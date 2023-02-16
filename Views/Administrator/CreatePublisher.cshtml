@@ -1,0 +1,98 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <style>
+        table {
+            font-family: arial, sans-serif;
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+
+        tr:nth-child(even) {
+            background-color: #dddddd;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <form>
+            <label for="publisherName">Tên nhà phát hành:</label><br>
+            <input type="text" id="publisherName" value=""><br>
+            <label for="detail">Thông tin chi tiết thêm:</label><br>
+            <textarea id="detail" rows="10"></textarea>
+        </form>
+
+        <div>
+            <button type="button" onclick="loadDoc()">Thêm mới nhà phát hành</button>
+        </div>
+
+        <p id="result-insert"></p>
+        <div>
+            <button type="button" onclick="loadPublishers()"> Danh sách nhà phát hành</button>
+        </div>
+        <table id="publisher-table"></table>
+
+        <script>
+            function loadDoc() {
+                let publisherName = document.getElementById("publisherName").value;
+                if (isEmptyOrSpaces(publisherName)) {
+                    document.getElementById("result-insert").innerHTML = "Tên nhà phát hành đang trống.";
+                    console.log("string null!");
+                    return;
+                }
+                console.log("string not null!");
+                const xhttp = new XMLHttpRequest();
+                xhttp.onload = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        GetJsonResponse(this.responseText);
+                    }
+                }
+                let query = "/Administrator/AddNewPublisher?publisherName=";
+                query = query + publisherName;
+                query = query + "&detail=";
+                let detail = document.getElementById("detail").value;
+                query = query + detail;
+                if (DEBUG) {
+                    console.log(query);
+                }
+                xhttp.open("GET", query);
+                xhttp.send();
+            }
+
+            // lấy danh sách nhà phát hành
+            function loadPublishers() {
+                const xhttp = new XMLHttpRequest();
+                xhttp.onload = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        document.getElementById("publisher-table").innerHTML = this.responseText;
+                    }
+                }
+                let query = "/Administrator/LoadPublisher";
+                xhttp.open("GET", query);
+                xhttp.send();
+            }
+        </script>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+</body>
+</html>

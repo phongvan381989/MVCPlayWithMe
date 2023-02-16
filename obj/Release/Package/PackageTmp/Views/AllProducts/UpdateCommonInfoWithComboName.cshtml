@@ -1,0 +1,258 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <style>
+        input {
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <form>
+            <label for="combo-name">Tên combo:</label><br>
+            <input list="comboNames" id="combo-name" onchange="ChangeComboName()"><br><br>
+            <datalist id="comboNames">
+                @foreach (var comboName in ViewData["lsComboName"] as List<string>)
+                {
+                    <option value="@comboName" />
+                }
+            </datalist>
+
+            <label for="category">Thể loại:</label><br>
+            <input list="categorys" id="category"><br><br>
+            <datalist id="categorys">
+                @foreach (var category in ViewData["lsCategory"] as List<string>)
+                {
+                    <option value="@category" />
+                }
+            </datalist>
+
+            <label for="book-cover-price">Giá bìa:</label><br>
+            <input type="number" id="book-cover-price" value=""><br><br>
+
+            <label for="author">Tác giả:</label><br>
+            <input list="authors" id="author"><br><br>
+            <datalist id="authors">
+                @foreach (var author in ViewData["lsAuthor"] as List<string>)
+                {
+                    <option value="@author" />
+                }
+            </datalist>
+
+            <label for="translator">Người dịch:</label><br>
+            <input list="translators" id="translator"><br><br>
+            <datalist id="authors">
+                @foreach (var translator in ViewData["lsTranslator"] as List<string>)
+                {
+                    <option value="@translator" />
+                }
+            </datalist>
+
+            <label for="publisher-id">Nhà phát hành:</label><br><br>
+            <select id="publisher-id">
+                @foreach (var pub in ViewData["lsPublisher"] as IList<MVCPlayWithMe.Models.Publisher>)
+                {
+                    <option value=@pub.id>@pub.publisherName</option>
+                }
+            </select>
+            <button type="submit" formaction="/Publisher/Index" formtarget="_self">Thêm nhà phát hành</button>
+            <br /><br>
+            <label for="publishing-company">Nhà xuất bản:</label><br>
+            <input list="publishingCompanys" id="publishing-company"><br><br>
+            <datalist id="authors">
+                @foreach (var publishingCompany in ViewData["lsPublishingCompany"] as List<string>)
+                {
+                    <option value="@publishingCompany" />
+                }
+            </datalist>
+
+            <label for="publishing-time">Năm xuất bản:</label><br>
+            <input type="date" id="publishing-time" value=""><br><br>
+
+            <label for="product-long">Dài(cm):</label><br>
+            <input type="number" id="product-long" value=""><br><br>
+
+            <label for="product-wide">Rộng(cm):</label><br>
+            <input type="number" id="product-wide" value=""><br><br>
+
+            <label for="product-high">Cao(cm):</label><br>
+            <input type="number" id="product-high" value=""><br><br>
+
+            <label for="product-weight">Nặng(g):</label><br>
+            <input type="number" id="product-weight" value=""><br><br>
+
+            <label for="position-in-warehouse">Vị trí lưu kho:</label><br>
+            <input type="text" id="position-in-warehouse" value=""><br><br>
+        </form>
+
+        <div>
+            <button type="button" onclick="Update()">Cập nhật thông tin chung của combo</button>
+            <button type="button" onclick="TestGetCookie()">Test lấy cookie_session</button>
+        </div>
+        <p id="result-insert"></p>
+
+        <script>
+            function Update() {
+                let responseId = 0;
+                const xhttp = new XMLHttpRequest();
+                xhttp.onload = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        responseId = parseInt(this.responseText);
+                        if (responseId === -5) {
+                            document.getElementById("result-insert").innerHTML = "Tên combo không chính xác.";
+                        }
+                        else if (responseId === -1) {
+                            document.getElementById("result-insert").innerHTML = "Có lỗi phía database.";
+                        }
+                        else {
+                            document.getElementById("result-insert").innerHTML = "Update thành công.";
+                        }
+                    }
+                }
+
+                const searchParams = new URLSearchParams();
+                let comboName = document.getElementById("combo-name").value;
+                if (DEBUG) {
+                    console.log("comboName: " + comboName);
+                }
+                if (isEmptyOrSpaces(comboName)) {
+                    document.getElementById("result-insert").innerHTML = "Tên combo không chính xác.";
+                    return;
+                }
+                searchParams.append("comboName", comboName);
+
+                searchParams.append("category", document.getElementById("category").value);
+
+                let bookCoverPrice = document.getElementById("book-cover-price").value;
+                if (isEmptyOrSpaces(bookCoverPrice)) {
+                    bookCoverPrice = 0;
+                }
+                searchParams.append("bookCoverPrice", bookCoverPrice);
+
+                searchParams.append("author", document.getElementById("author").value);
+
+                searchParams.append("translator", document.getElementById("translator").value);
+
+                let publisherId = document.getElementById("publisher-id").value;
+                if (isEmptyOrSpaces(publisherId)) {
+                    publisherId = 0;
+                }
+                searchParams.append("publisherId", publisherId);
+
+                searchParams.append("publishingCompany", document.getElementById("publishing-company").value);
+
+                let publishingTime = document.getElementById("publishing-time").value;
+                if (isEmptyOrSpaces(publishingTime)) {
+                    publishingTime = "2018-08-05"; // Giá trị mặc định là ngày sinh Sâu béo
+                }
+                searchParams.append("publishingTime", publishingTime);
+
+                let productLong = document.getElementById("product-long").value;
+                if (isEmptyOrSpaces(productLong)) {
+                    productLong = 0;
+                }
+                searchParams.append("productLong", productLong);
+
+                let productWide = document.getElementById("product-wide").value;
+                if (isEmptyOrSpaces(productWide)) {
+                    productWide = 0;
+                }
+                searchParams.append("productWide", productWide);
+
+                let productHigh = document.getElementById("product-high").value;
+                if (isEmptyOrSpaces(productHigh)) {
+                    productHigh = 0;
+                }
+                searchParams.append("productHigh", productHigh);
+
+                let productWeight = document.getElementById("product-weight").value;
+                if (isEmptyOrSpaces(productWeight)) {
+                    productWeight = 0;
+                }
+                searchParams.append("productWeight", productWeight);
+
+                searchParams.append("positionInWarehouse", document.getElementById("position-in-warehouse").value);
+
+                let query = "/AllProducts/UpdateCommonInfoWithComboName_Update?" + searchParams.toString();
+                if (DEBUG) {
+                    console.log(query);
+                }
+                xhttp.open("GET", query);
+                xhttp.send();
+            }
+
+            function ChangeComboName() {
+                let comboName = document.getElementById("combo-name").value;
+                if (DEBUG) {
+                    console.log("comboName: " + comboName);
+                }
+                if (isEmptyOrSpaces(comboName)) {
+                    document.getElementById("result-insert").innerHTML = "Tên combo không chính xác.";
+                    return;
+                }
+
+                const xhttp = new XMLHttpRequest();
+                xhttp.onload = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        let responseText = this.responseText;
+                        if (isEmptyOrSpaces(responseText)) {
+                            document.getElementById("result-insert").innerHTML = "Tên combo không chính xác.";
+                            return;
+                        }
+                        const obj = JSON.parse(responseText);
+                        if (DEBUG) {
+                            console.log(obj);
+                        }
+                        document.getElementById("category").value = obj.category;
+                        document.getElementById("book-cover-price").value = obj.bookCoverPrice;
+                        document.getElementById("author").value = obj.author;
+                        document.getElementById("translator").value = obj.translator;
+                        document.getElementById("publisher-id").value = obj.publisherId;
+                        document.getElementById("publishing-company").value = obj.publishingCompany;
+                        document.getElementById("publishing-time").value = obj.publishingTime;
+                        document.getElementById("product-long").value = obj.productLong;
+                        document.getElementById("product-wide").value = obj.productWide;
+                        document.getElementById("product-high").value = obj.productHigh;
+                        document.getElementById("product-weight").value = obj.productWeight;
+                        document.getElementById("position-in-warehouse").value = obj.positionInWarehouse;
+
+                        document.getElementById("result-insert").innerHTML = "Update thành công.";
+                    }
+                }
+
+                const searchParams = new URLSearchParams();
+                searchParams.append("comboName", comboName);
+                let query = "/AllProducts/UpdateCommonInfoWithComboName_Get?" + searchParams.toString();
+                if (DEBUG) {
+                    console.log(query);
+                }
+                xhttp.open("GET", query);
+                xhttp.send();
+
+            }
+
+            function TestGetCookie() {
+                if (DEBUG) {
+                    console.log("cookie: " + document.cookie);
+                }
+                document.getElementById("result-insert").innerHTML = document.cookie;
+            }
+        </script>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+</body>
+</html>

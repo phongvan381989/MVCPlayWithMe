@@ -1,0 +1,24 @@
+﻿@model MVCPlayWithMe.Models.ProductForSelector
+<div class="product-for-selector-container"style="width:200px; border-radius:10px; padding:5px;">
+    <a class="product-item" href="#">
+        <div class="image-wrapper">
+            <img class="card-img-top" src="~/Media/sach1.png" alt="Card image">
+        </div>
+        <div class="product-infor">
+            <div class="product-name">
+                <h3 style="color:black">@Model.name</h3>
+            </div>
+            <div class="rating-quantity-sold">
+                <p style="color:black; font-size:x-small">Đã bán @Model.quantitySold bộ</p>
+            </div>
+            <div class="price-sell price-original price-discount-percent">
+                <span class="price-sell-detail" style="color:red; font-size:medium">
+                    @Model.strPriceIncludePromotion
+                    <sup>₫</sup>
+                </span>
+                <span class="price-original-detail" style="color:gray; font-size:smaller; text-decoration:line-through"> @Model.strPriceOnPackage ₫</span>
+                <span class="price-discount-percent-detail" style="color:red; font-size:small">-@Model.discountForBuyer %</span>
+            </div>
+        </div>
+    </a>
+</div>
