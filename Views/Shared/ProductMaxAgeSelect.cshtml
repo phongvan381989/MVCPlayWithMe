@@ -1,0 +1,13 @@
+﻿<div>
+    <label for="max-age">Tuổi lớn nhất(tháng):</label>
+    <input type="number" list="list-product-max-age" class="config-max-width margin-vertical" id="max-age">
+
+    <datalist id="list-product-max-age">
+        @foreach (var pub in ViewData["lsMaxAge"] as IList<int>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>

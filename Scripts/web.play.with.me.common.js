@@ -179,9 +179,188 @@ function GetJsonResponse(responseText) {
     if (DEBUG) {
         console.log(obj);
     }
+    if (obj == null)
+        return false;
+
     document.getElementById("result-insert").innerHTML = obj.Message;
     if (obj.State == 0)
         return true;
 
     return false;
+}
+
+function CheckStatusResponse(responseText) {
+    const obj = JSON.parse(responseText);
+    if (DEBUG) {
+        console.log(obj);
+    }
+    if (obj == null)
+        return false;
+
+    if (obj.State == 0)
+        return true;
+
+    return false;
+}
+
+// haveAlert: true hiển thị thông báo qua Alert ngược lại hiển thị text ra màn hình
+function CheckStatusResponseAndShowPrompt(responseText, haveAlert, messageOk, messageError) {
+    const obj = JSON.parse(responseText);
+    if (DEBUG) {
+        console.log(obj);
+    }
+    let isOk = true;
+    let mess = "";
+    if (obj == null) {
+        isOk = false;
+        //alert("Thao tác thất bại.");
+    }
+    else {
+        if (obj.State != 0) {
+            //alert("Thao tác thành công.");
+            isOk = false;
+        }
+        //alert("Thao tác có lỗi.");
+    }
+    if (isOk) {
+        mess = messageOk;
+    }
+    else {
+        mess = messageError;
+    }
+    if (haveAlert) {
+        alert(mess);
+    }
+    else {
+        document.getElementById("result-insert").innerHTML = mess;
+    }
+    return isOk;
+}
+
+// Show text vào thẻ <p id="result-insert">
+function ShowResult(str) {
+    document.getElementById("result-insert").innerHTML = str;
+    if (DEBUG) {
+        console.log(str);
+    }
+}
+
+// str: text cần check
+// id của <p> hiển thị kết quả nếu text empty or space
+function CheckIsEmptyOrSpacesAndShowResult(str, id, strResult) {
+    if (isEmptyOrSpaces(str)) {
+        document.getElementById(id).innerHTML = strResult;
+        console.log("string null, empty or space!");
+        return true;
+    }
+
+    return false;
+}
+
+// Lấy dữ liệu attribute data-id từ giá trị text đầu vào
+// datalistId: id của <datalist>
+// dataIdAttributeName: attribute data-id
+// str: giá trị text đầu vào
+function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
+{
+    let option = document.getElementById(datalistId).options;
+    if (option == null)
+        return null;
+
+    let length = option.length;
+    for (let i = 0; i < length; i++) {
+        if (option.item(i).value === str) {
+            return option.item(i).getAttribute(dataIdAttributeName);
+        }
+    }
+    return null;
+}
+
+// Lấy dữ liệu attribute data-id của publisher list
+// str: giá trị text đầu vào
+function GetDataIdFromPublisherDatalist(str)
+{
+    return GetDataFromDatalist("list-Publisher", "data-id", str);
+}
+
+// Lấy dữ liệu attribute data-id của combo list
+// str: giá trị text đầu vào
+function GetDataIdFromComboDatalist(str) {
+    return GetDataFromDatalist("list-combo", "data-id", str);
+}
+
+// Lấy dữ liệu attribute data-id của category list
+// str: giá trị text đầu vào
+function GetDataIdFromCategoryDatalist(str) {
+    return GetDataFromDatalist("list-category", "data-id", str);
+}
+
+// Lấy dữ liệu attribute data-id của sản phẩm cha list
+// str: giá trị text đầu vào
+function GetDataIdFromProductNameDatalist(str) {
+    return GetDataFromDatalist("list-product-name", "data-id", str);
+}
+
+// Lấy dữ liệu attribute data-id của sản phẩm list
+// str: giá trị text đầu vào
+function GetDataIdFromParentlist(str) {
+    return GetDataFromDatalist("list-parent", "data-id", str);
+}
+
+function RequestHttpPost(onloadFunc, searchParams, query) {
+    const xhttp = new XMLHttpRequest();
+    xhttp.onload = onloadFunc;
+
+    if (DEBUG) {
+        console.log(query);
+        console.log(searchParams.toString());
+    }
+    xhttp.open("POST", query);
+    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    xhttp.send(searchParams.toString());
+}
+
+function RequestHttpGet(onloadFunc, searchParams, query) {
+    const xhttp = new XMLHttpRequest();
+    xhttp.onload = onloadFunc;
+
+    let lastQuery = query + "?" + searchParams.toString();
+    if (DEBUG) {
+        console.log(lastQuery);
+    }
+    xhttp.open("GET", lastQuery);
+    xhttp.send();
+}
+
+// Nếu input type number trống, ta lấy giá trị mặc định -1
+function GetValueOfNumberInputById(id, defaultValue) {
+    let value = document.getElementById(id).value;
+    if (isEmptyOrSpaces(value)) {
+        value = defaultValue;
+    }
+
+    return value;
+}
+
+function Sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+//// Nếu input type number trống, ta lấy giá trị mặc định -1
+//function GetValueOfNumberInputByIdAndSetURLSearchParams(id, searchParams) {
+//    let value = document.getElementById(id).value;
+//    if (isEmptyOrSpaces(value)) {
+//        value = -1;
+//    }
+
+//    return value;
+//}
+
+// Check xem element có đang focus
+function CheckFocus(id) {
+    let dummyEl = document.getElementById(id);
+    // check for focus
+    let isFocused = (document.activeElement === dummyEl);
+
+    return isFocused;
 }

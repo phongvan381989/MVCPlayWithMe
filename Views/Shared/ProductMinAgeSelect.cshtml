@@ -1,0 +1,14 @@
+﻿<div>
+    <label for="min-age">Tuổi nhỏ nhất(tháng):</label>
+    <input type="number" list="list-product-min-age" class="config-max-width margin-vertical" id="min-age">
+
+    <datalist id="list-product-min-age">
+        @foreach (var pub in ViewData["lsMinAge"] as IList<int>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>
+

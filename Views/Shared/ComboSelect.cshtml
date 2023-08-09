@@ -1,0 +1,11 @@
+﻿<div>
+    <label for="combo-id">Combo:</label>
+    <input list="list-combo" class="config-max-width margin-vertical" id="combo-id">
+
+    <datalist id="list-combo">
+        @foreach (var pub in ViewData["lsCombo"] as IList<MVCPlayWithMe.Models.Combo>)
+        {
+            <option data-id=@pub.id>@pub.name</option>
+        }
+    </datalist>
+</div>

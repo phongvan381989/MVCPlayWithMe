@@ -1,0 +1,94 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/Publisher.cshtml")
+
+        <script>
+            function CreatePublisher() {
+                window.location.href = "/Publisher/Create";
+            }
+
+            function PreCheck() {
+                let publisherName = document.getElementById("publisher-id").value;
+                if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "result-insert", "Tên nhà phát hành không hợp lệ.")) {
+                    return false;
+                }
+                let publisherId = GetDataIdFromPublisherDatalist(publisherName);
+                if (publisherId === null) {
+                    let str = "Nhà phát hành chưa tồn tại.";
+                    if (DEBUG) {
+                        console.log(str);
+                    }
+                    ShowResult(str);
+                    return false;
+                }
+
+                if (DEBUG) {
+                    console.log("publisherName: " + publisherName + ", publisherId: " + publisherId);
+                }
+
+                return true;
+            }
+
+            function UpdatePublisher() {
+                if (!PreCheck())
+                    return;
+
+                let publisherName = document.getElementById("publisher-id").value;
+                let publisherDetail = document.getElementById("detail").value;
+                const searchParams = new URLSearchParams();
+                searchParams.append("name", publisherName);
+                searchParams.append("detail", publisherDetail);
+                let query = "/Publisher/UpdatePublisher";
+
+                let OnloadFuntion = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        GetJsonResponse(this.responseText);
+                    }
+                }
+
+                RequestHttpPost(OnloadFuntion, searchParams, query);
+            }
+
+            function DeletePublisher() {
+                if (!PreCheck())
+                    return;
+
+                let publisherName = document.getElementById("publisher-id").value;
+                const searchParams = new URLSearchParams();
+                searchParams.append("name", publisherName);
+                let query = "/Publisher/DeletePublisher";
+
+                let OnloadFuntion = function () {
+                    if (this.readyState == 4 && this.status == 200) {
+                        GetJsonResponse(this.responseText);
+                        document.getElementById("publisher-id").value  = "";
+                        document.getElementById("detail").value  = "";
+                    }
+                }
+
+                RequestHttpPost(OnloadFuntion, searchParams, query);
+            }
+        </script>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.publisher.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+</body>
+</html>

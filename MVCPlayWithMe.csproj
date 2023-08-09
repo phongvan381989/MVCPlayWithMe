@@ -229,10 +229,16 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AdministratorController.cs" />
     <Compile Include="Controllers\AllProductsController.cs" />
+    <Compile Include="Controllers\BasicController.cs" />
+    <Compile Include="Controllers\CategoryController.cs" />
+    <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\HelloWorldController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ProductController.cs" />
+    <Compile Include="Controllers\PublisherController.cs" />
     <Compile Include="General\Common.cs" />
+    <Compile Include="General\CommonQLK.cs" />
     <Compile Include="General\Cookie.cs" />
     <Compile Include="General\CookieResultState.cs" />
     <Compile Include="General\MyLogger.cs" />
@@ -242,10 +248,23 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Administrator.cs" />
+    <Compile Include="Models\BasicIdName.cs" />
+    <Compile Include="Models\BasicMySql.cs" />
+    <Compile Include="Models\BasicObject.cs" />
+    <Compile Include="Models\Category.cs" />
+    <Compile Include="Models\CategoryMySql.cs" />
+    <Compile Include="Models\Combo.cs" />
+    <Compile Include="Models\ComboMySql.cs" />
     <Compile Include="Models\Customer.cs" />
+    <Compile Include="Models\Import.cs" />
+    <Compile Include="Models\ProductCommonInfoWithCombo.cs" />
+    <Compile Include="Models\ProductIdName.cs" />
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\ProductForSelector.cs" />
+    <Compile Include="Models\ProductIdCodeBarcodeNameBookCoverPrice.cs" />
+    <Compile Include="Models\ProductMySql.cs" />
     <Compile Include="Models\Publisher.cs" />
+    <Compile Include="Models\PublisherMySql.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -254,6 +273,7 @@
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\web.play.with.me.common.css" />
+    <Content Include="Content\web.play.with.me.table.show.data.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
     <Content Include="Global.asax" />
@@ -272,8 +292,11 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\web.play.with.me.category.common.js" />
+    <Content Include="Scripts\web.play.with.me.combo.common.js" />
+    <Content Include="Scripts\web.play.with.me.publisher.common.js" />
     <Content Include="Scripts\web.play.with.me.update.width.js" />
-    <Content Include="Scripts\web.play.with.me.upload.image.js" />
+    <Content Include="Scripts\web.play.with.me.product.upload.js" />
     <Content Include="Views\Home\playwithme.jpg" />
     <Content Include="Views\Home\playwithme.png" />
     <Content Include="Web.config">
@@ -302,10 +325,42 @@
     <Content Include="Views\Customer\Login.cshtml" />
     <Content Include="Views\Customer\Update.cshtml" />
     <Content Include="Views\Shared\biggestContainer_Top.cshtml" />
-    <Content Include="Views\Administrator\CreateProduct.cshtml" />
-    <Content Include="Views\Administrator\UpdateCommonInfoWithComboName.cshtml" />
-    <Content Include="Views\Administrator\UpdateProduct.cshtml" />
     <Content Include="Views\Administrator\CreatePublisher.cshtml" />
+    <Content Include="Views\Product\Create.cshtml" />
+    <Content Include="Views\Shared\PublisherSelect.cshtml" />
+    <Content Include="Views\Publisher\Create.cshtml" />
+    <Content Include="Views\Publisher\Index.cshtml" />
+    <Content Include="Views\Shared\PublisherSelectAndGoPage.cshtml" />
+    <Content Include="Views\Publisher\UpdateDelete.cshtml" />
+    <Content Include="Views\Shared\Publisher.cshtml" />
+    <Content Include="Views\Combo\Create.cshtml" />
+    <Content Include="Views\Shared\ComboSelect.cshtml" />
+    <Content Include="Views\Shared\ComboSelectAndGoPage.cshtml" />
+    <Content Include="Views\Shared\Combo.cshtml" />
+    <Content Include="Views\Combo\Delete.cshtml" />
+    <Content Include="Views\Shared\CategorySelect.cshtml" />
+    <Content Include="Views\Shared\CategorySelectAndGoPage.cshtml" />
+    <Content Include="Views\Shared\Category.cshtml" />
+    <Content Include="Views\Category\Create.cshtml" />
+    <Content Include="Views\Category\Delete.cshtml" />
+    <Content Include="Views\Product\UpdateDelete.cshtml" />
+    <Content Include="Views\Shared\ParentIdSelect.cshtml" />
+    <Content Include="Views\Shared\PublishingCompanySelect.cshtml" />
+    <Content Include="Views\Shared\AuthorSelect.cshtml" />
+    <Content Include="Views\Shared\TranslatorSelect.cshtml" />
+    <Content Include="Views\Shared\ProductInput.cshtml" />
+    <Content Include="Views\Shared\Head.cshtml" />
+    <Content Include="Views\Shared\ProductNameSelect.cshtml" />
+    <Content Include="Views\Product\UpdateWithCombo.cshtml" />
+    <Content Include="Views\Shared\ProductLongSelect.cshtml" />
+    <Content Include="Views\Shared\ProductWideSelect.cshtml" />
+    <Content Include="Views\Shared\ProductHighSelect.cshtml" />
+    <Content Include="Views\Shared\ProductWeightSelect.cshtml" />
+    <Content Include="Views\Shared\ProductMinAgeSelect.cshtml" />
+    <Content Include="Views\Shared\ProductMaxAgeSelect.cshtml" />
+    <Content Include="Views\Shared\ProductPublishingTimeSelect.cshtml" />
+    <Content Include="Views\Shared\ProductInputCommon.cshtml" />
+    <Content Include="Views\Product\Import.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

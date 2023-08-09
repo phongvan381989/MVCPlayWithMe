@@ -13,7 +13,7 @@ namespace MVCPlayWithMe.General
 {
     public class MyMySql
     {
-        private static string connStr;
+        public static string connStr;
 
         private static string errMessage;
 
@@ -65,7 +65,7 @@ namespace MVCPlayWithMe.General
             return result;
         }
 
-        private static MySqlResultState ExcuteNonQueryStoreProceduce(string stName, MySqlParameter[] paras)
+        public static MySqlResultState ExcuteNonQueryStoreProceduce(string stName, MySqlParameter[] paras)
         {
             MySqlConnection conn = new MySqlConnection(connStr);
             MySqlResultState result = new MySqlResultState();
@@ -97,459 +97,106 @@ namespace MVCPlayWithMe.General
             return result;
         }
 
-        public static List<Publisher> GetListPublisher()
+        public static int ExcuteGetIdStoreProceduce(string stName, MySqlParameter[] paras)
         {
             MySqlConnection conn = new MySqlConnection(connStr);
-            List<Publisher> ls = new List<Publisher>();
+            int id = 0;
             try
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbPublisher_Select_All", conn);
+                MySqlCommand cmd = new MySqlCommand(stName, conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(new Publisher(rdr.GetInt32("Id"), rdr.GetString("PublisherName"), rdr.GetString("Detail")));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
+                cmd.ExecuteNonQuery();
+                int lengthPara = cmd.Parameters.Count;
+                id = (int)cmd.Parameters[lengthPara - 2].Value;
             }
             catch (Exception ex)
             {
                 errMessage = ex.ToString();
                 MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="productName"></param>
-        /// <returns> -2 nếu tên sản phẩm không tồn tại; -1 nếu có lỗi </returns>
-        public static int GetProductIdFromName(string productName)
-        {
-            int id = -1;
-            MySqlConnection conn = new MySqlConnection(connStr);
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_With_Name", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@productName", productName);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    if (rdr.HasRows)
-                    {
-                        while (rdr.Read())
-                        {
-                            id = rdr.GetInt32("Id");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        id = -2;
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                id = -1;
             }
 
             conn.Close();
             return id;
         }
 
-        /// <summary>
-        /// Lấy tất cả barcode
-        /// barcode phải khác trống
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListBarcode()
+        public static MySqlResultState ExcuteNonQueryStoreProceduce(string stName, MySqlParameterCollection paras)
         {
             MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
+            MySqlResultState result = new MySqlResultState();
             try
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Barcode", conn);
+                MySqlCommand cmd = new MySqlCommand(stName, conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Insert(0, paras);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                cmd.ExecuteNonQuery();
+                int lengthPara = cmd.Parameters.Count;
+                //if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("Barcode"));
-                    }
+                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
                 }
-                if (rdr != null)
-                    rdr.Close();
             }
             catch (Exception ex)
             {
                 errMessage = ex.ToString();
                 MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
             }
 
             conn.Close();
-            return ls;
+            return result;
         }
 
-        /// <summary>
-        /// Lấy tất cả tên sản phẩm
-        /// Tên trống bỏ qua
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListProductName()
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
-            try
-            {
-                conn.Open();
+        ///// <summary>
+        ///// Lấy tất cả thể loại
+        ///// Thể loại phải khác trống
+        ///// </summary>
+        ///// <returns></returns>
+        //public static List<string> GetListCategory()
+        //{
+        //    MySqlConnection conn = new MySqlConnection(connStr);
+        //    List<string> ls = new List<string>();
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_ProductName", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
+        //        MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Category", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("ProductName"));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        if (rdr != null && rdr.HasRows)
+        //        {
+        //            while (rdr.Read())
+        //            {
+        //                ls.Add(rdr.GetString("Category"));
+        //            }
+        //        }
+        //        if (rdr != null)
+        //            rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        errMessage = ex.ToString();
+        //        MyLogger.GetInstance().Warn(errMessage);
+        //    }
 
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// Lấy tất cả comboname trong db
-        /// Comboname phải khác trống
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListComboName()
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_ComboName", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("ComboName"));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// Lấy tất cả tác giả
-        /// Tác giả phải khác trống
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListAuthor()
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Author", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("Author"));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// Lấy tất cả người dịch
-        /// Người dịch phải khác trống
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListTranslator()
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Translator", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("Translator"));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// Lấy tất cả nhà xuất bản
-        /// Nhà xuất bản phải khác trống
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListPublishingCompany()
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_PublishingCompany", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("PublishingCompany"));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// Lấy tất cả thể loại
-        /// Thể loại phải khác trống
-        /// </summary>
-        /// <returns></returns>
-        public static List<string> GetListCategory()
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            List<string> ls = new List<string>();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Category", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        ls.Add(rdr.GetString("Category"));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return ls;
-        }
-
-        /// <summary>
-        /// Từ tên combo lấy được thông tin chung đã có trên db
-        /// Thông tin chung là thông tin của sản phẩm đầu tiên thuộc combo
-        /// </summary>
-        /// <param name="comboName"></param>
-        /// <returns></returns>
-        public static string GetJsonCommonInfoFromComboName(string comboName)
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            StringBuilder sb = new StringBuilder();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_First_Product_From_ComboName", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@comboName", comboName);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    sb.Append("{");
-                    while (rdr.Read())
-                    {
-                        sb.Append("\"bookCoverPrice\"");
-                        sb.Append(":");
-                        sb.Append(rdr.GetInt32("BookCoverPrice"));
-                        sb.Append(",");
-
-                        sb.Append("\"author\"");
-                        sb.Append(":");
-                        sb.Append("\"");
-                        sb.Append(rdr.GetString("Author"));
-                        sb.Append("\"");
-                        sb.Append(",");
-
-                        sb.Append("\"translator\"");
-                        sb.Append(":");
-                        sb.Append("\"");
-                        sb.Append(rdr.GetString("Translator"));
-                        sb.Append("\"");
-                        sb.Append(",");
-
-                        sb.Append("\"publisherId\"");
-                        sb.Append(":");
-                        sb.Append(rdr.GetInt32("PublisherId"));
-                        sb.Append(",");
-
-                        sb.Append("\"publishingCompany\"");
-                        sb.Append(":");
-                        sb.Append("\"");
-                        sb.Append(rdr.GetString("PublishingCompany"));
-                        sb.Append("\"");
-                        sb.Append(",");
-
-                        sb.Append("\"publishingTime\"");
-                        sb.Append(":");
-                        sb.Append("\"");
-                        sb.Append(rdr.GetDateTime("PublishingTime").ToString("yyyy-MM-dd"));
-                        sb.Append("\"");
-                        sb.Append(",");
-
-                        sb.Append("\"productLong\"");
-                        sb.Append(":");
-                        sb.Append(rdr.GetInt32("ProductLong"));
-                        sb.Append(",");
-
-                        sb.Append("\"productWide\"");
-                        sb.Append(":");
-                        sb.Append(rdr.GetInt32("ProductWide"));
-                        sb.Append(",");
-
-                        sb.Append("\"productHigh\"");
-                        sb.Append(":");
-                        sb.Append(rdr.GetInt32("ProductHigh"));
-                        sb.Append(",");
-
-                        sb.Append("\"productWeight\"");
-                        sb.Append(":");
-                        sb.Append(rdr.GetInt32("ProductWeight"));
-                        sb.Append(",");
-
-                        sb.Append("\"positionInWarehouse\"");
-                        sb.Append(":");
-                        sb.Append("\"");
-                        sb.Append(rdr.GetString("PositionInWarehouse"));
-                        sb.Append("\"");
-                        sb.Append(",");
-
-                        sb.Append("\"category\"");
-                        sb.Append(":");
-                        sb.Append("\"");
-                        sb.Append(rdr.GetString("Category"));
-                        sb.Append("\"");
-                    }
-                    sb.Append("}");
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return sb.ToString();
-        }
+        //    conn.Close();
+        //    return ls;
+        //}
 
         /// <summary>
         /// Thêm 2 parameters outResult và outMessage
         /// </summary>
         /// <param name="parameters"></param>
-        private static void AddOutParameters(MySqlParameterCollection parameters)
+        public static void AddOutParameters(MySqlParameterCollection parameters)
         {
             MySqlParameter paraoutResult = new MySqlParameter();
             paraoutResult.ParameterName = @"outResult";
@@ -569,7 +216,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="parameters"> Mảng tham số đầu vào</param>
         /// <param name="lengthParas">Chiều dài mảng tham số</param>
-        private static void AddOutParameters(MySqlParameter[] paras)
+        public static void AddOutParameters(MySqlParameter[] paras)
         {
             int lengthParas = paras.Length;
             MySqlParameter paraoutResult = new MySqlParameter();
@@ -753,164 +400,6 @@ namespace MVCPlayWithMe.General
                 result.State = EMySqlResultState.EXCEPTION;
                 result.Message = errMessage;
             }
-
-            return result;
-        }
-
-        public static MySqlResultState AddNewPro(string barcode,
-                string productName,
-                string comboName,
-                int bookCoverPrice,
-                string author,
-                string translator,
-                int publisherId,
-                string publishingCompany,
-                string publishingTime,
-                int productLong,
-                int productWide,
-                int productHigh,
-                int productWeight,
-                string positionInWarehouse,
-                string detail,
-                string category,
-                int productIdForUpdate //productIdForUpdate = -1: tạo mới sản phẩm, ngược lại là update sản phẩm
-                )
-        {
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
-
-            // Update không cần check barcode, tên sản phẩm tồn tại chưa
-            if (productIdForUpdate == -1)
-            {
-                paras = new MySqlParameter[3];
-                paras[0] = new MySqlParameter("@productName", productName);
-                AddOutParameters(paras);
-
-                // Check tên phẩm đã tồn tại?
-                result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Count_With_Name", paras);
-                if ((int)paras[1].Value != 0)
-                {
-                    return result;
-                }
-
-                // Check barcode đã tồn tại?
-                paras[0] = new MySqlParameter("@barcode", barcode);
-                result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Count_With_Barcode", paras);
-                if ((int)paras[1].Value != 0)
-                {
-                    return result;
-                }
-            }
-
-            if (productIdForUpdate == -1) // Tạo mới
-            {
-                paras = new MySqlParameter[18];
-            }
-            else // Update
-            {
-                paras = new MySqlParameter[19];
-            }
-
-            paras[0] = new MySqlParameter("@barcode", barcode);
-            paras[1] = new MySqlParameter("@productName", productName);
-            paras[2] = new MySqlParameter("@comboName", comboName);
-            paras[3] = new MySqlParameter("@bookCoverPrice", bookCoverPrice);
-            paras[4] = new MySqlParameter("@author", author);
-            paras[5] = new MySqlParameter("@translator", translator);
-            paras[6] = new MySqlParameter("@publisherId", publisherId);
-            paras[7] = new MySqlParameter("@publishingCompany", publishingCompany);
-            paras[8] = new MySqlParameter("@publishingTime", publishingTime);
-            paras[9] = new MySqlParameter("@productLong", productLong);
-            paras[10] = new MySqlParameter("@productWide", productWide);
-            paras[11] = new MySqlParameter("@productHigh", productHigh);
-            paras[12] = new MySqlParameter("@productWeight", productWeight);
-            paras[13] = new MySqlParameter("@positionInWarehouse", positionInWarehouse);
-            paras[14] = new MySqlParameter("@detail", detail);
-            paras[15] = new MySqlParameter("@category", category);
-            if (productIdForUpdate != -1)
-                paras[16]  = new MySqlParameter("@id", productIdForUpdate);
-
-            AddOutParameters(paras);
-            if (productIdForUpdate == -1)
-                result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Insert", paras);
-            else
-                result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update", paras);
-
-            return result;
-        }
-
-        public static MySqlResultState UpdateCommonInfoWithComboNae(
-                        string comboName,
-                        int bookCoverPrice,
-                        string author,
-                        string translator,
-                        int publisherId,
-                        string publishingCompany,
-                        string publishingTime,
-                        int productLong,
-                        int productWide,
-                        int productHigh,
-                        int productWeight,
-                        string positionInWarehouse,
-                        string category)
-        {
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
-
-            // Check combo name phải tồn tại
-            paras = new MySqlParameter[3];
-            paras[0] = new MySqlParameter("@inComboName", comboName);
-            AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Count_With_ComboName", paras);
-            if ((int)paras[1].Value == 0)
-            {
-                return result;
-            }
-
-            paras = new MySqlParameter[15];
-            paras[0] = new MySqlParameter("@comboName", comboName);
-            paras[1] = new MySqlParameter("@bookCoverPrice", bookCoverPrice);
-            paras[2] = new MySqlParameter("@author", author);
-            paras[3] = new MySqlParameter("@translator", translator);
-            paras[4] = new MySqlParameter("@publisherId", publisherId);
-            paras[5] = new MySqlParameter("@publishingCompany", publishingCompany);
-            paras[6] = new MySqlParameter("@publishingTime", publishingTime);
-            paras[7] = new MySqlParameter("@productLong", productLong);
-            paras[8] = new MySqlParameter("@productWide", productWide);
-            paras[9] = new MySqlParameter("@productHigh", productHigh);
-            paras[10] = new MySqlParameter("@productWeight", productWeight);
-            paras[11] = new MySqlParameter("@positionInWarehouse", positionInWarehouse);
-            paras[12] = new MySqlParameter("@category", category);
-            AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Common_Infor_ComboName", paras);
-            return result;
-        }
-
-        public static MySqlResultState AddNewPublisher(string publisherName, string detail)
-        {
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
-
-            // Check publisherName exist
-            paras = new MySqlParameter[3];
-            paras[0] = new MySqlParameter("@publisherName", publisherName);
-            AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbPublisher_Count_With_Name", paras);
-            if ((int)paras[1].Value != 0)
-            {
-                return result;
-            }
-
-            paras = new MySqlParameter[4];
-
-            paras[0] = new MySqlParameter("@publisherName", publisherName);
-            paras[1] = new MySqlParameter("@detail", detail);
-            AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbPublisher_Insert", paras);
 
             return result;
         }
@@ -1284,143 +773,20 @@ namespace MVCPlayWithMe.General
             return result;
         }
 
-        /// <summary>
-        /// TỪ dữ liệu select db, ta trả về đối tượng Product
-        /// </summary>
-        /// <returns></returns>
-        private static Product ConvertFromDataMySql(MySqlDataReader rdr)
+        public static int GetInt32(MySqlDataReader rdr, string columnName)
         {
-            if (rdr == null || !rdr.HasRows)
-                return null;
-
-            Product product = new Product();
-            while (rdr.Read())
-            {
-                product.id = rdr.GetInt32("Id");
-                product.barcode = rdr.GetString("Barcode");
-                product.productName = rdr.GetString("ProductName");
-                product.comboName = rdr.GetString("ComboName");
-                product.bookCoverPrice = rdr.GetInt32("BookCoverPrice");
-                product.author = rdr.GetString("Author");
-                product.translator = rdr.GetString("Translator");
-                product.publisherId = rdr.GetInt32("PublisherId");
-                product.publishingCompany = rdr.GetString("PublishingCompany");
-                product.publishingTime = rdr.GetDateTime("PublishingTime");
-                product.publishingTimeyyyyMMdd = product.publishingTime.ToString("yyyy-MM-dd");
-                product.productLong = rdr.GetInt32("ProductLong");
-                product.productWide = rdr.GetInt32("ProductWide");
-                product.productHigh = rdr.GetInt32("ProductHigh");
-                product.productWeight = rdr.GetInt32("ProductWeight");
-                product.positionInWarehouse = rdr.GetString("PositionInWarehouse");
-                product.detail = rdr.GetString("Detail");
-                product.category = rdr.GetString("Category");
-                break;
-            }
-            return product;
+            if (Convert.IsDBNull(rdr[columnName]))
+                return -1;
+            else
+                return rdr.GetInt32(columnName);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="barcode"></param>
-        /// <returns>Có thể trả về null</returns>
-        public static Product GetProductFromBarcode(string barcode)
+        public static string GetString(MySqlDataReader rdr, string columnName)
         {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            StringBuilder sb = new StringBuilder();
-            Product product = null;
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Barcode", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inBarcode", barcode);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                product = null;
-            }
-
-            conn.Close();
-            return product;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="barcode"></param>
-        /// <returns>Có thể trả về null</returns>
-        public static Product GetProductFromProductName(string productName)
-        {
-            MySqlConnection conn = new MySqlConnection(connStr);
-            StringBuilder sb = new StringBuilder();
-            Product product = null;
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Name", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inProductName", productName);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                product = null;
-            }
-
-            conn.Close();
-            return product;
-        }
-
-        public static MySqlResultState UpdateProductBarcode(int id, string newBarcode)
-        {
-            MySqlParameter[] paras = new MySqlParameter[4];
-
-            paras[0] = new MySqlParameter("@inId", id);
-            paras[1] = new MySqlParameter("@inBarcode", newBarcode);
-            AddOutParameters(paras);
-
-            MySqlResultState result = ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode", paras);
-            return result;
-        }
-
-        public static MySqlResultState AddMoreProductBarcode(int id, string newBarcode)
-        {
-            MySqlParameter[] paras = new MySqlParameter[4];
-
-            paras[0] = new MySqlParameter("@inId", id);
-            paras[1] = new MySqlParameter("@inBarcode", newBarcode);
-            AddOutParameters(paras);
-
-            MySqlResultState result = ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode_Add_More", paras);
-            return result;
-        }
-
-        public static MySqlResultState UpdateProductName(int id, string newProductName)
-        {
-            MySqlParameter[] paras = new MySqlParameter[4];
-
-            paras[0] = new MySqlParameter("@inId", id);
-            paras[1] = new MySqlParameter("@inProductName", newProductName);
-            AddOutParameters(paras);
-
-            MySqlResultState result = ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Name", paras);
-            return result;
+            if (Convert.IsDBNull(rdr[columnName]))
+                return string.Empty;
+            else
+                return rdr.GetString(columnName);
         }
     }
 }

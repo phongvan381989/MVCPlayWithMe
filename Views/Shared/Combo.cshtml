@@ -1,0 +1,16 @@
+﻿@Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+<div>
+        @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
+</div>
+
+<div>
+    <button type="button" onclick="CreateCombo()">Thêm mới</button>
+    <button type="button" onclick="DeleteCombo()">Xóa</button>
+</div>
+
+<p id="result-insert"></p>
+<div>
+    <button type="button" onclick="LoadCombo()"> Danh sách Combo</button>
+</div>
+<table id="combo-table"></table>
+

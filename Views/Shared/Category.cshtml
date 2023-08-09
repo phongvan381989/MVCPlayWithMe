@@ -1,0 +1,17 @@
+﻿@Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+<div>
+    @Html.Partial("~/Views/Shared/CategorySelect.cshtml")
+</div>
+
+<div>
+    <button type="button" onclick="CreateCategory()">Thêm mới</button>
+    <button type="button" onclick="DeleteCategory()">Xóa</button>
+</div>
+
+<p id="result-insert"></p>
+<div>
+    <button type="button" onclick="LoadCategory()"> Danh sách thể loại</button>
+</div>
+<table id="category-table"></table>
+
+

@@ -5,18 +5,13 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class Publisher
+    public class Publisher : BasicIdName
     {
-        public int id { get; set; }
-
-        public string publisherName { get; set; }
 
         public string detail { get; set; }
 
-        public Publisher(int idInput, string nameInput, string detalInput)
+        public Publisher(int idInput, string nameInput, string detalInput) : base(idInput, nameInput)
         {
-            id = idInput;
-            publisherName = nameInput;
             detail = detalInput;
         }
     }

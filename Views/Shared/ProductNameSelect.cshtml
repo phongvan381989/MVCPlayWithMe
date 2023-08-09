@@ -1,0 +1,12 @@
+﻿<div>
+    <label for="product-name-id">Tên:</label>
+    <input list="list-product-name" class="config-max-width margin-vertical" id="product-name-id">
+
+    <datalist id="list-product-name">
+        @foreach (var pub in ViewData["lsProductName"] as IList<MVCPlayWithMe.Models.ProductIdName>)
+        {
+            <option data-id=@pub.id>@pub.name</option>
+        }
+    </datalist>
+    <br><br>
+</div>

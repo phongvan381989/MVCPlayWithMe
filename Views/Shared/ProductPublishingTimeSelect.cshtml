@@ -1,0 +1,14 @@
+﻿<div>
+    <label for="publishing-time">Năm xuất bản:</label>
+    <input list="list-publishing-time" class="config-max-width margin-vertical" id="publishing-time">
+
+    <datalist id="list-publishing-time">
+        @foreach (var pub in ViewData["lsPublishingTime"] as IList<int>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>
+

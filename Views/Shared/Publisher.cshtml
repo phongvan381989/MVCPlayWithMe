@@ -1,0 +1,20 @@
+﻿@Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+<div>
+    <form>
+        @Html.Partial("~/Views/Shared/PublisherSelect.cshtml")
+        <label for="detail">Thông tin chi tiết thêm:</label><br>
+        <textarea id="detail" rows="10"></textarea>
+    </form>
+</div>
+
+<div>
+    <button type="button" onclick="CreatePublisher()">Thêm mới</button>
+    <button type="button" onclick="UpdatePublisher()">Cập nhật</button>
+    <button type="button" onclick="DeletePublisher()">Xóa</button>
+</div>
+
+<p id="result-insert"></p>
+<div>
+    <button type="button" onclick="loadPublishers()"> Danh sách nhà phát hành</button>
+</div>
+<table id="publisher-table"></table>

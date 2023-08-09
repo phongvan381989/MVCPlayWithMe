@@ -1,0 +1,34 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <div class="config-max-width padding-container">
+            @Html.Partial("~/Views/Shared/ProductInput.cshtml")
+            <div class="config-max-width">
+                <br />
+                <button type="button" onclick="UpdateProduct()">Cập nhật</button>
+                <button type="button" style="margin-left: 30px;" onclick="DeleteProduct()">Xóa</button>
+            </div>
+            <p id="result-insert"></p>
+        </div>
+    </div>
+    <script>
+        document.getElementById("product-name-id").onchange = function () { ProductNameChange(this.value) };
+        function PublisherChange() {
+        }
+    </script>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
+</body>
+</html>
+

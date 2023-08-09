@@ -1,0 +1,14 @@
+﻿<div>
+    <label for="translator-id">Người dịch:</label>
+    <input list="list-translator" class="config-max-width margin-vertical" id="translator-id">
+
+    <datalist id="list-translator">
+        @foreach (var pub in ViewData["lsTranslator"] as IList<String>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>
+

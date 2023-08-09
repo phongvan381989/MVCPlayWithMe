@@ -1,0 +1,13 @@
+﻿<div>
+    <label for="product-high">Cao(mm):</label>
+    <input type="number" list="list-product-high" class="config-max-width margin-vertical" id="product-high">
+
+    <datalist id="list-product-high">
+        @foreach (var pub in ViewData["lsProductHigh"] as IList<int>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>

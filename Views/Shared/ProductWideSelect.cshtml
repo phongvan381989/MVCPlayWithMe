@@ -1,0 +1,14 @@
+﻿<div>
+    <label for="product-wide">Rộng(mm):</label>
+    <input type="number" list="list-product-wide" class="config-max-width margin-vertical" id="product-wide">
+
+    <datalist id="list-product-wide">
+        @foreach (var pub in ViewData["lsProductWide"] as IList<int>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>
+

@@ -1,0 +1,13 @@
+﻿<div>
+    <label for="product-long">Dài(mm):</label>
+    <input type="number" list="list-product-long" class="config-max-width margin-vertical" id="product-long">
+
+    <datalist id="list-product-long">
+        @foreach (var pub in ViewData["lsProductLong"] as IList<int>)
+        {
+            <option>@pub</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>

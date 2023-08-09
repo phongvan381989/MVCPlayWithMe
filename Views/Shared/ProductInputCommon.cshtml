@@ -1,0 +1,60 @@
+﻿<div>
+    @Html.Partial("~/Views/Shared/ComboSelectAndGoPage.cshtml")
+
+    @Html.Partial("~/Views/Shared/CategorySelectAndGoPage.cshtml")
+
+    <label for="book-cover-price">Giá bìa:</label><br>
+    <input class="config-max-width margin-vertical" type="number" id="book-cover-price" value="">
+    <br>
+    <br>
+
+    <label for="hard-cover">Bìa:</label><br>
+    <select class="config-max-width margin-vertical" id="hard-cover">
+        <option value="0">Bìa mềm</option>
+        <option value="1">Bìa cứng</option>
+    </select>
+    <br>
+    <br>
+
+    @Html.Partial("~/Views/Shared/AuthorSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/TranslatorSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/PublisherSelectAndGoPage.cshtml")
+
+    @Html.Partial("~/Views/Shared/PublishingCompanySelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductPublishingTimeSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductLongSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductWideSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductHighSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductWeightSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductMinAgeSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ProductMaxAgeSelect.cshtml")
+
+    <label for="position-in-warehouse">Vị trí lưu kho:</label><br>
+    <input class="config-max-width margin-vertical" type="text" id="position-in-warehouse" value="">
+    <br>
+    <br>
+
+    <label for="republish">Tái bản lần thứ:</label><br>
+    <input class="config-max-width margin-vertical" type="number" id="republish" value="">
+    <br>
+    <br>
+
+    <label for="product-status">Trạng thái:</label><br>
+    <select class="config-max-width margin-vertical" id="product-status">
+        <option value="0">Đang kinh doanh</option>
+        <option value="1">Nhà phát hành tạm thời hết hàng</option>
+        <option value="2">Ngừng kinh doanh</option>
+    </select>
+    <br>
+    <br>
+
+</div>

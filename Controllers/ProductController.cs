@@ -1,0 +1,583 @@
+﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
+using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Web;
+using System.Web.Mvc;
+
+namespace MVCPlayWithMe.Controllers
+{
+    public class ProductController : BasicController
+    {
+        public ProductMySql sqler;
+        public ComboMySql comboSqler;
+        public CategoryMySql categorySqler;
+        public PublisherMySql publisherSqler;
+        public ProductController () : base ()
+        {
+            sqler = new ProductMySql();
+            comboSqler = new ComboMySql();
+            categorySqler = new CategoryMySql();
+            publisherSqler = new PublisherMySql();
+        }
+
+        private void GetViewDataForInput()
+        {
+            ViewDataGetListCombo();
+            ViewDataGetListCategory();
+            ViewDataGetListAuthor();
+            ViewDataGetListTranslator();
+            ViewDataGetListPublisher();
+            ViewDataGetListPublishingCompany();
+            ViewDataGetListProductName();
+
+            ViewDataGetListProductLong();
+            ViewDataGetListProductHigh();
+            ViewDataGetListProductWide();
+            ViewDataGetListProductWeight();
+            ViewDataGetListMinAge();
+            ViewDataGetListMaxAge();
+            ViewDataGetListPublishingTime();
+        }
+        // GET: Product
+        public ActionResult Create()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            GetViewDataForInput();
+
+            return View();
+        }
+
+        public ActionResult UpdateDelete()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            GetViewDataForInput();
+
+            return View();
+        }
+
+        public ActionResult UpdateWithCombo()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            GetViewDataForInput();
+
+            return View();
+        }
+
+        public ActionResult Import()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+            ViewDataGetListProductName();
+
+            return View();
+        }
+
+        private void AddUpdateParasCommon(
+            ref int comboId, string comboName,
+            ref int categoryId, string categoryName,
+            ref int publisherId, string publisherName,
+            ref int parentId, string parentName
+            )
+        {
+            if (string.IsNullOrWhiteSpace(comboName))
+                comboId = -1;
+            else
+                comboId = comboSqler.GetComboIdFromName(comboName);
+
+            if (string.IsNullOrWhiteSpace(categoryName))
+                categoryId = -1;
+            else
+                categoryId = categorySqler.GetCategoryIdFromName(categoryName);
+
+            if (string.IsNullOrWhiteSpace(publisherName))
+                publisherId = -1;
+            else
+                publisherId = publisherSqler.GetPublisherIdFromName(publisherName);
+
+            if (string.IsNullOrWhiteSpace(parentName))
+                parentId = -1;
+            else
+                parentId = sqler.GetProductIdFromName(parentName);
+        }
+
+        public string AddNewPro(
+                string code,
+                string barcode,
+                string name,
+                //int comboId,
+                string comboName, // Nếu comboId = -1, ta thêm mới comboName
+                //int categoryId,
+                string categoryName, // Nếu categoryId = -1, ta thêm mới categoryName
+                int bookCoverPrice,
+                string author,
+                string translator,
+                //int publisherId,
+                string publisherName, // Nếu publisherId = -1, ta thêm mới publisherName
+                string publishingCompany,
+                int publishingTime,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight,
+                string positionInWarehouse,
+                int hardCover,
+                int minAge,
+                int maxAge,
+                string parentName, // Nếu không có sản phẩm cha, parentId = -1
+                int republish,// Nếu không xác định, parentId = -1
+                string detail,
+                int status
+                )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+            int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
+            AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
+                ref publisherId, publisherName, ref parentId, parentName);
+
+            Product pro = new Product(-1,
+                 code,
+                 barcode,
+                 name,
+                 comboId,
+                 categoryId,
+                 bookCoverPrice,
+                 author,
+                 translator,
+                 publisherId,
+                 publishingCompany,
+                 publishingTime,
+                 productLong,
+                 productWide,
+                 productHigh,
+                 productWeight,
+                 positionInWarehouse,
+                 hardCover,
+                 minAge,
+                 maxAge,
+                 parentId,
+                 republish,
+                 detail,
+                 status
+                 );
+
+             MySqlResultState result = sqler.AddNewPro(pro);
+            // Lấy id của sản phẩm vừa thêm mới thành công
+            result.myAnything = sqler.GetProductIdFromName(name);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public string UpdateProduct(
+                string code,
+                string barcode,
+                string name,
+                //int comboId,
+                string comboName, // Nếu comboId = -1, ta thêm mới comboName
+                                  //int categoryId,
+                string categoryName, // Nếu categoryId = -1, ta thêm mới categoryName
+                int bookCoverPrice,
+                string author,
+                string translator,
+                //int publisherId,
+                string publisherName, // Nếu publisherId = -1, ta thêm mới publisherName
+                string publishingCompany,
+                int publishingTime,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight,
+                string positionInWarehouse,
+                int hardCover,
+                int minAge,
+                int maxAge,
+                string parentName, // Nếu không có sản phẩm cha, parentId = -1
+                int republish,// Nếu không xác định, parentId = -1
+                string detail,
+                int status
+                )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+
+            int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
+            AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
+                ref publisherId, publisherName, ref parentId, parentName);
+
+            Product pro = new Product(
+                -1,
+                code,
+                barcode,
+                 name,
+                 comboId,
+                 categoryId,
+                 bookCoverPrice,
+                 author,
+                 translator,
+                 publisherId,
+                 publishingCompany,
+                 publishingTime,
+                 productLong,
+                 productWide,
+                 productHigh,
+                 productWeight,
+                 positionInWarehouse,
+                 hardCover,
+                 minAge,
+                 maxAge,
+                 parentId,
+                 republish,
+                 detail,
+                 status
+                 );
+
+            MySqlResultState result = sqler.UpdateProduct(pro);
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Xóa sản phẩm
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public string DeleteProduct(int id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = sqler.DeleteProduct(id);
+            // xóa file của sản phẩm
+            DeleteOldFile(id);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public string UpdateCommonInfoWithCombo(
+                //int comboId,
+                string comboName, // Nếu comboId = -1, ta thêm mới comboName
+                                  //int categoryId,
+                string categoryName, // Nếu categoryId = -1, ta thêm mới categoryName
+                int bookCoverPrice,
+                string author,
+                string translator,
+                //int publisherId,
+                string publisherName, // Nếu publisherId = -1, ta thêm mới publisherName
+                string publishingCompany,
+                int publishingTime,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight,
+                string positionInWarehouse,
+                int hardCover,
+                int minAge,
+                int maxAge,
+                int republish,   // Nếu không xác định, parentId = -1
+                int status
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+
+            int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
+            AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
+                ref publisherId, publisherName, ref parentId, string.Empty);
+            ProductCommonInfoWithCombo pro = new ProductCommonInfoWithCombo(
+                 comboId,
+                 categoryId,
+                 bookCoverPrice,
+                 author,
+                 translator,
+                 publisherId,
+                 publishingCompany,
+                 publishingTime,
+                 productLong,
+                 productWide,
+                 productHigh,
+                 productWeight,
+                 positionInWarehouse,
+                 hardCover,
+                 minAge,
+                 maxAge,
+                 republish,
+                 status
+                );
+            MySqlResultState result = sqler.UpdateCommonInfoWithCombo(pro);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        ///// <summary>
+        /////Trả lại thông tin product json để hiển thị khi thay đổi barcode
+        ///// </summary>
+        ///// <param name="barcode"></param>
+        ///// <returns></returns>
+        //public string UpdateProduct_Get_ChangeBarcode(string barcode)
+        //{
+        //    Product product = sqler.GetProductFromBarcode(barcode);
+        //    if (product == null)
+        //        return string.Empty;
+        //    product.SetSrcImageVideo();
+        //    return JsonConvert.SerializeObject(product);
+        //}
+
+        //public string UpdateProduct_Get_ChangeproductName(string productName)
+        //{
+        //    Product product = sqler.GetProductFromProductName(productName);
+        //    if (product == null)
+        //        return string.Empty;
+        //    product.SetSrcImageVideo();
+        //    return JsonConvert.SerializeObject(product);
+        //}
+
+        //public string UpdateProduct_UpdateBarcode(int id, string newBarcode)
+        //{
+        //    MySqlResultState result = sqler.UpdateProductBarcode(id, newBarcode);
+        //    return JsonConvert.SerializeObject(result);
+        //}
+
+        //public string UpdateProduct_AddMoreProductBarcode(int id, string newBarcode)
+        //{
+        //    MySqlResultState result = sqler.AddMoreProductBarcode(id, newBarcode);
+        //    return JsonConvert.SerializeObject(result);
+        //}
+
+        //public string UpdateProduct_UpdateProductName(int id, string newProductName)
+        //{
+        //    MySqlResultState result = sqler.UpdateProductName(id, newProductName);
+        //    return JsonConvert.SerializeObject(result);
+        //}
+
+        ///// <summary>
+        ///// Cập nhật thông tin chung của các sản phẩm thuộc cùng 1 combo VD: tên nhà phát hành, nhà xuất bản, kích thước,..
+        ///// </summary>
+        ///// <returns></returns>
+        //public ActionResult UpdateCommonInfoWithComboName()
+        //{
+        //    if (AuthentAdministrator() == null)
+        //    {
+        //        return AuthenticationFail();
+        //    }
+
+        //    ViewDataGetListPublisher();
+
+        //    List<string> listComboName = sqler.GetListComboName();
+        //    ViewData["lsComboName"] = listComboName;
+
+        //    List<string> listPublishingCompany = sqler.GetListPublishingCompany();
+        //    ViewData["lsPublishingCompany"] = listPublishingCompany;
+
+        //    return View();
+        //}
+
+        /// <summary>
+        /// Xóa ảnh, video cũ
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
+        public string DeleteOldFile(int productId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+
+            string path = Common.GetProductMediaFolderPath(productId.ToString());
+            if (path != null)
+            {
+                System.IO.DirectoryInfo di = new DirectoryInfo(path);
+                //foreach (FileInfo file in di.GetFiles())
+                //{
+                //    file.Delete();
+                //}
+                di.Delete(true);
+            }
+
+            return JsonConvert.SerializeObject(new MySqlResultState());
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <param name="fileType">isImage hoặc isVideo</param>
+        /// <returns></returns>
+        //[HttpPost]
+        public string DeleteAllFileWithType(int id, string fileType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+            if(fileType == "isImage")
+            {
+                Common.DeleteAllImage(id.ToString());
+            }
+            else if(fileType == "isVideo")
+            {
+                Common.DeleteAllVideo(id.ToString());
+            }
+            MySqlResultState rs = new MySqlResultState();
+            return JsonConvert.SerializeObject(rs);
+        }
+
+        [HttpPost]
+        public string UploadFile(object obj)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+
+            var length = Request.ContentLength;
+            var bytes = new byte[length];
+            Request.InputStream.Read(bytes, 0, length);
+
+
+            var fileName = Request.Headers["fileName"];
+            var productId = Request.Headers["productId"];
+            var originalFileName = Request.Headers["originalFileName"];
+            var exist = Request.Headers["exist"];
+            var finish = Request.Headers["finish"];
+
+            string path = Common.GetProductMediaFolderPath(productId);
+            if (path == null)
+            {
+                path = Common.CreateProductMediaFolderPath(productId);
+            }
+
+            if (exist == "true")
+            {
+                MySqlResultState rs = new MySqlResultState();
+                try
+                {
+                    // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media, ta lấy chỉ tên
+                    originalFileName = Path.GetFileName(originalFileName);
+                    if(originalFileName != fileName) // Xóa file khác giống tên mới
+                    {
+                        // Xóa file cũ cùng tên không kể đuôi nếu có
+                        Common.DeleteImageVideoWithoutExtension(path + fileName);
+                        System.IO.File.Move(path + originalFileName, path + fileName);
+                    }
+                }
+                catch(Exception ex )
+                {
+                    MyLogger.GetInstance().Error(ex.ToString());
+
+                    rs.State = EMySqlResultState.ERROR;
+                    rs.Message = ex.ToString();
+                }
+                if (finish == "true")// Xóa bỏ ảnh/video không cần lưu nữa. Những file có tên lớn hơn tên cuối cùng được lưu
+                {
+                    Common.DeleteImageVideoNameGreat(path + fileName);
+                }
+                return JsonConvert.SerializeObject(rs);
+            }
+
+            // Xóa file cũ cùng tên không kể đuôi nếu có
+            Common.DeleteImageVideoWithoutExtension(path + fileName);
+
+            // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
+            var saveToFileLoc = string.Format("{0}//{1}",
+                                          path,
+                                           fileName);
+
+            // save the file.
+            var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
+            fileStream.Write(bytes, 0, length);
+            fileStream.Close();
+
+            if(finish == "true")// Xóa bỏ ảnh/video không cần lưu nữa. Những file có tên lớn hơn tên cuối cùng được lưu
+            {
+                Common.DeleteImageVideoNameGreat(path + fileName);
+            }
+
+            return JsonConvert.SerializeObject(new MySqlResultState());
+        }
+
+        /// <summary>
+        /// Lấy thông tin sản phẩm từ id sản phẩm
+        /// </summary>
+        /// <param name="id">id sản phẩm</param>
+        /// <returns></returns>
+        [HttpPost]
+        public string GetProduct(int id)
+        {
+            Product pro = sqler.GetProductFromId(id);
+            List<string> lsImage = Common.GetImageSrc(id.ToString());
+            List<string> lsVideo = Common.GetVideoSrc(id.ToString());
+            List<List<string>> ls = new List<List<string>>();
+            ls.Add(lsImage);
+            ls.Add(lsVideo);
+            pro.anything = JsonConvert.SerializeObject(ls);
+            return JsonConvert.SerializeObject(pro);
+        }
+
+        /// <summary>
+        /// Lấy thông tin chung của combo từ sản phẩm đầu tiên thuộc combo
+        /// </summary>
+        /// <param name="id">id combo</param>
+        /// <returns></returns>
+        [HttpPost]
+        public string GetProductCommonInfoWithComboFromFirst(int id)
+        {
+            Product pro = sqler.GetProductFromFirstComboId(id);
+
+            return JsonConvert.SerializeObject(pro);
+        }
+
+        [HttpPost]
+        public string GetProductIdCodeBarcodeNameBooCoverkPrice()
+        {
+            List<ProductIdCodeBarcodeNameBookCoverPrice> ls = sqler.GetProductIdCodeBarcodeNameBookCoverPrice();
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        [HttpPost]
+        public string AddImport(string listObject)
+        {
+            string rs = string.Empty;
+            List<Import> ls = null;
+            try
+            {
+                ls = JsonConvert.DeserializeObject<List<Import>>(listObject);
+                rs = JsonConvert.SerializeObject(sqler.AddListImport(ls));
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error(ex.ToString());
+                MySqlResultState rss = new MySqlResultState();
+                rss.State = EMySqlResultState.ERROR;
+                rss.Message = ex.ToString();
+                rs = JsonConvert.SerializeObject(rss);
+            }
+
+            return rs;
+        }
+    }
+}

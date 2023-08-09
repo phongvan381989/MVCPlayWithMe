@@ -1,0 +1,12 @@
+﻿<div>
+    <label for="category-id">Category:</label>
+    <input list="list-category" class="config-max-width margin-vertical" id="category-id">
+
+    <datalist id="list-category">
+        @foreach (var pub in ViewData["lsCategory"] as IList<MVCPlayWithMe.Models.Category>)
+        {
+            <option data-id=@pub.id>@pub.name</option>
+        }
+    </datalist>
+</div>
+

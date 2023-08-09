@@ -47,6 +47,6 @@ orientationChange();
 
 let portrait = window.matchMedia("(orientation: portrait)");
 portrait.addEventListener("change", function (e) {
-    alert("Hello World1!");
+    //alert("Hello World1!");
     orientationChange();
 });

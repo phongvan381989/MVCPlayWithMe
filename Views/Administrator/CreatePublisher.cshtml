@@ -12,23 +12,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
-    <style>
-        table {
-            font-family: arial, sans-serif;
-            border-collapse: collapse;
-            width: 100%;
-        }
-
-        td, th {
-            border: 1px solid #dddddd;
-            text-align: left;
-            padding: 8px;
-        }
-
-        tr:nth-child(even) {
-            background-color: #dddddd;
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
 </head>
 <body>
 
@@ -66,7 +50,7 @@
                         GetJsonResponse(this.responseText);
                     }
                 }
-                let query = "/Administrator/AddNewPublisher?publisherName=";
+                let query = "/Administrator/AddNewPublisher?name=";
                 query = query + publisherName;
                 query = query + "&detail=";
                 let detail = document.getElementById("detail").value;

@@ -1,0 +1,13 @@
+﻿<div>
+    <label for="parent-id">Sản phẩm cha:</label>
+    <input list="list-parent" class="config-max-width margin-vertical" id="parent-id" oninput="ParentChange()">
+
+    <datalist id="list-parent">
+        @foreach (var pub in ViewData["lsProductName"] as IList<MVCPlayWithMe.Models.ProductIdName>)
+        {
+            <option data-id=@pub.id>@pub.name</option>
+        }
+    </datalist>
+    <br>
+    <br>
+</div>
