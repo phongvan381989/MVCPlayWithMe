@@ -721,22 +721,115 @@ namespace MVCPlayWithMe.Models
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
             Boolean isOK = true;
-            paras = new MySqlParameter[6];
+            paras = new MySqlParameter[7];
             foreach (var obj in ls)
             {
                 paras[0] = new MySqlParameter("@inProductId", obj.productId);
                 paras[1] = new MySqlParameter("@inPrice", obj.priceImport);
                 paras[2] = new MySqlParameter("@inQuantity", obj.quantity);
                 paras[3] = new MySqlParameter("@inDate", DateTime.Now.ToString("yyy-MM-dd"));
+                paras[4] = new MySqlParameter("@inBookCoverPrice", obj.bookCoverPrice);
                 MyMySql.AddOutParameters(paras);
                 result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbImport_Insert", paras);
-                if (result.State != EMySqlResultState.OK)
+                if (result.State != EMySqlResultState.OK) // Có lỗi vẫn thực hiện tiếp check lại thủ công sau
                     isOK = false;
             }
             if (!isOK)
                 result.State = EMySqlResultState.ERROR;
             else
                 result.State = EMySqlResultState.OK;
+            return result;
+        }
+
+        public List<Import> GetImportList(string fromDate, string toDate)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            StringBuilder sb = new StringBuilder();
+            List<Import> ls = new List<Import>();
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbImport_Select", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inFromDate", fromDate);
+                cmd.Parameters.AddWithValue("@inToDate", toDate);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    Import imp = new Import();
+                    imp.id = MyMySql.GetInt32(rdr, "Id");
+                    imp.productId = MyMySql.GetInt32(rdr, "ProductId");
+                    imp.productName = MyMySql.GetString(rdr, "Name");
+                    imp.priceImport = MyMySql.GetInt32(rdr, "PriceImport");
+                    imp.quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    imp.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                    imp.dateImport = MyMySql.GetString(rdr, "DateImport");
+
+                    ls.Add(imp);
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return ls;
+        }
+
+        public MySqlResultState UpdateListImport(List<Import> ls)
+        {
+            MySqlResultState result = new MySqlResultState();
+            EMySqlResultState rsTemp;
+            MySqlParameter[] paras = null;
+            int lengthPara = 5;
+            paras = new MySqlParameter[lengthPara];
+            paras[0] = new MySqlParameter("@inId", 0);
+            paras[1] = new MySqlParameter("@inPrice", 0);
+            paras[2] = new MySqlParameter("@inQuantity", 0);
+            MyMySql.AddOutParameters(paras);
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbImport_Update", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+
+                foreach (var obj in ls)
+                {
+                    paras[0].Value = obj.id;
+                    paras[1].Value = obj.priceImport;
+                    paras[2].Value = obj.quantity;
+                    cmd.ExecuteNonQuery();
+                    rsTemp = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                    if (rsTemp != EMySqlResultState.OK) // Có lỗi vẫn thực hiện tiếp check lại thủ công sau
+                    {
+                        result.State = rsTemp;
+                        //result.Message = "Chả có gì đâu";
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+            }
+
+            conn.Close();
+
             return result;
         }
     }

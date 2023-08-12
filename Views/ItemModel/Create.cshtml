@@ -1,0 +1,24 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body onload="GetBasicInfoProduct()">
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <div class="config-max-width padding-container">
+            
+            <p id="result-insert"></p>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+</body>
+</html>
+

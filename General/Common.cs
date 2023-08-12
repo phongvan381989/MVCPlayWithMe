@@ -14,6 +14,7 @@ namespace MVCPlayWithMe.General
     {
         public static readonly List<string> ImageExtensions = new List<string> { ".apng", ".avif", ".gif", ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".svg", ".webp" };
         public static readonly List<string> VideoExtensions = new List<string> { ".mp4", ".webm", ".ogg" };
+        public static readonly string dateFormat = "yyyy-MM-dd";
         /// <summary>
         /// Đường dẫn thư mục chứa file ảnh
         /// </summary>

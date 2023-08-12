@@ -1,0 +1,195 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <div class="config-max-width padding-container">
+            <div>
+                <label for="discount">Từ ngày:</label>
+                <div>
+                    <input type="date" class="margin-vertical" id="from-date">
+                </div>
+                <br />
+                <br />
+            </div>
+
+            <div>
+                <label for="discount">Tới ngày:</label>
+                <div>
+                    <input type="date" class="margin-vertical" id="to-date">
+                </div>
+                <br />
+                <br />
+            </div>
+
+            <div class="config-max-width">
+                <button type="button" onclick="GetListImport()" id="import-list">Lấy danh sách nhập</button>
+                <br />
+                <br />
+            </div>
+            <table id="myTable">
+                <tr>
+                    <th>Tên</th>
+                    <th>Giá nhập</th>
+                    <th>Số lượng</th>
+                    <th>Giá bìa</th>
+                    <th>Ngày</th>
+                    <th style="display:none"></th> @*id*@
+                </tr>
+            </table>
+
+            <div class="config-max-width">
+                <br />
+                <button type="button" onclick="Update()">Cập nhật</button>
+            </div>
+            <p id="result-insert"></p>
+        </div>
+    </div>
+    <script>
+        //int id
+        //int productId
+        //string productName
+        //int priceImport
+        //int quantity
+        //int bookCoverPrice
+        //string dateImport định dạng yyyy-mm-dd
+        let listBasicInfo;
+
+        // Danh sách đối tượng lưu về db
+        let listSaveInfo = [];
+
+        function GetListImport(){
+            if (DEBUG) {
+                console.log("GetListImport function");
+            }
+            // Xóa dữ liệu trước đó nếu có
+            DeleteRowsExcludeHead("myTable");
+
+            let fromDate = document.getElementById("from-date").value;
+            let toDate = document.getElementById("to-date").value;
+            const searchParams = new URLSearchParams();
+            searchParams.append("fromDate", fromDate);
+            searchParams.append("toDate", toDate);
+            let query = "/Product/GetListImport";
+
+            let OnloadFuntion = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    listBasicInfo = JSON.parse(this.responseText);
+                    if (DEBUG) {
+                        console.log(listBasicInfo);
+                    }
+                    if (listBasicInfo == null)
+                        return;
+
+                    let length = listBasicInfo.length;
+
+                    for (let i = 0; i < length; i++) {
+                        let objBasicInfo = listBasicInfo[i];
+
+                        // Find a <table> element with id="myTable":
+                        var table = document.getElementById("myTable");
+
+                        // Create an empty <tr> element
+                        var row = table.insertRow(i + 1);
+
+                        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
+                        var cell1 = row.insertCell(0);
+                        var cell2 = row.insertCell(1);
+                        var cell3 = row.insertCell(2);
+                        var cell4 = row.insertCell(3);
+                        var cell5 = row.insertCell(4);
+                        var cell6 = row.insertCell(5);
+
+                        // Tên
+                        cell1.innerHTML = objBasicInfo.productName;
+
+                        // Giá nhập
+                        var input2 = document.createElement("input");
+                        input2.type = "number";
+                        input2.value = objBasicInfo.priceImport;
+                        cell2.appendChild(input2);
+
+                        // Số lượng nhập
+                        var input3 = document.createElement("input");
+                        input3.type = "number";
+                        input3.value = objBasicInfo.quantity;
+                        cell3.appendChild(input3);
+
+                        // Giá bìa
+                        cell4.innerHTML = objBasicInfo.bookCoverPrice;
+
+                        // Ngày
+                        cell5.innerHTML = objBasicInfo.dateImport;
+
+                        // Id
+                        cell6.innerHTML = objBasicInfo.id;
+                        cell6.style.display = "none";
+                    }
+                }
+            }
+
+            RequestHttpPost(OnloadFuntion, searchParams, query);
+        }
+
+
+        // Constructor function for objects
+        function objImport(id, priceImport, quantity) {
+            this.id = id;
+            this.priceImport = priceImport;
+            this.quantity = quantity;
+        }
+
+        // Lưu db
+        function Update() {
+            listSaveInfo = [];
+            let rows = document.getElementById("myTable").rows;
+            let length = rows.length;
+            for (let i = 1; i < length; i++) {
+                let obj = new objImport(/*-1,*/
+                    Number(rows[i].cells[5].innerHTML),
+                    Number(rows[i].cells[1].childNodes[0].value),
+                        Number(rows[i].cells[2].childNodes[0].value)/*, ""*/);
+                listSaveInfo.push(obj);
+            }
+            if (DEBUG) {
+                console.log(listSaveInfo);
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("listObject", JSON.stringify(listSaveInfo));
+            let query = "/Product/UpdateImport";
+
+            let OnloadFuntion = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    CheckStatusResponseAndShowPrompt(this.responseText, true, "Cập nhật thành công", "Cập nhật thất bại");
+                }
+            }
+
+            RequestHttpPost(OnloadFuntion, searchParams, query);
+        }
+
+        function Delete() {
+            let text = "Bạn chắc chắn muốn XÓA dữ liệu đang hiển thị?";
+            if (confirm(text) == false)
+                return;
+
+            let rows = document.getElementById("myTable").rows;
+            let length = rows.length;
+            for (let i = length - 1; i > 0 ; i--) {
+                document.getElementById("myTable").deleteRow(i);
+            }
+        }
+    </script>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+</body>
+</html>
+

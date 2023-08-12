@@ -364,3 +364,21 @@ function CheckFocus(id) {
 
     return isFocused;
 }
+
+// Xóa tất cả dữ liệu của bảng, để lại dòng đầu tiên
+function DeleteRowsExcludeHead(tableId) {
+    let rows = document.getElementById(tableId).rows;
+    if (rows == null)
+        return;
+    let length = rows.length;
+    for (let i = length - 1; i > 0; i--) {
+        document.getElementById(tableId).deleteRow(i);
+    }
+}
+
+// reload and scroll to top
+async function ReloadAndScrollToTop() {
+    window.scrollTo(0, 0);
+    await Sleep(1000);
+    window.location.reload();
+}

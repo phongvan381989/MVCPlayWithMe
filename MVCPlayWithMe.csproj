@@ -235,6 +235,7 @@
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\HelloWorldController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
+    <Compile Include="Controllers\ItemModelController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\PublisherController.cs" />
     <Compile Include="General\Common.cs" />
@@ -361,6 +362,11 @@
     <Content Include="Views\Shared\ProductPublishingTimeSelect.cshtml" />
     <Content Include="Views\Shared\ProductInputCommon.cshtml" />
     <Content Include="Views\Product\Import.cshtml" />
+    <Content Include="Views\Product\ChangeImport.cshtml" />
+    <Content Include="Views\ItemModel\Create.cshtml" />
+    <Content Include="Views\Shared\ItemModel.cshtml" />
+    <Content Include="Views\Shared\VideoSelect.cshtml" />
+    <Content Include="Views\Shared\ImageSelect.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

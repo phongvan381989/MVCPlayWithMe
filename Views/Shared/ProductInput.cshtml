@@ -19,31 +19,8 @@
     <textarea id="detail" rows="10" style="width:100%" value=""></textarea>
     <br>
     <br>
-    <div>
-        <input class="margin-vertical"
-               type="file"
-               id="videofileElem"
-               accept="video/*"
-               style="display:none" />
-        <div id="videofileList">
-            <p>Chưa video nào được chọn!</p>
-        </div>
-        <a href="#" id="videofileSelect">Chọn video</a>
-        @*<a href="#" id="videofileUnSelect">Bỏ chọn video</a>*@
-    </div>
-    <br />
-    <div>
-        <input class="margin-vertical"
-               type="file"
-               id="imagefileElem"
-               multiple
-               accept="image/*"
-               style="display:none" />
 
-        <div id="imagefileList">
-            <p>Chưa ảnh nào được chọn!</p>
-        </div>
-        <a href="#" id="imagefileSelect">Chọn ảnh</a>
-        @*<a href="#" id="imagefileUnSelect">Bỏ chọn ảnh</a>*@
-    </div>
+    @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
 </form>

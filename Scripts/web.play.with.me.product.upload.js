@@ -273,8 +273,7 @@ function UpdateProduct() {
                 const obj = JSON.parse(this.responseText);
                 SendFiles(productID);
                 if (CheckStatusResponseAndShowPrompt(this.responseText,true, "Cập nhật thành công", "Cập nhật thất bại")) {
-                    window.location.reload();
-                    window.scrollTo(0, 0);
+                    ReloadAndScrollToTop();
                 }
             }
         }
@@ -317,8 +316,7 @@ function UpdateCommonInfoWithCombo() {
         if (this.readyState == 4 && this.status == 200) {
             GetJsonResponse(this.responseText);
             if (CheckStatusResponseAndShowPrompt(this.responseText, true, "Cập nhật thành công", "Cập nhật thất bại")) {
-                window.location.reload();
-                window.scrollTo(0, 0);
+                ReloadAndScrollToTop();
             }
         }
     }

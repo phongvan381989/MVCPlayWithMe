@@ -90,6 +90,16 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        public ActionResult ChangeImport()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
         private void AddUpdateParasCommon(
             ref int comboId, string comboName,
             ref int categoryId, string categoryName,
@@ -561,12 +571,19 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string AddImport(string listObject)
         {
-            string rs = string.Empty;
+            string strResult = string.Empty;
             List<Import> ls = null;
             try
             {
                 ls = JsonConvert.DeserializeObject<List<Import>>(listObject);
-                rs = JsonConvert.SerializeObject(sqler.AddListImport(ls));
+                if(ls == null || ls.Count == 0)
+                {
+                    MySqlResultState rss = new MySqlResultState();
+                    rss.State = EMySqlResultState.ERROR;
+                    rss.Message = "Danh sách cần nhập không đúng.";
+                    strResult = JsonConvert.SerializeObject(rss);
+                }
+                strResult = JsonConvert.SerializeObject(sqler.AddListImport(ls));
             }
             catch (Exception ex)
             {
@@ -574,10 +591,50 @@ namespace MVCPlayWithMe.Controllers
                 MySqlResultState rss = new MySqlResultState();
                 rss.State = EMySqlResultState.ERROR;
                 rss.Message = ex.ToString();
-                rs = JsonConvert.SerializeObject(rss);
+                strResult = JsonConvert.SerializeObject(rss);
             }
 
-            return rs;
+            return strResult;
+        }
+
+        [HttpPost]
+        public string GetListImport(string fromDate, string toDate)
+        {
+            if (string.IsNullOrEmpty(fromDate))
+                fromDate = "2018-08-05";
+            if (string.IsNullOrEmpty(toDate))
+                toDate = DateTime.Now.ToString(Common.dateFormat);
+            List<Import> ls = sqler.GetImportList(fromDate, toDate);
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        [HttpPost]
+        public string UpdateImport(string listObject)
+        {
+            string strResult = string.Empty;
+            List<Import> ls = null;
+            try
+            {
+                ls = JsonConvert.DeserializeObject<List<Import>>(listObject);
+                if (ls == null || ls.Count == 0)
+                {
+                    MySqlResultState rss = new MySqlResultState();
+                    rss.State = EMySqlResultState.ERROR;
+                    rss.Message = "Danh sách cần cập nhât không đúng.";
+                    strResult = JsonConvert.SerializeObject(rss);
+                }
+                strResult = JsonConvert.SerializeObject(sqler.UpdateListImport(ls));
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error(ex.ToString());
+                MySqlResultState rss = new MySqlResultState();
+                rss.State = EMySqlResultState.ERROR;
+                rss.Message = ex.ToString();
+                strResult = JsonConvert.SerializeObject(rss);
+            }
+
+            return strResult;
         }
     }
 }
