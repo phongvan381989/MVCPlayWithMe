@@ -47,7 +47,7 @@
     width: 50px;
 }
 
-    #biggestContainer_top div[class="search_wrapper"] {
+#biggestContainer_top div[class="search_wrapper"] {
             /*height: 20px;*/
             width: 100%;
             display: flex;
@@ -59,7 +59,7 @@
             padding-left:10px;
         }
 
-    #biggestContainer_top img[class="playwithme-logo"] {
+#biggestContainer_top img[class="playwithme-logo"] {
         width: 100%;
         height: 100%;
         object-fit: contain;

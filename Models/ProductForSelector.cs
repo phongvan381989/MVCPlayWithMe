@@ -62,7 +62,7 @@ namespace MVCPlayWithMe.Models
             )
         {
             name = iName;
-            imageIcon = Common.MediaFolderPath + iImageIcon;
+            imageIcon = Common.ProductMediaFolderPath + iImageIcon;
             quantitySold = iQuantitySold;
             priceOnPackage = iPriceOnPackage;
             strPriceOnPackage = Common.ConvertIntToVNDFormat(priceOnPackage);

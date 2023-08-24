@@ -15,10 +15,12 @@ namespace MVCPlayWithMe.General
         public static readonly List<string> ImageExtensions = new List<string> { ".apng", ".avif", ".gif", ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".svg", ".webp" };
         public static readonly List<string> VideoExtensions = new List<string> { ".mp4", ".webm", ".ogg" };
         public static readonly string dateFormat = "yyyy-MM-dd";
+        public static readonly int quota = 5;
         /// <summary>
         /// Đường dẫn thư mục chứa file ảnh
         /// </summary>
-        public static string MediaFolderPath;// = ConfigurationManager.AppSettings["MediaFolderPath"];
+        public static string ProductMediaFolderPath;
+        public static string ItemMediaFolderPath;
         public static string ConvertIntToVNDFormat(int money)
         {
             // Thêm ','
@@ -45,21 +47,13 @@ namespace MVCPlayWithMe.General
             return sb.ToString();
         }
 
-        //static string MediaFolder
-
-        //public static DateTime ConvertFromMysqlDate(string date)
-        //{
-
-        //}
-
-
         /// <summary>
         /// Lấy được thư mục chứa media của sản phẩm hoặc trả về null nếu không có.
         /// </summary>
         /// <returns></returns>
         public static string GetProductMediaFolderPath(string productId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(MediaFolderPath) + productId + @"/";
+            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
             MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
@@ -71,7 +65,7 @@ namespace MVCPlayWithMe.General
 
         public static string CreateProductMediaFolderPath(string productId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath("/Media/Product/") + productId;
+            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
             Directory.CreateDirectory(path);
             return path;
         }
@@ -100,7 +94,7 @@ namespace MVCPlayWithMe.General
             List<string> src = new List<string>();
             string[] dirs = GetAllFileOfProduct(productId);
 
-            string relPath = MediaFolderPath + productId + @"/";
+            string relPath = ProductMediaFolderPath + productId + @"/";
             foreach (var dir in dirs)
             {
                 if (ImageExtensions.Contains(Path.GetExtension(dir).ToLower()))
@@ -121,7 +115,7 @@ namespace MVCPlayWithMe.General
             List<string> src = new List<string>();
             string[] dirs = GetAllFileOfProduct(productId);
 
-            string relPath = MediaFolderPath + productId + @"/";
+            string relPath = ProductMediaFolderPath + productId + @"/";
             foreach (var dir in dirs)
             {
                 if (VideoExtensions.Contains(Path.GetExtension(dir).ToLower()))
@@ -133,7 +127,7 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Xóa file ảnh/video có tên không kể đuôi giống tên file trong tham số
+        /// Xóa file ảnh hoặc video có tên không kể đuôi giống tên file trong tham số
         /// </summary>
         /// <param name="path">tên gồm đường dẫn</param>
         public static void DeleteImageVideoWithoutExtension(string path)
@@ -193,9 +187,9 @@ namespace MVCPlayWithMe.General
                     string[] files = Directory.GetFiles(Path.GetDirectoryName(path), intName.ToString() + ".*");
                     if (files.Length == 0)
                     {
-                        if(countBreak == 0)
+                        if(countBreak == 20)
                         {
-                            countBreak = 1;
+                            countBreak ++;
                             continue;
                         }
                         break;
@@ -206,9 +200,9 @@ namespace MVCPlayWithMe.General
             }
         }
 
-        public static void DeleteAllImage(string productId)
+        public static void DeleteAllImage(string path, string productId)
         {
-            string[] files =  GetAllFileOfProduct(productId);
+            string[] files =  Directory.GetFiles(path);
 
             foreach (var f in files)
             {
@@ -220,13 +214,9 @@ namespace MVCPlayWithMe.General
             return;
         }
 
-        public static void DeleteAllVideo(string productId)
+        public static void DeleteAllVideo(string path, string productId)
         {
-            string path = GetProductMediaFolderPath(productId);
-            if (path == null)
-                return;
-
-            string[] files = GetAllFileOfProduct(productId);
+            string[] files = Directory.GetFiles(path);
 
             foreach (var f in files)
             {
@@ -253,5 +243,53 @@ namespace MVCPlayWithMe.General
 
             return rs;
         }
+
+        #region Xử chung Item/model
+        /// <summary>
+        /// Lấy được thư mục chứa media của item hoặc trả về null nếu không có.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetItemMediaFolderPath(int itemId)
+        {
+            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+            MyLogger.GetInstance().Info(path);
+            if (!Directory.Exists(path))
+            {
+                //Directory.CreateDirectory(path);
+                path = null;
+            }
+            return path;
+        }
+
+        public static string CreateItemMediaFolderPath(int itemId)
+        {
+            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+            Directory.CreateDirectory(path);
+            return path;
+        }
+
+        /// <summary>
+        /// Lấy được thư mục chứa media của item hoặc trả về null nếu không có.
+        /// </summary>
+        /// <returns></returns>
+        public static string GetModelMediaFolderPath(int itemId)
+        {
+            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/Model/";
+            MyLogger.GetInstance().Info(path);
+            if (!Directory.Exists(path))
+            {
+                //Directory.CreateDirectory(path);
+                path = null;
+            }
+            return path;
+        }
+
+        public static string CreateModelMediaFolderPath(int itemId)
+        {
+            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/Model/";
+            Directory.CreateDirectory(path);
+            return path;
+        }
+        #endregion
     }
 }

@@ -258,6 +258,9 @@
     <Compile Include="Models\ComboMySql.cs" />
     <Compile Include="Models\Customer.cs" />
     <Compile Include="Models\Import.cs" />
+    <Compile Include="Models\Item.cs" />
+    <Compile Include="Models\ItemModelMySql.cs" />
+    <Compile Include="Models\Model.cs" />
     <Compile Include="Models\ProductCommonInfoWithCombo.cs" />
     <Compile Include="Models\ProductIdName.cs" />
     <Compile Include="Models\Product.cs" />
@@ -274,6 +277,7 @@
     <Content Include="Content\bootstrap.css" />
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\web.play.with.me.common.css" />
+    <Content Include="Content\web.play.with.me.modal.common.css" />
     <Content Include="Content\web.play.with.me.table.show.data.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -295,6 +299,8 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\web.play.with.me.category.common.js" />
     <Content Include="Scripts\web.play.with.me.combo.common.js" />
+    <Content Include="Scripts\web.play.with.me.image.video.common.js" />
+    <Content Include="Scripts\web.play.with.me.item.model.js" />
     <Content Include="Scripts\web.play.with.me.publisher.common.js" />
     <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />
@@ -367,6 +373,10 @@
     <Content Include="Views\Shared\ItemModel.cshtml" />
     <Content Include="Views\Shared\VideoSelect.cshtml" />
     <Content Include="Views\Shared\ImageSelect.cshtml" />
+    <Content Include="Views\Shared\RowsDistance.cshtml" />
+    <Content Include="Views\Shared\ItemModel\ItemName.cshtml" />
+    <Content Include="Views\Shared\ItemModel\ItemModelInputCommon.cshtml" />
+    <Content Include="Views\Shared\ItemModel\Mapping.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

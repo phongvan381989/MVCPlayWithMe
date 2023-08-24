@@ -1,0 +1,31 @@
+﻿<div>
+    @Html.Partial("~/Views/Shared/ItemModel/ItemName.cshtml")
+
+    @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
+
+    <label for="item-status-id">Trạng thái:</label><br>
+    <select class="config-max-width margin-vertical" id="item-status-id">
+        <option value="0" selected="selected">Đang kinh doanh</option>
+        <option value="1">Ngừng kinh doanh</option>
+        <option value="2">Hết hàng</option>
+    </select>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
+    <label for="item-quota-id">Quota:</label><br>
+    <input class="config-max-width margin-vertical" id="item-quota-id" type="number" value="5">
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
+    <label for="detail-id">Mô tả:</label><br>
+    <textarea id="detail-id" rows="10" style="width:100%" value=""></textarea>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
+    <div id="model-list">
+        @*<ul id="model-list" style="list-style-type:none;"></ul>*@
+    </div>
+    <br />
+    <button type="button" onclick="AddModelToScreen()" style="float: right;">Thêm mới phân loại</button>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
+</div>

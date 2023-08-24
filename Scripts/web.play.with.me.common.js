@@ -1,4 +1,7 @@
 ﻿var DEBUG = true;
+var thumbnailWidth = 60;
+var thumbnailHeight = 60;
+var itemModelQuota = 5;
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
 }
@@ -307,17 +310,43 @@ function GetDataIdFromParentlist(str) {
     return GetDataFromDatalist("list-parent", "data-id", str);
 }
 
-function RequestHttpPost(onloadFunc, searchParams, query) {
+function RequestHttpPost(onloadFunc, searchParams, url) {
     const xhttp = new XMLHttpRequest();
     xhttp.onload = onloadFunc;
 
     if (DEBUG) {
-        console.log(query);
+        console.log(url);
         console.log(searchParams.toString());
     }
-    xhttp.open("POST", query);
+    xhttp.open("POST", url);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhttp.send(searchParams.toString());
+}
+
+function RequestHttpPostUpFilePromise(xhttp, url, file) {
+    return new Promise(function (resolve, reject) {
+        //const xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
+                resolve(this.responseText);
+            }
+        };
+        xhttp.onerror = function () {
+            reject(this.statusText)
+        };
+        if (DEBUG) {
+            console.log(url);
+            //console.log(searchParams.toString());
+            var headers = xhttp.getAllResponseHeaders();
+            console.log(headers);
+
+        }
+        //xhttp.open("POST", url);
+        xhttp.send(file);
+    });
 }
 
 function RequestHttpGet(onloadFunc, searchParams, query) {
@@ -331,6 +360,31 @@ function RequestHttpGet(onloadFunc, searchParams, query) {
     xhttp.open("GET", lastQuery);
     xhttp.send();
 }
+
+function RequestHttpGetPromise(searchParams, url) {
+    return new Promise(function (resolve, reject) {
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
+                resolve(this);
+            }
+        };
+        xhttp.onerror = function () {
+            reject(this.statusText);
+        }
+
+        let lastQuery = url + "?" + searchParams.toString();
+        if (DEBUG) {
+            console.log(lastQuery);
+        }
+        xhttp.open("GET", lastQuery);
+        xhttp.send();
+    });
+}
+
 
 // Nếu input type number trống, ta lấy giá trị mặc định -1
 function GetValueOfNumberInputById(id, defaultValue) {
@@ -381,4 +435,16 @@ async function ReloadAndScrollToTop() {
     window.scrollTo(0, 0);
     await Sleep(1000);
     window.location.reload();
+}
+
+// Thêm nút xóa bên cạnh image/video trong <li>
+function AddDeleteButton(li) {
+    // Thêm nút xóa ảnh bên cạnh
+    var btn = document.createElement("BUTTON");
+    var btnContent = document.createTextNode("Xóa");
+    btn.onclick = function () {
+        this.parentElement.remove();
+    }
+    btn.appendChild(btnContent);
+    li.appendChild(btn);
 }

@@ -1,0 +1,56 @@
+﻿<div>
+    <!-- Trigger/Open The Modal -->
+    <button id="myBtn">Open Modal</button>
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <div>
+                <span class="close">&times;</span>
+            </div>
+            <div>
+                <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
+                <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+                <br>
+                <br>
+
+                @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
+
+                @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
+
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+                <button type="button" onclick="Search()">Tìm kiếm</button>
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+            </div>
+
+            <p> Bảng kết quả tìm kiếm:</p>
+            <div>
+                <table id="myTable">
+                    <tr>
+                        <th style="display:none"></th>
+                        <th style="width:30px">Chọn</th>
+                        <th style="width:200px">Ảnh</th>
+                        <th>Tên</th>
+                    </tr>
+                </table>
+            </div>
+
+            @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+            <p> Bảng liên kết sản phẩm:</p>
+            <div>
+                <table id="myTableMapping">
+                    <tr>
+                        <th style="display:none"></th>
+                        <th style="width:200px">Ảnh</th>
+                        <th>Tên</th>
+                        <th style="width:30px"></th>
+                    </tr>
+                </table>
+            </div>
+            @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+            <div>
+                <button type="button" onclick="SaveMapping()">Lưu liên kết</button>
+            </div>
+        </div>
+    </div>
+</div>

@@ -3,6 +3,8 @@ using MVCPlayWithMe.Models;
 using System.Web.Mvc;
 using System.Collections.Generic;
 using System.IO;
+using System;
+using Newtonsoft.Json;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -121,6 +123,98 @@ namespace MVCPlayWithMe.Controllers
             ProductMySql sqler = new ProductMySql();
             List<int> lsPublishingTime = sqler.GetListDifferenceIntValue(7);
             ViewData["lsPublishingTime"] = lsPublishingTime;
+        }
+
+        public void ViewDataGetListItemName()
+        {
+            ItemModelMySql sqler = new ItemModelMySql();
+            List<BasicIdName> ls = sqler.GetListItemName();
+            ViewData["lsItemName"] = ls;
+        }
+
+        // Nhận và lưu image/video khi upload cho sản phẩm
+        // trong kho hoặc item (ProductControler và ItemModelControler)
+        public string UploadImageVideo(string path)
+        {
+            var length = Request.ContentLength;
+            var bytes = new byte[length];
+            Request.InputStream.Read(bytes, 0, length);
+
+
+            var fileName = Request.Headers["fileName"];
+            var id = Request.Headers["productId"];
+            var originalFileName = Request.Headers["originalFileName"];
+            var exist = Request.Headers["exist"];
+            var finish = Request.Headers["finish"];
+
+            if (exist == "true")
+            {
+                MySqlResultState rs = new MySqlResultState();
+                try
+                {
+                    // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media, ta lấy chỉ tên
+                    originalFileName = Path.GetFileName(originalFileName);
+                    if (originalFileName != fileName) // Xóa file khác giống tên mới
+                    {
+                        // Xóa file cũ cùng tên không kể đuôi nếu có
+                        Common.DeleteImageVideoWithoutExtension(path + fileName);
+                        System.IO.File.Move(path + originalFileName, path + fileName);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Error(ex.ToString());
+
+                    rs.State = EMySqlResultState.ERROR;
+                    rs.Message = ex.ToString();
+                }
+
+                // Xóa bỏ ảnh/video không cần lưu nữa với những file có tên lớn hơn tên cuối cùng được lưu
+                if (finish == "true")
+                {
+                    Common.DeleteImageVideoNameGreat(path + fileName);
+                }
+                return JsonConvert.SerializeObject(rs);
+            }
+
+            // Xóa file cũ cùng tên không kể đuôi nếu có
+            Common.DeleteImageVideoWithoutExtension(path + fileName);
+
+            // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
+            var saveToFileLoc = string.Format("{0}{1}",
+                                          path,
+                                           fileName);
+
+            // save the file.
+            var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
+            fileStream.Write(bytes, 0, length);
+            fileStream.Close();
+
+            if (finish == "true")// Xóa bỏ ảnh/video không cần lưu nữa. Những file có tên lớn hơn tên cuối cùng được lưu
+            {
+                Common.DeleteImageVideoNameGreat(path + fileName);
+            }
+
+            return JsonConvert.SerializeObject(new MySqlResultState());
+        }
+
+        // Xóa file trong thư mục tương ứng với id
+        public string DeleteAllFileWithTypeBasic(string path, int id, string fileType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+            if (fileType == "isImage")
+            {
+                Common.DeleteAllImage(path, id.ToString());
+            }
+            else if (fileType == "isVideo")
+            {
+                Common.DeleteAllVideo(path, id.ToString());
+            }
+            MySqlResultState rs = new MySqlResultState();
+            return JsonConvert.SerializeObject(rs);
         }
     }
 }

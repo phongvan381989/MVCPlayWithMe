@@ -19,7 +19,8 @@ namespace MVCPlayWithMe
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
-            Common.MediaFolderPath = ConfigurationManager.AppSettings["MediaFolderPath"];
+            Common.ProductMediaFolderPath = ConfigurationManager.AppSettings["ProductMediaFolderPath"];
+            Common.ItemMediaFolderPath = ConfigurationManager.AppSettings["ItemMediaFolderPath"];
             MyMySql.Initialization();
         }
     }

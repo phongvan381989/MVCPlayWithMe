@@ -25,6 +25,8 @@ namespace MVCPlayWithMe.Models
         public Product() :base()
         {
             id = -1;
+            imageSrc = new List<string>();
+            videoSrc = new List<string>();
         }
 
         public Product(
@@ -79,6 +81,8 @@ namespace MVCPlayWithMe.Models
             name = nameIn;
             parentId = parentIdIn;
             detail = detailIn;
+            imageSrc = new List<string>();
+            videoSrc = new List<string>();
         }
 
         public void SetSrcImageVideo()

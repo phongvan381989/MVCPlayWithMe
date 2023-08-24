@@ -255,6 +255,7 @@
                 // Giá bìa
                 cell4.innerHTML = objBasicInfo.bookCoverPrice;
 
+                // Nút xóa
                 var btn = document.createElement("button");
                 btn.onclick = function () {
                     this.parentElement.parentElement.remove();
@@ -262,6 +263,7 @@
                 btn.innerHTML = "Xóa";
                 cell5.appendChild(btn)
 
+                // Id
                 cell6.innerHTML = objBasicInfo.id;
                 cell6.style.display = "none";
 

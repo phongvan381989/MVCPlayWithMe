@@ -13,46 +13,43 @@ namespace MVCPlayWithMe.Models
     {
         /// <summary>
         /// TỪ dữ liệu select db, ta trả về đối tượng Product
+        /// Dùng trong trường hợp câu select chỉ trả về 1 row
         /// </summary>
+        /// <param name="rdr">Trả về ngay từ câu select</param>
         /// <returns></returns>
-        private Product ConvertFromDataMySql(MySqlDataReader rdr)
+        private Product ConvertOneRowFromDataMySql(MySqlDataReader rdr)
         {
-            if (rdr == null || !rdr.HasRows)
-                return null;
-
             Product product = new Product();
-            while (rdr.Read())
-            {
-                product.id = MyMySql.GetInt32(rdr, "Id");
-                product.code = MyMySql.GetString(rdr, "Code");
-                product.barcode = MyMySql.GetString(rdr, "Barcode");
-                product.name = MyMySql.GetString(rdr, "Name");
-                product.comboId = MyMySql.GetInt32(rdr, "ComboId");
-                product.comboName = MyMySql.GetString(rdr, "ComboName");
-                product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
-                product.categoryName = MyMySql.GetString(rdr, "CategoryName");
-                product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                product.author = MyMySql.GetString(rdr, "Author");
-                product.translator = MyMySql.GetString(rdr, "Translator");
-                product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-                product.publisherName = MyMySql.GetString(rdr, "PublisherName");
-                product.publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
-                product.publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
-                product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
-                product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
-                product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
-                product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
-                product.positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
-                product.hardCover = MyMySql.GetInt32(rdr, "HardCover");
-                product.minAge = MyMySql.GetInt32(rdr, "MinAge");
-                product.maxAge = MyMySql.GetInt32(rdr, "MaxAge");
-                product.parentId = MyMySql.GetInt32(rdr, "ParentId");
-                product.parentName = MyMySql.GetString(rdr, "ParentName");
-                product.republish = MyMySql.GetInt32(rdr, "Republish");
-                product.detail = MyMySql.GetString(rdr, "Detail");
-                product.status = MyMySql.GetInt32(rdr, "Status");
-                break;
-            }
+            product.id = MyMySql.GetInt32(rdr, "Id");
+            product.code = MyMySql.GetString(rdr, "Code");
+            product.barcode = MyMySql.GetString(rdr, "Barcode");
+            product.name = MyMySql.GetString(rdr, "Name");
+            product.comboId = MyMySql.GetInt32(rdr, "ComboId");
+            product.comboName = MyMySql.GetString(rdr, "ComboName");
+            product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
+            product.categoryName = MyMySql.GetString(rdr, "CategoryName");
+            product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+            product.author = MyMySql.GetString(rdr, "Author");
+            product.translator = MyMySql.GetString(rdr, "Translator");
+            product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+            product.publisherName = MyMySql.GetString(rdr, "PublisherName");
+            product.publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
+            product.publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
+            product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
+            product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
+            product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
+            product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
+            product.positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
+            product.hardCover = MyMySql.GetInt32(rdr, "HardCover");
+            product.minAge = MyMySql.GetInt32(rdr, "MinAge");
+            product.maxAge = MyMySql.GetInt32(rdr, "MaxAge");
+            product.parentId = MyMySql.GetInt32(rdr, "ParentId");
+            product.parentName = MyMySql.GetString(rdr, "ParentName");
+            product.republish = MyMySql.GetInt32(rdr, "Republish");
+            product.detail = MyMySql.GetString(rdr, "Detail");
+            product.status = MyMySql.GetInt32(rdr, "Status");
+            product.SetSrcImageVideo();
+
             return product;
         }
 
@@ -67,7 +64,6 @@ namespace MVCPlayWithMe.Models
                 return null;
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             Product product = null;
             try
             {
@@ -78,7 +74,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inBarcode", barcode);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
+                while (rdr.Read())
+                {
+                    product = ConvertOneRowFromDataMySql(rdr);
+                }
                 if (rdr != null)
                     rdr.Close();
             }
@@ -101,7 +100,6 @@ namespace MVCPlayWithMe.Models
         public Product GetProductFromProductName(string productName)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             Product product = null;
             try
             {
@@ -112,7 +110,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inProductName", productName);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
+                while (rdr.Read())
+                {
+                    product = ConvertOneRowFromDataMySql(rdr);
+                }
                 if (rdr != null)
                     rdr.Close();
             }
@@ -135,7 +136,6 @@ namespace MVCPlayWithMe.Models
         public Product GetProductFromCode(string code)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             Product product = null;
             try
             {
@@ -146,7 +146,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inCode", code);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
+                while (rdr.Read())
+                {
+                    product = ConvertOneRowFromDataMySql(rdr);
+                }
                 if (rdr != null)
                     rdr.Close();
             }
@@ -169,7 +172,6 @@ namespace MVCPlayWithMe.Models
         public Product GetProductFromId(int id)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             Product product = null;
             try
             {
@@ -180,7 +182,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inId", id);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
+                while (rdr.Read())
+                {
+                    product = ConvertOneRowFromDataMySql(rdr);
+                }
                 if (rdr != null)
                     rdr.Close();
             }
@@ -203,7 +208,6 @@ namespace MVCPlayWithMe.Models
         public Product GetProductFromFirstComboId(int id)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             Product product = null;
             try
             {
@@ -214,7 +218,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inId", id);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                product = ConvertFromDataMySql(rdr);
+                while (rdr.Read())
+                {
+                    product = ConvertOneRowFromDataMySql(rdr);
+                }
                 if (rdr != null)
                     rdr.Close();
             }
@@ -681,7 +688,6 @@ namespace MVCPlayWithMe.Models
         public List<ProductIdCodeBarcodeNameBookCoverPrice> GetProductIdCodeBarcodeNameBookCoverPrice()
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             List<ProductIdCodeBarcodeNameBookCoverPrice> ls = new List<ProductIdCodeBarcodeNameBookCoverPrice>();
             try
             {
@@ -744,7 +750,6 @@ namespace MVCPlayWithMe.Models
         public List<Import> GetImportList(string fromDate, string toDate)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            StringBuilder sb = new StringBuilder();
             List<Import> ls = new List<Import>();
             try
             {
@@ -831,6 +836,39 @@ namespace MVCPlayWithMe.Models
             conn.Close();
 
             return result;
+        }
+
+        public List<Product> SearProduct(string codeOrBarcode, string name, string combo)
+        {
+            List<Product> ls = new List<Product>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Product", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCodeOrBarcode", codeOrBarcode);
+                cmd.Parameters.AddWithValue("@inName", name);
+                cmd.Parameters.AddWithValue("@inCombo", combo);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    ls.Add(ConvertOneRowFromDataMySql(rdr));
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return ls;
         }
     }
 }
