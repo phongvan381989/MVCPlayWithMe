@@ -1,6 +1,7 @@
 ﻿var DEBUG = true;
 var thumbnailWidth = 60;
 var thumbnailHeight = 60;
+var srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
 var itemModelQuota = 5;
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;

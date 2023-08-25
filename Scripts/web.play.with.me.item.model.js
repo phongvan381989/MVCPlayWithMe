@@ -3,14 +3,16 @@ let classOfModelName = "class-model-name";
 let classOfModelQuota = "class-model-quota";
 let classOfModelImage = "class-model-image";
 let classOfModelStatus = "class-model-status";
+let classOffModelTable = "class-model-table"
 let countModel = 0;
 let isFinishUploadImageModel = 0;
+let modelMapping = null; // model đang chọn mapping
 
 // Thêm nút xóa phân loại
 function AddDeleteButtonForModel(container) {
     // Thêm nút xóa ảnh bên cạnh
-    var btn = document.createElement("BUTTON");
-    var btnContent = document.createTextNode("Xóa phân loại");
+    let btn = document.createElement("BUTTON");
+    let btnContent = document.createTextNode("Xóa phân loại");
     btn.onclick = function () {
         countModel = countModel - 1;
         this.parentElement.parentElement.remove();
@@ -26,9 +28,12 @@ function AddDeleteButtonForModel(container) {
 // Thêm nút liên kết sản phẩm
 function AddMappingButtonForModel(container) {
     // Thêm nút xóa ảnh bên cạnh
-    var btn = document.createElement("BUTTON");
-    var btnContent = document.createTextNode("Liên kết sản phẩm");
+    let btn = document.createElement("BUTTON");
+    let btnContent = document.createTextNode("Liên kết sản phẩm");
     btn.onclick = function () {
+        modelMapping = this.parentElement.parentElement;
+        // Get the modal
+        let modal = document.getElementById("myModal");
         modal.style.display = "block";
     }
     btn.appendChild(btnContent);
@@ -37,6 +42,99 @@ function AddMappingButtonForModel(container) {
     const div = document.createElement("div");
     div.appendChild(btn);
     container.appendChild(div);
+}
+
+// Thêm table mapping vào model
+function AddModelTableMapping(container) {
+    if (DEBUG) {
+        console.log("Start AddModelTableMapping");
+    }
+    const div = document.createElement("div");
+    let tab = document.createElement("table");
+    tab.className = classOffModelTable;
+
+    div.appendChild(tab);
+    container.appendChild(div);
+}
+
+// Constructor function for obj gồm: id, img, name
+function objRowTableMapping(id, imageSrc, name) {
+    this.id = id;
+    this.imageSrc = imageSrc;
+    this.name = name;
+}
+
+function InsertObjToTable(table, obj) {
+    let row = table.insertRow(-1);
+
+    // Insert new cells (<td> elements)
+    let cell1 = row.insertCell(0);
+    let cell2 = row.insertCell(1);
+    let cell3 = row.insertCell(2);
+    let cell4 = row.insertCell(3);
+
+    // Id
+    cell1.innerHTML = obj.id;
+    cell1.style.display = "none";
+
+    // Image
+    let img = document.createElement("img");
+    img.setAttribute("src", obj.imageSrc);
+    img.height = thumbnailHeight;
+    img.width = thumbnailWidth;
+    cell2.append(img);
+
+    // Tên
+    cell3.innerHTML = obj.name;
+
+    // Nút xóa
+    let btn = document.createElement("button");
+    btn.onclick = function () {
+        this.parentElement.parentElement.remove();
+    };
+    btn.innerHTML = "Xóa";
+    cell4.appendChild(btn)
+}
+
+// obj gồm: id, img, name
+function CheckObjExistAndInsert(modelTable, obj) {
+    let length = modelTable.rows.length;
+    let exist = false;
+    for (let i = 0; i < length; i++) {
+        if (modelTable.rows[i].cells[0].innerHTML == obj.id) {
+            exist = true;
+        }
+    }
+    if (exist === true)
+        return;
+
+    // Thêm vào table
+    InsertObjToTable(modelTable, obj);
+}
+
+// listObj: sản phẩm được chọn từ modal gồm: id, img, name
+function AddTableMapping(container, listObj) {
+    if (DEBUG) {
+        console.log(listObj);
+    }
+    // Check container chứa table mapping chưa? Nếu không thì tạo mới
+    let modelTable;
+    if (container.getElementsByClassName(classOffModelTable).length == 0) {
+        AddModelTableMapping(container);
+    }
+    modelTable = container.getElementsByClassName(classOffModelTable)[0];
+
+
+    if (DEBUG) {
+        console.log(modelTable);
+        console.log(modelTable.nodeName);
+    }
+
+    // Insert listObj vào table, có check obj đã tồn tại trong table theo id
+    let length = listObj.length;
+    for (let i = 0; i < length; i++) {
+        CheckObjExistAndInsert(modelTable, listObj[i]);
+    }
 }
 
 function AddDistanceRows(modelContainer) {
@@ -53,7 +151,7 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     let inp = document.createElement("INPUT");
     inp.setAttribute("type", inputType);
     inp.id = id + countModel;
-    inp.className = "config-max-width margin-vertical";
+    //inp.className = "config-max-width margin-vertical";
     inp.disabled = disabled;
     // Set giá trị quota mặc định
     if (id == "id-quota-") {
@@ -80,18 +178,18 @@ function AddLabelSelectOfStatus(container, label, id) {
     selectList.id = id + countModel;
     selectList.className = "config-max-width margin-vertical class-model-status";
 
-    var option = document.createElement("option");
+    let option = document.createElement("option");
     option.value = 0;
     option.text = "Đang kinh doanh";
     option.selected = "selected";
     selectList.appendChild(option);
 
-    var option1 = document.createElement("option");
+    let option1 = document.createElement("option");
     option1.value = 1;
     option1.text = "Ngừng kinh doanh";
     selectList.appendChild(option1);
 
-    var option2 = document.createElement("option");
+    let option2 = document.createElement("option");
     option2.value = 2;
     option2.text = "Hết hàng";
     selectList.appendChild(option2);
@@ -261,6 +359,28 @@ function GetListModelId() {
     return JSON.stringify(listModelId);
 }
 
+function GetListProIdMappiGetListProIdMappingng(model) {
+    if (DEBUG) {
+        console.log("Start ");
+    }
+    let listProIdMapping = [];
+    if (model.getElementsByClassName(classOffModelTable).length != 0) {
+        let rows = model.getElementsByClassName(classOffModelTable)[0].rows;
+        let length = rows.length;
+        if (DEBUG) {
+            console.log("length: " + length);
+        }
+        // Danh sách đối tượng lưu về db
+        for (let i = 0; i < length; i++) {
+            listProIdMapping.push(Number(rows[i].cells[0].innerHTML));
+        }
+    }
+    if (DEBUG) {
+        console.log(listProIdMapping);
+    }
+    return JSON.stringify(listProIdMapping);
+}
+
 // Thay đổi màu nền giúp dễ nhìn các model
 function EasyViewListModel() {
     const ls = document.getElementsByClassName("model-container");
@@ -301,7 +421,8 @@ function AddItemParameters(searchParams){
 // Thông tin gồm ảnh, tên, quota.
 // Tạo mới modelId = -1
 function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, exist,
-    listModelId, itemId, status, quantity, imageExtension) {
+    listModelId, itemId, status, quantity, imageExtension,
+    listProIdMapping) {
     if (DEBUG) {
         console.log(" Start upload image of modelId: " + modelId);
         console.log(" this of ModelUpload: " + this.nodeName);
@@ -340,6 +461,7 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     xhr.setRequestHeader("status", status); 
     xhr.setRequestHeader("quantity", quantity);
     xhr.setRequestHeader("imageExtension", imageExtension);
+    xhr.setRequestHeader("listProIdMapping", listProIdMapping);
     if (DEBUG) {
         console.log("modelId: " + modelId);
         console.log("modelName: " + modelName);
@@ -350,6 +472,7 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
         console.log("status: " + status);
         console.log("quantity: " + quantity);
         console.log("imageExtension: " + imageExtension);
+        console.log("listProIdMapping: " + listProIdMapping);
     }
     //xhr.send(file);
     let response = RequestHttpPostUpFilePromise(xhr, url, file);
@@ -422,10 +545,12 @@ async function AddItemModel() {
             }
 
             let listModelId = GetListModelId();
+            let listProIdMapping = GetListProIdMapping(model);
             let status = model.getElementsByClassName(classOfModelStatus)[0].value;
             let imageExtension = GetExtensionOfFileName(img.fileName);
             ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
-                modelQuota, exist, listModelId, itemId, status, 0, imageExtension);
+                modelQuota, exist, listModelId, itemId, status, 0,
+                imageExtension, listProIdMapping);
         }
         
     }
@@ -465,4 +590,197 @@ async function AddItemModel() {
     window.scrollTo(0, 0);
     await Sleep(1000)
     //window.location.reload();
+}
+function CloseModal(modal) {
+    modal.style.display = "none";
+    EmptyModal();
+}
+function InitializeModal() {
+    // Get the modal
+    let modal = document.getElementById("myModal");
+
+    // Get the button that opens the modal
+    let btn = document.getElementById("myBtn");
+
+    // Get the <span> element that closes the modal
+    let span = document.getElementsByClassName("close")[0];
+
+    // When the user clicks the button, open the modal
+    btn.onclick = function () {
+        modal.style.display = "block";
+    }
+
+    // When the user clicks on <span> (x), close the modal
+    span.onclick = function () {
+        //modal.style.display = "none";
+        //EmptyModal();
+        CloseModal(modal);
+    }
+
+    // When the user clicks anywhere outside of the modal, close it
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            //modal.style.display = "none";
+            //EmptyModal();
+            CloseModal(modal);
+        }
+    }
+}
+
+function EmptyModal() {
+    document.getElementById("code-or-isbn").value = "";
+    document.getElementById("product-name-id").value = "";
+    document.getElementById("combo-id").value = "";
+
+    // Làm trống bảng
+    DeleteRowsExcludeHead("myTable");
+    DeleteRowsExcludeHead("myTableMapping");
+}
+
+// pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm
+function AddRowToTableMapping(pro) {
+    if (pro == null)
+        return;
+    if (DEBUG) {
+        console.log(pro);
+    }
+    let table = document.getElementById("myTableMapping");
+    let src;
+    if (pro.imageSrc.length > 0) {
+        src = pro.imageSrc[0];
+    } else {
+        src = srcNoImageThumbnail;
+    }
+    let obj = new objRowTableMapping(pro.id, src, pro.name);
+
+    InsertObjToTable(table, obj);
+}
+
+// pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm
+function DeleteRowFromTableMapping(pro) {
+    if (pro == null)
+        return;
+
+    let rows = document.getElementById("myTableMapping").rows;
+    let length = rows.length;
+    for (let i = 0; i < length; i++) {
+        if (Number(rows[i].cells[0].innerHTML) == pro.id) {
+            // Xóa row này
+            document.getElementById("myTableMapping").deleteRow(i);
+        }
+    }
+}
+
+function FindProductFromList(listProduct, id) {
+    let length = listProduct.length;
+    for (let i = 0; i < length; i++) {
+        if (listProduct[i].id == id) {
+            return listProduct[i];
+        }
+    }
+}
+
+async function Search() {
+    let codeOrBarcode = document.getElementById("code-or-isbn").value;
+    let name = document.getElementById("product-name-id").value;
+    let combo = document.getElementById("combo-id").value;
+    const searchParams = new URLSearchParams();
+    searchParams.append("codeOrBarcode", codeOrBarcode);
+    searchParams.append("name", name);
+    searchParams.append("combo", combo);
+
+    let url = "/ItemModel/SearchProduct";
+    let resObj = await RequestHttpGetPromise(searchParams, url);
+    if (DEBUG) {
+        console.log("responseText: " + resObj.responseText);
+    }
+    let listProduct = JSON.parse(resObj.responseText);
+    if (DEBUG) {
+        console.log(listProduct);
+    }
+
+    // Làm trống bảng
+    DeleteRowsExcludeHead("myTable");
+
+    // Show
+    let table = document.getElementById("myTable");
+    let length = listProduct.length;
+    for (let i = 0; i < length; i++) {
+        let pro = listProduct[i];
+        let row = table.insertRow(-1);
+
+        // Insert new cells (<td> elements)
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        let cell4 = row.insertCell(3);
+
+        // Id
+        cell1.innerHTML = pro.id;
+        cell1.style.display = "none";
+
+        // Checkbox
+        let checkbox = document.createElement("INPUT");
+        checkbox.setAttribute("type", "checkbox");
+        checkbox.onclick = function () {
+            // Lấy id
+            let id = Number(this.parentElement.previousSibling.innerHTML);
+            let pro = FindProductFromList(listProduct, id);
+            if (this.checked == true) {
+                AddRowToTableMapping(pro);
+            }
+            else {
+                DeleteRowFromTableMapping(pro);
+            }
+        }
+        cell2.appendChild(checkbox)
+
+        // Image
+        let img = document.createElement("img");
+        if (pro.imageSrc.length > 0) {
+            img.setAttribute("src", pro.imageSrc[0]);
+        } else {
+            img.setAttribute("src", srcNoImageThumbnail);
+        }
+        img.height = thumbnailHeight;
+        img.width = thumbnailWidth;
+        cell3.append(img);
+
+        // Tên
+        cell4.innerHTML = pro.name;
+    }
+}
+
+function SaveMappingToModel() {
+    // Lấy danh sách sản phẩm đã chọn trên modal
+    let rows = document.getElementById("myTableMapping").rows;
+    let length = rows.length;
+    if (DEBUG) {
+        console.log("myTableMapping length: " + length);
+    }
+    // Danh sách đối tượng lưu về db
+    let listObj = [];
+    for (let i = 1; i < length; i++) {
+        let obj = new objRowTableMapping(
+            Number(rows[i].cells[0].innerHTML),
+            rows[i].cells[1].children[0].src,
+            rows[i].cells[2].innerHTML
+        );
+        if (DEBUG) {
+            console.log(rows[i].cells[1].childNodes[0].nodeName);
+            console.log(rows[i].cells[1].children[0].src);
+            console.log(obj);
+        }
+        listObj.push(obj);
+
+        //if (DEBUG) {
+        //    console.log(listObj.length);
+        //}
+    }
+
+    AddTableMapping(modelMapping, listObj);
+
+    // Đóng modal
+    let modal = document.getElementById("myModal");
+    CloseModal(modal);
 }

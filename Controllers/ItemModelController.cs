@@ -107,6 +107,7 @@ namespace MVCPlayWithMe.Controllers
             var status = Common.ConvertStringToInt32(Request.Headers["status"]);
             var quantity = Common.ConvertStringToInt32(Request.Headers["quantity"]); 
             var imageExtension = Request.Headers["imageExtension"];// phần mở rộng của ảnh không gồm '.'
+            var listProIdMapping = Request.Headers["listProIdMapping"];// Mảng id sản phẩm mapping
             MySqlResultState result = null;
             // Lưu vào db
             Model model = new Model(modelId, itemId, modelName, 0, 0, status, quota, quantity);
