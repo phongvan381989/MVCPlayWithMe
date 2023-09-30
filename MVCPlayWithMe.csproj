@@ -278,6 +278,7 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\web.play.with.me.common.css" />
     <Content Include="Content\web.play.with.me.modal.common.css" />
+    <Content Include="Content\web.play.with.me.paging.css" />
     <Content Include="Content\web.play.with.me.table.show.data.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -304,6 +305,7 @@
     <Content Include="Scripts\web.play.with.me.publisher.common.js" />
     <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />
+    <Content Include="Scripts\web.play.with.me.paging.js" />
     <Content Include="Views\Home\playwithme.jpg" />
     <Content Include="Views\Home\playwithme.png" />
     <Content Include="Web.config">
@@ -377,6 +379,11 @@
     <Content Include="Views\Shared\ItemModel\ItemName.cshtml" />
     <Content Include="Views\Shared\ItemModel\ItemModelInputCommon.cshtml" />
     <Content Include="Views\Shared\ItemModel\Mapping.cshtml" />
+    <Content Include="Views\ItemModel\Search.cshtml" />
+    <Content Include="Views\Shared\ItemModel\SearchParameter.cshtml" />
+    <Content Include="Views\Shared\GoToPage.cshtml" />
+    <Content Include="Views\Shared\ItemModel\SearchResult.cshtml" />
+    <Content Include="Views\ItemModel\UpdateDelete.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

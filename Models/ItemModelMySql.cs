@@ -284,5 +284,144 @@ namespace MVCPlayWithMe.Models
 
             return result;
         }
+
+        public MySqlResultState AddMapping(Model model)
+        {
+            MySqlResultState result = new MySqlResultState();
+            if(model.mapping.Count()  == 0)
+            {
+                return result;
+            }
+
+            MySqlParameter[] paras = null;
+
+            paras = new MySqlParameter[4];
+            paras[0] = new MySqlParameter("@inModelId", model.id);
+            paras[1] = new MySqlParameter("@inProductId", 0);
+            MyMySql.AddOutParameters(paras);
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbMapping_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+                foreach (var id in model.mapping)
+                {
+                    paras[1].Value = id;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+            }
+            conn.Close();
+
+            return result;
+        }
+
+        private Model ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr)
+        {
+            Model model = new Model();
+            model.id = MyMySql.GetInt32(rdr, "ModelId");
+            model.name = MyMySql.GetString(rdr, "ModelName");
+            model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
+            model.price = MyMySql.GetInt32(rdr, "ModelPrice");
+            model.quota = MyMySql.GetInt32(rdr, "ModelQuota");
+            model.status = MyMySql.GetInt32(rdr, "ModelStatus");
+            model.quantity = MyMySql.GetInt32(rdr, "ModelQuantity");
+
+            return model;
+        }
+
+        private Item ConvertOneRowFromDataMySqlToItem(MySqlDataReader rdr)
+        {
+            Item item = new Item();
+            item.id = MyMySql.GetInt32(rdr, "Id");
+            item.name = MyMySql.GetString(rdr, "Name");
+            item.quota = MyMySql.GetInt32(rdr, "Quota");
+            item.status = MyMySql.GetInt32(rdr, "Status");
+            item.SetSrcImageVideo();
+            //item.models.Add(ConvertOneRowFromDataMySqlToModel(rdr));
+
+            return item;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="namePara"></param>
+        /// <param name="start">Tính từ 0</param>
+        /// <param name="offset">Số item max trên 1 page</param>
+        /// <returns></returns>
+        public List<Item> SearchItemChangePage(string namePara, int start, int offset)
+        {
+            List<Item> ls = new List<Item>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Search", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inNamePara", namePara);
+                cmd.Parameters.AddWithValue("@inStart", start);
+                cmd.Parameters.AddWithValue("@inOffset", offset);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    ls.Add(ConvertOneRowFromDataMySqlToItem(rdr));
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return ls;
+        }
+
+        public int SearchItemCount(string namePara)
+        {
+            int count = 0;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inNamePara", namePara);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    count = MyMySql.GetInt32(rdr, "CountRecord");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return count;
+        }
     }
 }

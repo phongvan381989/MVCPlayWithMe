@@ -22,11 +22,16 @@ namespace MVCPlayWithMe.Models
 
         public List<Model> models { get; set; }
 
+        public List<string> imageSrc { get; set; }
+
+        string videoSrc { get; set; }
+
         public Item()
         {
             id = -1;
             quota = Common.quota;
             models = new List<Model>();
+            imageSrc = new List<string>();
         }
 
         public Item(string inName,
@@ -41,6 +46,13 @@ namespace MVCPlayWithMe.Models
             quota = inQuota;
             detail = inDetail;
             models = new List<Model>();
+            imageSrc = new List<string>();
+        }
+
+        public void SetSrcImageVideo()
+        {
+            imageSrc = Common.GetItemImageSrc(id);
+            videoSrc = Common.GetItemVideoSrc(id);
         }
     }
 }

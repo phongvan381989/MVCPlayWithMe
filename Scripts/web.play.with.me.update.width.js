@@ -37,7 +37,7 @@
     scrWidth = scrWidth.toString() + "px";
     document.getElementById("biggestContainer").style.width = scrWidth;
 
-    document.getElementById("result-insert").innerHTML = scrWidth + ": " + document.getElementById("biggestContainer_top_first").style.display;
+    //document.getElementById("result-insert").innerHTML = scrWidth + ": " + document.getElementById("biggestContainer_top_first").style.display;
     
     return scrWidth;
 }

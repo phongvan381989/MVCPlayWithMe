@@ -71,7 +71,7 @@
                 console.log("GetListImport function");
             }
             // Xóa dữ liệu trước đó nếu có
-            DeleteRowsExcludeHead("myTable");
+            DeleteRowsExcludeHead(document.getElementById("myTable"));
 
             let fromDate = document.getElementById("from-date").value;
             let toDate = document.getElementById("to-date").value;

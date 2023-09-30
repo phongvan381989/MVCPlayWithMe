@@ -1,0 +1,29 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.paging.css">
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <div class="config-max-width padding-container">
+            @Html.Partial("~/Views/Shared/ItemModel/SearchParameter.cshtml")
+
+            <button type="button" onclick="Search()">Tìm kiếm</button>
+
+            @Html.Partial("~/Views/Shared/ItemModel/SearchResult.cshtml")
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.paging.js"></script>
+</body>
+</html>
+

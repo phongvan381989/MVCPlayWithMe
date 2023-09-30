@@ -13,6 +13,8 @@ namespace MVCPlayWithMe.Models
         public string name { get; set; }
         public int bookCoverPrice { get; set; }
         public int price { get; set; }
+        public List<int> mapping { get; set; }
+        public string imageSrc { get; set; }
 
         /// <summary>
         /// 0: Bán bình thường, 1: Ngừng kinh doanh, 2: Hết hàng
@@ -25,6 +27,7 @@ namespace MVCPlayWithMe.Models
         {
             id = -1;
             quota = Common.quota;
+            mapping = new List<int>();
         }
 
         public Model(int inId, int inItemId, string inName, int inBookCoverPrice, int inPrice, int inStatus,
@@ -38,6 +41,12 @@ namespace MVCPlayWithMe.Models
             status = inStatus;
             quota = inQuota;
             quantity = inQuantity;
+            mapping = new List<int>();
+        }
+
+        public void SetSrcImage()
+        {
+            imageSrc = Common.GetModelImageSrc(itemId, id);
         }
     }
 }

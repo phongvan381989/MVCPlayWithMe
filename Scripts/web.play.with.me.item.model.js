@@ -4,7 +4,7 @@ let classOfModelQuota = "class-model-quota";
 let classOfModelImage = "class-model-image";
 let classOfModelStatus = "class-model-status";
 let classOffModelTable = "class-model-table"
-let countModel = 0;
+let countItem = 0;
 let isFinishUploadImageModel = 0;
 let modelMapping = null; // model đang chọn mapping
 
@@ -14,7 +14,10 @@ function AddDeleteButtonForModel(container) {
     let btn = document.createElement("BUTTON");
     let btnContent = document.createTextNode("Xóa phân loại");
     btn.onclick = function () {
-        countModel = countModel - 1;
+        if (DEBUG) {
+            console.log("countModel: " + countItem);
+        }
+        countItem = countItem - 1;
         this.parentElement.parentElement.remove();
     }
     btn.appendChild(btnContent);
@@ -50,7 +53,9 @@ function AddModelTableMapping(container) {
         console.log("Start AddModelTableMapping");
     }
     const div = document.createElement("div");
+    div.style.marginLeft = "50px";
     let tab = document.createElement("table");
+
     tab.className = classOffModelTable;
 
     div.appendChild(tab);
@@ -137,6 +142,33 @@ function AddTableMapping(container, listObj) {
     }
 }
 
+function AddTableMappingToItem(container, listObj) {
+    if (DEBUG) {
+        console.log(listObj);
+    }
+    // Check container chứa table mapping chưa? Nếu không thì tạo mới
+    let modelTable;
+    if (container.children.length == 0) {
+        // Status
+        AddLabelSelectOfStatus(container, "Trạng thái:", "id-status-item");
+        AddDistanceRows(container);
+
+        // Quota
+        AddLabelInput(container, "Quota:", "id-quota-item", "number", false);
+        AddDistanceRows(container);
+
+        let tab = document.createElement("table");
+        container.appendChild(tab);
+    }
+    modelTable = container.children[4];
+
+    // Insert listObj vào table, có check obj đã tồn tại trong table theo id
+    let length = listObj.length;
+    for (let i = 0; i < length; i++) {
+        CheckObjExistAndInsert(modelTable, listObj[i]);
+    }
+}
+
 function AddDistanceRows(modelContainer) {
     modelContainer.appendChild(document.createElement("br"));
 }
@@ -145,16 +177,16 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     // Thêm tên
     const div = document.createElement("div");
     let lab = document.createElement("label");
-    lab.htmlFor = id + countModel;
+    lab.htmlFor = id + countItem;
     lab.innerHTML = label;
 
     let inp = document.createElement("INPUT");
     inp.setAttribute("type", inputType);
-    inp.id = id + countModel;
+    inp.id = id + countItem;
     //inp.className = "config-max-width margin-vertical";
     inp.disabled = disabled;
     // Set giá trị quota mặc định
-    if (id == "id-quota-") {
+    if (id == "id-quota-" || id == "id-quota-item") {
         inp.value = itemModelQuota;
         inp.className = classOfModelQuota;
     }
@@ -171,11 +203,11 @@ function AddLabelSelectOfStatus(container, label, id) {
     // Thêm tên
     const div = document.createElement("div");
     let lab = document.createElement("label");
-    lab.htmlFor = id + countModel;
+    lab.htmlFor = id + countItem;
     lab.innerHTML = label;
 
     let selectList  = document.createElement("SELECT");
-    selectList.id = id + countModel;
+    selectList.id = id + countItem;
     selectList.className = "config-max-width margin-vertical class-model-status";
 
     let option = document.createElement("option");
@@ -200,7 +232,18 @@ function AddLabelSelectOfStatus(container, label, id) {
 }
 
 function AddModelToScreen() {
-    countModel = countModel + 1;
+    // Check có đang mapping tới item
+    if (document.getElementById("mapping-to-item").children.length > 0) {
+        let text = "Chắc chắn xóa liên kết tới sản phẩm cha?";
+        if (confirm(text) == false) {
+            return;
+        }
+        document.getElementById("mapping-to-item").innerHTML = "";
+    }
+    countItem = countItem + 1;
+    if (DEBUG) {
+        console.log("countModel: " + countItem);
+    }
     const modelContainer = document.createElement("div");
     modelContainer.style.marginLeft = "10px";
     modelContainer.style.backgroundColor = "#e6e6e6";
@@ -274,6 +317,31 @@ function AddModelToScreen() {
     //EasyViewListModel();
 }
 
+// Khi item không cần phân loại
+function MappingToItem() {
+    // Check có phân loại không?
+    if (modelList.children.length > 0) {
+        let text = "Chắc chắn xóa hết phân loại?";
+        if (confirm(text) == false) {
+            return;
+        }
+    }
+
+    // Xóa bỏ hết phân loại
+    if (modelList.children.length > 0) {
+        modelList.innerHTML = "";
+        modelMapping = null;
+        countItem = 0;
+        if (DEBUG) {
+            console.log("countModel: " + countItem);
+        }
+    }
+
+    // Get the modal
+    let modal = document.getElementById("myModal");
+    modal.style.display = "block";
+}
+
 // Chọn 1 ảnh làm thumbnail từ local
 function SetThumbnail() {
     if (this.files.length){
@@ -343,15 +411,30 @@ function CheckModelHasImage() {
     return isValid;
 }
 
-function GetListModelId() {
+// modelList chứa cả <br> ta lấy list chỉ <div> container
+function GetListModelOnly() {
     const ls = modelList.children;
     let length = ls.length;
-    if (DEBUG) {
-        console.log("length of list model: " + length);
+
+    let listModelOnly = [];
+    for (let i = 0; i < length; i++) {
+        if (ls[i].tagName == "DIV") {
+            listModelOnly.push(ls[i]);
+        }
     }
+    if (DEBUG) {
+        console.log("length of list model: " + listModelOnly.length);
+    }
+    return listModelOnly;
+}
+
+function GetListModelId() {
+    let listModelOnly = GetListModelOnly();
+    let length = listModelOnly.length;
+
     let listModelId = [];
     for (let i = 0; i < length; i++) {
-        listModelId.push(ls[i].modelId);
+            listModelId.push(listModelOnly[i].modelId);
     }
     if (DEBUG) {
         console.log(listModelId);
@@ -359,13 +442,14 @@ function GetListModelId() {
     return JSON.stringify(listModelId);
 }
 
-function GetListProIdMappiGetListProIdMappingng(model) {
+function GetListProIdMapping(table) {
     if (DEBUG) {
-        console.log("Start ");
+        console.log("Start GetListProIdMapping");
     }
+
     let listProIdMapping = [];
-    if (model.getElementsByClassName(classOffModelTable).length != 0) {
-        let rows = model.getElementsByClassName(classOffModelTable)[0].rows;
+    if (typeof table !== undefined) {
+        let rows = table.rows;
         let length = rows.length;
         if (DEBUG) {
             console.log("length: " + length);
@@ -375,9 +459,9 @@ function GetListProIdMappiGetListProIdMappingng(model) {
             listProIdMapping.push(Number(rows[i].cells[0].innerHTML));
         }
     }
-    if (DEBUG) {
-        console.log(listProIdMapping);
-    }
+    //if (DEBUG) {
+    //    console.log(listProIdMapping);
+    //}
     return JSON.stringify(listProIdMapping);
 }
 
@@ -421,12 +505,13 @@ function AddItemParameters(searchParams){
 // Thông tin gồm ảnh, tên, quota.
 // Tạo mới modelId = -1
 function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, exist,
-    listModelId, itemId, status, quantity, imageExtension,
+     itemId, status, quantity, imageExtension,
     listProIdMapping) {
     if (DEBUG) {
         console.log(" Start upload image of modelId: " + modelId);
-        console.log(" this of ModelUpload: " + this.nodeName);
+        //console.log(" this of ModelUpload: " + this.nodeName);
     }
+
     isFinishUploadImageModel++;
     //const reader = new FileReader();
     let parrent = fileElement.parentElement;
@@ -450,13 +535,13 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
 
         isFinishUploadImageModel--;
     }, false);
+
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "multipart/form-data");
     xhr.setRequestHeader("modelId", modelId);
     xhr.setRequestHeader("modelName", modelName);
     xhr.setRequestHeader("exist", exist);
     xhr.setRequestHeader("quota", quota);
-    xhr.setRequestHeader("listModelId", listModelId); // Chứa list model id cũ cho trường hợp update
     xhr.setRequestHeader("itemId", itemId);
     xhr.setRequestHeader("status", status); 
     xhr.setRequestHeader("quantity", quantity);
@@ -467,7 +552,6 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
         console.log("modelName: " + modelName);
         console.log("exist: " + exist);
         console.log("quota: " + quota);
-        console.log("listModelId: " + listModelId);
         console.log("itemId: " + itemId);
         console.log("status: " + status);
         console.log("quantity: " + quantity);
@@ -509,6 +593,7 @@ async function AddItemModel() {
 
     let urlAdd = "/ItemModel/AddItem";
     let urlUpItem = "/ItemModel/UploadFileItem";
+    let urlUpModelNoName = "/ItemModel/UpModelNoName";
     let urlDeleItem = "";
     let urlUpModel = "/ItemModel/UploadFileModel";
     let itemId = 0;
@@ -525,38 +610,59 @@ async function AddItemModel() {
         }
         itemId = obj.myAnything;
 
-        // Upload ảnh/video sản phẩm lên server
+        // Upload ảnh/video item lên server
         let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleItem, itemId);
 
-        // Upload thông tin,ảnh model lên server
-        isFinishUploadImageModel = 0;
-        let length = modelList.children.length;
-        for (let i = 0; i < length; i++) {
-            let model = modelList.children[i];
-            let img = model.getElementsByClassName(classOfModelImage)[0];
-            let modelName = model.getElementsByClassName(classOfModelName)[0].value;
-            let modelQuota = model.getElementsByClassName(classOfModelQuota)[0].value;
-            let exist;
-            if (img.file == null) {
-                exist = "true";
-            }
-            else {
-                exist = "false";
-            }
+        // Item không có model, ta thêm model với tên trống
+        if (document.getElementById("mapping-to-item").children.length > 0) {
+            const searchParamsTemp = new URLSearchParams();
 
-            let listModelId = GetListModelId();
-            let listProIdMapping = GetListProIdMapping(model);
-            let status = model.getElementsByClassName(classOfModelStatus)[0].value;
-            let imageExtension = GetExtensionOfFileName(img.fileName);
-            ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
-                modelQuota, exist, listModelId, itemId, status, 0,
-                imageExtension, listProIdMapping);
+            searchParamsTemp.append("itemId", itemId);
+
+            let listProIdMapping = GetListProIdMapping(document.getElementById("mapping-to-item").children[4]);
+            searchParamsTemp.append("listProIdMapping", listProIdMapping);
+
+            searchParamsTemp.append("status", document.getElementById("mapping-to-item").children[0].children[1].value);
+            searchParamsTemp.append("quota", document.getElementById("mapping-to-item").children[2].children[1].value);
+
+            let responseDBTemp = await RequestHttpGetPromise(searchParamsTemp, urlUpModelNoName);
+            if (DEBUG) {
+                console.log("responseDBTemp.then: " + responseDBTemp.responseText);
+            }
         }
-        
+        else {
+            // Upload thông tin,ảnh model lên server
+            isFinishUploadImageModel = 0;
+            let listModelOnly = GetListModelOnly();
+            let length = listModelOnly.length;
+
+            for (let i = 0; i < length; i++) {
+                let model = listModelOnly[i];
+                let img = model.getElementsByClassName(classOfModelImage)[0];
+                let modelName = model.getElementsByClassName(classOfModelName)[0].value;
+                let modelQuota = model.getElementsByClassName(classOfModelQuota)[0].value;
+                let exist;
+                if (img.file == null) {
+                    exist = "true";
+                }
+                else {
+                    exist = "false";
+                }
+
+                let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
+                let status = model.getElementsByClassName(classOfModelStatus)[0].value;
+                let imageExtension = GetExtensionOfFileName(img.fileName);
+
+                ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
+                    modelQuota, exist, itemId, status, 0,
+                    imageExtension, listProIdMapping);
+            }
+        }
     }
-    catch (error) {
+    catch (err) {
         if (DEBUG) {
-            console.log(error);
+            console.log(err.message);
+            console.log(err);
         }
         alert("Tạo sản phẩm lỗi.");
         return;
@@ -599,16 +705,16 @@ function InitializeModal() {
     // Get the modal
     let modal = document.getElementById("myModal");
 
-    // Get the button that opens the modal
-    let btn = document.getElementById("myBtn");
+    //// Get the button that opens the modal
+    //let btn = document.getElementById("myBtn");
 
     // Get the <span> element that closes the modal
     let span = document.getElementsByClassName("close")[0];
 
-    // When the user clicks the button, open the modal
-    btn.onclick = function () {
-        modal.style.display = "block";
-    }
+    //// When the user clicks the button, open the modal
+    //btn.onclick = function () {
+    //    modal.style.display = "block";
+    //}
 
     // When the user clicks on <span> (x), close the modal
     span.onclick = function () {
@@ -633,8 +739,8 @@ function EmptyModal() {
     document.getElementById("combo-id").value = "";
 
     // Làm trống bảng
-    DeleteRowsExcludeHead("myTable");
-    DeleteRowsExcludeHead("myTableMapping");
+    DeleteRowsExcludeHead(document.getElementById("myTable"));
+    DeleteRowsExcludeHead(document.getElementById("myTableMapping"));
 }
 
 // pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm
@@ -680,7 +786,7 @@ function FindProductFromList(listProduct, id) {
     }
 }
 
-async function Search() {
+async function SearchProduct() {
     let codeOrBarcode = document.getElementById("code-or-isbn").value;
     let name = document.getElementById("product-name-id").value;
     let combo = document.getElementById("combo-id").value;
@@ -700,7 +806,7 @@ async function Search() {
     }
 
     // Làm trống bảng
-    DeleteRowsExcludeHead("myTable");
+    DeleteRowsExcludeHead(document.getElementById("myTable"));
 
     // Show
     let table = document.getElementById("myTable");
@@ -751,7 +857,7 @@ async function Search() {
     }
 }
 
-function SaveMappingToModel() {
+function SaveMappingToItemOrModel() {
     // Lấy danh sách sản phẩm đã chọn trên modal
     let rows = document.getElementById("myTableMapping").rows;
     let length = rows.length;
@@ -777,8 +883,13 @@ function SaveMappingToModel() {
         //    console.log(listObj.length);
         //}
     }
-
-    AddTableMapping(modelMapping, listObj);
+    // Mapping tới model
+    if (modelMapping != null) {
+        AddTableMapping(modelMapping, listObj);
+    }
+    else { // Mapping tới item
+        AddTableMappingToItem(document.getElementById("mapping-to-item"), listObj);
+    }
 
     // Đóng modal
     let modal = document.getElementById("myModal");

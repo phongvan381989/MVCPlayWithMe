@@ -20,7 +20,16 @@
     <label for="detail-id">Mô tả:</label><br>
     <textarea id="detail-id" rows="10" style="width:100%" value=""></textarea>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    <div style="margin-left: 10px; background-color: #e6e6e6; padding: 10px 10px 10px 10px; border-radius: 10px">
+        <div id="mapping-to-item">
 
+        </div>
+        <div>
+            <button type="button" onclick="MappingToItem()" style="float: right;">Liên kết sản phẩm tới cha</button>
+        </div>
+        <br />
+    </div>
+    <br />
     <div id="model-list">
         @*<ul id="model-list" style="list-style-type:none;"></ul>*@
     </div>

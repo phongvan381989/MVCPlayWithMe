@@ -1,0 +1,57 @@
+﻿<div>
+    <div class="wraper-pagination">
+        @*Có 12 nút phục vụ phân trang, đầu tiên, cuối cùng là tiến trái, tiến phải, và max 10 nút có đánh số và ...*@
+        <div onclick="ChangePage(0)" class="pagination-item">
+            <p><</p>
+        </div>
+
+        <div class="pagination-item" onclick="ChangePage(1)">
+            <p>1</p>
+        </div>
+
+        <div class="pagination-item" id="p-more-left"><p>...</p></div>
+        <div class="pagination-item " onclick="ChangePage(4)">
+            <p title="4">4</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(5)">
+            <p title="5">5</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(6)">
+            <p title="6">6</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(7)">
+            <p title="7">7</p>
+        </div>
+
+        <div class="pagination-item active" onclick="ChangePage(8)">
+            <p title="8">8</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(9)">
+            <p title="9">9</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(10)">
+            <p title="10">10</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(11)">
+            <p title="11">11</p>
+        </div>
+
+        <div class="pagination-item " onclick="ChangePage(12)">
+            <p title="12">12</p>
+        </div>
+
+        <div class="pagination-item" id="p-more-left"><p>...</p></div>
+        <div class="pagination-item" onclick="ChangePage(115)">
+            <p title="115">115</p>
+        </div>
+        <div onclick="ChangePage(100)" class="pagination-item">
+            <p>></p>
+        </div>
+    </div>
+</div>

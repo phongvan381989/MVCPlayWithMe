@@ -326,7 +326,6 @@ function RequestHttpPost(onloadFunc, searchParams, url) {
 
 function RequestHttpPostUpFilePromise(xhttp, url, file) {
     return new Promise(function (resolve, reject) {
-        //const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
                 if (DEBUG) {
@@ -338,14 +337,7 @@ function RequestHttpPostUpFilePromise(xhttp, url, file) {
         xhttp.onerror = function () {
             reject(this.statusText)
         };
-        if (DEBUG) {
-            console.log(url);
-            //console.log(searchParams.toString());
-            var headers = xhttp.getAllResponseHeaders();
-            console.log(headers);
 
-        }
-        //xhttp.open("POST", url);
         xhttp.send(file);
     });
 }
@@ -421,13 +413,13 @@ function CheckFocus(id) {
 }
 
 // Xóa tất cả dữ liệu của bảng, để lại dòng đầu tiên
-function DeleteRowsExcludeHead(tableId) {
-    let rows = document.getElementById(tableId).rows;
+function DeleteRowsExcludeHead(table) {
+    let rows = table.rows;
     if (rows == null)
         return;
     let length = rows.length;
     for (let i = length - 1; i > 0; i--) {
-        document.getElementById(tableId).deleteRow(i);
+        table.deleteRow(i);
     }
 }
 
