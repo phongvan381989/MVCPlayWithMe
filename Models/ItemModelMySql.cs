@@ -53,17 +53,43 @@ namespace MVCPlayWithMe.Models
             MyMySql.AddOutParameters(paras);
         }
 
-        public MySqlResultState AddItem(Item it)
+        public int AddItem(Item item)
         {
-            MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[7];
-            ItemParameters(it, paras);
+            paras = new MySqlParameter[4];
+            paras[0] = new MySqlParameter("@inName", item.name);
+            paras[1] = new MySqlParameter("@inStatus", item.status);
+            paras[2] = new MySqlParameter("@inDetail", item.detail);
+            paras[3] = new MySqlParameter("@inQuota", item.quota);
 
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbItem_Insert", paras);
+            int id = -1;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
 
-            return result;
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    id = MyMySql.GetInt32(rdr, "LastId");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
+
+            return id;
         }
 
         public MySqlResultState UpdateItem(Item it)
@@ -261,16 +287,45 @@ namespace MVCPlayWithMe.Models
             MyMySql.AddOutParameters(paras);
         }
 
-        public MySqlResultState AddModel(Model model)
+        public int AddModel(Model model)
         {
-            MySqlResultState result = null;
+            int id = -1;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[10];
-            ModelParameters(model, paras);
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbModel_Insert", paras);
+            paras = new MySqlParameter[7];
+            paras[0] = new MySqlParameter("@inItemId", model.itemId);
+            paras[1] = new MySqlParameter("@inName", model.name);
+            paras[2] = new MySqlParameter("@inBookCoverPrice", model.bookCoverPrice);
+            paras[3] = new MySqlParameter("@inPrice", model.price);
+            paras[4] = new MySqlParameter("@inStatus", model.status);
+            paras[5] = new MySqlParameter("@inQuota", model.quota);
+            paras[6] = new MySqlParameter("@inQuantity", model.quantity);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
 
-            return result;
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    id = MyMySql.GetInt32(rdr, "LastId");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
+
+            return id;
         }
 
         public MySqlResultState UpdateModel(Model model)
@@ -288,7 +343,7 @@ namespace MVCPlayWithMe.Models
         public MySqlResultState AddMapping(Model model)
         {
             MySqlResultState result = new MySqlResultState();
-            if(model.mapping.Count()  == 0)
+            if(model.mappingOnlyProductId.Count()  == 0)
             {
                 return result;
             }
@@ -309,7 +364,7 @@ namespace MVCPlayWithMe.Models
                 MySqlCommand cmd = new MySqlCommand("st_tbMapping_Insert", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddRange(paras);
-                foreach (var id in model.mapping)
+                foreach (var id in model.mappingOnlyProductId)
                 {
                     paras[1].Value = id;
                     cmd.ExecuteNonQuery();
@@ -327,29 +382,83 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        private Model ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr)
+        /// <summary>
+        /// TỪ dữ liệu select db, ta trả về đối tượng Product
+        /// </summary>
+        /// <param name="rdr">Trả về ngay từ câu select</param>
+        /// <returns></returns>
+        private Product ConvertOneRowFromDataMySqlToProduct(MySqlDataReader rdr)
         {
-            Model model = new Model();
-            model.id = MyMySql.GetInt32(rdr, "ModelId");
-            model.name = MyMySql.GetString(rdr, "ModelName");
-            model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
-            model.price = MyMySql.GetInt32(rdr, "ModelPrice");
-            model.quota = MyMySql.GetInt32(rdr, "ModelQuota");
-            model.status = MyMySql.GetInt32(rdr, "ModelStatus");
-            model.quantity = MyMySql.GetInt32(rdr, "ModelQuantity");
+            Product product = new Product();
+            product.id = MyMySql.GetInt32(rdr, "ProductId");
+            product.code = MyMySql.GetString(rdr, "ProductCode");
+            product.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+            product.name = MyMySql.GetString(rdr, "ProductName");
+            product.comboId = MyMySql.GetInt32(rdr, "ComboId");
+            product.comboName = MyMySql.GetString(rdr, "ComboName");
+            product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
+            product.categoryName = MyMySql.GetString(rdr, "CategoryName");
+            product.bookCoverPrice = MyMySql.GetInt32(rdr, "ProductBookCoverPrice");
+            product.author = MyMySql.GetString(rdr, "ProductAuthor");
+            product.translator = MyMySql.GetString(rdr, "ProductTranslator");
+            product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+            product.publisherName = MyMySql.GetString(rdr, "PublisherName");
+            product.publishingCompany = MyMySql.GetString(rdr, "ProductPublishingCompany");
+            product.publishingTime = MyMySql.GetInt32(rdr, "ProductPublishingTime");
+            product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
+            product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
+            product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
+            product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
+            product.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+            product.hardCover = MyMySql.GetInt32(rdr, "ProductHardCover");
+            product.minAge = MyMySql.GetInt32(rdr, "ProductMinAge");
+            product.maxAge = MyMySql.GetInt32(rdr, "ProductMaxAge");
+            product.parentId = MyMySql.GetInt32(rdr, "ParentId");
+            product.republish = MyMySql.GetInt32(rdr, "ProductRepublish");
+            product.detail = MyMySql.GetString(rdr, "ProductDetail");
+            product.status = MyMySql.GetInt32(rdr, "ProductStatus");
 
-            return model;
+            product.SetSrcImageVideo();
+
+            return product;
+        }
+
+        private void ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr, List<Model> lsModel)
+        {
+            int modelId = MyMySql.GetInt32(rdr, "ModelId");
+            if (modelId != -1)// item đã có model
+            {
+                // check lsModel đã có model này chưa? Chỉ cần check phần tử cuối cùng của lsModel
+                if (lsModel.Count() == 0 || lsModel[lsModel.Count() - 1].id != modelId)
+                {
+                    Model model = new Model();
+                    model.id = modelId;
+                    model.itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    model.name = MyMySql.GetString(rdr, "ModelName");
+                    model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
+                    model.price = MyMySql.GetInt32(rdr, "ModelPrice");
+                    model.quota = MyMySql.GetInt32(rdr, "ModelQuota");
+                    model.status = MyMySql.GetInt32(rdr, "ModelStatus");
+                    model.quantity = MyMySql.GetInt32(rdr, "ModelQuantity");
+                    model.SetSrcImage();
+
+                    lsModel.Add(model);
+                }
+
+                Product pro = ConvertOneRowFromDataMySqlToProduct(rdr);
+                    lsModel[lsModel.Count() - 1].mapping.Add(pro);
+            }
         }
 
         private Item ConvertOneRowFromDataMySqlToItem(MySqlDataReader rdr)
         {
             Item item = new Item();
-            item.id = MyMySql.GetInt32(rdr, "Id");
-            item.name = MyMySql.GetString(rdr, "Name");
-            item.quota = MyMySql.GetInt32(rdr, "Quota");
-            item.status = MyMySql.GetInt32(rdr, "Status");
+            item.id = MyMySql.GetInt32(rdr, "ItemId");
+            item.name = MyMySql.GetString(rdr, "ItemName");
+            item.quota = MyMySql.GetInt32(rdr, "ItemQuota");
+            item.status = MyMySql.GetInt32(rdr, "ItemStatus");
+            item.date = MyMySql.GetDateTime(rdr, "ItemDate");
             item.SetSrcImageVideo();
-            //item.models.Add(ConvertOneRowFromDataMySqlToModel(rdr));
 
             return item;
         }
@@ -422,6 +531,42 @@ namespace MVCPlayWithMe.Models
 
             conn.Close();
             return count;
+        }
+
+        public Item GetItemFromId(int id)
+        {
+            Item item = null;
+            List<Model> lsModel = new List<Model>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Get_From_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    if (item == null)
+                    {
+                        item = ConvertOneRowFromDataMySqlToItem(rdr);
+                    }
+                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                }
+                if (rdr != null)
+                    rdr.Close();
+                item.models = lsModel;
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return item;
         }
     }
 }

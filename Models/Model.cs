@@ -13,7 +13,11 @@ namespace MVCPlayWithMe.Models
         public string name { get; set; }
         public int bookCoverPrice { get; set; }
         public int price { get; set; }
-        public List<int> mapping { get; set; }
+        public List<int> mappingOnlyProductId { get; set; }
+        public List<Product> mapping { get; set; }
+
+        // image source thumbnail của sản phẩm được mapping.
+        //public List<string> mappingProductImageSrc { get; set; }
         public string imageSrc { get; set; }
 
         /// <summary>
@@ -27,7 +31,8 @@ namespace MVCPlayWithMe.Models
         {
             id = -1;
             quota = Common.quota;
-            mapping = new List<int>();
+            mapping = new List<Product>();
+            //mappingProductImageSrc = new List<string>();
         }
 
         public Model(int inId, int inItemId, string inName, int inBookCoverPrice, int inPrice, int inStatus,
@@ -41,12 +46,18 @@ namespace MVCPlayWithMe.Models
             status = inStatus;
             quota = inQuota;
             quantity = inQuantity;
-            mapping = new List<int>();
+            mapping = new List<Product>();
+            //mappingProductImageSrc = new List<string>();
         }
 
         public void SetSrcImage()
         {
             imageSrc = Common.GetModelImageSrc(itemId, id);
         }
+
+        //public void SetMappingProductImageSrc()
+        //{
+        //    mappingProductImageSrc = Common.GetListThumbnailImageSrd(mapping);
+        //}
     }
 }

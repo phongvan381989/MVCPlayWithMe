@@ -143,6 +143,7 @@ namespace MVCPlayWithMe.Controllers
 
             var fileName = Request.Headers["fileName"];
             var id = Request.Headers["productId"];
+            // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media, ta lấy chỉ tên
             var originalFileName = Request.Headers["originalFileName"];
             var exist = Request.Headers["exist"];
             var finish = Request.Headers["finish"];
@@ -180,15 +181,18 @@ namespace MVCPlayWithMe.Controllers
             // Xóa file cũ cùng tên không kể đuôi nếu có
             Common.DeleteImageVideoWithoutExtension(path + fileName);
 
-            // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
-            var saveToFileLoc = string.Format("{0}{1}",
-                                          path,
-                                           fileName);
+            if (length > 0)
+            {
+                // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
+                var saveToFileLoc = string.Format("{0}{1}",
+                                              path,
+                                               fileName);
 
-            // save the file.
-            var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
-            fileStream.Write(bytes, 0, length);
-            fileStream.Close();
+                // save the file.
+                var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
+                fileStream.Write(bytes, 0, length);
+                fileStream.Close();
+            }
 
             if (finish == "true")// Xóa bỏ ảnh/video không cần lưu nữa. Những file có tên lớn hơn tên cuối cùng được lưu
             {

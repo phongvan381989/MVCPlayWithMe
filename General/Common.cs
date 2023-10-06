@@ -17,6 +17,7 @@ namespace MVCPlayWithMe.General
         public static readonly List<string> VideoExtensions = new List<string> { ".mp4", ".webm", ".ogg" };
         public static readonly string dateFormat = "yyyy-MM-dd";
         public static readonly int quota = 5;
+        public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
         /// <summary>
         /// Đường dẫn thư mục chứa file ảnh
         /// </summary>
@@ -93,18 +94,61 @@ namespace MVCPlayWithMe.General
         public static List<string> GetImageSrc(string productId)
         {
             List<string> src = new List<string>();
-            string[] dirs = GetAllFileNameOfProduct(productId);
+            string[] files = GetAllFileNameOfProduct(productId);
 
             string relPath = ProductMediaFolderPath + productId + @"/";
 
-            foreach (var dir in dirs)
+            foreach (var file in files)
             {
-                if (ImageExtensions.Contains(Path.GetExtension(dir).ToLower()))
+                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
                 {
-                    src.Add(relPath + Path.GetFileName(dir));
+                    src.Add(relPath + Path.GetFileName(file));
                 }
             }
             return src;
+        }
+
+        /// <summary>
+        /// Từ id sản phẩm, lấy ảnh đầu tiên (tên là 0.*) làm ảnh đại diện
+        /// Nếu không có ảnh lấy ảnh mặc định
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
+        public static string GetThumbnailImageSrc(int productId)
+        {
+            string str = srcNoImageThumbnail;
+            string path = GetProductMediaFolderPath(productId.ToString());
+            string[] files = Directory.GetFiles(Path.GetDirectoryName(path), "0.*");
+
+            string relPath = ProductMediaFolderPath + productId + @"/";
+
+            foreach (var file in files)
+            {
+                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                {
+                    str = relPath + Path.GetFileName(file);
+                    break;
+                }
+            }
+            return str;
+        }
+
+        /// <summary>
+        ///  Từ list id sản phẩm, lấy list ảnh đầu tiên (tên là 0.*) làm ảnh đại diện
+        /// </summary>
+        /// <param name="lsProductId"></param>
+        /// <returns></returns>
+        public static List<string> GetListThumbnailImageSrd(List<int> lsProductId)
+        {
+            List<string> ls = new List<string>();
+            if (lsProductId == null)
+                return ls;
+
+            foreach(var i in lsProductId)
+            {
+                ls.Add(GetThumbnailImageSrc(i));
+            }
+            return ls;
         }
 
         /// <summary>
@@ -115,15 +159,15 @@ namespace MVCPlayWithMe.General
         public static List<string> GetVideoSrc(string productId)
         {
             List<string> src = new List<string>();
-            string[] dirs = GetAllFileNameOfProduct(productId);
+            string[] files = GetAllFileNameOfProduct(productId);
 
             string relPath = ProductMediaFolderPath + productId + @"/";
 
-            foreach (var dir in dirs)
+            foreach (var file in files)
             {
-                if (VideoExtensions.Contains(Path.GetExtension(dir).ToLower()))
+                if (VideoExtensions.Contains(Path.GetExtension(file).ToLower()))
                 {
-                    src.Add(relPath + Path.GetFileName(dir));
+                    src.Add(relPath + Path.GetFileName(file));
                 }
             }
 
@@ -277,6 +321,7 @@ namespace MVCPlayWithMe.General
             return path;
         }
 
+
         public static string CreateItemMediaFolderPath(int itemId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
@@ -294,7 +339,6 @@ namespace MVCPlayWithMe.General
             MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
-                //Directory.CreateDirectory(path);
                 path = null;
             }
             return path;
@@ -325,15 +369,15 @@ namespace MVCPlayWithMe.General
         public static List<string> GetItemImageSrc(int itemId)
         {
             List<string> src = new List<string>();
-            string[] dirs = GetAllFileNameOfItem(itemId);
+            string[] files = GetAllFileNameOfItem(itemId);
 
             string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
 
-            foreach (var dir in dirs)
+            foreach (var file in files)
             {
-                if (ImageExtensions.Contains(Path.GetExtension(dir).ToLower()))
+                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
                 {
-                    src.Add(relPath + Path.GetFileName(dir));
+                    src.Add(relPath + Path.GetFileName(file));
                 }
             }
 
@@ -349,15 +393,15 @@ namespace MVCPlayWithMe.General
         {
             //List<string> src = new List<string>();
             string src= "";
-            string[] dirs = GetAllFileNameOfItem(itemId);
+            string[] files = GetAllFileNameOfItem(itemId);
 
             string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
 
-            foreach (var dir in dirs)
+            foreach (var file in files)
             {
-                if (VideoExtensions.Contains(Path.GetExtension(dir).ToLower()))
+                if (VideoExtensions.Contains(Path.GetExtension(file).ToLower()))
                 {
-                    src = relPath + Path.GetFileName(dir);
+                    src = relPath + Path.GetFileName(file);
                     break;
                 }
             }
@@ -365,19 +409,25 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Từ id model, lấy được đường dẫn tới ảnh dùng cho thẻ img
+        /// Từ id model, lấy được đường dẫn tới thumbnail dùng cho thẻ img
         /// </summary>
         /// <param name="itemId"></param>
         /// <returns></returns>
         public static string GetModelImageSrc(int itemId, int modelId)
         {
+            string path = GetModelMediaFolderPath(itemId);
+            if(path == null)
+                return Common.srcNoImageThumbnail;
+
             string src = "";
-            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/" + modelId.ToString() + @"/";
+            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/Model/";
 
-            string[] files = Directory.GetFiles(relPath, modelId.ToString() + ".*");
-            if(files.Length != 0)
+            // Model không có video nên không cần check
+            string[] files = Directory.GetFiles(path, modelId.ToString() + ".*");
+            if (files.Length != 0)
                 src = relPath + Path.GetFileName(files[0]);
-
+            else
+                src = Common.srcNoImageThumbnail;
             return src;
         }
         #endregion

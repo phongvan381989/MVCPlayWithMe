@@ -20,11 +20,13 @@ namespace MVCPlayWithMe.Models
 
         public int quota { get; set; }
 
+        public DateTime date { get; set; }
+
         public List<Model> models { get; set; }
 
         public List<string> imageSrc { get; set; }
 
-        string videoSrc { get; set; }
+        public string videoSrc { get; set; }
 
         public Item()
         {
@@ -41,6 +43,22 @@ namespace MVCPlayWithMe.Models
             )
         {
             id = -1;
+            name = inName;
+            status = inStatus;
+            quota = inQuota;
+            detail = inDetail;
+            models = new List<Model>();
+            imageSrc = new List<string>();
+        }
+
+        public Item(int inId, 
+            string inName,
+            int inStatus,
+            int inQuota,
+            string inDetail
+            )
+        {
+            id = inId;
             name = inName;
             status = inStatus;
             quota = inQuota;

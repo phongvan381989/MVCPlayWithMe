@@ -56,20 +56,23 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="id">item id</param>
         /// <returns></returns>
         [HttpGet]
-        public ActionResult UpdateDelete(int id)
+        public ActionResult UpdateDelete(/*int id*/)
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-
+            int id = 60;
             ViewDataGetListItemName();
             ViewDataGetListProductName();
             ViewDataGetListCombo();
+            ViewData["itemObject"] = JsonConvert.SerializeObject(sqler.GetItemFromId(id));
 
             return View();
         }
 
+        // Thêm item vào db, không xử lý image/video
+        [HttpGet]
         public string AddItem(string name, int status, int quota, string detail)
         {
             if (AuthentAdministrator() == null)
@@ -78,29 +81,50 @@ namespace MVCPlayWithMe.Controllers
             }
 
             Item it = new Item(name, status, quota, detail);
-
-            MySqlResultState result = sqler.AddItem(it);
+            int id = sqler.AddItem(it);
+            MySqlResultState result = new MySqlResultState();
             // Lấy id của sản phẩm vừa thêm mới thành công
-            result.myAnything = sqler.GetMaxItemId();
+            result.myAnything = id;
 
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpGet]
-        public string UpModelNoName(int itemId, string listProIdMapping, int status, int quota)
+        public string UpdateItem(int id, string name, int status, int quota, string detail)
         {
-            MySqlResultState result = null;
-            int modelId = -1;
-            // Lưu vào db
-            Model model = new Model(modelId, itemId, "", 0, 0, status, quota, 0);
-            model.mapping = Common.ConvertJsonArrayToListInt(listProIdMapping);
-            result = sqler.AddModel(model);
-            modelId = sqler.GetMaxModelId();
-            result.myAnything = modelId;
-            model.id = modelId;
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
 
-            sqler.AddMapping(model);
+            Item it = new Item(id, name, status, quota, detail);
+
+            MySqlResultState result = sqler.UpdateItem(it);
+
             return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="fileType">isImage hoặc isVideo</param>
+        /// <returns></returns>
+        //[HttpPost]
+        public string DeleteAllFileWithType(int id, string fileType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+            }
+            string path = Common.GetItemMediaFolderPath(id);
+            // Folder được tạo khi có image/video tương ứng
+            if (path == null)
+            {
+                MySqlResultState rs = new MySqlResultState();
+                return JsonConvert.SerializeObject(rs);
+            }
+            return DeleteAllFileWithTypeBasic(path, id, fileType);
         }
 
         /// <summary>
@@ -128,7 +152,8 @@ namespace MVCPlayWithMe.Controllers
         }
 
         /// <summary>
-        /// Nhận thông tin 1 model.
+        /// Model gồm thông tin lưu db và ảnh đại diện. Thông tin model ở header.
+        /// Dùng cho cả tạo mới và cập nhật model
         /// </summary>
         /// <param name="obj"></param>
         /// <returns></returns>
@@ -147,8 +172,10 @@ namespace MVCPlayWithMe.Controllers
 
             var modelName = Request.Headers["modelName"];
             var modelId = Common.ConvertStringToInt32(Request.Headers["modelId"]);// Tạo mới modelId = -1
+            // exist chỉ ảnh đại diện model đã tồn tại trên server
             var exist = Request.Headers["exist"];
             var quota = Common.ConvertStringToInt32(Request.Headers["quota"]);
+            var price = Common.ConvertStringToInt32(Request.Headers["price"]);
             var finish = Request.Headers["finish"];
             var itemId = Common.ConvertStringToInt32(Request.Headers["itemId"]);
             var status = Common.ConvertStringToInt32(Request.Headers["status"]);
@@ -157,18 +184,18 @@ namespace MVCPlayWithMe.Controllers
             var listProIdMapping = Request.Headers["listProIdMapping"];// Mảng id sản phẩm mapping
             MySqlResultState result = null;
             // Lưu vào db
-            Model model = new Model(modelId, itemId, modelName, 0, 0, status, quota, quantity);
-            if(exist == "true")
+            Model model = new Model(modelId, itemId, modelName, 0, price, status, quota, quantity);
+            if(modelId != -1)
             {
                 result = sqler.UpdateModel(model);
             }
             else
             {
-                result = sqler.AddModel(model);
-                modelId = sqler.GetMaxModelId();
+                result = new MySqlResultState();
+                modelId = sqler.AddModel(model);
                 result.myAnything = modelId;
 
-                model.mapping = Common.ConvertJsonArrayToListInt(listProIdMapping);
+                model.mappingOnlyProductId = Common.ConvertJsonArrayToListInt(listProIdMapping);
                 model.id = modelId;
 
                 sqler.AddMapping(model);
@@ -177,14 +204,15 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(result);
             }
-            string path = Common.GetModelMediaFolderPath(itemId);
-            if(path == null)
-            {
-                path = Common.CreateModelMediaFolderPath(itemId);
-            }
             // Lưu ảnh vào thư mục
-            if (exist != "true")
+            if (exist != "true" && length > 0)
             {
+                string path = Common.GetModelMediaFolderPath(itemId);
+                if (path == null)
+                {
+                    path = Common.CreateModelMediaFolderPath(itemId);
+                }
+
                 // Tên ảnh lưu có định dạng. modelId.jpg
                 var saveToFileLoc = string.Format("{0}{1}",
                                               path,
@@ -195,31 +223,6 @@ namespace MVCPlayWithMe.Controllers
                 fileStream.Write(bytes, 0, length);
                 fileStream.Close();
             }
-
-            //if (finish == "true")
-            //{
-            //    var listModelId = Request.Headers["listModelId"];
-            //    //List<string> lsModelIdStr = JsonConvert.DeserializeObject<List<string>>(listModelId);
-
-            //    // Danh sách modelId mới nhất
-            //    List<int> lsModelId = JsonConvert.DeserializeObject<List<int>>(listModelId);
-            //    //foreach(var str in lsModelIdStr)
-            //    //{
-            //    //    lsModelId.Add(Common.ConvertStringToInt32(str));
-            //    //}
-            //    if (lsModelId.Count() > 0)
-            //    {
-
-            //        // Xóa model trong db
-            //        List<Model> lsDeletedModel = sqler.DeleteOldModel(lsModelId, itemId);
-
-            //        // Xóa ảnh model tương ứng trong thư mục
-            //        foreach (var mod in lsDeletedModel)
-            //        {
-            //            Common.DeleteImageVideoWithoutExtension(path + mod.id.ToString() + ".jpg");
-            //        }
-            //    }
-            //}
 
             return JsonConvert.SerializeObject(result);
         }
@@ -253,12 +256,6 @@ namespace MVCPlayWithMe.Controllers
             return count.ToString();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="namePara"></param>
-        /// <param name="page"> Tính từ 1. Nên cần -1</param>
-        /// <returns></returns>
         [HttpGet]
         public string ChangePage(string namePara, int start, int offset)
         {
@@ -266,6 +263,12 @@ namespace MVCPlayWithMe.Controllers
             lsSearchResult = sqler.SearchItemChangePage(namePara, start, offset);
 
             return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
+        [HttpGet]
+        public string GetItemFromId(int id)
+        {
+            return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
         }
     }
 }

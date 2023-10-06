@@ -123,7 +123,7 @@ async function AddNewProPromise() {
 
     let urlAdd = "/Product/AddNewPro";
     let urlUp = "/Product/UploadFile";
-    let urlDele = "";
+    let urlDeleteAllFileWithType = "";
     let productID = 0;
 
     try {
@@ -136,7 +136,7 @@ async function AddNewProPromise() {
         productID = obj.myAnything;
 
         // Upload ảnh/video sản phẩm lên server
-        let respinseSendFile = await SendFilesPromise(urlUp, urlDele, productID);
+        let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
     }
     catch (error) {
         if (DEBUG) {
@@ -337,14 +337,14 @@ async function UpdateProductPromise() {
 
     let url = "/Product/UpdateProduct";
     let urlUp = "/Product/UploadFile";
-    let urlDele = "/Product/DeleteAllFileWithType";
+    let urlDeleteAllFileWithType = "/Product/DeleteAllFileWithType";
 
     try {
         // Cập nhật vào db
         let responseDB = await RequestHttpGetPromise(searchParams, url);
 
         // Upload ảnh/video sản phẩm lên server
-        let respinseSendFile = await SendFilesPromise(urlUp, urlDele, productID);
+        let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
     }
     catch (error) {
         if (DEBUG) {

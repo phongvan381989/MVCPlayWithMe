@@ -3,8 +3,15 @@ let classOfModelName = "class-model-name";
 let classOfModelQuota = "class-model-quota";
 let classOfModelImage = "class-model-image";
 let classOfModelStatus = "class-model-status";
-let classOffModelTable = "class-model-table"
-let countItem = 0;
+let classOffModelTable = "class-model-table";
+let classOffModelPrice = "class-model-price";
+let classOffModelBookCoverPrice = "class-model-book-cover-price";
+let classOffModelQuantity = "class-model-quantity";
+let countModel = 0;
+let item = null; // Khi chọn item để xem, cập nhật thông tin
+// Giá trị này chỉ tăng, không giảm
+// Tăng khi add thêm model, mục đích cấu thành id của các tag, để id là khác nhau
+let autoIncrease = 0;
 let isFinishUploadImageModel = 0;
 let modelMapping = null; // model đang chọn mapping
 
@@ -15,9 +22,9 @@ function AddDeleteButtonForModel(container) {
     let btnContent = document.createTextNode("Xóa phân loại");
     btn.onclick = function () {
         if (DEBUG) {
-            console.log("countModel: " + countItem);
+            console.log("countModel: " + countModel);
         }
-        countItem = countItem - 1;
+        countModel = countModel - 1;
         this.parentElement.parentElement.remove();
     }
     btn.appendChild(btnContent);
@@ -48,9 +55,9 @@ function AddMappingButtonForModel(container) {
 }
 
 // Thêm table mapping vào model
-function AddModelTableMapping(container) {
+function CreateModelTableMapping(container) {
     if (DEBUG) {
-        console.log("Start AddModelTableMapping");
+        console.log("Start CreateModelTableMapping");
     }
     const div = document.createElement("div");
     div.style.marginLeft = "50px";
@@ -60,6 +67,7 @@ function AddModelTableMapping(container) {
 
     div.appendChild(tab);
     container.appendChild(div);
+    return tab;
 }
 
 // Constructor function for obj gồm: id, img, name
@@ -118,14 +126,14 @@ function CheckObjExistAndInsert(modelTable, obj) {
 }
 
 // listObj: sản phẩm được chọn từ modal gồm: id, img, name
-function AddTableMapping(container, listObj) {
+function AddToTableMapping(container, listObj) {
     if (DEBUG) {
         console.log(listObj);
     }
     // Check container chứa table mapping chưa? Nếu không thì tạo mới
     let modelTable;
     if (container.getElementsByClassName(classOffModelTable).length == 0) {
-        AddModelTableMapping(container);
+        CreateModelTableMapping(container);
     }
     modelTable = container.getElementsByClassName(classOffModelTable)[0];
 
@@ -142,33 +150,6 @@ function AddTableMapping(container, listObj) {
     }
 }
 
-function AddTableMappingToItem(container, listObj) {
-    if (DEBUG) {
-        console.log(listObj);
-    }
-    // Check container chứa table mapping chưa? Nếu không thì tạo mới
-    let modelTable;
-    if (container.children.length == 0) {
-        // Status
-        AddLabelSelectOfStatus(container, "Trạng thái:", "id-status-item");
-        AddDistanceRows(container);
-
-        // Quota
-        AddLabelInput(container, "Quota:", "id-quota-item", "number", false);
-        AddDistanceRows(container);
-
-        let tab = document.createElement("table");
-        container.appendChild(tab);
-    }
-    modelTable = container.children[4];
-
-    // Insert listObj vào table, có check obj đã tồn tại trong table theo id
-    let length = listObj.length;
-    for (let i = 0; i < length; i++) {
-        CheckObjExistAndInsert(modelTable, listObj[i]);
-    }
-}
-
 function AddDistanceRows(modelContainer) {
     modelContainer.appendChild(document.createElement("br"));
 }
@@ -177,12 +158,12 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     // Thêm tên
     const div = document.createElement("div");
     let lab = document.createElement("label");
-    lab.htmlFor = id + countItem;
+    lab.htmlFor = id + autoIncrease;
     lab.innerHTML = label;
 
     let inp = document.createElement("INPUT");
     inp.setAttribute("type", inputType);
-    inp.id = id + countItem;
+    inp.id = id + autoIncrease;
     //inp.className = "config-max-width margin-vertical";
     inp.disabled = disabled;
     // Set giá trị quota mặc định
@@ -194,6 +175,19 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     if (id == "id-name-") {
         inp.className = classOfModelName;
     }
+    // Set class cho input giá bán
+    if (id == "id-price-") {
+        inp.className = classOffModelPrice;
+    }
+    // Set class cho input giá bìa
+    if (id == "id-book-cover-price-") {
+        inp.className = classOffModelBookCoverPrice;
+    }
+    // Set class cho input giá bìa
+    if (id == "id-quatity-") {
+        inp.className = classOffModelQuantity;
+    }
+    
     div.appendChild(lab);
     div.appendChild(inp);
     container.appendChild(div);
@@ -203,11 +197,11 @@ function AddLabelSelectOfStatus(container, label, id) {
     // Thêm tên
     const div = document.createElement("div");
     let lab = document.createElement("label");
-    lab.htmlFor = id + countItem;
+    lab.htmlFor = id + autoIncrease;
     lab.innerHTML = label;
 
     let selectList  = document.createElement("SELECT");
-    selectList.id = id + countItem;
+    selectList.id = id + autoIncrease;
     selectList.className = "config-max-width margin-vertical class-model-status";
 
     let option = document.createElement("option");
@@ -232,17 +226,11 @@ function AddLabelSelectOfStatus(container, label, id) {
 }
 
 function AddModelToScreen() {
-    // Check có đang mapping tới item
-    if (document.getElementById("mapping-to-item").children.length > 0) {
-        let text = "Chắc chắn xóa liên kết tới sản phẩm cha?";
-        if (confirm(text) == false) {
-            return;
-        }
-        document.getElementById("mapping-to-item").innerHTML = "";
-    }
-    countItem = countItem + 1;
+    countModel = countModel + 1;
+    autoIncrease = autoIncrease + 1;
     if (DEBUG) {
-        console.log("countModel: " + countItem);
+        console.log("countModel: " + countModel);
+        console.log("autoIncrease: " + autoIncrease);
     }
     const modelContainer = document.createElement("div");
     modelContainer.style.marginLeft = "10px";
@@ -266,6 +254,7 @@ function AddModelToScreen() {
     img.src = "";
     img.file = null;
     img.fileName = "";
+    img.exist = "false";
     img.className = classOfModelImage;
     img.height = thumbnailHeight;
     img.width = thumbnailWidth;
@@ -286,13 +275,17 @@ function AddModelToScreen() {
 
     AddDistanceRows(modelContainer);
 
-    //// Thêm giá bán, giá bán lấy từ các chương trình khyến mại, giảm giá
-    //AddLabelInput(modelContainer, "Giá bán:", "id-price-", "number", true);
-    //AddDistanceRows(modelContainer);
+    // Thêm giá bán, giá bán lấy từ các chương trình khyến mại, giảm giá
+    AddLabelInput(modelContainer, "Giá bán:", "id-price-", "number", false);
+    AddDistanceRows(modelContainer);
 
-    //// Thêm giá bìa, thuộc tính này hiển thị chứ không cần nhập
-    //AddLabelInput(modelContainer, "Giá bìa:", "id-book-cover-price-", "number", true);
-    //AddDistanceRows(modelContainer);
+    // Thêm giá bìa, thuộc tính này hiển thị chứ không cần nhập
+    AddLabelInput(modelContainer, "Giá bìa:", "id-book-cover-price-", "number", true);
+    AddDistanceRows(modelContainer);
+
+    // Thêm số lượng trong kho
+    AddLabelInput(modelContainer, "Số lượng:", "id-quatity-", "number", false);
+    AddDistanceRows(modelContainer);
 
     // Status
     AddLabelSelectOfStatus(modelContainer, "Trạng thái:", "id-status-");
@@ -301,10 +294,6 @@ function AddModelToScreen() {
     // Quota
     AddLabelInput(modelContainer, "Quota:", "id-quota-", "number", false);
     AddDistanceRows(modelContainer);
-
-    //// Số lượng sản phẩm trong kho, thuộc tính này hiển thị chứ không cần nhập
-    //AddLabelInput(modelContainer, "Số lượng có thể bán:", "id-quantity-", "number", true);
-    //AddDistanceRows(modelContainer);
 
     // Thêm nút xóa bên cạnh
     AddDeleteButtonForModel(modelContainer);
@@ -315,6 +304,7 @@ function AddModelToScreen() {
     AddDistanceRows(modelContainer);
     AddDistanceRows(modelList);
     //EasyViewListModel();
+    return modelContainer;
 }
 
 // Khi item không cần phân loại
@@ -331,9 +321,9 @@ function MappingToItem() {
     if (modelList.children.length > 0) {
         modelList.innerHTML = "";
         modelMapping = null;
-        countItem = 0;
+        countModel = 0;
         if (DEBUG) {
-            console.log("countModel: " + countItem);
+            console.log("countModel: " + countModel);
         }
     }
 
@@ -359,7 +349,7 @@ function SetThumbnail() {
             img.onload = () => {
                 URL.revokeObjectURL(img.src);
             }
-
+            img.exist = false;
             //const info = document.createElement("span");
             //info.innerHTML = `${this.files[i].name}: ${this.files[i].size} bytes`;
             //li.appendChild(info);
@@ -448,7 +438,7 @@ function GetListProIdMapping(table) {
     }
 
     let listProIdMapping = [];
-    if (typeof table !== undefined) {
+    if ( table != null) {
         let rows = table.rows;
         let length = rows.length;
         if (DEBUG) {
@@ -459,9 +449,7 @@ function GetListProIdMapping(table) {
             listProIdMapping.push(Number(rows[i].cells[0].innerHTML));
         }
     }
-    //if (DEBUG) {
-    //    console.log(listProIdMapping);
-    //}
+
     return JSON.stringify(listProIdMapping);
 }
 
@@ -502,9 +490,9 @@ function AddItemParameters(searchParams){
     searchParams.append("detail", detail);
 }
 
-// Thông tin gồm ảnh, tên, quota.
+// Thông tin gồm ảnh, tên, quota,...
 // Tạo mới modelId = -1
-function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, exist,
+function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, price, exist,
      itemId, status, quantity, imageExtension,
     listProIdMapping) {
     if (DEBUG) {
@@ -520,21 +508,21 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     parrent.xhr = xhr;
 
     const self = parrent;
-    parrent.xhr.upload.addEventListener("progress", (e) => {
+    self.xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
             const percentage = Math.round((e.loaded * 100) / e.total);
             self.ctrl.update(percentage);
         }
     }, false);
 
-    xhr.upload.addEventListener("load", (e) => {
-        if (DEBUG) {
-            console.log("Upload image model done.");
-        }
-        self.ctrl.update(100);
+    //xhr.upload.addEventListener("load", (e) => {
+    //    if (DEBUG) {
+    //        console.log("Upload image model done.");
+    //    }
+    //    self.ctrl.update(100);
 
-        isFinishUploadImageModel--;
-    }, false);
+    //    isFinishUploadImageModel--;
+    //}, false);
 
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "multipart/form-data");
@@ -542,6 +530,7 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     xhr.setRequestHeader("modelName", modelName);
     xhr.setRequestHeader("exist", exist);
     xhr.setRequestHeader("quota", quota);
+    xhr.setRequestHeader("price", price);
     xhr.setRequestHeader("itemId", itemId);
     xhr.setRequestHeader("status", status); 
     xhr.setRequestHeader("quantity", quantity);
@@ -552,6 +541,7 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
         console.log("modelName: " + modelName);
         console.log("exist: " + exist);
         console.log("quota: " + quota);
+        console.log("price: " + price);
         console.log("itemId: " + itemId);
         console.log("status: " + status);
         console.log("quantity: " + quantity);
@@ -567,6 +557,9 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
             console.log("resolve: " + resolve);
             console.log("new modelId: " + model.modelId);
         }
+        self.ctrl.update(100);
+
+        isFinishUploadImageModel--;
     }, null);
 }
 
@@ -577,11 +570,11 @@ async function AddItemModel() {
         document.getElementById("item-name-id").focus();
         return;
     }
-
-    if (!CheckValidModelName()) {
-        alert("Tên phân loại không hợp lệ.");
-        return;
-    }
+    ShowCircleLoader();
+    //if (!CheckValidModelName()) {
+    //    alert("Tên phân loại không hợp lệ.");
+    //    return;
+    //}
     
     //if (!CheckModelHasImage()) {
     //    alert("Phân loại không có ảnh đại diện.");
@@ -593,12 +586,11 @@ async function AddItemModel() {
 
     let urlAdd = "/ItemModel/AddItem";
     let urlUpItem = "/ItemModel/UploadFileItem";
-    let urlUpModelNoName = "/ItemModel/UpModelNoName";
-    let urlDeleItem = "";
+    let urlDeleteAllFileWithType = "";
     let urlUpModel = "/ItemModel/UploadFileModel";
     let itemId = 0;
     try {
-        // Cập nhật vào db
+        // Cập nhật item vào db
         let responseDB = await RequestHttpGetPromise(searchParams, urlAdd);
         if (DEBUG) {
             console.log("responseDB.then: " + responseDB.responseText);
@@ -611,52 +603,30 @@ async function AddItemModel() {
         itemId = obj.myAnything;
 
         // Upload ảnh/video item lên server
-        let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleItem, itemId);
+        let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleteAllFileWithType, itemId);
 
-        // Item không có model, ta thêm model với tên trống
-        if (document.getElementById("mapping-to-item").children.length > 0) {
-            const searchParamsTemp = new URLSearchParams();
+        // Upload thông tin,ảnh model lên server
+        isFinishUploadImageModel = 0;
+        let listModelOnly = GetListModelOnly();
+        let length = listModelOnly.length;
 
-            searchParamsTemp.append("itemId", itemId);
+        for (let i = 0; i < length; i++) {
+            let model = listModelOnly[i];
+            let img = model.getElementsByClassName(classOfModelImage)[0];
+            let modelName = model.getElementsByClassName(classOfModelName)[0].value;
+            let modelQuota = ConvertToInt(model.getElementsByClassName(classOfModelQuota)[0].value);
+            
+            let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
+            let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
+            let exist = img.exist;
 
-            let listProIdMapping = GetListProIdMapping(document.getElementById("mapping-to-item").children[4]);
-            searchParamsTemp.append("listProIdMapping", listProIdMapping);
+            let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
+            let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
+            let imageExtension = GetExtensionOfFileName(img.fileName);
 
-            searchParamsTemp.append("status", document.getElementById("mapping-to-item").children[0].children[1].value);
-            searchParamsTemp.append("quota", document.getElementById("mapping-to-item").children[2].children[1].value);
-
-            let responseDBTemp = await RequestHttpGetPromise(searchParamsTemp, urlUpModelNoName);
-            if (DEBUG) {
-                console.log("responseDBTemp.then: " + responseDBTemp.responseText);
-            }
-        }
-        else {
-            // Upload thông tin,ảnh model lên server
-            isFinishUploadImageModel = 0;
-            let listModelOnly = GetListModelOnly();
-            let length = listModelOnly.length;
-
-            for (let i = 0; i < length; i++) {
-                let model = listModelOnly[i];
-                let img = model.getElementsByClassName(classOfModelImage)[0];
-                let modelName = model.getElementsByClassName(classOfModelName)[0].value;
-                let modelQuota = model.getElementsByClassName(classOfModelQuota)[0].value;
-                let exist;
-                if (img.file == null) {
-                    exist = "true";
-                }
-                else {
-                    exist = "false";
-                }
-
-                let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
-                let status = model.getElementsByClassName(classOfModelStatus)[0].value;
-                let imageExtension = GetExtensionOfFileName(img.fileName);
-
-                ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
-                    modelQuota, exist, itemId, status, 0,
-                    imageExtension, listProIdMapping);
-            }
+            ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
+                modelQuota, modelPrice, exist, itemId, modelStatus, modelQuantity,
+                imageExtension, listProIdMapping);
         }
     }
     catch (err) {
@@ -693,14 +663,104 @@ async function AddItemModel() {
     }
 
     // Refresh page
+    RemoveCircleLoader();
     window.scrollTo(0, 0);
     await Sleep(1000)
     //window.location.reload();
 }
+
+async function UpdateItemModel() {
+    let itemId = item.id;
+    if (itemId == null) {
+        ShowResult("Sản phẩm không chính xác.")
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", itemId);
+    AddItemParameters(searchParams);
+
+    let url = "/ItemModel/UpdateItem";
+    let urlUpItem = "/ItemModel/UploadFileItem";
+    let urlDeleteAllFileWithType = "/ItemModel/DeleteAllFileWithType";
+    let urlUpModel = "/ItemModel/UploadFileModel";
+
+    try {
+        // Cập nhật vào db
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+
+        // Upload ảnh/video item lên server
+        let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleteAllFileWithType, itemId);
+
+        // Upload thông tin,ảnh model lên server
+        isFinishUploadImageModel = 0;
+        let listModelOnly = GetListModelOnly();
+        let length = listModelOnly.length;
+
+        for (let i = 0; i < length; i++) {
+            let model = listModelOnly[i];
+            let img = model.getElementsByClassName(classOfModelImage)[0];
+            let modelName = model.getElementsByClassName(classOfModelName)[0].value;
+            let modelQuota = ConvertToInt(model.getElementsByClassName(classOfModelQuota)[0].value);
+
+            let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
+            let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
+            let exist = img.exist;
+
+            let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
+            let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
+            let imageExtension = GetExtensionOfFileName(img.fileName);
+
+            ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
+                modelQuota, modelPrice, exist, itemId, modelStatus, modelQuantity,
+                imageExtension, listProIdMapping);
+        }
+    }
+    catch (err) {
+        if (DEBUG) {
+            console.log(err.message);
+            console.log(err);
+        }
+        alert("Tạo sản phẩm lỗi.");
+        return;
+    }
+
+    // Đợi upload xong ảnh/video của item
+    while (true) {
+        await Sleep(1000);
+        if (DEBUG) {
+            console.log("isFinishUploadImage = " + isFinishUploadImage);
+            console.log("isFinishUploadVideo = " + isFinishUploadVideo);
+        }
+        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+            break;
+        }
+    }
+
+    // Đợi upload xong ảnh của model
+    while (true) {
+        await Sleep(1000);
+        if (DEBUG) {
+            console.log("isFinishUploadImageModel = " + isFinishUploadImageModel);
+        }
+        if (isFinishUploadImageModel == 0) {
+            alert("Tạo sản phẩm thành công.");
+            break;
+        }
+    }
+
+    // Refresh page
+    RemoveCircleLoader();
+    window.scrollTo(0, 0);
+    await Sleep(1000)
+    //window.location.reload();
+}
+
 function CloseModal(modal) {
     modal.style.display = "none";
     EmptyModal();
 }
+
 function InitializeModal() {
     // Get the modal
     let modal = document.getElementById("myModal");
@@ -857,7 +917,7 @@ async function SearchProduct() {
     }
 }
 
-function SaveMappingToItemOrModel() {
+function SaveMappingToModel() {
     // Lấy danh sách sản phẩm đã chọn trên modal
     let rows = document.getElementById("myTableMapping").rows;
     let length = rows.length;
@@ -878,20 +938,94 @@ function SaveMappingToItemOrModel() {
             console.log(obj);
         }
         listObj.push(obj);
-
-        //if (DEBUG) {
-        //    console.log(listObj.length);
-        //}
     }
     // Mapping tới model
     if (modelMapping != null) {
-        AddTableMapping(modelMapping, listObj);
-    }
-    else { // Mapping tới item
-        AddTableMappingToItem(document.getElementById("mapping-to-item"), listObj);
+        AddToTableMapping(modelMapping, listObj);
     }
 
     // Đóng modal
     let modal = document.getElementById("myModal");
     CloseModal(modal);
+}
+
+
+// Từ item object hiển thị ra màn hình
+function ShowItemFromItemObject() {
+    item = JSON.parse(document.getElementById("item-object").innerHTML);
+    if (DEBUG) {
+        console.log(item);
+    }
+    if (item == null)
+        return;
+
+    // Hiển thị dữ liệu, image, video của item
+    document.getElementById("item-name-id").value = item.name;
+    document.getElementById("item-status-id").value = item.status;
+    document.getElementById("item-quota-id").value = item.quota;
+    document.getElementById("detail-id").value = item.detail;
+
+    InitializeImageList(item.imageSrc);
+    // Vì item.videoSrc không phải array, cần chuyển sang array
+    let lsVideo = [];
+    lsVideo.push(item.videoSrc);
+    InitializeVideoList(lsVideo);
+
+    // Hiển thị các model
+    let length = item.models.length;
+    countModel = 0;
+    for (let i = 0; i < length; i++) {
+        // Hiển thị mapping sản phẩm trong kho nếu có
+        let modelObj = item.models[i];
+
+        let model = AddModelToScreen();
+        model.modelId = item.models[i].id;
+        // Hiển thị dữ liệu input
+        model.getElementsByClassName(classOfModelName)[0].value = modelObj.name;
+        model.getElementsByClassName(classOfModelQuota)[0].value = modelObj.quota;
+        model.getElementsByClassName(classOffModelPrice)[0].value = modelObj.price;
+        model.getElementsByClassName(classOffModelBookCoverPrice)[0].value = modelObj.bookCoverPrice;
+        model.getElementsByClassName(classOffModelQuantity)[0].value = modelObj.quantity;
+        model.getElementsByClassName(classOfModelStatus)[0].value = modelObj.status;
+
+        // Hiển thị thumbnail image
+        let img = model.getElementsByClassName(classOfModelImage)[0];
+        if (modelObj.imageSrc != null) {
+            img.src = modelObj.imageSrc;
+        }
+        else {
+            img.src = srcNoImageThumbnail;
+        }
+        img.exist = true;
+
+        // Hiển thị mapping
+        let table = CreateModelTableMapping(model);
+
+        let listObj = [];
+        for (let j = 0; j < modelObj.mapping.length; j++) {
+            let src;
+            if (modelObj.mapping[j].imageSrc[0].length > 0) {
+                src = modelObj.mapping[j].imageSrc[0];
+            }
+            else {
+                src = srcNoImageThumbnail;
+            }
+
+            let obj = new objRowTableMapping(
+                Number(modelObj.mapping[j].id),
+                src,
+                modelObj.mapping[j].name
+            );
+            
+            listObj.push(obj);
+        }
+        if (DEBUG) {
+            console.log(listObj);
+        }
+
+
+        for (let j = 0; j < listObj.length; j++) {
+            CheckObjExistAndInsert(table, listObj[j]);
+        }
+    }
 }

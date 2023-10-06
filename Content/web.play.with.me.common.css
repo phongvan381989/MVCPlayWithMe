@@ -288,3 +288,80 @@
     width:100px;
     height:100px;
 }
+
+/*Loader start*/
+#circle-loader {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 60px;
+    height: 60px;
+    margin: -76px 0 0 -76px;
+    border: 6px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 6px solid #00ff40;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+/*Loader end*/
+
+/* Paging start*/
+.wraper-pagination {
+    display: flex;
+    /*background-color: DodgerBlue;*/
+}
+
+    .wraper-pagination > div {
+        border-radius: 5px;
+        width: 36px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 10px;
+        padding-top: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 20px;
+        border-radius: 8px;
+        color: #004370;
+        cursor: pointer;
+        user-select: none;
+        text-align: center;
+    }
+
+.pagination-item.active {
+    background: #E3ECFF;
+}
+
+.go-to-detail-item:hover {
+    cursor: pointer;
+}
+/* Paging end*/
+
+.class-model-image:hover {
+    cursor: pointer;
+}

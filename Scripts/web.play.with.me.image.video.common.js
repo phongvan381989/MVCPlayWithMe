@@ -61,6 +61,7 @@ function RemoveVideo(el) {
 };
 
 // Hiển thị list ảnh đã có
+// Tham số phải là array
 function InitializeImageList(listImage) {
     // Làm trống
     imagefileList.innerHTML = "";
@@ -87,7 +88,7 @@ function InitializeImageList(listImage) {
         const img = document.createElement("img");
         img.src = listImage[i];
         img.file = null;
-        img.fileName = listImage[i];
+        img.fileName = listImage[i];// \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media
         img.className = "objImage";
         img.height = thumbnailHeight;
         img.width = thumbnailWidth;
@@ -147,6 +148,7 @@ function ImageHandleFiles() {
 }
 
 // Hiển thị list video đã có
+// Tham số phải là array
 function InitializeVideoList(listVideo) {
     // Làm trống
     videofileList.innerHTML = "";
@@ -178,7 +180,7 @@ function InitializeVideoList(listVideo) {
         video.file = null;
         video.fileName = listVideo[i];
         video.className = "objVideo";
-        video.height = 120;
+        video.height = avatarVideoHeight;
         //video.play();
         //video.onload = () => {
         //    URL.revokeObjectURL(video.src);
@@ -226,7 +228,7 @@ function VideoHandleFiles() {
             video.file = this.files[i];
             video.fileName = this.files[i].name;
             video.className = "objVideo";
-            video.height = 120;
+            video.height = avatarVideoHeight;
             //video.play();
             video.onload = () => {
                 URL.revokeObjectURL(video.src);
@@ -262,7 +264,7 @@ function DeleteAllFileWithType(url, productId, fileType) {
 }
 
 //
-function SendFilesPromise(urlCreate, urlDelete, productId) {
+function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
     return new Promise(function (resolve, reject) {
         if (DEBUG) {
             console.log("Start up load image and video. productId = " + productId);
@@ -302,10 +304,10 @@ function SendFilesPromise(urlCreate, urlDelete, productId) {
             }
             new FileUpload(urlCreate, productId, imgs[i], isImage, imgs[i].file, imgs[i].fileName, i, exist, finish);
         }
-        if (!isEmptyOrSpaces(urlDelete)) {// Trường hợp cập nhật mới gửi lệnh xóa ảnh cũ
+        if (!isEmptyOrSpaces(urlDeleteAllFileWithType)) {// Trường hợp cập nhật mới gửi lệnh xóa ảnh cũ
             // Không có ảnh nào gửi lệnh xóa ảnh trên server
             if (imgs.length == 0) {
-                DeleteAllFileWithType(urlDelete, productId, isImage);
+                DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isImage);
             }
         }
         // Upload video lên server
@@ -332,10 +334,10 @@ function SendFilesPromise(urlCreate, urlDelete, productId) {
 
             new FileUpload(urlCreate, productId, videos[i], isVideo, videos[i].file, videos[i].fileName, i, exist, finish);
         }
-        if (!isEmptyOrSpaces(urlDelete)) {// Trường hợp cập nhật mới gửi lệnh xóa video cũ
-            // Không có ảnh nào gửi lệnh xóa ảnh trên server
+        if (!isEmptyOrSpaces(urlDeleteAllFileWithType)) {// Trường hợp cập nhật mới gửi lệnh xóa video cũ
+            // Không có ảnh nào gửi lệnh xóa video trên server
             if (videos.length == 0) {
-                DeleteAllFileWithType(urlDelete, productId, isVideo);
+                DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isVideo);
             }
         }
         resolve("done");

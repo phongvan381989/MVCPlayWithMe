@@ -1,6 +1,7 @@
 ﻿var DEBUG = true;
-var thumbnailWidth = 60;
-var thumbnailHeight = 60;
+var thumbnailWidth = 150;
+var thumbnailHeight = 150;
+var avatarVideoHeight = 120;
 var srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
 var itemModelQuota = 5;
 function isEmptyOrSpaces(str) {
@@ -440,4 +441,28 @@ function AddDeleteButton(li) {
     }
     btn.appendChild(btnContent);
     li.appendChild(btn);
+}
+
+// Hiển thị vòng tròn đợi thao tác thực hiện xong
+function ShowCircleLoader() {
+    // add vào body tag
+    let circleLoader = document.createElement("div");
+    circleLoader.id = "circle-loader";
+    document.getElementsByTagName("body")[0].appendChild(circleLoader);
+}
+
+function RemoveCircleLoader() {
+    if (document.getElementById("circle-loader"))
+        document.getElementById("circle-loader").remove();
+}
+
+
+
+// Nếu input chưa nhập, hoặc nhập không phải số tự nhiên, số tự nhiên âm thì set giá trị là 0
+function ConvertToInt(value) {
+    let i = parseInt(value);
+    if (isNaN(i) || i < 0) {
+        i = 0;
+    }
+    return i;
 }

@@ -431,31 +431,6 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(new MySqlResultState());
         }
 
-        ///// <summary>
-        ///// 
-        ///// </summary>
-        ///// <param name="productId"></param>
-        ///// <param name="fileType">isImage hoặc isVideo</param>
-        ///// <returns></returns>
-        ////[HttpPost]
-        //public string DeleteAllFileWithType(int id, string fileType)
-        //{
-        //    if (AuthentAdministrator() == null)
-        //    {
-        //        return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
-        //    }
-        //    if(fileType == "isImage")
-        //    {
-        //        Common.DeleteAllImage(id.ToString());
-        //    }
-        //    else if(fileType == "isVideo")
-        //    {
-        //        Common.DeleteAllVideo(id.ToString());
-        //    }
-        //    MySqlResultState rs = new MySqlResultState();
-        //    return JsonConvert.SerializeObject(rs);
-        //}
-
         /// <summary>
         /// 
         /// </summary>
@@ -470,9 +445,11 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
             }
             string path = Common.GetProductMediaFolderPath(id.ToString());
+            // Folder được tạo khi có image/video tương ứng
             if (path == null)
             {
-                path = Common.CreateProductMediaFolderPath(id.ToString());
+                MySqlResultState rs = new MySqlResultState();
+                return JsonConvert.SerializeObject(rs);
             }
             return DeleteAllFileWithTypeBasic(path, id, fileType);
         }

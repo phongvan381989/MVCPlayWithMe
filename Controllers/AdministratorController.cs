@@ -52,6 +52,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
                 return AuthenticationFail();
+
             return View();
         }
 

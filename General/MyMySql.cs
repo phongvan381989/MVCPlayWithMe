@@ -788,5 +788,13 @@ namespace MVCPlayWithMe.General
             else
                 return rdr.GetString(columnName);
         }
+
+        public static DateTime GetDateTime(MySqlDataReader rdr, string columnName)
+        {
+            if (Convert.IsDBNull(rdr[columnName]))
+                return new DateTime();
+            else
+                return rdr.GetDateTime(columnName);
+        }
     }
 }

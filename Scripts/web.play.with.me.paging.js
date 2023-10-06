@@ -21,8 +21,8 @@ async function Search() {
         console.log("responseText: " + resObj.responseText);
     }
     // Lấy số lượng sản phẩm trong kết quả trả về
-    countItem = parseInt(resObj.responseText);
-    if (countItem == 0) {
+    countModel = parseInt(resObj.responseText);
+    if (countModel == 0) {
         document.getElementById("empty-result").style.display = "block";
         document.getElementById("search-result").style.display = "none";
         return;
@@ -31,8 +31,8 @@ async function Search() {
     document.getElementById("empty-result").style.display = "none";
     document.getElementById("search-result").style.display = "block";
 
-    maxPage = Math.floor(countItem / itemOnPage)
-    if (countItem % itemOnPage != 0)
+    maxPage = Math.floor(countModel / itemOnPage)
+    if (countModel % itemOnPage != 0)
         maxPage = maxPage + 1;
 
     // Lấy dữ liệu cho page 1
@@ -202,7 +202,7 @@ async function ChangePage(page) {
         img.onclick = function () {
             // Lấy id
             let id = Number(this.parentElement.parentElement.children[0].innerHTML);
-            GoToDetialItem(id);
+            GoToDetailItem(id);
         };
         cell2.append(img);
 
@@ -213,16 +213,16 @@ async function ChangePage(page) {
         pName.onclick = function () {
             // Lấy id
             let id = Number(this.parentElement.parentElement.children[0].innerHTML);
-            GoToDetialItem(id);
+            GoToDetailItem(id);
         };
         //cell3.innerHTML = item.name;
         cell3.append(pName);
     }
 }
 
-function GoToDetialItem(id) {
+function GoToDetailItem(id) {
     if (DEBUG) {
-        console.log("GoToDetialItem Start");
+        console.log("GoToDetailItem Start");
         console.log("item id: " + id);
     }
     if (isNaN(id))
