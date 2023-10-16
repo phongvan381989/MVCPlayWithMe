@@ -350,10 +350,18 @@ function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
 let isFinishUploadImage = 0;
 let isFinishUploadVideo = 0;
 
-// exist: true nếu file này đã tồn tại trên server, ngược lại false. Check tồn tại dựa vào tên
-function FileUpload(url, productId, fileElement, fileType, file, fileName, fileOrder, exist, finish) {
+// exist: true nếu file này đã tồn tại trên server, ngược lại false
+function FileUpload(url, productId, fileElement, fileType, file, originalFileName, fileOrder, exist, finish) {
     if (DEBUG) {
+        console.log("start FileUpload for image and video");
+        console.log("url: " + url);
         console.log("productId: " + productId);
+        console.log("fileElement: " + fileElement.nodeName);
+        console.log("fileType: " + fileType);
+        console.log("originalFileName: " + originalFileName);
+        console.log("fileOrder: " + fileOrder);
+        console.log("exist: " + exist);
+        console.log("exist: " + exist);
         console.log("Order: " + fileOrder);
     }
     //const reader = new FileReader();
@@ -392,9 +400,9 @@ function FileUpload(url, productId, fileElement, fileType, file, fileName, fileO
     //xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');
     xhr.setRequestHeader("Content-Type", "multipart/form-data");
     //let newFileName = `${fileOrder}.${GetExtensionOfFileName(fileName)}`;
-    xhr.setRequestHeader("fileName", `${fileOrder}.${GetExtensionOfFileName(fileName)}`);
+    xhr.setRequestHeader("fileName", `${fileOrder}.${GetExtensionOfFileName(originalFileName)}`);
     xhr.setRequestHeader("productId", productId);
-    xhr.setRequestHeader("originalFileName", fileName);
+    xhr.setRequestHeader("originalFileName", originalFileName);
     xhr.setRequestHeader("exist", exist);
     xhr.setRequestHeader("finish", finish);
     xhr.send(file);

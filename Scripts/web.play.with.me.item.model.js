@@ -24,8 +24,25 @@ function AddDeleteButtonForModel(container) {
         if (DEBUG) {
             console.log("countModel: " + countModel);
         }
-        countModel = countModel - 1;
-        this.parentElement.parentElement.remove();
+        let model = this.parentElement.parentElement;
+        if (model.modelId == -1) { // Tạo mới, model chưa có trên server nên không cần hỏi
+            countModel = countModel - 1;
+            this.parentElement.parentElement.nextSibling.remove(); // Xóa tag <br>
+            this.parentElement.parentElement.remove();
+        }
+        else {
+            // Hỏi trước khi xóa dữ liệu trên server
+            let text = "Bạn chắc chắn muốn xóa phân loại?";
+            if (confirm(text) == false) {
+                return;
+            }
+            let rs = DeleteModel(model.modelId);
+            if (rs == 0) {// Xóa trên server thành công
+                countModel = countModel - 1;
+                this.parentElement.parentElement.nextSibling.remove(); // Xóa tag <br>
+                this.parentElement.parentElement.remove();
+            }
+        }
     }
     btn.appendChild(btnContent);
     btn.className = "margin-vertical";
@@ -305,31 +322,6 @@ function AddModelToScreen() {
     AddDistanceRows(modelList);
     //EasyViewListModel();
     return modelContainer;
-}
-
-// Khi item không cần phân loại
-function MappingToItem() {
-    // Check có phân loại không?
-    if (modelList.children.length > 0) {
-        let text = "Chắc chắn xóa hết phân loại?";
-        if (confirm(text) == false) {
-            return;
-        }
-    }
-
-    // Xóa bỏ hết phân loại
-    if (modelList.children.length > 0) {
-        modelList.innerHTML = "";
-        modelMapping = null;
-        countModel = 0;
-        if (DEBUG) {
-            console.log("countModel: " + countModel);
-        }
-    }
-
-    // Get the modal
-    let modal = document.getElementById("myModal");
-    modal.style.display = "block";
 }
 
 // Chọn 1 ảnh làm thumbnail từ local
@@ -635,6 +627,7 @@ async function AddItemModel() {
             console.log(err);
         }
         alert("Tạo sản phẩm lỗi.");
+        RemoveCircleLoader();
         return;
     }
 
@@ -676,6 +669,7 @@ async function UpdateItemModel() {
         return;
     }
 
+    ShowCircleLoader();
     const searchParams = new URLSearchParams();
     searchParams.append("id", itemId);
     AddItemParameters(searchParams);
@@ -721,7 +715,8 @@ async function UpdateItemModel() {
             console.log(err.message);
             console.log(err);
         }
-        alert("Tạo sản phẩm lỗi.");
+        alert("Cập nhật sản phẩm lỗi.");
+        RemoveCircleLoader();
         return;
     }
 
@@ -744,7 +739,7 @@ async function UpdateItemModel() {
             console.log("isFinishUploadImageModel = " + isFinishUploadImageModel);
         }
         if (isFinishUploadImageModel == 0) {
-            alert("Tạo sản phẩm thành công.");
+            alert("Cập nhật sản phẩm thành công.");
             break;
         }
     }
@@ -754,6 +749,29 @@ async function UpdateItemModel() {
     window.scrollTo(0, 0);
     await Sleep(1000)
     //window.location.reload();
+}
+
+async function DeleteModel(id) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id);
+    AddItemParameters(searchParams);
+    let rs = 0;
+    ShowCircleLoader();
+    try {
+        // Cập nhật vào db
+        let responseDB = await RequestHttpGetPromise(searchParams, "/ItemModel/DeleteModel");
+    }
+    catch (err) {
+        if (DEBUG) {
+            console.log(err.message);
+            console.log(err);
+        }
+        rs = -1;
+        alert("Xóa phân loại lỗi.");
+    }
+    RemoveCircleLoader();
+    alert("Xóa phân loại thành công.");
+    return rs;
 }
 
 function CloseModal(modal) {
@@ -949,10 +967,9 @@ function SaveMappingToModel() {
     CloseModal(modal);
 }
 
-
 // Từ item object hiển thị ra màn hình
 function ShowItemFromItemObject() {
-    item = JSON.parse(document.getElementById("item-object").innerHTML);
+    item = JSON.parse(document.getElementById("item-object").textContent);
     if (DEBUG) {
         console.log(item);
     }
@@ -996,6 +1013,7 @@ function ShowItemFromItemObject() {
         else {
             img.src = srcNoImageThumbnail;
         }
+        img.file = null;
         img.exist = true;
 
         // Hiển thị mapping
@@ -1004,7 +1022,7 @@ function ShowItemFromItemObject() {
         let listObj = [];
         for (let j = 0; j < modelObj.mapping.length; j++) {
             let src;
-            if (modelObj.mapping[j].imageSrc[0].length > 0) {
+            if (modelObj.mapping[j].imageSrc.length > 0) {
                 src = modelObj.mapping[j].imageSrc[0];
             }
             else {

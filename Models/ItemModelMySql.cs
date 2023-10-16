@@ -213,66 +213,6 @@ namespace MVCPlayWithMe.Models
             return model;
         }
 
-        /// <summary>
-        /// Từ list model hiện tại, xóa hết model cũ và trả về list model đã bị xóa
-        /// </summary>
-        /// <param name="lsNewModel"></param>
-        public List<Model> DeleteOldModel(List<int> lsNewModel, int itemId)
-        {
-            List<Model> lsDeletedModel = new List<Model>();
-            List<Model> lsOldModel = new List<Model>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            MySqlResultState result = new MySqlResultState();
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbModel_Select_From_ItemId", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inItemId", itemId);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        lsOldModel.Add(ConvertFromDataMySql(rdr));
-                    }
-                }
-                if (rdr != null)
-                    rdr.Close();
-
-                // Xóa model cũ
-                MySqlParameter[] paras = null;
-                int lengthPara = 3;
-                paras = new MySqlParameter[lengthPara];
-                paras[0] = new MySqlParameter("@inId", 0);
-                MyMySql.AddOutParameters(paras);
-
-                MySqlCommand cmdDel = new MySqlCommand("st_tbModel_Delete_From_Id", conn);
-                cmdDel.CommandType = CommandType.StoredProcedure;
-                cmdDel.Parameters.AddRange(paras);
-
-                foreach (var old in lsOldModel)
-                {
-                    if (!lsNewModel.Contains(old.id))
-                    {
-                        cmdDel.Parameters[0].Value = old.id;
-                        lsDeletedModel.Add(old);
-                    }
-                    cmdDel.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-            return lsDeletedModel;
-        }
-
         private void ModelParameters(Model model, MySqlParameter[] paras)
         {
             paras[0] = new MySqlParameter("@inId", model.id);
@@ -340,6 +280,21 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        public MySqlResultState DeleteModel(int id)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlParameter[] paras = null;
+            int lengthPara = 3;
+            paras = new MySqlParameter[lengthPara];
+            paras[0] = new MySqlParameter("@inId", id);
+            MyMySql.AddOutParameters(paras);
+
+            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbModel_Delete_From_Id", paras);
+
+            return result;
+        }
+
         public MySqlResultState AddMapping(Model model)
         {
             MySqlResultState result = new MySqlResultState();
@@ -378,6 +333,22 @@ namespace MVCPlayWithMe.Models
                 result.Message = errMessage;
             }
             conn.Close();
+
+            return result;
+        }
+
+        // Xóa tất cả mapping của model
+        public MySqlResultState DeleteMapping(Model model)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlParameter[] paras = null;
+
+            paras = new MySqlParameter[3];
+            paras[0] = new MySqlParameter("@inModelId", model.id);
+            MyMySql.AddOutParameters(paras);
+
+            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbMapping_Delete_From_ModelId", paras);
 
             return result;
         }
@@ -446,6 +417,7 @@ namespace MVCPlayWithMe.Models
                 }
 
                 Product pro = ConvertOneRowFromDataMySqlToProduct(rdr);
+                if(pro.id != -1)
                     lsModel[lsModel.Count() - 1].mapping.Add(pro);
             }
         }

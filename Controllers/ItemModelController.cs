@@ -56,13 +56,12 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="id">item id</param>
         /// <returns></returns>
         [HttpGet]
-        public ActionResult UpdateDelete(/*int id*/)
+        public ActionResult UpdateDelete(int id)
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-            int id = 60;
             ViewDataGetListItemName();
             ViewDataGetListProductName();
             ViewDataGetListCombo();
@@ -117,7 +116,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
             }
-            string path = Common.GetItemMediaFolderPath(id);
+            string path = Common.GetAbsoluteItemMediaFolderPath(id);
             // Folder được tạo khi có image/video tương ứng
             if (path == null)
             {
@@ -142,10 +141,10 @@ namespace MVCPlayWithMe.Controllers
 
             var itemId =Common.ConvertStringToInt32(Request.Headers["productId"]);
 
-            string path = Common.GetItemMediaFolderPath(itemId);
+            string path = Common.GetAbsoluteItemMediaFolderPath(itemId);
             if (path == null)
             {
-                path = Common.CreateItemMediaFolderPath(itemId);
+                path = Common.CreateAbsoluteItemMediaFolderPath(itemId);
             }
 
             return UploadImageVideo(path);
@@ -185,9 +184,17 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = null;
             // Lưu vào db
             Model model = new Model(modelId, itemId, modelName, 0, price, status, quota, quantity);
-            if(modelId != -1)
+            model.mappingOnlyProductId = Common.ConvertJsonArrayToListInt(listProIdMapping);
+
+            if (modelId != -1)
             {
                 result = sqler.UpdateModel(model);
+
+                // Xóa mapping cũ
+                sqler.DeleteMapping(model);
+
+                // Tạo mapping mới
+                sqler.AddMapping(model);
             }
             else
             {
@@ -195,7 +202,6 @@ namespace MVCPlayWithMe.Controllers
                 modelId = sqler.AddModel(model);
                 result.myAnything = modelId;
 
-                model.mappingOnlyProductId = Common.ConvertJsonArrayToListInt(listProIdMapping);
                 model.id = modelId;
 
                 sqler.AddMapping(model);
@@ -207,10 +213,10 @@ namespace MVCPlayWithMe.Controllers
             // Lưu ảnh vào thư mục
             if (exist != "true" && length > 0)
             {
-                string path = Common.GetModelMediaFolderPath(itemId);
+                string path = Common.GetAbsoluteModelMediaFolderPath(itemId);
                 if (path == null)
                 {
-                    path = Common.CreateModelMediaFolderPath(itemId);
+                    path = Common.CreateAbsoluteModelMediaFolderPath(itemId);
                 }
 
                 // Tên ảnh lưu có định dạng. modelId.jpg
@@ -224,6 +230,28 @@ namespace MVCPlayWithMe.Controllers
                 fileStream.Close();
             }
 
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Xóa model
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public string DeleteModel(int id)
+        {
+            // Xóa ảnh làm thumbnail
+            MySqlResultState result = sqler.DeleteModel(id);
+            string path = Common.GetAbsoluteModelMediaFolderPath(id);
+            if (path != null)
+            {
+                string[] files = Directory.GetFiles(path, id.ToString() + ".*");
+                if (files.Length != 0) // Chỉ có 1 ảnh
+                {
+                    System.IO.File.Delete(files[0]);
+                }
+            }
             return JsonConvert.SerializeObject(result);
         }
 

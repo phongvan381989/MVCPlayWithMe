@@ -365,3 +365,6 @@
 .class-model-image:hover {
     cursor: pointer;
 }
+li {
+    margin: 5px;
+}

@@ -342,69 +342,6 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        ///// <summary>
-        /////Trả lại thông tin product json để hiển thị khi thay đổi barcode
-        ///// </summary>
-        ///// <param name="barcode"></param>
-        ///// <returns></returns>
-        //public string UpdateProduct_Get_ChangeBarcode(string barcode)
-        //{
-        //    Product product = sqler.GetProductFromBarcode(barcode);
-        //    if (product == null)
-        //        return string.Empty;
-        //    product.SetSrcImageVideo();
-        //    return JsonConvert.SerializeObject(product);
-        //}
-
-        //public string UpdateProduct_Get_ChangeproductName(string productName)
-        //{
-        //    Product product = sqler.GetProductFromProductName(productName);
-        //    if (product == null)
-        //        return string.Empty;
-        //    product.SetSrcImageVideo();
-        //    return JsonConvert.SerializeObject(product);
-        //}
-
-        //public string UpdateProduct_UpdateBarcode(int id, string newBarcode)
-        //{
-        //    MySqlResultState result = sqler.UpdateProductBarcode(id, newBarcode);
-        //    return JsonConvert.SerializeObject(result);
-        //}
-
-        //public string UpdateProduct_AddMoreProductBarcode(int id, string newBarcode)
-        //{
-        //    MySqlResultState result = sqler.AddMoreProductBarcode(id, newBarcode);
-        //    return JsonConvert.SerializeObject(result);
-        //}
-
-        //public string UpdateProduct_UpdateProductName(int id, string newProductName)
-        //{
-        //    MySqlResultState result = sqler.UpdateProductName(id, newProductName);
-        //    return JsonConvert.SerializeObject(result);
-        //}
-
-        ///// <summary>
-        ///// Cập nhật thông tin chung của các sản phẩm thuộc cùng 1 combo VD: tên nhà phát hành, nhà xuất bản, kích thước,..
-        ///// </summary>
-        ///// <returns></returns>
-        //public ActionResult UpdateCommonInfoWithComboName()
-        //{
-        //    if (AuthentAdministrator() == null)
-        //    {
-        //        return AuthenticationFail();
-        //    }
-
-        //    ViewDataGetListPublisher();
-
-        //    List<string> listComboName = sqler.GetListComboName();
-        //    ViewData["lsComboName"] = listComboName;
-
-        //    List<string> listPublishingCompany = sqler.GetListPublishingCompany();
-        //    ViewData["lsPublishingCompany"] = listPublishingCompany;
-
-        //    return View();
-        //}
-
         /// <summary>
         /// Xóa ảnh, video cũ
         /// </summary>
@@ -417,7 +354,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
             }
 
-            string path = Common.GetProductMediaFolderPath(productId.ToString());
+            string path = Common.GetAbsoluteProductMediaFolderPath(productId.ToString());
             if (path != null)
             {
                 System.IO.DirectoryInfo di = new DirectoryInfo(path);
@@ -444,7 +381,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
             }
-            string path = Common.GetProductMediaFolderPath(id.ToString());
+            string path = Common.GetAbsoluteProductMediaFolderPath(id.ToString());
             // Folder được tạo khi có image/video tương ứng
             if (path == null)
             {
@@ -463,10 +400,10 @@ namespace MVCPlayWithMe.Controllers
             }
 
             var productId = Request.Headers["productId"];
-            string path = Common.GetProductMediaFolderPath(productId);
+            string path = Common.GetAbsoluteProductMediaFolderPath(productId);
             if (path == null)
             {
-                path = Common.CreateProductMediaFolderPath(productId);
+                path = Common.CreateAbsoluteProductMediaFolderPath(productId);
             }
 
             return UploadImageVideo(path);

@@ -95,42 +95,6 @@ namespace MVCPlayWithMe.Models
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="productName"></param>
-        /// <returns>Có thể trả về null</returns>
-        public Product GetProductFromProductName(string productName)
-        {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            Product product = null;
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Name", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inProductName", productName);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    product = ConvertOneRowFromDataMySql(rdr);
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                product = null;
-            }
-
-            conn.Close();
-            return product;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="code"></param>
         /// <returns>Có thể trả về null</returns>
         public Product GetProductFromCode(string code)
