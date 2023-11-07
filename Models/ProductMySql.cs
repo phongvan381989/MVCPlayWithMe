@@ -212,30 +212,6 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        public MySqlResultState AddMoreProductBarcode(int id, string newBarcode)
-        {
-            MySqlParameter[] paras = new MySqlParameter[4];
-
-            paras[0] = new MySqlParameter("@inId", id);
-            paras[1] = new MySqlParameter("@inBarcode", newBarcode);
-            MyMySql.AddOutParameters(paras);
-
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode_Add_More", paras);
-            return result;
-        }
-
-        public MySqlResultState UpdateProductName(int id, string newProductName)
-        {
-            MySqlParameter[] paras = new MySqlParameter[4];
-
-            paras[0] = new MySqlParameter("@inId", id);
-            paras[1] = new MySqlParameter("@inProductName", newProductName);
-            MyMySql.AddOutParameters(paras);
-
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Name", paras);
-            return result;
-        }
-
         private void AddUpdateParameters(Product pro, MySqlParameter[] paras)
         {
             paras[0]  = new MySqlParameter("@proCode", pro.code);
@@ -802,7 +778,8 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        public List<Product> SearProduct(string codeOrBarcode, string name, string combo)
+        // Tìm kiếm không phân trang
+        public List<Product> SearchProduct(string codeOrBarcode, string name, string combo)
         {
             List<Product> ls = new List<Product>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -833,6 +810,116 @@ namespace MVCPlayWithMe.Models
 
             conn.Close();
             return ls;
+        }
+
+        // Đếm số record kết quả trả về, phục vụ phân trang
+        public int SearchProductCount(ProductSearchParameter searchParameter)
+        {
+            int count = 0;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Count_Record", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    count = MyMySql.GetInt32(rdr, "CountRecord");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return count;
+        }
+
+        //Tìm kiếm có phân trang
+        public List<Product> SearchProductChangePage(ProductSearchParameter searchParameter)
+        {
+            List<Product> ls = new List<Product>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+                cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    ls.Add(ConvertOneRowFromDataMySql(rdr));
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return ls;
+        }
+
+        // Cập nhật chỉ tên sản phẩm, có check tên đã tồn tại trong store
+        public MySqlResultState UpdateName(int id, string name)
+        {
+            MySqlParameter[] paras = new MySqlParameter[4];
+
+            paras[0] = new MySqlParameter("@inId", id);
+            paras[1] = new MySqlParameter("@inProductName", name);
+            MyMySql.AddOutParameters(paras);
+
+            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Name", paras);
+            return result;
+        }
+
+        // Cập nhật chỉ code, có check tên đã tồn tại trong store
+        public MySqlResultState UpdateCode(int id, string code)
+        {
+            MySqlParameter[] paras = new MySqlParameter[4];
+
+            paras[0] = new MySqlParameter("@inId", id);
+            paras[1] = new MySqlParameter("@inCode", code);
+            MyMySql.AddOutParameters(paras);
+
+            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Code", paras);
+            return result;
+        }
+
+        // Cập nhật chỉ code, có check tên đã tồn tại trong store
+        // isbn chính là Barcode trong db
+        public MySqlResultState UpdateISBN(int id, string isbn)
+        {
+            MySqlParameter[] paras = new MySqlParameter[4];
+
+            paras[0] = new MySqlParameter("@inId", id);
+            paras[1] = new MySqlParameter("@inBarcode", isbn);
+            MyMySql.AddOutParameters(paras);
+
+            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode", paras);
+            return result;
         }
     }
 }

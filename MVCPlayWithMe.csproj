@@ -228,7 +228,6 @@
     <Compile Include="App_Start\FilterConfig.cs" />
     <Compile Include="App_Start\RouteConfig.cs" />
     <Compile Include="Controllers\AdministratorController.cs" />
-    <Compile Include="Controllers\AllProductsController.cs" />
     <Compile Include="Controllers\BasicController.cs" />
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\ComboController.cs" />
@@ -260,13 +259,15 @@
     <Compile Include="Models\Import.cs" />
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\ItemModelMySql.cs" />
+    <Compile Include="Models\ItemModelSearchParameter.cs" />
     <Compile Include="Models\Model.cs" />
+    <Compile Include="Models\PriceQuantity.cs" />
     <Compile Include="Models\ProductCommonInfoWithCombo.cs" />
     <Compile Include="Models\ProductIdName.cs" />
     <Compile Include="Models\Product.cs" />
-    <Compile Include="Models\ProductForSelector.cs" />
     <Compile Include="Models\ProductIdCodeBarcodeNameBookCoverPrice.cs" />
     <Compile Include="Models\ProductMySql.cs" />
+    <Compile Include="Models\ProductSearchParameter.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -324,8 +325,6 @@
     <Content Include="Views\Home\About.cshtml" />
     <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
-    <Content Include="Views\AllProducts\Shared\Product.cshtml" />
-    <Content Include="Views\AllProducts\Index.cshtml" />
     <Content Include="Scripts\web.play.with.me.common.js" />
     <Content Include="Views\Administrator\Index.cshtml" />
     <Content Include="Views\Administrator\Login.cshtml" />
@@ -384,6 +383,12 @@
     <Content Include="Views\Shared\GoToPage.cshtml" />
     <Content Include="Views\Shared\ItemModel\SearchResult.cshtml" />
     <Content Include="Views\ItemModel\UpdateDelete.cshtml" />
+    <Content Include="Views\Product\Search.cshtml" />
+    <Content Include="Views\Shared\Product\SearchParameter.cshtml" />
+    <Content Include="Views\Shared\Product\SearchResult.cshtml" />
+    <Content Include="Views\Shared\Home\Item.cshtml" />
+    <Content Include="Views\Shared\Home\SearchResult.cshtml" />
+    <Content Include="Views\Home\Item.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

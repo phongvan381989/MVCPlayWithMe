@@ -36,8 +36,6 @@
             <button type="button" onclick="CreateCustomer_Add()">Tạo tài khoản</button>
         </div>
 
-        <p id="result-insert"></p>
-
         <script>
             function CreateCustomer_Add() {
                 //let responseId = 0;
@@ -57,7 +55,6 @@
                         console.log(obj);
                     }
                     if (obj.isValid === false) {
-                        document.getElementById("result-insert").innerHTML = obj.message;
                         return;
                     }
                 }
@@ -73,7 +70,6 @@
                     }
                     if (obj !== null) {
                         if (obj.isValid === false) {
-                            document.getElementById("result-insert").innerHTML = obj.message;
                             return;
                         }
                     }

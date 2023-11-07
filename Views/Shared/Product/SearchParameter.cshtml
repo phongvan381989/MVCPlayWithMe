@@ -1,0 +1,16 @@
+﻿<div>
+    @*<label for="product-name">Tên sản phẩm:</label><br>
+    <input class="config-max-width margin-vertical" type="text" id="product-name" value="">
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")*@
+
+    <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
+    <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+    <br>
+    <br>
+
+    @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+</div>

@@ -1,13 +1,20 @@
 ﻿<form class="config-max-width">
+
+    @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
+
+    @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
+
     @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
 
     <label for="code">Mã sản phẩm(bắt đầu bằng 89):</label><br>
     <input class="config-max-width margin-vertical" type="text" id="code" value="">
+    <button type="button" onclick="UpdateCode()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
     <br>
     <br>
 
     <label for="barcode">Mã vạch(ISBN,không chứa ký tự đặc biệt -,/,..):</label><br>
     <input class="config-max-width margin-vertical" type="text" id="barcode" value="">
+    <button type="button" onclick="UpdateISBN()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
     <br>
     <br>
 
@@ -19,8 +26,4 @@
     <textarea id="detail" rows="10" style="width:100%" value=""></textarea>
     <br>
     <br>
-
-    @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
-
-    @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
 </form>

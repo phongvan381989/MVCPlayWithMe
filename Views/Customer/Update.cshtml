@@ -36,7 +36,6 @@
         <div>
             <button type="button" onclick="Logout()">Đăng xuất</button>
         </div>
-        <p id="result-insert"></p>
 
         <script>
             function Logout() {
@@ -47,7 +46,6 @@
                             const obj = JSON.parse(this.responseText);
                             console.log(obj);
                         }
-                        //document.getElementById("result-insert").innerHTML = "Đăng xuất thành công.";
                         GetJsonResponse(this.responseText);
                         window.location.href = "/Customer/Login";
                     }

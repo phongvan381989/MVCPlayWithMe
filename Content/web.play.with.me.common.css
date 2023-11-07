@@ -11,16 +11,14 @@
     margin-left: auto;
     /*margin-top: 10px;*/
 }
-#biggestContainer_body {
+
+#biggestContainer_body_wraper_item {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    /*padding-left: 0px;
-    padding-right: 0px;
-    margin-right: auto;
-    margin-left: auto;*/
-    width:100%;
+    width: 100%;
 }
+
 #biggestContainer_top {
     padding: 10px 5px;
     width: 100%;
@@ -368,3 +366,9 @@
 li {
     margin: 5px;
 }
+
+/*Search prodcut start*/
+.go-to-detail-product:hover {
+    cursor: pointer;
+}
+/*Search prodcut end*/

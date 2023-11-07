@@ -11,16 +11,14 @@
     margin-left: auto;
     /*margin-top: 10px;*/
 }
-#biggestContainer_body {
+
+#biggestContainer_body_wraper_item {
     display: flex;
     flex-wrap: wrap;
     justify-content: flex-start;
-    /*padding-left: 0px;
-    padding-right: 0px;
-    margin-right: auto;
-    margin-left: auto;*/
-    width:100%;
+    width: 100%;
 }
+
 #biggestContainer_top {
     padding: 10px 5px;
     width: 100%;
@@ -47,7 +45,7 @@
     width: 50px;
 }
 
-    #biggestContainer_top div[class="search_wrapper"] {
+#biggestContainer_top div[class="search_wrapper"] {
             /*height: 20px;*/
             width: 100%;
             display: flex;
@@ -59,7 +57,7 @@
             padding-left:10px;
         }
 
-    #biggestContainer_top img[class="playwithme-logo"] {
+#biggestContainer_top img[class="playwithme-logo"] {
         width: 100%;
         height: 100%;
         object-fit: contain;
@@ -149,14 +147,14 @@
     position: relative;
     border-radius: 8px;
 }
-    .main-page-container:hover, .account-container:hover, .cart-container:hover, .search-button:hover {
+.main-page-container:hover, .account-container:hover, .cart-container:hover, .search-button:hover {
         background: #e1e1e1;
     }
 
 .dropdown:hover .dropdown-content {
     display: block;
 }
-        .search-button {
+.search-button {
             cursor: pointer;
             border: 0px;
             width: 92px;
@@ -176,7 +174,7 @@
             justify-content: center;
             position: relative;
         }
-        .search-button::before {
+.search-button::before {
             content: "";
             display: block;
             position: absolute;
@@ -238,3 +236,139 @@
     .remove-underline-container:hover {
         background: #e1e1e1;
     }
+.config-max-width{
+    width: 100%;
+}
+
+/* để các phần tử không sát màn hình*/
+.padding-container{
+    padding-left:2px;
+    padding-right:2px;
+}
+.add-more-left-padding {
+    padding-left: 20px;
+}
+/*Để các phần tử cách nhau*/
+.margin-vertical {
+    margin-top: 2px;
+    margin-right: 2px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+}
+
+/* Tooltip container */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+}
+
+/* Tooltip text */
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+
+.product-thumbnail{
+    width:100px;
+    height:100px;
+}
+
+/*Loader start*/
+#circle-loader {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    z-index: 1;
+    width: 60px;
+    height: 60px;
+    margin: -76px 0 0 -76px;
+    border: 6px solid #f3f3f3;
+    border-radius: 50%;
+    border-top: 6px solid #00ff40;
+    -webkit-animation: spin 2s linear infinite;
+    animation: spin 2s linear infinite;
+}
+
+/* Safari */
+@-webkit-keyframes spin {
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+/*Loader end*/
+
+/* Paging start*/
+.wraper-pagination {
+    display: flex;
+    /*background-color: DodgerBlue;*/
+}
+
+    .wraper-pagination > div {
+        border-radius: 5px;
+        width: 36px;
+        height: 32px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-right: 10px;
+        padding-top: 12px;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+        font-weight: 600;
+        font-size: 15px;
+        line-height: 20px;
+        border-radius: 8px;
+        color: #004370;
+        cursor: pointer;
+        user-select: none;
+        text-align: center;
+    }
+
+.pagination-item.active {
+    background: #E3ECFF;
+}
+
+.go-to-detail-item:hover {
+    cursor: pointer;
+}
+/* Paging end*/
+
+.class-model-image:hover {
+    cursor: pointer;
+}
+li {
+    margin: 5px;
+}
+
+/*Search prodcut start*/
+.go-to-detail-product:hover {
+    cursor: pointer;
+}
+/*Search prodcut end*/

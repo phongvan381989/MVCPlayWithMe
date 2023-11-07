@@ -19,6 +19,9 @@ namespace MVCPlayWithMe.Models
         public string parentName { get; set; }
         public string detail { get; set; }
 
+        // Số lượng hàng tồn kho, giá trị này được cập nhật khi có thông tin nhập / xuất kho
+        public int quantity { get; set; }
+
         public List<string> imageSrc { get; set; }
         public List<string> videoSrc { get; set; }
 

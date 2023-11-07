@@ -6,13 +6,13 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class Model
+    public class Model : PriceQuantity
     {
         public int id { get; set; }
         public int itemId { get; set; }
         public string name { get; set; }
-        public int bookCoverPrice { get; set; }
-        public int price { get; set; }
+        //public int bookCoverPrice { get; set; }
+        //public int price { get; set; }
         public List<int> mappingOnlyProductId { get; set; }
         public List<Product> mapping { get; set; }
 
@@ -25,7 +25,6 @@ namespace MVCPlayWithMe.Models
         /// </summary>
         public int status { get; set; }
         public int quota { get; set; }
-        public int quantity { get; set; }
 
         public Model()
         {
@@ -35,17 +34,15 @@ namespace MVCPlayWithMe.Models
             //mappingProductImageSrc = new List<string>();
         }
 
-        public Model(int inId, int inItemId, string inName, int inBookCoverPrice, int inPrice, int inStatus,
-            int inQuota, int inQuantity)
+        public Model(int inId, int inItemId, string inName,
+            int inQuota, int inDiscount)
         {
             id = inId;
             itemId = inItemId;
             name = inName;
-            bookCoverPrice = inBookCoverPrice;
-            price = inPrice;
-            status = inStatus;
+
             quota = inQuota;
-            quantity = inQuantity;
+            discount = inDiscount;
             mapping = new List<Product>();
             //mappingProductImageSrc = new List<string>();
         }
@@ -59,5 +56,26 @@ namespace MVCPlayWithMe.Models
         //{
         //    mappingProductImageSrc = Common.GetListThumbnailImageSrd(mapping);
         //}
+
+        // Từ mapping tính được giá bìa model, số lượng tồn kho
+        public void SetPriceFromMappingPriceAndQuantity()
+        {
+            if (mapping.Count() == 0)
+                return;
+
+            quantity = int.MaxValue;
+            foreach(var pro in mapping)
+            {
+                bookCoverPrice = bookCoverPrice + pro.bookCoverPrice;
+                if (quantity > pro.quantity)
+                    quantity = pro.quantity;
+            }
+
+            // Giá sau chiết khấu
+            price = bookCoverPrice * (100 - discount) / 100;
+            
+            // Giá làm tròn xuống
+            price = Common.FloorMoney(price);
+        }
     }
 }

@@ -22,7 +22,7 @@
         <script>
             function CreatePublisher() {
                 let publisherName = document.getElementById("publisher-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "result-insert", "Tên nhà phát hành không hợp lệ.")) {
+                if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "Tên nhà phát hành không hợp lệ.")) {
                     return;
                 }
                 let publisherId = GetDataIdFromPublisherDatalist(publisherName);

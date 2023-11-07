@@ -34,11 +34,7 @@
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function () {
                 if (this.readyState == 4 && this.status == 200) {
-                    if (DEBUG) {
-                        const obj = JSON.parse(this.responseText);
-                        console.log(obj);
-                    }
-                    //document.getElementById("result-insert").innerHTML = "Đăng xuất thành công.";
+                    GetJsonResponse(this.responseText);
                     window.location.href = "/Administrator/Login";
                 }
             }

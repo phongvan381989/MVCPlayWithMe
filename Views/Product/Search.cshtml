@@ -13,11 +13,11 @@
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <div class="config-max-width padding-container">
-            @Html.Partial("~/Views/Shared/ItemModel/SearchParameter.cshtml")
+            @Html.Partial("~/Views/Shared/Product/SearchParameter.cshtml")
 
             <button type="button" onclick="Search()">Tìm kiếm</button>
 
-            @Html.Partial("~/Views/Shared/ItemModel/SearchResult.cshtml")
+            @Html.Partial("~/Views/Shared/Product/SearchResult.cshtml")
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
@@ -25,12 +25,17 @@
     <script src="~/Scripts/web.play.with.me.paging.js"></script>
     <script>
         // Tham số tìm kiếm
-        let namePara;
+        let codeOrBarcode;
+        let name;
+        let combo;
+
         // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
         async function Search() {
-            namePara = document.getElementById("item-model-name").value;
+            codeOrBarcode = GetValueInputById("code-or-isbn","");
+            name = GetValueInputById("product-name-id","");
+            combo = GetValueInputById("combo-id","");
 
-            let url = "/ItemModel/SearchItemCount";
+            let url = "/Product/SearchProductCount";
             const searchParams = new URLSearchParams();
             SetSearchParameter(searchParams);
             let resObj = await RequestHttpGetPromise(searchParams, url);
@@ -53,33 +58,26 @@
                 maxPage = maxPage + 1;
             currentPage = -1; // Làm mới currentPage
             // Lấy dữ liệu cho page 1
-            ChangePage(1, "/ItemModel/ChangePage");
+            ChangePage(1, "/Product/ChangePage");
         }
 
         function SetSearchParameter(searchParams) {
-            searchParams.append("namePara", namePara);
+            searchParams.append("codeOrBarcode", codeOrBarcode);
+            searchParams.append("name", name);
+            searchParams.append("combo", combo);
         }
 
         function ShowSearchingResult(resObj) {
-            // Danh sách item
-            //int id
-            //string name
-            //int status
-            //string detail
-            //int quota
-            //List < Model > models
-            //List < string > imageSrc
-            //string videoSrc
-            let listItem = JSON.parse(resObj.responseText);
+            let listProduct = JSON.parse(resObj.responseText);
 
             // Làm trống bảng
             DeleteRowsExcludeHead(document.getElementById("myTable"));
 
             // Show
             let table = document.getElementById("myTable");
-            let length = listItem.length;
+            let length = listProduct.length;
             for (let i = 0; i < length; i++) {
-                let item = listItem[i];
+                let product = listProduct[i];
                 let row = table.insertRow(-1);
 
                 // Insert new cells (<td> elements)
@@ -88,19 +86,19 @@
                 let cell3 = row.insertCell(2);
 
                 // Id
-                cell1.innerHTML = item.id;
+                cell1.innerHTML = product.id;
                 cell1.style.display = "none";
 
                 // Image
                 let img = document.createElement("img");
-                if (item.imageSrc.length > 0) {
-                    img.setAttribute("src", item.imageSrc[0]);
+                if (product.imageSrc.length > 0) {
+                    img.setAttribute("src", product.imageSrc[0]);
                 } else {
                     img.setAttribute("src", srcNoImageThumbnail);
                 }
                 img.height = thumbnailHeight;
                 img.width = thumbnailWidth;
-                img.className = "go-to-detail-item";
+                img.className = "go-to-detail-product";
                 img.onclick = function () {
                     // Lấy id
                     let id = Number(this.parentElement.parentElement.children[0].innerHTML);
@@ -110,14 +108,13 @@
 
                 // Tên
                 let pName = document.createElement("p");
-                pName.innerHTML = item.name;
-                //pName.className = "go-to-detail-item";
+                pName.innerHTML = product.name;
+                //pName.className = "go-to-detail-product";
                 //pName.onclick = function () {
                 //    // Lấy id
                 //    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
                 //    GoToDetailItem(id);
                 //};
-                //cell3.innerHTML = item.name;
                 cell3.append(pName);
             }
         }
@@ -125,7 +122,7 @@
         function GoToDetailItem(id) {
             if (DEBUG) {
                 console.log("GoToDetailItem Start");
-                console.log("item id: " + id);
+                console.log("product id: " + id);
             }
             if (isNaN(id))
                 return;

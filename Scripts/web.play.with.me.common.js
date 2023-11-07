@@ -187,7 +187,6 @@ function GetJsonResponse(responseText) {
     if (obj == null)
         return false;
 
-    document.getElementById("result-insert").innerHTML = obj.Message;
     if (obj.State == 0)
         return true;
 
@@ -208,8 +207,7 @@ function CheckStatusResponse(responseText) {
     return false;
 }
 
-// haveAlert: true hiển thị thông báo qua Alert ngược lại hiển thị text ra màn hình
-function CheckStatusResponseAndShowPrompt(responseText, haveAlert, messageOk, messageError) {
+function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError) {
     const obj = JSON.parse(responseText);
     if (DEBUG) {
         console.log(obj);
@@ -233,29 +231,37 @@ function CheckStatusResponseAndShowPrompt(responseText, haveAlert, messageOk, me
     else {
         mess = messageError;
     }
-    if (haveAlert) {
-        alert(mess);
-    }
-    else {
-        document.getElementById("result-insert").innerHTML = mess;
-    }
+    alert(mess);
+
     return isOk;
 }
 
-// Show text vào thẻ <p id="result-insert">
+// Check từ kết quả trả về của câu mysql
+function CheckStatusAndShowPromptFromResponseObject(responseText) {
+    const obj = JSON.parse(responseText);
+    if (DEBUG) {
+        console.log(obj);
+    }
+    let mess = "Thao tác lỗi.";
+    if (obj != null) {
+        mess = obj.Message;
+    }
+
+    alert(mess);
+}
+
 function ShowResult(str) {
-    document.getElementById("result-insert").innerHTML = str;
     if (DEBUG) {
         console.log(str);
     }
+    alert(str);
 }
 
 // str: text cần check
 // id của <p> hiển thị kết quả nếu text empty or space
-function CheckIsEmptyOrSpacesAndShowResult(str, id, strResult) {
+function CheckIsEmptyOrSpacesAndShowResult(st, strResult) {
     if (isEmptyOrSpaces(str)) {
-        document.getElementById(id).innerHTML = strResult;
-        console.log("string null, empty or space!");
+        ShowResult(strResult);
         return true;
     }
 
@@ -380,8 +386,8 @@ function RequestHttpGetPromise(searchParams, url) {
 }
 
 
-// Nếu input type number trống, ta lấy giá trị mặc định -1
-function GetValueOfNumberInputById(id, defaultValue) {
+// Nếu input trống, ta lấy theo giá trị mặc định
+function GetValueInputById(id, defaultValue) {
     let value = document.getElementById(id).value;
     if (isEmptyOrSpaces(value)) {
         value = defaultValue;
@@ -456,8 +462,6 @@ function RemoveCircleLoader() {
         document.getElementById("circle-loader").remove();
 }
 
-
-
 // Nếu input chưa nhập, hoặc nhập không phải số tự nhiên, số tự nhiên âm thì set giá trị là 0
 function ConvertToInt(value) {
     let i = parseInt(value);
@@ -465,4 +469,40 @@ function ConvertToInt(value) {
         i = 0;
     }
     return i;
+}
+
+// Convert số tiền sang text dạng: 123,456,700
+function ConvertMoneyToText(money) {
+    let text = money.toString();
+    let textMoney = "";
+    let length = text.length;
+    for (let i = length - 1; i >= 0; i--) {
+        textMoney = text.charAt(i) + textMoney;
+        if ((i == length - 3 && length > 3) ||
+            (i == length - 6 && length > 6) ||
+            (i == length - 9 && length > 9)) {
+            textMoney = "," + textMoney;
+        }
+    }
+    if (DEBUG) {
+        console.log(money + ": " + textMoney);
+    }
+    return textMoney;
+}
+
+// Convert text dạng: 123,456,700 sang số tiền
+function ConvertTextToMoney(text) {
+    let textMoney = "";
+    let length = text.length;
+    for (let i = length - 1; i >= 0; i--) {
+        if (text.charAt(i).localeCompare(",") != 0) {
+            textMoney = text.charAt(i) + textMoney;
+        }
+    }
+
+    return ConvertToInt(textMoney);
+}
+
+function ConvertIntToPixel(value) {
+    return value.toString() + "px";
 }

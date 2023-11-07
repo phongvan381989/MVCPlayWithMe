@@ -218,11 +218,8 @@ namespace MVCPlayWithMe.Models
             paras[0] = new MySqlParameter("@inId", model.id);
             paras[1] = new MySqlParameter("@inItemId", model.itemId);
             paras[2] = new MySqlParameter("@inName", model.name);
-            paras[3] = new MySqlParameter("@inBookCoverPrice", model.bookCoverPrice);
-            paras[4] = new MySqlParameter("@inPrice", model.price);
-            paras[5] = new MySqlParameter("@inStatus", model.status);
-            paras[6] = new MySqlParameter("@inQuota", model.quota);
-            paras[7] = new MySqlParameter("@inQuantity", model.quantity);
+            paras[3] = new MySqlParameter("@inQuota", model.quota);
+            paras[4] = new MySqlParameter("@inDiscount", model.discount);
 
             MyMySql.AddOutParameters(paras);
         }
@@ -232,14 +229,11 @@ namespace MVCPlayWithMe.Models
             int id = -1;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[7];
+            paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inItemId", model.itemId);
             paras[1] = new MySqlParameter("@inName", model.name);
-            paras[2] = new MySqlParameter("@inBookCoverPrice", model.bookCoverPrice);
-            paras[3] = new MySqlParameter("@inPrice", model.price);
-            paras[4] = new MySqlParameter("@inStatus", model.status);
-            paras[5] = new MySqlParameter("@inQuota", model.quota);
-            paras[6] = new MySqlParameter("@inQuantity", model.quantity);
+            paras[2] = new MySqlParameter("@inQuota", model.quota);
+            paras[3] = new MySqlParameter("@inDiscount", model.discount);
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
@@ -273,7 +267,7 @@ namespace MVCPlayWithMe.Models
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[10];
+            paras = new MySqlParameter[7];
             ModelParameters(model, paras);
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbModel_Update", paras);
 
@@ -388,6 +382,7 @@ namespace MVCPlayWithMe.Models
             product.republish = MyMySql.GetInt32(rdr, "ProductRepublish");
             product.detail = MyMySql.GetString(rdr, "ProductDetail");
             product.status = MyMySql.GetInt32(rdr, "ProductStatus");
+            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
 
             product.SetSrcImageVideo();
 
@@ -406,11 +401,9 @@ namespace MVCPlayWithMe.Models
                     model.id = modelId;
                     model.itemId = MyMySql.GetInt32(rdr, "ItemId");
                     model.name = MyMySql.GetString(rdr, "ModelName");
-                    model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
-                    model.price = MyMySql.GetInt32(rdr, "ModelPrice");
+
                     model.quota = MyMySql.GetInt32(rdr, "ModelQuota");
-                    model.status = MyMySql.GetInt32(rdr, "ModelStatus");
-                    model.quantity = MyMySql.GetInt32(rdr, "ModelQuantity");
+                    model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
                     model.SetSrcImage();
 
                     lsModel.Add(model);
@@ -434,6 +427,7 @@ namespace MVCPlayWithMe.Models
 
             return item;
         }
+
         /// <summary>
         /// 
         /// </summary>
@@ -441,9 +435,10 @@ namespace MVCPlayWithMe.Models
         /// <param name="start">Tính từ 0</param>
         /// <param name="offset">Số item max trên 1 page</param>
         /// <returns></returns>
-        public List<Item> SearchItemChangePage(string namePara, int start, int offset)
+        public List<Item> SearchItemChangePage(ItemModelSearchParameter searchParameter)
         {
             List<Item> ls = new List<Item>();
+            List<int> lsId = new List<int>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
@@ -451,18 +446,24 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbItem_Search", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inNamePara", namePara);
-                cmd.Parameters.AddWithValue("@inStart", start);
-                cmd.Parameters.AddWithValue("@inOffset", offset);
+                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inHasMapping", searchParameter.hasMapping);
+                cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    ls.Add(ConvertOneRowFromDataMySqlToItem(rdr));
+                    lsId.Add(MyMySql.GetInt32(rdr, "ItemId"));
                 }
 
                 if (rdr != null)
                     rdr.Close();
+                foreach(var id in lsId)
+                {
+                    Item item = GetItemFromIdWithReadyConn(id, conn);
+                    ls.Add(item);
+                }
             }
             catch (Exception ex)
             {
@@ -474,7 +475,7 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public int SearchItemCount(string namePara)
+        public int SearchItemCount(ItemModelSearchParameter searchParameter)
         {
             int count = 0;
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -484,7 +485,8 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inNamePara", namePara);
+                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inHasMapping", searchParameter.hasMapping);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
@@ -529,7 +531,13 @@ namespace MVCPlayWithMe.Models
                 }
                 if (rdr != null)
                     rdr.Close();
+
+                foreach(var model in lsModel)
+                {
+                    model.SetPriceFromMappingPriceAndQuantity();
+                }
                 item.models = lsModel;
+                item.SetPriceAndQuantity();
             }
             catch (Exception ex)
             {
@@ -538,6 +546,45 @@ namespace MVCPlayWithMe.Models
             }
 
             conn.Close();
+            return item;
+        }
+
+        // Tương tự hàm GetItemFromId nhưng với conn mở đóng bên ngoài
+        public Item GetItemFromIdWithReadyConn(int id, MySqlConnection conn)
+        {
+            Item item = null;
+            List<Model> lsModel = new List<Model>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Get_From_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    if (item == null)
+                    {
+                        item = ConvertOneRowFromDataMySqlToItem(rdr);
+                    }
+                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                }
+                if (rdr != null)
+                    rdr.Close();
+
+                foreach (var model in lsModel)
+                {
+                    model.SetPriceFromMappingPriceAndQuantity();
+                }
+                item.models = lsModel;
+                item.SetPriceAndQuantity();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
             return item;
         }
     }

@@ -22,7 +22,7 @@
         <script>
             function CreateCategory() {
                 let name = document.getElementById("category-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(name, "result-insert", "Thể loại không hợp lệ.")) {
+                if (CheckIsEmptyOrSpacesAndShowResult(name, "Thể loại không hợp lệ.")) {
                     return;
                 }
                 let id = GetDataIdFromCategoryDatalist(name);

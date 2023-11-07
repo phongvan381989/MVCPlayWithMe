@@ -1,5 +1,5 @@
 ﻿
-let namePara;
+//let namePara;
 // số sản phẩm trong kết quả tìm kiếm
 let countItem;
 // itemOnPage: Số lượng item mỗi trang
@@ -134,10 +134,11 @@ async function ChangePage(page, url) {
 
     //let url = "/ItemModel/ChangePage";
     const searchParams = new URLSearchParams();
-    searchParams.append("namePara", namePara);
+    //searchParams.append("namePara", namePara);
+    SetSearchParameter(searchParams);
     searchParams.append("start", (page - 1) * itemOnPage);
     searchParams.append("offset", itemOnPage);
     let resObj = await RequestHttpGetPromise(searchParams, url);
 
-    ShowResult(resObj);
+    ShowSearchingResult(resObj);
 }

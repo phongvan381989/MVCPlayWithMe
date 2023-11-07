@@ -7,6 +7,7 @@ let classOffModelTable = "class-model-table";
 let classOffModelPrice = "class-model-price";
 let classOffModelBookCoverPrice = "class-model-book-cover-price";
 let classOffModelQuantity = "class-model-quantity";
+let classOffModelDiscount = "class-model-discount";
 let countModel = 0;
 let item = null; // Khi chọn item để xem, cập nhật thông tin
 // Giá trị này chỉ tăng, không giảm
@@ -204,7 +205,11 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     if (id == "id-quatity-") {
         inp.className = classOffModelQuantity;
     }
-    
+
+    // Set class cho input chiết khấu
+    if (id == "id-discount-") {
+        inp.className = classOffModelDiscount;
+    }
     div.appendChild(lab);
     div.appendChild(inp);
     container.appendChild(div);
@@ -292,8 +297,12 @@ function AddModelToScreen() {
 
     AddDistanceRows(modelContainer);
 
+    // Thêm chiết khấu
+    AddLabelInput(modelContainer, "Chiết khấu:", "id-discount-", "number", false);
+    AddDistanceRows(modelContainer);
+
     // Thêm giá bán, giá bán lấy từ các chương trình khyến mại, giảm giá
-    AddLabelInput(modelContainer, "Giá bán:", "id-price-", "number", false);
+    AddLabelInput(modelContainer, "Giá bán:", "id-price-", "number", true);
     AddDistanceRows(modelContainer);
 
     // Thêm giá bìa, thuộc tính này hiển thị chứ không cần nhập
@@ -301,7 +310,7 @@ function AddModelToScreen() {
     AddDistanceRows(modelContainer);
 
     // Thêm số lượng trong kho
-    AddLabelInput(modelContainer, "Số lượng:", "id-quatity-", "number", false);
+    AddLabelInput(modelContainer, "Số lượng:", "id-quatity-", "number", true);
     AddDistanceRows(modelContainer);
 
     // Status
@@ -484,8 +493,8 @@ function AddItemParameters(searchParams){
 
 // Thông tin gồm ảnh, tên, quota,...
 // Tạo mới modelId = -1
-function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, price, exist,
-     itemId, status, quantity, imageExtension,
+function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, exist,
+     itemId, discount, imageExtension,
     listProIdMapping) {
     if (DEBUG) {
         console.log(" Start upload image of modelId: " + modelId);
@@ -522,10 +531,8 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, p
     xhr.setRequestHeader("modelName", modelName);
     xhr.setRequestHeader("exist", exist);
     xhr.setRequestHeader("quota", quota);
-    xhr.setRequestHeader("price", price);
     xhr.setRequestHeader("itemId", itemId);
-    xhr.setRequestHeader("status", status); 
-    xhr.setRequestHeader("quantity", quantity);
+    xhr.setRequestHeader("discount", discount);
     xhr.setRequestHeader("imageExtension", imageExtension);
     xhr.setRequestHeader("listProIdMapping", listProIdMapping);
     if (DEBUG) {
@@ -533,10 +540,8 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, p
         console.log("modelName: " + modelName);
         console.log("exist: " + exist);
         console.log("quota: " + quota);
-        console.log("price: " + price);
         console.log("itemId: " + itemId);
-        console.log("status: " + status);
-        console.log("quantity: " + quantity);
+        console.log("discount: " + discount);
         console.log("imageExtension: " + imageExtension);
         console.log("listProIdMapping: " + listProIdMapping);
     }
@@ -608,16 +613,17 @@ async function AddItemModel() {
             let modelName = model.getElementsByClassName(classOfModelName)[0].value;
             let modelQuota = ConvertToInt(model.getElementsByClassName(classOfModelQuota)[0].value);
             
-            let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
-            let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
+            //let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
+            //let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
+            let modelDiscount = ConvertToInt(model.getElementsByClassName(classOffModelDiscount)[0].value);
             let exist = img.exist;
 
             let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
-            let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
+            //let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
             let imageExtension = GetExtensionOfFileName(img.fileName);
 
-            ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
-                modelQuota, modelPrice, exist, itemId, modelStatus, modelQuantity,
+            ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName, modelQuota,
+                exist, itemId, modelDiscount,
                 imageExtension, listProIdMapping);
         }
     }
@@ -697,16 +703,17 @@ async function UpdateItemModel() {
             let modelName = model.getElementsByClassName(classOfModelName)[0].value;
             let modelQuota = ConvertToInt(model.getElementsByClassName(classOfModelQuota)[0].value);
 
-            let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
-            let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
+            //let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
+            //let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
+            let modelDiscount = ConvertToInt(model.getElementsByClassName(classOffModelDiscount)[0].value);
             let exist = img.exist;
 
             let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
-            let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
+            //let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
             let imageExtension = GetExtensionOfFileName(img.fileName);
 
             ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
-                modelQuota, modelPrice, exist, itemId, modelStatus, modelQuantity,
+                modelQuota, exist, itemId, modelDiscount,
                 imageExtension, listProIdMapping);
         }
     }
@@ -1003,6 +1010,7 @@ function ShowItemFromItemObject() {
         model.getElementsByClassName(classOffModelPrice)[0].value = modelObj.price;
         model.getElementsByClassName(classOffModelBookCoverPrice)[0].value = modelObj.bookCoverPrice;
         model.getElementsByClassName(classOffModelQuantity)[0].value = modelObj.quantity;
+        model.getElementsByClassName(classOffModelDiscount)[0].value = modelObj.discount;
         model.getElementsByClassName(classOfModelStatus)[0].value = modelObj.status;
 
         // Hiển thị thumbnail image

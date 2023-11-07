@@ -32,29 +32,14 @@
             <button type="button" onclick="Login_Login()">Đăng nhập</button>
         </div>
 
-        <p id="result-insert"></p>
-
         <script>
             function Login_Login() {
                 const xhttp = new XMLHttpRequest();
                 xhttp.onload = function () {
                     if (this.readyState == 4 && this.status == 200) {
-                        //document.getElementById("result-insert").innerHTML = this.responseText;
 
-                        const obj = JSON.parse(this.responseText);
-                        if (DEBUG) {
-                            console.log(obj);
-                        }
-                        if (obj !== null) {
-                            if (obj.isValid === false) {
-                                document.getElementById("result-insert").innerHTML = "Tài khoản hoặc mật khẩu không đúng.";
-                                return;
-                            }
-                            else {
-                                document.getElementById("result-insert").innerHTML = "Đăng nhập thành công.";
-                                window.location.href = "/Administrator/Index";
-                                //return;
-                            }
+                        if (GetJsonResponse(this.responseText)) {
+                            window.location.href = "/Administrator/Index";
                         }
                     }
                 }

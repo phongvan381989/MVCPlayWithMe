@@ -62,7 +62,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListItemName();
+            //ViewDataGetListItemName();
             ViewDataGetListProductName();
             ViewDataGetListCombo();
             ViewData["itemObject"] = JsonConvert.SerializeObject(sqler.GetItemFromId(id));
@@ -174,16 +174,13 @@ namespace MVCPlayWithMe.Controllers
             // exist chỉ ảnh đại diện model đã tồn tại trên server
             var exist = Request.Headers["exist"];
             var quota = Common.ConvertStringToInt32(Request.Headers["quota"]);
-            var price = Common.ConvertStringToInt32(Request.Headers["price"]);
-            var finish = Request.Headers["finish"];
             var itemId = Common.ConvertStringToInt32(Request.Headers["itemId"]);
-            var status = Common.ConvertStringToInt32(Request.Headers["status"]);
-            var quantity = Common.ConvertStringToInt32(Request.Headers["quantity"]); 
+            var discount = Common.ConvertStringToInt32(Request.Headers["discount"]); 
             var imageExtension = Request.Headers["imageExtension"];// phần mở rộng của ảnh không gồm '.'
             var listProIdMapping = Request.Headers["listProIdMapping"];// Mảng id sản phẩm mapping
             MySqlResultState result = null;
             // Lưu vào db
-            Model model = new Model(modelId, itemId, modelName, 0, price, status, quota, quantity);
+            Model model = new Model(modelId, itemId, modelName, quota, discount);
             model.mappingOnlyProductId = Common.ConvertJsonArrayToListInt(listProIdMapping);
 
             if (modelId != -1)
@@ -265,8 +262,13 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public string SearchProduct(string codeOrBarcode, string name, string combo)
         {
-            List<Product> ls = productSqler.SearProduct(codeOrBarcode, name, combo);
-
+            ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.codeOrBarcode = codeOrBarcode;
+            searchParameter.name = name;
+            searchParameter.combo = combo;
+            searchParameter.start = 0;
+            searchParameter.offset = 1000000;// Lớn để lấy tất cả kết quả
+            List<Product> ls = productSqler.SearchProductChangePage(searchParameter);
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -279,8 +281,11 @@ namespace MVCPlayWithMe.Controllers
         public string SearchItemCount(string namePara)
         {
             // Đếm số sản phẩm trong kết quả tìm kiếm
+            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.name = namePara;
+            searchParameter.hasMapping = 2;
             int count = 0;
-            count = sqler.SearchItemCount(namePara);
+            count = sqler.SearchItemCount(searchParameter);
             return count.ToString();
         }
 
@@ -288,15 +293,20 @@ namespace MVCPlayWithMe.Controllers
         public string ChangePage(string namePara, int start, int offset)
         {
             List<Item> lsSearchResult;
-            lsSearchResult = sqler.SearchItemChangePage(namePara, start, offset);
+            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.name = namePara;
+            searchParameter.start = start;
+            searchParameter.offset = offset;
+            searchParameter.hasMapping = 2;
+            lsSearchResult = sqler.SearchItemChangePage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
-        [HttpGet]
-        public string GetItemFromId(int id)
-        {
-            return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
-        }
+        //[HttpGet]
+        //public string GetItemFromId(int id)
+        //{
+        //    return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
+        //}
     }
 }

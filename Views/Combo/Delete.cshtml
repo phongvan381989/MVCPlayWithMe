@@ -26,7 +26,7 @@
 
             function DeleteCombo() {
                 let name = document.getElementById("combo-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(name, "result-insert", "Combo không hợp lệ.")) {
+                if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
                     return;
                 }
                 let id = GetDataIdFromComboDatalist(name);

@@ -18,6 +18,7 @@ namespace MVCPlayWithMe.General
         public static readonly string dateFormat = "yyyy-MM-dd";
         public static readonly int quota = 5;
         public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
+        public static readonly int offset = 20;
         /// <summary>
         /// Đường dẫn thư mục chứa file ảnh
         /// </summary>
@@ -374,6 +375,13 @@ namespace MVCPlayWithMe.General
             }
             return lsInt;
         }
+
+        #region Xử lý tiền
+         public static int FloorMoney(int money)
+        {
+            return money / 100 * 100;
+        }
+        #endregion
 
         #region Xử chung Item/model
         /// <summary>

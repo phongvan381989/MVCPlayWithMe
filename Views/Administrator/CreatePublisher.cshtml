@@ -29,7 +29,6 @@
             <button type="button" onclick="loadDoc()">Thêm mới nhà phát hành</button>
         </div>
 
-        <p id="result-insert"></p>
         <div>
             <button type="button" onclick="loadPublishers()"> Danh sách nhà phát hành</button>
         </div>
@@ -39,11 +38,9 @@
             function loadDoc() {
                 let publisherName = document.getElementById("publisherName").value;
                 if (isEmptyOrSpaces(publisherName)) {
-                    document.getElementById("result-insert").innerHTML = "Tên nhà phát hành đang trống.";
-                    console.log("string null!");
+                    console.log("Tên nhà phát hành đang trống string null!");
                     return;
                 }
-                console.log("string not null!");
                 const xhttp = new XMLHttpRequest();
                 xhttp.onload = function () {
                     if (this.readyState == 4 && this.status == 200) {

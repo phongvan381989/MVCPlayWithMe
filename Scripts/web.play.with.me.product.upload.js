@@ -11,7 +11,7 @@
     let categoryName = document.getElementById("category-id").value;
     searchParams.append("categoryName", categoryName);
 
-    let bookCoverPrice = GetValueOfNumberInputById("book-cover-price", 0);
+    let bookCoverPrice = GetValueInputById("book-cover-price", 0);
     searchParams.append("bookCoverPrice", bookCoverPrice);
 
     searchParams.append("author", document.getElementById("author-id").value);
@@ -22,19 +22,19 @@
 
     searchParams.append("publishingCompany", document.getElementById("publishing-company-id").value);
 
-    let publishingTime = GetValueOfNumberInputById("publishing-time", -1);
+    let publishingTime = GetValueInputById("publishing-time", -1);
     searchParams.append("publishingTime", publishingTime);
 
-    let productLong = GetValueOfNumberInputById("product-long", 0);
+    let productLong = GetValueInputById("product-long", 0);
     searchParams.append("productLong", productLong);
 
-    let productWide = GetValueOfNumberInputById("product-wide", 0);
+    let productWide = GetValueInputById("product-wide", 0);
     searchParams.append("productWide", productWide);
 
-    let productHigh = GetValueOfNumberInputById("product-high", 0);
+    let productHigh = GetValueInputById("product-high", 0);
     searchParams.append("productHigh", productHigh);
 
-    let productWeight = GetValueOfNumberInputById("product-weight", 0);
+    let productWeight = GetValueInputById("product-weight", 0);
     searchParams.append("productWeight", productWeight);
 
     searchParams.append("positionInWarehouse", document.getElementById("position-in-warehouse").value);
@@ -42,13 +42,13 @@
     let hardCover = document.getElementById("hard-cover").value;
     searchParams.append("hardCover", hardCover);
 
-    let minAge = GetValueOfNumberInputById("min-age", -1);
+    let minAge = GetValueInputById("min-age", -1);
     searchParams.append("minAge", minAge);
 
-    let maxAge = GetValueOfNumberInputById("max-age", -1);
+    let maxAge = GetValueInputById("max-age", -1);
     searchParams.append("maxAge", maxAge);
 
-    searchParams.append("republish", GetValueOfNumberInputById("republish", -1));
+    searchParams.append("republish", GetValueInputById("republish", -1));
 
     let productStatus = document.getElementById("product-status").value;
     searchParams.append("status", productStatus);
@@ -223,6 +223,7 @@ function SetProductCommonInfoWithCombo(product) {
 function SetProductInfomation(product) {
     document.getElementById("code").value = product.code;
     document.getElementById("barcode").value = product.barcode;
+    document.getElementById("product-name-id").value = product.name;
     document.getElementById("combo-id").value = product.comboName;
 
     SetProductCommonInfoWithCombo(product);
@@ -234,39 +235,39 @@ function SetProductInfomation(product) {
     InitializeVideoList(product.videoSrc);
 }
 
-// Thay đổi tên sản phẩm, hiển thị tất cả thông tin tương ứng
-function ProductNameChange(str) {
-    if (DEBUG) {
-        console.log("ProductNameChange function");
-    }
-    let id = GetDataIdFromProductNameDatalist(str);
-    if (id == null) {
-        SetProductInfomationToDefault();
-        return;
-    }
+//// Thay đổi tên sản phẩm, hiển thị tất cả thông tin tương ứng
+//function ProductNameChange(str) {
+//    if (DEBUG) {
+//        console.log("ProductNameChange function");
+//    }
+//    let id = GetDataIdFromProductNameDatalist(str);
+//    if (id == null) {
+//        SetProductInfomationToDefault();
+//        return;
+//    }
 
-    // Lấy tất cả thông tin về sản phẩm và hiển thị
-    const searchParams = new URLSearchParams();
-    searchParams.append("id", id);
-    let query = "/Product/GetProduct";
+//    // Lấy tất cả thông tin về sản phẩm và hiển thị
+//    const searchParams = new URLSearchParams();
+//    searchParams.append("id", id);
+//    let query = "/Product/GetProduct";
 
-    let OnloadFuntion = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            const product = JSON.parse(this.responseText);
-            if (DEBUG) {
-                console.log(product);
-            }
-            if (product == null) {
-                SetProductInfomationToDefault();
-                return;
-            }
+//    let OnloadFuntion = function () {
+//        if (this.readyState == 4 && this.status == 200) {
+//            const product = JSON.parse(this.responseText);
+//            if (DEBUG) {
+//                console.log(product);
+//            }
+//            if (product == null) {
+//                SetProductInfomationToDefault();
+//                return;
+//            }
 
-            SetProductInfomation(product);
-        }
-    }
+//            SetProductInfomation(product);
+//        }
+//    }
 
-    RequestHttpPost(OnloadFuntion, searchParams, query);
-}
+//    RequestHttpPost(OnloadFuntion, searchParams, query);
+//}
 
 // Thay đổi combo, hiển thị tất cả thông tin chung các sản phẩm cùng combo
 // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
@@ -407,10 +408,125 @@ function UpdateCommonInfoWithCombo() {
     let OnloadFuntion = function () {
         if (this.readyState == 4 && this.status == 200) {
             GetJsonResponse(this.responseText);
-            if (CheckStatusResponseAndShowPrompt(this.responseText, true, "Cập nhật thành công", "Cập nhật thất bại")) {
+            if (CheckStatusResponseAndShowPrompt(this.responseText, "Cập nhật thành công", "Cập nhật thất bại")) {
                 ReloadAndScrollToTop();
             }
         }
     }
     RequestHttpPost(OnloadFuntion, searchParams, query);
+}
+
+// HIển thị nút cập nhật cho riêng tên, isbn và mã sản phẩm
+function ShowUpdateButtonForOne() {
+    const collection = document.getElementsByClassName("diplay-none-when-create");
+
+    for (let i = 0; i < collection.length; i++)
+    {
+        collection[i].style.display = "block";
+    }
+}
+
+async function UpdateName() {
+    const product = JSON.parse(document.getElementById("product-object").textContent);
+    if (product == null) {
+        ShowResult("Chưa chọn sản phẩm.");
+        return false
+    }
+
+    let productName = document.getElementById("product-name-id").value;
+    if (isEmptyOrSpaces(productName)) {
+        ShowResult("Tên sản phẩm trống.");
+        return false;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", product.id);
+    searchParams.append("name", productName);
+
+    let url = "/Product/UpdateName";
+
+    try {
+        // Cập nhật vào db
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
+    }
+    catch (error) {
+        if (DEBUG) {
+            console.log(error);
+        }
+        alert("Cập nhật tên lỗi.");
+        return;
+    }
+}
+
+async function UpdateCode() {
+    const product = JSON.parse(document.getElementById("product-object").textContent);
+    if (product == null) {
+        ShowResult("Chưa chọn sản phẩm.");
+        return false
+    }
+
+    let productCode = document.getElementById("code").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", product.id);
+    searchParams.append("code", productCode);
+
+    let url = "/Product/UpdateCode";
+
+    try {
+        // Cập nhật vào db
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
+    }
+    catch (error) {
+        if (DEBUG) {
+            console.log(error);
+        }
+        alert("Cập nhật mã lỗi.");
+        return;
+    }
+}
+
+async function UpdateISBN() {
+    const product = JSON.parse(document.getElementById("product-object").textContent);
+    if (product == null) {
+        ShowResult("Chưa chọn sản phẩm.");
+        return false
+    }
+
+    let productISBN = document.getElementById("barcode").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", product.id);
+    searchParams.append("isbn", productISBN);
+
+    let url = "/Product/UpdateISBN";
+
+    try {
+        // Cập nhật vào db
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
+    }
+    catch (error) {
+        if (DEBUG) {
+            console.log(error);
+        }
+        alert("Cập nhật tên lỗi.");
+        return;
+    }
+}
+
+// Từ product object json lưu trong thẻ p, hiển thị
+function ShowProductFromObject() {
+    const product = JSON.parse(document.getElementById("product-object").textContent);
+    if (DEBUG) {
+        console.log(product);
+    }
+    if (product == null) {
+        SetProductInfomationToDefault();
+        return;
+    }
+
+    SetProductInfomation(product);
 }

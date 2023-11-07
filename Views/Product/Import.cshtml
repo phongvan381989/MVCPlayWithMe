@@ -56,7 +56,6 @@
                 <button type="button" onclick="Save()">Lưu</button>
                 <button type="button" style="float: right;" onclick="Delete()">Xóa toàn bộ</button>
             </div>
-            <p id="result-insert"></p>
         </div>
     </div>
     <script>
@@ -302,7 +301,7 @@
 
             let OnloadFuntion = function () {
                 if (this.readyState == 4 && this.status == 200) {
-                    CheckStatusResponseAndShowPrompt(this.responseText, true, "Cập nhật thành công", "Cập nhật thất bại");
+                    CheckStatusResponseAndShowPrompt(this.responseText, "Cập nhật thành công", "Cập nhật thất bại");
                 }
             }
 

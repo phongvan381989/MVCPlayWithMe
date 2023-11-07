@@ -41,7 +41,6 @@
             <button type="button" onclick="New_AddAdministrator()">Thêm người dùng</button>
         </div>
 
-        <p id="result-insert"></p>
         <div>
             <a href="/Administrator/Login" target="_self">Đăng nhập</a>
         </div> <br />
@@ -65,7 +64,6 @@
                         console.log(obj);
                     }
                     if (obj.isValid === false) {
-                        document.getElementById("result-insert").innerHTML = obj.message;
                         return;
                     }
                     if (obj.message === "Email") {
@@ -90,7 +88,6 @@
                     }
                     if (obj !== null) {
                         if (obj.isValid === false) {
-                            document.getElementById("result-insert").innerHTML = obj.message;
                             return;
                         }
                     }

@@ -55,7 +55,7 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public ActionResult UpdateDelete()
+        public ActionResult UpdateDelete(int id)
         {
             if (AuthentAdministrator() == null)
             {
@@ -63,6 +63,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             GetViewDataForInput();
+            ViewData["itemObject"] = JsonConvert.SerializeObject(sqler.GetProductFromId(id));
 
             return View();
         }
@@ -97,6 +98,17 @@ namespace MVCPlayWithMe.Controllers
                 return AuthenticationFail();
             }
 
+            return View();
+        }
+
+        public ActionResult Search()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+            ViewDataGetListCombo();
+            ViewDataGetListProductName();
             return View();
         }
 
@@ -514,6 +526,58 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return strResult;
+        }
+
+        /// <summary>
+        /// Tìm kiếm sản phẩm trong kho
+        /// </summary>
+        /// <param name="namePara"></param>
+        /// <returns></returns>
+        [HttpGet]
+        public string SearchProductCount(string codeOrBarcode, string name, string combo)
+        {
+            // Đếm số sản phẩm trong kết quả tìm kiếm
+            int count = 0;
+            ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.codeOrBarcode = codeOrBarcode;
+            searchParameter.name = name;
+            searchParameter.combo = combo;
+            count = sqler.SearchProductCount(searchParameter);
+            return count.ToString();
+        }
+
+        [HttpGet]
+        public string ChangePage(string codeOrBarcode, string name, string combo, int start, int offset)
+        {
+            ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.codeOrBarcode = codeOrBarcode;
+            searchParameter.name = name;
+            searchParameter.combo = combo;
+            searchParameter.start = start;
+            searchParameter.offset = offset;
+
+            List<Product> lsSearchResult;
+            lsSearchResult = sqler.SearchProductChangePage(searchParameter);
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
+        [HttpGet]
+        public string UpdateName(int id, string name)
+        {
+            return JsonConvert.SerializeObject(sqler.UpdateName(id, name));
+        }
+
+        [HttpGet]
+        public string UpdateCode(int id, string code)
+        {
+            return JsonConvert.SerializeObject(sqler.UpdateCode(id, code));
+        }
+
+        [HttpGet]
+        public string UpdateISBN(int id, string isbn)
+        {
+            return JsonConvert.SerializeObject(sqler.UpdateISBN(id, isbn));
         }
     }
 }

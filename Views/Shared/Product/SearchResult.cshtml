@@ -1,0 +1,16 @@
+﻿<div>
+    <div id="empty-result" style="display:none">
+        <p>Kết quả trống</p>
+    </div>
+    <div id="search-result" style="display:none">
+        <table id="myTable">
+            <tr>
+                <th style="display:none"></th>
+                <th style="width:200px">Ảnh</th>
+                <th>Tên</th>
+            </tr>
+        </table>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+        @Html.Partial("~/Views/Shared/GoToPage.cshtml")
+    </div>
+</div>

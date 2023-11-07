@@ -1,0 +1,13 @@
+﻿@*@model IEnumerable<MVCPlayWithMe.Models.Item>*@
+<div>
+    <div id="empty-result" style="display:none">
+        <p>Kết quả trống</p>
+    </div>
+    <div id="search-result" style="display:none">
+        @Html.Partial("~/Views/Shared/Home/Item.cshtml"@*, item*@)
+        <div id="biggestContainer_body_wraper_item">
+        </div>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+        @Html.Partial("~/Views/Shared/GoToPage.cshtml")
+    </div>
+</div>
