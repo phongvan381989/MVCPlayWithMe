@@ -19,18 +19,23 @@
             /*display: block;
             margin: auto;*/
         }
-        #item-media-wrapper {
+        #item-media-wrapper, #item-something-wrapper {
             display: flex;
             flex-direction: column;
+            flex-wrap: wrap;
+            width: 100%;
         }
         #item-medium-media {
-            display: flex;
+            /*display: flex;*/
+            /*position:relative;*/
             justify-content: center;
             align-items:center;
-            /*display: block;*/
+            display: block;
             /*width: 100%;*/
             margin-left: auto;
             margin-right: auto;
+            margin-top:auto;
+            margin-bottom:auto;
             padding: 5px;
             /*height: 800px;*/
             /*border: 1px solid rgb(255, 0, 0);*/
@@ -49,12 +54,12 @@
             /*border: 1px solid rgb(255, 0, 0);*/
         }
 
-        #item-variation-container {
+        #item-variation-container, #item-order {
             display: flex;
-            /*width: 100%;*/
+            width: 100%;
             padding: 5px;
             flex-wrap: wrap;
-            border: 1px solid rgb(255, 0, 0);
+            /*border: 1px solid rgb(255, 0, 0);*/
         }
         /*#item-something-wrapper{
             height: 1000px;
@@ -94,7 +99,7 @@
             display: flex;
             align-content: center;
             flex-wrap: wrap;
-            width: 625px;
+            width: 100%;
             /*flex-basis: 625px;*/
             min-height: 1.875rem;
         }
@@ -156,9 +161,9 @@
             align-items: center;
             justify-content: center;
         }
-        .variation-button:hover {
+        /*.variation-button:hover {
             border: 1px solid rgb(255, 0, 0);
-        }
+        }*/
         .variation-image {
             width: 1.5rem;
             height: 1.5rem;
@@ -177,6 +182,7 @@
             right: 0;
             bottom: 0;
         }
+
         #check-container::before {
             border: 0.9375rem solid transparent;
             border-bottom: 0.9375rem solid rgb(255, 0, 0);
@@ -197,6 +203,216 @@
             height: 1em;
             fill: currentColor;
         }
+
+        .flex-items-center {
+            display: flex;
+            align-items: center;
+            flex-wrap:wrap;
+        }
+        .shopee-input-quantity {
+            background: #fff;
+            display: flex;
+            align-items: center;
+        }
+
+        .xNxl-t {
+            outline: none;
+            /*cursor: pointer;
+            border: 0;
+            font-size: .875rem;*/
+            font-weight: 300;
+            line-height: 1;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color .1s cubic-bezier(.4,0,.6,1);
+            border: 1px solid rgba(0,0,0,.09);
+            border-radius: 2px;
+            background: transparent;
+            color: rgba(0,0,0,.8);
+            width: 32px;
+            height: 32px;
+            font-size: 10px;
+            flex-shrink: 0;
+        }
+        /*.xNxl-t:first-child {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }*/
+
+        .shopee-svg-icon {
+            font-size: 10px;
+            width: 10px;
+            height: 10px;
+            flex-shrink: 0
+        }
+
+        .VWjjde {
+            width: 50px;
+            height: 32px;
+            border-left: 0;
+            border-right: 0;
+            font-size: 16px;
+            font-weight: 400;
+            box-sizing: border-box;
+            text-align: center;
+            cursor: text;
+            border-radius: 0;
+            -webkit-appearance: none;
+            outline: none;
+            line-height: 1;
+            letter-spacing: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color .1s cubic-bezier(.4,0,.6,1);
+            border: 1px solid rgba(0,0,0,.09);
+            background: transparent;
+            color: rgba(0,0,0,.8);
+        }
+
+        .I-H1Co {
+            /*margin: 15px 0 0 110px;*/
+            padding: 5px;
+            color: #ff424f;
+            display: none;
+            /*border: 1px solid #73AD21;*/
+        }
+        .p-UZsF {
+            padding: 5px;
+            display: flex;
+            /*padding-left: 0.9375rem;*/
+            /*border: 1px solid #73AD21;*/
+        }
+        .btn-add-to-cart {
+            position: relative;
+            overflow: visible;
+            outline: 0;
+            background: rgba(208,1,27,.08);
+            color: #d0011b;
+            border: 1px solid #d0011b;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.03);
+            height: 48px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: capitalize;
+            flex-direction: row;
+            cursor: pointer;
+            margin-right: 0.9375rem;
+            min-width: 8.25rem;
+        }
+
+        .btn-buy-now {
+            position: relative;
+            overflow: visible;
+            outline: 0;
+            background: #d0011b;
+            color: #fff;
+            height: 48px;
+            padding: 0 20px;
+            text-overflow: ellipsis;
+            flex-direction: column;
+            box-sizing: border-box;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+            border-radius: 2px;
+            border: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: capitalize;
+            max-width: 250px;
+            margin-right: 0.9375rem;
+            min-width: 8.25rem;
+            /*font-size: .875rem;*/
+        }
+
+        .icon-add-to-cart {
+            display: inline-block;
+            width: 1em;
+            height: 1em;
+            fill: currentColor;
+            position: relative;
+            margin-right: 10px;
+            color: #ee4d2d;
+            stroke: #ee4d2d;
+            font-size: 1.25rem;
+        }
+        .product-detail {
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            border-radius: 0.125rem;
+            overflow: hidden;
+            background: #fff;
+            margin-top: 0.9375rem;
+            padding-top: 0.625rem;
+            display: block;
+        }
+        .U9rGd1 {
+            /*padding: 0.9375rem 0.9375rem 0;*/
+            display: block;
+        }
+        .Iv7FJp {
+            background: rgba(0,0,0,.02);
+            color: rgba(0,0,0,.87);
+            font-size: 1.125rem;
+            font-weight: 400;
+            margin: 0;
+            padding: 0.875rem;
+            text-transform: capitalize;
+            display: block;
+            /*font-size: 1.5em;*/
+            /*margin-block-start: 0.83em;
+            margin-block-end: 0.83em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;*/
+            /*font-weight: bold;*/
+        }
+        h2 {
+            display: block;
+            /*font-size: 1.5em;
+            margin-block-start: 0.83em;
+            margin-block-end: 0.83em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+            font-weight: bold;*/
+        }
+        .MCCLkq {
+            margin: 0rem 0.9375rem 0.9375rem;
+            display:block;
+        }
+        .dR8kXc {
+            display: flex;
+            margin-bottom: 0.75rem;
+        }
+        .zquA4o {
+            color: rgba(0,0,0,.4);
+            font-size: .875rem;
+            box-sizing: border-box;
+            width: 8.75rem;
+            padding-right: 0.75rem;
+        }
+
+        .GvvZVe {
+            color: #05a;
+        }
+
+        .f7AU53 {
+            white-space: pre-wrap;
+            color: rgba(0,0,0,.8);
+            font-size: 1rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            line-height: 1.7;
+            display: block;
+            padding:0px;
+        }
+        .irIKAp {
+            margin: 0;
+        }
+
+
     </style>
 </head>
 <body onload="HomePageShowItem()">
@@ -205,10 +421,9 @@
         <div id="item-media-wrapper">
             <p id="item-object" style="display:none;">@ViewData["itemObject"]</p>
             <div id="item-medium-media">
-                <img id="medium-image" style="display:none;" alt="No Image" />
-                <video id="medium-video" style="display:none" controls autoplay
-    muted="muted">
-                </video>
+                <img id="medium-image" style="display:none; object-fit:contain; object-position:center; width:100%; height:100%;" alt="No Image" />
+                <video id="medium-video" style="display:none; object-fit:contain; object-position:center; width:100%; height:100%;" controls autoplay
+                       muted="muted"></video>
             </div>
             <div id="item-small-media">
                 <div id="item-small-media-container">
@@ -217,7 +432,7 @@
             </div>
         </div>
         <div id="item-something-wrapper">
-            <div id="item-name">
+            <div id="item-name" style="width:100%">
                 <h1 id="item-name-h1"></h1>
             </div>
             <div id="item-vote">
@@ -233,10 +448,66 @@
             <div id="item-variation-container">
 
             </div>
-            <div id="item-order">
 
+            <div id="item-order">
+                <div class="flex-items-center">
+                    <div style="margin-right: 15px;">
+                        <div class="shopee-input-quantity">
+                            <button aria-label="Decrease" class="xNxl-t" onclick="Decrease()">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="4.5 4.5 3.5 4.5 0 4.5 0 5.5 3.5 5.5 4.5 5.5 10 5.5 10 4.5"></polygon></svg>
+                            </button>
+                            <input class="VWjjde" type="text" value="1" id="quantity-input"
+                                   oninput="ValidateInput(event)">
+                            <button aria-label="Increase" class="xNxl-t" onclick="Increase()">
+                                <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="10 4.5 5.5 4.5 5.5 0 4.5 0 4.5 4.5 0 4.5 0 5.5 4.5 5.5 4.5 10 5.5 10 5.5 5.5 10 5.5"></polygon></svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="max-quatity">4992 sản phẩm có sẵn</div>
+                </div>
+            </div>
+
+            <div class="I-H1Co">Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này</div>
+
+            <div class="p-UZsF">
+                <button type="button" class="btn-add-to-cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1"
+                         viewBox="0 0 15 15" x="0" y="0" class="icon-add-to-cart">
+                        <g>
+                            <g>
+                                <polyline fill="none" points=".5 .5 2.7 .5 5.2 11 12.4 11 14.5 3.5 3.7 3.5" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10">
+                                </polyline>
+                                <circle cx="6" cy="13.5" r="1" stroke="none">
+                                </circle>
+                                <circle cx="11.5" cy="13.5" r="1" stroke="none">
+                                </circle>
+                            </g>
+                            <line fill="none" stroke-linecap="round" stroke-miterlimit="10" x1="7.5" x2="10.5" y1="7" y2="7">
+                            </line>
+                            <line fill="none" stroke-linecap="round" stroke-miterlimit="10" x1="9" x2="9" y1="8.5" y2="5.5">
+                            </line>
+                        </g>
+                    </svg>
+                    <span>thêm vào giỏ hàng</span>
+                </button>
+                <button type="button" class="btn-buy-now">
+                    Mua ngay
+                </button>
             </div>
         </div>
+        <div class="product-detail">
+            <section class="U9rGd1">
+                <h2 class="Iv7FJp">MÔ TẢ SẢN PHẨM</h2>
+                <div class="MCCLkq">
+                    <div class="f7AU53"></div>
+                </div>
+            </section>
+        </div>
+        <div class="other-product">
+
+        </div>
+
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -249,8 +520,9 @@
         let itemObject; // object item đại diện đối tượng item server trả về
         let varition; // Models trong item
         let selectedIdModel;// Id của model được chọn để mua
+        let quantityInput; // Input trước oninput
 
-
+        quantityInput = 1;
         // Constructor function for item objects
         function objMediaSrc(itemSrc, itemIsVideo) {
             this.src = itemSrc;
@@ -290,7 +562,7 @@
 
             // Cập nhật dữ liệu cho listItemData
             listItemData = [];
-            if (itemObject.videoSrc != null) {
+            if (itemObject.videoSrc != null && itemObject.videoSrc.length > 0) {
                 listItemData.push(new objMediaSrc(itemObject.videoSrc, true));
             }
             for (let i = 0; i < itemObject.imageSrc.length; i++) {
@@ -305,7 +577,7 @@
                 console.log("listItemData: " + JSON.stringify(listItemData));
             }
 
-            ShowSmallItem(0, true);
+            ShowSmallItem(0);
 
             ShowRightLeftArrow(itemSmallMedia);
 
@@ -313,6 +585,9 @@
             ChangeSelectedItem(document.getElementById("item-small-media-container").children[0]);
 
             ShowItemSomthing();
+
+            // Hien thi mo ta chi tiet san pham
+            ShowProductDescription();
         }
 
         function CreateContainerSmallItem(ItemData, i) {
@@ -324,17 +599,9 @@
             container.setAttribute("data-index", i);
             if (ItemData.isVideo) {
                 const video = document.createElement("video");
-
                 video.src = ItemData.src;
-
                 video.controls = false;
-
-                //container.className = "small-media";
                 container.style.position = "relative";
-                //container.setAttribute("data-index", i);
-                container.addEventListener("mouseover", function (event) {
-                    ChangeSelectedItem(event.currentTarget);
-                });
 
                 // Thêm video icon
                 let videoIcon123 = document.createElement("div");
@@ -351,15 +618,11 @@
             else {
                 const img = document.createElement("img");
                 img.src = ItemData.src;
-
-                //container.className = "small-media";
-                //container.setAttribute("data-index", i);
-                container.addEventListener("mouseover", function (event) {
-                    ChangeSelectedItem(event.currentTarget);
-                });
-
                 container.appendChild(img);
             }
+            container.addEventListener("mouseenter", function (event) {
+                ChangeSelectedItem(event.currentTarget);
+            });
 
             return container;
         }
@@ -386,7 +649,7 @@
                 let leftArrow = document.createElement("div");
                 leftArrow.className = "right-left-arrow";
                 leftArrow.style.position = "absolute"
-                leftArrow.style.top = "0px"
+                leftArrow.style.top = "10px"
                 leftArrow.style.width = "40px";
                 leftArrow.style.height = "100px";
                 leftArrow.style.zIndex = 1;
@@ -416,7 +679,7 @@
                 let rightArrow = document.createElement("div");
                 rightArrow.className = "right-left-arrow";
                 rightArrow.style.position = "absolute";
-                rightArrow.style.top = "0px"
+                rightArrow.style.top = "10px"
                 rightArrow.style.right = "0px";
                 rightArrow.style.width = "40px";
                 rightArrow.style.height = "100px";
@@ -490,28 +753,49 @@
             let mediumImage = document.getElementById("medium-image");
 
             let mediumVideo = document.getElementById("medium-video");
+            mediumImage.src = src;
+
             if (DEBUG) {
-                console.log("mediumVideo.style.display: " + mediumVideo.style.display);
+                console.log("ShowMediumItemFromSelectedVariation Call");
+                console.log("src: " + src);
             }
             if (mediumVideo.style.display != "none") {
-                    mediumVideo.style.display = "none";
+                mediumVideo.style.display = "none";
                 mediumVideo.pause();
                 mediumImage.style.display = "block";
             }
-
-            mediumImage.src = src;
         }
 
+        function ShowProductDescription() {
+            if (DEBUG) {
+                console.log("ShowProductDescription CALL");
+            }
+ 
+            if (itemObject.detail == null) {
+                // An mo ta san pham
+                document.getElementsByClassName("product-detail")[0].style.display = "none";
+                return;
+            }
+
+            let p = document.createElement("p");
+            p.className = "irIKAp";
+            p.innerHTML = itemObject.detail;
+            document.getElementsByClassName("f7AU53")[0].appendChild(p);
+        }
+
+        function GetModelObjectFromModelId(modelId) {
+            for (let i = 0; i < itemObject.models.length; i++) {
+                if (modelId == itemObject.models[i].id) {
+                    return itemObject.models[i];
+                }
+            }
+        }
         // Thay đổi medium media theo variation đã chọn, nếu chưa chọn variation thì check theo small item đã chọn
         function ShowMediumMediaFromSelectedObj()
         {
-            // Variation đã chọn
-            if (selectedIdModel != null) {
-                for (let i = 0; i < itemObject.models.length; i++) {
-                    if (selectedIdModel == itemObject.models[i].id) {
-                        ShowMediumItemFromSelectedVariation(itemObject.models[i].imageSrc);
-                    }
-                }
+            // Variation đã chọn và có từ 2 biến thể/ model trở lên
+            if (selectedIdModel != null && itemObject.models.length > 1) {
+                ShowMediumItemFromSelectedVariation(GetModelObjectFromModelId(selectedIdModel).imageSrc);
             }
             else {
                 // Hiển thị small item/media đã chọn
@@ -555,39 +839,25 @@
         }
 
         function VariationClick(newSelectVariation) {
-            let name = newSelectVariation.textContent;
-            if (DEBUG) {
-                console.log("name of model: " + name);
-            }
             // Lấy id variation/ model
-            let id;
-            for (let i = 0; i < itemObject.models.length; i++) {
-                if (name == itemObject.models[i].name) {
-                    id = itemObject.models[i].id;
-                    if (DEBUG) {
-                        console.log("id of selected variation: " + id);
-                    }
-                }
+            let id = parseInt(newSelectVariation.getAttribute("data-model-id"));
+            if (DEBUG) {
+                console.log("id of model: " + id);
             }
-
-            // Bỏ chọn variation đã chọn
-            if (selectedIdModel != null && selectedIdModel == id) {
-                selectedIdModel = null;
-
-                // Bỏ icon V
-                document.getElementById("check-container").remove();
-
-                return;
-            }
-
             // Bỏ chọn variontion cũ nếu có
             if (selectedIdModel != null)
             {
+                if (selectedIdModel != id) {//  Bỏ chọn border màu đỏ button cũ
+                    document.getElementById("check-container").parentElement.style.borderColor = "rgba(0, 0, 0, .09)";
+                }
                 // Bỏ icon V
                 document.getElementById("check-container").remove();
-
-                // Bỏ hiển thị border button màu đỏ
-                document.getElementById("check-container").parentElement.style.borderColor = "rgba(0, 0, 0, .09)";
+                if (selectedIdModel == id) {
+                    selectedIdModel = null;
+                    //ShowPrice();
+                    ShowPriceAndReadyMaxQuantity();
+                    return;
+                }
             }
 
             selectedIdModel = id;
@@ -599,18 +869,115 @@
             newSelectVariation.appendChild(checkContainer);
             // Luôn hiển thị border màu đỏ với variation đã chọn
             newSelectVariation.style.borderColor = "rgb(255, 0, 0)";
+            //ShowPrice();
+            ShowPriceAndReadyMaxQuantity();
+        }
+
+        // Lấy số lượng max của 1 variation/model.
+        // Nếu chưa chọn variation / model số lượng max = tổng số lượng các variation / model
+        // trong item
+        function GetMaxQuantityInput() {
+            let maxQuantity = 0;
+            if (selectedIdModel == null) { // tổng số lượng các variation / model trong item
+                for (let i = 0; i < itemObject.models.length; i++) {
+                    maxQuantity = maxQuantity + itemObject.models[i].quantity;
+                }
+            }
+            else {
+                maxQuantity = GetModelObjectFromModelId(selectedIdModel).quantity;
+            }
+            return maxQuantity;
         }
 
         // Thay đổi medium media khi di chuyển chuột trên variation button
-        function VariatiMouseOver(newSelectVariation) {
+        function VariationMouseEnter(newSelectVariation) {
+            newSelectVariation.style.borderColor = "rgba(255, 0, 0)";
+            if (DEBUG) {
+                console.log("VariationMouseEnter Call");
+                let id = parseInt(newSelectVariation.getAttribute("data-model-id"));
+                console.log("id of model: " + id);
+            }
             ShowMediumItemFromSelectedVariation(newSelectVariation.getElementsByClassName("variation-image")[0].src);
         }
 
         // Thay đổi medium media khi di chuyển chuột ra khỏi variation button
-        function VariatiMouseOut() {
+        function VariationMouseLeave(newSelectVariation) {
+            if (DEBUG) {
+                console.log("VariationMouseLeave Call");
+                let id = parseInt(newSelectVariation.getAttribute("data-model-id"));
+                console.log("id of model: " + id);
+            }
             ShowMediumMediaFromSelectedObj();
+            if (parseInt(newSelectVariation.getAttribute("data-model-id")) != selectedIdModel) {
+                newSelectVariation.style.borderColor = "rgba(0, 0, 0, .09)";
+            }
         }
 
+        function GetModelObjectFromModelId(modelId) {
+            let modelObject = null;
+            for (let i = 0; i < itemObject.models.length; i++) {
+                if (modelId == itemObject.models[i].id) {
+                    modelObject = itemObject.models[i];
+                    break;
+                }
+            }
+            return modelObject;
+        }
+        // Show giá bìa, giá bán và % triết khấu
+        function ShowPrice()
+        {
+            // Chưa chọn model nên ta hiển thị biến thể giá nhỏ nhất - đắt nhất, chiết khấu lớn nhất,
+            // thường các biến thể cùng item sẽ chiết khấu như nhau
+            if (selectedIdModel == null) {
+                // Giá bìa
+                document.getElementById("book-cover-price").innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(itemObject.cheapestModel.bookCoverPrice) + " - " +
+                    "<sup>₫</sup>" + ConvertMoneyToText(itemObject.mostExpensiveModel.bookCoverPrice);
+
+                // Giá bán thực tế
+                document.getElementById("price").innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(itemObject.cheapestModel.price) + " - " +
+                    "<sup>₫</sup>" + ConvertMoneyToText(itemObject.mostExpensiveModel.price);
+
+                // % Chiết khấu
+                let discount = itemObject.cheapestModel.discount;
+                if (discount < itemObject.mostExpensiveModel.discount) {
+                    discount = itemObject.mostExpensiveModel.discount;
+                }
+
+                document.getElementById("discount").innerHTML = discount + "% GIẢM";
+            }
+            else {
+                let modelObject = GetModelObjectFromModelId(selectedIdModel);
+
+                // Giá bìa
+                document.getElementById("book-cover-price").innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(modelObject.bookCoverPrice);
+
+                // Giá bán thực tế
+                document.getElementById("price").innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(modelObject.price);
+
+                // % Chiết khấu
+                let discount = modelObject.discount;
+                document.getElementById("discount").innerHTML = discount + "% GIẢM";
+            }
+        }
+
+        function ShowReadyMaxQuantity() {
+            document.getElementById("max-quatity").innerHTML = GetMaxQuantityInput().toString() + " sản phẩm có sẵn";
+        }
+
+        function ShowPriceAndReadyMaxQuantity() {
+            ShowPrice();
+            ShowReadyMaxQuantity();
+
+            // Refresh input quantity ve 1
+            quantityInput = 1;
+            if (GetMaxQuantityInput() == 0)
+                quantityInput = 0;
+            document.getElementById("quantity-input").value = quantityInput.toString();
+            if (document.getElementsByClassName("I-H1Co")[0].style.display != "none") {
+                document.getElementsByClassName("I-H1Co")[0].style.display = "none";
+            }
+        }
+        // Gồm: Tên, giá bìa, giá chiết khấu, lựa chọn
         function ShowItemSomthing() {
             if (itemObject == null)
                 return;
@@ -618,49 +985,98 @@
             // Show tên
             document.getElementById("item-name-h1").innerHTML = itemObject.name;
 
-            // Show giá bìa, giá bán và % triết khấu
+            // Show giá bìa, giá bán và % triết khấu, so luong max
+            //ShowPrice();
+            ShowPriceAndReadyMaxQuantity();
 
-            // Chưa chọn model nên ta hiển thị biến thể giá nhỏ nhất - đắt nhất, chiết khấu lớn nhất,
-            // thường các biến thể cùng item sẽ chiết khấu như nhau
-            document.getElementById("book-cover-price").innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(itemObject.cheapestModel.bookCoverPrice) + " - " +
-                "<sup>₫</sup>" + ConvertMoneyToText(itemObject.mostExpensiveModel.bookCoverPrice);
+            if (itemObject.models.length > 1) {
+                // Thêm các biến thể
+                let variationContainer = document.getElementById("item-variation-container");
+                for (let i = 0; i < itemObject.models.length; i++) {
+                    let variationButton = document.createElement("button");
+                    variationButton.type = "button";
+                    variationButton.innerHTML = itemObject.models[i].name;
+                    variationButton.className = "variation-button";
+                    variationButton.setAttribute("data-model-id", itemObject.models[i].id);
+                    variationButton.addEventListener("click", function (event) {
+                        VariationClick(event.currentTarget);
+                    });
 
-            // Giá bán thực tế
-            document.getElementById("price").innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(itemObject.cheapestModel.price) + " - " +
-                "<sup>₫</sup>" + ConvertMoneyToText(itemObject.mostExpensiveModel.price);
+                    variationButton.addEventListener("mouseenter", function (event) {
+                        VariationMouseEnter(event.currentTarget);
+                    });
 
-            // % Chiết khấu
-            let discount = itemObject.cheapestModel.discount;
-            if (discount < itemObject.mostExpensiveModel.discount) {
-                discount = itemObject.mostExpensiveModel.discount;
+                    variationButton.addEventListener("mouseleave", function (event) {
+                        VariationMouseLeave(event.currentTarget);
+                    });
+
+                    let variationImg = document.createElement("img");
+                    variationImg.className = "variation-image";
+                    variationImg.src = itemObject.models[i].imageSrc;
+                    variationButton.appendChild(variationImg);
+
+                    variationContainer.appendChild(variationButton);
+                }
+            }
+            else {
+                // Mặc định chọn biến thể là model duy nhất
+                selectedIdModel = itemObject.models[0].id;
+            }
+            // Hien thi so luong max
+            //ShowReadyMaxQuantity();
+        }
+
+        function Decrease() {
+            if (quantityInput > 1) {
+                quantityInput = quantityInput - 1;
+                document.getElementById("quantity-input").value = quantityInput.toString();
+            }
+            if (document.getElementsByClassName("I-H1Co")[0].style.display != "none") {
+                document.getElementsByClassName("I-H1Co")[0].style.display = "none";
+            }
+        }
+        function Increase() {
+            let maxQuatity = GetMaxQuantityInput();
+            if (quantityInput < maxQuatity) {
+                quantityInput = quantityInput + 1;
+                document.getElementById("quantity-input").value = quantityInput.toString();
+            }
+            else {
+                document.getElementsByClassName("I-H1Co")[0].style.display = "block";
+            }
+        }
+
+        function ValidateInput(event) {
+            let newInput = document.getElementById("quantity-input").value;
+            if (DEBUG) {
+                console.log("ValidateInput: ");
+                console.log("newInput: " + newInput);
+                console.log("quantityInput: " + quantityInput);
             }
 
-            document.getElementById("discount").innerHTML = discount + "% GIẢM";
+            if (IsNumeric(newInput)) {
+                let iInput = ConvertToInt(newInput);
+                let maxQuantity = GetMaxQuantityInput();
+                if (iInput === 0) {
+                    quantityInput = 1;
+                    if (maxQuantity == 0) {
+                        quantityInput = 0;
+                    }
+                }
 
-            // Thêm các biến thể
-            let variationContainer = document.getElementById("item-variation-container");
-            for (let i = 0; i < itemObject.models.length; i++) {
-                let variationButton = document.createElement("button");
-                variationButton.innerHTML = itemObject.models[i].name;
-                variationButton.className = "variation-button";
-                variationButton.addEventListener("click", function (event) {
-                    VariationClick(event.currentTarget);
-                });
-
-                variationButton.addEventListener("mouseover", function (event) {
-                    VariatiMouseOver(event.currentTarget);
-                });
-                variationButton.addEventListener("mouseout", function (event) {
-                    VariatiMouseOut();
-                });
-
-                let variationImg = document.createElement("img");
-                variationImg.className = "variation-image";
-                variationImg.src = itemObject.models[i].imageSrc;
-                variationButton.appendChild(variationImg);
-
-                variationContainer.appendChild(variationButton);
+                if (iInput > maxQuantity) {
+                    quantityInput = maxQuantity;
+                    document.getElementsByClassName("I-H1Co")[0].style.display = "block";
+                }
+                else {
+                    quantityInput = iInput;
+                    if (document.getElementsByClassName("I-H1Co")[0].style.display != "none") {
+                        document.getElementsByClassName("I-H1Co")[0].style.display = "none";
+                    }
+                }
             }
+            document.getElementById("quantity-input").value = quantityInput.toString();
+
         }
     </script>
 </body>

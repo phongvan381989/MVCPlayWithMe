@@ -462,10 +462,20 @@ function RemoveCircleLoader() {
         document.getElementById("circle-loader").remove();
 }
 
+// Kiểm tra value chỉ gồm chữ số
+function IsNumeric(value) {
+    let isnum = /^\d+$/.test(value);
+    return isnum;
+}
+
 // Nếu input chưa nhập, hoặc nhập không phải số tự nhiên, số tự nhiên âm thì set giá trị là 0
 function ConvertToInt(value) {
+    if (isNaN(value)) {
+        return 0;
+    }
+
     let i = parseInt(value);
-    if (isNaN(i) || i < 0) {
+    if (i < 0) {
         i = 0;
     }
     return i;
@@ -501,4 +511,8 @@ function ConvertTextToMoney(text) {
     }
 
     return ConvertToInt(textMoney);
+}
+
+function ConvertIntToPixel(value) {
+    return value.toString() + "px";
 }

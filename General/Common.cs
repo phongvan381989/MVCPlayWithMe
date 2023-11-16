@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
@@ -507,6 +508,58 @@ namespace MVCPlayWithMe.General
             else
                 src = Common.srcNoImageThumbnail;
             return src;
+        }
+        #endregion
+
+        #region Xử lý mã hóa login
+        public const int SHA512Size = 64;
+
+        /// <summary>
+        /// Create a salt value.
+        /// </summary>
+        /// <returns>Salt value.</returns>
+        public static byte[] CreateSalt()
+        {
+            // Generate a cryptographic random number.
+            RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
+            byte[] buff = new byte[Common.SHA512Size];
+            rng.GetBytes(buff);
+            return buff;
+        }
+
+        /// <summary>
+        /// Generate a hash value with a salt added to orignal input
+        /// </summary>
+        /// <param name="password"> Original input.</param>
+        /// <param name="salt"> Salt value.</param>
+        /// <returns>Byte array.</returns>
+        public static byte[] GenerateSaltedHash(string password, byte[] salt)
+        {
+            HashAlgorithm algorithm = new SHA512Managed();
+            byte[] plainText = Encoding.UTF8.GetBytes(password);
+            byte[] plainTextWithSaltBytes = new byte[plainText.Length + salt.Length];
+            Array.Copy(plainText, plainTextWithSaltBytes, plainText.Length);
+            Array.Copy(salt, 0, plainTextWithSaltBytes, plainText.Length, salt.Length);
+
+            return algorithm.ComputeHash(plainTextWithSaltBytes);
+        }
+
+        public static bool ByteArrayCompare(byte[] a1, byte[] a2)
+        {
+            if (a1.Length != a2.Length)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < a1.Length; i++)
+            {
+                if (a1[i] != a2[i])
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
         #endregion
     }

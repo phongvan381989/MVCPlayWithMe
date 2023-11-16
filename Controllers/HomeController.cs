@@ -104,9 +104,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpGet]
-        public ActionResult Item(/*int id*/)
+        public ActionResult Item(int id)
         {
-            int id = 583;
+            //int id = 583;
             ViewData["itemObject"] = JsonConvert.SerializeObject(itemModelsqler.GetItemFromId(id));
             return View();
         }

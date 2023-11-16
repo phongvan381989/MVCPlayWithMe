@@ -2,8 +2,11 @@
 let itemOnRow;
 // Hardcode số row trên 1 page
 let rowOnPage = 5;
+
+// Chiều rộng hiển thị nội dung.
+let scrWidth; 
 function orientationChange() {
-    let scrWidth = screen.availWidth;
+    scrWidth = screen.availWidth;
     let widthProItem = 200;
     itemOnRow = Math.floor(scrWidth / widthProItem);
     if (itemOnRow > 6) {
@@ -40,8 +43,8 @@ function orientationChange() {
     }
 
     // Cap nhat chieu rong theo man hinh thiet bi
-    scrWidth = scrWidth.toString() + "px";
-    document.getElementById("biggestContainer").style.width = scrWidth;
+    // scrWidth = scrWidth.toString() + "px";
+    document.getElementById("biggestContainer").style.width = scrWidth.toString() + "px";
 
     return scrWidth;
 }

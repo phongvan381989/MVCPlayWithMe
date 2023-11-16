@@ -12,12 +12,19 @@ namespace MVCPlayWithMe.Controllers
 {
     public class CustomerController : Controller
     {
+        public CustomerMySql sqler;
+
+        public CustomerController()
+        {
+            sqler = new CustomerMySql();
+        }
+
         private Customer AuthentCustomer()
         {
             CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
             /// Check cookie đã được lưu trong db
-            return Cookie.GetCustomerFromCookUId(cookieResult);
+            return sqler.GetCustomerFromCookie(cookieResult.uId);
         }
 
         // GET: Customer
@@ -29,7 +36,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string CreateCustomer_Add(string userName, int userNameType, string passWord)
         {
-            MySqlResultState result = MyMySql.AddNewCostomer(userName, userNameType, passWord);
+            MySqlResultState result = sqler.AddNewCustomer(userName, userNameType, passWord);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -45,7 +52,7 @@ namespace MVCPlayWithMe.Controllers
         public string Logout()
         {
             CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
-            MyMySql.CustomerLogout(cookieResult.uId);
+            sqler.CustomerLogout(cookieResult.uId);
             Cookie.RecreateCookie(HttpContext);
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
@@ -54,21 +61,18 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string Login_Login(string userName, string passWord)
         {
-            MySqlResultState result = MyMySql.LoginCustomer(userName, passWord);
+            MySqlResultState result = sqler.LoginCustomer(userName, passWord);
 
             // Set cookie cho tài khoản
             if (result.State == EMySqlResultState.OK)
             {
                 CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
-                //if (cookieResult.cooType != 1)
-                //{
-                //    Cookie.SetCookieType(HttpContext, 1);
-                //}
+
                 // Lấy thông tin cutomer
-                Customer customer = MyMySql.GetCustomerFromUserName(userName);
+                Customer customer = sqler.GetCustomerFromUserName(userName);
 
                 // Lưu cookie vào bảng tbcookie_administrator
-                MySqlResultState resultInsert = MyMySql.CookieCustomerLogin(cookieResult.uId, customer.id);
+                MySqlResultState resultInsert = sqler.CookieCustomerLogin(cookieResult.uId, customer.id);
                 if (resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);
@@ -76,26 +80,6 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
             return JsonConvert.SerializeObject(result);
-
-            //StringBuilder sb = new StringBuilder();
-            //sb.Append("{");
-
-            //sb.Append("\"isValid\"");
-            //sb.Append(":");
-            //if (result.State == EMySqlResultState.OK)
-            //{
-            //    sb.Append("true");
-            //}
-            //else
-            //{
-            //    sb.Append("false");
-            //}
-            //sb.Append(",");
-            //sb.Append("\"state\"");
-            //sb.Append(":");
-            //sb.Append((int)result.State);
-            //sb.Append("}");
-            //return sb.ToString();
         }
 
         public ActionResult Update()

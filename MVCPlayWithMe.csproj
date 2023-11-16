@@ -248,6 +248,7 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Models\Administrator.cs" />
+    <Compile Include="Models\AdministratorMySql.cs" />
     <Compile Include="Models\BasicIdName.cs" />
     <Compile Include="Models\BasicMySql.cs" />
     <Compile Include="Models\BasicObject.cs" />
@@ -256,6 +257,7 @@
     <Compile Include="Models\Combo.cs" />
     <Compile Include="Models\ComboMySql.cs" />
     <Compile Include="Models\Customer.cs" />
+    <Compile Include="Models\CustomerMySql.cs" />
     <Compile Include="Models\Import.cs" />
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\ItemModelMySql.cs" />
@@ -389,6 +391,7 @@
     <Content Include="Views\Shared\Home\Item.cshtml" />
     <Content Include="Views\Shared\Home\SearchResult.cshtml" />
     <Content Include="Views\Home\Item.cshtml" />
+    <Content Include="Views\Shared\biggestContainer_Bottom.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

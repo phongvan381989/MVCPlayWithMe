@@ -13,19 +13,21 @@ using System.Web.Mvc;
 
 namespace MVCPlayWithMe.Controllers
 {
-    public class AdministratorController : Controller
+    public class AdministratorController : BasicController
     {
+        AdministratorMySql sqler;
         public AdministratorController ()
         {
             //sqler = new ProductMySql();
+            sqler = new AdministratorMySql();
         }
-        private Administrator AuthentAdministrator()
-        {
-            CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
+        //private Administrator AuthentAdministrator()
+        //{
+        //    CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
-            /// Check cookie đã được lưu trong db
-            return Cookie.GetAdministratorFromCookieUId(cookieResult);
-        }
+        //    /// Check cookie đã được lưu trong db
+        //    return sqler.GetAdministratorFromCookie(cookieResult.uId);
+        //}
 
         //ProductMySql sqler;
         /// <summary>
@@ -64,7 +66,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 result = new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage);
             }
-            result = MyMySql.AddNewAdministrator(userName, userNameType, passWord, privilege);
+            result = sqler.AddNewAdministrator(userName, userNameType, passWord, privilege);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -82,9 +84,9 @@ namespace MVCPlayWithMe.Controllers
             CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
             //if(string.IsNullOrEmpty(cookieResult.uId))
-                //return "{\"state\": 4}";
+            //return "{\"state\": 4}";
 
-            MyMySql.AdministratorLogout(cookieResult.uId);
+            sqler.AdministratorLogout(cookieResult.uId);
             Cookie.RecreateCookie(HttpContext);
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
@@ -92,7 +94,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string Login_Login(string userName, string passWord)
         {
-            MySqlResultState result = MyMySql.LoginAdministrator(userName, passWord);
+            MySqlResultState result = sqler.LoginAdministrator(userName, passWord);
 
             // Set cookie cho tài khoản quản trị
             if (result.State == EMySqlResultState.OK)
@@ -100,10 +102,10 @@ namespace MVCPlayWithMe.Controllers
                 CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
                 // Lấy thông tin adminstrator
-                Administrator administrator = MyMySql.GetAdministratorFromUserName(userName);
+                Administrator administrator = sqler.GetAdministratorFromUserName(userName);
 
                 // Lưu cookie vào bảng tbcookie_administrator
-                MySqlResultState resultInsert = MyMySql.AddNewCookieAdministrator(cookieResult.uId, administrator.id);
+                MySqlResultState resultInsert = sqler.AddNewCookieAdministrator(cookieResult.uId, administrator.id);
                 if(resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);
@@ -112,6 +114,5 @@ namespace MVCPlayWithMe.Controllers
             }
             return JsonConvert.SerializeObject(result);
         }
-
     }
 }

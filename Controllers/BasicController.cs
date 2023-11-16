@@ -15,7 +15,8 @@ namespace MVCPlayWithMe.Controllers
             CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
             /// Check cookie đã được lưu trong db
-            return Cookie.GetAdministratorFromCookieUId(cookieResult);
+            AdministratorMySql sqler = new AdministratorMySql();
+            return sqler.GetAdministratorFromCookie(cookieResult.uId);
         }
 
         /// <summary>

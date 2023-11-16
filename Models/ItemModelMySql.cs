@@ -423,6 +423,7 @@ namespace MVCPlayWithMe.Models
             item.quota = MyMySql.GetInt32(rdr, "ItemQuota");
             item.status = MyMySql.GetInt32(rdr, "ItemStatus");
             item.date = MyMySql.GetDateTime(rdr, "ItemDate");
+            item.detail = MyMySql.GetString(rdr, "ItemDetail");
             item.SetSrcImageVideo();
 
             return item;
