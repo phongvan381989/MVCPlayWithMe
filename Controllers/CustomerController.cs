@@ -24,7 +24,7 @@ namespace MVCPlayWithMe.Controllers
             CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
             /// Check cookie đã được lưu trong db
-            return sqler.GetCustomerFromCookie(cookieResult.uId);
+            return sqler.GetCustomerFromCookie(cookieResult.cookieValue);
         }
 
         // GET: Customer
@@ -52,8 +52,8 @@ namespace MVCPlayWithMe.Controllers
         public string Logout()
         {
             CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
-            sqler.CustomerLogout(cookieResult.uId);
-            Cookie.RecreateCookie(HttpContext);
+            sqler.CustomerLogout(cookieResult.cookieValue);
+            Cookie.RecreateUserIdCookie(HttpContext);
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
 
@@ -72,7 +72,7 @@ namespace MVCPlayWithMe.Controllers
                 Customer customer = sqler.GetCustomerFromUserName(userName);
 
                 // Lưu cookie vào bảng tbcookie_administrator
-                MySqlResultState resultInsert = sqler.CookieCustomerLogin(cookieResult.uId, customer.id);
+                MySqlResultState resultInsert = sqler.CookieCustomerLogin(cookieResult.cookieValue, customer.id);
                 if (resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);

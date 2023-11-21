@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.Models;
+﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -106,8 +107,19 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public ActionResult Item(int id)
         {
-            //int id = 583;
             ViewData["itemObject"] = JsonConvert.SerializeObject(itemModelsqler.GetItemFromId(id));
+            return View();
+        }
+
+        public ActionResult Cart()
+        {
+            // Check khách vãng lai hay đã đăng nhập
+
+            // Xử lý nếu là khách vãng lai
+            // Lấy cart cookie
+            List<CartCookie> ls = Cookie.GetListCartCookie(HttpContext);
+            itemModelsqler.GetCartCookie(ls);
+            ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
             return View();
         }
     }

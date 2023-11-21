@@ -16,7 +16,7 @@ namespace MVCPlayWithMe.Controllers
 
             /// Check cookie đã được lưu trong db
             AdministratorMySql sqler = new AdministratorMySql();
-            return sqler.GetAdministratorFromCookie(cookieResult.uId);
+            return sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
         }
 
         /// <summary>

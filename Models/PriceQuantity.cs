@@ -53,5 +53,14 @@ namespace MVCPlayWithMe.Models
             bookCoverPrice = iBookCoverPrice;
             price = iPrice;
         }
+
+        public void Copy(PriceQuantity from)
+        {
+            this.bookCoverPrice = from.bookCoverPrice;
+            this.price = from.price;
+            this.quantitySold = from.quantitySold;
+            this.quantity = from.quantity;
+            this.discount = from.discount;
+        }
     }
 }

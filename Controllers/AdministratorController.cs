@@ -86,8 +86,8 @@ namespace MVCPlayWithMe.Controllers
             //if(string.IsNullOrEmpty(cookieResult.uId))
             //return "{\"state\": 4}";
 
-            sqler.AdministratorLogout(cookieResult.uId);
-            Cookie.RecreateCookie(HttpContext);
+            sqler.AdministratorLogout(cookieResult.cookieValue);
+            Cookie.RecreateUserIdCookie(HttpContext);
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
 
@@ -105,7 +105,7 @@ namespace MVCPlayWithMe.Controllers
                 Administrator administrator = sqler.GetAdministratorFromUserName(userName);
 
                 // Lưu cookie vào bảng tbcookie_administrator
-                MySqlResultState resultInsert = sqler.AddNewCookieAdministrator(cookieResult.uId, administrator.id);
+                MySqlResultState resultInsert = sqler.AddNewCookieAdministrator(cookieResult.cookieValue, administrator.id);
                 if(resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);

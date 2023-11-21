@@ -23,12 +23,12 @@ namespace MVCPlayWithMe.General
         public static CookieResultState SetAndGetUserIdCookie(HttpContextBase httpContext)
         {
             CookieResultState cookieResut = new CookieResultState();
-            if (httpContext.Request.Cookies["uId"] == null)
+            if (httpContext.Request.Cookies[Common.userIdKey] == null)
             {
-                HttpCookie uId = new HttpCookie("uId");
+                HttpCookie uId = new HttpCookie(Common.userIdKey);
                 Guid guidVal = Guid.NewGuid();
-                cookieResut.uId = guidVal.ToString("N");
-                uId.Value = cookieResut.uId;
+                cookieResut.cookieValue = guidVal.ToString("N");
+                uId.Value = cookieResut.cookieValue;
                 uId.Expires = SetExpires();
                 uId.HttpOnly = true;
 
@@ -36,7 +36,7 @@ namespace MVCPlayWithMe.General
             }
             else
             {
-                cookieResut.uId = httpContext.Request.Cookies["uId"].Value;
+                cookieResut.cookieValue = httpContext.Request.Cookies[Common.userIdKey].Value;
             }
 
             return cookieResut;
@@ -46,18 +46,49 @@ namespace MVCPlayWithMe.General
         /// Sau khi đăng xuất, tạo uid mới
         /// </summary>
         /// <param name="httpContext"></param>
-        public static CookieResultState RecreateCookie(HttpContextBase httpContext)
+        public static CookieResultState RecreateUserIdCookie(HttpContextBase httpContext)
         {
             CookieResultState cookieResut = new CookieResultState();
 
-            HttpCookie uId = new HttpCookie("uId");
+            HttpCookie uId = new HttpCookie(Common.userIdKey);
             Guid guidVal = Guid.NewGuid();
-            cookieResut.uId = guidVal.ToString("N");
-            uId.Value = cookieResut.uId;
+            cookieResut.cookieValue = guidVal.ToString("N");
+            uId.Value = cookieResut.cookieValue;
             uId.Expires = SetExpires();
             uId.HttpOnly = true;
             httpContext.Response.Cookies.Add(uId);
             return cookieResut;
+        }
+
+        public static CookieResultState GetCartCookie(HttpContextBase httpContext)
+        {
+            CookieResultState cookie = new CookieResultState();
+            if(httpContext.Request.Cookies[Common.cartKey] != null)
+            {
+                cookie.cookieValue = httpContext.Request.Cookies[Common.cartKey].Value;
+            }
+            return cookie;
+        }
+
+        // cookie có dạng: cart=id=123&q=10&real=1$id=321&q=1&real=0$....$id=321&q=2&real=0
+        public static List<CartCookie> GetListCartCookieFromCartCookie(string cartCookie)
+        {
+            List<CartCookie> listCartCookie = new List<CartCookie>();
+            if (string.IsNullOrEmpty(cartCookie))
+                return listCartCookie;
+
+            string[] myArray = cartCookie.Split('$');
+            for (int i = 0; i < myArray.Length; i++)
+            {
+                listCartCookie.Add(new CartCookie(myArray[i]));
+            }
+            return listCartCookie;
+        }
+
+        public static List<CartCookie> GetListCartCookie(HttpContextBase httpContext)
+        {
+            CookieResultState cookie = GetCartCookie(httpContext);
+            return GetListCartCookieFromCartCookie(cookie.cookieValue);
         }
     }
 }

@@ -372,3 +372,10 @@ li {
     cursor: pointer;
 }
 /*Search prodcut end*/
+
+/*Hiển thị  ký tự ₫ nhỏ, bên trên*/
+sup {
+    /*vertical-align:bottom;*/
+    font-size: 70%;
+    /*border:1px solid red;*/
+}

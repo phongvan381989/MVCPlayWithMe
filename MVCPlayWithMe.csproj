@@ -232,6 +232,7 @@
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
+    <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HelloWorldController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
@@ -252,6 +253,7 @@
     <Compile Include="Models\BasicIdName.cs" />
     <Compile Include="Models\BasicMySql.cs" />
     <Compile Include="Models\BasicObject.cs" />
+    <Compile Include="Models\CartCookie.cs" />
     <Compile Include="Models\Category.cs" />
     <Compile Include="Models\CategoryMySql.cs" />
     <Compile Include="Models\Combo.cs" />
@@ -392,6 +394,10 @@
     <Content Include="Views\Shared\Home\SearchResult.cshtml" />
     <Content Include="Views\Home\Item.cshtml" />
     <Content Include="Views\Shared\biggestContainer_Bottom.cshtml" />
+    <Content Include="Views\Shared\Home\SelectedModal.cshtml" />
+    <Content Include="Views\Shared\Home\OverMaxModal.cshtml" />
+    <Content Include="Views\Error\Error404.cshtml" />
+    <Content Include="Views\Home\Cart.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -112,8 +112,15 @@ function CheckPassWordValid(passWord, repassWord) {
     return '{"isValid":true, "message":"Mật khẩu ok"}';
 }
 
-function SetCookie(name, value) {
-    document.cookie = name + '=' + value + '; Path=/;';
+function SetCookie(name, value, days) {
+    //document.cookie = name + '=' + value + '; Path=/;';
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
 }
 
 function DeleteCookie(name) {
@@ -130,8 +137,15 @@ function GetCookie(cname) {
             c = c.substring(1);
         }
         if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
+            let value = c.substring(name.length, c.length);
+            if (DEBUG) {
+                console.log(cname + ": " + value);
+            }
+            return value;
         }
+    }
+    if (DEBUG) {
+        console.log(cname + ": ");
     }
     return "";
 }
@@ -515,4 +529,26 @@ function ConvertTextToMoney(text) {
 
 function ConvertIntToPixel(value) {
     return value.toString() + "px";
+}
+
+// Tạo modal, bắt buộc phải click button ok để tắt modal
+// text tham số hiển thị thông báo của modal
+//<div class='my-modal-must-click-ok'>
+//    <div class='modal-content-selected'>
+//        <div class='alert-popup-message'>
+//        </div>
+//        <div>
+//            <button class='btn-modal-must-click-ok' type='button' onclick='CloseModalMustClickOk()'>OK</button>
+//        </div>
+//    </div>
+//</div>
+function CreateMustClickOkModal(text) {
+    let container = document.createElement("div");
+    container.className = "container-my-modal-must-click-ok";
+    container.innerHTML = "<div class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><button class='btn-modal-must-click-ok' type='button'>OK</button></div></div></div>";
+    container.getElementsByClassName("alert-popup-message")[0].innerHTML = text;
+    container.getElementsByClassName("btn-modal-must-click-ok")[0].addEventListener("click", function () {
+        document.getElementsByClassName("container-my-modal-must-click-ok")[0].remove();
+    });
+    document.getElementsByTagName("body")[0].appendChild(container);
 }

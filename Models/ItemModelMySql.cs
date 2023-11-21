@@ -292,7 +292,7 @@ namespace MVCPlayWithMe.Models
         public MySqlResultState AddMapping(Model model)
         {
             MySqlResultState result = new MySqlResultState();
-            if(model.mappingOnlyProductId.Count()  == 0)
+            if (model.mappingOnlyProductId.Count() == 0)
             {
                 return result;
             }
@@ -410,7 +410,7 @@ namespace MVCPlayWithMe.Models
                 }
 
                 Product pro = ConvertOneRowFromDataMySqlToProduct(rdr);
-                if(pro.id != -1)
+                if (pro.id != -1)
                     lsModel[lsModel.Count() - 1].mapping.Add(pro);
             }
         }
@@ -460,7 +460,7 @@ namespace MVCPlayWithMe.Models
 
                 if (rdr != null)
                     rdr.Close();
-                foreach(var id in lsId)
+                foreach (var id in lsId)
                 {
                     Item item = GetItemFromIdWithReadyConn(id, conn);
                     ls.Add(item);
@@ -508,6 +508,7 @@ namespace MVCPlayWithMe.Models
             return count;
         }
 
+        // Lấy được thông tin chi tiết
         public Item GetItemFromId(int id)
         {
             Item item = null;
@@ -533,7 +534,7 @@ namespace MVCPlayWithMe.Models
                 if (rdr != null)
                     rdr.Close();
 
-                foreach(var model in lsModel)
+                foreach (var model in lsModel)
                 {
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
@@ -587,6 +588,127 @@ namespace MVCPlayWithMe.Models
             }
 
             return item;
+        }
+
+        // Lấy được thông tin chi tiết theo model id,
+        // những model thuộc item có id khác tham số sẽ không được lấy
+        public Item GetItemFromModelId(int id)
+        {
+            Item item = null;
+            List<Model> lsModel = new List<Model>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Get_From_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    if (item == null)
+                    {
+                        item = ConvertOneRowFromDataMySqlToItem(rdr);
+                    }
+                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                }
+                if (rdr != null)
+                    rdr.Close();
+
+                foreach (var model in lsModel)
+                {
+                    model.SetPriceFromMappingPriceAndQuantity();
+                }
+                item.models = lsModel;
+                item.SetPriceAndQuantity();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+            return item;
+        }
+
+        // Kết nối mở, đóng bên ngoài
+        // Lấy được thông tin chi tiết theo model id,
+        // những model thuộc item có id khác tham số sẽ không được lấy
+        public Item GetItemFromModelIdWithReadyConn(int id, MySqlConnection conn)
+        {
+            Item item = null;
+            List<Model> lsModel = new List<Model>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Get_From_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    if (item == null)
+                    {
+                        item = ConvertOneRowFromDataMySqlToItem(rdr);
+                    }
+                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                }
+                if (rdr != null)
+                    rdr.Close();
+
+                foreach (var model in lsModel)
+                {
+                    model.SetPriceFromMappingPriceAndQuantity();
+                }
+                item.models = lsModel;
+                item.SetPriceAndQuantity();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            return item;
+        }
+
+        private void ConvertItemToCartCookie(Item item, CartCookie cart)
+        {
+            if (item == null || cart == null)
+                return;
+
+            cart.itemId = item.id;
+            cart.itemName = item.name;
+            cart.modelName = item.models[0].name;
+            cart.imageSrc = item.models[0].imageSrc;
+            cart.Copy(item.models[0]);
+        }
+
+        // Từ model id, lấy được thông tin của model
+        public void GetCartCookie(List<CartCookie> ls)
+        {
+            if (ls == null || ls.Count() == 0)
+                return;
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+                foreach (var cart in ls)
+                {
+                    Item item = GetItemFromModelIdWithReadyConn(cart.id, conn);
+                    ConvertItemToCartCookie(item, cart);
+                }
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
         }
     }
 }
