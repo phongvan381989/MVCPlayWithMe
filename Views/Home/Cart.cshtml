@@ -404,13 +404,13 @@
                     </div>
                     <div class="MRh9G6">
                         <div class="_8Xhu5_ shopee-input-quantity">
-                            <button class="EOdsa-">
+                            <button class="EOdsa-" onclick="Decrease(this)">
                                 <svg enable-background="new 0 0 10 10" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon">
                                     <polygon points="4.5 4.5 3.5 4.5 0 4.5 0 5.5 3.5 5.5 4.5 5.5 10 5.5 10 4.5"></polygon>
                                 </svg>
                             </button>
-                            <input class="EOdsa- v3H4Zf" type="text" value="4">
-                            <button class="EOdsa-">
+                            <input class="EOdsa- v3H4Zf" type="text" value="4" oninput="ValidateInput(this)">
+                            <button class="EOdsa-"  onclick="Increase(this)">
                                 <svg enable-background="new 0 0 10 10" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon icon-plus-sign">
                                     <polygon points="10 4.5 5.5 4.5 5.5 0 4.5 0 4.5 4.5 0 4.5 0 5.5 4.5 5.5 4.5 10 5.5 10 5.5 5.5 10 5.5">
                                     </polygon>
@@ -425,14 +425,14 @@
                         <span>₫119.200</span>
                     </div>
                     <div class="mhcjog">
-                        <button class="fX1Y2g">Xóa</button>
+                        <button class="fX1Y2g" onclick="DeleteModel(this)">Xóa</button>
                     </div>
                 </div>
             </div>
         </div>
         <div class="cart-empty">
             <strong>Bạn chưa chọn sản phẩm nào.</strong>
-            <p>Quay về <a href="/" title="">trang chủ</a></p>
+            <p>Quay về <a href="/" title="">trang chọn sản phẩm</a></p>
         </div>
         <div class="main-container">
             <div class="BjIo5w">
@@ -454,7 +454,7 @@
             <div class="s1Gxkq">
                 <div class="s1Gxkq-sum">
                     <div class="mcsiKT">
-                        <input class="stardust-checkbox__input all-model-checkbox-input" type="checkbox">
+                        <input class="stardust-checkbox__input all-model-checkbox-input" type="checkbox" onclick="ClickAllModelCheckBox(this)">
                     </div>
                     <button class="iGlIrs">Chọn Tất Cả (50)</button>
                 </div>
@@ -465,7 +465,7 @@
                         </div>
                         <div class="WC0us-"><sup>₫</sup>417.200</div>
                     </div>
-                    <button class="shopee-button-solid"><span class="TTXpRG">Mua hàng</span></button>
+                    <button class="shopee-button-solid" onclick="BuyNow()"><span class="TTXpRG">Mua hàng</span></button>
                 </div>
             </div>
         </div>
@@ -474,9 +474,13 @@
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
     <script>
         let listCartCookieObject; // list cart cookie objec server trả về
         ChangeLayoutForSmallScreen();
+
+        LoadCart();
+
         // Thay đổi hiển thị khi hiển thị trên màn hình điện thoại
         function ChangeLayoutForSmallScreen() {
             if (scrWidth >= 800)
@@ -492,7 +496,7 @@
             document.getElementsByClassName("contianer-selected-model")[0].style.marginRight = "0px";
             document.getElementsByClassName("contianer-selected-model")[0].style.marginLeft = "0px";
 
-            
+
             document.getElementsByClassName("s1Gxkq")[0].style.paddingRight = "0px";
             document.getElementsByClassName("s1Gxkq")[0].style.paddingLeft = "0px";
             document.getElementsByClassName("s1Gxkq")[0].style.marginRight = "0px";
@@ -527,8 +531,9 @@
             for (let i = 0; i < length; i++) {
                 let obj = listCartCookieObject[i];
                 let clone = sample.cloneNode(true);
-                clone.setAttribute("data-model-id", obj.id);
+                clone.setAttribute("data-model-id", obj.id.toString());
                 // Cập nhật dữ liệu bản sao
+                clone.getElementsByClassName("model-checkbox-input")[0].checked = obj.real;
                 clone.getElementsByClassName("WanNdG")[0].src = obj.imageSrc;
 
                 let listA = clone.getElementsByTagName("a");
@@ -554,7 +559,6 @@
             ShowCheckboxAll();
         }
 
-        LoadCart();
         function LoadCart() {
             listCartCookieObject = JSON.parse(document.getElementById("list-cart-cookie-object").textContent);
             if (DEBUG) {
@@ -565,22 +569,44 @@
                 document.getElementsByClassName("main-container")[0].style.display = "none";
                 return;
             }
+            // Có những sản phẩm số lượng trong kho nhỏ hơn số lượng khách đã chọn, cập nhật lại cookie và list obj
+            let length = listCartCookieObject.length;
+
+            for (let i = 0; i < length; i++) {
+                let obj = listCartCookieObject[i];
+                if (obj.q > obj.quantity) {
+                    obj.q = obj.quantity;
+                }
+            }
+
+            SetCartCookieFromListCartCookieObject();
+
             CreateSelectedModel();
         }
 
         // Hiển thị tổng tiền thanh toán
         function ShowSumMoney() {
             let length = listCartCookieObject.length;
-
+            let count = 0;
             let sumMoney = 0;
             for (let i = 0; i < length; i++) {
-                sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+                if (listCartCookieObject[i].real == 1) {
+                    sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+                    count++;
+                }
             }
-            document.getElementsByClassName("A-CcKC")[0].innerHTML = "Tổng thanh toán (" + length + " Sản phẩm):"
+            document.getElementsByClassName("A-CcKC")[0].innerHTML = "Tổng thanh toán (" + count + " Sản phẩm):"
             document.getElementsByClassName("WC0us-")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
             if (DEBUG) {
                 console.log("ShowSumMoney CALL " + ConvertMoneyToText(sumMoney));
             }
+        }
+
+        // Hiển thị tiền thanh toán 1 sản phẩm
+        function ShowMoney(model) {
+            let id = parseInt(model.getAttribute("data-model-id"));
+            let obj = GetObjFromListAndId(id, listCartCookieObject);
+            model.getElementsByClassName("ofQLuG")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.q * obj.price);
         }
 
         // Hiển thị checkbox tất cả
@@ -603,15 +629,182 @@
         }
 
         function ClickModelCheckBox(element) {
-
+            let model = element.parentElement.parentElement.parentElement;
+            UpdateModelCheckbox(model, element.checked)
         }
-        //TestModal();
-        //function TestModal() {
-        //    if (DEBUG) {
-        //        console.log("TestModal");
-        //    }
-        //    CreateMustClickOkModal("test modal");
-        //}
+
+        // Khi click check box model, cập nhật vào listCartCookieObject
+        function UpdateModelCheckbox(model, isChecked) {
+            let id = parseInt(model.getAttribute("data-model-id"));
+            let obj = GetObjFromListAndId(id, listCartCookieObject);
+            if (isChecked) {
+                obj.real = 1;
+            } else {
+                obj.real = 0;
+            }
+
+            // Cập nhật cookie
+            SetCartCookieFromListCartCookieObject()
+
+            ShowCheckboxAll();
+            ShowSumMoney();
+        }
+
+        function SetCartCookieFromListCartCookieObject()
+        {
+            let newCart = "";
+            let length = listCartCookieObject.length;
+            for (let i = 0; i < length; i++) {
+                let obj = listCartCookieObject[i];
+                if (i == 0) {
+                    newCart = "id=" + obj.id.toString() + "#q=" + obj.q.toString()
+                        + "#real=" + obj.real.toString();
+                }
+                else {
+                    newCart = newCart + "$id=" + obj.id.toString()
+                        + "#q=" + obj.q.toString() + "#real=" + obj.real.toString();
+                }
+            }
+            SetCookie(cartKey, newCart, 365);
+        }
+
+        function ClickAllModelCheckBox(element) {
+            let isChecked = element.checked;
+
+            let listModel = document.getElementsByClassName("contianer-selected-model")[0].children;
+            for (let i = 0; i < listModel.length; i++) {
+                listModel[i].getElementsByClassName("model-checkbox-input")[0].checked = isChecked;
+
+                if (isChecked) {
+                    listCartCookieObject[i].real = 1;
+                } else {
+                    listCartCookieObject[i].real = 0;
+                }
+            }
+
+            SetCartCookieFromListCartCookieObject();
+            if (DEBUG) {
+                console.log(JSON.stringify(listCartCookieObject));
+            }
+            ShowSumMoney();
+        }
+
+        // Lấy số lượng max khách hàng có thể chọn
+        function GetMaxQuantityInputInCartPage(model) {
+            let id = parseInt(model.getAttribute("data-model-id"));
+            let obj = GetObjFromListAndId(id, listCartCookieObject);
+            return obj.quantity;
+        }
+
+        // Cập nhật listCartCookieObject, cart cookie khi thay đổi số lượng muốn mua
+        // element là input tag
+        function UpdateWhenChangeInputQuantity(model, element) {
+            let id = parseInt(model.getAttribute("data-model-id"));
+            let obj = GetObjFromListAndId(id, listCartCookieObject);
+            obj.q = ConvertToInt(element.value);
+            SetCartCookieFromListCartCookieObject();
+        }
+
+        function ValidateInput(element) {
+            let model = element.parentElement.parentElement.parentElement.parentElement;
+            let newInput = element.value;
+            let iInput = 0;
+            if (IsNumeric(newInput)) {
+                iInput = ConvertToInt(newInput);
+                let maxQuantity = GetMaxQuantityInputInCartPage(model);
+                if (iInput === 0) {
+                    iInput = 1;
+                    if (maxQuantity == 0) {
+                        iInput = 0;
+                    }
+                }
+
+                if (iInput > maxQuantity) {
+                    iInput = maxQuantity;
+                    CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.");
+                }
+            }
+            element.value = iInput.toString();
+            UpdateWhenChangeInputQuantity(model, element);
+            ShowSumMoney();
+            ShowMoney(model);
+        }
+
+        // element là button giảm 1 số lượng đặt hàng
+        function Decrease(element) {
+            let eInput = element.nextElementSibling;
+            let iInput = ConvertToInt(eInput.value);
+            if (iInput > 1) {
+                iInput = iInput - 1;
+                eInput.value = iInput.toString();
+            }
+
+            let model = element.parentElement.parentElement.parentElement.parentElement;
+            UpdateWhenChangeInputQuantity(model, eInput);
+            ShowSumMoney();
+            ShowMoney(model);
+        }
+
+        // element là button giảm 1 số lượng đặt hàng
+        function Increase(element) {
+            let eInput = element.previousElementSibling;
+            let iInput = ConvertToInt(eInput.value);
+
+            let model = element.parentElement.parentElement.parentElement.parentElement;
+            let maxQuantity = GetMaxQuantityInputInCartPage(model);
+
+            if (iInput < maxQuantity) {
+                iInput = iInput + 1;
+                eInput.value = iInput.toString();
+            }
+            else {
+                CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.");
+            }
+
+            UpdateWhenChangeInputQuantity(model, eInput);
+            ShowSumMoney();
+            ShowMoney(model);
+        }
+
+        // element là button xóa
+        function DeleteModel(element) {
+            let model = element.parentElement.parentElement.parentElement;
+            let id = parseInt(model.getAttribute("data-model-id"));
+            let length = listCartCookieObject.length;
+            for (let i = 0; i < length; i++) {
+                if (listCartCookieObject[i].id == id) {
+                    listCartCookieObject.splice(i, 1);
+                    break;
+                }
+            }
+            model.remove();
+
+            SetCartCookieFromListCartCookieObject();
+            ShowSumMoney();
+            ShowCheckboxAll();
+
+            // Giỏ hàng trống
+            if (listCartCookieObject.length == 0) {
+                document.getElementsByClassName("cart-empty")[0].style.display = "block";
+                document.getElementsByClassName("main-container")[0].style.display = "none";
+                return;
+            }
+        }
+
+        function BuyNow() {
+            // Chưa sản phẩm / model nào được chọn để mua
+            let isSelected = false;
+            let length = listCartCookieObject.length;
+            for (let i = 0; i < length; i++) {
+                if (listCartCookieObject[i].real == 1) {
+                    isSelected = true;
+                    break;
+                }
+            }
+            if (!isSelected) {
+                CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.")
+            }
+        }
     </script>
 </body>
 </html>

@@ -70,7 +70,7 @@ namespace MVCPlayWithMe.General
             return cookie;
         }
 
-        // cookie có dạng: cart=id=123&q=10&real=1$id=321&q=1&real=0$....$id=321&q=2&real=0
+        // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         public static List<CartCookie> GetListCartCookieFromCartCookie(string cartCookie)
         {
             List<CartCookie> listCartCookie = new List<CartCookie>();

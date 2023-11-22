@@ -40,7 +40,7 @@ namespace MVCPlayWithMe.Models
                 return;
             }
 
-            string[] myArray = cookieValue.Split('&');
+            string[] myArray = cookieValue.Split('#');
             id = Common.ConvertStringToInt32((myArray[0].Split('='))[1]);
             q = Common.ConvertStringToInt32((myArray[1].Split('='))[1]);
             real = Common.ConvertStringToInt32((myArray[2].Split('='))[1]);

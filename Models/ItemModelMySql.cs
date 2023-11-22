@@ -683,7 +683,11 @@ namespace MVCPlayWithMe.Models
             cart.itemId = item.id;
             cart.itemName = item.name;
             cart.modelName = item.models[0].name;
-            cart.imageSrc = item.models[0].imageSrc;
+            // Nếu item chỉ có 1 model và model không có ảnh đại diện. Ta lấy ảnh đại diện của item thay
+            if (item.models[0].imageSrc != Common.srcNoImageThumbnail)
+                cart.imageSrc = item.models[0].imageSrc;
+            else
+                cart.imageSrc = item.imageSrc[0];
             cart.Copy(item.models[0]);
         }
 

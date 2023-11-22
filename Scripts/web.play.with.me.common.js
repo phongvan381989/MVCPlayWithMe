@@ -552,3 +552,15 @@ function CreateMustClickOkModal(text) {
     });
     document.getElementsByTagName("body")[0].appendChild(container);
 }
+
+// Lấy được obj từ danh sách obj thỏa obj.id = id
+function GetObjFromListAndId(id, list) {
+    let obj = null;
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].id == id) {
+            obj = list[i];
+            break;
+        }
+    }
+    return obj;
+}

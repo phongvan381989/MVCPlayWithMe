@@ -474,12 +474,12 @@
                     <div class="flex-items-center">
                         <div style="margin-right: 15px;">
                             <div class="shopee-input-quantity">
-                                <button aria-label="Decrease" class="xNxl-t" onclick="Decrease()">
+                                <button class="xNxl-t" onclick="Decrease()">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="4.5 4.5 3.5 4.5 0 4.5 0 5.5 3.5 5.5 4.5 5.5 10 5.5 10 4.5"></polygon></svg>
                                 </button>
                                 <input class="VWjjde" type="text" value="1" id="quantity-input"
                                        oninput="ValidateInput(event)">
-                                <button aria-label="Increase" class="xNxl-t" onclick="Increase()">
+                                <button class="xNxl-t" onclick="Increase()">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="10 4.5 5.5 4.5 5.5 0 4.5 0 4.5 4.5 0 4.5 0 5.5 4.5 5.5 4.5 10 5.5 10 5.5 5.5 10 5.5"></polygon></svg>
                                 </button>
                             </div>
@@ -535,6 +535,7 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
     <script>
         let maxSmallMediaCanShow; // Số lượng iten có thể hiển thị
         let countOfSmallMedia; // Số lượng media gồm video + image
@@ -547,8 +548,6 @@
 
         quantityInput = 1;
 
-        let cartName;// key của giỏ hàng
-        cartName = "cart";
         let limitQuantity = "Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này";
         let dontSelectVariation = "Vui lòng chọn Phân loại hàng";
         // Get the modal nhắc chọn variation
@@ -561,72 +560,6 @@
         function objMediaSrc(itemSrc, itemIsVideo) {
             this.src = itemSrc;
             this.isVideo = itemIsVideo;
-        }
-
-        // Constructor function for pair key/value in cart
-        // format: id=123&q=10&real=1
-        function objCartCookie(value) {
-            if (DEBUG) {
-                console.log("objCartCookie(value) CALL " + value);
-            }
-            let myArray = value.split("&");
-
-            this.id = parseInt(myArray[0].split("=")[1]);
-            this.q = parseInt(myArray[1].split("=")[1]);
-            this.real = parseInt(myArray[2].split("=")[1])
-        }
-
-        // cookie có dạng: cart=id=123&q=10&real=1$id=321&q=1&real=0$....$id=321&q=2&real=0
-        // id: mã model, q: số lượng thêm vào giỏ hàng, real: 1-thực sự chọn mua, 0-có thể mua sau này
-        function GetListCartCookieFromCartCookie(cartCookie) {
-            let listCartCookie = [];
-            if (isEmptyOrSpaces(cartCookie))
-                return listCartCookie;
-
-            let myArray = cartCookie.split("$");
-            for (let i = 0; i < myArray.length; i++) {
-                listCartCookie.push(new objCartCookie(myArray[i]));
-            }
-            return listCartCookie;
-        }
-
-        // Từ list id quantity object lấy được string cookie
-        function GetCartCookieFromListCartCookie(listCartCookie) {
-            let cartCookie = "";
-            for (let i = 0; i < listCartCookie.length; i++) {
-                if (i == 0) {
-                    cartCookie = "id=" + listCartCookie[i].id.toString() + "&q=" + listCartCookie[i].q.toString()
-                        + "&real=" + listCartCookie[i].real.toString();
-                }
-                else {
-                    cartCookie = cartCookie + "$id=" + listCartCookie[i].id.toString()
-                        + "&q=" + listCartCookie[i].q.toString() + "&real=" + listCartCookie[i].real.toString();
-                }
-
-            }
-            return cartCookie;
-        }
-
-        // Nếu đối tượng tồn tại, tăng quantity tương ứng, nếu không insert ở đầu mảng
-        // Nếu đối tượng đã tồn tại, khi tăng quantity tương ứng có thể vượt quá tồn kho. Nếu vượt quá trả về true
-        function InsertAtBeginToListCartCookieCheckExist(listCartCookie, cartCookieObj, maxQuantity) {
-            let exist = false;
-            let overMax = false;
-            for (let i = 0; i < listCartCookie.length; i++) {
-                if (listCartCookie[i].id == cartCookieObj.id) {
-                    exist = true;
-                    listCartCookie[i].q = listCartCookie[i].q + cartCookieObj.q;
-                    if (listCartCookie[i].q > maxQuantity) {
-                        listCartCookie[i].q = maxQuantity; // Set số lượng về max tồn kho
-                        overMax = true;
-                    }
-                    break;
-                }
-            }
-            if (exist == false) {
-                listCartCookie.unshift(cartCookieObj);
-            }
-            return overMax;
         }
 
         function HomePageShowItem() {
@@ -763,7 +696,7 @@
                         return;
                     i = i - 1;
                     if (DEBUG) {
-                        console.log("i: " +i);
+                        console.log("i: " + i);
                     }
                     // Xóa item cuối cùng
                     itemContainer.lastElementChild.remove();
@@ -822,7 +755,7 @@
                 //    console.log("mediumVideo.src: " + mediumVideo.src);
                 //}
 
-                if(isEmptyOrSpaces(mediumVideo.src)) {
+                if (isEmptyOrSpaces(mediumVideo.src)) {
                     mediumVideo.src = listItemData[i].src;
                 }
 
@@ -871,7 +804,7 @@
             if (DEBUG) {
                 console.log("ShowProductDescription CALL");
             }
- 
+
             if (itemObject.detail == null) {
                 // An mo ta san pham
                 document.getElementsByClassName("product-detail")[0].style.display = "none";
@@ -892,8 +825,7 @@
             }
         }
         // Thay đổi medium media theo variation đã chọn, nếu chưa chọn variation thì check theo small item đã chọn
-        function ShowMediumMediaFromSelectedObj()
-        {
+        function ShowMediumMediaFromSelectedObj() {
             // Variation đã chọn và có từ 2 biến thể/ model trở lên
             if (selectedIdModel != null && itemObject.models.length > 1) {
                 ShowMediumItemFromSelectedVariation(GetModelObjectFromModelId(selectedIdModel).imageSrc);
@@ -955,8 +887,7 @@
                 document.getElementsByClassName("_7VDqtl")[0].style.backgroundColor = "initial";
             }
             // Bỏ chọn variontion cũ nếu có
-            if (selectedIdModel != null)
-            {
+            if (selectedIdModel != null) {
                 if (selectedIdModel != id) {//  Bỏ chọn border màu đỏ button cũ
                     document.getElementById("check-container").parentElement.style.borderColor = "rgba(0, 0, 0, .09)";
                 }
@@ -1034,8 +965,7 @@
             return modelObject;
         }
         // Show giá bìa, giá bán và % triết khấu
-        function ShowPrice()
-        {
+        function ShowPrice() {
             // Chưa chọn model nên ta hiển thị biến thể giá nhỏ nhất - đắt nhất, chiết khấu lớn nhất,
             // thường các biến thể cùng item sẽ chiết khấu như nhau
             if (selectedIdModel == null) {
@@ -1141,6 +1071,7 @@
                 document.getElementsByClassName("I-H1Co")[0].style.display = "none";
             }
         }
+
         function Increase() {
             let maxQuatity = GetMaxQuantityInput();
             if (quantityInput < maxQuatity) {
@@ -1183,19 +1114,17 @@
                 }
             }
             document.getElementById("quantity-input").value = quantityInput.toString();
-
         }
 
         // Thêm sản phẩm muốn mua vào giỏ hàng
-        // cookie có dạng: cart=id=123&q=10&real=1$id=321&q=1&real=0$....$id=321&q=2&real=0
+        // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         function AddToCart() {
             //// Xóa cookie
             //SetCookie(cartName, "", 365);
             //return;
 
             // Chưa chọn phân loại hiện thị thông báo dòng chữ đỏ và thay màu nền div chứa phân loại
-            if (selectedIdModel == null)
-            {
+            if (selectedIdModel == null) {
                 document.getElementsByClassName("I-H1Co")[0].innerHTML = dontSelectVariation;
                 document.getElementsByClassName("I-H1Co")[0].style.display = "block";
                 // Thay màu nền div chứa phân loại
@@ -1204,7 +1133,7 @@
             }
 
             // Lấy cookie cũ
-            let oldCart = GetCookie(cartName);
+            let oldCart = GetCookie(cartKey);
 
             let listCartCookie = GetListCartCookieFromCartCookie(oldCart);
             if (DEBUG) {
@@ -1212,8 +1141,8 @@
             }
             let q = parseInt(document.getElementById("quantity-input").value);
             let maxQuantity = GetMaxQuantityInput();
-            let obj = new objCartCookie("id=" + selectedIdModel.toString() + "&q=" + q.toString()
-                + "&real=1"); 
+            let obj = new objCartCookie("id=" + selectedIdModel.toString() + "#q=" + q.toString()
+                + "#real=1");
             if (DEBUG) {
                 console.log("maxQuantity: " + maxQuantity);
                 console.log("obj: " + JSON.stringify(obj));
@@ -1221,7 +1150,7 @@
             let overMax = InsertAtBeginToListCartCookieCheckExist(listCartCookie, obj, maxQuantity);
             if (overMax) { // Hiện thị modal thông báo
                 document.getElementsByClassName("shopee-alert-popup__message")[0].innerHTML =
-                    "Bạn đã có " + maxQuantity.toString() + " sản phẩm trong giỏ hàng. Không thể thêm số lượng đã chọn vào giỏ hàng vì sẽ vượt quá giới hạn mua hàng của bạn"
+                    "Bạn đã có " + maxQuantity.toString() + " sản phẩm trong giỏ hàng. Không thể thêm số lượng đã chọn vào giỏ hàng vì sẽ vượt quá tồn kho của cửa hàng"
                 modalOverMax.style.display = "flex";
             }
             if (DEBUG) {
@@ -1229,10 +1158,10 @@
             }
             let newCart = GetCartCookieFromListCartCookie(listCartCookie);
 
-            SetCookie(cartName, newCart, 365);
+            SetCookie(cartKey, newCart, 365);
 
             if (DEBUG) {
-                GetCookie(cartName);
+                GetCookie(cartKey);
             }
             if (overMax) {
                 return;
@@ -1242,7 +1171,7 @@
         }
 
         function BuyNow() {
-
+            location.href = "/Home/Cart";
         }
 
         function CloseModal() {
