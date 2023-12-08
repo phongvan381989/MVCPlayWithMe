@@ -21,7 +21,11 @@ namespace MVCPlayWithMe.Controllers
 
         private Customer AuthentCustomer()
         {
-            CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
+            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
+            if (string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                return null;
+            }
 
             /// Check cookie đã được lưu trong db
             return sqler.GetCustomerFromCookie(cookieResult.cookieValue);
@@ -44,41 +48,76 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentCustomer() == null)
                 return View();
-
-            return View("~/Views/Customer/Update.cshtml");
+            // Quay về trang chủ
+            return View("~/Views/Home/Index.cshtml");
         }
 
         [HttpPost]
         public string Logout()
         {
-            CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
-            sqler.CustomerLogout(cookieResult.cookieValue);
-            Cookie.RecreateUserIdCookie(HttpContext);
+            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
+            if (!string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                sqler.CustomerLogout(cookieResult.cookieValue);
+                Cookie.RecreateUserIdCookie(HttpContext);
+            }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
 
 
+        /// <summary>
+        /// Vì customerInforCookie chứa unicode, bị lỗi khi lấy như cookie do chưa encode,
+        /// nên ta gửi như tham số
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <param name="passWord"></param>
+        /// <param name="customerInforCookie"></param>
+        /// <returns></returns>
         [HttpPost]
-        public string Login_Login(string userName, string passWord)
+        public string Login_Login(string userName, string passWord, string customerInforCookie)
         {
             MySqlResultState result = sqler.LoginCustomer(userName, passWord);
 
-            // Set cookie cho tài khoản
-            if (result.State == EMySqlResultState.OK)
+            do
             {
+                if (result.State != EMySqlResultState.OK)
+                {
+                    break;
+                }
+
+                // Set cookie cho tài khoản
                 CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
                 // Lấy thông tin cutomer
                 Customer customer = sqler.GetCustomerFromUserName(userName);
+                if (customer == null || customer.id == -1)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Cant get customer from db";
+                    break;
+                }
 
-                // Lưu cookie vào bảng tbcookie_administrator
+                // Lưu cookie vào bảng tbcookie
                 MySqlResultState resultInsert = sqler.CookieCustomerLogin(cookieResult.cookieValue, customer.id);
                 if (resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);
                     result = resultInsert;
+                    break;
                 }
+
+                // Đang nhập thành công, lưu thông tin cookie khách vãng lai như: cart, customer information vào db
+                // Lưu cart cookie
+                List<Cart> lsCart = Cookie.GetListCartCookie(HttpContext);
+                sqler.AddCartLogin(customer.id, lsCart);
+                // Xóa cart cookie bên javascript
+
+                // Lưu customer information
+                List<CustomerInforCookie> lsCustomerInforCookie = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
+                sqler.AddCustomerInforAddress(customer.id, lsCustomerInforCookie);
+                // Xóa customer info cookie bên javascript
             }
+            while (false);
             return JsonConvert.SerializeObject(result);
         }
 

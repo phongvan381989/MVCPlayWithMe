@@ -4,6 +4,9 @@ var thumbnailHeight = 150;
 var avatarVideoHeight = 120;
 var srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
 var itemModelQuota = 5;
+var standardShipFeeInHaNoi = 15000; // Phí ship tiêu chuẩn trong Hà Nội
+var standardShipFeeOutHaNoi = 30000; // Phí ship tiêu chuẩn trong Hà Nội
+var HaNoiCity = "Thành phố Hà Nội";
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
 }
@@ -69,23 +72,19 @@ function CheckUserNameValid(userName) {
     return '{"isValid":false, "message":"Tên đăng nhập không đúng."}'
 }
 
-// Check SDT hợp lệ
+// Check SDT di động hợp lệ
+// Đầu số Viettel: 086|096|097|098|039|038|037|036|035|034|033|032
+// Đầu số Vinaphone: 091|094|088|083|084|085|081|082
+// Đầu số MobiFone: 070|079|077|076|078|089|090|093
+// Đầu số Vietnamobile: 092|052|056|058
+// Đầu số Gmobile: 099|059
+// Đầu số Itelecom: 087
 function CheckValidSDT(sdt) {
-    // Nếu là SDT thì độ dài = 10 với số di động, 11 với số cố định
-    let length = userName.length;
-    let pattern = /[^0-9]/g;
-    let result = sdt.match(pattern);
-    if (result === null) {
-        if (length < 10) {
-            return '{"isValid":false, "message":"Số điện thoại quá ngắn."}'
-        }
-        else if (length > 12) {
-            return '{"isValid":false, "message":"Số điện thoại quá dài."}'
-        }
-        else {
-            return '{"isValid":true, "message":"SDT"}'
-        }
+    let pattern = /((086|096|097|098|039|038|037|036|035|034|033|032  |091|094|088|083|084|085|081|082  |070|079|077|076|078|089|090|093  |092|052|056|058  |099|059  |087)+([0-9]{7})\b)/g;
+    if (!pattern.test(sdt)) {
+        return false;
     }
+    return true;
 }
 
 function CheckPassWordValid(passWord, repassWord) {
@@ -112,8 +111,15 @@ function CheckPassWordValid(passWord, repassWord) {
     return '{"isValid":true, "message":"Mật khẩu ok"}';
 }
 
-function SetCookie(name, value) {
-    document.cookie = name + '=' + value + '; Path=/;';
+function SetCookie(name, value, days) {
+    //document.cookie = name + '=' + value + '; Path=/;';
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
 }
 
 function DeleteCookie(name) {
@@ -130,8 +136,15 @@ function GetCookie(cname) {
             c = c.substring(1);
         }
         if (c.indexOf(name) == 0) {
-            return c.substring(name.length, c.length);
+            let value = c.substring(name.length, c.length);
+            if (DEBUG) {
+                console.log(cname + ": " + value);
+            }
+            return value;
         }
+    }
+    if (DEBUG) {
+        console.log(cname + ": ");
     }
     return "";
 }
@@ -331,6 +344,31 @@ function RequestHttpPost(onloadFunc, searchParams, url) {
     xhttp.send(searchParams.toString());
 }
 
+function RequestHttpPostPromise(searchParams, url) {
+    return new Promise(function (resolve, reject) {
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
+                resolve(this);
+            }
+        };
+        xhttp.onerror = function () {
+            reject(this.statusText);
+        }
+
+        let lastQuery = url + "?" + searchParams.toString();
+        if (DEBUG) {
+            console.log(lastQuery);
+        }
+        xhttp.open("POST", url);
+        xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        xhttp.send(searchParams.toString());
+    });
+}
+
 function RequestHttpPostUpFilePromise(xhttp, url, file) {
     return new Promise(function (resolve, reject) {
         xhttp.onload = function () {
@@ -384,7 +422,6 @@ function RequestHttpGetPromise(searchParams, url) {
         xhttp.send();
     });
 }
-
 
 // Nếu input trống, ta lấy theo giá trị mặc định
 function GetValueInputById(id, defaultValue) {
@@ -515,4 +552,38 @@ function ConvertTextToMoney(text) {
 
 function ConvertIntToPixel(value) {
     return value.toString() + "px";
+}
+
+// Tạo modal, bắt buộc phải click button ok để tắt modal
+// text tham số hiển thị thông báo của modal
+//<div class='my-modal-must-click-ok'>
+//    <div class='modal-content-selected'>
+//        <div class='alert-popup-message'>
+//        </div>
+//        <div>
+//            <button class='btn-modal-must-click-ok' type='button' onclick='CloseModalMustClickOk()'>OK</button>
+//        </div>
+//    </div>
+//</div>
+function CreateMustClickOkModal(text) {
+    let container = document.createElement("div");
+    container.className = "container-my-modal-must-click-ok";
+    container.innerHTML = "<div class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><button class='btn-modal-must-click-ok' type='button'>OK</button></div></div></div>";
+    container.getElementsByClassName("alert-popup-message")[0].innerHTML = text;
+    container.getElementsByClassName("btn-modal-must-click-ok")[0].addEventListener("click", function () {
+        document.getElementsByClassName("container-my-modal-must-click-ok")[0].remove();
+    });
+    document.getElementsByTagName("body")[0].appendChild(container);
+}
+
+// Lấy được obj từ danh sách obj thỏa obj.id = id
+function GetObjFromListAndId(id, list) {
+    let obj = null;
+    for (let i = 0; i < list.length; i++) {
+        if (list[i].id == id) {
+            obj = list[i];
+            break;
+        }
+    }
+    return obj;
 }

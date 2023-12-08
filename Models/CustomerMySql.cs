@@ -8,6 +8,9 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
+    /// <summary>
+    /// Khách vãng lai không lưu userCookieIdentify vào db
+    /// </summary>
     public class CustomerMySql : BasicMySql
     {
         /// <summary>
@@ -17,8 +20,12 @@ namespace MVCPlayWithMe.Models
         /// <returns></returns>
         public Customer GetCustomerFromCookie(string userCookieIdentify)
         {
-            Customer customer = new Customer();
+            if(string.IsNullOrEmpty(userCookieIdentify))
+            {
+                return null;
+            }
 
+            Customer customer = new Customer();
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
 
@@ -187,6 +194,7 @@ namespace MVCPlayWithMe.Models
             {
                 errMessage = ex.ToString();
                 MyLogger.GetInstance().Warn(errMessage);
+                customer = null;
             }
 
             conn.Close();
@@ -200,14 +208,16 @@ namespace MVCPlayWithMe.Models
         /// <returns></returns>
         public MySqlResultState CookieCustomerLogin(string userCookieIdentify, int customerId)
         {
-            MySqlParameter[] paras = new MySqlParameter[4];
+            //MySqlParameter[] paras = new MySqlParameter[4];
 
-            paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
-            paras[1] = new MySqlParameter("@inCustomerId", customerId);
-            MyMySql.AddOutParameters(paras);
+            //paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
+            //paras[1] = new MySqlParameter("@inCustomerId", customerId);
+            //MyMySql.AddOutParameters(paras);
 
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Login", paras);
-            return result;
+            //MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Login", paras);
+            //return result;
+
+            return AddNewCookie(userCookieIdentify, customerId);
         }
 
         /// <summary>
@@ -227,6 +237,121 @@ namespace MVCPlayWithMe.Models
 
             MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Insert", paras);
             return result;
+        }
+
+        // Khi đăng nhập, cần mere cart cookie với db
+        // Check trong db cart đã tồn tại, nếu đã tồn tại chỉ cần cập nhật trạng thái.
+        // Ta không theo dõi chi tiết. Thực hiện trên store proceduce
+        // Với số lượng ta không cộng dồn trong cart và db, ta lấy chỉ số lượng cho cart
+        public void AddCartLogin(int customerId, List<Cart> ls)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_Cart_Insert_And_Update_Login", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inModelId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+                cmd.Parameters.AddWithValue("@inReal", 0);
+
+                foreach (var cart in ls)
+                {
+                    cmd.Parameters[1].Value = cart.id;
+                    cmd.Parameters[2].Value = cart.q;
+                    cmd.Parameters[3].Value = cart.real;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
+        }
+
+        // Check trong db cart đã tồn tại, nếu đã tồn tại chỉ cần cập nhật trạng thái.
+        // Ta không theo dõi chi tiết. Thực hiện trên store proceduce
+        // Với số lượng ta không cộng dồn trong cart và db, ta lấy chỉ số lượng cho cart
+        public MySqlResultState AddCart(int customerId, Cart cart, int maxQuantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_Cart_Insert_And_Update", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inModelId", cart.id);
+                cmd.Parameters.AddWithValue("@inQuantity", cart.q);
+                cmd.Parameters.AddWithValue("@inReal", cart.real);
+                cmd.Parameters.AddWithValue("@inMaxQuantity", maxQuantity);
+                cmd.Parameters.AddWithValue("@outResult", 0);
+                cmd.Parameters.AddWithValue("@outMessage", "");
+                cmd.Parameters[5].Direction = ParameterDirection.Output;
+                cmd.Parameters[6].Direction = ParameterDirection.Output;
+
+                    cmd.ExecuteNonQuery();
+                cmd.ExecuteNonQuery();
+                int lengthPara = cmd.Parameters.Count;
+                //if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                {
+                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                }
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
+            return result;
+        }
+
+        public void AddCustomerInforAddress(int customerId, List<CustomerInforCookie> ls)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert_And_Update", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inName", "");
+                cmd.Parameters.AddWithValue("@inPhone", "");
+                cmd.Parameters.AddWithValue("@inProvince", "");
+                cmd.Parameters.AddWithValue("@inDistrict", "");
+                cmd.Parameters.AddWithValue("@inSubDistrict", "");
+                cmd.Parameters.AddWithValue("@inDetail", "");
+                cmd.Parameters.AddWithValue("@inDefaultAdd", 0);
+
+                foreach (var cus in ls)
+                {
+                    cmd.Parameters[1].Value = cus.name;
+                    cmd.Parameters[2].Value = cus.phone;
+                    cmd.Parameters[3].Value = cus.province;
+                    cmd.Parameters[4].Value = cus.district;
+                    cmd.Parameters[5].Value = cus.subdistrict;
+                    cmd.Parameters[6].Value = cus.detail;
+                    cmd.Parameters[7].Value = cus.defaultAdd;
+                    cmd.ExecuteNonQuery();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
         }
     }
 }

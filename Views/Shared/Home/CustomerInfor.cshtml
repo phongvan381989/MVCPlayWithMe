@@ -1,0 +1,44 @@
+﻿
+<div id="modal-customer-infor" class="modal center-block-selected">
+    <!-- Modal content -->
+    <div class="modal-content-container">
+        <div>
+            <div>Địa Chỉ Mới</div>
+            <div>
+                <div class="modal-name-phone">
+                    <div class="modal-name">
+                        <input id="customer-name" type="text" placeholder="Họ và tên" autocomplete="on" maxlength="64" value="" onfocus="GetFocus(this)" />
+                    </div>
+                    <div class="modal-phone">
+                        <input id="phone-number" type="text" placeholder="Số điện thoại" autocomplete="tel" value="" onfocus="GetFocus(this)" />
+                    </div>
+                </div>
+                <div class="modal-province">
+                    <select name="provinces" id="province" onchange="ChangeProvince()" onfocus="GetFocus(this)">
+                        <option value="" disabled selected>Tỉnh/Thành phố</option>
+                    </select>
+                    <select name="districts" id="district" onchange="ChangeDistrict()" onfocus="GetFocus(this)">
+                        <option value="" disabled selected>Quận/Huyện</option>
+                    </select>
+                    <select name="subdistricts" id="subdistrict" onchange="ChangeSubDistrict()" onfocus="GetFocus(this)">
+                        <option value="" disabled selected>Phường/Xã</option>
+                    </select>
+                </div>
+                <div class="modal-detail">
+                    <textarea id="detail-subdistrict" rows="2" placeholder="Địa chỉ cụ thể" autocomplete="on" maxlength="128" onfocus="GetFocus(this)"></textarea>
+                </div>
+                <div class="modal-default">
+                    <input id="check-default" type="checkbox">
+                    <label for="check-default"> Đặt làm địa chỉ mặc định</label>
+                </div>
+                <div class="modal-customer-infor-button">
+                    <button class="modal-customer-infor-button-return" onclick="ReturnCustomerInforModal()">Trở Lại</button>
+                    <button class="modal-customer-infor-button-finish" onclick="FinishCreateNewCustomerInforModal()">Hoàn Thành</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+

@@ -8,6 +8,8 @@ namespace MVCPlayWithMe.General
 {
     // Đăng nhập sẽ lưu uid quản trị, khách hàng tương ứng vào bảng tbcookie_administrator, tbcookie
     // Chưa đăng nhập uid chỉ được lưu ở client. Khi khách hàng đăng nhập đồng bộ dữ liệu client lên server
+    // Khách chưa đăng nhập, sản phẩm ở giỏ hàng mặc địnhcó real = 0, chỉ real = 1 khi click mua ngay bên page Item
+    // hoặc checkout( ở page checkout trạng thái real không được lưu vào cookie)
     public class Cookie
     {
         private static DateTime SetExpires()
@@ -23,23 +25,27 @@ namespace MVCPlayWithMe.General
         public static CookieResultState SetAndGetUserIdCookie(HttpContextBase httpContext)
         {
             CookieResultState cookieResut = new CookieResultState();
-            if (httpContext.Request.Cookies[Common.userIdKey] == null)
-            {
-                HttpCookie uId = new HttpCookie(Common.userIdKey);
-                Guid guidVal = Guid.NewGuid();
-                cookieResut.cookieValue = guidVal.ToString("N");
-                uId.Value = cookieResut.cookieValue;
-                uId.Expires = SetExpires();
-                uId.HttpOnly = true;
 
-                httpContext.Response.Cookies.Add(uId);
-            }
-            else
-            {
-                cookieResut.cookieValue = httpContext.Request.Cookies[Common.userIdKey].Value;
-            }
+            HttpCookie uId = new HttpCookie(Common.userIdKey);
+            Guid guidVal = Guid.NewGuid();
+            cookieResut.cookieValue = guidVal.ToString("N");
+            uId.Value = cookieResut.cookieValue;
+            uId.Expires = SetExpires();
+            uId.HttpOnly = true;
+
+            httpContext.Response.Cookies.Add(uId);
 
             return cookieResut;
+        }
+
+        public static CookieResultState GetUserIdCookie(HttpContextBase httpContext)
+        {
+            CookieResultState cookie = new CookieResultState();
+            if (httpContext.Request.Cookies[Common.userIdKey] != null)
+            {
+                cookie.cookieValue = httpContext.Request.Cookies[Common.userIdKey].Value;
+            }
+            return cookie;
         }
 
         /// <summary>
@@ -70,25 +76,57 @@ namespace MVCPlayWithMe.General
             return cookie;
         }
 
-        // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
-        public static List<CartCookie> GetListCartCookieFromCartCookie(string cartCookie)
+        public static CookieResultState GetCustomerInforCookie(HttpContextBase httpContext)
         {
-            List<CartCookie> listCartCookie = new List<CartCookie>();
+            CookieResultState cookie = new CookieResultState();
+            if (httpContext.Request.Cookies[Common.customerInforKey] != null)
+            {
+                cookie.cookieValue = httpContext.Request.Cookies[Common.customerInforKey].Value;
+            }
+            return cookie;
+        }
+
+        // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
+        public static List<Cart> GetListCartCookieFromCookieValue(string cartCookie)
+        {
+            List<Cart> listCartCookie = new List<Cart>();
             if (string.IsNullOrEmpty(cartCookie))
                 return listCartCookie;
 
             string[] myArray = cartCookie.Split('$');
             for (int i = 0; i < myArray.Length; i++)
             {
-                listCartCookie.Add(new CartCookie(myArray[i]));
+                listCartCookie.Add(new Cart(myArray[i]));
             }
+
             return listCartCookie;
         }
 
-        public static List<CartCookie> GetListCartCookie(HttpContextBase httpContext)
+        public static List<Cart> GetListCartCookie(HttpContextBase httpContext)
         {
             CookieResultState cookie = GetCartCookie(httpContext);
-            return GetListCartCookieFromCartCookie(cookie.cookieValue);
+            return GetListCartCookieFromCookieValue(cookie.cookieValue);
+        }
+
+        // cookie có dạng: name=Hoàng Huệ#phone=0359127226#province=Hà Nội#district=Bắc Từ Liêm#subdistrict=Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
+        public static List<CustomerInforCookie> GetListCustomerInforCookieFromCookieValue(string customerInforCookie)
+        {
+            List<CustomerInforCookie> listCustomerInforCookie = new List<CustomerInforCookie>();
+            if (string.IsNullOrEmpty(customerInforCookie))
+                return listCustomerInforCookie;
+
+            string[] myArray = customerInforCookie.Split('$');
+            for (int i = 0; i < myArray.Length; i++)
+            {
+                listCustomerInforCookie.Add(new CustomerInforCookie(myArray[i]));
+            }
+            return listCustomerInforCookie;
+        }
+
+        public static List<CustomerInforCookie> GetListCustomerInforCookie(HttpContextBase httpContext)
+        {
+            CookieResultState cookie = GetCustomerInforCookie(httpContext);
+            return GetListCustomerInforCookieFromCookieValue(cookie.cookieValue);
         }
     }
 }

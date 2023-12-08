@@ -1,0 +1,999 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
+    <style>
+        .address-model {
+            /*margin-bottom: 70px;*/
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .letter-boder {
+            height: 3px;
+            width: 100%;
+            background-position-x: -30px;
+            background-size: 116px 3px;
+            background-image: repeating-linear-gradient(45deg,#6fa6d6,#6fa6d6 33px,transparent 0,transparent 41px,#f18d9b 0,#f18d9b 74px,transparent 0,transparent 82px);
+        }
+
+        .address-detail {
+            padding: 28px 5px 24px;
+        }
+
+        .address-icon {
+            display: flex;
+            align-items: center;
+            font-size: 1.125rem;
+            color: #ee4d2d;
+            margin-bottom: 20px;
+            text-transform: capitalize;
+            flex: 1 1 auto;
+            margin-right: 9px
+        }
+
+        .Iafoll {
+            display: flex;
+            margin-right: 9px;
+        }
+
+        .icon-location-marker {
+            width: 12px;
+            height: 16px;
+            color: #ee4d2d;
+            fill: currentColor;
+            display: inline-block;
+        }
+
+        h2 {
+            margin: 0;
+            padding: 0;
+            font-size: inherit;
+            font-weight: inherit;
+            line-height: inherit;
+            color: inherit;
+        }
+
+        .address-container {
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            background: #fff;
+            border-radius: 3px;
+        }
+
+        .address-content {
+            display: flex;
+            align-items: center;
+            font-size: 1rem;
+            word-break: break-word;
+            flex-wrap: wrap;
+        }
+
+        .address-name-phone {
+            font-weight: 700;
+            color: #222;
+        }
+
+        .address-address {
+            margin: 5px;
+            word-break: break-word;
+        }
+
+        .address-default {
+            padding: 2px 5px;
+            margin: 5px;
+            color: #ee4d2d;
+            border-radius: 1px;
+            border: 0.5px solid;
+            font-size: 10px;
+            text-transform: capitalize;
+            flex-shrink: 0;
+        }
+
+        button.change-address-btn {
+            color: #4080ee;
+            text-transform: capitalize;
+            /*margin-left: 2.5rem;*/
+            cursor: pointer;
+            background: none;
+            border: 0;
+            padding: 0;
+            margin: 5px;
+            cursor: pointer;
+            text-align: center;
+        }
+
+        .selected_model {
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            border-radius: 3px;
+            margin-top: 12px;
+        }
+
+        .ktatB- {
+            flex: 2;
+            text-align: left;
+        }
+
+        ._6HCfS6 {
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+            color: #222;
+        }
+
+        .jNp-ZB {
+            flex: 1;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .LBqTli {
+            flex: 1;
+            text-align: center;
+        }
+
+        .model-container-header {
+            height: 50px;
+            padding: 10px 5px;
+            background: #fff;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+        }
+
+        /*.model-container {
+            background: #fff;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+            border-radius: 3px;
+            padding: 10px 5px;
+            display: flex;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            color: #222;
+            min-height: 55px;
+        }*/
+        .model-wrapper {
+            background: #fff;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+            border-radius: 3px;
+            padding: 10px 5px;
+            display: flex;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            color: #222;
+            min-height: 55px;
+        }
+
+        .EOqcX3 {
+            flex: 2;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            /*justify-content: center;*/
+            align-items: center;
+        }
+
+        img {
+            border: 0;
+            width: 40px;
+            height: 40px;
+        }
+
+        .item-name, .model-name {
+            margin: 0 5px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .h3ONzh {
+            flex: 1;
+            /*overflow: hidden;
+            text-overflow: ellipsis;*/
+            overflow-wrap: break-word;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fHRPUO {
+            flex: 1;
+            font-weight: 500;
+            /*overflow: hidden;
+            text-overflow: ellipsis;*/
+            overflow-wrap: break-word;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .U4A1mu {
+            display: flex;
+            justify-content: flex-end;
+            background-color: #fafdff;
+            min-width: 0;
+            min-height: 0;
+            border-bottom: 1px dashed rgba(0,0,0,.09);
+        }
+
+        .OUah6W {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            min-height: 0;
+            font-size: 14px;
+        }
+
+        .message-to-shop {
+            display: flex;
+            align-items: center;
+            margin: 15px 0px;
+            padding: 5px 10px;
+            background-color: white;
+            border-radius: 3px;
+        }
+
+        .peusTR {
+            width: 100%;
+        }
+
+            .peusTR input {
+                padding: 4px 12px;
+                width: 100%;
+                height: 40px;
+                box-sizing: border-box;
+                background-color: initial;
+                outline: none;
+                font-size: .875rem;
+                min-width: 0;
+                color: #222;
+                border: 1px solid rgba(0,0,0,.14);
+                border-radius: 2px;
+            }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            min-height: 90px;
+            padding-left: 30px;
+            padding-right: 10px;
+            box-sizing: border-box;
+            background-color: white;
+            margin: 15px 0px;
+            border-radius: 3px;
+        }
+
+        .SzEjHI {
+            width: 200px;
+            font-size: 1.25rem;
+            color: #222;
+            flex: 1;
+        }
+
+        .KoRB7y {
+            font-size: 14px;
+            color: #222;
+            font-size: 1rem;
+        }
+
+        .payment-infor {
+            background: #fffefb;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            border-top: 1px solid #f1f0ed;
+            padding-top: 15px;
+        }
+
+        .flex-end {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin: 20px;
+        }
+
+        .money-padding {
+            min-width: 130px;
+            text-align: end;
+        }
+
+        .money-sum {
+            height: 50px;
+            font-size: 28px;
+            font-weight: 500;
+            color: #ee4d2d;
+        }
+
+        .money-title {
+            width: 120px;
+        }
+
+        .order-btn {
+            background: #ee4d2d;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: capitalize;
+            max-width: 250px;
+            min-width: 8.25rem;
+            height: 48px;
+            border: 1px solid rgba(0,0,0,.09);
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.03);
+            border-radius: 2px !important;
+            outline: none;
+        }
+
+        .sample-model {
+            display: none;
+        }
+
+        .cart-empty {
+            display: none;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <p id="list-cart-cookie-object" style="display:none;">@ViewData["listCartCookieObject"]</p>
+        <div class="sample-model">
+            <div class="model-wrapper">
+                <div class="EOqcX3">
+                    <img class="rTOisL" alt="product image" src="https://down-vn.img.susercontent.com/file/vn-11134207-7qukw-liwhf99gb1n039_tn" width="40" height="40">
+                    <div>
+                        <span class="item-name">
+                            Gạo Thơm RVT Vinaseed Túi 5kg - Nhà phân phối chính hãng - Giá Sỉ, Date mới
+                        </span>
+                        <span class="model-name">
+                            Gạo Thơm RVT Vinaseed Túi 5kg - Nhà phân phối chính hãng - Giá Sỉ, Date mới
+                        </span>
+                    </div>
+                </div>
+
+                <div class="h3ONzh price-model">₫1.300.000</div>
+                <div class="h3ONzh quantity-model">1</div>
+                <div class="fHRPUO money-model">₫1.300.000</div>
+            </div>
+        </div>
+        <div class="cart-empty">
+            <strong>Bạn chưa chọn sản phẩm nào.</strong>
+            <p>Quay về <a href="/" title="">trang chọn sản phẩm</a></p>
+        </div>
+        <div class="main-container">
+            <div class="address-model">
+                <div class="address-container">
+                    <div class="letter-boder"></div>
+                    <div class="address-detail">
+                        <div class="address-icon">
+                            <div class="Iafoll">
+                                <svg height="16" viewBox="0 0 12 16" width="12" class="icon-location-marker">
+                                    <path d="M6 3.2c1.506 0 2.727 1.195 2.727 2.667 0 1.473-1.22 2.666-2.727 2.666S3.273 7.34 3.273 5.867C3.273 4.395 4.493 3.2 6 3.2zM0 6c0-3.315 2.686-6 6-6s6 2.685 6 6c0 2.498-1.964 5.742-6 9.933C1.613 11.743 0 8.498 0 6z" fill-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <h2>Địa chỉ nhận hàng</h2>
+                        </div>
+                        <div class="address-content">
+                            <div class="address-name-phone">Huệ hoàng (+84) 383519872</div>
+                            <div class="address-address">Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Hà Nội</div>
+                            <div class="address-default">Mặc định</div>
+                            <button class="change-address-btn">Thay đổi</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="selected_model">
+                    <div class="model-container-header">
+                        <div class="ktatB-">
+                            <h2 class="_6HCfS6">Sản phẩm</h2>
+                        </div>
+                        <div class="jNp-ZB">Đơn giá</div>
+                        <div class="jNp-ZB">Số lượng</div>
+                        <div class="LBqTli">Thành tiền</div>
+                    </div>
+                    <div class="model-container">
+
+                    </div>
+                </div>
+                <div class="message-to-shop">
+                    <div>
+                        <span style="padding-right:10px">Lời nhắn:</span>
+                    </div>
+                    <div class="peusTR">
+                        <input class="gQuJxM" type="text" placeholder="Lưu ý cho Người bán..." value="">
+                    </div>
+                </div>
+            </div>
+            <div class="payment-method">
+                <div class="SzEjHI">Phương thức thanh toán</div>
+                <div class="KoRB7y">Thanh toán khi nhận hàng</div>
+            </div>
+            <div class="payment-infor">
+                <div class="flex-end">
+                    <div class="money-title">Tổng tiền hàng</div>
+                    <div class="money-padding model-money-sum">₫405.080</div>
+                </div>
+                <div class="flex-end">
+                    <div class="money-title">Phí vận chuyển</div>
+                    <div class="money-padding shipee-fee">₫39.150</div>
+                </div>
+                <div class="flex-end">
+                    <div class="money-title">Tổng thanh toán</div>
+                    <div class="money-padding money-sum">₫444.230</div>
+                </div>
+                <div class="flex-end">
+                    <button class="order-btn" onclick="Order()">Đặt hàng</button>
+                </div>
+            </div>
+        </div>
+        @Html.Partial("~/Views/Shared/Home/CustomerInfor.cshtml")
+        @Html.Partial("~/Views/Shared/Home/ListCustomerInfor.cshtml")
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    <script>
+        let listCartCookieObject; // list cart cookie object server trả về, đã check real == 1 trên server
+
+        let listCustomerInforCookieObject; // list customer cookie object server trả về
+
+        let administrativeAddressObject; // địa giới hành chính
+
+        let currentIndexInforObject = -1; // index địa chỉ nhận hàng hiện tại. Chưa chọn địa chỉ nhận hàng thì dùng thông tin mặc định
+
+        let currentIndexInforUpdateObject = -1; // index cần cập nhật
+
+        LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship
+
+        LoadCart();
+
+        function CreateSelectedModel() {
+            if (DEBUG) {
+                console.log("CreateSelectedModel CALL");
+                console.log("listCartCookieObject.length: " + listCartCookieObject.length);
+            }
+            // Lấy mẫu
+            let sample = document.getElementsByClassName("sample-model")[0].firstElementChild;
+            let containerModel = document.getElementsByClassName("model-container")[0];
+
+            let length = listCartCookieObject.length;
+
+            // Sinh bản sao
+            for (let i = 0; i < length; i++) {
+                let obj = listCartCookieObject[i];
+
+                let clone = sample.cloneNode(true);
+                clone.setAttribute("data-model-id", obj.id.toString());
+
+                // Cập nhật dữ liệu bản sao
+                clone.getElementsByClassName("rTOisL")[0].src = obj.imageSrc;
+                clone.getElementsByClassName("item-name")[0].innerHTML = obj.itemName;
+                clone.getElementsByClassName("model-name")[0].innerHTML = obj.modelName;
+                clone.getElementsByClassName("price-model")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.price);
+                clone.getElementsByClassName("quantity-model")[0].innerHTML = obj.q;
+                clone.getElementsByClassName("money-model")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.q * obj.price);
+
+                containerModel.appendChild(clone);
+            }
+
+            ShowSumMoney();
+        }
+
+        function LoadCart() {
+            listCartCookieObject = JSON.parse(document.getElementById("list-cart-cookie-object").textContent);
+            if (DEBUG) {
+                console.log(JSON.stringify(listCartCookieObject));
+            }
+            if (listCartCookieObject == null || listCartCookieObject.length == 0) {
+                document.getElementsByClassName("cart-empty")[0].style.display = "block";
+                document.getElementsByClassName("main-container")[0].style.display = "none";
+                return;
+            }
+            // Có những sản phẩm số lượng trong kho nhỏ hơn số lượng khách đã chọn,
+            // nhưng được tính lại phía server
+
+            CreateSelectedModel();
+        }
+
+        // Hiển thị tổng tiền thanh toán
+        function ShowSumMoney() {
+            let length = listCartCookieObject.length;
+            let sumMoney = 0;
+            for (let i = 0; i < length; i++) {
+                sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+            }
+
+            document.getElementsByClassName("model-money-sum")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
+
+            let shipFee = GetShipFee();
+            sumMoney = shipFee + sumMoney;
+            document.getElementsByClassName("shipee-fee")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(shipFee);
+            document.getElementsByClassName("money-sum")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
+        }
+
+        function GetShipFee() {
+            let fee = 0;
+            if (currentIndexInforObject != -1) {
+                let obj = listCustomerInforCookieObject[currentIndexInforObject];
+                if (obj.province == HaNoiCity) {
+                    fee = standardShipFeeInHaNoi;
+                }
+                else {
+                    fee = standardShipFeeOutHaNoi;
+                }
+            }
+            return fee;
+        }
+
+        function LoadCustomerInfor() {
+            // Lấy từ cookie
+            listCustomerInforCookieObject = GetListCustomerInforCookieFromCookie();
+            if (DEBUG) {
+                console.log("LoadCustomerInfor CALL");
+                console.log("listCustomerInforCookieObject: " + JSON.stringify(listCustomerInforCookieObject));
+            }
+
+            let isDefaultAdd = false;
+            // Tìm địa chỉ mặc định
+            for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
+                let obj = listCustomerInforCookieObject[i];
+                if (obj.defaultAdd == 1) {
+                    currentIndexInforObject = i;
+                    ShowCustomerInforFromObj(obj);
+                    isDefaultAdd = true;
+                    break;
+                }
+            }
+
+            if (!isDefaultAdd) {
+                document.getElementsByClassName("address-name-phone")[0].style.display = "none";
+                document.getElementsByClassName("address-address")[0].style.display = "none";
+                document.getElementsByClassName("address-default")[0].style.display = "none";
+                document.getElementsByClassName("change-address-btn")[0].innerHTML = "Thêm địa chỉ mới";
+
+                // Chưa địa chỉ nào được chọn là mặc định
+                // Hiển thị danh sách địa chỉ trước
+                if (listCustomerInforCookieObject.length > 0) {
+                    document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowListCustomerInforModal() });
+                }
+                else {
+                    document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowCustomerInforModal(true, false) });
+                }
+            }
+        }
+
+        // isCreate: true là thêm mới thông tin địa chỉ
+        // false: Cập nhật thông tin cũ
+        // isModalUnder: true, có modal bên dưới, cần tăng zindex = 2 ngược lại không cần
+        async function ShowCustomerInforModal(isCreate, isModalUnder) {
+            if (DEBUG) {
+                console.log("ShowCustomerInforModal CALL");
+            }
+            if (administrativeAddressObject == null) {
+                // Lấy dữ liệu tỉnh, huyện xã từ db
+                let responseDB = await GetAdministrativeAddress();
+                administrativeAddressObject = JSON.parse(responseDB.responseText);
+
+                AddProvince();
+            }
+            let ele = document.getElementById("modal-customer-infor");
+            if (isCreate) {
+                ele.style.display = "block";
+                if (isModalUnder) {
+                    ele.style.zIndex = 2;
+                }
+            }
+            else{
+                ele.style.display = "block";
+                // mặc định có modal ở dưới
+                ele.style.zIndex = 2;
+                // Hiển thị thông tin địa chỉ
+                let obj = listCustomerInforCookieObject[currentIndexInforUpdateObject];
+                document.getElementById("customer-name").value = obj.name;
+                document.getElementById("phone-number").value = obj.phone;
+                document.getElementById("province").value = obj.province;
+                DeleteDistrict();
+                AddDistrict();
+                document.getElementById("district").value = obj.district;
+                DeleteSubDistrict();
+                AddSubDistrict();
+                document.getElementById("subdistrict").value = obj.subdistrict;
+                document.getElementById("detail-subdistrict").value = obj.detail;
+                document.getElementById("check-default").checked = Boolean(obj.defaultAdd);
+
+            }
+        }
+
+        // Từ obj hiển thị tên, phone, địa chỉ lên web
+        function ShowCustomerInforFromObj(obj) {
+            document.getElementsByClassName("address-name-phone")[0].style.display = "block";
+            document.getElementsByClassName("address-address")[0].style.display = "block";
+
+            document.getElementsByClassName("address-name-phone")[0].innerHTML = obj.name + "  " + obj.phone;
+            document.getElementsByClassName("address-address")[0].innerHTML =
+                obj.detail + ", " + obj.province + ", " + obj.district + ", " + obj.subdistrict;
+            if (obj.defaultAdd) {
+                document.getElementsByClassName("address-default")[0].style.display = "block";
+            }
+            else {
+                document.getElementsByClassName("address-default")[0].style.display = "none";
+            }
+            document.getElementsByClassName("change-address-btn")[0].innerHTML = "Thay đổi";
+            document.getElementsByClassName("change-address-btn")[0].addEventListener("click", ShowListCustomerInforModal);
+        }
+
+        function ShowListCustomerInforModal() {
+            document.getElementById("modal-list-customer-infor").style.display = "block";
+
+            // Hiển thị danh sách địa chỉ
+            // Lấy mẫu
+            let sample = document.getElementsByClassName("sample-customer-infor-container")[0];
+            let container = document.getElementsByClassName("list-customer-infor-container")[0];
+
+            let length = listCustomerInforCookieObject.length;
+            if (DEBUG) {
+                console.log("ShowListCustomerInforModal CALL");
+                console.log("listCustomerInforCookieObject.length: " + length);
+            }
+            for (let i = 0; i < length; i++) {
+                let obj = listCustomerInforCookieObject[i];
+                let clone = sample.cloneNode(true);
+                clone.style.display = "flex";
+                clone.setAttribute("data-index", i.toString());
+
+                if ((obj.defaultAdd && currentIndexInforObject == -1)
+                    || currentIndexInforObject == i){
+                    clone.getElementsByClassName("address-radio")[0].checked = true;
+                }
+
+                clone.getElementsByClassName("name")[0].innerHTML = obj.name;
+                clone.getElementsByClassName("phone")[0].innerHTML = obj.phone;
+
+                clone.getElementsByClassName("detail")[0].innerHTML = obj.detail;
+                clone.getElementsByClassName("province-district-subdistrict")[0].innerHTML =
+                    obj.province + ", " + obj.district + ", " + obj.subdistrict;
+
+                if (!obj.defaultAdd) {
+                    clone.getElementsByClassName("default-address")[0].style.display = "none";
+                }
+                container.appendChild(clone);
+            }
+        }
+
+        function ReturnCustomerInforModal() {
+            document.getElementById("modal-customer-infor").style.display = "none";
+            currentIndexInforUpdateObject = -1;
+        }
+
+        function FinishCreateNewCustomerInforModal() {
+            if (!ValidCustomerInforInput()) {
+                return;
+            }
+
+            let obj = CreateCookieValueFromInput();
+            if (currentIndexInforUpdateObject != -1) {// Cập nhật thông tin vào object
+                listCustomerInforCookieObject[currentIndexInforUpdateObject] = obj;
+                //Kiểm tra có đặt mặc đinh
+                if (obj.defaultAdd) {
+                    // Bỏ mặc định cũ nếu có
+                    for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
+                        if (listCustomerInforCookieObject[i].defaultAdd
+                            && i != currentIndexInforUpdateObject) {
+                            listCustomerInforCookieObject[i].defaultAdd = 0;
+                        }
+                    }
+                }
+            }
+            else {
+                //Kiểm tra có đặt mặc đinh
+                if (obj.defaultAdd) {
+                    // Bỏ mặc định cũ nếu có
+                    for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
+                        if (listCustomerInforCookieObject[i].defaultAdd) {
+                            listCustomerInforCookieObject[i].defaultAdd = 0;
+                        }
+                    }
+                }
+                listCustomerInforCookieObject.push(obj);
+            }
+            currentIndexInforUpdateObject = -1;
+            SetCartCookieFromListCustomerInforCookieObject(listCustomerInforCookieObject);
+
+            document.getElementById("modal-customer-infor").style.display = "none";
+
+
+            // Nếu bên dưới có modal hiển thị danh sách địa chỉ, ta cập nhật lại
+            // Xóa địa chỉ khỏi danh sách
+            document.getElementsByClassName("list-customer-infor-container")[0].innerHTML = "";
+            ShowListCustomerInforModal();
+        }
+
+        // Tạo cookie obj từ input
+        function CreateCookieValueFromInput() {
+            let isDefault = 1;
+            if (!document.getElementById("check-default").checked) {
+                isDefault = 0;
+            }
+            let obj = new objCustomerInforCookieFromInput(
+                document.getElementById("customer-name").value,
+                document.getElementById("phone-number").value,
+                document.getElementById("province").value,
+                document.getElementById("district").value,
+                document.getElementById("subdistrict").value,
+                document.getElementById("detail-subdistrict").value,
+                isDefault
+            );
+            if (DEBUG) {
+                console.log("CreateCookieValueFromInput CALL" + JSON.stringify(obj));
+            }
+            return obj;
+        }
+
+        // Chỉ gọi 1 lần, vì option không thay đổi
+        function AddProvince() {
+            //if (DEBUG) {
+            //    console.log("AddProvince CALL");
+            //}
+
+            if (administrativeAddressObject == null)
+                return;
+            let ele = document.getElementById("province");
+            let length = administrativeAddressObject.length;
+            //if (DEBUG) {
+            //    console.log("AddProvince CALL length: " + length);
+            //}
+            for (let i = 0; i < length; i++) {
+                let option = document.createElement("option");
+                option.value = administrativeAddressObject[i].province;
+                option.text = administrativeAddressObject[i].province;
+                ele.appendChild(option);
+            }
+
+        }
+
+        async function GetAdministrativeAddress() {
+            if (DEBUG) {
+                console.log("GetAdministrativeAddress CALL");
+            }
+            // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
+            const searchParams = new URLSearchParams();
+
+            let query = "/Home/GetAdministrativeAddress";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        // Thay đổi tỉnh, add huyện tương ứng vào select tag
+        function AddDistrict() {
+            let provinceEle = document.getElementById("province");
+            if (provinceEle.selectedIndex == 0 || provinceEle.selectedIndex == -1) {
+                return;
+            }
+            let districtEle = document.getElementById("district");
+
+            // Trừ 1 vì option đầu là cấp độ: tỉnh, huyện, xã
+            let Obj = administrativeAddressObject[provinceEle.selectedIndex - 1].districts;
+            let length = Obj.length;
+            for (let i = 0; i < length; i++) {
+                let option = document.createElement("option");
+                option.value = Obj[i];
+                option.text = Obj[i];
+                districtEle.appendChild(option);
+            }
+        }
+
+        function DeleteDistrict() {
+            let districtEle = document.getElementById("district");
+            for (let i = districtEle.length - 1; i > 0; i--) {
+                districtEle.remove(i);
+            }
+            districtEle.selectedIndex = 0;
+        }
+
+        // Thay đổi huyện, add xã tương ứng vào select tag
+        function AddSubDistrict() {
+            let provinceEle = document.getElementById("province");
+            if (provinceEle.selectedIndex == 0 || provinceEle.selectedIndex == -1) {
+                return;
+            }
+            let districtEle = document.getElementById("district");
+            if (districtEle.selectedIndex == 0 || districtEle.selectedIndex == -1) {
+                return;
+            }
+            let subdistrictEle = document.getElementById("subdistrict");
+            // Trừ 1 vì option đầu là cấp độ: tỉnh, huyện, xã
+            let Obj = administrativeAddressObject[provinceEle.selectedIndex - 1].subdistricts[districtEle.selectedIndex - 1];
+
+            let length = Obj.length;
+            for (let i = 0; i < length; i++) {
+                let option = document.createElement("option");
+                option.value = Obj[i];
+                option.text = Obj[i];
+                subdistrictEle.appendChild(option);
+            }
+        }
+
+        function DeleteSubDistrict() {
+            let subdistrictEle = document.getElementById("subdistrict");
+            for (let i = subdistrictEle.length - 1; i > 0; i--) {
+                subdistrictEle.remove(i);
+            }
+            subdistrictEle.selectedIndex = 0;
+        }
+
+        function ChangeProvince() {
+            DeleteDistrict();
+            AddDistrict();
+
+            DeleteSubDistrict();
+        }
+
+        function ChangeDistrict() {
+
+            DeleteSubDistrict();
+            AddSubDistrict();
+        }
+
+        function ChangeSubDistrict() {
+
+        }
+
+        // Kiểm tra thông tin tên, sdt, địa chỉ khách nhập đã chính xác
+        function ValidCustomerInforInput() {
+            let isOk = true;
+            // Check tên
+            if (isEmptyOrSpaces(document.getElementById("customer-name").value)) {
+                document.getElementById("customer-name").style.border = "1px solid red";
+                isOk = false;
+            }
+            // Check số điện thoại di động
+            let phoneNumber = document.getElementById("phone-number").value;
+            if (!CheckValidSDT(phoneNumber)) {
+                document.getElementById("phone-number").style.border = "1px solid red";
+                isOk = false;
+            }
+
+            // Check tỉnh
+            if (document.getElementById("province").selectedIndex < 1) {
+                document.getElementById("province").style.border = "1px solid red";
+                isOk = false;
+            }
+
+            // Check huyện
+            if (document.getElementById("district").selectedIndex < 1) {
+                document.getElementById("district").style.border = "1px solid red";
+                isOk = false;
+            }
+
+            // Check xã
+            if (document.getElementById("subdistrict").selectedIndex < 1) {
+                document.getElementById("subdistrict").style.border = "1px solid red";
+                isOk = false;
+            }
+
+            // Check chi tiết
+            if (isEmptyOrSpaces(document.getElementById("detail-subdistrict").value)) {
+                document.getElementById("detail-subdistrict").style.border = "1px solid red";
+                isOk = false;
+            }
+            return isOk;
+        }
+
+        function GetFocus(ele) {
+            ele.style.border = "1px solid rgba(0,0,0,.14)";
+        }
+
+        function DestroyListCustomerInforModal() {
+            // Xóa địa chỉ khỏi danh sách
+            document.getElementsByClassName("list-customer-infor-container")[0].innerHTML = "";
+            document.getElementById("modal-list-customer-infor").style.display = "none";
+
+            // Trở về màn hình chính, nếu chưa có địa chỉ nào được chọn trong khi danh sách địa chỉ
+            // đã có lựa chọn, click vào "Thêm địa chỉ mới" hiện ra cửa sổ "danh sách địa chỉ"
+            // thay vì cửa sổ "tạo mới địa chỉ"
+            // => Phuc tap khoong caan thiet
+            //if (document.getElementsByClassName("change-address-btn")[0].innerHTML == "Thêm địa chỉ mới") {
+            //    if (listCustomerInforCookieObject.length > 0) {
+            //        document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowListCustomerInforModal() });
+            //    }
+            //    else {
+            //        document.getElementsByClassName("change-address-btn")[0].removeEventListenerremoveEventListener("click", function () { ShowCustomerInforModal(true, false) });
+            //    }
+            //}
+        }
+
+        // Xác nhận dùng thông tin nào nhận hàng
+        function ConfirmListCustomerInforModal() {
+            let list = document.getElementsByClassName("list-customer-infor-container")[0].children;
+            let length = list.length;
+            for (let i = 0; i < length - 1; i++) {
+                let ele = list[i];
+                if (ele.getElementsByClassName("address-radio")[0].checked) {
+                    currentIndexInforObject = parseInt(ele.getAttribute("data-index"));
+                    if (DEBUG) {
+                        console.log("ConfirmListCustomerInforModal CALL");
+                        console.log("currentIndexInforObject: " + currentIndexInforObject);
+                    }
+                    ShowCustomerInforFromObj(listCustomerInforCookieObject[currentIndexInforObject]);
+                    break;
+                }
+            }
+            DestroyListCustomerInforModal();
+
+            // Tính lại tiền ship
+            ShowSumMoney();
+        }
+
+        function UpdateCustomerInfor(ele) {
+            currentIndexInforUpdateObject = parseInt(ele.parentElement.parentElement.getAttribute("data-index"));
+            if (DEBUG) {
+                //console.log(ele.parentElement.className );
+                console.log("UpdateCustomerInfor CALL");
+                console.log("currentIndexInforUpdateObject: " + currentIndexInforUpdateObject);
+            }
+            ShowCustomerInforModal(false, true);
+        }
+
+        // Check lại thông tin đơn hàng bên phía server: mã sản phẩm, số lượng có đủ
+        // (vì trong thời gian khách chọn có thể số lượng tồn kho thay đổi), tổng tiền hàng, tiền ship.
+        // Đồng thời gửi thông tin địa chỉ, lời nhắn shop
+        async function CheckOrderOnSever() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("cart", JSON.stringify(listCartCookieObject));
+            searchParams.append("customerInfor", JSON.stringify(listCustomerInforCookieObject[currentIndexInforObject]));
+            searchParams.append("shipFee", GetShipFee().toString());
+            searchParams.append("noteToShop", document.getElementsByClassName("gQuJxM")[0].value);
+
+            let query = "/Home/CheckOrderOnSever";
+
+            return await RequestHttpPostPromise(searchParams, query);
+
+        }
+        async function Order() {
+            if (currentIndexInforObject == -1) {
+                CreateMustClickOkModal("Vui lòng cung cấp thông tin người nhận hàng.", null)
+                return;
+            }
+            if (DEBUG) {
+                console.log("listCartCookieObject before order:" + JSON.stringify(listCartCookieObject));
+            }
+            ShowCircleLoader();
+            let responseDB = await CheckOrderOnSever();
+            RemoveCircleLoader();
+
+            let result = JSON.parse(responseDB.responseText);
+            if (result == null) {
+                CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.");
+                return;
+            }
+            if (!result.status) {
+                CreateMustClickOkModal(result.message);
+                return;
+            }
+            // Với khách vãng lai
+            // Cập nhật lại cart cookie, xóa những sản phẩm đặt hàng thành công
+            let length = listCartCookieObject.length;
+            for (let i = length - 1; i >= 0; i--) {
+                DeleteOneCartCookie(listCartCookieObject[i]);
+            }
+
+            CreateMustClickOkModal("Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại shop.", function () { location.replace("/") });
+        }
+    </script>
+</body>
+</html>

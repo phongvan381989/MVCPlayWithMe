@@ -371,7 +371,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="RefreshRealOfCartCookieAndGet()">
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <p id="list-cart-cookie-object" style="display:none;">@ViewData["listCartCookieObject"]</p>
@@ -383,11 +383,11 @@
                     </div>
                     <div class="eUrDQm">
                         <div class="LAQKxn">
-                            <a title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
+                            <a class="item-url"title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
                                 <img class="WanNdG" src="https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lkkyikcwkaui58" alt="product image">
                             </a>
                             <div class="TyNN8t">
-                                <a class="JB57cn" title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
+                                <a class="JB57cn item-url" title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
                                     Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn
                                 </a>
                                 <div style="margin-top:10px;" class="dcPz7Y">ĐỪNGTHỨCKHUYA.Songng</div>
@@ -476,7 +476,10 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
     <script>
-        let listCartCookieObject; // list cart cookie objec server trả về
+        // Khi tích/bỏ tích chọn mua sẽ không được cập nhật vào real cart cookie,
+        // chỉ xóa sản phẩm, thay đổi số lượng chọn là được cập nhật nếu cookie có đối ứng
+        let listCartCookieObject; // list cart cookie object server trả về
+
         ChangeLayoutForSmallScreen();
 
         LoadCart();
@@ -533,12 +536,15 @@
                 let clone = sample.cloneNode(true);
                 clone.setAttribute("data-model-id", obj.id.toString());
                 // Cập nhật dữ liệu bản sao
-                clone.getElementsByClassName("model-checkbox-input")[0].checked = obj.real;
+                clone.getElementsByClassName("model-checkbox-input")[0].checked = Boolean(obj.real);
                 clone.getElementsByClassName("WanNdG")[0].src = obj.imageSrc;
 
-                let listA = clone.getElementsByTagName("a");
+                let listA = clone.getElementsByClassName("item-url");
                 listA[0].title = obj.itemName;
+                listA[0].href = "/Home/Item?id=" + obj.itemId;
+
                 listA[1].title = obj.itemName;
+                listA[1].href = "/Home/Item?id=" + obj.itemId;
 
                 clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.itemName;
                 clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;
@@ -578,8 +584,6 @@
                     obj.q = obj.quantity;
                 }
             }
-
-            SetCartCookieFromListCartCookieObject();
 
             CreateSelectedModel();
         }
@@ -643,29 +647,8 @@
                 obj.real = 0;
             }
 
-            // Cập nhật cookie
-            SetCartCookieFromListCartCookieObject()
-
             ShowCheckboxAll();
             ShowSumMoney();
-        }
-
-        function SetCartCookieFromListCartCookieObject()
-        {
-            let newCart = "";
-            let length = listCartCookieObject.length;
-            for (let i = 0; i < length; i++) {
-                let obj = listCartCookieObject[i];
-                if (i == 0) {
-                    newCart = "id=" + obj.id.toString() + "#q=" + obj.q.toString()
-                        + "#real=" + obj.real.toString();
-                }
-                else {
-                    newCart = newCart + "$id=" + obj.id.toString()
-                        + "#q=" + obj.q.toString() + "#real=" + obj.real.toString();
-                }
-            }
-            SetCookie(cartKey, newCart, 365);
         }
 
         function ClickAllModelCheckBox(element) {
@@ -682,7 +665,6 @@
                 }
             }
 
-            SetCartCookieFromListCartCookieObject();
             if (DEBUG) {
                 console.log(JSON.stringify(listCartCookieObject));
             }
@@ -702,7 +684,8 @@
             let id = parseInt(model.getAttribute("data-model-id"));
             let obj = GetObjFromListAndId(id, listCartCookieObject);
             obj.q = ConvertToInt(element.value);
-            SetCartCookieFromListCartCookieObject();
+
+            UpdateQuantityOfCookie(obj);
         }
 
         function ValidateInput(element) {
@@ -721,7 +704,7 @@
 
                 if (iInput > maxQuantity) {
                     iInput = maxQuantity;
-                    CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.");
+                    CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
                 }
             }
             element.value = iInput.toString();
@@ -758,7 +741,7 @@
                 eInput.value = iInput.toString();
             }
             else {
-                CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.");
+                CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
             }
 
             UpdateWhenChangeInputQuantity(model, eInput);
@@ -773,13 +756,13 @@
             let length = listCartCookieObject.length;
             for (let i = 0; i < length; i++) {
                 if (listCartCookieObject[i].id == id) {
+                    DeleteOneCartCookie(listCartCookieObject[i]);
                     listCartCookieObject.splice(i, 1);
                     break;
                 }
             }
             model.remove();
 
-            SetCartCookieFromListCartCookieObject();
             ShowSumMoney();
             ShowCheckboxAll();
 
@@ -792,6 +775,7 @@
         }
 
         function BuyNow() {
+            // Khách vãng lai
             // Chưa sản phẩm / model nào được chọn để mua
             let isSelected = false;
             let length = listCartCookieObject.length;
@@ -802,9 +786,24 @@
                 }
             }
             if (!isSelected) {
-                CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.")
+                CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.", null)
+                return;
             }
+            // Tạo string dạng cookie của những sản phẩm chọn mua và thêm vào url như query
+            let listReal = [];
+            for (let i = 0; i < length; i++) {
+                if (listCartCookieObject[i].real == 1) {
+                    listReal.push(listCartCookieObject[i]);
+                }
+            }
+            let cookie = GetCartCookieFromListCartCookie(listReal);
+            let cookieBase64 = window.btoa(cookie);
+            if (DEBUG) {
+                console.log("Cart page BuyNow CALL cookie: " + cookieBase64);
+            }
+            location.href = "/Home/Checkout?cart=" + cookieBase64;
         }
+
     </script>
 </body>
 </html>

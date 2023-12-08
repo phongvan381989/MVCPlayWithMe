@@ -141,10 +141,10 @@
                 // Thay đổi id
                 itemElement.id = "hardcode" + i;
                 // Set link chi tiết sản phẩm
-                itemElement.getElementsByClassName("product-item")[0].href = "Item?id=" + item.id;
+                itemElement.getElementsByClassName("product-item")[0].href = "Home/Item?id=" + item.id;
                 // Hiển thị vì sample đang ẩn
                 itemElement.style.display = "block";
-                itemElement.getElementsByClassName("card-img-top")[0].src = item.cheapestModel.imageSrc;
+                itemElement.getElementsByClassName("card-img-top")[0].src = item.imageSrc[0];
                 itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.name;
                 itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumQuantitySold + " bộ";
                 itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML = item.cheapestModel.price
@@ -156,17 +156,6 @@
 
                 table.appendChild(itemElement);
             }
-        }
-
-        function GoToDetailItem(id) {
-            if (DEBUG) {
-                console.log("GoToDetailItem Start");
-                console.log("item id: " + id);
-            }
-            if (isNaN(id))
-                return;
-
-            window.open("UpdateDelete?id=" + id);
         }
     </script>
 </body>

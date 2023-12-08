@@ -659,12 +659,15 @@ namespace MVCPlayWithMe.Models
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in lsModel)
+                if (item != null)
                 {
-                    model.SetPriceFromMappingPriceAndQuantity();
+                    foreach (var model in lsModel)
+                    {
+                        model.SetPriceFromMappingPriceAndQuantity();
+                    }
+                    item.models = lsModel;
+                    item.SetPriceAndQuantity();
                 }
-                item.models = lsModel;
-                item.SetPriceAndQuantity();
             }
             catch (Exception ex)
             {
@@ -675,7 +678,7 @@ namespace MVCPlayWithMe.Models
             return item;
         }
 
-        private void ConvertItemToCartCookie(Item item, CartCookie cart)
+        public void ConvertItemToCartCookie(Item item, Cart cart)
         {
             if (item == null || cart == null)
                 return;
@@ -683,36 +686,18 @@ namespace MVCPlayWithMe.Models
             cart.itemId = item.id;
             cart.itemName = item.name;
             cart.modelName = item.models[0].name;
-            // Nếu item chỉ có 1 model và model không có ảnh đại diện. Ta lấy ảnh đại diện của item thay
+            // Nếu item chỉ có 1 model và model không có ảnh đại diện.
+            // Ta lấy ảnh đại diện, tên của item thay
             if (item.models[0].imageSrc != Common.srcNoImageThumbnail)
+            {
                 cart.imageSrc = item.models[0].imageSrc;
+            }
             else
+            {
                 cart.imageSrc = item.imageSrc[0];
-            cart.Copy(item.models[0]);
-        }
-
-        // Từ model id, lấy được thông tin của model
-        public void GetCartCookie(List<CartCookie> ls)
-        {
-            if (ls == null || ls.Count() == 0)
-                return;
-
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-                foreach (var cart in ls)
-                {
-                    Item item = GetItemFromModelIdWithReadyConn(cart.id, conn);
-                    ConvertItemToCartCookie(item, cart);
-                }
-                conn.Close();
             }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
+            cart.Copy((PriceQuantity)item.models[0]);
+            cart.UpdateQ();
         }
     }
 }

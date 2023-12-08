@@ -23,10 +23,12 @@ namespace MVCPlayWithMe.General
 
         // Cookie const
         #region Cookie
-        public static readonly string userIdKey = "uId";
+        public static readonly string userIdKey = "uid";
         // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         // id: mã model, q: số lượng thêm vào giỏ hàng, real: 1-thực sự chọn mua, 0-có thể mua sau này
         public static readonly string cartKey = "cart";
+
+        public static readonly string customerInforKey = "cusinfor";
         #endregion
 
         /// <summary>
@@ -401,7 +403,7 @@ namespace MVCPlayWithMe.General
         public static string GetAbsoluteItemMediaFolderPath(int itemId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
-            MyLogger.GetInstance().Info(path);
+            MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -425,7 +427,7 @@ namespace MVCPlayWithMe.General
         public static string GetAbsoluteModelMediaFolderPath(int itemId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/Model/";
-            MyLogger.GetInstance().Info(path);
+            MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
                 path = null;

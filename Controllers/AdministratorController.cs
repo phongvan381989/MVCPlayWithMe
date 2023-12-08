@@ -21,23 +21,6 @@ namespace MVCPlayWithMe.Controllers
             //sqler = new ProductMySql();
             sqler = new AdministratorMySql();
         }
-        //private Administrator AuthentAdministrator()
-        //{
-        //    CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
-
-        //    /// Check cookie đã được lưu trong db
-        //    return sqler.GetAdministratorFromCookie(cookieResult.uId);
-        //}
-
-        //ProductMySql sqler;
-        /// <summary>
-        /// Nơi đến khi xác thực thất bại hoặc logout
-        /// </summary>
-        /// <returns></returns>
-        private ActionResult AuthenticationFail()
-        {
-            return View("~/Views/Administrator/Login.cshtml");
-        }
 
         // GET: Administrator
         public ActionResult Index()
@@ -81,13 +64,13 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string Logout()
         {
-            CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
+            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
 
-            //if(string.IsNullOrEmpty(cookieResult.uId))
-            //return "{\"state\": 4}";
-
-            sqler.AdministratorLogout(cookieResult.cookieValue);
-            Cookie.RecreateUserIdCookie(HttpContext);
+            if (!string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                sqler.AdministratorLogout(cookieResult.cookieValue);
+                Cookie.RecreateUserIdCookie(HttpContext);
+            }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
 

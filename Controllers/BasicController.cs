@@ -12,7 +12,7 @@ namespace MVCPlayWithMe.Controllers
     {
         public Administrator AuthentAdministrator()
         {
-            CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
+            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
 
             /// Check cookie đã được lưu trong db
             AdministratorMySql sqler = new AdministratorMySql();

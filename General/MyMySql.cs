@@ -195,7 +195,6 @@ namespace MVCPlayWithMe.General
             paras[lengthParas - 1] = paraoutMessage;
         }
 
-
         public static int GetInt32(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))

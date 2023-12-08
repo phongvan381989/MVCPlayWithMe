@@ -17,6 +17,10 @@ namespace MVCPlayWithMe.Models
         /// <returns></returns>
         public Administrator GetAdministratorFromCookie(string userCookieIdentify)
         {
+            if(string.IsNullOrEmpty(userCookieIdentify))
+            {
+                return null;
+            }
             Administrator administrator = new Administrator();
 
             MySqlParameter[] paras = new MySqlParameter[4];

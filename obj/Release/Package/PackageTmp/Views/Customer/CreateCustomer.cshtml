@@ -50,11 +50,7 @@
                 let userNameType = 2;//1: email, 2: SDT, 3: user name.
                 let userName = document.getElementById("userName").value;
                 {
-                    const obj = JSON.parse(CheckValidSDT(userName));
-                    if (DEBUG) {
-                        console.log(obj);
-                    }
-                    if (obj.isValid === false) {
+                    if (CheckValidSDT(userName) === false) {
                         return;
                     }
                 }
