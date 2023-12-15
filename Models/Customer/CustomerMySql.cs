@@ -1,4 +1,6 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Customer;
+using MVCPlayWithMe.Models.Order;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -6,7 +8,7 @@ using System.Data;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.Customer
 {
     /// <summary>
     /// Khách vãng lai không lưu userCookieIdentify vào db
@@ -50,10 +52,9 @@ namespace MVCPlayWithMe.Models
         /// 
         /// </summary>
         /// <param name="userName">SDT</param>
-        /// <param name="userNameType">1: email, 2: SDT, 3: user name. Hard code 2</param>
         /// <param name="passWord"></param>
         /// <returns></returns>
-        public MySqlResultState AddNewCustomer(string userName, int userNameType, string passWord)
+        public MySqlResultState AddNewCustomer(string userName, string passWord)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             byte[] salt = Common.CreateSalt();
@@ -66,10 +67,7 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Insert", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                if (userNameType == 1)
-                    cmd.Parameters.AddWithValue("@inEmail", userName);
-                else
-                    cmd.Parameters.AddWithValue("@inEmail", "");
+                cmd.Parameters.AddWithValue("@inEmail", "");
 
                 MySqlParameter paSalt = new MySqlParameter();
                 paSalt.ParameterName = @"inSalt";
@@ -85,15 +83,9 @@ namespace MVCPlayWithMe.Models
                 paHash.Value = hash;
                 cmd.Parameters.Add(paHash);
 
-                if (userNameType == 2)
-                    cmd.Parameters.AddWithValue("@inSDT", userName);
-                else
-                    cmd.Parameters.AddWithValue("@inSDT", "");
+                cmd.Parameters.AddWithValue("@inSDT", "");
 
-                if (userNameType == 3)
-                    cmd.Parameters.AddWithValue("@inUserName", userName);
-                else
-                    cmd.Parameters.AddWithValue("@inUserName", "");
+                cmd.Parameters.AddWithValue("@inUserName", userName);
 
                 cmd.Parameters.AddWithValue("@inFullName", "");
 
@@ -133,7 +125,7 @@ namespace MVCPlayWithMe.Models
         }
 
         /// <summary>
-        /// Customer logout tài khoản
+        /// Customer logout tài khoản ở tất cả các thiết bị đã đăng nhập
         /// </summary>
         /// <param name="userCookieIdentify"></param>
         /// <returns></returns>
@@ -250,7 +242,7 @@ namespace MVCPlayWithMe.Models
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_Cart_Insert_And_Update_Login", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update_Login", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inCustomerId", customerId);
                 cmd.Parameters.AddWithValue("@inModelId", 0);
@@ -284,7 +276,7 @@ namespace MVCPlayWithMe.Models
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_Cart_Insert_And_Update", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inCustomerId", customerId);
                 cmd.Parameters.AddWithValue("@inModelId", cart.id);
@@ -296,7 +288,6 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters[5].Direction = ParameterDirection.Output;
                 cmd.Parameters[6].Direction = ParameterDirection.Output;
 
-                    cmd.ExecuteNonQuery();
                 cmd.ExecuteNonQuery();
                 int lengthPara = cmd.Parameters.Count;
                 //if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
@@ -315,7 +306,7 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        public void AddCustomerInforAddress(int customerId, List<CustomerInforCookie> ls)
+        public void AddCustomerInforAddress(int customerId, List<Address> ls)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -352,6 +343,112 @@ namespace MVCPlayWithMe.Models
                 MyLogger.GetInstance().Warn(errMessage);
             }
             conn.Close();
+        }
+
+        public MySqlResultState UpdateAddress(Address add)
+        {
+            MySqlParameter[] paras = new MySqlParameter[8];
+
+            paras[0] = new MySqlParameter("@inId", add.id);
+            paras[1] = new MySqlParameter("@inName", add.name);
+            paras[2] = new MySqlParameter("@inPhone", add.phone);
+            paras[3] = new MySqlParameter("@inProvince", add.province);
+            paras[4] = new MySqlParameter("@inDistrict", add.district);
+            paras[5] = new MySqlParameter("@inSubDistrict", add.subdistrict);
+            paras[6] = new MySqlParameter("@inDetail", add.detail);
+            paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
+
+            return MyMySql.ExcuteNonQuery("st_tbAddress_Update", paras);
+        }
+
+        public MySqlResultState InsertAddress(int customerId, Address add)
+        {
+            MySqlParameter[] paras = new MySqlParameter[8];
+
+            paras[0] = new MySqlParameter("@inCustomerId", customerId);
+            paras[1] = new MySqlParameter("@inName", add.name);
+            paras[2] = new MySqlParameter("@inPhone", add.phone);
+            paras[3] = new MySqlParameter("@inProvince", add.province);
+            paras[4] = new MySqlParameter("@inDistrict", add.district);
+            paras[5] = new MySqlParameter("@inSubDistrict", add.subdistrict);
+            paras[6] = new MySqlParameter("@inDetail", add.detail);
+            paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
+
+            return MyMySql.ExcuteNonQuery("st_tbAddress_Insert_And_Update", paras);
+        }
+
+        // Set default = 0
+        public MySqlResultState DeleteDefaultAddress(int customerId)
+        {
+            MySqlParameter[] paras = new MySqlParameter[1];
+
+            paras[0] = new MySqlParameter("@inCustomerId", customerId);
+
+            return MyMySql.ExcuteNonQuery("st_tbAddress_Delete_Default", paras);
+        }
+        /// <summary>
+        /// Từ customerId lấy danh sách địa chỉ nhận hàng
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <returns></returns>
+        public List<Address> GetListAddress(int customerId)
+        {
+            List<Address> lsAddress = new List<Address>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr != null && rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        Address add = new Address();
+                        add.id = rdr.GetInt32("Id");
+                        add.name = rdr.GetString("Name");
+                        add.phone = rdr.GetString("Phone");
+                        add.province = rdr.GetString("Province");
+                        add.district = rdr.GetString("District");
+                        add.subdistrict = rdr.GetString("SubDistrict");
+                        add.detail = rdr.GetString("Detail");
+                        add.defaultAdd = rdr.GetInt32("DefaultAdd");
+                        lsAddress.Add(add);
+                    }
+                }
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                lsAddress.Clear();
+            }
+
+            conn.Close();
+            return lsAddress;
+        }
+
+        /// <summary>
+        /// Check userName, SDT hoặc email đã tồn tại hay chưa?
+        /// </summary>
+        /// <param name="userName"></param>
+        /// <returns></returns>
+        public MySqlResultState CheckValidUserName(string userName)
+        {
+            MySqlParameter[] paras = new MySqlParameter[4];
+
+            paras[0] = new MySqlParameter("@inId", -1);
+            paras[1] = new MySqlParameter("@inValue", userName);
+            MyMySql.AddOutParameters(paras);
+            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCustomer_CheckExist", paras);
+
+            return result;
         }
     }
 }

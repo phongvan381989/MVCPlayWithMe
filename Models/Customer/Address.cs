@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.Customer
 {
     // name=Hoàng Huệ#phone=0359127226#province=Hà Nội, Bắc Từ Liêm, Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
-    public class CustomerInforCookie
+    public class Address
     {
+        // id trong db
+        public int id { get; set; }
+
         public string name { get; set; }
 
         public string phone { get; set; }
@@ -28,12 +31,12 @@ namespace MVCPlayWithMe.Models
         // defaultAdd:1 địa chỉ nhận hàng mặc định, ngược lại là 0
         public int defaultAdd { get;set;}
 
-        public CustomerInforCookie()
+        public Address()
         {
 
         }
 
-        public CustomerInforCookie(string cookieValue)
+        public Address(string cookieValue)
         {
             if (string.IsNullOrEmpty(cookieValue))
             {

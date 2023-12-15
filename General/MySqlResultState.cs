@@ -49,8 +49,21 @@ namespace MVCPlayWithMe.General
 
         /// <summary>
         /// Have not permission
+        /// Value: 6
         /// </summary>
-        AUTHEN_FAIL
+        AUTHEN_FAIL,
+
+        /// <summary>
+        /// Empty
+        /// 7
+        /// </summary>
+        EMPTY,
+
+        /// <summary>
+        /// over max
+        /// 8
+        /// </summary>
+        OVER_MAX
     }
     public class MySqlResultState
     {

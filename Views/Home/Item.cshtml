@@ -1156,7 +1156,7 @@
                     console.log("obj: " + JSON.stringify(obj));
                 }
                 let overMax = InsertAtBeginToListCartCookieCheckExist(listCartCookie, obj, maxQuantity);
-                if (overMax) { // Hiện thị modal thông báo
+                if (overMax) { // Hiện thị modal thông báo vượt tồn kho
                     document.getElementsByClassName("shopee-alert-popup__message")[0].innerHTML =
                         "Bạn đã có " + maxQuantity.toString() + " sản phẩm trong giỏ hàng. Không thể thêm số lượng đã chọn vào giỏ hàng vì sẽ vượt quá tồn kho của cửa hàng"
                     modalOverMax.style.display = "flex";
@@ -1173,7 +1173,17 @@
             else { // Khách đăng nhập
                 // 
                 let responseDB = await Item_AddModelToCart(obj, maxQuantity);
-                JSON.parse(responseDB.responseText);
+                let resultObj = JSON.parse(responseDB.responseText);
+                if (DEBUG) {
+                    console.log("Item_AddModelToCart response: " + JSON.stringify(resultObj));
+                }
+                if (resultObj.State == 4) { // Hiện thị modal thông báo vượt tồn kho
+                    overMax = true;
+                    document.getElementsByClassName("shopee-alert-popup__message")[0].innerHTML =
+                        "Bạn đã có " + maxQuantity.toString() + " sản phẩm trong giỏ hàng. Không thể thêm số lượng đã chọn vào giỏ hàng vì sẽ vượt quá tồn kho của cửa hàng"
+                    modalOverMax.style.display = "flex";
+                }
+
             }
             if (overMax) {
                 return;
@@ -1200,30 +1210,37 @@
 
         // Chỉ khi đang chọn model mới chuyển sang trang giỏ hàng, chưa chọn hiện modal thông báo
         // Model đang chọn sẽ có real=1
-        function BuyNow() {
+        async function BuyNow() {
             // Chưa chọn phân loại hiện thị thông báo dòng chữ đỏ và thay màu nền div chứa phân loại
             if (selectedIdModel == null) {
                 DontSelectModel();
                 return;
             }
 
+            let maxQuantity = GetMaxQuantityInput();
             let q = parseInt(document.getElementById("quantity-input").value);
-            let overMax = false; // true: Nếu số lượng khách chọn + số lượng đã chọn lưu trong cookie/ db vượt quá số lượng max
+            let obj = new objCartCookie("id=" + selectedIdModel.toString() + "#q=" + q.toString()
+                + "#real=1");
+
+
+            //let overMax = false; // true: Nếu số lượng khách chọn + số lượng đã chọn lưu trong cookie/ db vượt quá số lượng max
             // Là khách vãng lai
             if (CheckAnonymousCustomer()) {
                 let listCartCookie = RefreshRealOfCartCookieAndGet();
 
-                let maxQuantity = GetMaxQuantityInput();
-                let obj = new objCartCookie("id=" + selectedIdModel.toString() + "#q=" + q.toString()
-                    + "#real=1");
-
-                let overMax = InsertAtBeginToListCartCookieCheckExist(listCartCookie, obj, maxQuantity);
+                InsertAtBeginToListCartCookieCheckExist(listCartCookie, obj, maxQuantity);
 
                 SetCartCookieFromListCartCookieObject(listCartCookie);
 
+                location.href = "/Home/CartBuyNow";
+
             }
-            // Set cook: buynow=1 mục đích giữ lại real=1 của sản phẩm được chọn mua ngay
-            location.href = "/Home/CartBuyNow";
+            else { // Khách đăng nhập
+                let responseDB = await Item_AddModelToCart(obj, maxQuantity);
+                //let resultObj = JSON.parse(responseDB.responseText);
+                location.href = "/Home/Cart";
+            }
+
         }
 
         function CloseModal() {

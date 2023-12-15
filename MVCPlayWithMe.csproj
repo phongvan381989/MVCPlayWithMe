@@ -240,7 +240,6 @@
     <Compile Include="Controllers\PublisherController.cs" />
     <Compile Include="General\Common.cs" />
     <Compile Include="General\CommonQLK.cs" />
-    <Compile Include="General\CommonResult.cs" />
     <Compile Include="General\Cookie.cs" />
     <Compile Include="General\CookieResultState.cs" />
     <Compile Include="General\MyLogger.cs" />
@@ -250,27 +249,31 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="Models\AdministrativeAddress.cs" />
-    <Compile Include="Models\AdministrativeAddressMySql.cs" />
+    <Compile Include="Models\Customer\AdministrativeAddress.cs" />
+    <Compile Include="Models\Customer\AdministrativeAddressMySql.cs" />
     <Compile Include="Models\Administrator.cs" />
     <Compile Include="Models\AdministratorMySql.cs" />
     <Compile Include="Models\BasicIdName.cs" />
     <Compile Include="Models\BasicMySql.cs" />
     <Compile Include="Models\BasicObject.cs" />
-    <Compile Include="Models\Cart.cs" />
+    <Compile Include="Models\Order\Cart.cs" />
     <Compile Include="Models\Category.cs" />
     <Compile Include="Models\CategoryMySql.cs" />
     <Compile Include="Models\Combo.cs" />
     <Compile Include="Models\ComboMySql.cs" />
-    <Compile Include="Models\Customer.cs" />
-    <Compile Include="Models\CustomerInforCookie.cs" />
-    <Compile Include="Models\CustomerMySql.cs" />
+    <Compile Include="Models\Customer\Customer.cs" />
+    <Compile Include="Models\Customer\Address.cs" />
+    <Compile Include="Models\Customer\CustomerMySql.cs" />
     <Compile Include="Models\Import.cs" />
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\ItemModelMySql.cs" />
     <Compile Include="Models\ItemModelSearchParameter.cs" />
     <Compile Include="Models\Model.cs" />
-    <Compile Include="Models\OrderMySql.cs" />
+    <Compile Include="Models\Order\Order.cs" />
+    <Compile Include="Models\Order\OrderDetail.cs" />
+    <Compile Include="Models\Order\OrderMySql.cs" />
+    <Compile Include="Models\Order\OrderPay.cs" />
+    <Compile Include="Models\Order\OrderTrack.cs" />
     <Compile Include="Models\PriceQuantity.cs" />
     <Compile Include="Models\ProductCommonInfoWithCombo.cs" />
     <Compile Include="Models\ProductIdName.cs" />
@@ -315,6 +318,7 @@
     <Content Include="Scripts\web.play.with.me.customer.infor.cookie.js" />
     <Content Include="Scripts\web.play.with.me.image.video.common.js" />
     <Content Include="Scripts\web.play.with.me.item.model.js" />
+    <Content Include="Scripts\web.play.with.me.order.js" />
     <Content Include="Scripts\web.play.with.me.publisher.common.js" />
     <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />

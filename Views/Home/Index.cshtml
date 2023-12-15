@@ -141,7 +141,7 @@
                 // Thay đổi id
                 itemElement.id = "hardcode" + i;
                 // Set link chi tiết sản phẩm
-                itemElement.getElementsByClassName("product-item")[0].href = "Home/Item?id=" + item.id;
+                itemElement.getElementsByClassName("product-item")[0].href = "/Home/Item?id=" + item.id;
                 // Hiển thị vì sample đang ẩn
                 itemElement.style.display = "block";
                 itemElement.getElementsByClassName("card-img-top")[0].src = item.imageSrc[0];

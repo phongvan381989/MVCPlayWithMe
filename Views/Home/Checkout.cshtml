@@ -458,9 +458,15 @@
 
         let currentIndexInforUpdateObject = -1; // index cần cập nhật
 
-        LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship
+        LoadSomething();
 
-        LoadCart();
+        // Sau khi load page, cần thêm thông tin
+        async function LoadSomething() {
+            // ** Cần xong hàm này để lấy được địa chỉ nhận hàng khi khách đăng nhập
+            await LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship 
+
+            LoadCart();
+        }
 
         function CreateSelectedModel() {
             if (DEBUG) {
@@ -527,6 +533,10 @@
         }
 
         function GetShipFee() {
+            if (DEBUG) {
+                console.log("GetShipFee CALL");
+                console.log("currentIndexInforObject: " + currentIndexInforObject);
+            }
             let fee = 0;
             if (currentIndexInforObject != -1) {
                 let obj = listCustomerInforCookieObject[currentIndexInforObject];
@@ -540,11 +550,37 @@
             return fee;
         }
 
-        function LoadCustomerInfor() {
-            // Lấy từ cookie
-            listCustomerInforCookieObject = GetListCustomerInforCookieFromCookie();
+        async function GetListAddress()
+        {
+            if (DEBUG) {
+                console.log("GetListAddress CALL");
+            }
+            const searchParams = new URLSearchParams();
+            let query = "/Customer/GetListAddress";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        async function LoadCustomerInfor() {
             if (DEBUG) {
                 console.log("LoadCustomerInfor CALL");
+            }
+            if (CheckAnonymousCustomer()) {// Khách vãng lai
+                // Lấy từ cookie
+                listCustomerInforCookieObject = GetListCustomerInforCookieFromCookie();
+            }
+            else {
+                let res = await GetListAddress();
+                if (JSON.parse(res.responseText) == null) {
+                    // uid cookie có nhưng xác thực thất bại, xóa bỏ uid, thành khách vãng lai
+                    //DeleteUidCookieWhenAuthentFail();
+                }
+                else {
+                    listCustomerInforCookieObject = JSON.parse(res.responseText);
+                }
+            }
+
+            if (DEBUG) {
                 console.log("listCustomerInforCookieObject: " + JSON.stringify(listCustomerInforCookieObject));
             }
 
@@ -554,6 +590,9 @@
                 let obj = listCustomerInforCookieObject[i];
                 if (obj.defaultAdd == 1) {
                     currentIndexInforObject = i;
+                    if (DEBUG) {
+                        console.log("defaultAdd = 1 currentIndexInforObject: " + currentIndexInforObject);
+                    }
                     ShowCustomerInforFromObj(obj);
                     isDefaultAdd = true;
                     break;
@@ -575,6 +614,30 @@
                     document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowCustomerInforModal(true, false) });
                 }
             }
+            // Trả về định dạng giống truy vấn httpPost
+            return new Promise(function (resolve, reject) {
+                let obj = {
+                    responseText: { State: 0, Message: "" }
+                };
+                resolve(obj);
+            });
+        }
+
+        // Ẩn modal và set giá trị input về ban đầu
+        function RefreshModalCustomerInfor() {
+            // Ẩn modal
+            document.getElementById("modal-customer-infor").style.display = "none";
+
+            // Set giá trị input về ban đầu
+            document.getElementById("customer-name").value = "";
+            document.getElementById("phone-number").value = "";
+            document.getElementById("province").selectedIndex = 0;
+
+            document.getElementById("district").selectedIndex = 0;
+            document.getElementById("subdistrict").selectedIndex = 0;
+            document.getElementById("detail-subdistrict").value = "";
+            document.getElementById("check-default").checked = false;
+
         }
 
         // isCreate: true là thêm mới thông tin địa chỉ
@@ -676,19 +739,42 @@
         }
 
         function ReturnCustomerInforModal() {
-            document.getElementById("modal-customer-infor").style.display = "none";
+            RefreshModalCustomerInfor();
             currentIndexInforUpdateObject = -1;
         }
 
-        function FinishCreateNewCustomerInforModal() {
+        async function InsertAddress(obj) {
+            if (DEBUG) {
+                console.log("InsertAddress CALL");
+            }
+            const searchParams = new URLSearchParams();
+            searchParams.append("address", JSON.stringify(obj));
+            let query = "/Customer/InsertAddress";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        async function UpdateAddress(obj) {
+            if (DEBUG) {
+                console.log("UpdateAddress CALL");
+            }
+            const searchParams = new URLSearchParams();
+            searchParams.append("address", JSON.stringify(obj));
+            let query = "/Customer/UpdateAddress";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        async function FinishCreateNewCustomerInforModal() {
             if (!ValidCustomerInforInput()) {
                 return;
             }
 
             let obj = CreateCookieValueFromInput();
             if (currentIndexInforUpdateObject != -1) {// Cập nhật thông tin vào object
+                obj.id = listCustomerInforCookieObject[currentIndexInforUpdateObject].id;
                 listCustomerInforCookieObject[currentIndexInforUpdateObject] = obj;
-                //Kiểm tra có đặt mặc đinh
+                //Kiểm tra có đặt mặc định
                 if (obj.defaultAdd) {
                     // Bỏ mặc định cũ nếu có
                     for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
@@ -699,7 +785,7 @@
                     }
                 }
             }
-            else {
+            else { // Thêm mới
                 //Kiểm tra có đặt mặc đinh
                 if (obj.defaultAdd) {
                     // Bỏ mặc định cũ nếu có
@@ -711,10 +797,31 @@
                 }
                 listCustomerInforCookieObject.push(obj);
             }
-            currentIndexInforUpdateObject = -1;
-            SetCartCookieFromListCustomerInforCookieObject(listCustomerInforCookieObject);
+            if (CheckAnonymousCustomer()) {// Khách vãng lai
+                SetCartCookieFromListCustomerInforCookieObject(listCustomerInforCookieObject);
+            }
+            else { // Khách đăng nhập
+                if (currentIndexInforUpdateObject != -1) {// Cập nhật thông tin
+                    let res = await UpdateAddress(obj);
+                    let resObj = JSON.parse(res.responseText);
+                    if (resObj.State != 0) {
+                        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                        return;
+                    }
+                }
+                else {
+                    let res = await InsertAddress(obj);
+                    let resObj = JSON.parse(res.responseText);
+                    if (resObj.State != 0) {
+                        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                        return;
+                    }
+                }
+            }
 
-            document.getElementById("modal-customer-infor").style.display = "none";
+            currentIndexInforUpdateObject = -1;
+
+            RefreshModalCustomerInfor();
 
 
             // Nếu bên dưới có modal hiển thị danh sách địa chỉ, ta cập nhật lại
@@ -949,6 +1056,36 @@
             ShowCustomerInforModal(false, true);
         }
 
+        function objOrderPay(type, value) {
+            if (DEBUG) {
+                console.log("objOrderPay CALL ");
+            }
+            this.type = type;
+            this.value = value;
+        }
+
+        // Tạo list thanh toán: tổng tiền hàng, phí ship, tổng thanh toán
+        /// 0: Tổng tiền hàng
+        /// 1: Phí ship
+        /// 2: Khuyến mại khác
+        /// 3: Tổng thanh toán = Tổng tiền hàng + Phí ship - Khuyến mại khác
+        function GetListOrderPay() {
+            let length = listCartCookieObject.length;
+            let sumMoney = 0;
+            for (let i = 0; i < length; i++) {
+                sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+            }
+            let listOrderPay = [];
+            listOrderPay.push(new objOrderPay(0, sumMoney));
+
+            let shipFee = GetShipFee();
+            listOrderPay.push(new objOrderPay(1, shipFee));
+
+            sumMoney = shipFee + sumMoney;
+            listOrderPay.push(new objOrderPay(3, sumMoney));
+
+            return listOrderPay;
+        }
         // Check lại thông tin đơn hàng bên phía server: mã sản phẩm, số lượng có đủ
         // (vì trong thời gian khách chọn có thể số lượng tồn kho thay đổi), tổng tiền hàng, tiền ship.
         // Đồng thời gửi thông tin địa chỉ, lời nhắn shop
@@ -956,7 +1093,8 @@
             const searchParams = new URLSearchParams();
             searchParams.append("cart", JSON.stringify(listCartCookieObject));
             searchParams.append("customerInfor", JSON.stringify(listCustomerInforCookieObject[currentIndexInforObject]));
-            searchParams.append("shipFee", GetShipFee().toString());
+            let listOrderPay = GetListOrderPay();
+            searchParams.append("listOrderPay", JSON.stringify(listOrderPay));
             searchParams.append("noteToShop", document.getElementsByClassName("gQuJxM")[0].value);
 
             let query = "/Home/CheckOrderOnSever";
@@ -981,8 +1119,8 @@
                 CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.");
                 return;
             }
-            if (!result.status) {
-                CreateMustClickOkModal(result.message);
+            if (result.State != 0) {
+                CreateMustClickOkModal(result.Message);
                 return;
             }
             // Với khách vãng lai
@@ -992,7 +1130,7 @@
                 DeleteOneCartCookie(listCartCookieObject[i]);
             }
 
-            CreateMustClickOkModal("Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại shop.", function () { location.replace("/") });
+            CreateMustClickOkModal("Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại shop.", function () { location.replace("/"); });
         }
     </script>
 </body>

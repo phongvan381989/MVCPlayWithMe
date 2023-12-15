@@ -1,4 +1,6 @@
 ﻿using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.Customer;
+using MVCPlayWithMe.Models.Order;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,9 +14,9 @@ namespace MVCPlayWithMe.General
     // hoặc checkout( ở page checkout trạng thái real không được lưu vào cookie)
     public class Cookie
     {
-        private static DateTime SetExpires()
+        private static DateTime SetExpires(int year)
         {
-            return DateTime.Now.AddYears(1);
+            return DateTime.Now.AddYears(year);
         }
 
         /// <summary>
@@ -30,8 +32,8 @@ namespace MVCPlayWithMe.General
             Guid guidVal = Guid.NewGuid();
             cookieResut.cookieValue = guidVal.ToString("N");
             uId.Value = cookieResut.cookieValue;
-            uId.Expires = SetExpires();
-            uId.HttpOnly = true;
+            uId.Expires = SetExpires(1);
+            //uId.HttpOnly = true;
 
             httpContext.Response.Cookies.Add(uId);
 
@@ -49,19 +51,19 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Sau khi đăng xuất, tạo uid mới
+        /// Sau khi đăng xuất, xóa uid
         /// </summary>
         /// <param name="httpContext"></param>
-        public static CookieResultState RecreateUserIdCookie(HttpContextBase httpContext)
+        public static CookieResultState DeleteUserIdCookie(HttpContextBase httpContext)
         {
             CookieResultState cookieResut = new CookieResultState();
 
             HttpCookie uId = new HttpCookie(Common.userIdKey);
             Guid guidVal = Guid.NewGuid();
-            cookieResut.cookieValue = guidVal.ToString("N");
+            cookieResut.cookieValue = "";
             uId.Value = cookieResut.cookieValue;
-            uId.Expires = SetExpires();
-            uId.HttpOnly = true;
+            uId.Expires = SetExpires(-1);
+            //uId.HttpOnly = true;
             httpContext.Response.Cookies.Add(uId);
             return cookieResut;
         }
@@ -109,21 +111,21 @@ namespace MVCPlayWithMe.General
         }
 
         // cookie có dạng: name=Hoàng Huệ#phone=0359127226#province=Hà Nội#district=Bắc Từ Liêm#subdistrict=Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
-        public static List<CustomerInforCookie> GetListCustomerInforCookieFromCookieValue(string customerInforCookie)
+        public static List<Address> GetListCustomerInforCookieFromCookieValue(string customerInforCookie)
         {
-            List<CustomerInforCookie> listCustomerInforCookie = new List<CustomerInforCookie>();
+            List<Address> listCustomerInforCookie = new List<Address>();
             if (string.IsNullOrEmpty(customerInforCookie))
                 return listCustomerInforCookie;
 
             string[] myArray = customerInforCookie.Split('$');
             for (int i = 0; i < myArray.Length; i++)
             {
-                listCustomerInforCookie.Add(new CustomerInforCookie(myArray[i]));
+                listCustomerInforCookie.Add(new Address(myArray[i]));
             }
             return listCustomerInforCookie;
         }
 
-        public static List<CustomerInforCookie> GetListCustomerInforCookie(HttpContextBase httpContext)
+        public static List<Address> GetListCustomerInforCookie(HttpContextBase httpContext)
         {
             CookieResultState cookie = GetCustomerInforCookie(httpContext);
             return GetListCustomerInforCookieFromCookieValue(cookie.cookieValue);

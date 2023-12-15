@@ -97,6 +97,31 @@ namespace MVCPlayWithMe.General
             return result;
         }
 
+        public static MySqlResultState ExcuteNonQuery(string stName, MySqlParameter[] paras)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(stName, conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+            }
+            conn.Close();
+            return result;
+        }
+
         public static int ExcuteGetIdStoreProceduce(string stName, MySqlParameter[] paras)
         {
             MySqlConnection conn = new MySqlConnection(connStr);

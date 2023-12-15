@@ -69,7 +69,7 @@ namespace MVCPlayWithMe.Controllers
             if (!string.IsNullOrEmpty(cookieResult.cookieValue))
             {
                 sqler.AdministratorLogout(cookieResult.cookieValue);
-                Cookie.RecreateUserIdCookie(HttpContext);
+                Cookie.DeleteUserIdCookie(HttpContext);
             }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }

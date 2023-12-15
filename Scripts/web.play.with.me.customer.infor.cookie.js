@@ -6,7 +6,7 @@ function objCustomerInforCookie(value) {
         console.log("objCustomerInforCookie(value) CALL " + value);
     }
     let myArray = value.split("#");
-
+    this.id = -1;
     this.name = myArray[0].split("=")[1];
     this.phone = myArray[1].split("=")[1];
     this.province = myArray[2].split("=")[1];
@@ -20,6 +20,7 @@ function objCustomerInforCookieFromInput(inName,
     inPhone, inProvince, inDistrict, inSubDistrict,
     inDetail, inDefaultAdd
 ) {
+    this.id = -1;
     this.name = inName;
     this.phone = inPhone;
     this.province = inProvince;
@@ -93,5 +94,5 @@ function InsertAtTailToListCustomerInforCookieCheckExist(listCustomerInforCookie
 }
 
 function DeleteAllCustomerInforCookie() {
-    SetCookie(customerInforKey, "", -1);
+    DeleteCookie(customerInforKey);
 }

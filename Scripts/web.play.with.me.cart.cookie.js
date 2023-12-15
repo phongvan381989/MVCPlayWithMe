@@ -134,6 +134,9 @@ function RefreshRealOfCartCookieAndGet() {
     }
     // Lấy cookie cũ
     let oldCart = GetCookie(cartKey);
+    if (isEmptyOrSpaces(oldCart)) {
+        return;
+    }
 
     let listCartCookie = GetListCartCookieFromCartCookie(oldCart);
 
@@ -152,5 +155,5 @@ function RefreshRealOfCartCookieAndGet() {
 }
 
 function DeleteAllCartCookie() {
-    SetCookie(cartKey, "", -1);
+    DeleteCookie(cartKey);
 }

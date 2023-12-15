@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System;
 using Newtonsoft.Json;
+using MVCPlayWithMe.Models.Customer;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -17,6 +18,15 @@ namespace MVCPlayWithMe.Controllers
             /// Check cookie đã được lưu trong db
             AdministratorMySql sqler = new AdministratorMySql();
             return sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
+        }
+
+        public Customer AuthentCustomer()
+        {
+            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
+
+            /// Check cookie đã được lưu trong db
+            CustomerMySql sqler = new CustomerMySql();
+            return sqler.GetCustomerFromCookie(cookieResult.cookieValue);
         }
 
         /// <summary>

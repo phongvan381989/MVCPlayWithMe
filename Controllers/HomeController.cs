@@ -1,5 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.Customer;
+using MVCPlayWithMe.Models.Order;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -9,7 +11,7 @@ using System.Web.Mvc;
 
 namespace MVCPlayWithMe.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController : BasicController
     {
         public ItemModelMySql itemModelsqler;
         public OrderMySql ordersqler;
@@ -130,10 +132,10 @@ namespace MVCPlayWithMe.Controllers
         {
             MySqlResultState result = new MySqlResultState();
             // Lấy thông tin cutomer
-            Customer customer = customersqler.GetCustomerFromCookie(Cookie.GetUserIdCookie(HttpContext).cookieValue);
-            if(customer == null)
+            Customer customer = AuthentCustomer();
+            if (customer == null)
             {
-                result.State = EMySqlResultState.DONT_EXIST;
+                result.State = EMySqlResultState.AUTHEN_FAIL;
                 result.Message = "Không lấy được thông tin khách hàng.";
                 return JsonConvert.SerializeObject(result);
             }
@@ -146,10 +148,10 @@ namespace MVCPlayWithMe.Controllers
         public ActionResult Cart()
         {
             // Check khách vãng lai hay đã đăng nhập
-
-            // Xử lý nếu là khách vãng lai
-            if (ViewData["listCartCookieObject"] == null)
+            Customer cus = AuthentCustomer();
+            if (cus == null)
             {
+                // Khách vãng lai
                 // Lấy cart cookie
                 List<Cart> ls = Cookie.GetListCartCookie(HttpContext);
                 // Không được gọi từ click mua ngay thì mặc định tất cả giỏ hàng có real = 0;
@@ -162,14 +164,23 @@ namespace MVCPlayWithMe.Controllers
                 ordersqler.GetCart(ls);
                 ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
             }
+            else
+            {
+                // Khách đăng nhập
+                // Lấy cart cookie
+                List<Cart> ls = ordersqler.GetListCart(cus.id);
+
+                ordersqler.GetCart(ls);
+                ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
+                // Làm mới real = 0
+                ordersqler.RefreshRealOfCart(cus.id);
+            }
             return View();
         }
 
+        // Dành riêng cho khách vãng lai
         public ActionResult CartBuyNow()
         {
-            // Check khách vãng lai hay đã đăng nhập
-
-            // Xử lý nếu là khách vãng lai
             // Lấy cart cookie
             List<Cart> ls = Cookie.GetListCartCookie(HttpContext);
             ordersqler.GetCart(ls);
@@ -200,7 +211,7 @@ namespace MVCPlayWithMe.Controllers
             // Check khách vãng lai hay đã đăng nhập
 
             // Xử lý nếu là khách vãng lai
-            List<Cart> lsRealCartCookie = null;
+            List<Cart> lsRealCartCookie = new List<Cart>();
             if (!string.IsNullOrEmpty(cart))
             {
                 // Decode base64
@@ -228,14 +239,14 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Check id model đúng, check số lượng cần mua có đủ, check giá bìa, giá bán thực tế có chính xác
-        private CommonResult CheckCart(List<Cart> ls)
+        private MySqlResultState CheckCart(List<Cart> ls)
         {
-            CommonResult result = new CommonResult();
+            MySqlResultState result = new MySqlResultState();
             int length = ls.Count();
             if(length == 0)
             {
-                result.status = false;
-                result.message = "Giỏ hàng trống.";
+                result.State = EMySqlResultState.EMPTY;
+                result.Message = "Giỏ hàng trống.";
                 MyLogger.GetInstance().Warn("result: " + JsonConvert.SerializeObject(result));
                 return result;
             }
@@ -258,8 +269,8 @@ namespace MVCPlayWithMe.Controllers
                 // Check id model đúng
                 if (cartTemp.itemId == 0)
                 {
-                    result.status = false;
-                    result.message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName + 
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName + 
                         " không lấy được thông tin. Vui lòng tải lại trang và kiểm tra";
                     indexWarning = i;
                     break;
@@ -268,8 +279,8 @@ namespace MVCPlayWithMe.Controllers
                 // Check số lượng cần mua có đủ
                 if (cartTemp.q < cart.q)
                 {
-                    result.status = false;
-                    result.message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
+                    result.State = EMySqlResultState.OVER_MAX;
+                    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
                         " số lượng tồn kho không đủ. Vui lòng chọn lại";
                     indexWarning = i;
                     break;
@@ -278,15 +289,15 @@ namespace MVCPlayWithMe.Controllers
                 // Check giá thực tế có đúng
                 if (cartTemp.price != cart.price)
                 {
-                    result.status = false;
-                    result.message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
                         " giá không đúng. Vui lòng tải lại trang và kiểm tra";
                     indexWarning = i;
                     break;
                 }
             }
 
-            if(!result.status)
+            if(result.State != EMySqlResultState.OK)
             {
                 MyLogger.GetInstance().Warn("cart web sent to server: " + JsonConvert.SerializeObject(ls[indexWarning]));
                 MyLogger.GetInstance().Warn("cart get from db to check: " + JsonConvert.SerializeObject(lsTemp[indexWarning]));
@@ -297,40 +308,95 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Cần kiểm tra vì khách có thể f12 trên web, sửa javascipt, html
-        public string CheckOrderOnSever(string cart, string customerInfor, string shipFee, string noteToShop)
+        [HttpPost]
+        public string CheckOrderOnSever(string cart, string customerInfor,
+            string listOrderPay, string noteToShop)
         {
-            CommonResult result = null;
+            MySqlResultState result = null;
             // Có thể lấy qua get cookie
-            List<Cart> lsCart = JsonConvert.DeserializeObject <List<Cart>>(cart);
-            CustomerInforCookie cusInfor = JsonConvert.DeserializeObject<CustomerInforCookie>(customerInfor);
-            int ship = Common.ConvertStringToInt32(shipFee);
+            List<Cart> lsBuyedCart = JsonConvert.DeserializeObject <List<Cart>>(cart);
+            Address cusInfor = JsonConvert.DeserializeObject<Address>(customerInfor);
+            List<OrderPay> lsOrderPay = JsonConvert.DeserializeObject<List<OrderPay>>(listOrderPay);
             string note = noteToShop;
             // Kiểm tra cart
-            result = CheckCart(lsCart);
-            if(!result.status)
+            result = CheckCart(lsBuyedCart);
+            if(result.State != EMySqlResultState.OK)
             {
                 return JsonConvert.SerializeObject(result);
             }
 
             // Với khách đăng nhập
-            {
-                // cập nhật lại cart trên db
-            }
+            Customer cus = AuthentCustomer();
 
             // insert order
-            int orderId = ordersqler.AddOrder(-1, ship, (int)EShopeeOrderStatus.UNPAID, noteToShop, cusInfor);
+            int orderId;
+            if (cus != null)
+            {
+                orderId = ordersqler.AddOrder(cus.id, noteToShop, cusInfor);
+            }
+            else
+            {
+                orderId = ordersqler.AddOrder(-1, noteToShop, cusInfor);
+            }
             if(orderId == -1)
             {
-                result.status = false;
-                result.message = "Không tạo được đơn hàng.";
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Không tạo được đơn hàng.";
                 return JsonConvert.SerializeObject(result);
+            }
+
+            if (cus != null)
+            {
+                // Xóa sản phẩm trong đơn hàng khỏi cart
+                result = ordersqler.DeleteListCart(cus.id, lsBuyedCart);
+                if (result.State != EMySqlResultState.OK)
+                {
+                    return JsonConvert.SerializeObject(result);
+                }
             }
 
             // insert track order
             ordersqler.AddTrackOrder(orderId, 0);
 
             // insert detail order
-            ordersqler.AddDetailOrder(orderId, lsCart);
+            ordersqler.AddDetailOrder(orderId, lsBuyedCart);
+
+            // insert pay order
+            ordersqler.AddPayOrder(orderId, lsOrderPay);
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string DeleteOneCart(int modelId)
+        {
+            Customer cus = AuthentCustomer();
+            MySqlResultState result = new MySqlResultState();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+            }
+            else
+            {
+                result = ordersqler.DeleteOneCart(cus.id, modelId);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string UpdateCartQuantity(int modelId, int quantity)
+        {
+            Customer cus = AuthentCustomer();
+            MySqlResultState result = new MySqlResultState();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+            }
+            else
+            {
+                result = ordersqler.UpdateCartQuantity(cus.id, modelId, quantity);
+            }
 
             return JsonConvert.SerializeObject(result);
         }

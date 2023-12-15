@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.Order
 {
     public class Cart : PriceQuantity
     {

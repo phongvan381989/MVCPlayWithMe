@@ -1,5 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.Customer;
+using MVCPlayWithMe.Models.Order;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -10,7 +12,7 @@ using System.Web.Mvc;
 
 namespace MVCPlayWithMe.Controllers
 {
-    public class CustomerController : Controller
+    public class CustomerController : BasicController
     {
         public CustomerMySql sqler;
 
@@ -19,28 +21,19 @@ namespace MVCPlayWithMe.Controllers
             sqler = new CustomerMySql();
         }
 
-        private Customer AuthentCustomer()
-        {
-            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
-            if (string.IsNullOrEmpty(cookieResult.cookieValue))
-            {
-                return null;
-            }
-
-            /// Check cookie đã được lưu trong db
-            return sqler.GetCustomerFromCookie(cookieResult.cookieValue);
-        }
-
         // GET: Customer
         public ActionResult CreateCustomer()
         {
-            return View();
+            if (AuthentCustomer() == null)
+                return View();
+            // Quay về trang chủ
+            return View("~/Views/Home/Index.cshtml");
         }
 
         [HttpPost]
-        public string CreateCustomer_Add(string userName, int userNameType, string passWord)
+        public string CreateCustomer_Add(string userName, string passWord)
         {
-            MySqlResultState result = sqler.AddNewCustomer(userName, userNameType, passWord);
+            MySqlResultState result = sqler.AddNewCustomer(userName, passWord);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -59,7 +52,7 @@ namespace MVCPlayWithMe.Controllers
             if (!string.IsNullOrEmpty(cookieResult.cookieValue))
             {
                 sqler.CustomerLogout(cookieResult.cookieValue);
-                Cookie.RecreateUserIdCookie(HttpContext);
+                Cookie.DeleteUserIdCookie(HttpContext);
             }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
@@ -113,17 +106,103 @@ namespace MVCPlayWithMe.Controllers
                 // Xóa cart cookie bên javascript
 
                 // Lưu customer information
-                List<CustomerInforCookie> lsCustomerInforCookie = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
-                sqler.AddCustomerInforAddress(customer.id, lsCustomerInforCookie);
+                List<Address> lsAddress = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
+                sqler.AddCustomerInforAddress(customer.id, lsAddress);
                 // Xóa customer info cookie bên javascript
             }
             while (false);
             return JsonConvert.SerializeObject(result);
         }
 
+        [HttpPost]
+        public string UpdateAddress(string address)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = AuthentCustomer();
+            if (cus != null)
+            {
+                Address add = JsonConvert.DeserializeObject<Address>(address);
+                if(add.defaultAdd == 1)
+                {
+                    // Xóa default cũ nếu có
+                    sqler.DeleteDefaultAddress(cus.id);
+                }
+                result = sqler.UpdateAddress(add);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string InsertAddress(string address)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = AuthentCustomer();
+            if (cus != null)
+            {
+                Address add = JsonConvert.DeserializeObject<Address>(address);
+                if (add.defaultAdd == 1)
+                {
+                    // Xóa default cũ nếu có
+                    sqler.DeleteDefaultAddress(cus.id);
+                }
+                result = sqler.InsertAddress(cus.id, add);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
         public ActionResult Update()
         {
             return View();
+        }
+
+        [HttpPost]
+        public string CheckUidCookieValid()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (AuthentCustomer() == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Xác thực khách hàng không thành công.";
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string GetListAddress()
+        {
+            List<Address> lsAddress = new List<Address>();
+            Customer cus = AuthentCustomer();
+            if (cus != null)
+            {
+                lsAddress = sqler.GetListAddress(cus.id);
+            }
+            else
+            {
+                lsAddress = null; // Không lấy được customer trả về null
+            }
+            // Authent thất bại, trả về null
+            return JsonConvert.SerializeObject(lsAddress);
+        }
+
+        public string CreateCustomer_CheckValidUserName(string userName)
+        {
+            MySqlResultState result = new MySqlResultState();
+            result = sqler.CheckValidUserName(userName);
+            return JsonConvert.SerializeObject(result);
         }
     }
 }

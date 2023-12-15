@@ -478,6 +478,7 @@
     <script>
         // Khi tích/bỏ tích chọn mua sẽ không được cập nhật vào real cart cookie,
         // chỉ xóa sản phẩm, thay đổi số lượng chọn là được cập nhật nếu cookie có đối ứng
+        // listCartCookieObje: dùng xác định sản phẩm được mua khi click mua hàng
         let listCartCookieObject; // list cart cookie object server trả về
 
         ChangeLayoutForSmallScreen();
@@ -678,17 +679,42 @@
             return obj.quantity;
         }
 
+        async function UpdateCartQuantity(modelId, quantity) {
+            if (DEBUG) {
+                console.log("UpdateCartQuantity CALL");
+            }
+            const searchParams = new URLSearchParams();
+            searchParams.append("modelId", modelId);
+            searchParams.append("quantity", quantity);
+            let query = "/Home/UpdateCartQuantity";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
         // Cập nhật listCartCookieObject, cart cookie khi thay đổi số lượng muốn mua
         // element là input tag
-        function UpdateWhenChangeInputQuantity(model, element) {
+        async function UpdateWhenChangeInputQuantity(model, element) {
             let id = parseInt(model.getAttribute("data-model-id"));
             let obj = GetObjFromListAndId(id, listCartCookieObject);
             obj.q = ConvertToInt(element.value);
 
-            UpdateQuantityOfCookie(obj);
+            // Là khách vãng lai
+            if (CheckAnonymousCustomer()) {
+                UpdateQuantityOfCookie(obj);
+                // Trả về định dạng giống truy vấn httpPost
+                return new Promise(function (resolve, reject) {
+                    let obj = {
+                        responseText: { State: 0, Message: "" }
+                    };
+                    resolve(obj);
+                });
+            }
+            else {// Khách đăng nhập
+                return await UpdateCartQuantity(id, ConvertToInt(element.value));
+            }
         }
 
-        function ValidateInput(element) {
+        async function ValidateInput(element) {
             let model = element.parentElement.parentElement.parentElement.parentElement;
             let newInput = element.value;
             let iInput = 0;
@@ -708,13 +734,20 @@
                 }
             }
             element.value = iInput.toString();
-            UpdateWhenChangeInputQuantity(model, element);
+
+            let res = await UpdateWhenChangeInputQuantity(model, element);
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+
             ShowSumMoney();
             ShowMoney(model);
         }
 
         // element là button giảm 1 số lượng đặt hàng
-        function Decrease(element) {
+        async function Decrease(element) {
             let eInput = element.nextElementSibling;
             let iInput = ConvertToInt(eInput.value);
             if (iInput > 1) {
@@ -723,13 +756,20 @@
             }
 
             let model = element.parentElement.parentElement.parentElement.parentElement;
-            UpdateWhenChangeInputQuantity(model, eInput);
+
+            let res = await UpdateWhenChangeInputQuantity(model, eInput);
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+
             ShowSumMoney();
             ShowMoney(model);
         }
 
         // element là button giảm 1 số lượng đặt hàng
-        function Increase(element) {
+        async function Increase(element) {
             let eInput = element.previousElementSibling;
             let iInput = ConvertToInt(eInput.value);
 
@@ -744,19 +784,48 @@
                 CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
             }
 
-            UpdateWhenChangeInputQuantity(model, eInput);
+            let res = await UpdateWhenChangeInputQuantity(model, eInput);
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+
             ShowSumMoney();
             ShowMoney(model);
         }
 
+        async function DeleteOneCart(modelId) {
+            if (DEBUG) {
+                console.log("DeleteOneCart CALL");
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("modelId", modelId);
+            let query = "/Home/DeleteOneCart";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
         // element là button xóa
-        function DeleteModel(element) {
+        async function DeleteModel(element) {
             let model = element.parentElement.parentElement.parentElement;
             let id = parseInt(model.getAttribute("data-model-id"));
             let length = listCartCookieObject.length;
             for (let i = 0; i < length; i++) {
                 if (listCartCookieObject[i].id == id) {
-                    DeleteOneCartCookie(listCartCookieObject[i]);
+                    // Là khách vãng lai
+                    if (CheckAnonymousCustomer()) {
+                        DeleteOneCartCookie(listCartCookieObject[i]);
+                    }
+                    else {// Khách đăng nhập
+                        let res = await DeleteOneCart(id);
+                        let resObj = JSON.parse(res.responseText);
+                        if (resObj.State != 0) {
+                            CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                            return;
+                        }
+                    }
                     listCartCookieObject.splice(i, 1);
                     break;
                 }

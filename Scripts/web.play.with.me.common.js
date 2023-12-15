@@ -363,8 +363,8 @@ function RequestHttpPostPromise(searchParams, url) {
             reject(this.statusText);
         }
 
-        let lastQuery = url + "?" + searchParams.toString();
         if (DEBUG) {
+            let lastQuery = url + "?" + searchParams.toString();
             console.log(lastQuery);
         }
         xhttp.open("POST", url);
@@ -598,15 +598,140 @@ function GetObjFromListAndId(id, list) {
 // Check khách vô danh
 // Chưa đăng nhập trả về true, ngược lại false
 function CheckAnonymousCustomer() {
+    if (DEBUG) {
+        console.log("CheckAnonymousCustomer CALL");
+    }
     let cookie = GetCookie(uidKey);
+
     if (isEmptyOrSpaces(cookie)) {
-        if (DEBUG) {
-            console.log("Khách vãng lai");
-        }
         return true;
     }
-    if (DEBUG) {
-        console.log("Khách đăng nhập");
-    }
+
     return false;
 }
+
+// Check khách vô danh
+// Chưa đăng nhập trả về true, ngược lại false
+async function CheckAnonymousCustomerFromServer() {
+    if (DEBUG) {
+        console.log("CheckAnonymousCustomerFromServer CALL");
+    }
+
+    const searchParams = new URLSearchParams();
+    let query = "/Customer/CheckUidCookieValid";
+
+    return await RequestHttpPostPromise(searchParams, query);
+}
+
+// Xóa bỏ uid cookie khi uid cookie có giá trị nhưng xác thực sai.
+// Có thể bị người dùng sửa bằng tay hoặc bên thứ 3
+function DeleteUidCookieWhenAuthentFail() {
+    DeleteCookie(uidKey);
+}
+
+// Đăng xuất khỏi tài khoản
+async function Logout() {
+    if (DEBUG) {
+        console.log("Logout CALL");
+    }
+
+    const searchParams = new URLSearchParams();
+    let query = "/Customer/Logout";
+
+    let res = await RequestHttpPostPromise(searchParams, query);
+    let resObj = JSON.parse(res.responseText);
+
+    if (resObj.State != 0) {
+        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+        // Xóa cookie ở web, ở thiết bị khác không được xóa
+        DeleteCookie(uidKey);
+    }
+
+    // Quay về trang chủ
+    window.location.href = "/Home/Index";
+
+}
+
+async function Login() {
+    if (DEBUG) {
+        console.log("Login CALL");
+    }
+
+    window.location.href = "/Customer/Login";
+}
+
+async function Signup() {
+    window.location.href = "/Customer/CreateCustomer";
+}
+
+async function AccoutInfor() {
+    //if (!window.location.href.includes("/Customer/CreateCustomer")) {
+    //    window.location.href = "/Customer/CreateCustomer";
+    //}
+}
+
+async function MyOrder() {
+    //if (!window.location.href.includes("/Customer/CreateCustomer")) {
+    //    window.location.href = "/Customer/CreateCustomer";
+    //}
+}
+
+// Tạo thẻ con của dropdown-content, hiển thị hành động tương ứng trên
+// menu Tài Khoản góc trên phải màn hình
+function CreateChildOfAccountElement(parrent, func, title) {
+    let childDiv = document.createElement("div");
+    childDiv.className = "remove-underline-container";
+
+    let childA = document.createElement("a");
+    childA.className = "remove-underline";
+    childA.href = "javascript:void(0);";
+    childA.title = title;
+    childA.innerHTML = title;
+    if (func != null) {
+        childA.onclick = function () { func(); };
+    }
+
+    childDiv.appendChild(childA);
+    parrent.appendChild(childDiv);
+}
+// Check khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
+// menu Tài Khoản góc trên phải màn hình
+// Hàm này phải gọi mỗi khi load page
+function ShowAccoutAction() {
+    let ele = document.getElementsByClassName("dropdown-content")[0];
+    ele.innerHTML = "";
+    if (DEBUG) {
+        console.log("ele" + ele.tagName);
+    }
+    if (CheckAnonymousCustomer()) {
+        // Đăng nhập
+        CreateChildOfAccountElement(ele, function () { Login(); }, "Đăng nhập")
+
+        // Đăng ký
+        CreateChildOfAccountElement(ele, function () { Signup(); }, "Đăng ký")
+    }
+    else {
+
+        // Thông tin tài khoản
+        CreateChildOfAccountElement(ele, function () { AccoutInfor(); }, "Thông tin tài khoản")
+
+        // Đơn hàng của tôi
+        CreateChildOfAccountElement(ele, function () { MyOrder(); }, "Đơn hàng của tôi")
+
+        // Đăng xuất
+        CreateChildOfAccountElement(ele, function () { Logout(); }, "Đăng xuất")
+    }
+}
+
+// Về trang chính
+function GoHomePage() {
+    if (!window.location.href.includes("/Home/Index")) {
+        window.location.href = "/Home/Index";
+    }
+}
+// Những hành động mà mọi page đều phải thực hiện sau khi load
+function CommonAction() {
+    ShowAccoutAction();
+}
+
+CommonAction();
