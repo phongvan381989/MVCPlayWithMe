@@ -312,6 +312,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
     <Content Include="Scripts\web.play.with.me.category.common.js" />
     <Content Include="Scripts\web.play.with.me.combo.common.js" />
@@ -413,6 +414,8 @@
     <Content Include="Views\Home\Checkout.cshtml" />
     <Content Include="Views\Shared\Home\CustomerInfor.cshtml" />
     <Content Include="Views\Shared\Home\ListCustomerInfor.cshtml" />
+    <Content Include="Views\Customer\AccountInfor.cshtml" />
+    <Content Include="Views\Customer\MyOrder.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

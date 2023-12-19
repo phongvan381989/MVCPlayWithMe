@@ -1,0 +1,686 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
+    <style>
+        table {
+            max-width: 600px;
+            width: 100%;
+            border-collapse: collapse;
+            border-spacing: 0;
+            display: table;
+            box-sizing: border-box;
+            text-indent: initial;
+            border-color: gray;
+        }
+
+        tr {
+            vertical-align: middle;
+            display: table-row;
+        }
+
+        td {
+            display: table-cell;
+            vertical-align: inherit;
+        }
+
+        .espR83 {
+            text-align: right;
+            color: rgba(85,85,85,.8);
+            overflow: hidden;
+            padding-bottom: 15px;
+            padding-top: 15px;
+            white-space: nowrap;
+            min-width: 20%;
+        }
+
+        .uxYEXm {
+            color: #333;
+        }
+
+        .Tmj5Z6 {
+            box-sizing: border-box;
+            padding-left: 20px;
+            padding-bottom: 15px;
+            padding-top: 15px;
+        }
+
+        .profile-save{
+            color: #fff;
+            position: relative;
+            overflow: visible;
+            outline: 0;
+            background: #ee4d2d;
+            height: 40px;
+            padding: 0 20px;
+            min-width: 70px;
+            max-width: 220px;
+            display: inline-flex;
+            text-overflow: ellipsis;
+            -webkit-line-clamp: 1;
+            flex-direction: column;
+            font-size: 14px;
+            box-sizing: border-box;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+            border-radius: 2px;
+            border: 0;
+            align-items: center;
+            justify-content: center;
+            text-transform: capitalize;
+            cursor: pointer;
+        }
+
+        .create-address {
+            color: #fff;
+            position: relative;
+            overflow: visible;
+            outline: 0;
+            background: #ee4d2d;
+            height: 40px;
+            padding: 0 20px;
+            min-width: 70px;
+            max-width: 220px;
+            display: flex;
+            text-overflow: ellipsis;
+            font-size: 14px;
+            box-sizing: border-box;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+            border-radius: 2px;
+            border: 0;
+            align-items: center;
+            justify-content: center;
+            text-transform: capitalize;
+            cursor: pointer;
+        }
+
+        .mblfAtcf {
+            width: 16px;
+            height: 16px;
+            fill: rgba(255,255,255,1);
+            margin-right: 8px;
+        }
+        .W50dp5 {
+            align-items: center;
+            display: flex;
+            box-sizing: border-box;
+            width: 100%;
+            height: 40px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,.14);
+            border-radius: 2px;
+            box-shadow: inset 0 2px 0 rgba(0,0,0,.02);
+        }
+
+        .CMyrTJ {
+            background: none;
+            padding: 12px;
+            outline: none;
+            border: 0;
+            flex: 1;
+            flex-shrink: 0;
+            filter: none;
+        }
+
+        .SbCTde {
+            margin: 0;
+            font-size: 1.125rem;
+            font-weight: 500;
+            line-height: 1.5rem;
+            text-transform: capitalize;
+            color: #333;
+        }
+
+        .account-header-container {
+            border-bottom: 0.0625rem solid #efefef;
+            padding: 1.125rem;
+            display:flex;
+            align-items:center;
+        }
+        .lpxAGdgh {
+            width:100%;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .radio-sex {
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
+        }
+
+        .s4eg4A {
+            display: flex;
+        }
+
+        .radio-sex-div {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .birthday-time {
+            padding: 12px;
+            align-items: center;
+            display: flex;
+            box-sizing: border-box;
+            width: 100%;
+            height: 40px;
+            overflow: hidden;
+            border: 1px solid rgba(0,0,0,.14);
+            border-radius: 2px;
+            box-shadow: inset 0 2px 0 rgba(0,0,0,.02);
+            background: none;
+        }
+
+        .account-infor-container {
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            background: #fff;
+            border-radius: 3px;
+        }
+
+        .sample-address-container {
+            display: none;
+        }
+
+            .sample-address-container input {
+                margin-top: 15px;
+                width: 20px;
+                height: 20px;
+            }
+
+            .sample-address-container .address {
+                padding: 10px;
+                margin-bottom: 15px;
+                margin-top: 15px;
+                border-bottom: 1px solid rgba(0,0,0,.14);
+                width: 100%;
+            }
+
+                .sample-address-container .address div {
+                    margin-top: 5px;
+                    margin-bottom: 5px;
+                }
+
+                .sample-address-container .address span {
+                    margin-right: 10px;
+                }
+
+            .sample-address-container .default-address {
+                color: #ee4d2d;
+                border-color: #ee4d2d;
+                margin: 0 4px 4px 0;
+                border-radius: 1px;
+                padding: 2px 4px;
+                border: 0.5px solid;
+            }
+
+            .sample-address-container .htlhtxbv {
+                display: flex;
+            }
+
+                .sample-address-container .htlhtxbv button {
+                    margin-top: 15px;
+                    margin-bottom: 15px;
+                    border: 0;
+                    background: none;
+                    outline: none;
+                    padding: 4px 10px;
+                    color: #08f;
+                    white-space: nowrap;
+                }
+
+            .sample-address-container .mgW0lg {
+                font-size: 0.875rem;
+                line-height: 1.25rem;
+                padding: 4px 12px;
+                height: 28px;
+                min-width: 0px;
+                color: rgba(0, 0, 0, 0.87);
+                border: 1px solid rgba(0, 0, 0, 0.26);
+                box-shadow: rgba(0, 0, 0, 0.03) 0px 1px 1px;
+                white-space: nowrap;
+                background-color: rgb(255, 255, 255);
+                align-items: center;
+                display: flex;
+                justify-content: center;
+                outline: none;
+                background: none;
+                border-radius: 2px;
+            }
+
+                .sample-address-container .mgW0lg:disabled {
+                    opacity: 0.7;
+                    cursor: not-allowed;
+                }
+
+                .sample-address-container .mgW0lg:hover {
+                    background-color: rgba(0, 0, 0, 0.02);
+                }
+    </style>
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <div class="account-infor-container">
+            <div class="account-header-container">
+                <h1 class="SbCTde">Hồ sơ của tôi</h1>
+            </div>
+            <div class="account-profile-container">
+                <table>
+                    <tr>
+                        <td class="espR83">
+                            <label>Tên đăng nhập</label>
+                        </td>
+                        <td class="Tmj5Z6">
+                            <div>
+                                <div class="uxYEXm">hueht1212</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="espR83">
+                            <label>Tên</label>
+                        </td>
+                        <td class="Tmj5Z6">
+                            <div class="W50dp5">
+                                <input type="text" placeholder="" class="CMyrTJ full-name" value="Hue Hoang" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="espR83">
+                            <label>Email</label>
+                        </td>
+                        <td class="Tmj5Z6">
+                            <div class="W50dp5">
+                                <input type="text" placeholder="" class="CMyrTJ mail" value="phongvan381989@gmail.com" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="espR83">
+                            <label>Số điện thoại</label>
+                        </td>
+                        <td class="Tmj5Z6">
+                            <div class="W50dp5">
+                                <input type="text" placeholder="" class="CMyrTJ phone" value="0383519872" />
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="espR83">
+                            <label>Giới tính</label>
+                        </td>
+                        <td class="Tmj5Z6">
+                            <div class="s4eg4A">
+                                <div class="radio-sex-div">
+                                    <input type="radio" id="men-sex" name="sex" class="radio-sex">
+                                    <label for="men-sex">Nam</label>
+                                </div>
+                                <div class="radio-sex-div">
+                                    <input type="radio" id="women-sex" name="sex" class="radio-sex">
+                                    <label for="women-sex">Nữ</label>
+                                </div>
+                                <div class="radio-sex-div">
+                                    <input type="radio" id="other-sex" name="sex" class="radio-sex">
+                                    <label for="other-sex">Khác</label>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="espR83">
+                            <label>Ngày sinh</label>
+                        </td>
+                        <td class="Tmj5Z6">
+                            <div>
+                                <input type="date" class="birthday-time">
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="espR83">
+                            <label />
+                        </td>
+                        <td class="Tmj5Z6">
+                            <button type="button" class="profile-save" onclick="SaveProfile()">Lưu</button>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="account-header-container">
+                <div class="SbCTde">Địa chỉ của tôi</div>
+                <div class="lpxAGdgh">
+                    <button class="create-address" onclick="ShowCustomerInforModal(true, false, null)">
+                        <svg viewBox="0 0 10 10" class="mblfAtcf">
+                            <path stroke="none" d="m10 4.5h-4.5v-4.5h-1v4.5h-4.5v1h4.5v4.5h1v-4.5h4.5z"></path>
+                        </svg>
+                        Thêm Địa Chỉ Mới
+                    </button>
+                </div>
+            </div>
+            <div class="account-address-container">
+                <div class="sample-address-container">
+                    <div class="address">
+                        <div class="name-phone">
+                            <span class="name"> Hoàng Huệ</span>
+                            <span class="phone"> 0359127226</span>
+                        </div>
+                        <div>
+                            <div class="detail">Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh</div>
+                            <div class="province-district-subdistrict">Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Hà Nội</div>
+                        </div>
+                        <div>
+                            <span class="default-address">Mặc định</span>
+                        </div>
+                    </div>
+                    <div class="klhkjcvf">
+                        <div class="htlhtxbv">
+                            <button onclick="UpdateCustomerAddress(this)">Cập Nhật</button>
+                            <button onclick="DeleteCustomerInfor(this)">Xóa</button>
+                        </div>
+                        <button class="mgW0lg" disabled onclick="SetDefault(this)">Thiết lập mặc định</button>
+                    </div>
+                </div>
+                <div class="list-address-container">
+
+                </div>
+            </div>
+        </div>
+        @Html.Partial("~/Views/Shared/Home/CustomerInfor.cshtml")
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.address.js"></script>
+    <script>
+        let customerObj = null; // Đối tượng khách hàng server trả về
+        let listCustomerAddressObj;
+        let currentIndexAddressUpdateObject = -1; // index cần cập nhật
+        LoadSomething();
+
+        async function GetCustomer() {
+            if (DEBUG) {
+                console.log("GetCustomer CALL");
+            }
+            const searchParams = new URLSearchParams();
+            let query = "/Customer/GetCustomer";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        // Sau khi load page, cần thêm thông tin
+        async function LoadSomething() {
+
+            await LoadCustomer();
+        }
+
+        // Hiển thị thông tin tài khoản
+        function ShowAccount() {
+            if (DEBUG) {
+                console.log("ShowAccount CALL");
+            }
+            let container = document.getElementsByClassName("account-profile-container")[0];
+
+            container.getElementsByClassName("uxYEXm")[0].innerHTML = customerObj.userName;
+            container.getElementsByClassName("full-name")[0].value = customerObj.fullName;
+            container.getElementsByClassName("mail")[0].value = customerObj.email;
+            container.getElementsByClassName("phone")[0].value = customerObj.sdt;
+            // 1: Nam, 2: Nu, 3: Khac
+            if (customerObj.sex == 1) {
+
+                container.getElementsByClassName("radio-sex")[0].checked = true;
+            }
+            else if (customerObj.sex == 2) {
+
+                container.getElementsByClassName("radio-sex")[1].checked = true;
+            }
+            else {
+                container.getElementsByClassName("radio-sex")[2].checked = true;
+            }
+            // customerObj.birthday: 1930-01-01T00:00:00
+            container.getElementsByClassName("birthday-time")[0].value = customerObj.birthday.split('T')[0];
+        }
+
+        // Hiển thị danh sách địa chỉ
+        function ShowAddress() {
+            if (DEBUG) {
+                console.log("ShowAddress CALL");
+            }
+
+            // Hiển thị danh sách địa chỉ
+            // Lấy mẫu
+            let sample = document.getElementsByClassName("sample-address-container")[0];
+            let container = document.getElementsByClassName("list-address-container")[0];
+            // Xóa nội dung cũ
+            container.innerHTML = "";
+
+            listCustomerAddressObj = customerObj.lsAddress;
+            let length = listCustomerAddressObj.length;
+            if (DEBUG) {
+                console.log("listCustomerAddressObj.length: " + length);
+            }
+            for (let i = 0; i < length; i++) {
+                let obj = listCustomerAddressObj[i];
+                let clone = sample.cloneNode(true);
+                clone.style.display = "flex";
+                clone.setAttribute("data-index", i.toString());
+
+                clone.getElementsByClassName("name")[0].innerHTML = obj.name;
+                clone.getElementsByClassName("phone")[0].innerHTML = obj.phone;
+
+                clone.getElementsByClassName("detail")[0].innerHTML = obj.detail;
+                clone.getElementsByClassName("province-district-subdistrict")[0].innerHTML =
+                    obj.subdistrict + ", " + obj.district + ", " + obj.province;
+
+                if (!obj.defaultAdd) {
+                    clone.getElementsByClassName("default-address")[0].style.display = "none";
+
+                    // enable button thiết lập mặc định
+                    clone.getElementsByClassName("mgW0lg")[0].disabled = false;
+
+                }
+                else {
+                    // Ẩn nút xóa địa chỉ
+                    clone.getElementsByClassName("htlhtxbv")[0].children[1].style.display = "none";
+                }
+                container.appendChild(clone);
+            }
+
+        }
+
+        function UpdateCustomerAddress(ele) {
+            currentIndexAddressUpdateObject = parseInt(ele.parentElement.parentElement.parentElement.getAttribute("data-index"));
+            if (DEBUG) {
+                console.log("UpdateCustomerInfor CALL");
+                console.log("currentIndexAddressUpdateObject: " + currentIndexAddressUpdateObject);
+            }
+            ShowCustomerInforModal(false, false, listCustomerAddressObj[currentIndexAddressUpdateObject]);
+        }
+
+        async function DeleteCustomerInfor(ele) {
+            let index = parseInt(ele.parentElement.parentElement.parentElement.getAttribute("data-index"));
+            if (DEBUG) {
+                console.log("DeleteCustomerInfor CALL");
+                console.log("index: " + index);
+            }
+            let obj = listCustomerAddressObj[index];
+
+            let children = document.getElementsByClassName("list-address-container")[0].children;
+            children[index].remove();
+
+            listCustomerAddressObj.splice(index, 1);
+
+            // Cập nhật data-index trên page
+            children = document.getElementsByClassName("list-address-container")[0].children;
+            let length = children.length;
+            for (let i = 0; i < length; i++) {
+                children[i].setAttribute("data-index", i.toString());
+            }
+
+            // Cập nhật db
+            let res = await DeleteAddress(obj);
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+        }
+
+        async function SetDefault(ele) {
+            let index = parseInt(ele.parentElement.parentElement.getAttribute("data-index"));
+            if (DEBUG) {
+                console.log("SetDefault CALL");
+                console.log("index: " + index);
+            }
+            let children = document.getElementsByClassName("list-address-container")[0].children;
+            let length = listCustomerAddressObj.length;
+            if (DEBUG) {
+                console.log("listCustomerAddressObj.length: " + length);
+            }
+            for (let i = 0; i < length; i++) {
+                if (i != index) {
+                    children[i].getElementsByClassName("default-address")[0].style.display = "none";
+                    // enable button thiết lập mặc định
+                    children[i].getElementsByClassName("mgW0lg")[0].disabled = false;
+                    // Hiện nút xóa địa chỉ
+                    children[i].getElementsByClassName("htlhtxbv")[0].children[1].style.display = "initial";
+
+                    listCustomerAddressObj[i].defaultAdd = 0;
+                }
+                else {
+                    children[i].getElementsByClassName("default-address")[0].style.display = "initial";
+                    // disable button thiết lập mặc định
+                    children[i].getElementsByClassName("mgW0lg")[0].disabled = true;
+                    // Ẩn nút xóa địa chỉ
+                    children[i].getElementsByClassName("htlhtxbv")[0].children[1].style.display = "none";
+
+                    listCustomerAddressObj[i].defaultAdd = 1;
+                }
+            }
+
+            // Cập nhật db
+            let obj = listCustomerAddressObj[index];
+            let res = await UpdateAddress(obj);
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+        }
+
+        function ReturnCustomerInforModal() {
+            RefreshModalCustomerInfor();
+            currentIndexAddressUpdateObject = -1;
+        }
+
+        async function FinishCustomerInforModal() {
+            if (!ValidCustomerInforInput()) {
+                return;
+            }
+
+            let obj = CreateCookieValueFromInput();
+            if (currentIndexAddressUpdateObject != -1) {// Cập nhật thông tin vào object
+                obj.id = listCustomerAddressObj[currentIndexAddressUpdateObject].id;
+                listCustomerAddressObj[currentIndexAddressUpdateObject] = obj;
+                //Kiểm tra có đặt mặc định
+                if (obj.defaultAdd) {
+                    // Bỏ mặc định cũ nếu có
+                    for (let i = listCustomerAddressObj.length - 1; i >= 0; i--) {
+                        if (listCustomerAddressObj[i].defaultAdd
+                            && i != currentIndexAddressUpdateObject) {
+                            listCustomerAddressObj[i].defaultAdd = 0;
+                        }
+                    }
+                }
+            }
+            else {
+                // Thêm mới
+                //Kiểm tra có đặt mặc đinh
+                if (obj.defaultAdd) {
+                    // Bỏ mặc định cũ nếu có
+                    for (let i = listCustomerAddressObj.length - 1; i >= 0; i--) {
+                        if (listCustomerAddressObj[i].defaultAdd) {
+                            listCustomerAddressObj[i].defaultAdd = 0;
+                        }
+                    }
+                }
+
+            }
+
+            if (currentIndexAddressUpdateObject != -1) {// Cập nhật thông tin
+                let res = await UpdateAddress(obj);
+                let resObj = JSON.parse(res.responseText);
+                if (resObj.State != 0) {
+                    CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                    return;
+                }
+            }
+            else {
+                let res = await InsertAddress(obj);
+                let resObj = JSON.parse(res.responseText);
+                if (resObj.State != 0) {
+                    CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                    return;
+                }
+
+                obj.id = resObj.myAnything;
+                listCustomerAddressObj.push(obj);
+            }
+
+            currentIndexAddressUpdateObject = -1;
+
+            RefreshModalCustomerInfor();
+
+            // Hiển thị danh sách địa chỉ, ta cập nhật lại
+            ShowAddress();
+        }
+
+        async function LoadCustomer() {
+            if (DEBUG) {
+                console.log("LoadCustomer CALL");
+            }
+
+            let res = await GetCustomer();
+            customerObj = JSON.parse(res.responseText);
+            if (JSON.parse(res.responseText) == null) {
+                CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
+                // Trả về định dạng giống truy vấn httpPost
+                return new Promise(function (resolve, reject) {
+                    let obj = {
+                        responseText: { State: 0, Message: "" }
+                    };
+                    resolve(obj);
+                });
+            }
+
+            ShowAccount();
+            ShowAddress();
+
+            // Trả về định dạng giống truy vấn httpPost
+            return new Promise(function (resolve, reject) {
+                let obj = {
+                    responseText: { State: 0, Message: "" }
+                };
+                resolve(obj);
+            });
+        }
+
+        function SaveProfile() {
+
+        }
+    </script>
+</body>
+</html>

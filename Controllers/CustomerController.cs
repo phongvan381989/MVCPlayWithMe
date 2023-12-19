@@ -15,10 +15,12 @@ namespace MVCPlayWithMe.Controllers
     public class CustomerController : BasicController
     {
         public CustomerMySql sqler;
+        public OrderMySql ordersqler;
 
         public CustomerController()
         {
             sqler = new CustomerMySql();
+            ordersqler = new OrderMySql();
         }
 
         // GET: Customer
@@ -98,17 +100,17 @@ namespace MVCPlayWithMe.Controllers
                     result = resultInsert;
                     break;
                 }
+                // Đăng nhập thành công, không xóa cookie của khách vãng lai
+                //// Đang nhập thành công, lưu thông tin cookie khách vãng lai như: cart, customer information vào db
+                //// Lưu cart cookie
+                //List<Cart> lsCart = Cookie.GetListCartCookie(HttpContext);
+                //sqler.AddCartLogin(customer.id, lsCart);
+                //// Xóa cart cookie bên javascript
 
-                // Đang nhập thành công, lưu thông tin cookie khách vãng lai như: cart, customer information vào db
-                // Lưu cart cookie
-                List<Cart> lsCart = Cookie.GetListCartCookie(HttpContext);
-                sqler.AddCartLogin(customer.id, lsCart);
-                // Xóa cart cookie bên javascript
-
-                // Lưu customer information
-                List<Address> lsAddress = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
-                sqler.AddCustomerInforAddress(customer.id, lsAddress);
-                // Xóa customer info cookie bên javascript
+                //// Lưu customer information
+                //List<Address> lsAddress = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
+                //sqler.AddCustomerInforAddress(customer.id, lsAddress);
+                //// Xóa customer info cookie bên javascript
             }
             while (false);
             return JsonConvert.SerializeObject(result);
@@ -129,6 +131,31 @@ namespace MVCPlayWithMe.Controllers
                     sqler.DeleteDefaultAddress(cus.id);
                 }
                 result = sqler.UpdateAddress(add);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string DeleteAddress(string address)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = AuthentCustomer();
+            if (cus != null)
+            {
+                Address add = JsonConvert.DeserializeObject<Address>(address);
+                // Chỉ xóa địa chỉ không phải mặc định
+                if (add.defaultAdd != 1)
+                {
+                    result = sqler.DeleteAddress(add);
+                }
+
             }
             else
             {
@@ -198,11 +225,58 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsAddress);
         }
 
+        [HttpPost]
         public string CreateCustomer_CheckValidUserName(string userName)
         {
-            MySqlResultState result = new MySqlResultState();
+            MySqlResultState result;
             result = sqler.CheckValidUserName(userName);
             return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string GetCartCount()
+        {
+            Customer cus = AuthentCustomer();
+            MySqlResultState result = new MySqlResultState();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+            }
+            else
+            {
+                result = ordersqler.GetCartCount(cus.id);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string GetCustomer()
+        {
+            Customer cus = AuthentCustomer();
+            if (cus == null)
+            {
+            }
+            else
+            {
+                cus = sqler.GetCustomer(cus.id);
+            }
+            return JsonConvert.SerializeObject(cus);
+        }
+
+        public ActionResult AccountInfor()
+        {
+            if (AuthentCustomer() == null)
+                return View("~/Views/Customer/Login.cshtml");
+
+            return View();
+        }
+
+        public ActionResult MyOrder()
+        {
+            if (AuthentCustomer() == null)
+                return View("~/Views/Customer/Login.cshtml");
+
+            return View();
         }
     }
 }

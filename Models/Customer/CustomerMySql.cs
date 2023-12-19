@@ -147,6 +147,36 @@ namespace MVCPlayWithMe.Models.Customer
             return Login(userName, password, "st_tbCustomer_Get_Salt_Hash");
         }
 
+        private void GetCustomerFromDataReader(MySqlDataReader rdr, Customer customer)
+        {
+            if (rdr != null && rdr.HasRows)
+            {
+                while (rdr.Read())
+                {
+                    if (customer.id == -1)
+                    {
+                        customer.id = rdr.GetInt32("Id");
+                        customer.email = rdr.GetString("Email");
+                        customer.sdt = rdr.GetString("SDT");
+                        customer.userName = rdr.GetString("UserName");
+                        customer.fullName = rdr.GetString("FullName");
+                        customer.birthday = rdr.GetDateTime("Birthday");
+                        customer.sex = rdr.GetInt32("Sex");
+                    }
+                    // Thêm address
+                    Address add = new Address();
+                    add.id = rdr.GetInt32("AddressId");
+                    add.name = rdr.GetString("Name");
+                    add.phone = rdr.GetString("Phone");
+                    add.province = rdr.GetString("Province");
+                    add.district = rdr.GetString("District");
+                    add.subdistrict = rdr.GetString("SubDistrict");
+                    add.detail = rdr.GetString("Detail");
+                    add.defaultAdd = rdr.GetInt32("DefaultAdd");
+                    customer.lsAddress.Add(add);
+                }
+            }
+        }
         /// <summary>
         /// Lấy customer
         /// </summary>
@@ -166,19 +196,7 @@ namespace MVCPlayWithMe.Models.Customer
                 cmd.Parameters.AddWithValue("@inUserName", userName);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
-                {
-                    while (rdr.Read())
-                    {
-                        customer.id = rdr.GetInt32("Id");
-                        customer.email = rdr.GetString("Email");
-                        customer.sdt = rdr.GetString("SDT");
-                        customer.userName = rdr.GetString("SDT");
-                        customer.fullName = rdr.GetString("FullName");
-                        customer.birthday = rdr.GetDateTime("Birthday");
-                        customer.sex = rdr.GetInt32("Sex");
-                    }
-                }
+                GetCustomerFromDataReader(rdr, customer);
                 if (rdr != null)
                     rdr.Close();
             }
@@ -193,6 +211,34 @@ namespace MVCPlayWithMe.Models.Customer
             return customer;
         }
 
+        public Customer GetCustomer(int id)
+        {
+            Customer customer = new Customer();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                GetCustomerFromDataReader(rdr, customer);
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                customer = null;
+            }
+
+            conn.Close();
+            return customer;
+        }
         /// <summary>
         /// Customer login, update customerId
         /// </summary>
@@ -306,44 +352,44 @@ namespace MVCPlayWithMe.Models.Customer
             return result;
         }
 
-        public void AddCustomerInforAddress(int customerId, List<Address> ls)
-        {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+        //public void AddCustomerInforAddress(int customerId, List<Address> ls)
+        //{
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert_And_Update", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                cmd.Parameters.AddWithValue("@inName", "");
-                cmd.Parameters.AddWithValue("@inPhone", "");
-                cmd.Parameters.AddWithValue("@inProvince", "");
-                cmd.Parameters.AddWithValue("@inDistrict", "");
-                cmd.Parameters.AddWithValue("@inSubDistrict", "");
-                cmd.Parameters.AddWithValue("@inDetail", "");
-                cmd.Parameters.AddWithValue("@inDefaultAdd", 0);
+        //        MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert_And_Update", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+        //        cmd.Parameters.AddWithValue("@inName", "");
+        //        cmd.Parameters.AddWithValue("@inPhone", "");
+        //        cmd.Parameters.AddWithValue("@inProvince", "");
+        //        cmd.Parameters.AddWithValue("@inDistrict", "");
+        //        cmd.Parameters.AddWithValue("@inSubDistrict", "");
+        //        cmd.Parameters.AddWithValue("@inDetail", "");
+        //        cmd.Parameters.AddWithValue("@inDefaultAdd", 0);
 
-                foreach (var cus in ls)
-                {
-                    cmd.Parameters[1].Value = cus.name;
-                    cmd.Parameters[2].Value = cus.phone;
-                    cmd.Parameters[3].Value = cus.province;
-                    cmd.Parameters[4].Value = cus.district;
-                    cmd.Parameters[5].Value = cus.subdistrict;
-                    cmd.Parameters[6].Value = cus.detail;
-                    cmd.Parameters[7].Value = cus.defaultAdd;
-                    cmd.ExecuteNonQuery();
-                }
+        //        foreach (var cus in ls)
+        //        {
+        //            cmd.Parameters[1].Value = cus.name;
+        //            cmd.Parameters[2].Value = cus.phone;
+        //            cmd.Parameters[3].Value = cus.province;
+        //            cmd.Parameters[4].Value = cus.district;
+        //            cmd.Parameters[5].Value = cus.subdistrict;
+        //            cmd.Parameters[6].Value = cus.detail;
+        //            cmd.Parameters[7].Value = cus.defaultAdd;
+        //            cmd.ExecuteNonQuery();
+        //        }
 
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-            conn.Close();
-        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        errMessage = ex.ToString();
+        //        MyLogger.GetInstance().Warn(errMessage);
+        //    }
+        //    conn.Close();
+        //}
 
         public MySqlResultState UpdateAddress(Address add)
         {
@@ -361,8 +407,24 @@ namespace MVCPlayWithMe.Models.Customer
             return MyMySql.ExcuteNonQuery("st_tbAddress_Update", paras);
         }
 
+        public MySqlResultState DeleteAddress(Address add)
+        {
+            MySqlParameter[] paras = new MySqlParameter[1];
+
+            paras[0] = new MySqlParameter("@inId", add.id);
+
+            return MyMySql.ExcuteNonQuery("st_tbAddress_Delete", paras);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <param name="add"></param>
+        /// <returns>Trả về id của row vừa insert</returns>
         public MySqlResultState InsertAddress(int customerId, Address add)
         {
+            MySqlResultState result = new MySqlResultState();
             MySqlParameter[] paras = new MySqlParameter[8];
 
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
@@ -374,7 +436,37 @@ namespace MVCPlayWithMe.Models.Customer
             paras[6] = new MySqlParameter("@inDetail", add.detail);
             paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
 
-            return MyMySql.ExcuteNonQuery("st_tbAddress_Insert_And_Update", paras);
+            //return MyMySql.ExcuteNonQuery("st_tbAddress_Insert_And_Update", paras);
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+                result.myAnything = -1;
+            }
+            conn.Close();
+
+            return result;
         }
 
         // Set default = 0

@@ -90,6 +90,9 @@ function CheckValidSDT(sdt) {
     if (!pattern.test(sdt)) {
         return false;
     }
+    if (sdt.length != 10) {
+        return false;
+    }
     return true;
 }
 
@@ -643,7 +646,7 @@ async function Logout() {
 
     if (resObj.State != 0) {
         CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
-        // Xóa cookie ở web, ở thiết bị khác không được xóa
+        // Xóa cookie ở thiết bị gửi request, ở thiết bị khác không được xóa
         DeleteCookie(uidKey);
     }
 
@@ -664,16 +667,12 @@ async function Signup() {
     window.location.href = "/Customer/CreateCustomer";
 }
 
-async function AccoutInfor() {
-    //if (!window.location.href.includes("/Customer/CreateCustomer")) {
-    //    window.location.href = "/Customer/CreateCustomer";
-    //}
+async function AccountInfor() {
+    window.location.href = "/Customer/AccountInfor";
 }
 
 async function MyOrder() {
-    //if (!window.location.href.includes("/Customer/CreateCustomer")) {
-    //    window.location.href = "/Customer/CreateCustomer";
-    //}
+    window.location.href = "/Customer/MyOrder";
 }
 
 // Tạo thẻ con của dropdown-content, hiển thị hành động tương ứng trên
@@ -694,6 +693,7 @@ function CreateChildOfAccountElement(parrent, func, title) {
     childDiv.appendChild(childA);
     parrent.appendChild(childDiv);
 }
+
 // Check khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
 // menu Tài Khoản góc trên phải màn hình
 // Hàm này phải gọi mỗi khi load page
@@ -713,7 +713,7 @@ function ShowAccoutAction() {
     else {
 
         // Thông tin tài khoản
-        CreateChildOfAccountElement(ele, function () { AccoutInfor(); }, "Thông tin tài khoản")
+        CreateChildOfAccountElement(ele, function () { AccountInfor(); }, "Thông tin tài khoản")
 
         // Đơn hàng của tôi
         CreateChildOfAccountElement(ele, function () { MyOrder(); }, "Đơn hàng của tôi")
@@ -729,9 +729,46 @@ function GoHomePage() {
         window.location.href = "/Home/Index";
     }
 }
+
+function AuthenFail() {
+    CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
+    // Xóa uid
+    DeleteCookie(uidKey);
+    // Quay về trang chủ
+    window.location.href = "/Home/Index";
+}
+// Cập nhật số sản phẩm trong giỏ hàng ( menu top), ẩn hiện icon giỏ hàng nếu cần thiết
+async function UpdateCartCount() {
+    let length = 0;
+    if (CheckAnonymousCustomer()) {
+        // Lấy giỏ hàng từ cookie
+        let cartCookie = GetCookie(cartKey);
+        let myArray = cartCookie.split("$");
+        length = myArray.length;
+    }
+    else {
+        const searchParams = new URLSearchParams();
+
+        let query = "/Customer/GetCartCount";
+
+        let responseDB = await RequestHttpPostPromise(searchParams, query);
+        let result = JSON.parse(responseDB.responseText);
+
+        // AUTHEN_FAIL
+        if (result.State == 6) {
+            AuthenFail();
+            return;
+        }
+        length = result.myAnything;
+    }
+
+    document.getElementsByClassName("cart-count")[0].innerHTML = length;
+}
+
 // Những hành động mà mọi page đều phải thực hiện sau khi load
-function CommonAction() {
-    ShowAccoutAction();
+async function CommonAction() {
+    await ShowAccoutAction();
+    await UpdateCartCount();
 }
 
 CommonAction();

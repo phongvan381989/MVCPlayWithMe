@@ -291,5 +291,44 @@ namespace MVCPlayWithMe.Models
             paras[2] = new MySqlParameter("@inQuantity", quantity);
             return MyMySql.ExcuteNonQuery("st_tbCart_Update_Quantity", paras);
         }
+
+
+        /// <summary>
+        /// Lấy số lượng sản phẩm trong giỏ hàng
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <returns></returns>
+        public MySqlResultState GetCartCount(int customerId)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbCart_Count_From_CustormerId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    result.myAnything = MyMySql.GetInt32(rdr, "Count");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+            }
+            conn.Close();
+            return result;
+        }
     }
 }

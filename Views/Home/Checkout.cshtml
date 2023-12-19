@@ -447,14 +447,13 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
     <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.address.js"></script>
     <script>
         let listCartCookieObject; // list cart cookie object server trả về, đã check real == 1 trên server
 
         let listCustomerInforCookieObject; // list customer cookie object server trả về
 
-        let administrativeAddressObject; // địa giới hành chính
-
-        let currentIndexInforObject = -1; // index địa chỉ nhận hàng hiện tại. Chưa chọn địa chỉ nhận hàng thì dùng thông tin mặc định
+        let currentIndexInforObject = -1; // index địa chỉ nhận hàng hiện tại. Chưa chọn địa chỉ nhận hàng thì dùng thông tin mặc định khi load trang
 
         let currentIndexInforUpdateObject = -1; // index cần cập nhật
 
@@ -462,8 +461,8 @@
 
         // Sau khi load page, cần thêm thông tin
         async function LoadSomething() {
-            // ** Cần xong hàm này để lấy được địa chỉ nhận hàng khi khách đăng nhập
-            await LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship 
+
+            await LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship
 
             LoadCart();
         }
@@ -550,8 +549,7 @@
             return fee;
         }
 
-        async function GetListAddress()
-        {
+        async function GetListAddress() {
             if (DEBUG) {
                 console.log("GetListAddress CALL");
             }
@@ -574,6 +572,14 @@
                 if (JSON.parse(res.responseText) == null) {
                     // uid cookie có nhưng xác thực thất bại, xóa bỏ uid, thành khách vãng lai
                     //DeleteUidCookieWhenAuthentFail();
+                    CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
+                    // Trả về định dạng giống truy vấn httpPost
+                    return new Promise(function (resolve, reject) {
+                        let obj = {
+                            responseText: { State: 0, Message: "" }
+                        };
+                        resolve(obj);
+                    });
                 }
                 else {
                     listCustomerInforCookieObject = JSON.parse(res.responseText);
@@ -611,7 +617,7 @@
                     document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowListCustomerInforModal() });
                 }
                 else {
-                    document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowCustomerInforModal(true, false) });
+                    document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowCustomerInforModal(true, false, null) });
                 }
             }
             // Trả về định dạng giống truy vấn httpPost
@@ -623,67 +629,12 @@
             });
         }
 
-        // Ẩn modal và set giá trị input về ban đầu
-        function RefreshModalCustomerInfor() {
-            // Ẩn modal
-            document.getElementById("modal-customer-infor").style.display = "none";
-
-            // Set giá trị input về ban đầu
-            document.getElementById("customer-name").value = "";
-            document.getElementById("phone-number").value = "";
-            document.getElementById("province").selectedIndex = 0;
-
-            document.getElementById("district").selectedIndex = 0;
-            document.getElementById("subdistrict").selectedIndex = 0;
-            document.getElementById("detail-subdistrict").value = "";
-            document.getElementById("check-default").checked = false;
-
-        }
-
-        // isCreate: true là thêm mới thông tin địa chỉ
-        // false: Cập nhật thông tin cũ
-        // isModalUnder: true, có modal bên dưới, cần tăng zindex = 2 ngược lại không cần
-        async function ShowCustomerInforModal(isCreate, isModalUnder) {
-            if (DEBUG) {
-                console.log("ShowCustomerInforModal CALL");
-            }
-            if (administrativeAddressObject == null) {
-                // Lấy dữ liệu tỉnh, huyện xã từ db
-                let responseDB = await GetAdministrativeAddress();
-                administrativeAddressObject = JSON.parse(responseDB.responseText);
-
-                AddProvince();
-            }
-            let ele = document.getElementById("modal-customer-infor");
-            if (isCreate) {
-                ele.style.display = "block";
-                if (isModalUnder) {
-                    ele.style.zIndex = 2;
-                }
-            }
-            else{
-                ele.style.display = "block";
-                // mặc định có modal ở dưới
-                ele.style.zIndex = 2;
-                // Hiển thị thông tin địa chỉ
-                let obj = listCustomerInforCookieObject[currentIndexInforUpdateObject];
-                document.getElementById("customer-name").value = obj.name;
-                document.getElementById("phone-number").value = obj.phone;
-                document.getElementById("province").value = obj.province;
-                DeleteDistrict();
-                AddDistrict();
-                document.getElementById("district").value = obj.district;
-                DeleteSubDistrict();
-                AddSubDistrict();
-                document.getElementById("subdistrict").value = obj.subdistrict;
-                document.getElementById("detail-subdistrict").value = obj.detail;
-                document.getElementById("check-default").checked = Boolean(obj.defaultAdd);
-
-            }
-        }
-
-        // Từ obj hiển thị tên, phone, địa chỉ lên web
+        // Từ obj hiển thị tên, phone, địa chỉ lên checkout page
         function ShowCustomerInforFromObj(obj) {
+            if (DEBUG) {
+                console.log("currentIndexInforObject: " + currentIndexInforObject);
+                console.log("obj: " + JSON.stringify(obj));
+            }
             document.getElementsByClassName("address-name-phone")[0].style.display = "block";
             document.getElementsByClassName("address-address")[0].style.display = "block";
 
@@ -719,8 +670,7 @@
                 clone.style.display = "flex";
                 clone.setAttribute("data-index", i.toString());
 
-                if ((obj.defaultAdd && currentIndexInforObject == -1)
-                    || currentIndexInforObject == i){
+                if (currentIndexInforObject == i) {
                     clone.getElementsByClassName("address-radio")[0].checked = true;
                 }
 
@@ -729,7 +679,7 @@
 
                 clone.getElementsByClassName("detail")[0].innerHTML = obj.detail;
                 clone.getElementsByClassName("province-district-subdistrict")[0].innerHTML =
-                    obj.province + ", " + obj.district + ", " + obj.subdistrict;
+                    obj.subdistrict + ", " + obj.district + ", " + obj.province;
 
                 if (!obj.defaultAdd) {
                     clone.getElementsByClassName("default-address")[0].style.display = "none";
@@ -743,29 +693,7 @@
             currentIndexInforUpdateObject = -1;
         }
 
-        async function InsertAddress(obj) {
-            if (DEBUG) {
-                console.log("InsertAddress CALL");
-            }
-            const searchParams = new URLSearchParams();
-            searchParams.append("address", JSON.stringify(obj));
-            let query = "/Customer/InsertAddress";
-
-            return await RequestHttpPostPromise(searchParams, query);
-        }
-
-        async function UpdateAddress(obj) {
-            if (DEBUG) {
-                console.log("UpdateAddress CALL");
-            }
-            const searchParams = new URLSearchParams();
-            searchParams.append("address", JSON.stringify(obj));
-            let query = "/Customer/UpdateAddress";
-
-            return await RequestHttpPostPromise(searchParams, query);
-        }
-
-        async function FinishCreateNewCustomerInforModal() {
+        async function FinishCustomerInforModal() {
             if (!ValidCustomerInforInput()) {
                 return;
             }
@@ -797,6 +725,7 @@
                 }
                 listCustomerInforCookieObject.push(obj);
             }
+
             if (CheckAnonymousCustomer()) {// Khách vãng lai
                 SetCartCookieFromListCustomerInforCookieObject(listCustomerInforCookieObject);
             }
@@ -816,6 +745,9 @@
                         CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                         return;
                     }
+
+                    // Cập nhật lại id cho obj vừa thêm vào list
+                    listCustomerInforCookieObject[listCustomerInforCookieObject.length - 1].id = resObj.myAnything;
                 }
             }
 
@@ -823,217 +755,45 @@
 
             RefreshModalCustomerInfor();
 
-
             // Nếu bên dưới có modal hiển thị danh sách địa chỉ, ta cập nhật lại
             // Xóa địa chỉ khỏi danh sách
             document.getElementsByClassName("list-customer-infor-container")[0].innerHTML = "";
             ShowListCustomerInforModal();
         }
 
-        // Tạo cookie obj từ input
-        function CreateCookieValueFromInput() {
-            let isDefault = 1;
-            if (!document.getElementById("check-default").checked) {
-                isDefault = 0;
-            }
-            let obj = new objCustomerInforCookieFromInput(
-                document.getElementById("customer-name").value,
-                document.getElementById("phone-number").value,
-                document.getElementById("province").value,
-                document.getElementById("district").value,
-                document.getElementById("subdistrict").value,
-                document.getElementById("detail-subdistrict").value,
-                isDefault
-            );
-            if (DEBUG) {
-                console.log("CreateCookieValueFromInput CALL" + JSON.stringify(obj));
-            }
-            return obj;
-        }
-
-        // Chỉ gọi 1 lần, vì option không thay đổi
-        function AddProvince() {
-            //if (DEBUG) {
-            //    console.log("AddProvince CALL");
-            //}
-
-            if (administrativeAddressObject == null)
-                return;
-            let ele = document.getElementById("province");
-            let length = administrativeAddressObject.length;
-            //if (DEBUG) {
-            //    console.log("AddProvince CALL length: " + length);
-            //}
-            for (let i = 0; i < length; i++) {
-                let option = document.createElement("option");
-                option.value = administrativeAddressObject[i].province;
-                option.text = administrativeAddressObject[i].province;
-                ele.appendChild(option);
-            }
-
-        }
-
-        async function GetAdministrativeAddress() {
-            if (DEBUG) {
-                console.log("GetAdministrativeAddress CALL");
-            }
-            // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
-            const searchParams = new URLSearchParams();
-
-            let query = "/Home/GetAdministrativeAddress";
-
-            return await RequestHttpPostPromise(searchParams, query);
-        }
-
-        // Thay đổi tỉnh, add huyện tương ứng vào select tag
-        function AddDistrict() {
-            let provinceEle = document.getElementById("province");
-            if (provinceEle.selectedIndex == 0 || provinceEle.selectedIndex == -1) {
-                return;
-            }
-            let districtEle = document.getElementById("district");
-
-            // Trừ 1 vì option đầu là cấp độ: tỉnh, huyện, xã
-            let Obj = administrativeAddressObject[provinceEle.selectedIndex - 1].districts;
-            let length = Obj.length;
-            for (let i = 0; i < length; i++) {
-                let option = document.createElement("option");
-                option.value = Obj[i];
-                option.text = Obj[i];
-                districtEle.appendChild(option);
-            }
-        }
-
-        function DeleteDistrict() {
-            let districtEle = document.getElementById("district");
-            for (let i = districtEle.length - 1; i > 0; i--) {
-                districtEle.remove(i);
-            }
-            districtEle.selectedIndex = 0;
-        }
-
-        // Thay đổi huyện, add xã tương ứng vào select tag
-        function AddSubDistrict() {
-            let provinceEle = document.getElementById("province");
-            if (provinceEle.selectedIndex == 0 || provinceEle.selectedIndex == -1) {
-                return;
-            }
-            let districtEle = document.getElementById("district");
-            if (districtEle.selectedIndex == 0 || districtEle.selectedIndex == -1) {
-                return;
-            }
-            let subdistrictEle = document.getElementById("subdistrict");
-            // Trừ 1 vì option đầu là cấp độ: tỉnh, huyện, xã
-            let Obj = administrativeAddressObject[provinceEle.selectedIndex - 1].subdistricts[districtEle.selectedIndex - 1];
-
-            let length = Obj.length;
-            for (let i = 0; i < length; i++) {
-                let option = document.createElement("option");
-                option.value = Obj[i];
-                option.text = Obj[i];
-                subdistrictEle.appendChild(option);
-            }
-        }
-
-        function DeleteSubDistrict() {
-            let subdistrictEle = document.getElementById("subdistrict");
-            for (let i = subdistrictEle.length - 1; i > 0; i--) {
-                subdistrictEle.remove(i);
-            }
-            subdistrictEle.selectedIndex = 0;
-        }
-
-        function ChangeProvince() {
-            DeleteDistrict();
-            AddDistrict();
-
-            DeleteSubDistrict();
-        }
-
-        function ChangeDistrict() {
-
-            DeleteSubDistrict();
-            AddSubDistrict();
-        }
-
-        function ChangeSubDistrict() {
-
-        }
-
-        // Kiểm tra thông tin tên, sdt, địa chỉ khách nhập đã chính xác
-        function ValidCustomerInforInput() {
-            let isOk = true;
-            // Check tên
-            if (isEmptyOrSpaces(document.getElementById("customer-name").value)) {
-                document.getElementById("customer-name").style.border = "1px solid red";
-                isOk = false;
-            }
-            // Check số điện thoại di động
-            let phoneNumber = document.getElementById("phone-number").value;
-            if (!CheckValidSDT(phoneNumber)) {
-                document.getElementById("phone-number").style.border = "1px solid red";
-                isOk = false;
-            }
-
-            // Check tỉnh
-            if (document.getElementById("province").selectedIndex < 1) {
-                document.getElementById("province").style.border = "1px solid red";
-                isOk = false;
-            }
-
-            // Check huyện
-            if (document.getElementById("district").selectedIndex < 1) {
-                document.getElementById("district").style.border = "1px solid red";
-                isOk = false;
-            }
-
-            // Check xã
-            if (document.getElementById("subdistrict").selectedIndex < 1) {
-                document.getElementById("subdistrict").style.border = "1px solid red";
-                isOk = false;
-            }
-
-            // Check chi tiết
-            if (isEmptyOrSpaces(document.getElementById("detail-subdistrict").value)) {
-                document.getElementById("detail-subdistrict").style.border = "1px solid red";
-                isOk = false;
-            }
-            return isOk;
-        }
-
-        function GetFocus(ele) {
-            ele.style.border = "1px solid rgba(0,0,0,.14)";
-        }
-
         function DestroyListCustomerInforModal() {
             // Xóa địa chỉ khỏi danh sách
             document.getElementsByClassName("list-customer-infor-container")[0].innerHTML = "";
             document.getElementById("modal-list-customer-infor").style.display = "none";
+        }
 
-            // Trở về màn hình chính, nếu chưa có địa chỉ nào được chọn trong khi danh sách địa chỉ
-            // đã có lựa chọn, click vào "Thêm địa chỉ mới" hiện ra cửa sổ "danh sách địa chỉ"
-            // thay vì cửa sổ "tạo mới địa chỉ"
-            // => Phuc tap khoong caan thiet
-            //if (document.getElementsByClassName("change-address-btn")[0].innerHTML == "Thêm địa chỉ mới") {
-            //    if (listCustomerInforCookieObject.length > 0) {
-            //        document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowListCustomerInforModal() });
-            //    }
-            //    else {
-            //        document.getElementsByClassName("change-address-btn")[0].removeEventListenerremoveEventListener("click", function () { ShowCustomerInforModal(true, false) });
-            //    }
-            //}
+        // Ý nghĩa: không thay đổi lựa chọn nhận hàng,
+        // nhưng lựa chọn cũ có thể đã cập nhật nên cần hiển thị ra checkout page
+        function DontConfirmListCustomerInforModal() {
+            DestroyListCustomerInforModal();
+
+            // Cập nhật thông tin lựa chọn cũ
+            ShowCustomerInforFromObj(listCustomerInforCookieObject[currentIndexInforObject]);
+
+            // Tính lại tiền
+            ShowSumMoney();
         }
 
         // Xác nhận dùng thông tin nào nhận hàng
         function ConfirmListCustomerInforModal() {
+            if (DEBUG) {
+                console.log("ConfirmListCustomerInforModal CALL");
+            }
             let list = document.getElementsByClassName("list-customer-infor-container")[0].children;
             let length = list.length;
-            for (let i = 0; i < length - 1; i++) {
+            for (let i = 0; i < length; i++) {
                 let ele = list[i];
+                if (DEBUG) {
+                    console.log("ele.radio.checked: " + ele.getElementsByClassName("address-radio")[0].checked);
+                }
                 if (ele.getElementsByClassName("address-radio")[0].checked) {
                     currentIndexInforObject = parseInt(ele.getAttribute("data-index"));
                     if (DEBUG) {
-                        console.log("ConfirmListCustomerInforModal CALL");
                         console.log("currentIndexInforObject: " + currentIndexInforObject);
                     }
                     ShowCustomerInforFromObj(listCustomerInforCookieObject[currentIndexInforObject]);
@@ -1042,7 +802,7 @@
             }
             DestroyListCustomerInforModal();
 
-            // Tính lại tiền ship
+            // Tính lại tiền
             ShowSumMoney();
         }
 
@@ -1053,7 +813,7 @@
                 console.log("UpdateCustomerInfor CALL");
                 console.log("currentIndexInforUpdateObject: " + currentIndexInforUpdateObject);
             }
-            ShowCustomerInforModal(false, true);
+            ShowCustomerInforModal(false, true, listCustomerInforCookieObject[currentIndexInforUpdateObject]);
         }
 
         function objOrderPay(type, value) {

@@ -550,7 +550,7 @@
 
         let limitQuantity = "Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này";
         let dontSelectVariation = "Vui lòng chọn Phân loại hàng";
-        // Get the modal nhắc chọn variation
+        // Get the modal thông báo đã thêm vào giỏ hàng thành công
         let modal = document.getElementById("myModal");
         // Get the modal nhắc số lượng trong giỏ vượt quá tồn kho
         let modalOverMax = document.getElementById("myModal-over-max");
@@ -1185,6 +1185,8 @@
                 }
 
             }
+            await UpdateCartCount();
+
             if (overMax) {
                 return;
             }
