@@ -2,13 +2,14 @@
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
 using MySql.Data.MySqlClient;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.Order
 {
     public class OrderMySql : BasicMySql
     {
@@ -328,6 +329,224 @@ namespace MVCPlayWithMe.Models
                 result.Message = errMessage;
             }
             conn.Close();
+            return result;
+        }
+
+
+        /// <summary>
+        /// Đếm số lượng đơn hàng
+        /// </summary>
+        /// <param name="customerId"></param>
+        /// <param name="statusOrder"></param>
+        /// <returns></returns>
+        public MySqlResultState SearchOrderCount(int customerId, int statusOrder)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbOrder_Search_Count", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inStatus", statusOrder);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    result.myAnything = MyMySql.GetInt32(rdr, "CountRecord");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState SearchOrderChangePage(int customerId, int statusOrder, int start, int offset)
+        {
+            MySqlResultState result = new MySqlResultState();
+            List<Order> ls = new List<Order>();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Lấy thông tin từ bảng tbOrder
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbOrder_Search", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    cmd.Parameters.AddWithValue("@inStatus", statusOrder);
+                    cmd.Parameters.AddWithValue("@inStart", start);
+                    cmd.Parameters.AddWithValue("@inOffset", offset);
+
+                    MySqlDataReader rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        Order order = new Order();
+                        order.id = MyMySql.GetInt32(rdr, "Id");
+                        order.customerId = MyMySql.GetInt32(rdr, "CustomerId");
+                        order.address.name = MyMySql.GetString(rdr, "Name");
+                        order.address.phone = MyMySql.GetString(rdr, "Phone");
+                        order.address.province = MyMySql.GetString(rdr, "Province");
+                        order.address.district = MyMySql.GetString(rdr, "District");
+                        order.address.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                        order.address.detail = MyMySql.GetString(rdr, "Detail");
+                        order.note = MyMySql.GetString(rdr, "Note");
+                        order.time = MyMySql.GetDateTime(rdr, "Time");
+
+                        ls.Add(order);
+                    }
+
+                    if (rdr != null)
+                        rdr.Close();
+                }
+                int index = 0;
+                int count = ls.Count();
+                if (count > 0)
+                {
+                    // Lấy thông tin từ bảng tbTrackOrder
+                    {
+                        MySqlCommand cmd = new MySqlCommand("st_tbTrackOrder_Search", conn);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                        index = 0;
+                        MySqlDataReader rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            OrderTrack track = new OrderTrack();
+                            track.id = MyMySql.GetInt32(rdr, "Id");
+                            track.orderId = MyMySql.GetInt32(rdr, "OrderId");
+                            track.status = (EShopeeOrderStatus)MyMySql.GetInt32(rdr, "Status");
+                            track.time = MyMySql.GetDateTime(rdr, "Time");
+                            track.SetStrStatus();
+
+                            while (ls[index].id != track.orderId)
+                            {
+                                index++;
+                                if (index >= count)
+                                    break;
+                            }
+                            if (index < count)
+                            {
+                                ls[index].lsOrderTrack.Add(track);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        if (rdr != null)
+                            rdr.Close();
+                    }
+
+                    // Lấy thông tin từ bảng tbPayOrder
+                    {
+                        MySqlCommand cmd = new MySqlCommand("st_tbPayOrder_Search", conn);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                        index = 0;
+                        MySqlDataReader rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            OrderPay pay = new OrderPay();
+                            pay.id = MyMySql.GetInt32(rdr, "Id");
+                            pay.orderId = MyMySql.GetInt32(rdr, "OrderId");
+                            pay.promotionOrderId = MyMySql.GetInt32(rdr, "PromotionOrderId");
+                            pay.type = (EPayType)MyMySql.GetInt32(rdr, "Type");
+                            pay.value = MyMySql.GetInt32(rdr, "Value");
+                            pay.SetStrType();
+
+                            while (ls[index].id != pay.orderId)
+                            {
+                                index++;
+                                if (index >= count)
+                                    break;
+                            }
+                            if (index < count)
+                            {
+                                ls[index].lsOrderPay.Add(pay);
+                            }
+                            else
+                            {
+                                break;
+                            }
+
+                        }
+
+                        if (rdr != null)
+                            rdr.Close();
+                    }
+
+                    // Lấy thông tin từ bảng tbDetailOrde
+                    {
+                        MySqlCommand cmd = new MySqlCommand("st_tbDetailOrder_Search", conn);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                        index = 0;
+                        MySqlDataReader rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            OrderDetail detail = new OrderDetail();
+                            detail.id = MyMySql.GetInt32(rdr, "Id");
+                            detail.orderId = MyMySql.GetInt32(rdr, "OrderId");
+                            detail.itemId = MyMySql.GetInt32(rdr, "ItemId");
+                            detail.itemName = MyMySql.GetString(rdr, "ItemName");
+                            detail.modelId = MyMySql.GetInt32(rdr, "ModelId");
+                            detail.modelName = MyMySql.GetString(rdr, "ModelName");
+                            detail.quantity = MyMySql.GetInt32(rdr, "Quantity");
+                            detail.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                            detail.price = MyMySql.GetInt32(rdr, "Price");
+                            detail.SetImageSrc();
+
+                            while (ls[index].id != detail.orderId)
+                            {
+                                index++;
+                                if (index >= count)
+                                    break;
+                            }
+                            if (index < count)
+                            {
+                                ls[index].lsOrderDetail.Add(detail);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+
+                        if (rdr != null)
+                            rdr.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = errMessage;
+                ls.Clear();
+            }
+
+            conn.Close();
+            result.myJson = ls;//JsonConvert.SerializeObject(ls);
             return result;
         }
     }

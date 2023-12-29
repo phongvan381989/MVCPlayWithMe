@@ -544,6 +544,12 @@ function ConvertMoneyToText(money) {
     return textMoney;
 }
 
+// 
+function ConvertMoneyToTextWithIcon(money) {
+    let text = ConvertMoneyToText(money);
+    return "<sup>₫</sup>" + text;
+}
+
 // Convert text dạng: 123,456,700 sang số tiền
 function ConvertTextToMoney(text) {
     let textMoney = "";
@@ -649,30 +655,10 @@ async function Logout() {
         // Xóa cookie ở thiết bị gửi request, ở thiết bị khác không được xóa
         DeleteCookie(uidKey);
     }
-
+    // Uidkey được xóa từ phía server
     // Quay về trang chủ
-    window.location.href = "/Home/Index";
+    window.location.reload();// = "/Home/Index";
 
-}
-
-async function Login() {
-    if (DEBUG) {
-        console.log("Login CALL");
-    }
-
-    window.location.href = "/Customer/Login";
-}
-
-async function Signup() {
-    window.location.href = "/Customer/CreateCustomer";
-}
-
-async function AccountInfor() {
-    window.location.href = "/Customer/AccountInfor";
-}
-
-async function MyOrder() {
-    window.location.href = "/Customer/MyOrder";
 }
 
 // Tạo thẻ con của dropdown-content, hiển thị hành động tương ứng trên
@@ -694,6 +680,25 @@ function CreateChildOfAccountElement(parrent, func, title) {
     parrent.appendChild(childDiv);
 }
 
+// Tạo thẻ con của dropdown-content, hiển thị hành động tương ứng trên
+// menu Tài Khoản góc trên phải màn hình
+function CreateChildOfAccountElementV2(parrent, href, title) {
+    let childDiv = document.createElement("div");
+    childDiv.className = "remove-underline-container";
+
+    let childA = document.createElement("a");
+    childA.className = "remove-underline";
+    childA.href = href;
+    childA.title = title;
+    childA.innerHTML = title;
+    //if (func != null) {
+    //    childA.onclick = function () { func(); };
+    //}
+
+    childDiv.appendChild(childA);
+    parrent.appendChild(childDiv);
+}
+
 // Check khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
 // menu Tài Khoản góc trên phải màn hình
 // Hàm này phải gọi mỗi khi load page
@@ -705,21 +710,22 @@ function ShowAccoutAction() {
     }
     if (CheckAnonymousCustomer()) {
         // Đăng nhập
-        CreateChildOfAccountElement(ele, function () { Login(); }, "Đăng nhập")
+        CreateChildOfAccountElementV2(ele, "/Customer/Login", "Đăng nhập")
 
         // Đăng ký
-        CreateChildOfAccountElement(ele, function () { Signup(); }, "Đăng ký")
+        CreateChildOfAccountElementV2(ele, "/Customer/CreateCustomer", "Đăng ký")
     }
     else {
 
         // Thông tin tài khoản
-        CreateChildOfAccountElement(ele, function () { AccountInfor(); }, "Thông tin tài khoản")
+        CreateChildOfAccountElementV2(ele, "/Customer/AccountInfor", "Thông tin tài khoản")
 
         // Đơn hàng của tôi
-        CreateChildOfAccountElement(ele, function () { MyOrder(); }, "Đơn hàng của tôi")
+        CreateChildOfAccountElementV2(ele, "/Customer/Order", "Đơn hàng của tôi")
 
         // Đăng xuất
         CreateChildOfAccountElement(ele, function () { Logout(); }, "Đăng xuất")
+
     }
 }
 
@@ -730,6 +736,9 @@ function GoHomePage() {
     }
 }
 
+function GoMyCart() {
+    window.location.href = "/Home/Cart";
+}
 function AuthenFail() {
     CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
     // Xóa uid

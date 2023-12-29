@@ -271,12 +271,54 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public ActionResult MyOrder()
+        public ActionResult Order()
         {
             if (AuthentCustomer() == null)
                 return View("~/Views/Customer/Login.cshtml");
 
             return View();
+        }
+
+        /// <summary>
+        /// /// 0: UNPAID, 1:  READY_TO_SHIP,
+        /// 2: PROCESSED, // Đây là trạng thái sau khi in đơn 3:  SHIPPED, 4:  COMPLETED,
+        /// 5: IN_CANCEL, 6:  CANCELLED, 7:  INVOICE_PENDING, 8: ALL
+        /// </summary>
+        /// <param name="status"></param>
+        /// <returns></returns>
+        [HttpPost]
+        public string SearchOrderCount(int statusOrder)
+        {
+            Customer cus = AuthentCustomer();
+            MySqlResultState result = new MySqlResultState();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+            }
+            else
+            {
+                result = ordersqler.SearchOrderCount(cus.id, statusOrder);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpGet]
+        public string ChangePage(int statusOrder, int start, int offset)
+        {
+            Customer cus = AuthentCustomer();
+
+            MySqlResultState result = new MySqlResultState();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                return JsonConvert.SerializeObject(result);
+            }
+            else
+            {
+                result = ordersqler.SearchOrderChangePage(cus.id, statusOrder, start, offset);
+            }
+
+            return JsonConvert.SerializeObject(result);
         }
     }
 }

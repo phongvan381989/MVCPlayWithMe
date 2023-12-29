@@ -5,19 +5,29 @@ using System.Web;
 
 namespace MVCPlayWithMe.General
 {
-    /// 0: UNPAID, 1:  READY_TO_SHIP,
-    /// 2: PROCESSED, // Đây là trạng thái sau khi in đơn 3:  SHIPPED, 4:  COMPLETED,
-    /// 5: IN_CANCEL, 6:  CANCELLED, 7:  INVOICE_PENDING, 8: ALL
+    // UNPAID:Order is created, buyer has not paid yet.
+    // READY_TO_SHIP:Seller can arrange shipment.
+    // PROCESSED:Seller has arranged shipment online and got tracking number from 3PL.
+    // RETRY_SHIP:3PL pickup parcel fail. Need to re arrange shipment.
+    // SHIPPED:The parcel has been drop to 3PL or picked up by 3PL.
+    // TO_CONFIRM_RECEIVE:The order has been received by buyer.
+    // IN_CANCEL:The order's cancelation is under processing.
+    // CANCELLED:The order has been canceled.
+    // TO_RETURN:The buyer requested to return the order and order's return is processing.
+    // COMPLETED:The order has been completed.
+    // ALL
     public enum EShopeeOrderStatus
     {
         UNPAID,
         READY_TO_SHIP,
         PROCESSED,// Đây là trạng thái sau khi in đơn
+        RETRY_SHIP,
         SHIPPED,
-        COMPLETED,
+        TO_CONFIRM_RECEIVE,
         IN_CANCEL,
         CANCELLED,
-        INVOICE_PENDING,
+        TO_RETURN,
+        COMPLETED,
         ALL
     }
 }

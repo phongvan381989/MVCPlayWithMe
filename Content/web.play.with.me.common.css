@@ -329,11 +329,13 @@
 
 /* Paging start*/
 .wraper-pagination {
-    display: flex;
+    display: none;
+    width: 100%;
+    flex-wrap: wrap;
     /*background-color: DodgerBlue;*/
 }
 
-    .wraper-pagination > div {
+.wraper-pagination > div {
         border-radius: 5px;
         width: 36px;
         height: 32px;

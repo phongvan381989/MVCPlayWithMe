@@ -246,15 +246,6 @@ namespace MVCPlayWithMe.Models.Customer
         /// <returns></returns>
         public MySqlResultState CookieCustomerLogin(string userCookieIdentify, int customerId)
         {
-            //MySqlParameter[] paras = new MySqlParameter[4];
-
-            //paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
-            //paras[1] = new MySqlParameter("@inCustomerId", customerId);
-            //MyMySql.AddOutParameters(paras);
-
-            //MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Login", paras);
-            //return result;
-
             return AddNewCookie(userCookieIdentify, customerId);
         }
 

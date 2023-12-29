@@ -1,0 +1,320 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <style>
+        .status-container{
+            display:flex;
+            padding:10px;
+            background-color:white;
+            flex-wrap:wrap;
+            border-radius:3px;
+            position:sticky;
+            top:0;
+        }
+        .sample-order {
+            display: none;
+            margin-top: 20px;
+            border-radius: 3px;
+            background-color: white;
+            width: 100%;
+        }
+        .nvsflAB87 {
+            border: none;
+            flex-grow: 1;
+            background-color: white;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+
+        .nvsflAB87:hover {
+            color: #ee4d2d !important;
+        }
+
+        .order-header{
+            display:flex;
+            justify-content: flex-end;
+            align-items:center;
+        }
+        .fxASnxvd {
+            line-height: 24px;
+            color: #ee4d2d;
+            text-align: right;
+            text-transform: uppercase;
+            white-space: nowrap;
+            margin:10px;
+        }
+        .sample-item-container {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            width: 100%;
+        }
+        .sample-payment {
+            display: none;
+            justify-content: flex-end;
+            align-items: center;
+            margin: 15px;
+        }
+        .name-quantity {
+            width: 100%;
+            padding: 5px 20px;
+        }
+        .model-icon {
+            width: 80px;
+            height: 80px;
+            flex-shrink: 0;
+            border: 1px solid #e1e1e1;
+            background: #e1e1e1;
+        }
+        .item-money {
+            /*white-space: nowrap;*/
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .j2En5csA {
+            margin: 0 4px 0 0;
+            text-decoration-line: line-through;
+            color: #000;
+            opacity: .26;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ffZM87hf{
+            word-break:break-all;
+        }
+        .result-container{
+            width:100%;
+        }
+        .payment-infor-container {
+            background: #fffefb;
+            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+            border-top: 1px solid #f1f0ed;
+            padding-top: 15px;
+        }
+        .money-title {
+            width: 120px;
+        }
+        .money-padding {
+            min-width: 130px;
+            text-align: end;
+        }
+        .money-sum {
+            height: 30px;
+            font-size: 20px;
+            font-weight: 500;
+            color: #ee4d2d;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="biggestContainer">
+        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+        <div>
+            <div class="status-container">
+                <button class="nvsflAB87" data-status="10" onclick="ShowResult(this);">Tất cả</button>
+                <button class="nvsflAB87" data-status="0" onclick="ShowResult(this);">Chờ thanh toán</button>
+                <button class="nvsflAB87" data-status="3" onclick="ShowResult(this);">Vận chuyển</button>
+                <button class="nvsflAB87" data-status="4" onclick="ShowResult(this);">Chờ giao hàng</button>
+                <button class="nvsflAB87" data-status="9" onclick="ShowResult(this);">Hoàn thành</button>
+                <button class="nvsflAB87" data-status="7" onclick="ShowResult(this);">Đã hủy</button>
+                <button class="nvsflAB87" data-status="8" onclick="ShowResult(this);">Trả hàng/Hoàn tiền</button>
+            </div>
+            <div class="sample-item-container">
+                <img class="model-icon" src="~/Media/searchIcon.png" />
+                <div class="name-quantity">
+                    <div class="ffZM87hf">(Tặng xe đẩy hoặc bàn nhạc) Tã quần/dán Huggies Siêu Cao Cấp Platinum Nature Made M58/L44/XL38/XXL26 NB60/S82/M64/L54/XL</div>
+                    <div class="ffZM87hf">Tên Phân Loại</div>
+                    <div class="ffZM87hf">x2</div>
+                </div>
+                <div class="item-money">
+                    <div>
+                        <span class="j2En5csA">đ280000</span>
+                        <span class="ndAKDn90">đ280000</span>
+                    </div>
+                </div>
+            </div>
+            <div class="sample-payment">
+                <div class="money-title">Tổng tiền hàng</div>
+                <div class="money-padding"><sup>₫</sup>156,000</div>
+            </div>
+            <div class="sample-order">
+                <div class="order-header">
+                    <div class="fxASnxvd">Hoàn Thành</div>
+                </div>
+                <div class="order-item-container">
+
+                </div>
+                <div class="payment-infor-container">
+
+                </div>
+            </div>
+            <div class="result-container">
+                <div class="result-content-container">
+
+                </div>
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+                @Html.Partial("~/Views/Shared/GoToPage.cshtml")
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.paging.js"></script>
+    <script>
+        // Tham số tìm kiếm
+        let status;
+        // Đảm bảo item trên 1 page chia hết số item trên 1 row
+        itemOnPage = 20;
+
+        async function SearchOrderCount() {
+            if (DEBUG) {
+                console.log("SearchOrderCount CALL");
+            }
+            const searchParams = new URLSearchParams();
+            searchParams.append("statusOrder", status);
+            let query = "/Customer/SearchOrderCount";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        function SetSearchParameter(searchParams) {
+            searchParams.append("statusOrder", status);
+        }
+
+        function ShowSearchingResult(res) {
+            if (DEBUG) {
+                console.log("ShowSearchingResult CALL");
+            }
+            // Làm trống
+            let container = document.getElementsByClassName("result-content-container")[0];
+            container.innerHTML = "";
+
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+
+            // Hiển thị order
+
+            let sample = document.getElementsByClassName("sample-order")[0];
+            let sampleItem = document.getElementsByClassName("sample-item-container")[0];
+            let samplePayment = document.getElementsByClassName("sample-payment")[0];
+
+            let length = resObj.myJson.length;
+            for (let i = 0; i < length; i++) {
+                let orderObj = resObj.myJson[i];
+
+                let clone = sample.cloneNode(true);
+                clone.style.display = "block";
+                // Trạng thái đơn
+                clone.getElementsByClassName("fxASnxvd")[0].innerHTML =
+                    orderObj.lsOrderTrack[orderObj.lsOrderTrack.length - 1].strStatus;
+
+                let containerItem = clone.getElementsByClassName("order-item-container")[0];
+                let containerPayment = clone.getElementsByClassName("payment-infor-container")[0];
+                let num = orderObj.lsOrderDetail.length;
+                for (let j = 0; j < num; j++) {
+                    let itemObj = orderObj.lsOrderDetail[j];
+                    let cloneItem = sampleItem.cloneNode(true);
+                    cloneItem.style.display = "flex";
+                    // Icon
+                    cloneItem.getElementsByClassName("model-icon")[0].src = itemObj.imageSrc;
+
+                    // Tên item
+                    cloneItem.getElementsByClassName("ffZM87hf")[0].innerHTML = itemObj.itemName;
+                    // Tên phân loại
+                    cloneItem.getElementsByClassName("ffZM87hf")[1].innerHTML = itemObj.modelName;
+                    // Số lượng
+                    cloneItem.getElementsByClassName("ffZM87hf")[2].innerHTML = "x" + itemObj.quantity;
+
+                    // Tiền giá bìa
+                    cloneItem.getElementsByClassName("j2En5csA")[0].innerHTML =
+                        "<sup>₫</sup>" + ConvertMoneyToText(itemObj.bookCoverPrice * itemObj.quantity);
+                    // Thành tiền
+                    cloneItem.getElementsByClassName("ndAKDn90")[0].innerHTML =
+                        "<sup>₫</sup>" + ConvertMoneyToText(itemObj.price * itemObj.quantity);
+
+                    containerItem.append(cloneItem);
+                }
+
+                num = orderObj.lsOrderPay.length;
+                for (let j = 0; j < num; j++) {
+                    let paymentObj = orderObj.lsOrderPay[j];
+
+                    let clonePayment = samplePayment.cloneNode(true);
+                    clonePayment.style.display = "flex";
+
+                    if (paymentObj.type == 10) {
+                        clonePayment.getElementsByClassName("money-padding")[0].className = "money-padding money-sum";
+                    }
+
+                    clonePayment.getElementsByClassName("money-title")[0].innerHTML = paymentObj.strType;
+                    clonePayment.getElementsByClassName("money-padding")[0].innerHTML = 
+                        ConvertMoneyToTextWithIcon(paymentObj.value);
+
+
+                    containerPayment.append(clonePayment);
+
+                    // Tính tổng tiền, các loại phí, khuyến mại
+                }
+                container.append(clone);
+            }
+        }
+
+        async function ShowResult(ele) {
+            status = parseInt(ele.getAttribute("data-status"));
+            // Bỏ màu bottom-border, chữ của button cũ
+            let lsBtn = document.getElementsByClassName("nvsflAB87");
+            for (let i = 0; i < lsBtn.length; i++) {
+                if (lsBtn[i] != ele) {
+                    lsBtn[i].style.color = "initial";
+                    lsBtn[i].style.borderBottom  = "none";
+                }
+                else {
+                    lsBtn[i].style.color = "#ee4d2d";
+                    lsBtn[i].style.borderBottom = "2px solid #ee4d2d";
+                }
+            }
+
+            // Lấy dữ liệu server
+            let res = await SearchOrderCount();
+            let resObj = JSON.parse(res.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+            if (resObj.myAnything == 0)
+            {
+                // Làm trống
+                document.getElementsByClassName("result-content-container")[0].innerHTML = "";
+
+                EmptySomethingV2();
+                return;
+            }
+            // Lấy số lượng sản phẩm trong kết quả trả về
+            countItem = resObj.myAnything;
+
+            maxPage = Math.floor(countItem / itemOnPage);
+            if (countItem % itemOnPage != 0)
+                maxPage = maxPage + 1;
+            currentPage = -1; // Làm mới currentPage
+            // Lấy dữ liệu cho page 1
+            ChangePage(1, "/Customer/ChangePage");
+        }
+    </script>
+</body>
+</html>

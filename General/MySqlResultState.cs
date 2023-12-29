@@ -99,5 +99,8 @@ namespace MVCPlayWithMe.General
         /// Chứa giá trị bất kỳ số nguyên
         /// </summary>
         public int myAnything { get; set; }
+
+        // Chứa json của đối tượng server trả về
+        public object myJson { get; set; }
     }
 }

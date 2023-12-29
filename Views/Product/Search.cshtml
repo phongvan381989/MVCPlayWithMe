@@ -43,18 +43,20 @@
                 console.log("responseText: " + resObj.responseText);
             }
             // Lấy số lượng sản phẩm trong kết quả trả về
-            countModel = parseInt(resObj.responseText);
-            if (countModel == 0) {
+            countItem = parseInt(resObj.responseText);
+            if (countItem == 0) {
                 document.getElementById("empty-result").style.display = "block";
                 document.getElementById("search-result").style.display = "none";
+
+                document.getElementsByClassName("wraper-pagination")[0].innerHTML = "";
                 return;
             }
 
             document.getElementById("empty-result").style.display = "none";
             document.getElementById("search-result").style.display = "block";
 
-            maxPage = Math.floor(countModel / itemOnPage)
-            if (countModel % itemOnPage != 0)
+            maxPage = Math.floor(countItem / itemOnPage);
+            if (countItem % itemOnPage != 0)
                 maxPage = maxPage + 1;
             currentPage = -1; // Làm mới currentPage
             // Lấy dữ liệu cho page 1

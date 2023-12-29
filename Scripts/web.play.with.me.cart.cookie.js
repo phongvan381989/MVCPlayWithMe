@@ -136,6 +136,8 @@ function RefreshRealOfCartCookieAndGet() {
     let oldCart = GetCookie(cartKey);
 
     let listCartCookie = GetListCartCookieFromCartCookie(oldCart);
+    if (listCartCookie.length == 0)
+        return listCartCookie;
 
     // Set tất cả real trước đó về real=0
     for (let i = 0; i < listCartCookie.length; i++) {

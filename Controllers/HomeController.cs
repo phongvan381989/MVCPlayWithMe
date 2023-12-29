@@ -154,13 +154,6 @@ namespace MVCPlayWithMe.Controllers
                 // Khách vãng lai
                 // Lấy cart cookie
                 List<Cart> ls = Cookie.GetListCartCookie(HttpContext);
-                // Không được gọi từ click mua ngay thì mặc định tất cả giỏ hàng có real = 0;
-
-                foreach (var cart in ls)
-                {
-                    cart.real = 0;
-                }
-
                 ordersqler.GetCart(ls);
                 ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
             }
@@ -177,31 +170,6 @@ namespace MVCPlayWithMe.Controllers
             }
             return View();
         }
-
-        // Dành riêng cho khách vãng lai
-        public ActionResult CartBuyNow()
-        {
-            // Lấy cart cookie
-            List<Cart> ls = Cookie.GetListCartCookie(HttpContext);
-            ordersqler.GetCart(ls);
-            ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
-            return View("~/Views/Home/Cart.cshtml");
-            //return View("~/Views/Administrator/Index.cshtml");
-        }
-
-        //// Lấy sản phẩm khách chọn mua, real = 1;
-        //private List<CartCookie> GetRealCartCookie(List<CartCookie> ls)
-        //{
-        //    List<CartCookie> lsRealCartCookie = new List<CartCookie>();
-        //    foreach (var cart in ls)
-        //    {
-        //        if (cart.real == 1)
-        //        {
-        //            lsRealCartCookie.Add(cart);
-        //        }
-        //    }
-        //    return lsRealCartCookie;
-        //}
 
         // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
         // giảm giá thêm: giảm giá cho khách quen, giảm giá cho đơn lơn hơn 500k,...

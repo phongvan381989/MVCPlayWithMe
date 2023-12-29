@@ -27,5 +27,15 @@ namespace MVCPlayWithMe.Models.Order
 
         public DateTime time { get; set; }
 
+
+        public Order()
+        {
+            id = -1;
+            lsOrderPay = new List<OrderPay>();
+            lsOrderTrack = new List<OrderTrack>();
+            lsOrderDetail = new List<OrderDetail>();
+            address = new Address();
+        }
     }
+
 }

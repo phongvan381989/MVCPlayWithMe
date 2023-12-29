@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.Order
 {
     /// <summary>
     /// 0: Tổng tiền hàng
@@ -28,8 +28,16 @@ namespace MVCPlayWithMe.Models
         /// </summary>
         PROMOTION,
 
+        OTHER1,
+        OTHER2,
+        OTHER3,
+        OTHER4,
+        OTHER5,
+        OTHER6,
+        OTHER7,
+
         /// <summary>
-        /// 3
+        /// 10
         /// </summary>
         SUM
     }
@@ -47,6 +55,24 @@ namespace MVCPlayWithMe.Models
 
         public EPayType type { get; set; }
 
+        public string strType { get; set; }
+
         public int value { get; set; }
+
+        public void SetStrType()
+        {
+            if(type == EPayType.TOTAL_OF_COST_GOODS)
+            {
+                strType = "Tổng tiền hàng";
+            }
+            else if(type == EPayType.SHIP)
+            {
+                strType = "Phí vận chuyển";
+            }
+            else if( type == EPayType.SUM)
+            {
+                strType = "Tổng thanh toán";
+            }
+        }
     }
 }

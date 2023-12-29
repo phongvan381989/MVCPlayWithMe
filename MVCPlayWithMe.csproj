@@ -292,7 +292,6 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\web.play.with.me.common.css" />
     <Content Include="Content\web.play.with.me.modal.common.css" />
-    <Content Include="Content\web.play.with.me.paging.css" />
     <Content Include="Content\web.play.with.me.table.show.data.css" />
     <Content Include="favicon.ico" />
     <Content Include="fonts\glyphicons-halflings-regular.svg" />
@@ -415,7 +414,7 @@
     <Content Include="Views\Shared\Home\CustomerInfor.cshtml" />
     <Content Include="Views\Shared\Home\ListCustomerInfor.cshtml" />
     <Content Include="Views\Customer\AccountInfor.cshtml" />
-    <Content Include="Views\Customer\MyOrder.cshtml" />
+    <Content Include="Views\Customer\Order.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
