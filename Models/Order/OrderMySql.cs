@@ -373,6 +373,27 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
+        /// <summary>
+        /// Lấy index trong list có orderId bằng tham số truyền vào
+        /// </summary>
+        /// <param name="ls"></param>
+        /// <param name="fromIndex">index bắt đầu tìm kiếm</param>
+        /// <param name="count">số phần tử của danh sách</param>
+        /// <param name="orderId"></param>
+        /// <returns></returns>
+        private int GetIndex(List<Order> ls, int fromIndex,int count, int orderId)
+        {
+            int index = -1;// nếu không tìm thấy
+            for(int i = fromIndex; i < count; i++)
+            {
+                if(ls[i].id == orderId)
+                {
+                    index = i;
+                }
+            }
+            return index;
+        }
+
         public MySqlResultState SearchOrderChangePage(int customerId, int statusOrder, int start, int offset)
         {
             MySqlResultState result = new MySqlResultState();
@@ -413,7 +434,10 @@ namespace MVCPlayWithMe.Models.Order
                     if (rdr != null)
                         rdr.Close();
                 }
+
                 int index = 0;
+                int indexTemp = 0;
+                int orderIdTemp = 0;
                 int count = ls.Count();
                 if (count > 0)
                 {
@@ -427,27 +451,22 @@ namespace MVCPlayWithMe.Models.Order
                         MySqlDataReader rdr = cmd.ExecuteReader();
                         while (rdr.Read())
                         {
+                            orderIdTemp = MyMySql.GetInt32(rdr, "OrderId");
+                            if (orderIdTemp < ls[index].id)
+                                continue;
+                            indexTemp = GetIndex(ls, index, count, orderIdTemp);
+                            if (indexTemp == -1)
+                                continue;
+
+                            index = indexTemp;
+
                             OrderTrack track = new OrderTrack();
                             track.id = MyMySql.GetInt32(rdr, "Id");
-                            track.orderId = MyMySql.GetInt32(rdr, "OrderId");
+                            track.orderId = orderIdTemp;
                             track.status = (EShopeeOrderStatus)MyMySql.GetInt32(rdr, "Status");
                             track.time = MyMySql.GetDateTime(rdr, "Time");
                             track.SetStrStatus();
-
-                            while (ls[index].id != track.orderId)
-                            {
-                                index++;
-                                if (index >= count)
-                                    break;
-                            }
-                            if (index < count)
-                            {
-                                ls[index].lsOrderTrack.Add(track);
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            ls[index].lsOrderTrack.Add(track);
                         }
 
                         if (rdr != null)
@@ -464,29 +483,23 @@ namespace MVCPlayWithMe.Models.Order
                         MySqlDataReader rdr = cmd.ExecuteReader();
                         while (rdr.Read())
                         {
+                            orderIdTemp = MyMySql.GetInt32(rdr, "OrderId");
+                            if (orderIdTemp < ls[index].id)
+                                continue;
+                            indexTemp = GetIndex(ls, index, count, orderIdTemp);
+                            if (indexTemp == -1)
+                                continue;
+
+                            index = indexTemp;
+
                             OrderPay pay = new OrderPay();
                             pay.id = MyMySql.GetInt32(rdr, "Id");
-                            pay.orderId = MyMySql.GetInt32(rdr, "OrderId");
+                            pay.orderId = orderIdTemp;
                             pay.promotionOrderId = MyMySql.GetInt32(rdr, "PromotionOrderId");
                             pay.type = (EPayType)MyMySql.GetInt32(rdr, "Type");
                             pay.value = MyMySql.GetInt32(rdr, "Value");
                             pay.SetStrType();
-
-                            while (ls[index].id != pay.orderId)
-                            {
-                                index++;
-                                if (index >= count)
-                                    break;
-                            }
-                            if (index < count)
-                            {
-                                ls[index].lsOrderPay.Add(pay);
-                            }
-                            else
-                            {
-                                break;
-                            }
-
+                            ls[index].lsOrderPay.Add(pay);
                         }
 
                         if (rdr != null)
@@ -503,9 +516,18 @@ namespace MVCPlayWithMe.Models.Order
                         MySqlDataReader rdr = cmd.ExecuteReader();
                         while (rdr.Read())
                         {
+                            orderIdTemp = MyMySql.GetInt32(rdr, "OrderId");
+                            if (orderIdTemp < ls[index].id)
+                                continue;
+                            indexTemp = GetIndex(ls, index, count, orderIdTemp);
+                            if (indexTemp == -1)
+                                continue;
+
+                            index = indexTemp;
+
                             OrderDetail detail = new OrderDetail();
                             detail.id = MyMySql.GetInt32(rdr, "Id");
-                            detail.orderId = MyMySql.GetInt32(rdr, "OrderId");
+                            detail.orderId = orderIdTemp;
                             detail.itemId = MyMySql.GetInt32(rdr, "ItemId");
                             detail.itemName = MyMySql.GetString(rdr, "ItemName");
                             detail.modelId = MyMySql.GetInt32(rdr, "ModelId");
@@ -515,20 +537,7 @@ namespace MVCPlayWithMe.Models.Order
                             detail.price = MyMySql.GetInt32(rdr, "Price");
                             detail.SetImageSrc();
 
-                            while (ls[index].id != detail.orderId)
-                            {
-                                index++;
-                                if (index >= count)
-                                    break;
-                            }
-                            if (index < count)
-                            {
-                                ls[index].lsOrderDetail.Add(detail);
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            ls[index].lsOrderDetail.Add(detail);
                         }
 
                         if (rdr != null)

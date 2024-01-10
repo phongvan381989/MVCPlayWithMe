@@ -233,7 +233,6 @@
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\ErrorController.cs" />
-    <Compile Include="Controllers\HelloWorldController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
@@ -419,7 +418,6 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Media\" />
-    <Folder Include="Views\HelloWorld\" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="fonts\glyphicons-halflings-regular.woff2" />

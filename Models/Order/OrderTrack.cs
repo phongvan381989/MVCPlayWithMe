@@ -13,10 +13,10 @@ namespace MVCPlayWithMe.Models.Order
     {
         static string[] arrayStatus = {
             "Chưa thanh toán",
-            "Chờ đóng hàng",
-            "Chờ lấy hàng",
+            "Chuẩn bị hàng",
+            "Chờ giao ĐVVC",
             "Lấy hàng thất bại",
-            "Chờ giao hàng",
+            "Chờ giao khách",
             "Nhận hàng",
             "Đơn hủy",
             "Đã hủy đơn",

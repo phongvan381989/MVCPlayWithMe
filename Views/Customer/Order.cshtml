@@ -64,7 +64,7 @@
             display: none;
             justify-content: flex-end;
             align-items: center;
-            margin: 15px;
+            padding: 15px;
         }
         .name-quantity {
             width: 100%;
@@ -99,9 +99,11 @@
         }
         .payment-infor-container {
             background: #fffefb;
-            box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-            border-top: 1px solid #f1f0ed;
-            padding-top: 15px;
+            /*box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);*/
+            /*border-top: 1px solid #f1f0ed;*/
+            border-style: solid;
+            border-width: 0px;
+            /*padding-top: 15px;*/
         }
         .money-title {
             width: 120px;
@@ -126,8 +128,9 @@
             <div class="status-container">
                 <button class="nvsflAB87" data-status="10" onclick="ShowResult(this);">Tất cả</button>
                 <button class="nvsflAB87" data-status="0" onclick="ShowResult(this);">Chờ thanh toán</button>
-                <button class="nvsflAB87" data-status="3" onclick="ShowResult(this);">Vận chuyển</button>
-                <button class="nvsflAB87" data-status="4" onclick="ShowResult(this);">Chờ giao hàng</button>
+                <button class="nvsflAB87" data-status="1" onclick="ShowResult(this);">Chuẩn bị hàng</button>
+                <button class="nvsflAB87" data-status="2" onclick="ShowResult(this);">Chờ giao ĐVVC</button>
+                <button class="nvsflAB87" data-status="4" onclick="ShowResult(this);">Chờ giao khách</button>
                 <button class="nvsflAB87" data-status="9" onclick="ShowResult(this);">Hoàn thành</button>
                 <button class="nvsflAB87" data-status="7" onclick="ShowResult(this);">Đã hủy</button>
                 <button class="nvsflAB87" data-status="8" onclick="ShowResult(this);">Trả hàng/Hoàn tiền</button>
@@ -165,7 +168,6 @@
                 <div class="result-content-container">
 
                 </div>
-                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
                 @Html.Partial("~/Views/Shared/GoToPage.cshtml")
             </div>
         </div>
