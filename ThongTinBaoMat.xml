@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<ThongTinBaoMat>
+  <Tiki>
+    <Application>
+      <ID>6249716820922226</ID>
+      <Home>https://tiki.vn/cua-hang/play-with-me</Home>
+      <Secret>9IfqSeQngzps840fhdQoZ0GLC34gTPob</Secret>
+      <UsingApp>Đang Sử Dụng</UsingApp>
+      <Authorization>
+        <AccessToken>3rb70kkNtCKR0i821B4Pf_ktYgpgIz9vQVX7Bsub5z8.mZzwI8RXmLdmD0EpAuygBVBpHLhCLYyE9bX2mSVQKU0</AccessToken>
+        <ExpiresIn>1295999</ExpiresIn>
+        <Scope></Scope>
+        <TokenType>bearer</TokenType>
+      </Authorization>
+    </Application>
+  </Tiki>
+  <Shopee>
+    <ShopId>137637267</ShopId>
+    <PartnerId>2002851</PartnerId>
+    <PartnerKey>6a4d4d58414467746a787349565454646a7554767045756f72776e6779755676</PartnerKey>
+    <Code>4f77526f694963617967556570496e41</Code>
+    <AccessToken>507472535551726761665469714e5264</AccessToken>
+    <RefreshToken>5a6d796b535a6c4b46444e7a4e634b65</RefreshToken>
+  </Shopee>
+</ThongTinBaoMat>

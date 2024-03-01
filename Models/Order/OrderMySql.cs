@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Customer;
+using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -463,7 +464,7 @@ namespace MVCPlayWithMe.Models.Order
                             OrderTrack track = new OrderTrack();
                             track.id = MyMySql.GetInt32(rdr, "Id");
                             track.orderId = orderIdTemp;
-                            track.status = (EShopeeOrderStatus)MyMySql.GetInt32(rdr, "Status");
+                            track.status = (EOrderStatus)MyMySql.GetInt32(rdr, "Status");
                             track.time = MyMySql.GetDateTime(rdr, "Time");
                             track.SetStrStatus();
                             ls[index].lsOrderTrack.Add(track);

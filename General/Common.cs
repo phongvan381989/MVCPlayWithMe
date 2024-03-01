@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using System.Web.Mvc;
+using System.Globalization;
+using RestSharp;
 
 namespace MVCPlayWithMe.General
 {
@@ -32,10 +34,34 @@ namespace MVCPlayWithMe.General
         #endregion
 
         /// <summary>
+        /// Hàm trả về fail, chi tiết lỗi sẽ được lưu trong biến này
+        /// </summary>
+        public static string CommonErrorMessage;
+
+        public enum EECommerceType
+        {
+            PLAY_WITH_ME,
+            TIKI,
+            SHOPEE,
+            LAZADA
+        }
+
+        public static string eShopee = "SHOPEE";
+        public static string eTiki = "TIKI";
+        public static string eLazada = "LAZADA";
+        public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
+
+        public static string returnedOrder = "Hoàn Hàng";
+        public static string packedOrder = "Hoàn Hàng";
+
+        /// <summary>
         /// Đường dẫn thư mục chứa file ảnh
         /// </summary>
         public static string ProductMediaFolderPath;
         public static string ItemMediaFolderPath;
+        public static string ThongTinBaoMatPath;
+        public static string TemporaryImageShopeeMediaFolderPath;
+        public static string TemporaryImageTikiMediaFolderPath;
         public static string ConvertIntToVNDFormat(int money)
         {
             // Thêm ','
@@ -376,6 +402,103 @@ namespace MVCPlayWithMe.General
             return rs;
         }
 
+        #region Xử lý ảnh lấy từ bên sàn thương mại điện tử, lưu vào Media/Temporary/Image
+        /// <summary>
+        ///  Từ url lấy được tên file
+        /// </summary>
+        /// <param name="url"https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png </param>
+        ///                  https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
+        /// <returns></returns>
+        public static String GetNameFromURL(string url)
+        {
+            string fileName = string.Empty;
+            if (string.IsNullOrEmpty(url))
+                return fileName;
+
+            // Lấy tên file ảnh
+            // Từ url lấy được tên ảnh
+            int lastIndex = url.LastIndexOf('/');
+            if (lastIndex == -1 || lastIndex == url.Length - 1)
+            {
+            }
+            else
+            {
+                fileName = url.Substring(lastIndex + 1);
+            }
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                string extention = Path.GetExtension(fileName);
+                if (string.IsNullOrEmpty(extention))
+                    fileName = fileName + ".jfif";
+            }
+            return fileName;
+        }
+
+        /// <summary>
+        /// Lấy được image source, nếu cần tải ảnh từ sàn TMDT
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="pathFolder"></param>
+        public static string GetFullPathOfImage(string url, string pathFolder)
+        {
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(pathFolder))
+                return string.Empty;
+
+            string fileName = GetNameFromURL(url);
+
+            if (string.IsNullOrEmpty(fileName))
+                return string.Empty;
+
+            if (!File.Exists(Path.Combine(pathFolder, fileName)))
+            {
+                // Nếu ảnh chưa có ta download ảnh
+                RestClient client = new RestClient(url);
+                client.Timeout = -1;
+                RestRequest request = new RestRequest(Method.GET);
+
+                try
+                {
+                    var fileBytes = client.DownloadData(request);
+                    File.WriteAllBytes(Path.Combine(pathFolder, fileName), fileBytes);
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    return string.Empty;
+                }
+            }
+
+            return Path.Combine(pathFolder, fileName);
+        }
+        #endregion
+
+        public static long ConvertStringToInt64(string str)
+        {
+            long rs;
+
+            try
+            {
+                rs = Int64.Parse(str);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+                rs = System.Int64.MinValue;
+            }
+
+            return rs;
+        }
+
+        /// <summary>
+        /// Giá trị num trong kiểu int, nhưng đang được lưu kiểu long, ta convert sang string rồi convert sang int
+        /// </summary>
+        /// <param name="num"></param>
+        /// <returns></returns>
+        public static int ConvertLongToInt(long num)
+        {
+            return ConvertStringToInt32(num.ToString());
+        }
+
         public static List<int> ConvertJsonArrayToListInt(string json)
         {
             List<string> lsStr = JsonConvert.DeserializeObject<List<string>>(json);
@@ -388,8 +511,14 @@ namespace MVCPlayWithMe.General
             return lsInt;
         }
 
+        public static void SetResultException(Exception ex, MySqlResultState result)
+        {
+            result.State = EMySqlResultState.ERROR;
+            result.Message = ex.ToString();
+        }
+
         #region Xử lý tiền
-         public static int FloorMoney(int money)
+        public static int FloorMoney(int money)
         {
             return money / 100 * 100;
         }
@@ -571,6 +700,185 @@ namespace MVCPlayWithMe.General
             }
 
             return true;
+        }
+        #endregion
+
+        #region Thời gian
+        /// <summary>
+        /// Định dạng: YYYY
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Boolean CheckYear(string text)
+        {
+            Int32 year;
+            try
+            {
+                year = Int32.Parse(text);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                return false;
+            }
+            if (year > 9999 || year < 1900)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Định dạng: M hoặc MM
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Boolean CheckMonth(string text)
+        {
+            Int32 month;
+            try
+            {
+                month = Int32.Parse(text);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                return false;
+            }
+            if (month > 12 || month < 1)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        /// Định dạng D hoặc DD
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
+        public static Boolean CheckDayOfMonth(string text)
+        {
+            Int32 day;
+            try
+            {
+                day = Int32.Parse(text);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                return false;
+            }
+            if (day > 31 || day < 1)
+                return false;
+
+            return true;
+        }
+
+        /// <summary>
+        ///  Check text có thể convert sang dạng thời gian
+        ///  03/08/1989 -> DD/MM/YYYY
+        ///  3/8/1989 -> DD/MM/YYYY
+        ///  8/1989 -> MM/YYYY
+        ///  1989->YYYY
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="enableNullOrEmpty">True: Cho phép text là null hay empty</param>
+        /// <returns></returns>
+        public static Boolean CheckTimeValid(string text, Boolean enableNullOrEmpty)
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                if (enableNullOrEmpty)
+                    return true;
+                else
+                    return false;
+            }
+
+            char[] delimiterChars = { '_', '.', '-', '/' };
+            string[] words = text.Split(delimiterChars);
+            Boolean isOk = true;
+            do
+            {
+                int length = words.Length;
+                if (length > 3 || length < 1)
+                {
+                    isOk = false;
+                    break;
+                }
+
+                // Text dạng YYYY
+                if (length == 1)
+                {
+                    if (!CheckYear(words[0]))
+                    {
+                        isOk = false;
+                        break;
+                    }
+                }
+                else if (length == 2) // Text dạng MM/YYYY
+                {
+                    if (!CheckMonth(words[0]) || !CheckYear(words[1]))
+                    {
+                        isOk = false;
+                        break;
+                    }
+                }
+                else // Text dạng DD/MM/YYYY
+                {
+                    if (!CheckDayOfMonth(words[0]) || !CheckMonth(words[1]) || !CheckYear(words[2]))
+                    {
+                        try
+                        {
+                            DateTime dt = DateTime.ParseExact(text, "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                        }
+                        catch (Exception ex)
+                        {
+                            string ms = ex.Message;
+                            isOk = false;
+                        }
+                    }
+                }
+
+            } while (false);
+
+            if (!isOk)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static long GetTimestampNow()
+        {
+            DateTime start = DateTime.Now;
+            long timest = ((DateTimeOffset)start).ToUnixTimeSeconds();
+            return timest;
+        }
+
+        public static long GetTimestamp(DateTime dt)
+        {
+            long timest = ((DateTimeOffset)dt).ToUnixTimeSeconds();
+            return timest;
+        }
+
+        public static DateTime GetDateFromTimestamp(long timest)
+        {
+            DateTimeOffset dateTimeOffset = DateTimeOffset.FromUnixTimeSeconds(timest);
+            DateTime dateTime = dateTimeOffset.LocalDateTime;
+            return dateTime;
+        }
+
+        public static string GetTimeNowddMMYYYY()
+        {
+            return DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+        }
+
+        public static DateTime ConvertStringToDateTime(string str)
+        {
+            // Trả giá trị mặc định là ngày sinh Sâu béo
+            if (string.IsNullOrEmpty(str))
+                return DateTime.ParseExact("05/08/2018 01:01:01", "dd/MM/yyyy", CultureInfo.InvariantCulture);
+
+            return DateTime.ParseExact(str, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
         }
         #endregion
     }

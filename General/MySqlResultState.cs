@@ -63,7 +63,12 @@ namespace MVCPlayWithMe.General
         /// over max
         /// 8
         /// </summary>
-        OVER_MAX
+        OVER_MAX,
+
+        /// <summary>
+        /// 9
+        /// </summary>
+        OUT_MIN
     }
     public class MySqlResultState
     {

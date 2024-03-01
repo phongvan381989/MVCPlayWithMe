@@ -56,7 +56,9 @@ namespace MVCPlayWithMe.Controllers
         public ActionResult Login()
         {
             if (AuthentAdministrator() == null)
+            {
                 return View();
+            }
 
             return View("~/Views/Administrator/Index.cshtml");
         }
@@ -95,6 +97,7 @@ namespace MVCPlayWithMe.Controllers
                     result = resultInsert;
                 }
             }
+
             return JsonConvert.SerializeObject(result);
         }
     }

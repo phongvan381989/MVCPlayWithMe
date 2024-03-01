@@ -699,11 +699,25 @@ function CreateChildOfAccountElementV2(parrent, href, title) {
     parrent.appendChild(childDiv);
 }
 
+// Tạo img tag
+function CreateImageElement(/*width, height, */src, className) {
+    let img = document.createElement("img");
+    img.src = src;
+    img.className = className;
+    //img.height = height;
+    //img.width = width;
+    return img;
+}
+
 // Check khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
 // menu Tài Khoản góc trên phải màn hình
 // Hàm này phải gọi mỗi khi load page
 function ShowAccoutAction() {
     let ele = document.getElementsByClassName("dropdown-content")[0];
+    if (ele == null) { // Đăng nhập với vai trò admin
+        return;
+    }
+
     ele.innerHTML = "";
     if (DEBUG) {
         console.log("ele" + ele.tagName);
@@ -739,6 +753,7 @@ function GoHomePage() {
 function GoMyCart() {
     window.location.href = "/Home/Cart";
 }
+
 function AuthenFail() {
     CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
     // Xóa uid
@@ -746,6 +761,7 @@ function AuthenFail() {
     // Quay về trang chủ
     window.location.href = "/Home/Index";
 }
+
 // Cập nhật số sản phẩm trong giỏ hàng ( menu top), ẩn hiện icon giỏ hàng nếu cần thiết
 async function UpdateCartCount() {
     let length = 0;
@@ -776,6 +792,10 @@ async function UpdateCartCount() {
 
 // Những hành động mà mọi page đều phải thực hiện sau khi load
 async function CommonAction() {
+    if (document.getElementById("biggestContainer_top") == null) {
+        return;
+    }
+
     await ShowAccoutAction();
     await UpdateCartCount();
 }

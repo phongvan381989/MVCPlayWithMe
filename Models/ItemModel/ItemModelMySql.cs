@@ -7,7 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.ItemModel
 {
     public class ItemModelMySql : BasicMySql
     {
@@ -293,16 +293,17 @@ namespace MVCPlayWithMe.Models
         public MySqlResultState AddMapping(Model model)
         {
             MySqlResultState result = new MySqlResultState();
-            if (model.mappingOnlyProductId.Count() == 0)
+            if (model.mapping.Count() == 0)
             {
                 return result;
             }
 
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[4];
+            paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@inModelId", model.id);
             paras[1] = new MySqlParameter("@inProductId", 0);
+            paras[2] = new MySqlParameter("@inQuantity", 0);
             MyMySql.AddOutParameters(paras);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -314,9 +315,10 @@ namespace MVCPlayWithMe.Models
                 MySqlCommand cmd = new MySqlCommand("st_tbMapping_Insert", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddRange(paras);
-                foreach (var id in model.mappingOnlyProductId)
+                foreach (var map in model.mapping)
                 {
-                    paras[1].Value = id;
+                    paras[1].Value = map.product.id;
+                    paras[2].Value = map.quantity;
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -353,7 +355,7 @@ namespace MVCPlayWithMe.Models
         /// </summary>
         /// <param name="rdr">Trả về ngay từ câu select</param>
         /// <returns></returns>
-        private Product ConvertOneRowFromDataMySqlToProduct(MySqlDataReader rdr)
+        public static Product ConvertOneRowFromDataMySqlToProduct(MySqlDataReader rdr)
         {
             Product product = new Product();
             product.id = MyMySql.GetInt32(rdr, "ProductId");
@@ -390,13 +392,13 @@ namespace MVCPlayWithMe.Models
             return product;
         }
 
-        private void ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr, List<Model> lsModel)
+        private void ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr, List<Model> models)
         {
             int modelId = MyMySql.GetInt32(rdr, "ModelId");
             if (modelId != -1)// item đã có model
             {
-                // check lsModel đã có model này chưa? Chỉ cần check phần tử cuối cùng của lsModel
-                if (lsModel.Count() == 0 || lsModel[lsModel.Count() - 1].id != modelId)
+                // check models đã có model này chưa? Chỉ cần check phần tử cuối cùng của models
+                if (models.Count() == 0 || models[models.Count() - 1].id != modelId)
                 {
                     Model model = new Model();
                     model.id = modelId;
@@ -407,12 +409,13 @@ namespace MVCPlayWithMe.Models
                     model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
                     model.SetSrcImage();
 
-                    lsModel.Add(model);
+                    models.Add(model);
                 }
 
                 Product pro = ConvertOneRowFromDataMySqlToProduct(rdr);
+                int quan = MyMySql.GetInt32(rdr, "MappingQuantity");
                 if (pro.id != -1)
-                    lsModel[lsModel.Count() - 1].mapping.Add(pro);
+                    models[models.Count() - 1].mapping.Add( new Mapping(pro, quan));
             }
         }
 
@@ -513,7 +516,7 @@ namespace MVCPlayWithMe.Models
         public Item GetItemFromId(int id)
         {
             Item item = null;
-            List<Model> lsModel = new List<Model>();
+            List<Model> models = new List<Model>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
@@ -530,16 +533,16 @@ namespace MVCPlayWithMe.Models
                     {
                         item = ConvertOneRowFromDataMySqlToItem(rdr);
                     }
-                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                    ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in lsModel)
+                foreach (var model in models)
                 {
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
-                item.models = lsModel;
+                item.models = models;
                 item.SetPriceAndQuantity();
             }
             catch (Exception ex)
@@ -556,7 +559,7 @@ namespace MVCPlayWithMe.Models
         public Item GetItemFromIdWithReadyConn(int id, MySqlConnection conn)
         {
             Item item = null;
-            List<Model> lsModel = new List<Model>();
+            List<Model> models = new List<Model>();
             try
             {
                 MySqlCommand cmd = new MySqlCommand("st_tbItem_Get_From_Id", conn);
@@ -570,16 +573,16 @@ namespace MVCPlayWithMe.Models
                     {
                         item = ConvertOneRowFromDataMySqlToItem(rdr);
                     }
-                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                    ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in lsModel)
+                foreach (var model in models)
                 {
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
-                item.models = lsModel;
+                item.models = models;
                 item.SetPriceAndQuantity();
             }
             catch (Exception ex)
@@ -596,7 +599,7 @@ namespace MVCPlayWithMe.Models
         public Item GetItemFromModelId(int id)
         {
             Item item = null;
-            List<Model> lsModel = new List<Model>();
+            List<Model> models = new List<Model>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
@@ -613,16 +616,16 @@ namespace MVCPlayWithMe.Models
                     {
                         item = ConvertOneRowFromDataMySqlToItem(rdr);
                     }
-                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                    ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in lsModel)
+                foreach (var model in models)
                 {
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
-                item.models = lsModel;
+                item.models = models;
                 item.SetPriceAndQuantity();
             }
             catch (Exception ex)
@@ -641,7 +644,7 @@ namespace MVCPlayWithMe.Models
         public Item GetItemFromModelIdWithReadyConn(int id, MySqlConnection conn)
         {
             Item item = null;
-            List<Model> lsModel = new List<Model>();
+            List<Model> models = new List<Model>();
             try
             {
                 MySqlCommand cmd = new MySqlCommand("st_tbModel_Get_From_Id", conn);
@@ -655,18 +658,18 @@ namespace MVCPlayWithMe.Models
                     {
                         item = ConvertOneRowFromDataMySqlToItem(rdr);
                     }
-                    ConvertOneRowFromDataMySqlToModel(rdr, lsModel);
+                    ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
                 if (rdr != null)
                     rdr.Close();
 
                 if (item != null)
                 {
-                    foreach (var model in lsModel)
+                    foreach (var model in models)
                     {
                         model.SetPriceFromMappingPriceAndQuantity();
                     }
-                    item.models = lsModel;
+                    item.models = models;
                     item.SetPriceAndQuantity();
                 }
             }

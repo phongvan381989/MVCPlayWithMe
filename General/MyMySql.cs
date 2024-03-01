@@ -228,6 +228,14 @@ namespace MVCPlayWithMe.General
                 return rdr.GetInt32(columnName);
         }
 
+        public static long GetInt64(MySqlDataReader rdr, string columnName)
+        {
+            if (Convert.IsDBNull(rdr[columnName]))
+                return -1;
+            else
+                return rdr.GetInt64(columnName);
+        }
+
         public static string GetString(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))

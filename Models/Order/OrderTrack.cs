@@ -28,7 +28,7 @@ namespace MVCPlayWithMe.Models.Order
 
         public int orderId { get; set; }
 
-        public EShopeeOrderStatus status { get; set; }
+        public EOrderStatus status { get; set; }
 
         public string strStatus { get; set; }
 

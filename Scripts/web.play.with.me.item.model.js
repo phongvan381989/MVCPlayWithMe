@@ -1,13 +1,13 @@
 ﻿let modelList = document.getElementById("model-list");
-let classOfModelName = "class-model-name";
+let classOfModelName = "class-model-name config-max-width ";
 let classOfModelQuota = "class-model-quota";
 let classOfModelImage = "class-model-image";
 let classOfModelStatus = "class-model-status";
-let classOffModelTable = "class-model-table";
-let classOffModelPrice = "class-model-price";
-let classOffModelBookCoverPrice = "class-model-book-cover-price";
-let classOffModelQuantity = "class-model-quantity";
-let classOffModelDiscount = "class-model-discount";
+let classOfModelTable = "class-model-table";
+let classOfModelPrice = "class-model-price";
+let classOfModelBookCoverPrice = "class-model-book-cover-price";
+let classOfModelQuantity = "class-model-quantity";
+let classOfModelDiscount = "class-model-discount";
 let countModel = 0;
 let item = null; // Khi chọn item để xem, cập nhật thông tin
 // Giá trị này chỉ tăng, không giảm
@@ -55,7 +55,6 @@ function AddDeleteButtonForModel(container) {
 
 // Thêm nút liên kết sản phẩm
 function AddMappingButtonForModel(container) {
-    // Thêm nút xóa ảnh bên cạnh
     let btn = document.createElement("BUTTON");
     let btnContent = document.createTextNode("Liên kết sản phẩm");
     btn.onclick = function () {
@@ -81,7 +80,7 @@ function CreateModelTableMapping(container) {
     div.style.marginLeft = "50px";
     let tab = document.createElement("table");
 
-    tab.className = classOffModelTable;
+    tab.className = classOfModelTable;
 
     div.appendChild(tab);
     container.appendChild(div);
@@ -89,10 +88,11 @@ function CreateModelTableMapping(container) {
 }
 
 // Constructor function for obj gồm: id, img, name
-function objRowTableMapping(id, imageSrc, name) {
+function objRowTableMapping(id, imageSrc, name, quantity) {
     this.id = id;
     this.imageSrc = imageSrc;
     this.name = name;
+    this.quantity = quantity;
 }
 
 function InsertObjToTable(table, obj) {
@@ -103,6 +103,7 @@ function InsertObjToTable(table, obj) {
     let cell2 = row.insertCell(1);
     let cell3 = row.insertCell(2);
     let cell4 = row.insertCell(3);
+    let cell5 = row.insertCell(4);
 
     // Id
     cell1.innerHTML = obj.id;
@@ -118,43 +119,60 @@ function InsertObjToTable(table, obj) {
     // Tên
     cell3.innerHTML = obj.name;
 
+    // Số lượng
+    let quan = document.createElement("INPUT");
+    quan.setAttribute("type", "number");
+    quan.value = obj.quantity;
+    quan.style.width = "40px";
+    quan.onchange = function () {
+        if (this.value < 1) {
+            this.value = 1;
+        }
+    }
+    cell4.appendChild(quan);
+
     // Nút xóa
     let btn = document.createElement("button");
     btn.onclick = function () {
         this.parentElement.parentElement.remove();
+        UncheckboxWhenDeleteProductMapping(this.parentElement.parentElement.children[0].innerHTML);
     };
     btn.innerHTML = "Xóa";
-    cell4.appendChild(btn)
+    cell5.appendChild(btn)
 }
 
-// obj gồm: id, img, name
+// obj gồm: id, img, name, quantity
+// Chưa tồn tại thì thêm vào table, ngược lại không làm gì
 function CheckObjExistAndInsert(modelTable, obj) {
     let length = modelTable.rows.length;
     let exist = false;
     for (let i = 0; i < length; i++) {
         if (modelTable.rows[i].cells[0].innerHTML == obj.id) {
+            // Cập nhật số lượng mới
+            modelTable.rows[i].cells[3].children[0].value = obj.quantity;
             exist = true;
         }
     }
-    if (exist === true)
+    if (exist === true) {
         return;
+    }
 
     // Thêm vào table
     InsertObjToTable(modelTable, obj);
 }
 
-// listObj: sản phẩm được chọn từ modal gồm: id, img, name
+// listObj: sản phẩm được chọn từ modal gồm: id, img, name, quantity
+// Lưu mapping được chọn tới model tương ứng
 function AddToTableMapping(container, listObj) {
     if (DEBUG) {
         console.log(listObj);
     }
     // Check container chứa table mapping chưa? Nếu không thì tạo mới
     let modelTable;
-    if (container.getElementsByClassName(classOffModelTable).length == 0) {
+    if (container.getElementsByClassName(classOfModelTable).length == 0) {
         CreateModelTableMapping(container);
     }
-    modelTable = container.getElementsByClassName(classOffModelTable)[0];
-
+    modelTable = container.getElementsByClassName(classOfModelTable)[0];
 
     if (DEBUG) {
         console.log(modelTable);
@@ -195,20 +213,20 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     }
     // Set class cho input giá bán
     if (id == "id-price-") {
-        inp.className = classOffModelPrice;
+        inp.className = classOfModelPrice;
     }
     // Set class cho input giá bìa
     if (id == "id-book-cover-price-") {
-        inp.className = classOffModelBookCoverPrice;
+        inp.className = classOfModelBookCoverPrice;
     }
     // Set class cho input giá bìa
     if (id == "id-quatity-") {
-        inp.className = classOffModelQuantity;
+        inp.className = classOfModelQuantity;
     }
 
     // Set class cho input chiết khấu
     if (id == "id-discount-") {
-        inp.className = classOffModelDiscount;
+        inp.className = classOfModelDiscount;
     }
     div.appendChild(lab);
     div.appendChild(inp);
@@ -442,16 +460,32 @@ function GetListProIdMapping(table) {
     if ( table != null) {
         let rows = table.rows;
         let length = rows.length;
-        if (DEBUG) {
-            console.log("length: " + length);
-        }
         // Danh sách đối tượng lưu về db
         for (let i = 0; i < length; i++) {
             listProIdMapping.push(Number(rows[i].cells[0].innerHTML));
         }
     }
 
-    return JSON.stringify(listProIdMapping);
+    return listProIdMapping;
+}
+
+function GetListQuantityMapping(table) {
+    if (DEBUG) {
+        console.log("Start GetListQuantityMapping");
+    }
+
+    let listQuantityMapping = [];
+    if (table != null) {
+        let rows = table.rows;
+        let length = rows.length;
+
+        // Danh sách đối tượng lưu về db
+        for (let i = 0; i < length; i++) {
+            listQuantityMapping.push(Number(rows[i].cells[3].children[0].value));
+        }
+    }
+
+    return listQuantityMapping;
 }
 
 // Thay đổi màu nền giúp dễ nhìn các model
@@ -477,7 +511,10 @@ function EasyViewListModel() {
 
 // Thêm đối số cho item
 // string name, int status, int quota, string detail
-function AddItemParameters(searchParams){
+function AddItemParameters(searchParams) {
+    if (DEBUG) {
+        console.log(" AddItemParameters CALL ");
+    }
     let name = document.getElementById("item-name-id").value;
     searchParams.append("name", name);
 
@@ -495,7 +532,7 @@ function AddItemParameters(searchParams){
 // Tạo mới modelId = -1
 function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, exist,
      itemId, discount, imageExtension,
-    listProIdMapping) {
+    listProIdMapping, listQuantityMapping) {
     if (DEBUG) {
         console.log(" Start upload image of modelId: " + modelId);
         //console.log(" this of ModelUpload: " + this.nodeName);
@@ -528,22 +565,25 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     xhr.open("POST", url);
     xhr.setRequestHeader("Content-Type", "multipart/form-data");
     xhr.setRequestHeader("modelId", modelId);
-    xhr.setRequestHeader("modelName", modelName);
+    // model name chứa tiếng việt, cần encode
+    xhr.setRequestHeader("encodeModelName", encodeURI(modelName));
     xhr.setRequestHeader("exist", exist);
     xhr.setRequestHeader("quota", quota);
     xhr.setRequestHeader("itemId", itemId);
     xhr.setRequestHeader("discount", discount);
     xhr.setRequestHeader("imageExtension", imageExtension);
     xhr.setRequestHeader("listProIdMapping", listProIdMapping);
+    xhr.setRequestHeader("listQuantityMapping", listQuantityMapping);
     if (DEBUG) {
         console.log("modelId: " + modelId);
-        console.log("modelName: " + modelName);
+        console.log("encodeModelName: " + encodeURI(modelName));
         console.log("exist: " + exist);
         console.log("quota: " + quota);
         console.log("itemId: " + itemId);
         console.log("discount: " + discount);
         console.log("imageExtension: " + imageExtension);
         console.log("listProIdMapping: " + listProIdMapping);
+        console.log("listQuantityMapping: " + listQuantityMapping);
     }
     //xhr.send(file);
     let response = RequestHttpPostUpFilePromise(xhr, url, file);
@@ -613,18 +653,19 @@ async function AddItemModel() {
             let modelName = model.getElementsByClassName(classOfModelName)[0].value;
             let modelQuota = ConvertToInt(model.getElementsByClassName(classOfModelQuota)[0].value);
             
-            //let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
-            //let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
-            let modelDiscount = ConvertToInt(model.getElementsByClassName(classOffModelDiscount)[0].value);
+            //let modelPrice = ConvertToInt(model.getElementsByClassName(classOfModelPrice)[0].value);
+            //let modelQuantity = ConvertToInt(model.getElementsByClassName(classOfModelQuantity)[0].value);
+            let modelDiscount = ConvertToInt(model.getElementsByClassName(classOfModelDiscount)[0].value);
             let exist = img.exist;
 
-            let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
+            let listProIdMapping = JSON.stringify(GetListProIdMapping(model.getElementsByClassName(classOfModelTable)[0]));
+            let listQuantityMapping = JSON.stringify(GetListQuantityMapping(model.getElementsByClassName(classOfModelTable)[0]));
             //let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
             let imageExtension = GetExtensionOfFileName(img.fileName);
 
             ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName, modelQuota,
                 exist, itemId, modelDiscount,
-                imageExtension, listProIdMapping);
+                imageExtension, listProIdMapping, listQuantityMapping);
         }
     }
     catch (err) {
@@ -687,7 +728,7 @@ async function UpdateItemModel() {
 
     try {
         // Cập nhật vào db
-        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        let responseDB = await RequestHttpPostPromise(searchParams, url);
 
         // Upload ảnh/video item lên server
         let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleteAllFileWithType, itemId);
@@ -703,18 +744,19 @@ async function UpdateItemModel() {
             let modelName = model.getElementsByClassName(classOfModelName)[0].value;
             let modelQuota = ConvertToInt(model.getElementsByClassName(classOfModelQuota)[0].value);
 
-            //let modelPrice = ConvertToInt(model.getElementsByClassName(classOffModelPrice)[0].value);
-            //let modelQuantity = ConvertToInt(model.getElementsByClassName(classOffModelQuantity)[0].value);
-            let modelDiscount = ConvertToInt(model.getElementsByClassName(classOffModelDiscount)[0].value);
+            //let modelPrice = ConvertToInt(model.getElementsByClassName(classOfModelPrice)[0].value);
+            //let modelQuantity = ConvertToInt(model.getElementsByClassName(classOfModelQuantity)[0].value);
+            let modelDiscount = ConvertToInt(model.getElementsByClassName(classOfModelDiscount)[0].value);
             let exist = img.exist;
 
-            let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOffModelTable)[0]);
+            let listProIdMapping = JSON.stringify(GetListProIdMapping(model.getElementsByClassName(classOfModelTable)[0]));
+            let listQuantityMapping = JSON.stringify(GetListQuantityMapping(model.getElementsByClassName(classOfModelTable)[0]));
             //let modelStatus = model.getElementsByClassName(classOfModelStatus)[0].value;
             let imageExtension = GetExtensionOfFileName(img.fileName);
 
             ModelUpload(urlUpModel, model, model.modelId, img, img.file, modelName,
                 modelQuota, exist, itemId, modelDiscount,
-                imageExtension, listProIdMapping);
+                imageExtension, listProIdMapping, listQuantityMapping);
         }
     }
     catch (err) {
@@ -829,7 +871,8 @@ function EmptyModal() {
 }
 
 // pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm
-function AddRowToTableMapping(pro) {
+// Lưu mapping vào table tạm trước khi lưu tới model tương ứng
+function AddRowToTableMapping(pro, quantity) {
     if (pro == null)
         return;
     if (DEBUG) {
@@ -842,9 +885,9 @@ function AddRowToTableMapping(pro) {
     } else {
         src = srcNoImageThumbnail;
     }
-    let obj = new objRowTableMapping(pro.id, src, pro.name);
+    let obj = new objRowTableMapping(pro.id, src, pro.name, quantity);
 
-    InsertObjToTable(table, obj);
+    CheckObjExistAndInsert(table, obj);
 }
 
 // pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm
@@ -867,6 +910,26 @@ function FindProductFromList(listProduct, id) {
     for (let i = 0; i < length; i++) {
         if (listProduct[i].id == id) {
             return listProduct[i];
+        }
+    }
+}
+
+// Khi xóa sản phẩm đã chọn mapping, bỏ checkbox tương ứng
+function UncheckboxWhenDeleteProductMapping(id) {
+    if (DEBUG) {
+        console.log("UncheckboxWhenDeleteProductMapping CALL");
+        console.log("id = " + id);
+    }
+
+    let table = document.getElementById("myTable");
+    let rows = table.rows;
+    if (rows == null)
+        return;
+    let length = rows.length;
+    for (let i = length - 1; i > 0; i--) {
+        if (table.rows[i].cells[0].innerHTML == id) {
+            table.rows[i].cells[1].children[0].checked = false;
+            break;
         }
     }
 }
@@ -918,7 +981,7 @@ async function SearchProduct() {
             let id = Number(this.parentElement.previousSibling.innerHTML);
             let pro = FindProductFromList(listProduct, id);
             if (this.checked == true) {
-                AddRowToTableMapping(pro);
+                AddRowToTableMapping(pro, 1);
             }
             else {
                 DeleteRowFromTableMapping(pro);
@@ -942,12 +1005,23 @@ async function SearchProduct() {
     }
 }
 
+// 2 trường hợp dựa vào url:
+// 1: save mapping tới sản phẩm của web
+// 2: save mapping tới sản phẩm trên sàn shopee, tiki, lazada
 function SaveMappingToModel() {
+    if (DEBUG) {
+        console.log("SaveMappingToModel CALL " );
+    }
     // Lấy danh sách sản phẩm đã chọn trên modal
     let rows = document.getElementById("myTableMapping").rows;
     let length = rows.length;
+    if (length == 0) {
+        return;
+    }
+
     if (DEBUG) {
         console.log("myTableMapping length: " + length);
+        console.log("url: " + window.location.href);
     }
     // Danh sách đối tượng lưu về db
     let listObj = [];
@@ -955,7 +1029,8 @@ function SaveMappingToModel() {
         let obj = new objRowTableMapping(
             Number(rows[i].cells[0].innerHTML),
             rows[i].cells[1].children[0].src,
-            rows[i].cells[2].innerHTML
+            rows[i].cells[2].innerHTML,
+            rows[i].cells[3].children[0].value
         );
         if (DEBUG) {
             console.log(rows[i].cells[1].childNodes[0].nodeName);
@@ -964,6 +1039,7 @@ function SaveMappingToModel() {
         }
         listObj.push(obj);
     }
+
     // Mapping tới model
     if (modelMapping != null) {
         AddToTableMapping(modelMapping, listObj);
@@ -992,7 +1068,9 @@ function ShowItemFromItemObject() {
     InitializeImageList(item.imageSrc);
     // Vì item.videoSrc không phải array, cần chuyển sang array
     let lsVideo = [];
-    lsVideo.push(item.videoSrc);
+    if (!isEmptyOrSpaces(item.videoSrc)) {
+        lsVideo.push(item.videoSrc);
+    }
     InitializeVideoList(lsVideo);
 
     // Hiển thị các model
@@ -1007,10 +1085,10 @@ function ShowItemFromItemObject() {
         // Hiển thị dữ liệu input
         model.getElementsByClassName(classOfModelName)[0].value = modelObj.name;
         model.getElementsByClassName(classOfModelQuota)[0].value = modelObj.quota;
-        model.getElementsByClassName(classOffModelPrice)[0].value = modelObj.price;
-        model.getElementsByClassName(classOffModelBookCoverPrice)[0].value = modelObj.bookCoverPrice;
-        model.getElementsByClassName(classOffModelQuantity)[0].value = modelObj.quantity;
-        model.getElementsByClassName(classOffModelDiscount)[0].value = modelObj.discount;
+        model.getElementsByClassName(classOfModelPrice)[0].value = modelObj.price;
+        model.getElementsByClassName(classOfModelBookCoverPrice)[0].value = modelObj.bookCoverPrice;
+        model.getElementsByClassName(classOfModelQuantity)[0].value = modelObj.quantity;
+        model.getElementsByClassName(classOfModelDiscount)[0].value = modelObj.discount;
         model.getElementsByClassName(classOfModelStatus)[0].value = modelObj.status;
 
         // Hiển thị thumbnail image
@@ -1030,17 +1108,18 @@ function ShowItemFromItemObject() {
         let listObj = [];
         for (let j = 0; j < modelObj.mapping.length; j++) {
             let src;
-            if (modelObj.mapping[j].imageSrc.length > 0) {
-                src = modelObj.mapping[j].imageSrc[0];
+            if (modelObj.mapping[j].product.imageSrc.length > 0) {
+                src = modelObj.mapping[j].product.imageSrc[0];
             }
             else {
                 src = srcNoImageThumbnail;
             }
 
             let obj = new objRowTableMapping(
-                Number(modelObj.mapping[j].id),
+                Number(modelObj.mapping[j].product.id),
                 src,
-                modelObj.mapping[j].name
+                modelObj.mapping[j].product.name,
+                Number(modelObj.mapping[j].quantity)
             );
             
             listObj.push(obj);

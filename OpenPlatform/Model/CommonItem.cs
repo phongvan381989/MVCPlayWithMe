@@ -1,0 +1,226 @@
+﻿using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using System;
+using System.Collections.Generic;
+using static MVCPlayWithMe.General.Common;
+
+namespace MVCPlayWithMe.OpenPlatform.Model
+{
+    public class CommonItem
+    {
+        //
+        public EECommerceType eType { get; set; }
+        /// <summary>
+        /// Does it contain model.
+        /// SHopee có has_model = false, ta vẫn tạo commonModel danh sách, nhưng chỉ có 1 phần tử
+        /// </summary>
+        public Boolean has_model { get; set; }
+
+        /// <summary>
+        /// Unique product ID
+        /// Shopee: Nếu sản phẩm không có phân loại, đây là id sản phẩm, modelId = -1, nếu có phân loại thì modelId != -1
+        /// Tiki: Đây là id sản phẩm
+        /// </summary>
+        public long itemId { get; set; }
+
+        // Lưu supper_id sàn Tiki, khi sản phẩm không có super_id giá trị này mặc định là 0.
+        public int tikiSuperId { get; set; }
+        /// <summary>
+        /// SKU of product
+        /// </summary>
+        public string sku { get; set; }
+
+        /// <summary>
+        /// Name of product
+        /// </summary>
+        public string name { get; set; }
+
+        /// <summary>
+        /// product is active (1) or inactive
+        /// </summary>
+        public Boolean bActive { get; set; }
+
+        ///// <summary>
+        ///// product is hidden.
+        ///// </summary>
+        //public string strHidden { get; set; }
+
+        ///// <summary>
+        ///// the sell price of a product
+        ///// </summary>
+        //public int price { get; set; }
+
+        ///// <summary>
+        ///// the price before discount of a product
+        ///// </summary>
+        //public int market_price { get; set; }
+
+        //public int quantity_sellable { get; set; }
+
+        /// <summary>
+        /// Đường dẫn chứa ảnh đại diện
+        /// </summary>
+        public string imageSrc { get; set; }
+
+        public List<CommonModel> models { get; set; }
+
+        public string detail { get; set; }
+
+        public CommonItem(EECommerceType inEtype)
+        {
+            eType = inEtype;
+            models = new List<CommonModel>();
+        }
+
+        private ShopeeGetModelList_Model GetModelFromModelListResponse(ShopeeGetModelListResponse obj, int tierIndex)
+        {
+            ShopeeGetModelList_Model model = null;
+            foreach(var m in obj.model)
+            {
+                if(m.tier_index[0] == tierIndex)
+                {
+                    model = m;
+                    break;
+                }
+            }
+
+            return model;
+        }
+
+        private Boolean ConvertModelStatusToInt(string status)
+        {
+            if (status == "MODEL_NORMAL")
+                return true;
+
+            return false;
+        }
+
+        public CommonItem(ShopeeGetItemBaseInfoItem pro)
+        {
+            eType = EECommerceType.SHOPEE;
+            models = new List<CommonModel>();
+
+            itemId = pro.item_id;
+            sku = pro.item_sku;
+            name = pro.item_name;
+
+            if (pro.item_status == "NORMAL")
+                bActive = true;
+            else
+                bActive = false;
+            has_model = pro.has_model;
+            imageSrc = pro.image.image_url_list[0];
+            if (pro.description_type == "normal")
+            {
+                detail = pro.description;
+            }
+            else
+            {
+                for (int j = 0; j < pro.description_info.extended_description.field_list.Count; j++)
+                {
+                    if (pro.description_info.extended_description.field_list[j].field_type == "text")
+                    {
+                        detail = detail + pro.description_info.extended_description.field_list[j].text;
+                    }
+                }
+            }
+            if (!has_model)
+            {
+                CommonModel commonModel = new CommonModel();
+                commonModel.modelId = -1;// Thực tế trên sàn shopee không có model id
+                commonModel.price = (int)pro.price_info[0].current_price;
+                commonModel.market_price = (int)pro.price_info[0].original_price;
+                if (pro.stock_info_v2 != null)
+                    commonModel.quantity_sellable = pro.stock_info_v2.seller_stock[0].stock;
+                else
+                    commonModel.quantity_sellable = 0;
+
+                // Lấy tên file ảnh
+                // Từ url lấy được đường dẫn đầy đủ của ảnh
+                commonModel.imageSrc = pro.image.image_url_list[0];
+                commonModel.bActive = bActive;
+
+                models.Add(commonModel);
+            }
+            else
+            {
+                ShopeeGetModelListResponse obj = ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
+                if (obj != null)
+                {
+                    ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
+                    int count = tierVar.option_list.Count;
+                    for (int i = 0; i < count; i++)
+                    {
+                        CommonModel commonModel = new CommonModel();
+                        ShopeeGetModelList_Model model = GetModelFromModelListResponse(obj, i);
+                        ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
+                        commonModel.modelId = model.model_id;
+                        commonModel.name = tierVar.name + "--" + option.option;
+                        if (option.image != null)
+                            commonModel.imageSrc = option.image.image_url;
+                        commonModel.quantity_sellable = model.stock_info_v2.seller_stock[0].stock;
+                        commonModel.price = (int)model.price_info[0].current_price;
+                        commonModel.market_price = (int)model.price_info[0].original_price;
+                        if (model.model_status == "MODEL_NORMAL")
+                            commonModel.bActive = true;
+                        else
+                            commonModel.bActive = false;
+
+                        models.Add(commonModel);
+                    }
+                }
+            }
+        }
+
+        public CommonItem(TikiProduct pro)
+        {
+            eType = EECommerceType.TIKI;
+            models = new List<CommonModel>();
+            itemId = pro.product_id;
+            tikiSuperId = pro.super_id;
+            sku = pro.sku;
+            name = pro.name;
+
+            if (pro.active == 1)
+                bActive = true;
+            else
+                bActive = false;
+            has_model = false;
+            imageSrc = pro.thumbnail;
+
+            CommonModel commonModel = new CommonModel();
+            commonModel.modelId = -1;
+            commonModel.price = pro.price;
+            commonModel.market_price = pro.market_price;
+
+            commonModel.quantity_sellable = TikiUpdateStock.GetQuantityFromTikiProduct(pro);
+
+            // Lấy tên file ảnh
+            // Từ url lấy được đường dẫn đầy đủ của ảnh
+            commonModel.imageSrc = pro.thumbnail;
+
+            models.Add(commonModel);
+        }
+        static private Boolean SumProductQuantity(Dictionary<string, int> sumDic, Dictionary<string, int> paraDic)
+        {
+            if (sumDic == null)
+                sumDic = new Dictionary<string, int>();
+
+            sumDic.Clear();
+            foreach (var e in paraDic)
+            {
+                if(sumDic.ContainsKey(e.Key))
+                {
+                    sumDic[e.Key] = sumDic[e.Key] + e.Value;
+                }
+                else
+                {
+                    sumDic.Add(e.Key, e.Value);
+                }
+            }
+            return true;
+        }
+    }
+}

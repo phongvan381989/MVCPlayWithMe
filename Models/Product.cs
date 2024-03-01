@@ -32,6 +32,11 @@ namespace MVCPlayWithMe.Models
             videoSrc = new List<string>();
         }
 
+        public Product(int idIn)
+        {
+            id = idIn;
+        }
+
         public Product(
                 int idIn,
                 string codeIn,

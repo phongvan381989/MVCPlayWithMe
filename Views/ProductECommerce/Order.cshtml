@@ -1,0 +1,165 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .cvAncz980 {
+            display: flex;
+            margin:10px;
+        }
+
+        .vbcgh45367 {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .kmaZvc29 {
+            margin-left: 20px;
+        }
+        .vndejhx90{
+            margin:5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="cvAncz980">
+            <div class="vbcgh45367">
+                <input type="radio" id="seven-day" name="from-to-day" class="kmaZvc29 one-day">
+                <label for="seven-day">1 Ngày</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="seven-day" name="from-to-day" class="kmaZvc29 seven-day" checked>
+                <label for="seven-day">7 Ngày</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="thirty-day" name="from-to-day" class="kmaZvc29 thirty-day">
+                <label for="thirty-day">30 Ngày</label>
+            </div>
+        </div>
+
+        <div class="cvAncz980">
+            <div class="vbcgh45367">
+                <input type="radio" id="all-order" name="order-type" class="kmaZvc29 all-order" checked>
+                <label for="all-order">Tất Cả</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order">
+                <label for="dont-pack-order">Chưa Đóng</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order">
+                <label for="canceled-order">Hủy</label>
+            </div>
+        </div>
+        <div class="cvAncz980">
+            <button class="vndejhx90" onclick="GetListOrder()">Danh Sách Đơn Hàng</button>
+            <button class="vndejhx90">Kiểm Tra Đủ Đơn</button>
+        </div>
+        <div class="cvAncz980">
+            <input type="text"class="vndejhx90"/>
+            <button class="vndejhx90">Chi Tiết Đơn Hàng</button>
+        </div>
+        <div>
+            <table class="order-table"></table>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script>
+        let listOrder; // Lưu danh sách common order trả về
+        // 0: 1 ngày, 1: 7 ngày, 2: 30 ngày
+        function GetFromTo() {
+            let fromto = 1;
+            if (document.getElementsByClassName("one-day")[0].checked == true) {
+                fromto = 0;
+            }
+            else if (document.getElementsByClassName("thirty-day")[0].checked == true) {
+                fromto = 2;
+            }
+            return fromto;
+        }
+
+        // 0: tất cả, 1: Chưa đóng, 2: Hủy
+        function GetOrderStatus() {
+            let orderStatus = 0;
+            if (document.getElementsByClassName("dont-pack-order")[0].checked == true) {
+                orderStatus = 1;
+            }
+            else if (document.getElementsByClassName("canceled-order")[0].checked == true) {
+                orderStatus = 2;
+            }
+            return orderStatus;
+        }
+
+        async function GetListOrder() {
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("fromTo", GetFromTo());
+
+            let query = "/ProductECommerce/GetListOrder";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText == null) {
+                CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                return;
+            }
+
+            // Hiển thị danh sách đơn hàng
+            listOrder = null;
+            listOrder = JSON.parse(responseDB.responseText);
+
+            // Lọc theo trạng thái đơn hàng
+            let orderStatus = GetOrderStatus();
+            // Trạng thái đơn hàng tiki có thể
+            //{
+            //    "queueing",
+            //        "canceled",
+            //        "complete",
+            //        "successful_delivery",
+            //        "processing",
+            //        "waiting_payment",
+            //        "handover_to_partner",
+            //        "closed",
+            //        "packaging",
+            //        "picking",
+            //        "shipping",
+            //        "paid",
+            //        "delivered",
+            //        "holded",
+            //        "ready_to_ship",
+            //        "payment_review",
+            //        "returned",
+            //        "finished_packing"
+            //}
+
+            // Trạng thái đơn hàng Shopee có thể
+            //{
+            //    UNPAID,
+            //    READY_TO_SHIP,
+            //    PROCESSED, // Đây là trạng thái sau khi in đơn
+            //    SHIPPED,
+            //    COMPLETED,
+            //    IN_CANCEL,
+            //    CANCELLED,
+            //    INVOICE_PENDING,
+            //    ALL
+            //}
+
+            // Lấy tất cả
+            if (orderStatus == 0) {
+
+            }
+        }
+    </script>
+</body>
+</html>
+

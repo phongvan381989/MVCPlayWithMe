@@ -13,8 +13,9 @@ namespace MVCPlayWithMe.Models
         public string name { get; set; }
         //public int bookCoverPrice { get; set; }
         //public int price { get; set; }
-        public List<int> mappingOnlyProductId { get; set; }
-        public List<Product> mapping { get; set; }
+        //public List<int> mappingOnlyProductId { get; set; }
+        //public List<int> mappingOnlyQuantity { get; set; }
+        public List<Mapping> mapping { get; set; }
 
         // image source thumbnail của sản phẩm được mapping.
         //public List<string> mappingProductImageSrc { get; set; }
@@ -30,7 +31,7 @@ namespace MVCPlayWithMe.Models
         {
             id = -1;
             quota = Common.quota;
-            mapping = new List<Product>();
+            mapping = new List<Mapping>();
             //mappingProductImageSrc = new List<string>();
         }
 
@@ -43,7 +44,7 @@ namespace MVCPlayWithMe.Models
 
             quota = inQuota;
             discount = inDiscount;
-            mapping = new List<Product>();
+            mapping = new List<Mapping>();
             //mappingProductImageSrc = new List<string>();
         }
 
@@ -64,11 +65,11 @@ namespace MVCPlayWithMe.Models
                 return;
 
             quantity = int.MaxValue;
-            foreach(var pro in mapping)
+            foreach(var map in mapping)
             {
-                bookCoverPrice = bookCoverPrice + pro.bookCoverPrice;
-                if (quantity > pro.quantity)
-                    quantity = pro.quantity;
+                bookCoverPrice = bookCoverPrice + map.product.bookCoverPrice;
+                if (quantity > map.quantity)
+                    quantity = map.quantity;
             }
 
             // Giá sau chiết khấu

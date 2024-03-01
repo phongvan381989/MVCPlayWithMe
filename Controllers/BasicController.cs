@@ -6,6 +6,7 @@ using System.IO;
 using System;
 using Newtonsoft.Json;
 using MVCPlayWithMe.Models.Customer;
+using MVCPlayWithMe.Models.ItemModel;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -17,7 +18,13 @@ namespace MVCPlayWithMe.Controllers
 
             /// Check cookie đã được lưu trong db
             AdministratorMySql sqler = new AdministratorMySql();
-            return sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
+            Administrator administrator = sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
+            //if(administrator == null)
+            //{
+            //    Cookie.DeleteUserIdCookie(HttpContext);
+            //}
+            return administrator;
+
         }
 
         public Customer AuthentCustomer()
@@ -26,7 +33,12 @@ namespace MVCPlayWithMe.Controllers
 
             /// Check cookie đã được lưu trong db
             CustomerMySql sqler = new CustomerMySql();
-            return sqler.GetCustomerFromCookie(cookieResult.cookieValue);
+            Customer customer = sqler.GetCustomerFromCookie(cookieResult.cookieValue);
+            //if (customer == null)
+            //{
+            //    Cookie.DeleteUserIdCookie(HttpContext);
+            //}
+            return customer;
         }
 
         /// <summary>
@@ -145,7 +157,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Nhận và lưu image/video khi upload cho sản phẩm
         // trong kho hoặc item (ProductControler và ItemModelControler)
-        public string UploadImageVideo(string path)
+        public string SaveImageVideo(string path)
         {
             var length = Request.ContentLength;
             var bytes = new byte[length];

@@ -1,0 +1,463 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Play with me</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    <style>
+        .cvAncz980{
+            display:flex;
+        }
+        .e-ecommonerce-type {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+        .kmaZvc29{
+            margin-left:20px;
+        }
+
+        .item-image-ACvv{
+            width: 100px;
+            height: 100px;
+            border-radius: 3px 4px;
+        }
+        .one-item-container {
+            display: flex;
+            padding: 10px;
+            align-items: center;
+        }
+        .item-name-vsfc{
+            padding-left: 10px;
+        }
+        .item-name-vsfc:link {
+            text-decoration: none;
+            color: black;
+        }
+
+        .item-name-vsfc:visited {
+            color: black;
+        }
+        .paging-container{
+            display:flex;
+            flex-wrap:wrap;
+        }
+        .axMLP902 {
+            width: 36px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            padding-top: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 20px;
+            border-radius: 8px;
+            color: #004370;
+            cursor: pointer;
+            user-select: none;
+            text-align: center;
+        }
+        .axMLP902-active {
+            background: #E3ECFF;
+        }
+        .KLMx09fs{
+            display: flex;
+            padding:10px 20px;
+            flex-wrap:wrap;
+        }
+        .fcnal986j {
+            margin-right: 40px;
+            border: 1px solid #e9ecef;
+            border-radius: 3px 4px;
+            padding: 5px;
+            margin:5px;
+        }
+        .lk09Jbvrd{
+            display:inline;
+            margin-right:20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="e-product-filter">
+            <div>
+                <div class="cvAncz980">
+                    <div class="e-ecommonerce-type">
+                        <input type="radio" id="tiki-e-ecommonerce-type" name="name-e-ecommonerce-type" class="kmaZvc29">
+                        <label for="tiki-e-ecommonerce-type">Tiki</label>
+                    </div>
+                    <div class="e-ecommonerce-type">
+                        <input type="radio" id="shopee-e-ecommonerce-type" name="name-e-ecommonerce-type" class="kmaZvc29" checked>
+                        <label for="shopee-e-ecommonerce-type">Shopee</label>
+                    </div>
+                    <div class="e-ecommonerce-type">
+                        <input type="radio" id="lazada-e-ecommonerce-type" name="name-e-ecommonerce-type" class="kmaZvc29">
+                        <label for="lazada-e-ecommonerce-type">Lazada</label>
+                    </div>
+                </div>
+            </div>
+            <div class="KLMx09fs">
+                <div class="fcnal986j" title="Trạng thái">
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFxjg" name="status-radio" value="On" checked/>
+                        <label for="nvnlFxjg">Đang bật</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFfesg" name="status-radio" value="Off"/>
+                        <label for="nvnlFfesg">Đang tắt</label>
+                    </div>
+                </div>
+
+                <div class="fcnal986j" title="Liên kết">
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="cbstdhagzb" name="mapping-radio" value="On"/>
+                        <label for="cbstdhagzb">Đã liên kết</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="jfhsgsefzc" name="mapping-radio" value="Off"/>
+                        <label for="jfhsgsefzc">Chưa liên kết</label>
+                    </div>
+                </div>
+
+                <div class="fcnal986j" title="Hết hàng">
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="vxbdh567" name="out-of-stock-radio" value="On" checked/>
+                        <label for="vxbdh567">Còn hàng</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="vxbdh879" name="out-of-stock-radio" value="Off"/>
+                        <label for="vxbdh879">Hết hàng</label>
+                    </div>
+                </div>
+                @*<div class="fcnal986j" title="Nhà phát hành">
+                    <label for="publisher-id">Nhà phát hành</label>
+                    <input list="list-Publisher" id="publisher-id">
+                    <datalist id="list-Publisher">
+                        @foreach (var pub in ViewData["lsPublisher"] as IList<MVCPlayWithMe.Models.Publisher>)
+                        {
+                            <option data-id=@pub.id data-detail="@pub.detail">@pub.name</option>
+                        }
+                    </datalist>
+                </div>*@
+
+                <div class="fcnal986j" title="Tên sản phẩm">
+                    <label for="product-name">Tên sản phẩm</label>
+                    <input type="text" id="product-name">
+                </div>
+            </div>
+            <div title="Lấy tất cả sản phẩm trên sàn (mất thời gian), sau đó lọc theo các tiêu chí người dùng chọn.">
+                <button class="pwm-btn-common" onclick="Filter()"><span class="pwm-btn-text-common">Lọc sản phẩm</span></button>
+            </div>
+        </div>
+
+        <div class="e-product-container">
+            <div class="paging-container">
+
+            </div>
+            <div class="e-paging-product-container">
+
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.paging.js"></script>
+    <script>
+        let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
+        let listItemAfterFilter = []; // Danh sách common item sau khi lọc
+        let sizePage = 5; // số lượng common Item trên mỗi page hiển thị.
+        function GetEEcommerceType() {
+            let type = "SHOPEE";
+            let radio = document.getElementsByClassName("kmaZvc29");
+            if (radio[0].checked) {
+                type = "TIKI";
+            }
+            else if (radio[1].checked) {
+                type = "SHOPEE";
+            }
+            else if (radio[2].checked) {
+                type = "LAZADA";
+            }
+            return type;
+        }
+
+        // Hiện thị phân trang
+        function ShowPaging() {
+            //<div class="pagination-item " onclick="ChangePage(4)">
+            //    <p title="4">4</p>
+            //</div>
+            if (DEBUG) {
+                console.log("ShowPaging CALL");
+            }
+            let container = document.getElementsByClassName("paging-container")[0];
+            container.innerHTML = "";
+
+            let length = listItemAfterFilter.length;
+            if (DEBUG) {
+                console.log("listItemAfterFilter.length: " + listItemAfterFilter.length);
+            }
+
+            let maxPage = Math.floor(length / sizePage);
+            if (length % sizePage != 0)
+                maxPage = maxPage + 1;
+
+            for (let i = 0; i < maxPage; i++) {
+                let div = document.createElement("div");
+                div.className = "axMLP902";
+                div.setAttribute("data-index-id", i);
+                div.onclick = function () {
+                    ShowPageListItemFilter(i + 1);
+                }
+
+                let p = document.createElement("p");
+                p.title = i + 1;
+                p.innerHTML = i + 1;
+
+                div.appendChild(p);
+
+                container.appendChild(div);
+            }
+        }
+
+        async function GetProductAll(eType) {
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", eType);
+
+            let query = "/ProductECommerce/GetProductAll";
+
+            return await RequestHttpPostPromise(searchParams, query);
+        }
+
+        function ShowPageListItemFilter(page)
+        {
+            // Hiển thị nổi bật phần tử paging trang tương ứng
+            {
+                let lsPaging = document.getElementsByClassName("axMLP902");
+                for (let i = 0; i < lsPaging.length; i++) {
+                    let e = lsPaging[i];
+                    if (i + 1 == page) {
+                        e.className = "axMLP902 axMLP902-active";
+                    }
+                    else {
+                        e.className = "axMLP902";
+                    }
+                }
+            }
+
+            let container = document.getElementsByClassName("e-paging-product-container")[0];
+            container.innerHTML = "";
+            let length = listItemAfterFilter.length;
+            for (let i = (page - 1) * sizePage; i < length && i < page * sizePage; i++) {
+                let item = listItemAfterFilter[i];
+                // Tạo div chứa 1 item
+                let itemDiv = document.createElement("div");
+                itemDiv.className = "one-item-container";
+                itemDiv.setAttribute("data-item-id", item.itemId);
+
+                itemDiv.appendChild(CreateImageElement(item.imageSrc, "item-image-ACvv"))
+
+                let itemName = document.createElement("a");
+                itemName.className = "item-name-vsfc";
+                let linkText = document.createTextNode(item.name);
+                itemName.appendChild(linkText);
+                itemName.title = item.name;
+                itemName.href = "/ProductECommerce/Item?eType=" + GetEEcommerceType() + "&id=" + item.itemId;
+                itemName.setAttribute("target", "_blank");
+
+                itemDiv.appendChild(itemName);
+
+                container.appendChild(itemDiv);
+            }
+        }
+
+        // Lọc theo trạng thái
+        function FilterStatus() {
+            if (DEBUG) {
+                console.log("FilterStatus CALL");
+            }
+            let obj = document.querySelector('input[name="status-radio"]:checked');
+            if (obj == null) {
+                return;
+            }
+            let value = obj.value;
+            let listItemTemp = [];
+            let length = listItemAfterFilter.length;
+            let bAc = true;
+            if (value == "Off") {
+                bAc = false;
+            }
+            for (let i = 0; i < length; i++) {
+                if (listItemAfterFilter[i].bActive === bAc) {
+                    listItemTemp.push(listItemAfterFilter[i]);
+                }
+            }
+            listItemAfterFilter = listItemTemp;
+        }
+
+        // Kiểm tra item đã có mapping hay chưa?
+        // Trả về: true nếu đã mapping, ngược lại false
+        function CheckItemHasMapping(commonItemObj) {
+            let length = commonItemObj.models.length;
+            for (let i = 0; i < length; i++) {
+                if (commonItemObj.models[i].mapping.length == 0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Lọc theo liên kết
+        function FilterMapping() {
+            if (DEBUG) {
+                console.log("FilterMapping CALL");
+            }
+            let obj = document.querySelector('input[name="mapping-radio"]:checked');
+            if (obj == null) {
+                return;
+            }
+            let value = obj.value;
+            let listItemTemp = [];
+            let length = listItemAfterFilter.length;
+            let bMapping = true;
+            if (value == "Off") {
+                bMapping = false;
+            }
+            for (let i = 0; i < length; i++) {
+                if (CheckItemHasMapping(listItemAfterFilter[i]) === bMapping) {
+                    listItemTemp.push(listItemAfterFilter[i]);
+                }
+            }
+
+            listItemAfterFilter = listItemTemp;
+        }
+
+        // Check item hết hàng trên sàn
+        // Trả về true nếu hết hàng, ngược lại false
+        function CheckOutOfStock(commonItemObj) {
+            let length = commonItemObj.models.length;
+            for (let i = 0; i < length; i++) {
+                if (commonItemObj.models[i].quantity_sellable == 0) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        // Lọc hết hàng
+        function FilterOutOfStock() {
+            if (DEBUG) {
+                console.log("FilterOutOfStock CALL");
+            }
+            let obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
+            
+            if (obj == null) {
+                return;
+            }
+
+            let value = obj.value;
+ 
+            let bAc = true;
+            if (value == "On") {
+                bAc = false;
+            }
+
+            let listItemTemp = [];
+            let length = listItemAfterFilter.length;
+            
+            for (let i = 0; i < length; i++) {
+                if (CheckOutOfStock(listItemAfterFilter[i]) == bAc) {
+                    listItemTemp.push(listItemAfterFilter[i]);
+                }
+            }
+
+            listItemAfterFilter = listItemTemp;
+        }
+
+        // Check item có tên chứa tham số
+        // Trả về true nếu đúng, ngược lại false
+        function CheckName(commonItemObj, para) {
+
+            let re = new RegExp(para, "i");
+            if (commonItemObj.name.search(re) != -1) {
+                return true;
+            }
+
+            let length = commonItemObj.models.length;
+            for (let i = 0; i < length; i++) {
+                if (commonItemObj.models[i].name != null && commonItemObj.models[i].name.search(re) != -1) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function FilterName() {
+            let value = document.querySelector('input[id="product-name"]').value;
+            if (DEBUG) {
+                console.log("FilterName CALL");
+                console.log("value: " + value);
+            }
+            if (isEmptyOrSpaces(value)) {
+                return;
+            }
+
+            let listItemTemp = [];
+            let length = listItemAfterFilter.length;
+
+            for (let i = 0; i < length; i++) {
+                if (CheckName(listItemAfterFilter[i], value)) {
+                    listItemTemp.push(listItemAfterFilter[i]);
+                }
+            }
+
+            listItemAfterFilter = listItemTemp;
+        }
+
+        function FilterGroup() {
+            FilterStatus();
+
+            FilterMapping();
+
+            FilterOutOfStock();
+
+            FilterName();
+        }
+
+        // Từ tham số lọc
+        async function Filter() {
+            // Chưa lấy tất cả sản phẩm của sàn, việc lấy tất cả sản phẩm của sàn mất thời gian vãi nhái
+            if (listItem.length == 0) {
+                ShowCircleLoader();
+                let responseDB = await GetProductAll(GetEEcommerceType());
+                if (responseDB.responseText != null) {
+                    listItem = JSON.parse(responseDB.responseText);
+                }
+                RemoveCircleLoader();
+            }
+
+            // Lọc
+            listItemAfterFilter = listItem;
+            FilterGroup();
+
+            ShowPaging();
+
+            // Hiển thị trang đầu tiên
+            ShowPageListItemFilter(1);
+        }
+    </script>
+</body>
+</html>

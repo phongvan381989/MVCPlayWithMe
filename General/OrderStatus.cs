@@ -16,7 +16,7 @@ namespace MVCPlayWithMe.General
     // TO_RETURN:The buyer requested to return the order and order's return is processing.
     // COMPLETED:The order has been completed.
     // ALL
-    public enum EShopeeOrderStatus
+    public enum EOrderStatus
     {
         UNPAID,
         READY_TO_SHIP,

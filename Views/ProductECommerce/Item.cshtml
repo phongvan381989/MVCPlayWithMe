@@ -1,0 +1,268 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
+    <style>
+        .pro-eecomerce-mapping-container {
+            margin-left: 50px;
+        }
+        .item-image-ACvv {
+            width: 150px;
+            height: 150px;
+            border-radius: 3px 4px;
+        }
+        .one-item-container {
+            display: flex;
+            padding: 10px;
+            align-items: center;
+        }
+        .item-name-vsfc{
+            margin-left:20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container">
+            <div class="one-item-container">
+                <img class="item-image-ACvv">
+                <div class="item-name-vsfc">
+                </div>
+            </div>
+            <div id="model-list">
+            </div>
+            @Html.Partial("~/Views/Shared/ItemModel/Mapping.cshtml")
+
+            <button type="button" onclick="UpdateEEcommerceMapping()">Cập nhật</button>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.item.model.js"></script>
+    <script>
+        InitializeModal();
+        ViewProductFromId();
+        let commonItem = null;
+        function GetEEcommerceTypeFromUrl() {
+            let type = "SHOPEE";
+
+            if (window.location.href.includes("SHOPEE")) {
+                type = "SHOPEE";
+            }
+            else if (window.location.href.includes("TIKI")) {
+                type = "TIKI";
+            }
+            else if (window.location.href.includes("LAZADA")) {
+                type = "LAZADA";
+            }
+            return type;
+        }
+
+        function GetIdFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('id');
+        }
+
+        async function GetProductFromId(eType, id) {
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", eType);
+            searchParams.append("id", id);
+
+            let query = "/ProductECommerce/GetProductFromId";
+
+            return RequestHttpPostPromise(searchParams, query);
+        }
+
+        async function ViewProductFromId() {
+            ShowCircleLoader();
+
+            let responseDB = await GetProductFromId(GetEEcommerceTypeFromUrl(), GetIdFromUrl());
+            if (responseDB.responseText != null) {
+                commonItem = JSON.parse(responseDB.responseText);
+            }
+            else {
+                RemoveCircleLoader();
+                return;
+            }
+
+            RemoveCircleLoader();
+            // Hiển thị sản phẩm của sàn
+            if (commonItem.imageSrc) {
+                document.getElementsByClassName("item-image-ACvv")[0].src = commonItem.imageSrc;
+            }
+            else {
+                document.getElementsByClassName("item-image-ACvv")[0].src = srcNoImageThumbnail;
+            }
+            document.getElementsByClassName("item-name-vsfc")[0].innerHTML = commonItem.name;
+
+            // Hiển thị danh sách mapping
+            ShowModelEEcommerce(commonItem);
+        }
+
+        function AddModelToScreenEEcommerce(modelObj) {
+            const modelContainer = document.createElement("div");
+            modelContainer.style.marginLeft = "10px";
+            modelContainer.style.backgroundColor = "#e6e6e6";
+            modelContainer.style.padding = "10px 10px 10px 10px";
+            modelContainer.style.borderRadius = "10px";
+            modelContainer.className = "model-container";
+            modelContainer.modelId = modelObj.modelId; // Tiki mặc định là -1 vì không có phân loại
+
+            modelList.appendChild(modelContainer);
+
+            // model không phải là item
+            if (modelObj.modelId != -1) {
+                const div = document.createElement("div");
+
+                // Ảnh đại diện
+                let imgDiv = document.createElement("img");
+                imgDiv.height = thumbnailHeight;
+                imgDiv.width = thumbnailWidth;
+                if (modelObj.imageSrc) {
+                    imgDiv.src = modelObj.imageSrc;
+                }
+                else {
+                    imgDiv.src = srcNoImageThumbnail;
+                }
+
+                // Tên:
+                let nameDiv = document.createElement("div");
+                nameDiv.innerHTML = modelObj.name;
+                nameDiv.style.marginLeft = "20px";
+
+                div.appendChild(imgDiv);
+                div.appendChild(nameDiv);
+                div.style.display = "flex";
+                div.style.alignItems = "center";
+                modelContainer.appendChild(div);
+            }
+            // Thêm nút mapping
+            AddMappingButtonForModel(modelContainer);
+
+            AddDistanceRows(modelContainer);
+            AddDistanceRows(modelList);
+
+            return modelContainer;
+        }
+
+        function ShowModelEEcommerce(item) {
+            // Hiển thị các model
+            let length = item.models.length;
+            countModel = 0;
+            for (let i = 0; i < length; i++) {
+                // Hiển thị mapping sản phẩm trong kho nếu có
+                let modelObj = item.models[i];
+
+                let model = AddModelToScreenEEcommerce(modelObj);
+
+                // Hiển thị mapping
+                let table = CreateModelTableMapping(model);
+
+                let listObj = [];
+                for (let j = 0; j < modelObj.mapping.length; j++) {
+                    let src;
+                    if (modelObj.mapping[j].product.imageSrc.length > 0) {
+                        src = modelObj.mapping[j].product.imageSrc[0];
+                    }
+                    else {
+                        src = srcNoImageThumbnail;
+                    }
+
+                    let obj = new objRowTableMapping(
+                        Number(modelObj.mapping[j].product.id),
+                        src,
+                        modelObj.mapping[j].product.name,
+                        Number(modelObj.mapping[j].quantity)
+                    );
+
+                    listObj.push(obj);
+                }
+                if (DEBUG) {
+                    console.log(listObj);
+                }
+
+                for (let j = 0; j < listObj.length; j++) {
+                    CheckObjExistAndInsert(table, listObj[j]);
+                }
+            }
+        }
+
+        async function UpdateEEcommerceMapping() {
+            if (DEBUG) {
+                console.log("UpdateEEcommerceMapping CALL ");
+            }
+            if (commonItem == null) {
+                CreateMustClickOkModal("Sản phẩm không chính xác.", null);
+                return;
+            }
+            ShowCircleLoader();
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetEEcommerceTypeFromUrl());
+
+            let url = "/ProductECommerce/UpdateMapping";
+            // tham số string gửi về server có dạng:
+            // itemId,modelId,productId,productQuantity,...,itemId,modelId,productId,productQuantity
+            let itemid = GetIdFromUrl();
+            let str = "";
+
+            let listModelOnly = GetListModelOnly();
+            let length = listModelOnly.length;
+
+            for (let i = 0; i < length; i++) {
+                let model = listModelOnly[i];
+
+                let listProIdMapping = GetListProIdMapping(model.getElementsByClassName(classOfModelTable)[0]);
+                let listQuantityMapping = GetListQuantityMapping(model.getElementsByClassName(classOfModelTable)[0]);
+
+                if (listProIdMapping.length == 0) {
+                    if (!isEmptyOrSpaces(str)) {
+                        str = str + ",";
+                    }
+                    str = str + itemid + "," + model.modelId + ",,"; // productId,productQuantity trống
+                }
+                else {
+                    for (let j = 0; j < listProIdMapping.length; j++) {
+                        if (!isEmptyOrSpaces(str)) {
+                            str = str + ",";
+                        }
+                        str = str + itemid + "," + model.modelId + ","
+                            + listProIdMapping[j] + "," + listQuantityMapping[j];
+                    }
+                }
+            }
+            searchParams.append("str", str);
+
+            try {
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                let result = JSON.parse(responseDB.responseText);
+                if (result.State != 0) {
+                    CreateMustClickOkModal(result.Message);
+                }
+                else {
+                    alert("Cập nhật thành công.");
+                }
+            }
+            catch (err) {
+                if (DEBUG) {
+                    console.log(err.message);
+                    console.log(err);
+                }
+                alert("Cập nhật sản phẩm lỗi.");
+                RemoveCircleLoader();
+                return;
+            }
+
+            // Refresh page
+            RemoveCircleLoader();
+            window.scrollTo(0, 0);
+        }
+    </script>
+</body>
+</html>
+

@@ -63,8 +63,8 @@
     <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.1.1.0\lib\net461\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.7.0.0\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.1.0\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
@@ -121,6 +121,9 @@
     <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
     </Reference>
+    <Reference Include="RestSharp, Version=106.15.0.0, Culture=neutral, PublicKeyToken=598062e77f915f75, processorArchitecture=MSIL">
+      <HintPath>..\packages\RestSharp.106.15.0\lib\net452\RestSharp.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Buffers, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Buffers.4.5.1\lib\net461\System.Buffers.dll</HintPath>
@@ -139,18 +142,24 @@
     </Reference>
     <Reference Include="System.Drawing" />
     <Reference Include="System.Management" />
-    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Memory.4.5.4\lib\net461\System.Memory.dll</HintPath>
+    <Reference Include="System.Memory, Version=4.0.1.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.5.5\lib\net461\System.Memory.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics" />
     <Reference Include="System.Numerics.Vectors, Version=4.1.4.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
       <HintPath>..\packages\System.Numerics.Vectors.4.5.0\lib\net46\System.Numerics.Vectors.dll</HintPath>
     </Reference>
-    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=5.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.5.0.0\lib\net45\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.0.0\lib\net461\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
     </Reference>
-    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.2\lib\netstandard2.0\System.Threading.Tasks.Extensions.dll</HintPath>
+    <Reference Include="System.Text.Encodings.Web, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.7.0.0\lib\netstandard2.0\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=7.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.7.0.3\lib\netstandard2.0\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.5.4\lib\net461\System.Threading.Tasks.Extensions.dll</HintPath>
     </Reference>
     <Reference Include="System.Transactions" />
     <Reference Include="System.Web.DynamicData" />
@@ -235,16 +244,16 @@
     <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
+    <Compile Include="Controllers\OpenPlatform\ProductECommerceController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\PublisherController.cs" />
     <Compile Include="General\Common.cs" />
-    <Compile Include="General\CommonQLK.cs" />
     <Compile Include="General\Cookie.cs" />
     <Compile Include="General\CookieResultState.cs" />
     <Compile Include="General\MyLogger.cs" />
     <Compile Include="General\MyMySql.cs" />
     <Compile Include="General\MySqlResultState.cs" />
-    <Compile Include="General\ShopeeOrderStatus.cs" />
+    <Compile Include="General\OrderStatus.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -255,6 +264,7 @@
     <Compile Include="Models\BasicIdName.cs" />
     <Compile Include="Models\BasicMySql.cs" />
     <Compile Include="Models\BasicObject.cs" />
+    <Compile Include="Models\Mapping.cs" />
     <Compile Include="Models\Order\Cart.cs" />
     <Compile Include="Models\Category.cs" />
     <Compile Include="Models\CategoryMySql.cs" />
@@ -265,8 +275,8 @@
     <Compile Include="Models\Customer\CustomerMySql.cs" />
     <Compile Include="Models\Import.cs" />
     <Compile Include="Models\Item.cs" />
-    <Compile Include="Models\ItemModelMySql.cs" />
-    <Compile Include="Models\ItemModelSearchParameter.cs" />
+    <Compile Include="Models\ItemModel\ItemModelMySql.cs" />
+    <Compile Include="Models\ItemModel\ItemModelSearchParameter.cs" />
     <Compile Include="Models\Model.cs" />
     <Compile Include="Models\Order\Order.cs" />
     <Compile Include="Models\Order\OrderDetail.cs" />
@@ -282,6 +292,163 @@
     <Compile Include="Models\ProductSearchParameter.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
+    <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\CommonShopeeAPI.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeLogistic\ShopeeGetTrackingNumber.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeOrder\ShopeeGetOrderDetail.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeOrder\ShopeeGetOrderList.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeGetItemBaseInfo.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeGetItemList.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeGetModelList.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdatePrice.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdateStock.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\CommonTikiAPI.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\Order\TikiGetListOrders.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\Product\GetListProductTiki.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\Product\TikiUpdateStock.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\TikiConstValues.cs" />
+    <Compile Include="OpenPlatform\Model\CommonForMapping.cs" />
+    <Compile Include="OpenPlatform\Model\CommonModel.cs" />
+    <Compile Include="OpenPlatform\Model\CommonItem.cs" />
+    <Compile Include="OpenPlatform\Model\CommonOrder.cs" />
+    <Compile Include="OpenPlatform\Model\Config\ModelThongTinBaoMat.cs" />
+    <Compile Include="OpenPlatform\Model\ObjectGeneral.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\CommonResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeConfig\ShopeeToken.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetTrackingNumberResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetTrackingNumberResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailImageInfocs.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailInvoiceData.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailItem.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailPackage.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailPackageItem.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailRecipientAddress.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderListBaseInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderListResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderListResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeOrderDetail.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeOrderStatus.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItem.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemAttribute.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemAttributeValue.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemBrand.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemComplaintPolicy.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemDimension.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemImage.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemLogisticInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemPreOrder.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemPriceInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemStockInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemTaxInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemVideoInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoItemWholeSales.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfoResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfo_Item_DescriptionInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfo_Item_DescriptionInfo_ExtendedDescription.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemBaseInfo_Item_DescriptionInfo_ExtendedDescription_FieldList.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemListResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetItemListResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListImage.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListModel.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListOption.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListPreOrder.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListPriceInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListStockInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelListTierVariation.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelList_Model_StockInfoV2.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelList_Model_StockInfoV2_SellerStock.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelList_Model_StockInfoV2_ShopeeStock.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeGetModelList_Model_StockInfoV2_SummaryInfo.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeItem.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeItemId.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeItemStatus.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdatePrice_Request.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdatePrice_Request_Price_List.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdatePrice_Response.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdatePrice_Response_HTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdatePrice_Response_Success_List.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStock.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockFailure.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockResponse.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockResponse_Success.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockStock.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockStock_SellerStock.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeMySql.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiAuthorization.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiConfigApp.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiApplyDiscount.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiBillingAddress.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiCancelInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiCustomerInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiDeliveryConfirmation.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiDiscount.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiDiscountCoupon.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiDiscountShippingFee.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiDiscountTikixu.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiInstallmentInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiInventoryRequisition.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiInventoryWithdrawal.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiMultisellerConfirmation.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrder.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderFulfillmentType.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderInvoice.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemConfirmation.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemConfirmationHistory.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemConfirmationStatus.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemFee.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemFilterByDate.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemInventoryType.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemInvoice.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemProduct.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemSeller.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderItemV2.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiOrderStatus.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiPageOrders.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiPagingOrder.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiPaymentInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiRMAInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiSellerAdress.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiSellerFee.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiSellerIncomeDetail.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiSellerWarehouse.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiShippingAddress.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiShippingDetail.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiShippingDetailDriver.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiShippingInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiShippingPlan.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiSibling.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiStatusHistory.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiTaxInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Order\TikiWarehouseInfo.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiAtributeSpecification.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiAtributeSpecificationAtribute.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiAttribute.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiCategory.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiImage.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiInventory.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiIventoryWarehouseStocks.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiPageProducts.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiPoType.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiProduct.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiProductVat.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiSeller.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiSupplier.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUnit.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdate.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdatePrice.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantity.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityMeta.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityResponse.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityWarehouseQuantities.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateStatus.cs" />
+    <Compile Include="OpenPlatform\Model\TikiMySql.cs" />
+    <Compile Include="OpenPlatform\Model\XMLAction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -322,6 +489,7 @@
     <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />
     <Content Include="Scripts\web.play.with.me.paging.js" />
+    <Content Include="ThongTinBaoMat.xml" />
     <Content Include="Views\Home\playwithme.jpg" />
     <Content Include="Views\Home\playwithme.png" />
     <Content Include="Web.config">
@@ -414,6 +582,9 @@
     <Content Include="Views\Shared\Home\ListCustomerInfor.cshtml" />
     <Content Include="Views\Customer\AccountInfor.cshtml" />
     <Content Include="Views\Customer\Order.cshtml" />
+    <Content Include="Views\ProductECommerce\Index.cshtml" />
+    <Content Include="Views\ProductECommerce\Item.cshtml" />
+    <Content Include="Views\ProductECommerce\Order.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -95,9 +95,9 @@ namespace MVCPlayWithMe.Models
             {
                 price = 0;
                 sumQuantitySold = sumQuantitySold + model.quantitySold;
-                foreach (var pro in model.mapping)
+                foreach (var map in model.mapping)
                 {
-                    price = price + pro.bookCoverPrice;
+                    price = price + map.product.bookCoverPrice;
                 }
                 // Model giá bìa rẻ nhất
                 if (cheapestModel == null)

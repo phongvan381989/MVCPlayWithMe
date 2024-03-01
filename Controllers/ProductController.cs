@@ -418,7 +418,7 @@ namespace MVCPlayWithMe.Controllers
                 path = Common.CreateAbsoluteProductMediaFolderPath(productId);
             }
 
-            return UploadImageVideo(path);
+            return SaveImageVideo(path);
         }
 
         /// <summary>

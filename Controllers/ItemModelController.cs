@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.ItemModel;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -88,7 +89,7 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet]
+        [HttpPost]
         public string UpdateItem(int id, string name, int status, int quota, string detail)
         {
             if (AuthentAdministrator() == null)
@@ -109,7 +110,7 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="id"></param>
         /// <param name="fileType">isImage hoặc isVideo</param>
         /// <returns></returns>
-        //[HttpPost]
+        [HttpPost]
         public string DeleteAllFileWithType(int id, string fileType)
         {
             if (AuthentAdministrator() == null)
@@ -147,7 +148,7 @@ namespace MVCPlayWithMe.Controllers
                 path = Common.CreateAbsoluteItemMediaFolderPath(itemId);
             }
 
-            return UploadImageVideo(path);
+            return SaveImageVideo(path);
         }
 
         /// <summary>
@@ -169,7 +170,7 @@ namespace MVCPlayWithMe.Controllers
             Request.InputStream.Read(bytes, 0, length);
 
 
-            var modelName = Request.Headers["modelName"];
+            var modelName = HttpUtility.UrlDecode(Request.Headers["encodeModelName"]);
             var modelId = Common.ConvertStringToInt32(Request.Headers["modelId"]);// Tạo mới modelId = -1
             // exist chỉ ảnh đại diện model đã tồn tại trên server
             var exist = Request.Headers["exist"];
@@ -178,10 +179,16 @@ namespace MVCPlayWithMe.Controllers
             var discount = Common.ConvertStringToInt32(Request.Headers["discount"]); 
             var imageExtension = Request.Headers["imageExtension"];// phần mở rộng của ảnh không gồm '.'
             var listProIdMapping = Request.Headers["listProIdMapping"];// Mảng id sản phẩm mapping
+            var listQuantityMapping = Request.Headers["listQuantityMapping"];// Mảng quantity sản phẩm mapping
             MySqlResultState result = null;
             // Lưu vào db
             Model model = new Model(modelId, itemId, modelName, quota, discount);
-            model.mappingOnlyProductId = Common.ConvertJsonArrayToListInt(listProIdMapping);
+            List<int> mappingOnlyProductId  = Common.ConvertJsonArrayToListInt(listProIdMapping);
+            List<int> mappingOnlyQuantity = Common.ConvertJsonArrayToListInt(listQuantityMapping);
+            for(int i = 0; i < mappingOnlyProductId.Count(); i++)
+            {
+                model.mapping.Add(new Mapping(mappingOnlyProductId[i], mappingOnlyQuantity[i]));
+            }
 
             if (modelId != -1)
             {
