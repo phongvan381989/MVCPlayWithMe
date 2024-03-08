@@ -384,5 +384,66 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
             return result;
         }
+
+        // Lấy mapping của sản phẩm trong đơn hàng
+        public void UpdateMappingToCommonOrder(List<CommonOrder> ls)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            string status = string.Empty;
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeMapping_Get_From_Item_ModelId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", long.MinValue);
+                cmd.Parameters.AddWithValue("@inTMDTShopeeModelId", long.MinValue);
+
+                int quantity = 0;
+                Product pro = null;
+                MySqlDataReader rdr;
+                foreach (var order in ls)
+                {
+                    if (order.ecommerceName != Common.eShopee)
+                        continue;
+
+                    for (int i = 0; i < order.listItemId.Count; i++)
+                    {
+
+                        cmd.Parameters[0].Value = order.listItemId[i];
+                        cmd.Parameters[1].Value = order.listModelId[i];
+                        order.listMapping.Add(new List<Mapping>());
+
+                        rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            // Đã được mapping
+                            if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                            {
+                                quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                pro = new Product();
+                                pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                                pro.code = MyMySql.GetString(rdr, "ProductCode");
+                                pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+                                pro.name = MyMySql.GetString(rdr, "ProductName");
+                                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+                                pro.SetSrcImageVideo();
+                                order.listMapping[i].Add(new Mapping(pro, quantity));
+                            }
+                        }
+                        if (rdr != null)
+                            rdr.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+        }
     }
 }

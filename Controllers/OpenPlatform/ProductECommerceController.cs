@@ -54,6 +54,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string GetProductAll(string eType)
         {
             List<CommonItem> lsCommonItem = null;
+            if (AuthentAdministrator() == null)
+                return JsonConvert.SerializeObject(lsCommonItem);
+
             if (eType == Common.eShopee)
             {
                 lsCommonItem = ShopeeGetProductAll();
@@ -69,6 +72,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string GetProductFromId(string eType, string id)
         {
             CommonItem commonItem = null;
+            if (AuthentAdministrator() == null)
+                return JsonConvert.SerializeObject(commonItem);
+
             if (eType == Common.eShopee)
             {
                 long lid = Common.ConvertStringToInt64(id);
@@ -168,6 +174,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string UpdateMapping(string eType, string str)
         {
             MySqlResultState result;
+            if (AuthentAdministrator() == null)
+            {
+                result = new MySqlResultState();
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Xác thực thất bại";
+                return JsonConvert.SerializeObject(result);
+            }
             List<CommonForMapping> ls = new List<CommonForMapping>();
             string[] values = str.Split(',');
             int length = values.Length;
@@ -215,9 +228,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string GetListOrder(int fromTo)
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
-            List<TikiOrder> lsOrderTikiFullInfo;
-            List<ShopeeOrderDetail> lsOrderShopeeFullInfo;
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(lsCommonOrder);
+            }
+
             // Lấy đơn hàng tiki
+            List<TikiOrder> lsOrderTikiFullInfo;
             lsOrderTikiFullInfo = TikiGetListOrders.GetListOrderAShop(CommonTikiAPI.tikiCongifApp, (EnumOrderItemFilterByDate)fromTo);
             if(lsOrderTikiFullInfo != null)
             {
@@ -228,6 +245,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Lấy đơn hàng của Shopee
+            List<ShopeeOrderDetail> lsOrderShopeeFullInfo;
             DateTime time_from, time_to;
             time_from = DateTime.Now;
             time_to = DateTime.Now;
@@ -238,15 +256,45 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
                 time_from = time_to.AddDays(-30);
             lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, new ShopeeOrderStatus());
-            if(lsOrderShopeeFullInfo != null)
+            if (lsOrderShopeeFullInfo != null)
             {
-                foreach(var order in lsOrderShopeeFullInfo)
+                foreach (var order in lsOrderShopeeFullInfo)
                 {
                     lsCommonOrder.Add(new CommonOrder(order));
                 }
             }
 
+            TikiMySql tikiMySql = new TikiMySql();
+            tikiMySql.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+            tikiMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+
+            ShopeeMySql shopeeMySql = new ShopeeMySql();
+            shopeeMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+
             return JsonConvert.SerializeObject(lsCommonOrder);
+        }
+
+        /// <summary>
+        /// Load lại mapping, sản phẩm trong 1 order
+        /// </summary>
+        /// <returns></returns>
+        [HttpPost]
+        public string ReloadOneOrder(string commonOrder)
+        {
+            CommonOrder order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+            order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
+
+            List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
+            
+            lsCommonOrder.Add(order);
+
+            TikiMySql tikiMySql = new TikiMySql();
+            tikiMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+
+            ShopeeMySql shopeeMySql = new ShopeeMySql();
+            shopeeMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+
+            return JsonConvert.SerializeObject(order);
         }
         #endregion
     }

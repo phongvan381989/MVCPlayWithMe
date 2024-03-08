@@ -22,7 +22,7 @@
 .modal-content {
     background-color: #fefefe;
     margin: auto;
-    padding: 20px;
+    padding: 5px;
     border: 1px solid #888;
     width: 80%;
 }
@@ -51,6 +51,7 @@
     text-decoration: none;
     cursor: pointer;
 }
+
 .btn-over-max {
     display: flex;
     color: #fff;

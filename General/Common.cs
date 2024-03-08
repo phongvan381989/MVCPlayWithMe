@@ -51,8 +51,8 @@ namespace MVCPlayWithMe.General
         public static string eLazada = "LAZADA";
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
-        public static string returnedOrder = "Hoàn Hàng";
-        public static string packedOrder = "Hoàn Hàng";
+        public static string returnedOrder = "Đã Hoàn";
+        public static string packedOrder = "Đã Đóng";
 
         /// <summary>
         /// Đường dẫn thư mục chứa file ảnh

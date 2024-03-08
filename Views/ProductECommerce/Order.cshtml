@@ -7,10 +7,11 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    @*<link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">*@
     <style>
         .cvAncz980 {
             display: flex;
-            margin:10px;
+            margin: 10px;
         }
 
         .vbcgh45367 {
@@ -22,8 +23,117 @@
         .kmaZvc29 {
             margin-left: 20px;
         }
-        .vndejhx90{
-            margin:5px;
+
+        .vndejhx90 {
+            margin: 5px;
+        }
+
+        tr:hover {
+            background-color: #c6ecd9;
+        }
+
+        .cccaaa4545{
+            display:inline;
+        }
+        .nvns63099{
+            margin:10px;
+        }
+
+        button:hover {
+            background-color: #e7e7e7;
+        }
+
+        .item-mapping-container {
+            background-color: rgba(0,0,0,0.1); /* Black w/ opacity */
+            border-radius: 2px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .item-container {
+            display: flex;
+            align-items: center;
+            padding: 3px;
+        }
+        .one-row-mapping-container {
+            display: flex;
+            align-items: center;
+            margin-left: 50px;
+            padding: 3px;
+            flex-wrap:wrap;
+        }
+        .nvzlfksjgs095 {
+            margin-right: 5px;
+        }
+        .xvxv768gfh{
+            margin-left:20px;
+            margin-right:20px;
+        }
+        .invisible-id {
+            display: none;
+        }
+        .adasdxcvfbxc {
+            background-color: #fefefe;
+            position: sticky;
+            top: -100px;
+        }
+        .xcvxvdgdfw {
+            background-color: #fefefe;
+            position: sticky;
+            bottom: 0px;
+        }
+        /* The Modal (background) */
+        .order-modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1; /* Sit on top */
+            padding-top: 100px; /* Location of the box */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgb(0,0,0); /* Fallback color */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+        }
+
+        /* Modal Content */
+        .order-content-modal {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 5px;
+            border: 1px solid #888;
+            width: 80%;
+            border-radius: 2px;
+        }
+
+        .sdfx09re789{
+            float:right;
+            margin-right: 20px;
+            cursor:pointer;
+        }
+        .sdfx09re789:hover,
+        .sdfx09re789:focus {
+            opacity:0.5;
+        }
+
+        /* The Close Button */
+        .order-close {
+            color: #aaaaaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            display: inline;
+        }
+
+        .order-close:hover,
+        .order-close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .img-cursor {
+            cursor: pointer;
         }
     </style>
 </head>
@@ -31,8 +141,8 @@
     <div id="biggestContainer">
         <div class="cvAncz980">
             <div class="vbcgh45367">
-                <input type="radio" id="seven-day" name="from-to-day" class="kmaZvc29 one-day">
-                <label for="seven-day">1 Ngày</label>
+                <input type="radio" id="one-day" name="from-to-day" class="kmaZvc29 one-day">
+                <label for="one-day">1 Ngày</label>
             </div>
             <div class="vbcgh45367">
                 <input type="radio" id="seven-day" name="from-to-day" class="kmaZvc29 seven-day" checked>
@@ -45,35 +155,109 @@
         </div>
 
         <div class="cvAncz980">
-            <div class="vbcgh45367">
-                <input type="radio" id="all-order" name="order-type" class="kmaZvc29 all-order" checked>
-                <label for="all-order">Tất Cả</label>
-            </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order">
-                <label for="dont-pack-order">Chưa Đóng</label>
-            </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order">
-                <label for="canceled-order">Hủy</label>
-            </div>
-        </div>
-        <div class="cvAncz980">
             <button class="vndejhx90" onclick="GetListOrder()">Danh Sách Đơn Hàng</button>
             <button class="vndejhx90">Kiểm Tra Đủ Đơn</button>
         </div>
+
         <div class="cvAncz980">
-            <input type="text"class="vndejhx90"/>
+            <div class="vbcgh45367">
+                <input type="radio" id="all-order" name="order-type" class="kmaZvc29 all-order"
+                       onchange="FilterOrder()" checked>
+                <label for="all-order">Tất Cả</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order"
+                       onchange="FilterOrder()">
+                <label for="dont-pack-order">Chưa Đóng</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order"
+                       onchange="FilterOrder()">
+                <label for="canceled-order">Hủy</label>
+            </div>
+        </div>
+
+        <div class="cvAncz980">
+            <div class="vbcgh45367">
+                <input type="radio" id="all-eCommerce" name="eCommerce-type" class="kmaZvc29 all-eCommerce"
+                       onchange="FilterOrder()" checked>
+                <label for="all-eCommerce">Tất Cả</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="tiki-eCommerce" name="eCommerce-type" class="kmaZvc29 tiki-eCommerce"
+                       onchange="FilterOrder()">
+                <label for="tiki-eCommerce">TIKI</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="shopee-eCommerce" name="eCommerce-type" class="kmaZvc29 shopee-eCommerce"
+                       onchange="FilterOrder()">
+                <label for="shopee-eCommerce">SHOPEE</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="lazada-eCommerce" name="eCommerce-type" class="kmaZvc29 lazada-eCommerce"
+                       onchange="FilterOrder()">
+                <label for="lazada-eCommerce">LAZADA</label>
+            </div>
+        </div>
+
+        <div class="cvAncz980">
+            <input type="text" class="vndejhx90" name="cnzAkmkcm0" />
             <button class="vndejhx90">Chi Tiết Đơn Hàng</button>
         </div>
+
         <div>
-            <table class="order-table"></table>
+            <table class="order-table">
+                <tr>
+                    <th style="width:60px">Sàn</th>
+                    <th>Mã Đơn Hàng</th>
+                    <th>Mã Vận Đơn</th>
+                    <th>Trạng Thái</th>
+                    <th>Thời Gian</th>
+                    <th>Đã Đóng</th>
+                    <th>Đã Hoàn</th>
+                </tr>
+            </table>
         </div>
     </div>
+    <div id="order-detail-modal" class="order-modal">
+        <div class="order-content-modal">
+            <div class="adasdxcvfbxc">
+                <span class="order-close">&times;</span>
+                <img src="~/Media/icons8-refresh-48.png" class="sdfx09re789" />
+                <div>
+                    <div>
+                        <p class="xxvAFXF90 cccaaa4545 nvns63099"> Mã Đơn Hàng: </p>
+                        <p class="zcx6768SF cccaaa4545 nvns63099"></p>
+                    </div>
+                    <input type="text" class="nvns63099" name="kxokSnxjn09" />
+                    <button class="nvns63099">Thêm Sản Phẩm</button>
+                    <button class="nvns63099">Hoàn Hàng</button>
+                </div>
+            </div>
+
+            <div class="order-detail">
+            </div>
+            <div class="xcvxvdgdfw">
+                <button class="nvns63099">Đủ Sản Phẩm</button>
+            </div>
+        </div>
+    </div>
+
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script>
         let listOrder; // Lưu danh sách common order trả về
+        let listOrderTemp = []; // Lưu danh sách common order sau khi lọc, và được hiển thị
+        let currentOrder; // Đơn hàng đang view chi tiết trên modal
+
+        // Get the modal
+        let modal = document.getElementById("order-detail-modal");
+
+        SetMinWidth(document.getElementsByClassName("order-content-modal")[0], 600);
+        SetMinWidth(document.getElementsByClassName("order-content-modal")[1], 600);
+
+        InitializeModal();
+
         // 0: 1 ngày, 1: 7 ngày, 2: 30 ngày
         function GetFromTo() {
             let fromto = 1;
@@ -98,8 +282,23 @@
             return orderStatus;
         }
 
-        async function GetListOrder() {
 
+        function GetECommerceType() {
+            let ecommerce = ""; // Tương ứng tất cả
+            if (document.getElementsByClassName("tiki-eCommerce")[0].checked == true) {
+                ecommerce = eTiki;
+            }
+            else if (document.getElementsByClassName("shopee-eCommerce")[0].checked == true) {
+                ecommerce = eShopee;
+            }
+            else if (document.getElementsByClassName("lazada-eCommerce")[0].checked == true) {
+                ecommerce = eLazada;
+            }
+            return ecommerce;
+        }
+
+        // Lấy tất cả đơn hàng trong 1 khoảng thời gian
+        async function GetListOrder() {
             const searchParams = new URLSearchParams();
             searchParams.append("fromTo", GetFromTo());
 
@@ -114,11 +313,60 @@
             }
 
             // Hiển thị danh sách đơn hàng
-            listOrder = null;
             listOrder = JSON.parse(responseDB.responseText);
 
-            // Lọc theo trạng thái đơn hàng
+            FilterOrder();
+        }
+
+        // Sắp xếp danh sách đơn hàng theo thời gian gần đây ở đầu danh sách
+        function SortByTime(ls) {
+            let lsTemp = [];
+            let lengthTemp = 0;
+            let indexAdd;
+            let length = ls.length;
+            for (let i = 0; i < length; i++) {
+                let obj = ls[i];
+                lengthTemp = lsTemp.length;
+                indexAdd = lengthTemp;
+                for (let j = 0; j < lengthTemp; j++) {
+                    let objTemp = lsTemp[j];
+                    if (obj.millisecondsTime >= objTemp.millisecondsTime) {
+                        indexAdd = j;
+                        break;
+                    }
+                }
+                lsTemp.splice(indexAdd, 0, obj);
+            }
+            //if (DEBUG) {
+            //    console.log("SortByTime CALL");
+            //    //console.log("ls: " + JSON.stringify(ls));
+            //    console.log("lsTemp: " + JSON.stringify(lsTemp));
+            //    for (let i = 0; i < length; i++) {
+            //        //console.log(ls[i].millisecondsTime);
+            //        console.log(lsTemp[i].millisecondsTime);
+            //        //console.log("");
+            //    }
+            //}
+            //ls = lsTemp;
+            //if (DEBUG) {
+            //    console.log("SortByTime CALL");
+            //    console.log("ls: " + JSON.stringify(ls));
+            //}
+            return lsTemp;
+        }
+
+        // Từ mã đơn hàng và tên sàn và danh sách đơn hàng, lấy được đối tượng đơn hàng
+        function GetOrderFromCache(code, eEcomerce) {
+            let length = listOrderTemp.length;
+            for (let i = 0; i < length; i++) {
+
+            }
+        }
+
+        // Lọc theo trạng thái đơn hàng
+        function FilterOrderByStatus(list) {
             let orderStatus = GetOrderStatus();
+
             // Trạng thái đơn hàng tiki có thể
             //{
             //    "queueing",
@@ -153,10 +401,368 @@
             //    INVOICE_PENDING,
             //    ALL
             //}
-
+            let listTemp = [];
+            let order;
+            let length = list.length;
             // Lấy tất cả
             if (orderStatus == 0) {
+                listTemp = list;
+            }
+            //Chưa đóng
+            else if (orderStatus == 1) {
+                for (let i = 0; i < length; i++) {
+                    order = list[i];
+                    if (order.ecommerceName == eTiki) {
+                        if (order.status == "queueing" || order.status == "picking") {
+                            listTemp.push(order);
+                        }
 
+                    }
+                    else if (order.ecommerceName == eShopee) {
+                        if (order.status == "IN_CANCEL" || order.status == "CANCELLED") {
+                            listTemp.push(order);
+                        }
+                    }
+                }
+            }
+            // Hủy đơn
+            else if (orderStatus == 2) {
+                for (let i = 0; i < length; i++) {
+                    order = list[i];
+                    if (order.ecommerceName == eTiki) {
+                        if (order.status == "canceled") {
+                            listTemp.push(order);
+                        }
+
+                    }
+                    else if (order.ecommerceName == eShopee) {
+                        if (order.status == "READY_TO_SHIP" || order.status == "PROCESSED") {
+                            listTemp.push(order);
+                        }
+                    }
+                }
+            }
+
+            return listTemp;
+        }
+
+        // Lọc theo sàn
+        function FilterOrderECommerceName(list) {
+            let ecommerce = GetECommerceType();
+            let listTemp = [];
+            let order;
+            let length = list.length;
+            // Lấy tất cả
+            if (ecommerce == "") {
+                listTemp = list;
+            }
+            else {
+                for (let i = 0; i < length; i++) {
+                    order = list[i];
+                    if (order.ecommerceName == ecommerce) {
+                        listTemp.push(order);
+                    }
+                }
+            }
+            return listTemp;
+        }
+
+        // Lọc order theo trạng thái, sàn
+        function FilterOrder() {
+            let length = listOrder.length;
+            if (length == 0)
+                return;
+
+            listOrderTemp = listOrder;
+
+            listOrderTemp = FilterOrderByStatus(listOrderTemp);
+            listOrderTemp = FilterOrderECommerceName(listOrderTemp)
+
+            // Hiển thị danh sách đơn hàng
+            let orderTable = document.getElementsByClassName("order-table")[0];
+            DeleteRowsExcludeHead(orderTable);
+
+            let lengthTemp = listOrderTemp.length;
+            // Sắp xếp theo thời gian tạo đơn giảm dần
+            for (let i = 0; i < lengthTemp; i++) {
+                listOrderTemp[i].millisecondsTime = Date.parse(listOrderTemp[i].created_at);
+            }
+            listOrderTemp = SortByTime(listOrderTemp);
+            let order;
+            for (let i = 0; i < lengthTemp; i++) {
+                order = listOrderTemp[i];
+                let row = orderTable.insertRow(-1);
+                // set id của row
+                row.setAttribute("data-index-id", i);
+
+                // Insert new cells (<td> elements)
+                let cell0 = row.insertCell(0);
+                let cell1 = row.insertCell(1);
+                let cell2 = row.insertCell(2);
+                let cell3 = row.insertCell(3);
+                let cell4 = row.insertCell(4);
+                let cell5 = row.insertCell(5);
+                let cell6 = row.insertCell(6);
+
+                // Sàn
+                cell0.innerHTML = order.ecommerceName;
+
+                // Mã Đơn Hàng
+                cell1.innerHTML = order.code;
+
+                // Mã Vận Đơn
+                cell2.innerHTML = order.shipCode;
+
+                // Trạng thái
+                cell3.innerHTML = order.status;
+
+                // Thời Gian
+                let testTime = new Date(order.millisecondsTime)
+                cell4.innerHTML = testTime.toLocaleString();
+
+                // Đã đóng
+                if (order.orderStatusInWarehoue == packedOrderStatusInWarehoue)
+                    cell5.innerHTML = order.orderStatusInWarehoue;
+
+                // Đã Hoàn
+                if (order.orderStatusInWarehoue == returnedOrderStatusInWarehoue)
+                    cell6.innerHTML = order.orderStatusInWarehoue;
+
+                row.onclick = function () {
+                    //// Lấy tên sàn
+                    //let eEcommerce = this.cells[0].innerHTML;
+                    //// Lấy mã đơn hàng
+                    //let code = this.cells[1].innerHTML;
+
+                    let id = parseInt(row.getAttribute("data-index-id"));
+                    ShowOneOrderOnModal(listOrderTemp[id]);
+                }
+            }
+        }
+
+        function ShowOneOrderOnModal(order) {
+            currentOrder = order;
+            let orderContainer = document.getElementsByClassName("order-detail")[0];
+            orderContainer.innerHTML = "";
+            document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
+            document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
+
+            for (let i = 0; i < order.listItemId.length; i++) {
+                let container = document.createElement("div");
+                container.className = "item-mapping-container"
+                orderContainer.appendChild(container);
+
+                // Hiển thị sản phẩm trên sàn
+                {
+                    let itemContainer = document.createElement("div");
+                    itemContainer.className = "item-container";
+                    container.appendChild(itemContainer);
+
+                    // Checkbox
+                    let checkbox = document.createElement("INPUT");
+                    checkbox.setAttribute("type", "checkbox");
+                    checkbox.name = "checkbox-" + i.toString();
+                    checkbox.style.width = "20px";
+                    checkbox.style.height = "20px";
+                    checkbox.className = "nvzlfksjgs095";
+                    checkbox.onclick = function () {
+                        //// Lấy id
+                        //let id = Number(this.parentElement.previousSibling.innerHTML);
+                        //let pro = FindProductFromList(listProduct, id);
+                        //if (this.checked == true) {
+                        //    AddRowToTableMapping(pro, 1);
+                        //}
+                        //else {
+                        //    DeleteRowFromTableMapping(pro);
+                        //}
+                    }
+                    itemContainer.appendChild(checkbox);
+
+                    // Image
+                    let img = document.createElement("img");
+                    img.className = "nvzlfksjgs095 img-cursor";
+                    if (order.listThumbnail.length > 0) {
+                        img.setAttribute("src", order.listThumbnail[i]);
+                    } else {
+                        img.setAttribute("src", srcNoImageThumbnail);
+                    }
+                    img.height = thumbnailHeight;
+                    img.width = thumbnailWidth;
+                    img.title = "Click để cập nhật liên kết"
+                    img.onclick = function () {
+                        if (order.ecommerceName == eTiki || order.ecommerceName == eShopee) {
+                            let url = "Item?eType=" + order.ecommerceName + "&id=" + order.listItemId[i].toString()
+                            window.open(url);
+                        }
+                    }
+                    itemContainer.appendChild(img);
+
+                    // Tên
+                    let nameEle = document.createElement("div");
+                    nameEle.className = "nvzlfksjgs095";
+                    let nameStr = "";
+                    if (isEmptyOrSpaces(order.listModelName[i])) {
+                        nameStr = order.listItemName[i];
+                    }
+                    else {
+                        nameStr = order.listItemName[i] + "--" + order.listModelName[i];
+                    }
+                    nameEle.innerHTML = nameStr;
+                    itemContainer.appendChild(nameEle);
+
+                    // Số lượng
+                    let quantityEle = document.createElement("div");
+                    quantityEle.className = "xvxv768gfh";
+                    quantityEle.innerHTML = order.listQuantity[i];
+                    itemContainer.appendChild(quantityEle)
+
+                    // Item id và model id, được ẩn
+                    let itemId = document.createElement("div");
+                    itemId.className = "invisible-id";
+                    itemId.innerHTML = order.listItemId[i];
+                    itemContainer.appendChild(itemId);
+
+                    let modelId = document.createElement("div");
+                    modelId.className = "invisible-id";
+                    modelId.innerHTML = order.listModelId[i];
+                    itemContainer.appendChild(modelId);
+                }
+
+                // Hiển thị mapping với sản phẩm trên sàn
+                {
+                    let mappingContainer = document.createElement("div");
+                    mappingContainer.className = "mapping-container";
+                    container.appendChild(mappingContainer);
+
+                    for (let j = 0; j < order.listMapping[i].length; j++) {
+
+                        let oneRowMappingContainer = document.createElement("div");
+                        oneRowMappingContainer.className = "one-row-mapping-container";
+                        mappingContainer.appendChild(oneRowMappingContainer);
+
+                        // Checkbox
+                        let checkbox = document.createElement("INPUT");
+                        checkbox.setAttribute("type", "checkbox");
+                        checkbox.name = "checkbox-" + i.toString();
+                        checkbox.style.width = "20px";
+                        checkbox.style.height = "20px";
+                        checkbox.className = "nvzlfksjgs095";
+                        checkbox.onclick = function () {
+                        }
+                        oneRowMappingContainer.appendChild(checkbox);
+
+                        // Image
+                        let img = document.createElement("img");
+                        img.className = "nvzlfksjgs095 img-cursor";
+                        if (order.listMapping[i][j].product.imageSrc.length > 0) {
+                            img.setAttribute("src", order.listMapping[i][j].product.imageSrc[0]);
+                        } else {
+                            img.setAttribute("src", srcNoImageThumbnail);
+                        }
+                        img.height = thumbnailHeight / 2;
+                        img.width = thumbnailWidth / 2;
+                        img.title = "Click để cập nhật thông tin sản phẩm trong kho như: Vị trí lưu kho, mã sản phẩm"
+                        img.onclick = function () {
+                            let url = "/Product/UpdateDelete?id=" + order.listMapping[i][j].product.id.toString()
+                            window.open(url);
+                        }
+                        oneRowMappingContainer.appendChild(img);
+
+                        // Mã sản phẩm gồm code 89 + barcode
+                        let codeBarcodeEle = document.createElement("div");
+                        codeBarcodeEle.className = "nvzlfksjgs095";
+                        let code = order.listMapping[i][j].product.code;
+                        if (!isEmptyOrSpaces(order.listMapping[i][j].product.barcode)) {
+                            code = code + "-" + order.listMapping[i][j].product.barcode;
+                        }
+                        codeBarcodeEle.innerHTML = code;
+                        oneRowMappingContainer.appendChild(codeBarcodeEle);
+
+                        // Tên
+                        let nameEle = document.createElement("div");
+                        nameEle.className = "nvzlfksjgs095";
+                        nameEle.innerHTML = order.listMapping[i][j].product.name;
+                        oneRowMappingContainer.appendChild(nameEle);
+
+                        // Vị trí trong kho
+                        let positionEle = document.createElement("div");
+                        positionEle.className = "xvxv768gfh";
+                        positionEle.innerHTML = order.listMapping[i][j].product.positionInWarehouse;
+                        oneRowMappingContainer.appendChild(positionEle)
+
+                        // Số lượng mapping
+                        let quantityEle = document.createElement("div");
+                        quantityEle.className = "xvxv768gfh";
+                        quantityEle.innerHTML = "0/" + order.listMapping[i][j].quantity;
+                        oneRowMappingContainer.appendChild(quantityEle)
+
+                        // Số lượng sản phẩm trong kho
+                        let quantityInWarehouseEle = document.createElement("div");
+                        quantityInWarehouseEle.className = "xvxv768gfh";
+                        quantityInWarehouseEle.innerHTML = order.listMapping[i][j].product.quantity;
+                        oneRowMappingContainer.appendChild(quantityInWarehouseEle)
+
+                        // code và barcode, được ẩn
+                        let codeEle = document.createElement("div");
+                        codeEle.className = "invisible-id";
+                        codeEle.innerHTML = order.listMapping[i][j].product.code;
+                        oneRowMappingContainer.appendChild(codeEle);
+
+                        let barcodeEle = document.createElement("div");
+                        barcodeEle.className = "invisible-id";
+                        barcodeEle.innerHTML = order.listMapping[i][j].product.barcode;
+                        oneRowMappingContainer.appendChild(barcodeEle);
+                    }
+                }
+            }
+
+            ShowModal();
+        }
+
+        function CloseModal() {
+            modal.style.display = "none";
+        }
+
+        function ShowModal() {
+            modal.style.display = "block";
+        }
+
+        // Khi cập nhật mapping, sản phẩm trong kho ta load lại
+        async function RefreshOrder() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("commonOrder", JSON.stringify(currentOrder));
+
+            let query = "/ProductECommerce/ReloadOneOrder";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText == null) {
+                CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                return;
+            }
+
+            // đơn hàng hiện tại sau cập nhật
+            let currentOrderNew = JSON.parse(responseDB.responseText);
+            currentOrder.listMapping = currentOrderNew.listMapping;
+
+            // Đóng modal và mở lại
+            CloseModal();
+            ShowOneOrderOnModal(currentOrder);
+        }
+
+        function InitializeModal() {
+
+            // Get the <span> element that closes the modal
+            let span = document.getElementsByClassName("order-close")[0];
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function () {
+                CloseModal(modal);
+            }
+
+            document.getElementsByClassName("sdfx09re789")[0].onclick = function () {
+                RefreshOrder();
             }
         }
     </script>

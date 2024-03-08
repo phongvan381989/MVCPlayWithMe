@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
 using System;
@@ -38,14 +39,32 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string status { get; set; }
 
+        public List<int> listQuantity { get; set; }
+
+        public List<string> listPosition { get; set; }
+
         // Trạng thái đóng hàng đi từ, hoàn hàng về kho
         public string orderStatusInWarehoue { get; set; }
 
         /// <summary>
-        /// Danh sách item id và model id tương ứng, model id = -1 nếu item không có model
+        /// Danh sách item id và model id tương ứng,
+        /// Shopee trả về model id = 0 nếu item không có model
+        /// Tiki set mặc định model id = -1
         /// </summary>
         public List<long> listItemId { get; set; }
         public List<long> listModelId { get; set; }
+
+        /// <summary>
+        /// Danh sách item name và model name tương ứng
+        /// Không có model ta lấy tên theo item name
+        /// </summary>
+        public List<string> listItemName { get; set; } // Tên của item
+        public List<string> listModelName { get; set; } // Tên của model
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public List<List<Mapping>> listMapping { get; set; }
 
         /// <summary>
         /// 2020-08-10 18:50:17	When the order is created
@@ -67,6 +86,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelId = new List<long>();
             created_at = new DateTime();
             listThumbnail = new List<string>();
+            listQuantity = new List<int>();
+            listPosition = new List<string>();
+
+            listItemName = new List<string>();
+            listModelName = new List<string>();
+            listMapping = new List<List<Mapping>>();
         }
 
         /// <summary>
@@ -82,15 +107,26 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemId = new List<long>();
             listModelId = new List<long>();
             listThumbnail = new List<string>();
+            listQuantity = new List<int>();
+            listPosition = new List<string>();
+
+            listItemName = new List<string>();
+            listModelName = new List<string>();
+            listMapping = new List<List<Mapping>>();
+
             foreach (TikiOrderItemV2 e in order.items)
             {
                 listItemId.Add(e.id);
                 listModelId.Add(-1);
+                listQuantity.Add(e.qty);
                 listThumbnail.Add(e.product.thumbnail);
+                listItemName.Add(e.product.name);
+                listModelName.Add("");
             }
             created_at = order.created_at;
-            TikiMySql tikiMySql = new TikiMySql();
-            orderStatusInWarehoue = tikiMySql.TikiGetOrderStatusInWarehoue(code, (int)Common.EECommerceType.TIKI);
+
+            //TikiMySql tikiMySql = new TikiMySql();
+            //orderStatusInWarehoue = tikiMySql.TikiGetOrderStatusInWarehoue(code, (int)Common.EECommerceType.TIKI);
         }
 
         /// <summary>
@@ -109,14 +145,25 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemId = new List<long>();
             listModelId = new List<long>();
             listThumbnail = new List<string>();
+            listQuantity = new List<int>();
+            listPosition = new List<string>();
+
+            listItemName = new List<string>();
+            listModelName = new List<string>();
+            listMapping = new List<List<Mapping>>();
+
             foreach (ShopeeGetOrderDetailItem e in order.item_list)
             {
                 listItemId.Add(e.item_id);
                 listModelId.Add(e.model_id);
                 listThumbnail.Add(e.image_info.image_url);
+                listQuantity.Add(e.model_quantity_purchased);
+
+                listItemName.Add(e.item_name);
+                listModelName.Add(e.model_name);
             }
-            TikiMySql tikiMySql = new TikiMySql();
-            orderStatusInWarehoue = tikiMySql.TikiGetOrderStatusInWarehoue(code, (int)Common.EECommerceType.SHOPEE);
+            //TikiMySql tikiMySql = new TikiMySql();
+            //orderStatusInWarehoue = tikiMySql.TikiGetOrderStatusInWarehoue(code, (int)Common.EECommerceType.SHOPEE);
         }
     }
 }

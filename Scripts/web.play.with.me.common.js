@@ -10,6 +10,12 @@ var HaNoiCity = "Thành phố Hà Nội";
 var cartKey = "cart";
 var customerInforKey = "cusinfor";
 var uidKey = "uid";
+var eShopee = "SHOPEE";
+var eTiki = "TIKI";
+var eLazada = "LAZADA";
+var ePlayWithMe = "PLAYWITHME";
+var packedOrderStatusInWarehoue = "Đã Đóng";
+var returnedOrderStatusInWarehoue = "Đã Hoàn";
 
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
@@ -760,6 +766,14 @@ function AuthenFail() {
     DeleteCookie(uidKey);
     // Quay về trang chủ
     window.location.href = "/Home/Index";
+}
+
+// Set min width khi hiển thị trên màn hình nhỏ
+// ele: đối tượng html
+function SetMinWidth(ele, minValue) {
+    if (scrWidth <= minValue) {
+        ele.style.minWidth = scrWidth + "px";
+    }
 }
 
 // Cập nhật số sản phẩm trong giỏ hàng ( menu top), ẩn hiện icon giỏ hàng nếu cần thiết

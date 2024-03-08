@@ -196,7 +196,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="code"></param>
         /// <returns></returns>
-        public string TikiGetOrderStatusInWarehoue(string code, int type)
+        public string TikiGetOrderStatusInWarehouse(string code, int eCommerce)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -204,10 +204,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_From_Code", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inCode", code);
-                cmd.Parameters.AddWithValue("@inType", type);
+                cmd.Parameters.AddWithValue("@inECommmerce", eCommerce);
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
@@ -230,6 +230,110 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
 
             return status;
+        }
+
+        // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn
+        // Hàm này dùng cho sàn: Tiki, Shopee
+        public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            string status = string.Empty;
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", "");
+                cmd.Parameters.AddWithValue("@inECommmerce", 0);
+                MySqlDataReader rdr;
+                foreach (var order in ls)
+                {
+                    status = string.Empty;
+                    cmd.Parameters[0].Value = order.code;
+                    if(order.ecommerceName == Common.eTiki)
+                        cmd.Parameters[1].Value = 1;
+                    else if (order.ecommerceName == Common.eShopee)
+                        cmd.Parameters[1].Value = 2;
+
+                    rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        if (MyMySql.GetInt32(rdr, "Status") == 0)
+                            status = Common.packedOrder;
+                        else
+                            status = Common.returnedOrder;
+                    }
+                    order.orderStatusInWarehoue = status;
+                    if (rdr != null)
+                        rdr.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+        }
+
+        // Lấy mapping của sản phẩm trong đơn hàng
+        public void UpdateMappingToCommonOrder(List<CommonOrder> ls)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            string status = string.Empty;
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_TikiId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
+
+                int quantity = 0;
+                Product pro = null;
+                MySqlDataReader rdr;
+                foreach (var order in ls)
+                {
+                    if (order.ecommerceName != Common.eTiki)
+                        continue;
+
+                    for (int i = 0; i < order.listItemId.Count; i++)
+                    {
+                        cmd.Parameters[0].Value = Common.ConvertLongToInt(order.listItemId[i]);
+                        order.listMapping.Add(new List<Mapping>());
+
+                        rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            // Đã được mapping
+                            if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                            {
+                                quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                pro = new Product();
+                                pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                                pro.code = MyMySql.GetString(rdr, "ProductCode");
+                                pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+                                pro.name = MyMySql.GetString(rdr, "ProductName");
+                                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+                                pro.SetSrcImageVideo();
+                                order.listMapping[i].Add(new Mapping(pro, quantity));
+                            }
+                        }
+                        if (rdr != null)
+                            rdr.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
         }
     }
 }

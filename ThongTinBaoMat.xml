@@ -7,7 +7,7 @@
       <Secret>9IfqSeQngzps840fhdQoZ0GLC34gTPob</Secret>
       <UsingApp>Đang Sử Dụng</UsingApp>
       <Authorization>
-        <AccessToken>3rb70kkNtCKR0i821B4Pf_ktYgpgIz9vQVX7Bsub5z8.mZzwI8RXmLdmD0EpAuygBVBpHLhCLYyE9bX2mSVQKU0</AccessToken>
+        <AccessToken>3zNASJWRN7E9rkx1fs7cIIn_hNez8HJKwG_jM3Cgz5Y.-XRGHco5BoFVsR825BzeFoR4CTAoL2SY6rTbb4vzTNo</AccessToken>
         <ExpiresIn>1295999</ExpiresIn>
         <Scope></Scope>
         <TokenType>bearer</TokenType>
@@ -19,7 +19,7 @@
     <PartnerId>2002851</PartnerId>
     <PartnerKey>6a4d4d58414467746a787349565454646a7554767045756f72776e6779755676</PartnerKey>
     <Code>4f77526f694963617967556570496e41</Code>
-    <AccessToken>507472535551726761665469714e5264</AccessToken>
-    <RefreshToken>5a6d796b535a6c4b46444e7a4e634b65</RefreshToken>
+    <AccessToken>56625857786e5756756c6365756f6e50</AccessToken>
+    <RefreshToken>466a79687a4e4d5854544862754f674c</RefreshToken>
   </Shopee>
 </ThongTinBaoMat>
