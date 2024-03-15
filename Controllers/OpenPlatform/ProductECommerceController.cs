@@ -13,6 +13,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Web.Mvc;
+using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
 
 namespace MVCPlayWithMe.Controllers.OpenPlatform
@@ -266,10 +267,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             TikiMySql tikiMySql = new TikiMySql();
             tikiMySql.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
-            tikiMySql.UpdateMappingToCommonOrder(lsCommonOrder);
 
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+            // Thông tin mapping được lấy khi xem chi tiết đơn hàng để luôn lấy được thông tin mới nhất
+            //tikiMySql.TikiUpdateMappingToCommonOrder(lsCommonOrder);
+
+            //ShopeeMySql shopeeMySql = new ShopeeMySql();
+            //shopeeMySql.ShopeeUpdateMappingToCommonOrder(lsCommonOrder);
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -289,12 +292,43 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             lsCommonOrder.Add(order);
 
             TikiMySql tikiMySql = new TikiMySql();
-            tikiMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+            tikiMySql.TikiUpdateMappingToCommonOrder(lsCommonOrder);
 
             ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.UpdateMappingToCommonOrder(lsCommonOrder);
+            shopeeMySql.ShopeeUpdateMappingToCommonOrder(lsCommonOrder);
 
             return JsonConvert.SerializeObject(order);
+        }
+
+        [HttpPost]
+        public string EnoughProductInOrder(string eType, string commonOrder)
+        {
+            MySqlResultState resultState = null;
+            CommonOrder order = null;
+            try
+            {
+                order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+            }
+            catch(Exception ex)
+            {
+                resultState = new MySqlResultState();
+                Common.SetResultException(ex, resultState);
+                return JsonConvert.SerializeObject(resultState);
+            }
+
+            EECommerceType eECommerceType = EECommerceType.TIKI;
+            if (eType == Common.eShopee)
+            {
+                eECommerceType = EECommerceType.SHOPEE;
+            }
+            else if (eType == Common.eTiki)
+            {
+                eECommerceType = EECommerceType.TIKI;
+            }
+            TikiMySql tikiMySql = new TikiMySql();
+            resultState = tikiMySql.EnoughProductInOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
+
+            return JsonConvert.SerializeObject(resultState);
         }
         #endregion
     }

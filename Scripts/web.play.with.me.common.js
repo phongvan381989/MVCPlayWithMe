@@ -14,8 +14,8 @@ var eShopee = "SHOPEE";
 var eTiki = "TIKI";
 var eLazada = "LAZADA";
 var ePlayWithMe = "PLAYWITHME";
-var packedOrderStatusInWarehoue = "Đã Đóng";
-var returnedOrderStatusInWarehoue = "Đã Hoàn";
+var packedOrderStatusInWarehouse = "Đã Đóng";
+var returnedOrderStatusInWarehouse = "Đã Hoàn";
 
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
@@ -96,12 +96,30 @@ function CheckValidSDT(sdt) {
     if (!pattern.test(sdt)) {
         return false;
     }
-    if (sdt.length != 10) {
-        return false;
-    }
     return true;
 }
 
+// Check mã sản phẩm hợp lệ bắt đầu 89, dài 13
+// 89..., VD: 8938519861794
+function CheckValidProductCode(code) {
+    let pattern = /((89)+([0-9]{11})\b)/g;
+    if (!pattern.test(code)) {
+        return false;
+    }
+
+    return true;
+}
+
+// Check isbn sản phẩm hợp lệ bắt đầu 978604, dài 13
+// 978604..., VD: 9786046546948
+function CheckValidProductISBN(code) {
+    let pattern = /((978604)+([0-9]{7})\b)/g;
+    if (!pattern.test(code)) {
+        return false;
+    }
+
+    return true;
+}
 function CheckPassWordValid(passWord, repassWord) {
     if (passWord !== repassWord) {
         return '{"isValid":false, "message":"Nhập lại mật khẩu không chính xác."}';
@@ -596,6 +614,7 @@ function CreateMustClickOkModal(text, okFunction) {
         }
     });
     document.getElementsByTagName("body")[0].appendChild(container);
+    document.getElementsByClassName("btn-modal-must-click-ok")[0].focus();
 }
 
 // Lấy được obj từ danh sách obj thỏa obj.id = id

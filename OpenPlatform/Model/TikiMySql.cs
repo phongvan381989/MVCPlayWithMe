@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
@@ -190,50 +191,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        /// <summary>
-        /// Một đơn hàng có thể xuât->nhập->xuất->nhập....
-        /// Ta lấy trạng thái cuối cùng của đơn hàng so với kho hàng
-        /// </summary>
-        /// <param name="code"></param>
-        /// <returns></returns>
-        public string TikiGetOrderStatusInWarehouse(string code, int eCommerce)
-        {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            string status = string.Empty;
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", code);
-                cmd.Parameters.AddWithValue("@inECommmerce", eCommerce);
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    if (MyMySql.GetInt32(rdr, "Status") == 0)
-                        status = Common.packedOrder;
-                    else
-                        status = Common.returnedOrder;
-                }
-
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                status = string.Empty;
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
-
-            conn.Close();
-
-            return status;
-        }
-
         // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn
-        // Hàm này dùng cho sàn: Tiki, Shopee
+        // Hàm này dùng cho sàn: Tiki, Shopee,...
         public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -279,7 +238,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void UpdateMappingToCommonOrder(List<CommonOrder> ls)
+        public void TikiUpdateMappingToCommonOrder(List<CommonOrder> ls)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -334,6 +293,89 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             conn.Close();
+        }
+
+        /// <summary>
+        /// Dùng chung cho nhiều sàn
+        /// </summary>
+        /// <param name="commonOrder"></param>
+        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
+        public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder, ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Lưu vào bảng tbECommerceOrder
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Lưu vào bảng tbOutput
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    int productId = 0;
+                    int quantity = 0;
+                    for(int i = 0; i < commonOrder.listMapping.Count; i++)
+                    {
+                        for(int j = 0; j <commonOrder.listMapping[i].Count; j++)
+                        {
+                            productId = commonOrder.listMapping[i][j].product.id;
+                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            cmd.Parameters[2].Value = productId;
+                            cmd.Parameters[3].Value = quantity;
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+
+                // Cập nhật số lượng sản phẩm trong kho
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    cmd.Parameters.AddWithValue("@inAdd", 0);
+                    int productId = 0;
+                    int quantity = 0;
+                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                    {
+                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                        {
+                            productId = commonOrder.listMapping[i][j].product.id;
+                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            cmd.Parameters[0].Value = productId;
+                            cmd.Parameters[1].Value = quantity * -1;// Giảm số lượng tồn kho
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+            return resultState;
         }
     }
 }

@@ -229,8 +229,8 @@
                         <p class="xxvAFXF90 cccaaa4545 nvns63099"> Mã Đơn Hàng: </p>
                         <p class="zcx6768SF cccaaa4545 nvns63099"></p>
                     </div>
-                    <input type="text" class="nvns63099" name="kxokSnxjn09" />
-                    <button class="nvns63099">Thêm Sản Phẩm</button>
+                    <input type="text" class="nvns63099" name="product-code-isbn" />
+                    <button class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
                     <button class="nvns63099">Hoàn Hàng</button>
                 </div>
             </div>
@@ -238,7 +238,7 @@
             <div class="order-detail">
             </div>
             <div class="xcvxvdgdfw">
-                <button class="nvns63099">Đủ Sản Phẩm</button>
+                <button class="nvns63099 vxvcx0989s" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
             </div>
         </div>
     </div>
@@ -250,6 +250,10 @@
         let listOrderTemp = []; // Lưu danh sách common order sau khi lọc, và được hiển thị
         let currentOrder; // Đơn hàng đang view chi tiết trên modal
 
+        function myFunction() {
+            CreateMustClickOkModal("vãi nhái.", null);
+        }
+
         // Get the modal
         let modal = document.getElementById("order-detail-modal");
 
@@ -257,6 +261,17 @@
         SetMinWidth(document.getElementsByClassName("order-content-modal")[1], 600);
 
         InitializeModal();
+        InitializeEnterPress();
+
+        function InitializeEnterPress() {
+            let input = document.getElementsByName("product-code-isbn")[0];
+            input.addEventListener("keypress", function (event) {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    document.getElementsByClassName("btn-add-product")[0].click();
+                }
+            });
+        }
 
         // 0: 1 ngày, 1: 7 ngày, 2: 30 ngày
         function GetFromTo() {
@@ -281,7 +296,6 @@
             }
             return orderStatus;
         }
-
 
         function GetECommerceType() {
             let ecommerce = ""; // Tương ứng tất cả
@@ -337,21 +351,6 @@
                 }
                 lsTemp.splice(indexAdd, 0, obj);
             }
-            //if (DEBUG) {
-            //    console.log("SortByTime CALL");
-            //    //console.log("ls: " + JSON.stringify(ls));
-            //    console.log("lsTemp: " + JSON.stringify(lsTemp));
-            //    for (let i = 0; i < length; i++) {
-            //        //console.log(ls[i].millisecondsTime);
-            //        console.log(lsTemp[i].millisecondsTime);
-            //        //console.log("");
-            //    }
-            //}
-            //ls = lsTemp;
-            //if (DEBUG) {
-            //    console.log("SortByTime CALL");
-            //    console.log("ls: " + JSON.stringify(ls));
-            //}
             return lsTemp;
         }
 
@@ -502,7 +501,6 @@
                 let cell3 = row.insertCell(3);
                 let cell4 = row.insertCell(4);
                 let cell5 = row.insertCell(5);
-                let cell6 = row.insertCell(6);
 
                 // Sàn
                 cell0.innerHTML = order.ecommerceName;
@@ -521,27 +519,108 @@
                 cell4.innerHTML = testTime.toLocaleString();
 
                 // Đã đóng
-                if (order.orderStatusInWarehoue == packedOrderStatusInWarehoue)
-                    cell5.innerHTML = order.orderStatusInWarehoue;
+                if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse)
+                    cell5.style.color = "initial";
 
-                // Đã Hoàn
-                if (order.orderStatusInWarehoue == returnedOrderStatusInWarehoue)
-                    cell6.innerHTML = order.orderStatusInWarehoue;
+                //// Đã Hoàn
+                if (order.orderStatusInWarehoue == returnedOrderStatusInWarehouse)
+                    cell5.style.color = "red";
+                cell5.innerHTML = order.orderStatusInWarehoue;
 
                 row.onclick = function () {
-                    //// Lấy tên sàn
-                    //let eEcommerce = this.cells[0].innerHTML;
-                    //// Lấy mã đơn hàng
-                    //let code = this.cells[1].innerHTML;
-
                     let id = parseInt(row.getAttribute("data-index-id"));
-                    ShowOneOrderOnModal(listOrderTemp[id]);
+                    currentOrder = listOrderTemp[id];
+                    RefreshOrder();
                 }
             }
         }
 
+        function ClickItemCheckBox(ele) {
+            if (DEBUG) {
+                console.log("ClickItemCheckBox CALL");
+            }
+            ResetBackgroundColorOfRowMappingAll();
+            let itemMappingContainer = ele.parentElement.parentElement;
+            let dataItemIndex = parseInt(itemMappingContainer.getAttribute("data-item-index"));
+            let lsRow = itemMappingContainer.getElementsByClassName("one-row-mapping-container");
+            if (lsRow == null)
+                return;
+
+            for (let i = 0; i < lsRow.length; i++) {
+                lsRow[i].getElementsByClassName("checked-enough")[0].checked = ele.checked;
+
+                let num = currentOrder.listQuantity[dataItemIndex] * currentOrder.listMapping[dataItemIndex][i].quantity;
+                if (ele.checked) {
+                    // Cập nhật vào object
+                    for (let i = 0; i < lsRow.length; i++) {
+                        let num = currentOrder.listQuantity[dataItemIndex] *
+                            currentOrder.listMapping[dataItemIndex][i].quantity;
+                        currentOrder.listMapping[dataItemIndex][i].checked = num;
+                    }
+
+                    lsRow[i].getElementsByClassName("need-quatity")[0].innerHTML =
+                        num + "/" + num;
+                }
+                else {
+                    // Cập nhật vào object
+                    for (let i = 0; i < lsRow.length; i++) {
+                        currentOrder.listMapping[dataItemIndex][i].checked = 0;
+                    }
+
+                    lsRow[i].getElementsByClassName("need-quatity")[0].innerHTML =
+                        "0/" + num;
+                }
+            }
+            if (DEBUG) {
+                console.log("currentOrder: " + JSON.stringify(currentOrder));
+            }
+        }
+
+        function ClickRowMappingCheckBox(ele) {
+            if (DEBUG) {
+                console.log("ClickRowMappingCheckBox CALL");
+            }
+            ResetBackgroundColorOfRowMappingAll();
+            let itemMappingContainer = ele.parentElement.parentElement.parentElement;
+            let dataItemIndex = parseInt(itemMappingContainer.getAttribute("data-item-index"));
+            let dataRowMappingIndex = parseInt(ele.parentElement.getAttribute("data-row-mapping-index"));
+            let lsRow = itemMappingContainer.getElementsByClassName("one-row-mapping-container");
+
+            let num = currentOrder.listQuantity[dataItemIndex] *
+                currentOrder.listMapping[dataItemIndex][dataRowMappingIndex].quantity;
+            if (ele.checked) {
+                ele.parentElement.getElementsByClassName("need-quatity")[0].innerHTML =
+                    num + "/" + num;
+                // Cập nhật vào object
+                currentOrder.listMapping[dataItemIndex][dataRowMappingIndex].checked = num;
+
+                // Kiểm tra những dòng khác đã đủ hàng, nếu đủ checkbox item được tích
+                let isFull = true;
+                for (let i = 0; i < lsRow.length; i++) {
+                    if (!lsRow[i].getElementsByClassName("checked-enough")[0].checked) {
+                        isFull = false;
+                        break;
+                    }
+                }
+                if (isFull) {
+                    itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = true;
+                }
+            }
+            else {
+                // Cập nhật vào object
+                currentOrder.listMapping[dataItemIndex][dataRowMappingIndex].checked = 0;
+
+                ele.parentElement.getElementsByClassName("need-quatity")[0].innerHTML =
+                    "0/" + num;
+                itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = false;
+            }
+
+            if (DEBUG) {
+                console.log("currentOrder: " + JSON.stringify(currentOrder));
+            }
+        }
+
         function ShowOneOrderOnModal(order) {
-            currentOrder = order;
             let orderContainer = document.getElementsByClassName("order-detail")[0];
             orderContainer.innerHTML = "";
             document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
@@ -550,6 +629,7 @@
             for (let i = 0; i < order.listItemId.length; i++) {
                 let container = document.createElement("div");
                 container.className = "item-mapping-container"
+                container.setAttribute("data-item-index", i);
                 orderContainer.appendChild(container);
 
                 // Hiển thị sản phẩm trên sàn
@@ -564,17 +644,9 @@
                     checkbox.name = "checkbox-" + i.toString();
                     checkbox.style.width = "20px";
                     checkbox.style.height = "20px";
-                    checkbox.className = "nvzlfksjgs095";
+                    checkbox.className = "nvzlfksjgs095 item-checked-enough";
                     checkbox.onclick = function () {
-                        //// Lấy id
-                        //let id = Number(this.parentElement.previousSibling.innerHTML);
-                        //let pro = FindProductFromList(listProduct, id);
-                        //if (this.checked == true) {
-                        //    AddRowToTableMapping(pro, 1);
-                        //}
-                        //else {
-                        //    DeleteRowFromTableMapping(pro);
-                        //}
+                        ClickItemCheckBox(this);
                     }
                     itemContainer.appendChild(checkbox);
 
@@ -638,6 +710,7 @@
 
                         let oneRowMappingContainer = document.createElement("div");
                         oneRowMappingContainer.className = "one-row-mapping-container";
+                        oneRowMappingContainer.setAttribute("data-row-mapping-index", j);
                         mappingContainer.appendChild(oneRowMappingContainer);
 
                         // Checkbox
@@ -646,8 +719,9 @@
                         checkbox.name = "checkbox-" + i.toString();
                         checkbox.style.width = "20px";
                         checkbox.style.height = "20px";
-                        checkbox.className = "nvzlfksjgs095";
+                        checkbox.className = "nvzlfksjgs095 checked-enough";
                         checkbox.onclick = function () {
+                            ClickRowMappingCheckBox(this);
                         }
                         oneRowMappingContainer.appendChild(checkbox);
 
@@ -663,7 +737,7 @@
                         img.width = thumbnailWidth / 2;
                         img.title = "Click để cập nhật thông tin sản phẩm trong kho như: Vị trí lưu kho, mã sản phẩm"
                         img.onclick = function () {
-                            let url = "/Product/UpdateDelete?id=" + order.listMapping[i][j].product.id.toString()
+                            let url = "/Product/UpdateDelete?id=" + order.listMapping[i][j].product.id.toString();
                             window.open(url);
                         }
                         oneRowMappingContainer.appendChild(img);
@@ -673,7 +747,12 @@
                         codeBarcodeEle.className = "nvzlfksjgs095";
                         let code = order.listMapping[i][j].product.code;
                         if (!isEmptyOrSpaces(order.listMapping[i][j].product.barcode)) {
-                            code = code + "-" + order.listMapping[i][j].product.barcode;
+                            if (!isEmptyOrSpaces(code)) {
+                                code = code + "-" + order.listMapping[i][j].product.barcode;
+                            }
+                            else {
+                                code = order.listMapping[i][j].product.barcode;
+                            }
                         }
                         codeBarcodeEle.innerHTML = code;
                         oneRowMappingContainer.appendChild(codeBarcodeEle);
@@ -692,14 +771,19 @@
 
                         // Số lượng mapping
                         let quantityEle = document.createElement("div");
-                        quantityEle.className = "xvxv768gfh";
-                        quantityEle.innerHTML = "0/" + order.listMapping[i][j].quantity;
+                        quantityEle.className = "xvxv768gfh need-quatity";
+                        quantityEle.innerHTML = "0/" +  order.listQuantity[i] * order.listMapping[i][j].quantity;
                         oneRowMappingContainer.appendChild(quantityEle)
 
                         // Số lượng sản phẩm trong kho
                         let quantityInWarehouseEle = document.createElement("div");
-                        quantityInWarehouseEle.className = "xvxv768gfh";
+                        quantityInWarehouseEle.className = "xvxv768gfh img-cursor";
                         quantityInWarehouseEle.innerHTML = order.listMapping[i][j].product.quantity;
+                        quantityInWarehouseEle.title = "Click để cập nhật số lượng sản phẩm trong kho"
+                        quantityInWarehouseEle.onclick = function () {
+                            let url = "/Product/Import";
+                            window.open(url);
+                        }
                         oneRowMappingContainer.appendChild(quantityInWarehouseEle)
 
                         // code và barcode, được ẩn
@@ -714,6 +798,16 @@
                         oneRowMappingContainer.appendChild(barcodeEle);
                     }
                 }
+            }
+
+            EmptyAndFocusCodeElement();
+
+            // Đơn đã đóng, disable nút đủ sản phẩm
+            if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
+                document.getElementsByClassName("vxvcx0989s")[0].disabled = true;
+            }
+            else {
+                document.getElementsByClassName("vxvcx0989s")[0].disabled = false;
             }
 
             ShowModal();
@@ -746,8 +840,6 @@
             let currentOrderNew = JSON.parse(responseDB.responseText);
             currentOrder.listMapping = currentOrderNew.listMapping;
 
-            // Đóng modal và mở lại
-            CloseModal();
             ShowOneOrderOnModal(currentOrder);
         }
 
@@ -764,6 +856,215 @@
             document.getElementsByClassName("sdfx09re789")[0].onclick = function () {
                 RefreshOrder();
             }
+        }
+
+        // Từ mã sản phẩm, tìm trong đơn hàng, trả về index của item, index của sản phẩm trong mapping
+        // indexI = -1: Sản phẩm không có trong đơn hàng
+        // indexJ = -1: Sản phẩm đã đủ số lượng
+        function SearchProductCodeInOrder(code) {
+            if (DEBUG) {
+                console.log("SearchProductCodeInOrder CALL");
+            }
+            let indexI = -1;
+            let indexJ = -1;
+            for (let i = 0; i < currentOrder.listItemId.length; i++) {
+                for (let j = 0; j < currentOrder.listMapping[i].length; j++) {
+                    if (currentOrder.listMapping[i][j].product.code == code
+                        || currentOrder.listMapping[i][j].product.barcode == code) {
+                        indexI = i;
+                        // Thêm thuộc tính checked để đếm số lần đã sản phẩm đã được xuất kho
+                        if (!currentOrder.listMapping[i][j].hasOwnProperty("checked")) {
+                            currentOrder.listMapping[i][j].checked = 1;
+                            indexJ = j;
+                            break;
+                        }
+                        else if (currentOrder.listMapping[i][j].checked < currentOrder.listQuantity[i] * currentOrder.listMapping[i][j].quantity) {
+                            currentOrder.listMapping[i][j].checked++;
+                            indexJ = j;
+                            break;
+                        }
+                    }
+                }
+
+                if (indexJ != -1) {
+                    break;
+                }
+            }
+
+            if (DEBUG) {
+                console.log("currentOrder: " + JSON.stringify(currentOrder));
+            }
+
+            let ls = [];
+            ls.push(indexI);
+            ls.push(indexJ);
+            if (DEBUG) {
+                console.log("return: " + JSON.stringify(ls));
+            }
+            return ls;
+        }
+
+        // Khi sản phẩm được chọn bằng máy đọc mã vạch, row mapping sẽ có màu nền khác, cần reset lại màu nền
+        function ResetBackgroundColorOfRowMappingAll() {
+            let ls = document.getElementsByClassName("one-row-mapping-container");
+            for (let i = 0; i < ls.length; i++) {
+                ls[i].style.backgroundColor = "initial";
+            }
+        }
+
+        function UpdateViewOfAddProduct(lsIndex) {
+            let itemMappingContainer = document.getElementsByClassName("item-mapping-container")[lsIndex[0]];
+            // oneRow tồn tại
+            let oneRow = itemMappingContainer.getElementsByClassName("one-row-mapping-container")[lsIndex[1]];
+
+            let checkedNum = currentOrder.listMapping[lsIndex[0]][lsIndex[1]].checked;
+            let needNum = currentOrder.listQuantity[lsIndex[0]] * currentOrder.listMapping[lsIndex[0]][lsIndex[1]].quantity;
+            // Hiển thị số lượng xuất kho / số lượng cần
+            oneRow.getElementsByClassName("need-quatity")[0].innerHTML = checkedNum + "/" + needNum;
+            if (lsIndex[0] == 0 && lsIndex[1] == 0) {// Row đầu tiên bị che
+                oneRow.scrollIntoView(false);
+            }
+            else {
+                oneRow.scrollIntoView(true);
+            }
+            ResetBackgroundColorOfRowMappingAll();
+            // Thay đổi background
+            oneRow.style.backgroundColor = "rgba(0,0,0,0.2)";
+
+            // sản phẩm đã nhặt đủ tích vào checkbox
+            if (checkedNum == needNum) {
+
+                oneRow.getElementsByClassName("checked-enough")[0].checked = true;
+            }
+
+            // item sàn đã nhặt đủ tích vào checkbox
+            let isFull = true;
+            for (let i = 0; i < currentOrder.listMapping[lsIndex[0]].length; i++) {
+                if (currentOrder.listMapping[lsIndex[0]][i].checked !=
+                    currentOrder.listQuantity[lsIndex[0]] * currentOrder.listMapping[lsIndex[0]][i].quantity) {
+                    isFull = false;
+                    break;
+                }
+            }
+            itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = isFull;
+
+            EmptyAndFocusCodeElement();
+        }
+
+        function EmptyAndFocusCodeElement() {
+            if (DEBUG) {
+                console.log("EmptyAndFocusCodeElement CALL");
+            }
+            let code = document.getElementsByName("product-code-isbn")[0];
+            code.value = "";
+            code.focus();
+        }
+
+        function AddProduct() {
+            let code = document.getElementsByName("product-code-isbn")[0];
+            if (!CheckValidProductCode(code.value) &&
+                !CheckValidProductISBN(code.value)) {
+                CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusCodeElement();});
+                return;
+            }
+
+            let lsIndex = SearchProductCodeInOrder(code.value);
+
+            if (lsIndex[1] == -1) {
+                CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusCodeElement(); });
+                return;
+            }
+
+            if (lsIndex[0] == -1) {
+                CreateMustClickOkModal("Sản phẩm không có trong đơn hàng.", function () { EmptyAndFocusCodeElement(); });
+                return;
+            }
+
+            UpdateViewOfAddProduct(lsIndex);
+        }
+
+        function UpdateOrderStatusToView(status){
+            let orderTable = document.getElementsByClassName("order-table")[0];
+            let rows = orderTable.rows;
+            if (rows == null)
+                return;
+
+            let length = rows.length;
+            for (let i = 1; i < length; i++) {
+                if (rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
+                    rows[i].cells[1].innerHTML == currentOrder.code) {// Mã đơn hàng
+                    // Đã đóng
+                    if (currentOrder.orderStatusInWarehoue == packedOrderStatusInWarehouse)
+                        rows[i].cells[5].style.color = "initial";
+                    //// Đã Hoàn
+                    else if (currentOrder.orderStatusInWarehoue == returnedOrderStatusInWarehouse)
+                        rows[i].cells[5].style.color = "red";
+
+                    rows[i].cells[5].innerHTML = status;
+                }
+            }
+        }
+
+        async function EnoughProduct() {
+            if (DEBUG) {
+                console.log("EnoughProduct CALL");
+            }
+            if (currentOrder == null)
+                return;
+
+            // kiểm tra đơn hàng đã đủ sản phẩm
+            let length = currentOrder.listMapping.length;
+            let isFull = true;
+            for (let i = 0; i < length; i++) {
+                // Sản phẩm phải được map
+                if (currentOrder.listMapping[i].length == 0) {
+                    isFull = false;
+                    break;
+                }
+
+                for (let j = 0; j < currentOrder.listMapping[i].length; j++) {
+                    if (!currentOrder.listMapping[i][j].hasOwnProperty("checked")) {
+                        isFull = false;
+                        break;
+                    }
+                    else if (currentOrder.listQuantity[i] * currentOrder.listMapping[i][j].quantity !=
+                        currentOrder.listMapping[i][j].checked) {
+                        isFull = false;
+                        break;
+                    }
+                }
+
+                if (isFull == false) {
+                    break;
+                }
+            }
+            if (isFull == false) {
+                CreateMustClickOkModal("Chưa đủ sản phẩm!", null);
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", currentOrder.ecommerceName);
+            searchParams.append("commonOrder", JSON.stringify(currentOrder));
+
+            let query = "/ProductECommerce/EnoughProductInOrder";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            let resObj = JSON.parse(responseDB.responseText);
+
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+
+            alert("Cập nhật thành công.");
+            // Ẩn modal
+            CloseModal();
+
+            // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
+            UpdateOrderStatusToView(packedOrderStatusInWarehouse);
         }
     </script>
 </body>

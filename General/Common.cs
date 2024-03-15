@@ -46,6 +46,12 @@ namespace MVCPlayWithMe.General
             LAZADA
         }
 
+        public enum ECommerceOrderStatus
+        {
+            PACKED,
+            RETURNED
+        }
+
         public static string eShopee = "SHOPEE";
         public static string eTiki = "TIKI";
         public static string eLazada = "LAZADA";

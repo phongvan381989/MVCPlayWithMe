@@ -764,7 +764,8 @@ async function UpdateItemModel() {
             console.log(err.message);
             console.log(err);
         }
-        alert("Cập nhật sản phẩm lỗi.");
+        //alert("Cập nhật sản phẩm lỗi.");
+        CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         RemoveCircleLoader();
         return;
     }

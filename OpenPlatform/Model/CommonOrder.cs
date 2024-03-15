@@ -41,8 +41,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public List<int> listQuantity { get; set; }
 
-        public List<string> listPosition { get; set; }
-
         // Trạng thái đóng hàng đi từ, hoàn hàng về kho
         public string orderStatusInWarehoue { get; set; }
 
@@ -87,7 +85,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             created_at = new DateTime();
             listThumbnail = new List<string>();
             listQuantity = new List<int>();
-            listPosition = new List<string>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();
@@ -108,7 +105,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelId = new List<long>();
             listThumbnail = new List<string>();
             listQuantity = new List<int>();
-            listPosition = new List<string>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();
@@ -146,7 +142,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelId = new List<long>();
             listThumbnail = new List<string>();
             listQuantity = new List<int>();
-            listPosition = new List<string>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();

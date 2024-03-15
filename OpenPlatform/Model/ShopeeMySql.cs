@@ -386,7 +386,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void UpdateMappingToCommonOrder(List<CommonOrder> ls)
+        public void ShopeeUpdateMappingToCommonOrder(List<CommonOrder> ls)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -411,8 +411,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     {
 
                         cmd.Parameters[0].Value = order.listItemId[i];
-                        cmd.Parameters[1].Value = order.listModelId[i];
-                        order.listMapping.Add(new List<Mapping>());
+                        if (order.listModelId[i] == 0)// Không có model, Shopee trả modelId = 0, db lưu modelId = -1
+                            cmd.Parameters[1].Value = -1;
+                        else
+                            cmd.Parameters[1].Value = order.listModelId[i];
+
+;                        order.listMapping.Add(new List<Mapping>());
 
                         rdr = cmd.ExecuteReader();
                         while (rdr.Read())
@@ -436,6 +440,36 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             rdr.Close();
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="commonOrder"></param>
+        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
+        public void ShopeeEnoughProductInOrder(CommonOrder commonOrder, int status)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+                cmd.Parameters.AddWithValue("@inStatus", status);
+                cmd.Parameters.AddWithValue("@inECommmerce", 2);
+
+                cmd.ExecuteNonQuery();
             }
             catch (Exception ex)
             {

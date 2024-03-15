@@ -351,7 +351,8 @@ async function UpdateProductPromise() {
         if (DEBUG) {
             console.log(error);
         }
-        alert("Cập nhật sản phẩm lỗi.");
+        //alert("Cập nhật sản phẩm lỗi.");
+        CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         return;
     }
 
