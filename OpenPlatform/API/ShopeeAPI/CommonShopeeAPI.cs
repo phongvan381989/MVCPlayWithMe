@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model;
-using MVCPlayWithMe.OpenPlatform.Model.Config;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeConfig;
 using RestSharp;
@@ -21,6 +20,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
     {
         public const string cShopeeHost = "https://partner.shopeemobile.com";
 
+        static public ShopeeAuthen shopeeAuthen = null;
         /// <summary>
         /// Generate Authorization Token
         /// </summary>
@@ -49,7 +49,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             string path = "/api/v2/shop/auth_partner";
             string redirect = "https://vnexpress.net/";
             long partner_id = 2002851;
-            string tmp_partner_key = ModelThongTinBaoMat.Shopee_GetPartnerKey();
+            ShopeeMySql shopeeMySql = new ShopeeMySql();
+            string tmp_partner_key = shopeeAuthen.partnerKey;
             string tmp_base_string = String.Format("{0}{1}{2}", partner_id, path, timest);
             byte[] partner_key = Encoding.UTF8.GetBytes(tmp_partner_key);
             byte[] base_string = Encoding.UTF8.GetBytes(tmp_base_string);
@@ -67,10 +68,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         /// <returns></returns>
         public static ShopeeToken ShopeeGetTokenShopLevel()
         {
-            string shop_id = ModelThongTinBaoMat.Shopee_GetShopId();
-            string partner_id = ModelThongTinBaoMat.Shopee_GetPartnerId();
-            string partner_key = ModelThongTinBaoMat.Shopee_GetPartnerKey();
-            string code = ModelThongTinBaoMat.Shopee_GetCode();
+            string shop_id = shopeeAuthen.shopId;
+            string partner_id = shopeeAuthen.partnerId;
+            string partner_key = shopeeAuthen.partnerKey;
+            string code = shopeeAuthen.code;
 
             long timest = Common.GetTimestampNow();
 
@@ -123,8 +124,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             }
             if (token != null)
             {
-                ModelThongTinBaoMat.Shopee_UpdateAccessToken(token.access_token);
-                ModelThongTinBaoMat.Shopee_UpdateRefreshToken(token.refresh_token);
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                shopeeMySql.ShopeeSaveToken(token);
+                // Cập nhật lại shopee authen
+                shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
             }
 
              return token;
@@ -143,10 +146,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         {
             long timest = Common.GetTimestampNow();
 
-            string shop_id = ModelThongTinBaoMat.Shopee_GetShopId();
-            string partner_id = ModelThongTinBaoMat.Shopee_GetPartnerId();
-            string partner_key = ModelThongTinBaoMat.Shopee_GetPartnerKey();
-            string refreh_token = ModelThongTinBaoMat.Shopee_GetRefreshToken();
+            string shop_id = shopeeAuthen.shopId;
+            string partner_id = shopeeAuthen.partnerId;
+            string partner_key = shopeeAuthen.partnerKey;
+            string refreh_token = shopeeAuthen.shopeeToken.refresh_token;
 
             string path = "/api/v2/auth/access_token/get";
             string tmp_base_string = String.Format("{0}{1}{2}", partner_id, path, timest);
@@ -162,13 +165,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             var request = new RestRequest(Method.POST);
             request.AddHeader("Content-Type", "application/json");
             var body = @"{
-" + "\n" +
-            @"    ""refresh_token"":""" + refreh_token + @""",
-" + "\n" +
-            @"    ""shop_id"":" + shop_id.ToString() + @",
-" + "\n" +
-            @"    ""partner_id"":" + partner_id + @"
-" + "\n" +
+            " + "\n" +
+                        @"    ""refresh_token"":""" + refreh_token + @""",
+            " + "\n" +
+                        @"    ""shop_id"":" + shop_id.ToString() + @",
+            " + "\n" +
+                        @"    ""partner_id"":" + partner_id + @"
+            " + "\n" +
             @"}";
             //MyLogger.GetInstance().Info(body);
 
@@ -197,18 +200,20 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 return null;
             }
             // Lưu giá trị cũ vào log
-            MyLogger.GetInstance().Info("old access_token: " + ModelThongTinBaoMat.Shopee_GetAccessToken());
-            MyLogger.GetInstance().Info("old refresh_token: " + ModelThongTinBaoMat.Shopee_GetRefreshToken());
+            MyLogger.GetInstance().Info("old access_token: " + shopeeAuthen.shopeeToken.access_token);
+            MyLogger.GetInstance().Info("old refresh_token: " + shopeeAuthen.shopeeToken.refresh_token);
             if (token != null)
             {
                 MyLogger.GetInstance().Info("new access_token from token: " + token.access_token);
                 MyLogger.GetInstance().Info("new refresh_token from token: " + token.refresh_token);
 
-                ModelThongTinBaoMat.Shopee_UpdateAccessToken(token.access_token);
-                ModelThongTinBaoMat.Shopee_UpdateRefreshToken(token.refresh_token);
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                shopeeMySql.ShopeeSaveToken(token);
+                // Cập nhật lại shopee authen
+                shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
             }
-            MyLogger.GetInstance().Info("new access_token from db: " + ModelThongTinBaoMat.Shopee_GetAccessToken());
-            MyLogger.GetInstance().Info("new refresh_token from db: " + ModelThongTinBaoMat.Shopee_GetRefreshToken());
+            MyLogger.GetInstance().Info("new access_token from db: " + shopeeAuthen.shopeeToken.access_token);
+            MyLogger.GetInstance().Info("new refresh_token from db: " + shopeeAuthen.shopeeToken.refresh_token);
             return token;
         }
 
@@ -224,10 +229,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         public static string GenerateURLShopeeAPI(string path, List<DevNameValuePair> ls)
         {
             long timest = Common.GetTimestampNow();
-            string partner_id = ModelThongTinBaoMat.Shopee_GetPartnerId();
-            string access_token = ModelThongTinBaoMat.Shopee_GetAccessToken();
-            string shop_id = ModelThongTinBaoMat.Shopee_GetShopId();
-            string partner_key = ModelThongTinBaoMat.Shopee_GetPartnerKey();
+            string shop_id = shopeeAuthen.shopId;
+            string partner_id = shopeeAuthen.partnerId;
+            string partner_key = shopeeAuthen.partnerKey;
+            string access_token = shopeeAuthen.shopeeToken.access_token;
 
             string tmp_base_string = String.Format("{0}{1}{2}{3}{4}", partner_id, path, timest, access_token, shop_id);
             byte[] byte_partner_key = Encoding.UTF8.GetBytes(partner_key);

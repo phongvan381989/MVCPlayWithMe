@@ -55,6 +55,8 @@ namespace MVCPlayWithMe.General
         public static string eShopee = "SHOPEE";
         public static string eTiki = "TIKI";
         public static string eLazada = "LAZADA";
+        public static string ePlayWithMe = "PLAYWITHME";
+
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
         public static string returnedOrder = "Đã Hoàn";

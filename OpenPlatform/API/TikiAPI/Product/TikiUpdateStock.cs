@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using MVCPlayWithMe.General;
-using MVCPlayWithMe.OpenPlatform.Model.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using RestSharp;
@@ -17,28 +16,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
     public class TikiUpdateStock
     {
-        static TikiConfigApp configApp = null;
-        public static TikiConfigApp GetConfigApp()
-        {
-            if(configApp == null)
-            {
-                List<TikiConfigApp> l = ModelThongTinBaoMat.Tiki_InhouseAppGetListUsingApp();
-                configApp = l[0];
-            }
-            return configApp;
-        }
-        //public static Boolean TikiProductUpdateQuantity(TikiUpdateQuantity st)
-        //{
-        //    //string http = TikiConstValues.cstrProductUpdate;
-        //    //List<TikiConfigApp> l = ModelThongTinBaoMatTiki.Tiki_InhouseAppGetListUsingApp();
-        //    //TikiConfigApp configApp = l[0];
-        //    return TikiProductUpdateQuantity(GetConfigApp(), st);
-        //}
-
-        public static Boolean TikiProductUpdate(TikiConfigApp configApp, TikiUpdate st)
+        public static Boolean TikiProductUpdate(TikiUpdate st)
         {
             string http = TikiConstValues.cstrProductUpdate;
-            IRestResponse response = CommonTikiAPI.PutExcuteRequest(configApp, http, st);
+            IRestResponse response = CommonTikiAPI.PutExcuteRequest(http, st);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 try
@@ -66,19 +47,19 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             }
             return true;
         }
-        public static Boolean TikiProductUpdateQuantity(TikiConfigApp configApp, TikiUpdateQuantity st)
+        public static Boolean TikiProductUpdateQuantity(TikiUpdateQuantity st)
         {
-            return TikiProductUpdate(configApp, st);
+            return TikiProductUpdate(st);
         }
 
-        public static Boolean TikiProductUpdatePrice(TikiConfigApp configApp, TikiUpdatePrice st)
+        public static Boolean TikiProductUpdatePrice(TikiUpdatePrice st)
         {
-            return TikiProductUpdate(configApp, st);
+            return TikiProductUpdate(st);
         }
 
-        public static Boolean TikiProductUpdateStatus(TikiConfigApp configApp, TikiUpdateStatus st)
+        public static Boolean TikiProductUpdateStatus(TikiUpdateStatus st)
         {
-            return TikiProductUpdate(configApp, st);
+            return TikiProductUpdate(st);
         }
 
         public static int GetQuantityFromTikiProduct(TikiProduct product)
@@ -164,9 +145,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             }
 
             // Cập nhật số lượng trên sàn Tiki
-            //List<TikiConfigApp> l = ModelThongTinBaoMatTiki.Tiki_InhouseAppGetListUsingApp();
-            //TikiConfigApp configApp = l[0];
-
             TikiUpdateQuantity st = new TikiUpdateQuantity(proId, TikiConstValues.intIdKho28Ngo3TTDL);
             // Cập nhật tồn kho cho tham số
             int qty = 0;
@@ -180,7 +158,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             //}
 
             st.UpdateQuantity(qty);
-            Boolean isOk = TikiProductUpdateQuantity(GetConfigApp(), st);
+            Boolean isOk = TikiProductUpdateQuantity(st);
             if (!isOk)
             {
                 //// Lưu vào db update mã sản phẩm lỗi
@@ -209,7 +187,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             // Cập nhật tồn kho cho tham số
 
             st.UpdatePrice(price);
-            Boolean isOk = TikiProductUpdatePrice(GetConfigApp(), st);
+            Boolean isOk = TikiProductUpdatePrice(st);
             if (!isOk)
             {
                 MyLogger.GetInstance().Info("Tiki sản phẩm cập nhật giá bán lỗi: " + proId.ToString());
@@ -233,7 +211,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             // Cập nhật tồn kho cho tham số
 
             st.UpdateStatus(status);
-            Boolean isOk = TikiProductUpdateStatus(GetConfigApp(), st);
+            Boolean isOk = TikiProductUpdateStatus(st);
             if (!isOk)
             {
                 MyLogger.GetInstance().Info("Tiki sản phẩm cập nhật trạng thái lỗi: " + proId.ToString());
@@ -244,111 +222,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             return true;
         }
 
-        ///// <summary>
-        ///// Từ danh sách mã sản phẩm trong kho / số lượng tồn ta cập nhật số lượng tồn sản phẩm trên sàn TMDT
-        ///// </summary>
-        ///// <param name="dic">danh sách mã sản phẩm trong kho / số lượng tồn</param>
-        ///// <returns></returns>
-        //static public Boolean TikiUpdateTonKhoSanTMDT(Dictionary<string, int> dic)
-        //{
-        //    if (dic == null)
-        //    {
-        //        Common.CommonErrorMessage = "Danh sách sản phẩm / số lượng tồn kho null";
-        //        MyLogger.GetInstance().Info(Common.CommonErrorMessage);
-        //        return false;
-        //    }
-        //    List<String> lsItem = new List<String>();
-        //    foreach (var obj in dic)
-        //    {
-        //        List<String> lsItemTemp = ModelMappingSanPhamTMDT_SanPhamKho.Tiki_GetIdSPTMDMappingFromIdInWarehouse(obj.Key);
-        //        foreach (var eItemTemp in lsItemTemp)
-        //        {
-        //            Boolean isExist = false;
-        //            foreach (var eItem in lsItem)
-        //            {
-        //                if (eItem == eItemTemp)
-        //                {
-        //                    isExist = true;
-        //                    break;
-        //                }
-        //            }
-        //            if (!isExist)
-        //                lsItem.Add(eItemTemp);
-        //        }
-        //    }
-
-        //    // Lấy list update lỗi để thực hiện lại
-        //    List<string> lsItemFailed = ModelUpdateStockFailure.Tiki_GetListId();
-
-        //    // Gộp danh sách
-        //    foreach (var eItemFailed in lsItemFailed)
-        //    {
-        //        Boolean isExist = false;
-        //        foreach (var eItem in lsItem)
-        //        {
-        //            if (eItem == eItemFailed)
-        //            {
-        //                isExist = true;
-        //                break;
-        //            }
-        //        }
-        //        if (!isExist)
-        //            lsItem.Add(eItemFailed);
-        //    }
-
-        //    // Tham số phục vụ update stock
-        //    List<TikiUpdateQuantity> lsStock = new List<TikiUpdateQuantity>();
-        //    foreach (var e in lsItem)
-        //    {
-
-        //        // Check đã tồn tại
-        //        Boolean isExist = false;
-        //        foreach (var eStock in lsStock)
-        //        {
-        //            if (eStock.product_id.ToString() == e)
-        //            {
-        //                isExist = true;
-        //                break;
-        //            }
-        //        }
-        //        if (!isExist)
-        //        {
-        //            lsStock.Add(new TikiUpdateQuantity(Common.ConvertStringToInt32(e), TikiConstValues.intIdKho28Ngo3TTDL));
-        //        }
-        //    }
-
-        //    // Cập nhật tồn kho cho tham số
-        //    int quantity = 0;
-        //    foreach (var eStock in lsStock)
-        //    {
-        //        quantity = ModelTonKhoSanTMDT.GetQuantityOnTMDT(Common.commerceNameTiki, eStock.product_id.ToString());
-        //        if (quantity != -1)
-        //        {
-        //            eStock.UpdateQuantity( quantity);
-        //        }
-        //        continue;
-        //    }
-
-        //    //List<TikiConfigApp> l = ModelThongTinBaoMatTiki.Tiki_InhouseAppGetListUsingApp();
-        //    //TikiConfigApp configApp = l[0];
-
-        //    // Lưu item update lỗi
-        //    List<string> lsUpdateFailed = new List<string>();
-        //    foreach (var eStock in lsStock)
-        //    {
-        //        Boolean isOk = TikiProductUpdateQuantity(GetConfigApp(), eStock);
-        //        if (!isOk)
-        //        {
-        //            lsUpdateFailed.Add(eStock.product_id.ToString());
-        //        }
-        //    }
-
-        //    // Lưu vào db
-        //    if (lsUpdateFailed.Count() > 0)
-        //        ModelUpdateStockFailure.Tiki_Update(lsUpdateFailed);
-
-        //    return true;
-        //}
 
         /// <summary>
         /// Từ đơn hàng mới trong khoảng thời gian, ta lấy được số lượng hàng cần xuất
@@ -358,11 +231,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <returns></returns>
         static public Dictionary<string, int> TikiGetProductQuantityPairToTake(DateTime time_from, DateTime time_to)
         {
-            //List<TikiConfigApp> l = ModelThongTinBaoMatTiki.Tiki_InhouseAppGetListUsingApp();
-            //TikiConfigApp configApp = l[0];
-
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrderTikiFullInfo;
-            lsOrderTikiFullInfo = MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order.TikiGetListOrders.GetListOrderAShop(GetConfigApp(),
+            lsOrderTikiFullInfo = MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order.TikiGetListOrders.GetListOrderAShop(
                 MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate.EnumOrderItemFilterByDate.last7days);
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsTem = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();
             foreach(var e in lsOrderTikiFullInfo)

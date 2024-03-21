@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -192,7 +193,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn
-        // Hàm này dùng cho sàn: Tiki, Shopee,...
+        // Hàm này dùng cho sàn: web PWM, Tiki, Shopee,...
         public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -211,9 +212,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     status = string.Empty;
                     cmd.Parameters[0].Value = order.code;
                     if(order.ecommerceName == Common.eTiki)
-                        cmd.Parameters[1].Value = 1;
+                        cmd.Parameters[1].Value = (int)EECommerceType.TIKI;
                     else if (order.ecommerceName == Common.eShopee)
-                        cmd.Parameters[1].Value = 2;
+                        cmd.Parameters[1].Value = (int)EECommerceType.SHOPEE;
+                    else if (order.ecommerceName == Common.ePlayWithMe)
+                        cmd.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
 
                     rdr = cmd.ExecuteReader();
                     while (rdr.Read())
@@ -238,7 +241,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void TikiUpdateMappingToCommonOrder(List<CommonOrder> ls)
+        public void TikiUpdateMappingToCommonOrder(CommonOrder commonOrder)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -253,15 +256,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 int quantity = 0;
                 Product pro = null;
                 MySqlDataReader rdr;
-                foreach (var order in ls)
                 {
-                    if (order.ecommerceName != Common.eTiki)
-                        continue;
 
-                    for (int i = 0; i < order.listItemId.Count; i++)
+                    for (int i = 0; i < commonOrder.listItemId.Count; i++)
                     {
-                        cmd.Parameters[0].Value = Common.ConvertLongToInt(order.listItemId[i]);
-                        order.listMapping.Add(new List<Mapping>());
+                        cmd.Parameters[0].Value = Common.ConvertLongToInt(commonOrder.listItemId[i]);
+                        commonOrder.listMapping.Add(new List<Mapping>());
 
                         rdr = cmd.ExecuteReader();
                         while (rdr.Read())
@@ -278,7 +278,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
                                 pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
                                 pro.SetSrcImageVideo();
-                                order.listMapping[i].Add(new Mapping(pro, quantity));
+                                commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
                             }
                         }
                         if (rdr != null)
@@ -375,6 +375,140 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             conn.Close();
+            return resultState;
+        }
+
+        public MySqlResultState ReturnedOrder (CommonOrder commonOrder, ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Lưu vào bảng tbECommerceOrder
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Xóa dữ liệu ở bảng tbOutput
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_Delete_From_Order_Code", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Cập nhật số lượng sản phẩm trong kho
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    cmd.Parameters.AddWithValue("@inAdd", 0);
+                    int productId = 0;
+                    int quantity = 0;
+                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                    {
+                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                        {
+                            productId = commonOrder.listMapping[i][j].product.id;
+                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            cmd.Parameters[0].Value = productId;
+                            cmd.Parameters[1].Value = quantity;// tăng số lượng tồn kho
+
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+            return resultState;
+        }
+
+        public TikiConfigApp GetTikiConfigApp()
+        {
+            TikiConfigApp config = new TikiConfigApp();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Lưu vào bảng tbECommerceOrder
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbTikiAuthen", conn);
+                cmd.CommandType = CommandType.Text;
+                MySqlDataReader rdr = null;
+                rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    config.appID = MyMySql.GetString(rdr, "AppId");
+                    config.homeAddress = MyMySql.GetString(rdr, "Home");
+                    config.secretAppCode = MyMySql.GetString(rdr, "Secret");
+                    config.tikiAu.access_token = MyMySql.GetString(rdr, "AccessToken");
+                    config.tikiAu.expires_in = MyMySql.GetString(rdr, "ExpiresIn");
+                    config.tikiAu.token_type = MyMySql.GetString(rdr, "TokenType");
+                    config.tikiAu.scope = MyMySql.GetString(rdr, "Scope");
+                }
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                config = null;
+            }
+
+            conn.Close();
+
+            return config;
+        }
+
+        public MySqlResultState TikiSaveAccessToken(TikiAuthorization accessToken)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(
+                    "UPDATE `tbTikiAuthen` SET `AccessToken`=@AccessToken" +
+                    ",`ExpiresIn`=@ExpiresIn" +
+                    ",`TokenType`=@TokenType" +
+                    ",`Scope`=@Scope" +
+                    " WHERE `Id` = 1;", conn);
+                cmd.Parameters.AddWithValue("@AccessToken", accessToken.access_token);
+                cmd.Parameters.AddWithValue("@ExpiresIn", accessToken.expires_in);
+                cmd.Parameters.AddWithValue("@TokenType", accessToken.token_type);
+                cmd.Parameters.AddWithValue("@Scope", accessToken.scope);
+                cmd.CommandType = CommandType.Text;
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+
             return resultState;
         }
     }

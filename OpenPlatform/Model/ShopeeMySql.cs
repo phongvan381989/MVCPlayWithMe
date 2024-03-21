@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeConfig;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -386,7 +387,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void ShopeeUpdateMappingToCommonOrder(List<CommonOrder> ls)
+        public void ShopeeUpdateMappingToCommonOrder(CommonOrder commonOrder)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -402,21 +403,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 int quantity = 0;
                 Product pro = null;
                 MySqlDataReader rdr;
-                foreach (var order in ls)
                 {
-                    if (order.ecommerceName != Common.eShopee)
-                        continue;
-
-                    for (int i = 0; i < order.listItemId.Count; i++)
+                    for (int i = 0; i < commonOrder.listItemId.Count; i++)
                     {
 
-                        cmd.Parameters[0].Value = order.listItemId[i];
-                        if (order.listModelId[i] == 0)// Không có model, Shopee trả modelId = 0, db lưu modelId = -1
+                        cmd.Parameters[0].Value = commonOrder.listItemId[i];
+                        if (commonOrder.listModelId[i] == 0)// Không có model, Shopee trả modelId = 0, db lưu modelId = -1
                             cmd.Parameters[1].Value = -1;
                         else
-                            cmd.Parameters[1].Value = order.listModelId[i];
+                            cmd.Parameters[1].Value = commonOrder.listModelId[i];
 
-;                        order.listMapping.Add(new List<Mapping>());
+                        commonOrder.listMapping.Add(new List<Mapping>());
 
                         rdr = cmd.ExecuteReader();
                         while (rdr.Read())
@@ -433,7 +430,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
                                 pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
                                 pro.SetSrcImageVideo();
-                                order.listMapping[i].Add(new Mapping(pro, quantity));
+                                commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
                             }
                         }
                         if (rdr != null)
@@ -478,6 +475,71 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             conn.Close();
+        }
+
+        public ShopeeAuthen ShopeeGetAuthen()
+        {
+            ShopeeAuthen shopeeAuthen = new ShopeeAuthen();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Lưu vào bảng tbECommerceOrder
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen", conn);
+                cmd.CommandType = CommandType.Text;
+                MySqlDataReader rdr = null;
+                rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    shopeeAuthen.shopId = MyMySql.GetString(rdr, "ShopId");
+                    shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
+                    shopeeAuthen.partnerKey = MyMySql.GetString(rdr, "PartnerKey");
+                    shopeeAuthen.code = MyMySql.GetString(rdr, "Code");
+                    shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
+                    shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
+                }
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                shopeeAuthen = null;
+            }
+
+            conn.Close();
+
+            return shopeeAuthen;
+        }
+
+        public MySqlResultState ShopeeSaveToken(ShopeeToken shopeeToken)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd =
+                    new MySqlCommand("UPDATE `tbShopeeAuthen` SET `AccessToken`=@AccessToken," +
+                    " `RefreshToken`=@RefreshToken WHERE `Id` = 1", conn);
+                cmd.Parameters.AddWithValue("@AccessToken", shopeeToken.access_token);
+                cmd.Parameters.AddWithValue("@RefreshToken", shopeeToken.refresh_token);
+                cmd.CommandType = CommandType.Text;
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+
+            return resultState;
         }
     }
 }

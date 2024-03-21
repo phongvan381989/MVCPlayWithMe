@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.OpenPlatform.Model;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
@@ -558,6 +559,139 @@ namespace MVCPlayWithMe.Models.Order
             conn.Close();
             result.myJson = ls;//JsonConvert.SerializeObject(ls);
             return result;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="fromTo"> 0: 1 ngày, 1: 7 ngày, 2: 30 ngày</param>
+        /// <returns></returns>
+        public List<CommonOrder> GetListCommonOrder(int fromTo)
+        {
+            List<CommonOrder> ls = new List<CommonOrder>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbOrder_Get_To_Pack_Order", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inFromTo", fromTo);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                CommonOrder commonOrder = null;
+                long id = 0;
+                long itemId = 0;
+                long modelId = 0;
+                int modelQuantity = 0; // số lượng model trog đơn
+                string itemName = "";
+                string modelName = "";
+                string imgSrc = "";
+
+                while (rdr.Read())
+                {
+                    id = (long)MyMySql.GetInt32(rdr, "OrderId");
+                    if (ls.Count == 0 || ls[ls.Count - 1].id != id)
+                    {
+                        ls.Add(new CommonOrder());
+                    }
+                    commonOrder = ls[ls.Count - 1];
+                    commonOrder.ecommerceName = Common.ePlayWithMe;
+                    if (commonOrder.id != id )
+                    {
+                        commonOrder.id = id;
+                        commonOrder.code = MyMySql.GetString(rdr, "OrderCode");
+                        commonOrder.created_at = MyMySql.GetDateTime(rdr, "OrderTime");
+                        commonOrder.status = OrderTrack.GetString(MyMySql.GetInt32(rdr, "StatusInTrackOrder"));
+                    }
+
+                    modelId = (long)MyMySql.GetInt32(rdr, "ModelId");
+
+                    if (commonOrder.listModelId.Count == 0 ||
+                        commonOrder.listModelId[commonOrder.listModelId.Count - 1] != modelId)
+                    {
+                        itemId = (long)MyMySql.GetInt32(rdr, "ItemId");
+                        modelQuantity = MyMySql.GetInt32(rdr, "ModelQuantity");
+                        itemName = MyMySql.GetString(rdr, "ItemName");
+                        modelName = MyMySql.GetString(rdr, "ModelName");
+                        imgSrc = Common.GetModelImageSrc(Common.ConvertLongToInt(itemId), Common.ConvertLongToInt(modelId));
+
+                        commonOrder.listItemId.Add(itemId);
+                        commonOrder.listModelId.Add(modelId);
+                        commonOrder.listItemName.Add(itemName);
+                        commonOrder.listModelName.Add(modelName);
+                        commonOrder.listQuantity.Add(modelQuantity);
+                        commonOrder.listThumbnail.Add(imgSrc);
+                    }
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                ls.Clear();
+            }
+
+            conn.Close();
+            return ls;
+        }
+
+        // Lấy mapping của sản phẩm trong đơn hàng
+        public void UpdateMappingToCommonOrder(CommonOrder commonOrder)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            string status = string.Empty;
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbMapping_Get_From_ModelId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inModelId", int.MinValue);
+
+                int quantity = 0;
+                Product pro = null;
+                MySqlDataReader rdr;
+                {
+                    for (int i = 0; i < commonOrder.listModelId.Count; i++)
+                    {
+                        cmd.Parameters[0].Value = Common.ConvertLongToInt(commonOrder.listModelId[i]);
+
+                        commonOrder.listMapping.Add(new List<Mapping>());
+
+                        rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            // Đã được mapping
+                            if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                            {
+                                quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                pro = new Product();
+                                pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                                pro.code = MyMySql.GetString(rdr, "ProductCode");
+                                pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+                                pro.name = MyMySql.GetString(rdr, "ProductName");
+                                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+                                pro.SetSrcImageVideo();
+                                commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
+                            }
+                        }
+                        if (rdr != null)
+                            rdr.Close();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
         }
     }
 }

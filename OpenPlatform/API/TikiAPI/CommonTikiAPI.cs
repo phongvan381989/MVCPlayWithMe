@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using MVCPlayWithMe.General;
-using MVCPlayWithMe.OpenPlatform.Model.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using RestSharp;
@@ -12,31 +11,27 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using MVCPlayWithMe.OpenPlatform.Model;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 {
     public class CommonTikiAPI
     {
-        /// <summary>
-        /// Chứa danh sách các app đang sử dụng
-        /// </summary>
-        //static public List<TikiConfigApp> listTikiConfigAppUsing = new List<TikiConfigApp>();
-
-        static public TikiConfigApp tikiCongifApp;
+        static public TikiConfigApp tikiConfigApp;
 
         /// <summary>
         /// Khi Access token phục vụ authorization hết hạn, gọi hàm này lấy access token mới và lưu và db xml
         /// </summary>
         /// <param name="appID"></param>
         /// <returns>empty nếu thành công. Ngược lại trả về string mô tả lỗi</returns>
-        static public string RefreshDataAuthorization(string appID)
+        static public string RefreshDataAuthorization()
         {
             var client = new RestClient("https://api.tiki.vn/sc/oauth2/token");
             RestRequest request = new RestRequest(Method.POST);
-            request.AddHeader("Authorization", "Basic " + ModelThongTinBaoMat.Tiki_GetAppCredentialBase64Format(appID));
+            request.AddHeader("Authorization", "Basic " + tikiConfigApp.Tiki_GetAppCredentialBase64Format());
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
             request.AddParameter("grant_type", "client_credentials");
-            request.AddParameter("client_id", appID);
+            request.AddParameter("client_id", tikiConfigApp.appID);
             request.AddParameter("scope", "");
             IRestResponse response = null;
             try
@@ -53,77 +48,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
                 return "Lấy quyền truy cập shop lỗi. Vui lòng thử lại.";
             }
             TikiAuthorization accessToken = JsonConvert.DeserializeObject<TikiAuthorization>(response.Content);
-            ModelThongTinBaoMat.Tiki_InhouseAppSaveAccessToken(appID, accessToken);
+            TikiMySql tikiMySql = new TikiMySql();
+
+            tikiMySql.TikiSaveAccessToken(accessToken);
+
+            // Cập nhật
+            tikiConfigApp = tikiMySql.GetTikiConfigApp();
+
             MyLogger.GetInstance().Info("New token: " + accessToken.access_token);
             return string.Empty;
         }
-
-        ///// <summary>
-        ///// Cập nhật danh sách ứng dụng đang sử dụng
-        ///// </summary>
-        //static public void GetListTikiConfigAppUsing()
-        //{
-        //    listTikiConfigAppUsing.Clear();
-        //    List<TikiConfigApp> l = ModelThongTinBaoMat.Tiki_InhouseAppGetListUsingApp();
-        //    if (l != null)
-        //        listTikiConfigAppUsing = l;
-        //}
-
-        ///// <summary>
-        ///// Lấy danh sách URL của shop đang sử dụng
-        ///// </summary>
-        ///// <returns>Nếu không có shop nào đang sử dụng, trả về list rỗng</returns>
-        //static public ObservableCollection<String> GetListHomeAddressUsing()
-        //{
-        //    ObservableCollection<String> lStr = new ObservableCollection<string>();
-        //    foreach(TikiConfigApp e in listTikiConfigAppUsing)
-        //    {
-        //        if(e.usingApp == TikiConfigApp.constUsingApp)
-        //            lStr.Add(e.homeAddress);
-        //    }
-        //    return lStr;
-        //}
-
-        ///// <summary>
-        ///// Từ địa chỉ web shop lấy được đối tượng config
-        ///// </summary>
-        ///// <param name="homeAddress"></param>
-        ///// <returns>Trả về null nếu không có đối tượng thỏa mãn</returns>
-        //static public TikiConfigApp GetTikiConfigAppFromHomeAddress(string homeAddress)
-        //{
-        //    if (string.IsNullOrEmpty(homeAddress))
-        //        return null;
-
-        //    TikiConfigApp tikiConfigApp = null;
-        //    foreach (TikiConfigApp e in listTikiConfigAppUsing)
-        //    {
-        //        if (e.usingApp == TikiConfigApp.constUsingApp && e.homeAddress == homeAddress)
-        //        {
-        //            tikiConfigApp = e;
-        //            break;
-        //        }
-        //    }
-        //    return tikiConfigApp;
-        //}
-
-        ///// <summary>
-        ///// Từ địa chỉ web shop lấy được đối tượng config
-        ///// </summary>
-        ///// <param name="homeAddress"></param>
-        ///// <returns>Trả về null nếu không có đối tượng thỏa mãn</returns>
-        //static public TikiConfigApp GetTikiConfigAppDefault()
-        //{
-        //    TikiConfigApp tikiConfigApp = null;
-        //    foreach (TikiConfigApp e in listTikiConfigAppUsing)
-        //    {
-        //        if (e.usingApp == TikiConfigApp.constUsingApp && e.homeAddress == TikiConstValues.cstrHomeAdress)
-        //        {
-        //            tikiConfigApp = e;
-        //            break;
-        //        }
-        //    }
-        //    return tikiConfigApp;
-        //}
 
         /// <summary>
         /// Thực hiện 1 request HTTP, nếu access token hết hạn thì làm mới
@@ -132,44 +66,42 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <param name="request"></param>
         /// <param name="configApp"></param>
         /// <returns></returns>
-        static public IRestResponse ExcuteRequest(RestClient client, RestRequest request, TikiConfigApp configApp)
+        static public IRestResponse ExcuteRequest(RestClient client, RestRequest request)
         {
-            request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(configApp.tikiAu.access_token) ? string.Empty: configApp.tikiAu.access_token));
+            request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty: tikiConfigApp.tikiAu.access_token));
             IRestResponse response = client.Execute(request);
             MyLogger.InfoRestLog(client, request, response);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                MyLogger.GetInstance().Info("Expried token:" + (string.IsNullOrEmpty(configApp.tikiAu.access_token) ? string.Empty : configApp.tikiAu.access_token));
+                MyLogger.GetInstance().Info("Expried token:" + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty : tikiConfigApp.tikiAu.access_token));
                 // Làm mới access token
                 string str;
-                str = CommonTikiAPI.RefreshDataAuthorization(configApp.appID);
+                str = CommonTikiAPI.RefreshDataAuthorization();
 
                 if (!string.IsNullOrEmpty(str))
                 {
                     MyLogger.GetInstance().Warn(str);
                     return response;
                 }
-                // Cập nhật configApp
-                configApp.tikiAu.access_token = ModelThongTinBaoMat.Tiki_InhouseGetAccessToken(configApp.appID);
 
                 // Thực hiện request lại
-                request.AddOrUpdateHeader("Authorization", "Bearer " + configApp.tikiAu.access_token);
+                request.AddOrUpdateHeader("Authorization", "Bearer " + tikiConfigApp.tikiAu.access_token);
                 response = client.Execute(request);
                 MyLogger.InfoRestLog(client, request, response);
             }
             return response;
         }
 
-        static public IRestResponse GetExcuteRequest(TikiConfigApp configApp, string http)
+        static public IRestResponse GetExcuteRequest(string http)
         {
             RestClient client = new RestClient(http);
             client.Timeout = -1;
             RestRequest request = new RestRequest(Method.GET);
-            IRestResponse response = ExcuteRequest(client, request, configApp);
+            IRestResponse response = ExcuteRequest(client, request);
             return response;
         }
 
-        static public IRestResponse PutExcuteRequest(TikiConfigApp configApp, string http, TikiUpdate st)
+        static public IRestResponse PutExcuteRequest(string http, TikiUpdate st)
         {
             RestClient client = new RestClient(http);
             client.Timeout = -1;
@@ -180,7 +112,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-            IRestResponse response = ExcuteRequest(client, request, configApp);
+            IRestResponse response = ExcuteRequest(client, request);
             return response;
         }
     }

@@ -17,11 +17,6 @@ namespace MVCPlayWithMe.General
 
         private static string errMessage;
 
-        public static void Initialization()
-        {
-            connStr = ConfigurationManager.AppSettings["ConectMysql"];
-        }
-
         /// <summary>
         /// 
         /// </summary>

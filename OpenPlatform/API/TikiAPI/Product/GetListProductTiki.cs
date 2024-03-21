@@ -34,10 +34,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// </summary>
         /// <param name="configApp"></param>
         /// <returns>Danh sách sản phẩm. List rỗng nếu không lấy thành công</returns>
-        public static List<TikiProduct> GetListLatestProductsFromOneShop(TikiConfigApp configApp)
+        public static List<TikiProduct> GetListLatestProductsFromOneShop()
         {
             List<TikiProduct> lsProduct = new List<TikiProduct>();
-            if (configApp == null)
+            if (CommonTikiAPI.tikiConfigApp == null)
                 return lsProduct;
 
             // GET https://api.tiki.vn/integration/v2/products?page=2&limit=20
@@ -62,7 +62,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                     listValuePair[0].value = currentPage.ToString();
                 }
                 string http = TikiConstValues.cstrProductsHTTPAddress + DevNameValuePair.GetQueryString(listValuePair);
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(configApp, http);
+                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     break;
@@ -98,22 +98,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         }
 
         /// <summary>
-        /// Lấy danh sách sản phẩm của nhiều shop
-        /// </summary>
-        /// <param name="listConfigApp"></param>
-        /// <returns></returns>
-        public static List<TikiProduct> GetListLatestProductsFromAllShop(List<TikiConfigApp> listConfigApp)
-        {
-            List<TikiProduct> lsProduct = new List<TikiProduct>();
-            int num = listConfigApp.Count();
-            for (int i = 0; i < num; i++)
-            {
-                    lsProduct.AddRange(GetListLatestProductsFromOneShop(listConfigApp[i]));
-            }
-            return lsProduct;
-        }
-
-        /// <summary>
         /// Lấy sản phẩm từ mã sản phẩm của 1 shop
         /// GET https://api.tiki.vn/integration/v2/products/{productId}
         /// Parameter	Type	    Mandatory	Description
@@ -124,15 +108,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="configApp"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static TikiProduct GetProductFromOneShop(TikiConfigApp configApp, int id)
+        public static TikiProduct GetProductFromOneShop(int id)
         {
-            if (configApp == null)
+            if (CommonTikiAPI.tikiConfigApp == null)
                 return null;
 
             // Thêm ?includes=seller,categories,inventory,attributes,images để lấy full thông tin
             //string http = TikiConstValues.cstrProductsHTTPAddress + "/" + code + "?includes=seller,categories,inventory,attributes,images";
             string http = TikiConstValues.cstrProductsHTTPAddress + "/" + id.ToString() + "?includes=inventory,images";
-            IRestResponse response = CommonTikiAPI.GetExcuteRequest(configApp, http);
+            IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 return null;
@@ -154,19 +138,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             {
                 MyLogger.GetInstance().Warn(ex.Message);
                 return null;
-            }
-            return pro;
-        }
-
-        public static TikiProduct GetProductFromAllShop(List<TikiConfigApp> listConfigApp, int id)
-        {
-            TikiProduct pro = null;
-            int num = listConfigApp.Count();
-            for (int i = 0; i < num; i++)
-            {
-                pro = GetProductFromOneShop(listConfigApp[i], id);
-                if (pro != null)
-                    break;
             }
             return pro;
         }

@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
 {
     /// <summary>
@@ -6,8 +8,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
     /// </summary>
     public class TikiConfigApp
     {
-        public const string constUsingApp = "Đang Sử Dụng";
-        public const string constNotUsingApp = "Không Sử Dụng";
         public TikiConfigApp()
         {
             Empty();
@@ -15,7 +15,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
         public string appID { get; set; }
         public string homeAddress { get; set; }
         public string secretAppCode { get; set; }
-        public string usingApp { get; set; } // Nhận 1 trong 2 giá trị: Đang Sử Dụng hoặc Không Sử Dụng
         public TikiAuthorization tikiAu{get; set;}
 
         public TikiConfigApp(string inputAppID, string inputHomeAddress, string inputSecretAppCode, string inputUsingApp, TikiAuthorization tikiAuthorization)
@@ -23,7 +22,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
             appID = inputAppID;
             homeAddress = inputHomeAddress;
             secretAppCode = inputSecretAppCode;
-            usingApp = inputUsingApp;
             tikiAu = tikiAuthorization;
         }
 
@@ -32,7 +30,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
             appID = dataTikiConfigApp.appID;
             homeAddress = dataTikiConfigApp.homeAddress;
             secretAppCode = dataTikiConfigApp.secretAppCode;
-            usingApp = dataTikiConfigApp.usingApp;
             tikiAu = dataTikiConfigApp.tikiAu;
         }
         public void Empty()
@@ -40,7 +37,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
             appID = string.Empty;
             homeAddress = string.Empty;
             secretAppCode = string.Empty;
-            usingApp = constNotUsingApp;
             tikiAu = new TikiAuthorization();
         }
 
@@ -49,8 +45,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
             appID = inputAppID;
             homeAddress = inputHomeAddress;
             secretAppCode = inputSecretAppCode;
-            usingApp = inputUsingApp;
             tikiAu = inputTikiAu;
+        }
+
+        /// <summary>
+        /// 1.Given an app credentials with id = 7590139168389961, and secret = tfSl0c6VFv3fAB_z9F-m22IhEnmwq6ew
+        /// 2.Join them with a semi-colon we have 7590139168389961:tfSl0c6VFv3fAB_z9F-m22IhEnmwq6ew
+        /// 3.Encode the result with Base64 we have
+        /// </summary>
+        /// <param name="appID">inhouse app ID</param>
+        /// <returns></returns>
+        public string Tiki_GetAppCredentialBase64Format()
+        {
+            byte[] plainTextBytes = System.Text.Encoding.UTF8.GetBytes(appID + ":" + secretAppCode);
+            return Convert.ToBase64String(plainTextBytes);
         }
     }
 }

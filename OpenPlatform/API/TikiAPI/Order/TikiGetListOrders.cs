@@ -79,9 +79,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
         /// </summary>
         /// <param name="configApp">shop</param>
         /// <returns>Danh sách đơn hàng. Trả null không lấy thành công</returns>
-        static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(TikiConfigApp configApp, EnumOrderItemFilterByDate interval)
+        static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(EnumOrderItemFilterByDate interval)
         {
-            if (configApp == null)
+            if (CommonTikiAPI.tikiConfigApp == null)
                 return null;
 
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrder = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();
@@ -124,7 +124,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 
                 string http = TikiConstValues.cstrOrdersHTTPAddress + DevNameValuePair.GetQueryString(listValuePair);
 
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(configApp, http);
+                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     isOK = false;
@@ -158,22 +158,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
             }
             if (!isOK)
                 return null;
-            return lsOrder;
-        }
-
-        /// <summary>
-        /// Lấy được tất cả đơn hàng cần xác nhận còn hàng của nhiều shop đang sử dụng
-        /// </summary>
-        /// <param name="listConfigApp">danh sách shop</param>
-        /// <returns>Danh sách đơn hàng. Rỗng nếu không lấy thành công</returns>
-        static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAllShops(List<TikiConfigApp> listConfigApp, EnumOrderItemFilterByDate interval)
-        {
-            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrder = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();
-            int num = listConfigApp.Count();
-            for(int i = 0; i < num; i++)
-            {
-                lsOrder.AddRange(GetListOrderAShop(listConfigApp[i], interval));
-            }
             return lsOrder;
         }
 

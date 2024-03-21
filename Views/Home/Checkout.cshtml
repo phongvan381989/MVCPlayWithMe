@@ -846,6 +846,7 @@
 
             return listOrderPay;
         }
+
         // Check lại thông tin đơn hàng bên phía server: mã sản phẩm, số lượng có đủ
         // (vì trong thời gian khách chọn có thể số lượng tồn kho thay đổi), tổng tiền hàng, tiền ship.
         // Đồng thời gửi thông tin địa chỉ, lời nhắn shop
@@ -862,6 +863,7 @@
             return await RequestHttpPostPromise(searchParams, query);
 
         }
+
         async function Order() {
             if (currentIndexInforObject == -1) {
                 CreateMustClickOkModal("Vui lòng cung cấp thông tin người nhận hàng.", null)

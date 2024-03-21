@@ -1,6 +1,8 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
-using MVCPlayWithMe.OpenPlatform.Model.Config;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
+using MVCPlayWithMe.OpenPlatform.Model;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -28,10 +30,13 @@ namespace MVCPlayWithMe
                 ConfigurationManager.AppSettings["TemporaryImageShopeeMediaFolderPath"];
             Common.TemporaryImageTikiMediaFolderPath = 
                 ConfigurationManager.AppSettings["TemporaryImageTikiMediaFolderPath"];
-            ModelThongTinBaoMat.action = new OpenPlatform.Model.XMLAction(System.Web.HttpContext.Current.Server.MapPath(Common.ThongTinBaoMatPath));
-            CommonTikiAPI.tikiCongifApp = ModelThongTinBaoMat.Tiki_InhouseAppGetConfig();
 
-            MyMySql.Initialization();
+            MyMySql.connStr = ConfigurationManager.AppSettings["ConectMysql"];
+            TikiMySql tikiMySql = new TikiMySql();
+            CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+
+            ShopeeMySql shopeeMySql = new ShopeeMySql();
+            CommonShopeeAPI.shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
         }
     }
 }

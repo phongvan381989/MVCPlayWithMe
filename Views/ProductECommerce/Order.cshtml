@@ -32,11 +32,12 @@
             background-color: #c6ecd9;
         }
 
-        .cccaaa4545{
-            display:inline;
+        .cccaaa4545 {
+            display: inline;
         }
-        .nvns63099{
-            margin:10px;
+
+        .nvns63099 {
+            margin: 10px;
         }
 
         button:hover {
@@ -49,33 +50,40 @@
             margin-top: 20px;
             margin-bottom: 20px;
         }
+
         .item-container {
             display: flex;
             align-items: center;
             padding: 3px;
         }
+
         .one-row-mapping-container {
             display: flex;
             align-items: center;
             margin-left: 50px;
             padding: 3px;
-            flex-wrap:wrap;
+            flex-wrap: wrap;
         }
+
         .nvzlfksjgs095 {
             margin-right: 5px;
         }
-        .xvxv768gfh{
-            margin-left:20px;
-            margin-right:20px;
+
+        .xvxv768gfh {
+            margin-left: 20px;
+            margin-right: 20px;
         }
+
         .invisible-id {
             display: none;
         }
+
         .adasdxcvfbxc {
             background-color: #fefefe;
             position: sticky;
             top: -100px;
         }
+
         .xcvxvdgdfw {
             background-color: #fefefe;
             position: sticky;
@@ -106,15 +114,16 @@
             border-radius: 2px;
         }
 
-        .sdfx09re789{
-            float:right;
+        .sdfx09re789 {
+            float: right;
             margin-right: 20px;
-            cursor:pointer;
+            cursor: pointer;
         }
-        .sdfx09re789:hover,
-        .sdfx09re789:focus {
-            opacity:0.5;
-        }
+
+            .sdfx09re789:hover,
+            .sdfx09re789:focus {
+                opacity: 0.5;
+            }
 
         /* The Close Button */
         .order-close {
@@ -125,12 +134,12 @@
             display: inline;
         }
 
-        .order-close:hover,
-        .order-close:focus {
-            color: #000;
-            text-decoration: none;
-            cursor: pointer;
-        }
+            .order-close:hover,
+            .order-close:focus {
+                color: #000;
+                text-decoration: none;
+                cursor: pointer;
+            }
 
         .img-cursor {
             cursor: pointer;
@@ -156,7 +165,7 @@
 
         <div class="cvAncz980">
             <button class="vndejhx90" onclick="GetListOrder()">Danh Sách Đơn Hàng</button>
-            <button class="vndejhx90">Kiểm Tra Đủ Đơn</button>
+            <button class="vndejhx90" onclick="CheckPackedOrderEnough()">Kiểm Tra Đủ Đơn</button>
         </div>
 
         <div class="cvAncz980">
@@ -168,7 +177,7 @@
             <div class="vbcgh45367">
                 <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order"
                        onchange="FilterOrder()">
-                <label for="dont-pack-order">Chưa Đóng</label>
+                <label for="dont-pack-order">Chưa Gửi Hàng</label>
             </div>
             <div class="vbcgh45367">
                 <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order"
@@ -182,6 +191,11 @@
                 <input type="radio" id="all-eCommerce" name="eCommerce-type" class="kmaZvc29 all-eCommerce"
                        onchange="FilterOrder()" checked>
                 <label for="all-eCommerce">Tất Cả</label>
+            </div>
+            <div class="vbcgh45367">
+                <input type="radio" id="play-with-me-eCommerce" name="eCommerce-type" class="kmaZvc29 play-with-me-eCommerce"
+                       onchange="FilterOrder()">
+                <label for="play-with-me-eCommerce">Play With Me</label>
             </div>
             <div class="vbcgh45367">
                 <input type="radio" id="tiki-eCommerce" name="eCommerce-type" class="kmaZvc29 tiki-eCommerce"
@@ -201,8 +215,8 @@
         </div>
 
         <div class="cvAncz980">
-            <input type="text" class="vndejhx90" name="cnzAkmkcm0" />
-            <button class="vndejhx90">Chi Tiết Đơn Hàng</button>
+            <input type="text" class="vndejhx90" name="order-code" />
+            <button class="vndejhx90 btn-order-detail" onclick="OrderDetail()">Chi Tiết Đơn Hàng</button>
         </div>
 
         <div>
@@ -213,8 +227,7 @@
                     <th>Mã Vận Đơn</th>
                     <th>Trạng Thái</th>
                     <th>Thời Gian</th>
-                    <th>Đã Đóng</th>
-                    <th>Đã Hoàn</th>
+                    <th>Đóng/Hoàn</th>
                 </tr>
             </table>
         </div>
@@ -231,14 +244,14 @@
                     </div>
                     <input type="text" class="nvns63099" name="product-code-isbn" />
                     <button class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
-                    <button class="nvns63099">Hoàn Hàng</button>
+                    <button class="nvns63099 btn-return-order" onclick="ReturnedOrder()">Hoàn Hàng</button>
                 </div>
             </div>
 
             <div class="order-detail">
             </div>
             <div class="xcvxvdgdfw">
-                <button class="nvns63099 vxvcx0989s" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
+                <button class="nvns63099 btn-enough-product" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
             </div>
         </div>
     </div>
@@ -264,11 +277,19 @@
         InitializeEnterPress();
 
         function InitializeEnterPress() {
-            let input = document.getElementsByName("product-code-isbn")[0];
-            input.addEventListener("keypress", function (event) {
-                if (event.key === "Enter") {
+            modal.style.display = "none";
+            let inputProductCode = document.getElementsByName("product-code-isbn")[0];
+            let inputOrderCode = document.getElementsByName("order-code")[0];
+            inputProductCode.addEventListener("keypress", function (event) {
+                if (event.key === "Enter" && modal.style.display == "block") {
                     event.preventDefault();
                     document.getElementsByClassName("btn-add-product")[0].click();
+                }
+            });
+            inputOrderCode.addEventListener("keypress", function (event) {
+                if (event.key === "Enter" && modal.style.display == "none") {
+                    event.preventDefault();
+                    document.getElementsByClassName("btn-order-detail")[0].click();
                 }
             });
         }
@@ -285,7 +306,7 @@
             return fromto;
         }
 
-        // 0: tất cả, 1: Chưa đóng, 2: Hủy
+        // 0: tất cả, 1: Chưa gửi hàng, 2: Hủy
         function GetOrderStatus() {
             let orderStatus = 0;
             if (document.getElementsByClassName("dont-pack-order")[0].checked == true) {
@@ -308,6 +329,10 @@
             else if (document.getElementsByClassName("lazada-eCommerce")[0].checked == true) {
                 ecommerce = eLazada;
             }
+            else if (document.getElementsByClassName("play-with-me-eCommerce")[0].checked == true) {
+                ecommerce = ePlayWithMe;
+            }
+
             return ecommerce;
         }
 
@@ -330,6 +355,67 @@
             listOrder = JSON.parse(responseDB.responseText);
 
             FilterOrder();
+        }
+
+        // Kiểm tra đơn đang hiển thị "Đã Đóng" hết chưa
+        function CheckPackedOrderEnough() {
+            let list = FilterOrderByStatus(listOrderTemp, 1)
+            if (DEBUG) {
+                console.log("CheckPackedOrderEnough CALL");
+                console.log(JSON.stringify(list));
+            }
+            let length = list.length;
+            let isEnough = true;
+            for (let i = 0; i < length; i++) {
+                if (isEmptyOrSpaces(list[i].orderStatusInWarehoue)) {
+                    isEnough = false;
+                    break;
+                }
+            }
+
+            if (!isEnough) {
+                CreateMustClickOkModal("Có đơn chưa đóng hàng.", null);
+                return;
+            }
+            alert("Các đơn đều đã được đóng hàng.");
+        }
+
+        function SearchOrderCodeInList() {
+            if (DEBUG) {
+                console.log("SearchOrderCodeInList CALL");
+                console.log(JSON.stringify(listOrderTemp));
+            }
+            let orderCodeValue = document.getElementsByName("order-code")[0].value;
+            let length = listOrderTemp.length;
+            let orderTemp = null;
+            for (let i = 0; i < length; i++) {
+                if (listOrderTemp[i].code == orderCodeValue) {
+                    orderTemp = listOrderTemp[i];
+                    break;
+                }
+            }
+            return orderTemp;
+        }
+
+        function EmptyAndFocusOrderCodeElement() {
+            if (DEBUG) {
+                console.log("EmptyAndFocusOrderCodeElement CALL");
+            }
+            let code = document.getElementsByName("order-code")[0];
+            code.value = "";
+            code.focus();
+        }
+
+        function OrderDetail() {
+
+            let orderTemp = SearchOrderCodeInList();
+            if (orderTemp == null) {
+                CreateMustClickOkModal("Không tìm thấy đơn hàng.",
+                    function () { EmptyAndFocusOrderCodeElement(); });
+                return;
+            }
+            currentOrder = orderTemp;
+            RefreshOrder();
         }
 
         // Sắp xếp danh sách đơn hàng theo thời gian gần đây ở đầu danh sách
@@ -363,9 +449,7 @@
         }
 
         // Lọc theo trạng thái đơn hàng
-        function FilterOrderByStatus(list) {
-            let orderStatus = GetOrderStatus();
-
+        function FilterOrderByStatus(list, orderStatus) {
             // Trạng thái đơn hàng tiki có thể
             //{
             //    "queueing",
@@ -388,7 +472,7 @@
             //        "finished_packing"
             //}
 
-            // Trạng thái đơn hàng Shopee có thể
+            // Trạng thái đơn hàng Shopee, play with me có thể
             //{
             //    UNPAID,
             //    READY_TO_SHIP,
@@ -407,7 +491,7 @@
             if (orderStatus == 0) {
                 listTemp = list;
             }
-            //Chưa đóng
+            //Chưa gửi hàng
             else if (orderStatus == 1) {
                 for (let i = 0; i < length; i++) {
                     order = list[i];
@@ -417,8 +501,8 @@
                         }
 
                     }
-                    else if (order.ecommerceName == eShopee) {
-                        if (order.status == "IN_CANCEL" || order.status == "CANCELLED") {
+                    else if (order.ecommerceName == eShopee || order.ecommerceName == ePlayWithMe) {
+                        if (order.status == "READY_TO_SHIP" || order.status == "PROCESSED") {
                             listTemp.push(order);
                         }
                     }
@@ -434,8 +518,8 @@
                         }
 
                     }
-                    else if (order.ecommerceName == eShopee) {
-                        if (order.status == "READY_TO_SHIP" || order.status == "PROCESSED") {
+                    else if (order.ecommerceName == eShopee || order.ecommerceName == ePlayWithMe) {
+                        if (order.status == "IN_CANCEL" || order.status == "CANCELLED") {
                             listTemp.push(order);
                         }
                     }
@@ -446,8 +530,7 @@
         }
 
         // Lọc theo sàn
-        function FilterOrderECommerceName(list) {
-            let ecommerce = GetECommerceType();
+        function FilterOrderECommerceName(list, ecommerce) {
             let listTemp = [];
             let order;
             let length = list.length;
@@ -474,8 +557,8 @@
 
             listOrderTemp = listOrder;
 
-            listOrderTemp = FilterOrderByStatus(listOrderTemp);
-            listOrderTemp = FilterOrderECommerceName(listOrderTemp)
+            listOrderTemp = FilterOrderByStatus(listOrderTemp, GetOrderStatus());
+            listOrderTemp = FilterOrderECommerceName(listOrderTemp, GetECommerceType())
 
             // Hiển thị danh sách đơn hàng
             let orderTable = document.getElementsByClassName("order-table")[0];
@@ -533,6 +616,8 @@
                     RefreshOrder();
                 }
             }
+
+            EmptyAndFocusOrderCodeElement();
         }
 
         function ClickItemCheckBox(ele) {
@@ -666,6 +751,10 @@
                             let url = "Item?eType=" + order.ecommerceName + "&id=" + order.listItemId[i].toString()
                             window.open(url);
                         }
+                        else if (order.ecommerceName == ePlayWithMe) {
+                            let url = "/ItemModel/UpdateDelete?id=" + order.listItemId[i].toString()
+                            window.open(url);
+                        }
                     }
                     itemContainer.appendChild(img);
 
@@ -772,7 +861,7 @@
                         // Số lượng mapping
                         let quantityEle = document.createElement("div");
                         quantityEle.className = "xvxv768gfh need-quatity";
-                        quantityEle.innerHTML = "0/" +  order.listQuantity[i] * order.listMapping[i][j].quantity;
+                        quantityEle.innerHTML = "0/" + order.listQuantity[i] * order.listMapping[i][j].quantity;
                         oneRowMappingContainer.appendChild(quantityEle)
 
                         // Số lượng sản phẩm trong kho
@@ -800,14 +889,17 @@
                 }
             }
 
-            EmptyAndFocusCodeElement();
+            EmptyAndFocusProductCodeElement();
 
             // Đơn đã đóng, disable nút đủ sản phẩm
+            // Đơn chưa gửi hàng, disable nút hoàn hàng btn-return-order
             if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
-                document.getElementsByClassName("vxvcx0989s")[0].disabled = true;
+                document.getElementsByClassName("btn-enough-product")[0].disabled = true;
+                document.getElementsByClassName("btn-return-order")[0].disabled = false;
             }
             else {
-                document.getElementsByClassName("vxvcx0989s")[0].disabled = false;
+                document.getElementsByClassName("btn-enough-product")[0].disabled = false;
+                document.getElementsByClassName("btn-return-order")[0].disabled = true;
             }
 
             ShowModal();
@@ -815,10 +907,14 @@
 
         function CloseModal() {
             modal.style.display = "none";
+
+            EmptyAndFocusOrderCodeElement();
         }
 
         function ShowModal() {
             modal.style.display = "block";
+
+            EmptyAndFocusProductCodeElement();
         }
 
         // Khi cập nhật mapping, sản phẩm trong kho ta load lại
@@ -948,12 +1044,12 @@
             }
             itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = isFull;
 
-            EmptyAndFocusCodeElement();
+            EmptyAndFocusProductCodeElement();
         }
 
-        function EmptyAndFocusCodeElement() {
+        function EmptyAndFocusProductCodeElement() {
             if (DEBUG) {
-                console.log("EmptyAndFocusCodeElement CALL");
+                console.log("EmptyAndFocusProductCodeElement CALL");
             }
             let code = document.getElementsByName("product-code-isbn")[0];
             code.value = "";
@@ -964,26 +1060,26 @@
             let code = document.getElementsByName("product-code-isbn")[0];
             if (!CheckValidProductCode(code.value) &&
                 !CheckValidProductISBN(code.value)) {
-                CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusCodeElement();});
+                CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
             let lsIndex = SearchProductCodeInOrder(code.value);
 
             if (lsIndex[1] == -1) {
-                CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusCodeElement(); });
+                CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
             if (lsIndex[0] == -1) {
-                CreateMustClickOkModal("Sản phẩm không có trong đơn hàng.", function () { EmptyAndFocusCodeElement(); });
+                CreateMustClickOkModal("Sản phẩm không có trong đơn hàng.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
             UpdateViewOfAddProduct(lsIndex);
         }
 
-        function UpdateOrderStatusToView(status){
+        function UpdateOrderStatusToView(status) {
             let orderTable = document.getElementsByClassName("order-table")[0];
             let rows = orderTable.rows;
             if (rows == null)
@@ -996,11 +1092,11 @@
                     // Đã đóng
                     if (currentOrder.orderStatusInWarehoue == packedOrderStatusInWarehouse)
                         rows[i].cells[5].style.color = "initial";
-                    //// Đã Hoàn
+                    // Đã Hoàn
                     else if (currentOrder.orderStatusInWarehoue == returnedOrderStatusInWarehouse)
                         rows[i].cells[5].style.color = "red";
 
-                    rows[i].cells[5].innerHTML = status;
+                    rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehoue;
                 }
             }
         }
@@ -1062,6 +1158,47 @@
             alert("Cập nhật thành công.");
             // Ẩn modal
             CloseModal();
+
+            currentOrder.orderStatusInWarehoue = packedOrderStatusInWarehouse;
+
+            // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
+            UpdateOrderStatusToView();
+        }
+
+        async function ReturnedOrder() {
+            if (DEBUG) {
+                console.log("EnoughProduct CALL");
+            }
+
+            let text = "Bạn Muốn Hoàn Đơn Hàng?";
+            if (confirm(text) == false) {
+                return;
+            }
+
+            if (currentOrder == null)
+                return;
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", currentOrder.ecommerceName);
+            searchParams.append("commonOrder", JSON.stringify(currentOrder));
+
+            let query = "/ProductECommerce/ReturnedOrder";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            let resObj = JSON.parse(responseDB.responseText);
+
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                return;
+            }
+
+            alert("Cập nhật thành công.");
+            // Ẩn modal
+            CloseModal();
+
+            currentOrder.orderStatusInWarehoue = returnedOrderStatusInWarehouse;
 
             // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
             UpdateOrderStatusToView(packedOrderStatusInWarehouse);

@@ -112,7 +112,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             foreach (TikiOrderItemV2 e in order.items)
             {
-                listItemId.Add(e.id);
+                listItemId.Add(e.product.id);
                 listModelId.Add(-1);
                 listQuantity.Add(e.qty);
                 listThumbnail.Add(e.product.thumbnail);

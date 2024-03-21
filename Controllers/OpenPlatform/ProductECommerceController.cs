@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
@@ -114,7 +115,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
-            lsTikiItem = GetListProductTiki.GetListLatestProductsFromOneShop(CommonTikiAPI.tikiCongifApp);
+            lsTikiItem = GetListProductTiki.GetListLatestProductsFromOneShop();
             foreach (var pro in lsTikiItem)
             {
                 CommonItem item = new CommonItem(pro);
@@ -154,7 +155,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         private CommonItem TikiGetProductFromId(int id)
         {
             TikiProduct pro = null;
-            pro = GetListProductTiki.GetProductFromOneShop(CommonTikiAPI.tikiCongifApp, id);
+            pro = GetListProductTiki.GetProductFromOneShop(id);
             if (pro == null)
                 return null;
 
@@ -236,7 +237,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Lấy đơn hàng tiki
             List<TikiOrder> lsOrderTikiFullInfo;
-            lsOrderTikiFullInfo = TikiGetListOrders.GetListOrderAShop(CommonTikiAPI.tikiCongifApp, (EnumOrderItemFilterByDate)fromTo);
+            lsOrderTikiFullInfo = TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo);
             if(lsOrderTikiFullInfo != null)
             {
                 foreach(var order in lsOrderTikiFullInfo)
@@ -265,14 +266,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
             }
 
+            // Lấy đơn hàng của web Play With Me
+            OrderMySql orderMySql = new OrderMySql();
+            lsCommonOrder.AddRange(orderMySql.GetListCommonOrder(fromTo));
+
+            // Cập nhật trạng thái đơn hàng: đã đóng / đã hoàn
             TikiMySql tikiMySql = new TikiMySql();
             tikiMySql.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
-
-            // Thông tin mapping được lấy khi xem chi tiết đơn hàng để luôn lấy được thông tin mới nhất
-            //tikiMySql.TikiUpdateMappingToCommonOrder(lsCommonOrder);
-
-            //ShopeeMySql shopeeMySql = new ShopeeMySql();
-            //shopeeMySql.ShopeeUpdateMappingToCommonOrder(lsCommonOrder);
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -287,15 +287,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             CommonOrder order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
             order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
 
-            List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
-            
-            lsCommonOrder.Add(order);
-
-            TikiMySql tikiMySql = new TikiMySql();
-            tikiMySql.TikiUpdateMappingToCommonOrder(lsCommonOrder);
-
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.ShopeeUpdateMappingToCommonOrder(lsCommonOrder);
+            if (order.ecommerceName == eTiki)
+            {
+                TikiMySql tikiMySql = new TikiMySql();
+                tikiMySql.TikiUpdateMappingToCommonOrder(order);
+            }
+            else if (order.ecommerceName == eShopee)
+            {
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                shopeeMySql.ShopeeUpdateMappingToCommonOrder(order);
+            }
+            else if (order.ecommerceName == ePlayWithMe)
+            {
+                OrderMySql orderMySql = new OrderMySql();
+                orderMySql.UpdateMappingToCommonOrder(order);
+            }
 
             return JsonConvert.SerializeObject(order);
         }
@@ -325,8 +331,48 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.TIKI;
             }
+            else if (eType == Common.ePlayWithMe)
+            {
+                eECommerceType = EECommerceType.PLAY_WITH_ME;
+            }
             TikiMySql tikiMySql = new TikiMySql();
             resultState = tikiMySql.EnoughProductInOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
+
+            return JsonConvert.SerializeObject(resultState);
+        }
+
+        [HttpPost]
+        public string ReturnedOrder(string eType, string commonOrder)
+        {
+            MySqlResultState resultState = null;
+
+            CommonOrder order = null;
+            try
+            {
+                order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+            }
+            catch (Exception ex)
+            {
+                resultState = new MySqlResultState();
+                Common.SetResultException(ex, resultState);
+                return JsonConvert.SerializeObject(resultState);
+            }
+
+            EECommerceType eECommerceType = EECommerceType.TIKI;
+            if (eType == Common.eShopee)
+            {
+                eECommerceType = EECommerceType.SHOPEE;
+            }
+            else if (eType == Common.eTiki)
+            {
+                eECommerceType = EECommerceType.TIKI;
+            }
+            else if (eType == Common.ePlayWithMe)
+            {
+                eECommerceType = EECommerceType.PLAY_WITH_ME;
+            }
+            TikiMySql tikiMySql = new TikiMySql();
+            resultState = tikiMySql.ReturnedOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
 
             return JsonConvert.SerializeObject(resultState);
         }
