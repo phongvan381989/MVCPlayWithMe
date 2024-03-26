@@ -21,11 +21,14 @@ namespace MVCPlayWithMe.Controllers
             sqler = new ItemModelMySql();
             productSqler = new ProductMySql();
         }
+
         // GET: ItemModel
         public ActionResult Index()
         {
             return View();
         }
+
+
 
         public ActionResult Create()
         {

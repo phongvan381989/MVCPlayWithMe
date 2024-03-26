@@ -896,7 +896,6 @@
                 document.getElementById("check-container").remove();
                 if (selectedIdModel == id) {
                     selectedIdModel = null;
-                    //ShowPrice();
                     ShowPriceAndReadyMaxQuantity();
                     return;
                 }
@@ -911,7 +910,6 @@
             newSelectVariation.appendChild(checkContainer);
             // Luôn hiển thị border màu đỏ với variation đã chọn
             newSelectVariation.style.borderColor = "rgb(255, 0, 0)";
-            //ShowPrice();
             ShowPriceAndReadyMaxQuantity();
         }
 
@@ -928,6 +926,10 @@
             else {
                 maxQuantity = GetModelObjectFromModelId(selectedIdModel).quantity;
             }
+            //if (DEBUG) {
+            //    console.log("GetMaxQuantityInput CALL");
+            //    console.log("maxQuantity: " + maxQuantity);
+            //}
             return maxQuantity;
         }
 

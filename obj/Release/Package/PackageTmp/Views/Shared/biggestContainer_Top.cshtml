@@ -1,39 +1,49 @@
 ﻿<div id="biggestContainer_top">
     <div id="biggestContainer_top_first" class="first">
         <div id="right_container">
-            <div class="main-page-container">
-                <img class="icon24" src="~/Media/mainPageIcon.png" alt="header_menu_item_home">
+            <div class="main-page-container" onclick="GoHomePage();">
+                <img class="icon24" src="~/Media/mainPageIcon.png">
                 <span>Trang chủ</span>
             </div>
             <div class="dropdown">
                 <div class="account-container">
-                    <img class="icon24" src="~/Media/accountIcon.png" alt="header_header_account_img">
+                    <img class="icon24" src="~/Media/accountIcon.png">
                     <span>Tài khoản</span>
                 </div>
                 <div class="dropdown-content">
                     <div class="remove-underline-container">
-                        <a class="remove-underline khoaithenhi" rel="nofollow" href="/customer/account/edit?src=header_my_account" title="Thông tin tài khoản">
+                        <a class="remove-underline" href="/Customer/AccountInfor" title="Thông tin tài khoản">
                             Thông tin tài khoản
                         </a>
                     </div>
                     <div class="remove-underline-container">
-                        <a class="remove-underline" rel="nofollow" href="/sales/order/history?src=header_my_account" title="Đơn hàng của tôi">
+                        <a class="remove-underline" href="/Customer/Order" title="Đơn hàng của tôi">
                             Đơn hàng của tôi
                         </a>
                     </div>
                     <div class="remove-underline-container">
-                        <a class="remove-underline" rel="nofollow" href="/customer/account/edit?src=header_my_account" title="Đăng xuất">
+                        <a class="remove-underline" href="javascript:void(0);" onclick="Logout();" title="Đăng xuất">
                             Đăng xuất
+                        </a>
+                    </div>
+                    <div class="remove-underline-container">
+                        <a class="remove-underline" href="/Customer/Login" title="Đăng xuất">
+                            Đăng nhập
+                        </a>
+                    </div>
+                    <div class="remove-underline-container">
+                        <a class="remove-underline" href="javascript:void(0);" onclick="Register();" title="Đăng xuất">
+                            Đăng ký
                         </a>
                     </div>
                 </div>
             </div>
             <div class="cart-container">
-                <a href="#" rel="nofollow">
+                <a class="remove-underline" href="/Home/Cart" title="Đăng xuất">
                     <div>
                         <div class="cart-wrapper">
-                            <img class="icon24" src="~/Media/cartIcon.png" alt="header_header_img_Cart">
-                            <span class="cart-number">100</span>
+                            <img class="icon24" src="~/Media/cartIcon.png">
+                            <span class="cart-count">0</span>
                         </div>
                     </div>
                 </a>
@@ -42,47 +52,15 @@
         <div id="left_container">
             <div class="logo-menu">
                 <a href="/">
-                    <img src="~/Media/playwithme.png" alt="playwithme-logo" class="playwithme-logo">
+                    <img src="~/Media/playwithme.png" class="playwithme-logo">
                 </a>
             </div>
             <div class="search_wrapper">
                 <div>
-                    <img class="icon20" src="~/Media/searchIcon.png" alt="icon-search">
+                    <img class="icon20" src="~/Media/searchIcon.png">
                 </div>
                 <input class="search-input-text" id="search-input-text-id" type="text" value="" placeholder="Bạn tìm gì hôm nay">
                 <button class="search-button">Tìm kiếm</button>
-            </div>
-        </div>
-
-    </div>
-    <div id="biggestContainer_top_second" class="second">
-        <div data-view-id="header_quicklinks_container" class="style__StyledHeaderKeyWordsRevamp-sc-1tmiyrh-1 cdVVTD">
-            <a data-view-id="header_quicklinks_item" data-view-index="0" href="https://tiki.vn/tikingon/trai-cay/c44824">trái cây
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="1" href="https://tiki.vn/tikingon/thit-trung/c54276">thịt, trứng
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="2" href="https://tiki.vn/tikingon/rau-cu-qua/c54302">rau củ quả
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="3" href="https://tiki.vn/tikingon/sua-bo-pho-mai/c54330">sữa, bơ, phô mai
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="4" href="https://tiki.vn/tikingon/ca-thuy-hai-san/c54290">hải sản
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="5" href="https://tiki.vn/tikingon/gao-mi-nong-san/c54384">gạo, mì ăn liền
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="6" href="https://tiki.vn/tikingon/bia-do-uong/c54412">đồ uống, bia rượu
-            </a>
-            <a data-view-id="header_quicklinks_item" data-view-index="7" href="https://tiki.vn/tikingon/banh-keo-gio-qua/c54452">bánh kẹo
-            </a>
-        </div>
-        <div>
-            <div>
-                <div>
-                    <img class="icon20" src="~/Media/locationIcon.png" alt="header-icon-location">
-                </div>
-                <p class="title">Giao đến:</p>
-                <div class="address">
-                    Q. Bắc Từ Liêm, P. Cổ Nhuế 2, Hà Nội
-                </div>
             </div>
         </div>
     </div>

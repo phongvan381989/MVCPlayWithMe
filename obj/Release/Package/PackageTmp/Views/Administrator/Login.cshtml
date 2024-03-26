@@ -20,7 +20,6 @@
 <body>
 
     <div id="biggestContainer">
-        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <form>
             <label for="userName">Số điện thoại/Email/Tên đăng nhập:</label><br>
             <input type="text" id="userName" value=""><br><br>
@@ -33,16 +32,7 @@
         </div>
 
         <script>
-            function Login_Login() {
-                const xhttp = new XMLHttpRequest();
-                xhttp.onload = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-
-                        if (GetJsonResponse(this.responseText)) {
-                            window.location.href = "/Administrator/Index";
-                        }
-                    }
-                }
+            async function Login_Login() {
 
                 const searchParams = new URLSearchParams();
                 let userName = document.getElementById("userName").value;
@@ -54,13 +44,19 @@
                 searchParams.append("passWord", passWord);
 
                 let query = "/Administrator/Login_Login";
-                if (DEBUG) {
-                    console.log(query);
-                    console.log(searchParams.toString());
+
+                let res = await RequestHttpPostPromise(searchParams, query);
+                let resObj = JSON.parse(res.responseText);
+
+                if (resObj.State != 0) {
+                    CreateMustClickOkModal(resObj.Message, null);
+                    return;
                 }
-                xhttp.open("POST", query);
-                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp.send(searchParams.toString());
+
+                // Quay về trang trước đó
+                window.history.back();
+                // Refresh lại page với thông tin đã đăng nhập
+                window.location.reload();
             }
         </script>
     </div>

@@ -38,28 +38,28 @@
         </div>
 
         <script>
-            function Logout() {
-                const xhttp = new XMLHttpRequest();
-                xhttp.onload = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        if (DEBUG) {
-                            const obj = JSON.parse(this.responseText);
-                            console.log(obj);
-                        }
-                        GetJsonResponse(this.responseText);
-                        window.location.href = "/Customer/Login";
-                    }
-                }
+            //function Logout() {
+            //    const xhttp = new XMLHttpRequest();
+            //    xhttp.onload = function () {
+            //        if (this.readyState == 4 && this.status == 200) {
+            //            if (DEBUG) {
+            //                const obj = JSON.parse(this.responseText);
+            //                console.log(obj);
+            //            }
+            //            GetJsonResponse(this.responseText);
+            //            window.location.href = "/Customer/Login";
+            //        }
+            //    }
 
-                let query = "/Customer/Logout";
-                if (DEBUG) {
-                    console.log(query);
-                    //console.log(searchParams.toString());
-                }
-                xhttp.open("POST", query);
-                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp.send(/*searchParams.toString()*/);
-            }
+            //    let query = "/Customer/Logout";
+            //    if (DEBUG) {
+            //        console.log(query);
+            //        //console.log(searchParams.toString());
+            //    }
+            //    xhttp.open("POST", query);
+            //    xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            //    xhttp.send(/*searchParams.toString()*/);
+            //}
         </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>

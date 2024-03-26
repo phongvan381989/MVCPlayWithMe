@@ -241,7 +241,6 @@
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
-    <Compile Include="Controllers\ErrorController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
     <Compile Include="Controllers\OpenPlatform\ProductECommerceController.cs" />
@@ -466,6 +465,7 @@
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
+    <None Include="Properties\PublishProfiles\CustomProfile1.pubxml" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
@@ -575,7 +575,6 @@
     <Content Include="Views\Shared\biggestContainer_Bottom.cshtml" />
     <Content Include="Views\Shared\Home\SelectedModal.cshtml" />
     <Content Include="Views\Shared\Home\OverMaxModal.cshtml" />
-    <Content Include="Views\Error\Error404.cshtml" />
     <Content Include="Views\Home\Cart.cshtml" />
     <Content Include="Views\Home\Checkout.cshtml" />
     <Content Include="Views\Shared\Home\CustomerInfor.cshtml" />

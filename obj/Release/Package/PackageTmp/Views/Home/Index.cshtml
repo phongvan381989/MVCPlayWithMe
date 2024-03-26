@@ -55,27 +55,10 @@
     </style>
 </head>
 <body onload="Search()">
-    @*<p id="demo1"></p>
-        <p id="demo2">aaaaaaaaaaa</p>
-        <script>
-            document.getElementById("demo1").innerHTML =
-                "Browser inner window width: " + window.innerWidth + "px<br>" +
-                "Browser inner window height: " + window.innerHeight + "px<br><br>" +
-
-                "Screen Width: " + screen.width + "px<br>" +
-                "Screen available width: " + screen.availWidth + "px<br><br>" +
-
-                "Screen Height: " + screen.height + "px<br>" +
-                "Screen Available Height: " + screen.availHeight + "px";
-            function myFunction() {
-                alert("Hello World  1!");
-            }
-        </script>*@
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
-        @*<div class="config-max-width padding-container">*@
-        @Html.Partial("~/Views/Shared/Home/SearchResult.cshtml"@*, Model*@)
-        @*</div>*@
+
+        @Html.Partial("~/Views/Shared/Home/SearchResult.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -99,18 +82,17 @@
                 console.log("responseText: " + resObj.responseText);
             }
             // Lấy số lượng sản phẩm trong kết quả trả về
-            countModel = parseInt(resObj.responseText);
-            if (countModel == 0) {
-                document.getElementById("empty-result").style.display = "block";
-                document.getElementById("search-result").style.display = "none";
+            countItem = parseInt(resObj.responseText);
+            if (countItem == 0) {
+                EmptySomethingV1();
                 return;
             }
 
             document.getElementById("empty-result").style.display = "none";
             document.getElementById("search-result").style.display = "block";
 
-            maxPage = Math.floor(countModel / itemOnPage)
-            if (countModel % itemOnPage != 0)
+            maxPage = Math.floor(countItem / itemOnPage);
+            if (countItem % itemOnPage != 0)
                 maxPage = maxPage + 1;
             currentPage = -1; // Làm mới currentPage
             // Lấy dữ liệu cho page 1
@@ -141,7 +123,7 @@
                 // Thay đổi id
                 itemElement.id = "hardcode" + i;
                 // Set link chi tiết sản phẩm
-                itemElement.getElementsByClassName("product-item")[0].href = "Home/Item?id=" + item.id;
+                itemElement.getElementsByClassName("product-item")[0].href = "/Home/Item?id=" + item.id;
                 // Hiển thị vì sample đang ẩn
                 itemElement.style.display = "block";
                 itemElement.getElementsByClassName("card-img-top")[0].src = item.imageSrc[0];

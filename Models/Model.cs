@@ -64,12 +64,12 @@ namespace MVCPlayWithMe.Models
             if (mapping.Count() == 0)
                 return;
 
-            quantity = int.MaxValue;
+            quantity = 0;
             foreach(var map in mapping)
             {
                 bookCoverPrice = bookCoverPrice + map.product.bookCoverPrice;
-                if (quantity > map.quantity)
-                    quantity = map.quantity;
+                if (quantity < map.product.quantity)
+                    quantity = map.product.quantity;
             }
 
             // Giá sau chiết khấu

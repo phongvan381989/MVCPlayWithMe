@@ -12,8 +12,34 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
     <style>
-        input {
+        .login-container {
             width: 100%;
+            max-width: 500px;
+            background-color: #fefefe;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid rgba(0,0,0,0.4);
+            border-radius: 2px;
+        }
+
+        .login-container input {
+            width: 100%;
+        }
+
+        .login-container button {
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            outline: none;
+            padding: 10px;
+            border: 0;
+            background: none;
+            border-radius: 2px;
+            min-width: 140px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #fff;
+            background-color: #ee4d2d;
         }
     </style>
 </head>
@@ -21,65 +47,66 @@
 
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
-        <form>
-            <label for="userName">Số điện thoại:</label><br>
-            <input type="text" id="userName" value=""><br><br>
+        <div class="login-container">
+            <form>
+                <label for="userName">Số điện thoại:</label><br>
+                <input type="text" id="userName" value=""><br><br>
 
-            <label for="passWord">Mật khẩu:</label><br>
-            <input type="password" id="passWord" value=""><br><br>
-        </form>
-        <div>
-            <button type="button" onclick="Login_Login()">Đăng nhập</button>
+                <label for="passWord">Mật khẩu:</label><br>
+                <input type="password" id="passWord" value=""><br><br>
+            </form>
+            <div>
+                <button type="button" onclick="Login_Login()">Đăng nhập</button>
+            </div>
         </div>
-
-        <script>
-            function Login_Login() {
-                const xhttp = new XMLHttpRequest();
-                xhttp.onload = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        //const obj = JSON.parse(this.responseText);
-                        //if (DEBUG) {
-                        //    console.log(obj);
-                        //}
-                        //if (obj !== null) {
-                        //    if (obj.isValid === false) {
-                        //        //if (obj.state === 3)
-                        //        //else
-                        //        return;
-                        //    }
-                        //    else {
-                        //        window.location.href = "/Customer/Update";
-                        //        //return;
-                        //    }
-                        //}
-
-                        if (GetJsonResponse(this.responseText)) {
-                            window.location.href = "/Administrator/Index";
-                        }
-                    }
-                }
-
-                const searchParams = new URLSearchParams();
-                let userName = document.getElementById("userName").value;
-
-                searchParams.append("userName", userName);
-
-                let passWord = document.getElementById("passWord").value;
-
-                searchParams.append("passWord", passWord);
-
-                let query = "/Customer/Login_Login";
-                if (DEBUG) {
-                    console.log(query);
-                    console.log(searchParams.toString());
-                }
-                xhttp.open("POST", query);
-                xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-                xhttp.send(searchParams.toString());
-            }
-        </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
+    <script>
+        async function Login_Login( ) {
+            if (DEBUG) {
+                console.log("Login_Login CALL");
+            }
+
+            let userName = document.getElementById("userName").value;
+            if (isEmptyOrSpaces(userName)) {
+                CreateMustClickOkModal("Nhập tài khoản.", null);
+            }
+
+            let passWord = document.getElementById("passWord").value;
+            if (isEmptyOrSpaces(passWord)) {
+                CreateMustClickOkModal("Nhập mật khẩu.", null);
+            }
+            const searchParams = new URLSearchParams();
+            searchParams.append("userName", userName);
+            searchParams.append("passWord", passWord);
+
+            let cookie = GetCookie(customerInforKey);
+            searchParams.append("customerInforCookie", cookie);
+
+            let query = "/Customer/Login_Login";
+
+            let res = await RequestHttpPostPromise(searchParams, query);
+            let resObj = JSON.parse(res.responseText);
+
+            if (resObj.State != 0) {
+                CreateMustClickOkModal(resObj.Message, null);
+                //// Xóa cookie ở web, ở thiết bị khác không được xóa
+                //DeleteCookie(uidKey);
+                return;
+            }
+            //// Xóa cart cookie bên javascript
+            //DeleteAllCartCookie();
+            //// Xóa customer info cookie bên javascript
+            //DeleteAllCustomerInforCookie();
+
+            // Quay về trang trước đó
+            window.history.back();
+            // Refresh lại page với thông tin đã đăng nhập
+            window.location.reload();
+        }
+    </script>
 </body>
 </html>

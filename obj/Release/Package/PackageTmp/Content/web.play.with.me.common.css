@@ -1,4 +1,8 @@
-﻿#biggestContainer {
+﻿html, body {
+    height: 100%;
+    margin: 0;
+}
+#biggestContainer {
     display: flex;
     flex-direction: column;
     flex-wrap: wrap;
@@ -9,6 +13,7 @@
     padding-top:20px;
     margin-right: auto;
     margin-left: auto;
+    min-height: 100%;
     /*margin-top: 10px;*/
 }
 
@@ -197,10 +202,7 @@
     background: transparent;
 }
 
-#biggestContainer_top_second {
-    display: none;
-}
-.cart-number {
+.cart-count {
     color: rgb(255, 255, 255);
     background: rgb(255, 66, 79);
     height: 16px;
@@ -290,12 +292,12 @@
 /*Loader start*/
 #circle-loader {
     position: fixed;
-    left: 50%;
+    left: 45%;
     top: 50%;
-    z-index: 1;
+    z-index: 100;
     width: 60px;
     height: 60px;
-    margin: -76px 0 0 -76px;
+    /*margin: -76px 0 0 -76px;*/
     border: 6px solid #f3f3f3;
     border-radius: 50%;
     border-top: 6px solid #00ff40;
@@ -327,11 +329,13 @@
 
 /* Paging start*/
 .wraper-pagination {
-    display: flex;
+    display: none;
+    width: 100%;
+    flex-wrap: wrap;
     /*background-color: DodgerBlue;*/
 }
 
-    .wraper-pagination > div {
+.wraper-pagination > div {
         border-radius: 5px;
         width: 36px;
         height: 32px;
@@ -378,4 +382,87 @@ sup {
     /*vertical-align:bottom;*/
     font-size: 70%;
     /*border:1px solid red;*/
+}
+
+/*-----------css cho modal thông báo phải click ok để tắt---------*/
+.my-modal-must-click-ok {
+    display: flex; /* Hidden by default */
+    justify-content: center;
+    align-items: center;
+    position: fixed; /* Stay in place */
+    z-index: 10; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-content-selected {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 10px;
+    border: 1px solid #888;
+    width: 20%;
+    min-width: 200px;
+    border-radius: 2px;
+}
+
+
+.btn-modal-must-click-ok {
+    display: flex;
+    color: #fff;
+    position: relative;
+    overflow: visible;
+    outline: 0;
+    background: #ee4d2d;
+    width: 100%;
+    height: 40px;
+    margin-top: 20px;
+    padding: 20px;
+    min-width: 70px;
+    text-overflow: ellipsis;
+    flex-direction: column;
+    font-size: 14px;
+    box-sizing: border-box;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+    border-radius: 2px;
+    border: 0;
+    align-items: center;
+    justify-content: center;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+.pwm-btn-common {
+    padding: 13px 36px;
+    margin: 5px 22px 5px 15px;
+    text-transform: capitalize;
+    font-weight: 500;
+    height: 2.5rem;
+    box-sizing: border-box;
+    font-size: 1rem;
+    border-radius: 2px;
+    position: relative;
+    overflow: visible;
+    outline: 0;
+    background: #ee4d2d;
+    cursor: pointer;
+    border: 0;
+    line-height: 1.5;
+    letter-spacing: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    transition: opacity .2s ease;
+    user-select: none;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+}
+
+.pwm-btn-text-common {
+    width: 100%;
 }

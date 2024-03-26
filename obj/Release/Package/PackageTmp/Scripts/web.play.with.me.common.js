@@ -7,6 +7,16 @@ var itemModelQuota = 5;
 var standardShipFeeInHaNoi = 15000; // Phí ship tiêu chuẩn trong Hà Nội
 var standardShipFeeOutHaNoi = 30000; // Phí ship tiêu chuẩn trong Hà Nội
 var HaNoiCity = "Thành phố Hà Nội";
+var cartKey = "cart";
+var customerInforKey = "cusinfor";
+var uidKey = "uid";
+var eShopee = "SHOPEE";
+var eTiki = "TIKI";
+var eLazada = "LAZADA";
+var ePlayWithMe = "PLAYWITHME";
+var packedOrderStatusInWarehouse = "Đã Đóng";
+var returnedOrderStatusInWarehouse = "Đã Hoàn";
+
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
 }
@@ -15,11 +25,13 @@ function GetExtensionOfFileName(fileName) {
     var fileExt = fileName.split('.').pop();
     return fileExt;
 }
+
 function CheckValidateEmail(email) {
     return email.match(
         /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
     );
 }
+
 // Có thể dùng SDT, Email hoặc tên đăng nhập làm tên tài khoản
 function CheckUserNameValid(userName) {
     if (isEmptyOrSpaces(userName)) {
@@ -87,6 +99,27 @@ function CheckValidSDT(sdt) {
     return true;
 }
 
+// Check mã sản phẩm hợp lệ bắt đầu 89, dài 13
+// 89..., VD: 8938519861794
+function CheckValidProductCode(code) {
+    let pattern = /((89)+([0-9]{11})\b)/g;
+    if (!pattern.test(code)) {
+        return false;
+    }
+
+    return true;
+}
+
+// Check isbn sản phẩm hợp lệ bắt đầu 978604, dài 13
+// 978604..., VD: 9786046546948
+function CheckValidProductISBN(code) {
+    let pattern = /((978604)+([0-9]{7})\b)/g;
+    if (!pattern.test(code)) {
+        return false;
+    }
+
+    return true;
+}
 function CheckPassWordValid(passWord, repassWord) {
     if (passWord !== repassWord) {
         return '{"isValid":false, "message":"Nhập lại mật khẩu không chính xác."}';
@@ -130,23 +163,21 @@ function GetCookie(cname) {
     let name = cname + "=";
     let decodedCookie = decodeURIComponent(document.cookie);
     let ca = decodedCookie.split(';');
+    let cookie = "";
     for (let i = 0; i < ca.length; i++) {
         let c = ca[i];
         while (c.charAt(0) == ' ') {
             c = c.substring(1);
         }
         if (c.indexOf(name) == 0) {
-            let value = c.substring(name.length, c.length);
-            if (DEBUG) {
-                console.log(cname + ": " + value);
-            }
-            return value;
+            cookie = c.substring(name.length, c.length);
+            break;
         }
     }
     if (DEBUG) {
-        console.log(cname + ": ");
+        console.log(cname + ": " + cookie);
     }
-    return "";
+    return cookie;
 }
 
 // Kiểm tra 1 string có trong datalist
@@ -359,8 +390,8 @@ function RequestHttpPostPromise(searchParams, url) {
             reject(this.statusText);
         }
 
-        let lastQuery = url + "?" + searchParams.toString();
         if (DEBUG) {
+            let lastQuery = url + "?" + searchParams.toString();
             console.log(lastQuery);
         }
         xhttp.open("POST", url);
@@ -537,6 +568,12 @@ function ConvertMoneyToText(money) {
     return textMoney;
 }
 
+// 
+function ConvertMoneyToTextWithIcon(money) {
+    let text = ConvertMoneyToText(money);
+    return "<sup>₫</sup>" + text;
+}
+
 // Convert text dạng: 123,456,700 sang số tiền
 function ConvertTextToMoney(text) {
     let textMoney = "";
@@ -565,15 +602,19 @@ function ConvertIntToPixel(value) {
 //        </div>
 //    </div>
 //</div>
-function CreateMustClickOkModal(text) {
+function CreateMustClickOkModal(text, okFunction) {
     let container = document.createElement("div");
     container.className = "container-my-modal-must-click-ok";
     container.innerHTML = "<div class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><button class='btn-modal-must-click-ok' type='button'>OK</button></div></div></div>";
     container.getElementsByClassName("alert-popup-message")[0].innerHTML = text;
     container.getElementsByClassName("btn-modal-must-click-ok")[0].addEventListener("click", function () {
         document.getElementsByClassName("container-my-modal-must-click-ok")[0].remove();
+        if (okFunction != null) {
+            okFunction();
+        }
     });
     document.getElementsByTagName("body")[0].appendChild(container);
+    document.getElementsByClassName("btn-modal-must-click-ok")[0].focus();
 }
 
 // Lấy được obj từ danh sách obj thỏa obj.id = id
@@ -587,3 +628,209 @@ function GetObjFromListAndId(id, list) {
     }
     return obj;
 }
+
+// Check khách vô danh
+// Chưa đăng nhập trả về true, ngược lại false
+function CheckAnonymousCustomer() {
+    if (DEBUG) {
+        console.log("CheckAnonymousCustomer CALL");
+    }
+    let cookie = GetCookie(uidKey);
+
+    if (isEmptyOrSpaces(cookie)) {
+        return true;
+    }
+
+    return false;
+}
+
+// Check khách vô danh
+// Chưa đăng nhập trả về true, ngược lại false
+async function CheckAnonymousCustomerFromServer() {
+    if (DEBUG) {
+        console.log("CheckAnonymousCustomerFromServer CALL");
+    }
+
+    const searchParams = new URLSearchParams();
+    let query = "/Customer/CheckUidCookieValid";
+
+    return await RequestHttpPostPromise(searchParams, query);
+}
+
+// Xóa bỏ uid cookie khi uid cookie có giá trị nhưng xác thực sai.
+// Có thể bị người dùng sửa bằng tay hoặc bên thứ 3
+function DeleteUidCookieWhenAuthentFail() {
+    DeleteCookie(uidKey);
+}
+
+// Đăng xuất khỏi tài khoản
+async function Logout() {
+    if (DEBUG) {
+        console.log("Logout CALL");
+    }
+
+    const searchParams = new URLSearchParams();
+    let query = "/Customer/Logout";
+
+    let res = await RequestHttpPostPromise(searchParams, query);
+    let resObj = JSON.parse(res.responseText);
+
+    if (resObj.State != 0) {
+        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+        // Xóa cookie ở thiết bị gửi request, ở thiết bị khác không được xóa
+        DeleteCookie(uidKey);
+    }
+    // Uidkey được xóa từ phía server
+    // Quay về trang chủ
+    window.location.reload();// = "/Home/Index";
+
+}
+
+// Tạo thẻ con của dropdown-content, hiển thị hành động tương ứng trên
+// menu Tài Khoản góc trên phải màn hình
+function CreateChildOfAccountElement(parrent, func, title) {
+    let childDiv = document.createElement("div");
+    childDiv.className = "remove-underline-container";
+
+    let childA = document.createElement("a");
+    childA.className = "remove-underline";
+    childA.href = "javascript:void(0);";
+    childA.title = title;
+    childA.innerHTML = title;
+    if (func != null) {
+        childA.onclick = function () { func(); };
+    }
+
+    childDiv.appendChild(childA);
+    parrent.appendChild(childDiv);
+}
+
+// Tạo thẻ con của dropdown-content, hiển thị hành động tương ứng trên
+// menu Tài Khoản góc trên phải màn hình
+function CreateChildOfAccountElementV2(parrent, href, title) {
+    let childDiv = document.createElement("div");
+    childDiv.className = "remove-underline-container";
+
+    let childA = document.createElement("a");
+    childA.className = "remove-underline";
+    childA.href = href;
+    childA.title = title;
+    childA.innerHTML = title;
+    //if (func != null) {
+    //    childA.onclick = function () { func(); };
+    //}
+
+    childDiv.appendChild(childA);
+    parrent.appendChild(childDiv);
+}
+
+// Tạo img tag
+function CreateImageElement(/*width, height, */src, className) {
+    let img = document.createElement("img");
+    img.src = src;
+    img.className = className;
+    //img.height = height;
+    //img.width = width;
+    return img;
+}
+
+// Check khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
+// menu Tài Khoản góc trên phải màn hình
+// Hàm này phải gọi mỗi khi load page
+function ShowAccoutAction() {
+    let ele = document.getElementsByClassName("dropdown-content")[0];
+    if (ele == null) { // Đăng nhập với vai trò admin
+        return;
+    }
+
+    ele.innerHTML = "";
+    if (DEBUG) {
+        console.log("ele" + ele.tagName);
+    }
+    if (CheckAnonymousCustomer()) {
+        // Đăng nhập
+        CreateChildOfAccountElementV2(ele, "/Customer/Login", "Đăng nhập")
+
+        // Đăng ký
+        CreateChildOfAccountElementV2(ele, "/Customer/CreateCustomer", "Đăng ký")
+    }
+    else {
+
+        // Thông tin tài khoản
+        CreateChildOfAccountElementV2(ele, "/Customer/AccountInfor", "Thông tin tài khoản")
+
+        // Đơn hàng của tôi
+        CreateChildOfAccountElementV2(ele, "/Customer/Order", "Đơn hàng của tôi")
+
+        // Đăng xuất
+        CreateChildOfAccountElement(ele, function () { Logout(); }, "Đăng xuất")
+
+    }
+}
+
+// Về trang chính
+function GoHomePage() {
+    if (!window.location.href.includes("/Home/Index")) {
+        window.location.href = "/Home/Index";
+    }
+}
+
+function GoMyCart() {
+    window.location.href = "/Home/Cart";
+}
+
+function AuthenFail() {
+    CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
+    // Xóa uid
+    DeleteCookie(uidKey);
+    // Quay về trang chủ
+    window.location.href = "/Home/Index";
+}
+
+// Set min width khi hiển thị trên màn hình nhỏ
+// ele: đối tượng html
+function SetMinWidth(ele, minValue) {
+    if (scrWidth <= minValue) {
+        ele.style.minWidth = scrWidth + "px";
+    }
+}
+
+// Cập nhật số sản phẩm trong giỏ hàng ( menu top), ẩn hiện icon giỏ hàng nếu cần thiết
+async function UpdateCartCount() {
+    let length = 0;
+    if (CheckAnonymousCustomer()) {
+        // Lấy giỏ hàng từ cookie
+        let cartCookie = GetCookie(cartKey);
+        let myArray = cartCookie.split("$");
+        length = myArray.length;
+    }
+    else {
+        const searchParams = new URLSearchParams();
+
+        let query = "/Customer/GetCartCount";
+
+        let responseDB = await RequestHttpPostPromise(searchParams, query);
+        let result = JSON.parse(responseDB.responseText);
+
+        // AUTHEN_FAIL
+        if (result.State == 6) {
+            AuthenFail();
+            return;
+        }
+        length = result.myAnything;
+    }
+
+    document.getElementsByClassName("cart-count")[0].innerHTML = length;
+}
+
+// Những hành động mà mọi page đều phải thực hiện sau khi load
+async function CommonAction() {
+    if (document.getElementById("biggestContainer_top") == null) {
+        return;
+    }
+
+    await ShowAccoutAction();
+    await UpdateCartCount();
+}
+
+CommonAction();
