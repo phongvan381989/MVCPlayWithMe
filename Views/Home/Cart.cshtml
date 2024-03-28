@@ -374,7 +374,6 @@
 <body onload="RefreshRealOfCartCookieAndGet()">
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
-        <p id="list-cart-cookie-object" style="display:none;">@ViewData["listCartCookieObject"]</p>
         <div class="sample-selected-model">
             <div class="zoXdNN" data-model-id="">
                 <div class="checkbox-name">
@@ -566,11 +565,18 @@
             ShowCheckboxAll();
         }
 
-        function LoadCart() {
-            listCartCookieObject = JSON.parse(document.getElementById("list-cart-cookie-object").textContent);
+        async function LoadCart() {
             if (DEBUG) {
-                console.log(JSON.stringify(listCartCookieObject));
+                console.log("Cart page LoadCart() CALL");
             }
+            let responseDB = await CartPageLoadCart();
+            if (responseDB.responseText != null) {
+                listCartCookieObject = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listCartCookieObject = null;
+            }
+
             if (listCartCookieObject == null || listCartCookieObject.length == 0) {
                 document.getElementsByClassName("cart-empty")[0].style.display = "block";
                 document.getElementsByClassName("main-container")[0].style.display = "none";
@@ -702,12 +708,7 @@
             if (CheckAnonymousCustomer()) {
                 UpdateQuantityOfCookie(obj);
                 // Trả về định dạng giống truy vấn httpPost
-                return new Promise(function (resolve, reject) {
-                    let obj = {
-                        responseText: { State: 0, Message: "" }
-                    };
-                    resolve(obj);
-                });
+                return GetEasyPromise();
             }
             else {// Khách đăng nhập
                 return await UpdateCartQuantity(id, ConvertToInt(element.value));
@@ -736,6 +737,7 @@
             element.value = iInput.toString();
 
             let res = await UpdateWhenChangeInputQuantity(model, element);
+
             let resObj = JSON.parse(res.responseText);
             if (resObj.State != 0) {
                 CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
@@ -858,7 +860,7 @@
                 CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.", null)
                 return;
             }
-            // Tạo string dạng cookie của những sản phẩm chọn mua và thêm vào url như query
+            // Tạo string dạng cookie của những sản phẩm chọn mua
             let listReal = [];
             for (let i = 0; i < length; i++) {
                 if (listCartCookieObject[i].real == 1) {

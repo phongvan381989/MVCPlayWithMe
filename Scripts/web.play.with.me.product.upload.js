@@ -518,9 +518,25 @@ async function UpdateISBN() {
     }
 }
 
+async function GetItemObjectFromId(id) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id);
+
+    let query = "/Product/GetItemObjectFromId";
+
+    return RequestHttpPostPromise(searchParams, query);
+}
+
 // Từ product object json lưu trong thẻ p, hiển thị
-function ShowProductFromObject() {
-    const product = JSON.parse(document.getElementById("product-object").textContent);
+async function ShowProductFromObject() {
+    let responseDB = await GetItemObjectFromId(GetValueFromUrlName("id"));
+    if (responseDB.responseText != null) {
+        product = JSON.parse(responseDB.responseText);
+    }
+    else {
+        product = null;
+    }
+
     if (DEBUG) {
         console.log(product);
     }

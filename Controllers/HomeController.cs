@@ -116,8 +116,13 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public ActionResult Item(int id)
         {
-            ViewData["itemObject"] = JsonConvert.SerializeObject(itemModelsqler.GetItemFromId(id));
             return View();
+        }
+
+        [HttpPost]
+        public string GetItemFromId(int id)
+        {
+            return JsonConvert.SerializeObject(itemModelsqler.GetItemFromId(id));
         }
 
         /// <summary>
@@ -145,31 +150,55 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-
-        public ActionResult Cart()
+        [HttpPost]
+        public string CartPageLoadCart()
         {
             // Check khách vãng lai hay đã đăng nhập
             Customer cus = AuthentCustomer();
+            List<Cart> ls = null;
             if (cus == null)
             {
                 // Khách vãng lai
                 // Lấy cart cookie
-                List<Cart> ls = Cookie.GetListCartCookie(HttpContext);
+                ls = Cookie.GetListCartCookie(HttpContext);
                 ordersqler.GetCart(ls);
-                ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
             }
             else
             {
                 // Khách đăng nhập
                 // Lấy cart cookie
-                List<Cart> ls = ordersqler.GetListCart(cus.id);
+                ls = ordersqler.GetListCart(cus.id);
 
                 ordersqler.GetCart(ls);
-                ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(ls);
                 // Làm mới real = 0
                 ordersqler.RefreshRealOfCart(cus.id);
             }
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        public ActionResult Cart()
+        {
             return View();
+        }
+
+        // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
+        // giảm giá thêm: giảm giá cho khách quen, giảm giá cho đơn lơn hơn 500k,...
+        // cart: encode base64
+        [HttpPost]
+        public string CheckoutPageLoadCart(string cart)
+        {
+            // Xử lý nếu là khách vãng lai
+            List<Cart> lsRealCartCookie = new List<Cart>();
+            if (!Common.ParameterOfURLQueryIsNullOrEmpty(cart))
+            {
+                // Decode base64
+                var base64EncodedBytes = System.Convert.FromBase64String(cart);
+                string decodeCart = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+                lsRealCartCookie = Cookie.GetListCartCookieFromCookieValue(decodeCart);
+                ordersqler.GetCart(lsRealCartCookie);
+            }
+
+            return JsonConvert.SerializeObject(lsRealCartCookie);
         }
 
         // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
@@ -177,26 +206,6 @@ namespace MVCPlayWithMe.Controllers
         // cart: encode base64
         public ActionResult Checkout(string cart)
         {
-            // Check khách vãng lai hay đã đăng nhập
-
-            // Xử lý nếu là khách vãng lai
-            List<Cart> lsRealCartCookie = new List<Cart>();
-            if (!string.IsNullOrEmpty(cart))
-            {
-                // Decode base64
-                var base64EncodedBytes = System.Convert.FromBase64String(cart);
-                string decodeCart = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
-                lsRealCartCookie = Cookie.GetListCartCookieFromCookieValue(decodeCart);
-            }
-
-            ordersqler.GetCart(lsRealCartCookie);
-            ViewData["listCartCookieObject"] = JsonConvert.SerializeObject(lsRealCartCookie);
-
-            // Lấy customer infor cookie cho khách đăng nhập
-            //List<CustomerInforCookie> lsCustomerInforCookie = Cookie.GetListCustomerInforCookie(HttpContext);
-            //ViewData["listCustomerInfotCookieObject"] = JsonConvert.SerializeObject(lsCustomerInforCookie);
-            //ViewData["listCustomerInfotCookieObject"] = "";
-
             return View();
         }
 

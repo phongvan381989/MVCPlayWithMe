@@ -155,25 +155,28 @@ namespace MVCPlayWithMe.Models.Customer
                 {
                     if (customer.id == -1)
                     {
-                        customer.id = rdr.GetInt32("Id");
-                        customer.email = rdr.GetString("Email");
-                        customer.sdt = rdr.GetString("SDT");
-                        customer.userName = rdr.GetString("UserName");
-                        customer.fullName = rdr.GetString("FullName");
-                        customer.birthday = rdr.GetDateTime("Birthday");
-                        customer.sex = rdr.GetInt32("Sex");
+                        customer.id = MyMySql.GetInt32(rdr, "Id");
+                        customer.email = MyMySql.GetString(rdr, "Email");
+                        customer.sdt = MyMySql.GetString(rdr, "SDT");
+                        customer.userName = MyMySql.GetString(rdr, "UserName");
+                        customer.fullName = MyMySql.GetString(rdr, "FullName");
+                        customer.birthday = MyMySql.GetDateTime(rdr, "Birthday");
+                        customer.sex = MyMySql.GetInt32(rdr, "Sex");
                     }
                     // Thêm address
-                    Address add = new Address();
-                    add.id = rdr.GetInt32("AddressId");
-                    add.name = rdr.GetString("Name");
-                    add.phone = rdr.GetString("Phone");
-                    add.province = rdr.GetString("Province");
-                    add.district = rdr.GetString("District");
-                    add.subdistrict = rdr.GetString("SubDistrict");
-                    add.detail = rdr.GetString("Detail");
-                    add.defaultAdd = rdr.GetInt32("DefaultAdd");
-                    customer.lsAddress.Add(add);
+                    if (!Convert.IsDBNull(rdr["AddressId"]))
+                    {
+                        Address add = new Address();
+                        add.id = MyMySql.GetInt32(rdr, "AddressId");
+                        add.name = MyMySql.GetString(rdr, "Name");
+                        add.phone = MyMySql.GetString(rdr, "Phone");
+                        add.province = MyMySql.GetString(rdr, "Province");
+                        add.district = MyMySql.GetString(rdr, "District");
+                        add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                        add.detail = MyMySql.GetString(rdr, "Detail");
+                        add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
+                        customer.lsAddress.Add(add);
+                    }
                 }
             }
         }
@@ -492,14 +495,14 @@ namespace MVCPlayWithMe.Models.Customer
                     while (rdr.Read())
                     {
                         Address add = new Address();
-                        add.id = rdr.GetInt32("Id");
-                        add.name = rdr.GetString("Name");
-                        add.phone = rdr.GetString("Phone");
-                        add.province = rdr.GetString("Province");
-                        add.district = rdr.GetString("District");
-                        add.subdistrict = rdr.GetString("SubDistrict");
-                        add.detail = rdr.GetString("Detail");
-                        add.defaultAdd = rdr.GetInt32("DefaultAdd");
+                        add.id = MyMySql.GetInt32(rdr, "Id");
+                        add.name = MyMySql.GetString(rdr, "Name");
+                        add.phone = MyMySql.GetString(rdr, "Phone");
+                        add.province = MyMySql.GetString(rdr, "Province");
+                        add.district = MyMySql.GetString(rdr, "District");
+                        add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                        add.detail = MyMySql.GetString(rdr, "Detail");
+                        add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
                         lsAddress.Add(add);
                     }
                 }

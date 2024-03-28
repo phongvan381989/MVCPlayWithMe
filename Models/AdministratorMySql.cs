@@ -178,11 +178,11 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        administrator.id = rdr.GetInt32("Id");
-                        administrator.email = rdr.GetString("Email");
-                        administrator.sdt = rdr.GetString("SDT");
-                        administrator.userName = rdr.GetString("SDT");
-                        administrator.privilege = rdr.GetInt32("Privilege");
+                        administrator.id = MyMySql.GetInt32(rdr,"Id");
+                        administrator.email = MyMySql.GetString(rdr, "Email");
+                        administrator.sdt = MyMySql.GetString(rdr, "SDT");
+                        administrator.userName = MyMySql.GetString(rdr, "SDT");
+                        administrator.privilege = MyMySql.GetInt32(rdr, "Privilege");
                     }
                 }
                 if (rdr != null)

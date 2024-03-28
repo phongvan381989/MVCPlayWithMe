@@ -439,7 +439,6 @@
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <div id="item-media-wrapper">
-            <p id="item-object" style="display:none;">@ViewData["itemObject"]</p>
             <div id="item-medium-media">
                 <img id="medium-image" style="display:none; object-fit:contain; object-position:center; width:100%; height:100%;" alt="No Image" />
                 <video id="medium-video" style="display:none; object-fit:contain; object-position:center; width:100%; height:100%;" controls autoplay
@@ -562,13 +561,23 @@
             this.isVideo = itemIsVideo;
         }
 
-        function HomePageShowItem() {
-            itemObject = JSON.parse(document.getElementById("item-object").textContent);
-            if (DEBUG) {
-                console.log(itemObject);
+        async function GetItemFromId( id) {
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", id);
+
+            let query = "/Home/GetItemFromId";
+
+            return RequestHttpPostPromise(searchParams, query);
+        }
+
+        async function HomePageShowItem() {
+            let responseDB = await GetItemFromId(GetValueFromUrlName("id"));
+            if (responseDB.responseText != null) {
+                itemObject = JSON.parse(responseDB.responseText);
             }
-            if (itemObject == null)
+            else {
                 return;
+            }
 
             // Show small media
             let itemSmallMedia = document.getElementById("item-small-media");
@@ -1193,7 +1202,7 @@
                 return;
             }
             ShowModal();
-            setTimeout(CloseModal, 2000);
+            setTimeout(CloseModal, 1000);
         }
 
         async function Item_AddModelToCart(obj, maxQuantity) {

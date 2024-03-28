@@ -40,6 +40,12 @@
             cursor: pointer;
             color: #fff;
             background-color: #ee4d2d;
+            margin:0px 20px 0px 20px;
+        }
+        .fxvdf098 {
+            display: flex;
+            justify-content: center;
+            align-items:center;
         }
     </style>
 </head>
@@ -55,8 +61,10 @@
                 <label for="passWord">Mật khẩu:</label><br>
                 <input type="password" id="passWord" value=""><br><br>
             </form>
-            <div>
-                <button type="button" onclick="Login_Login()">Đăng nhập</button>
+            <div class="fxvdf098">
+                <button type="button" onclick="Login_Login()">Đăng Nhập</button>
+
+                <button type="button" onclick="GoToCreateCustormerPage()">Tạo Tài Khoản</button>
             </div>
         </div>
     </div>
@@ -88,7 +96,10 @@
 
             let query = "/Customer/Login_Login";
 
+            ShowCircleLoader();
             let res = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
             let resObj = JSON.parse(res.responseText);
 
             if (resObj.State != 0) {
@@ -102,10 +113,22 @@
             //// Xóa customer info cookie bên javascript
             //DeleteAllCustomerInforCookie();
 
-            // Quay về trang trước đó
-            window.history.back();
-            // Refresh lại page với thông tin đã đăng nhập
-            window.location.reload();
+            //if (window.history.length > 2) {
+            //    // Quay về trang trước đó
+            //    alert("pasueeee");
+            //    window.history.back();
+            //    // Refresh lại page với thông tin đã đăng nhập
+            //    window.location.reload();
+            //}
+            //else {
+            //    window.location.href = "/Home";
+            //}
+
+            window.location.href = "/Home";
+        }
+
+        function GoToCreateCustormerPage() {
+            window.location.href = "/Customer/CreateCustomer";
         }
     </script>
 </body>

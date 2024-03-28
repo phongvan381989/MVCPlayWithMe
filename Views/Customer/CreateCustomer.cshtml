@@ -40,6 +40,12 @@
             cursor: pointer;
             color: #fff;
             background-color: #ee4d2d;
+            margin: 0px 20px 0px 20px;
+        }
+        .kcbuc0986 {
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
     </style>
 </head>
@@ -58,8 +64,9 @@
                 <label for="repassWord">Nhập lại mật khẩu:</label><br>
                 <input type="password" id="repassWord" value=""><br><br>
             </form>
-            <div>
+            <div class="kcbuc0986">
                 <button type="button" onclick="CreateCustomer_Add()">Tạo Tài Khoản</button>
+                <button type="button" onclick="GoToLoginPage()">Đăng Nhập</button>
             </div>
         </div>
         <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -137,6 +144,10 @@
                 }
                 CreateMustClickOkModal("Tạo tài khoản thành công",
                     function () {window.location.replace("/Customer/Login"); });
+            }
+
+            function GoToLoginPage() {
+                window.location.href = "/Customer/Login";
             }
         </script>
     </div>

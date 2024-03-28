@@ -1051,9 +1051,26 @@ function SaveMappingToModel() {
     CloseModal(modal);
 }
 
+async function GetItemObjectFromId(id) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id);
+
+    let query = "/ItemModel/GetItemObjectFromId";
+
+    return RequestHttpPostPromise(searchParams, query);
+}
+
 // Từ item object hiển thị ra màn hình
-function ShowItemFromItemObject() {
-    item = JSON.parse(document.getElementById("item-object").textContent);
+async function ShowItemFromItemObject() {
+
+    let responseDB = await GetItemObjectFromId(GetValueFromUrlName("id"));
+    if (responseDB.responseText != null) {
+        item = JSON.parse(responseDB.responseText);
+    }
+    else {
+        item = null;
+    }
+
     if (DEBUG) {
         console.log(item);
     }

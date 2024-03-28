@@ -20,7 +20,7 @@ function objCustomerInforCookieFromInput(inName,
     inPhone, inProvince, inDistrict, inSubDistrict,
     inDetail, inDefaultAdd
 ) {
-    this.id = -1;
+    this.id = -1; // -1 khi là địa chỉ của khách vãng lai
     this.name = inName;
     this.phone = inPhone;
     this.province = inProvince;

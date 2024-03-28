@@ -26,7 +26,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(new Publisher(rdr.GetInt32("Id"), rdr.GetString("Name"), rdr.GetString("Detail")));
+                        ls.Add(new Publisher(MyMySql.GetInt32(rdr, "Id"), MyMySql.GetString(rdr, "Name"), MyMySql.GetString(rdr, "Detail")));
                     }
                 }
                 if (rdr != null)

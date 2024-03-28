@@ -525,6 +525,22 @@ namespace MVCPlayWithMe.General
             result.Message = ex.ToString();
         }
 
+        /// <summary>
+        /// Kiểm tra tham số request có null hay không
+        /// str=null, empty hay "null" trả về true
+        /// </summary>
+        /// <param name=""></param>
+        /// <returns></returns>
+        public static Boolean ParameterOfURLQueryIsNullOrEmpty(string str)
+        {
+            if (string.IsNullOrEmpty(str))
+                return true;
+            if (str == "null")
+                return true;
+
+            return false;
+        }
+
         #region Xử lý tiền
         public static int FloorMoney(int money)
         {

@@ -350,7 +350,6 @@
 <body>
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
-        <p id="list-cart-cookie-object" style="display:none;">@ViewData["listCartCookieObject"]</p>
         <div class="sample-model">
             <div class="model-wrapper">
                 <div class="EOqcX3">
@@ -432,7 +431,7 @@
                 </div>
                 <div class="flex-end">
                     <div class="money-title">Tổng thanh toán</div>
-                    <div class="money-padding money-sum">₫444.230</div>
+                    <div class="money-padding money-sum">₫0</div>
                 </div>
                 <div class="flex-end">
                     <button class="order-btn" onclick="Order()">Đặt hàng</button>
@@ -455,7 +454,9 @@
 
         let currentIndexInforObject = -1; // index địa chỉ nhận hàng hiện tại. Chưa chọn địa chỉ nhận hàng thì dùng thông tin mặc định khi load trang
 
-        let currentIndexInforUpdateObject = -1; // index cần cập nhật
+        let currentIndexInforUpdateObject = -1; // index địa chỉ nhận hàng cập nhật thông tin
+
+        let funcOfChangeAddress = null; // Hàm xử lý sự kiện click nút change-address-btn
 
         LoadSomething();
 
@@ -499,11 +500,15 @@
             ShowSumMoney();
         }
 
-        function LoadCart() {
-            listCartCookieObject = JSON.parse(document.getElementById("list-cart-cookie-object").textContent);
-            if (DEBUG) {
-                console.log(JSON.stringify(listCartCookieObject));
+        async function LoadCart() {
+            let responseDB = await CheckoutPageLoadCart(GetValueFromUrlName("cart"));
+            if (responseDB.responseText != null) {
+                listCartCookieObject = JSON.parse(responseDB.responseText);
             }
+            else {
+                listCartCookieObject = null;
+            }
+
             if (listCartCookieObject == null || listCartCookieObject.length == 0) {
                 document.getElementsByClassName("cart-empty")[0].style.display = "block";
                 document.getElementsByClassName("main-container")[0].style.display = "none";
@@ -558,6 +563,19 @@
 
             return await RequestHttpPostPromise(searchParams, query);
         }
+        // Chưa địa chỉ nào được chọn (lần đầu vào page chưa tạo địa chỉ, chưa chọn địa chỉ mặc định)
+        function ShowAddressDontSelected() {
+
+        }
+
+        // Thêm hàm xử lý sự kiện click nút change-address-btn
+        // Xóa hàm xử lý cũ nếu có
+        function ChangeAddressClickEvent(element) {
+            if (element.getAttribute('listener') === 'true') {
+                element.removeEventListener("click", funcOfChangeAddress);
+            }
+            element.addEventListener('click', funcOfChangeAddress);
+        }
 
         async function LoadCustomerInfor() {
             if (DEBUG) {
@@ -574,12 +592,7 @@
                     //DeleteUidCookieWhenAuthentFail();
                     CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
                     // Trả về định dạng giống truy vấn httpPost
-                    return new Promise(function (resolve, reject) {
-                        let obj = {
-                            responseText: { State: 0, Message: "" }
-                        };
-                        resolve(obj);
-                    });
+                    return GetEasyPromise();
                 }
                 else {
                     listCustomerInforCookieObject = JSON.parse(res.responseText);
@@ -609,24 +622,26 @@
                 document.getElementsByClassName("address-name-phone")[0].style.display = "none";
                 document.getElementsByClassName("address-address")[0].style.display = "none";
                 document.getElementsByClassName("address-default")[0].style.display = "none";
-                document.getElementsByClassName("change-address-btn")[0].innerHTML = "Thêm địa chỉ mới";
+                let changeAddressBtnEle = document.getElementsByClassName("change-address-btn")[0];
+                changeAddressBtnEle.innerHTML = "Thêm địa chỉ mới";
 
                 // Chưa địa chỉ nào được chọn là mặc định
                 // Hiển thị danh sách địa chỉ trước
+
+                if (funcOfChangeAddress !== null) {
+                    changeAddressBtnEle.removeEventListener("click", funcOfChangeAddress);
+                }
+
                 if (listCustomerInforCookieObject.length > 0) {
-                    document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowListCustomerInforModal() });
+                    funcOfChangeAddress = function () { ShowListCustomerInforModal(); };
                 }
                 else {
-                    document.getElementsByClassName("change-address-btn")[0].addEventListener("click", function () { ShowCustomerInforModal(true, false, null) });
+                    funcOfChangeAddress = function () { ShowCustomerInforModal(true, false, null); };
                 }
+                changeAddressBtnEle.addEventListener("click", funcOfChangeAddress);
             }
             // Trả về định dạng giống truy vấn httpPost
-            return new Promise(function (resolve, reject) {
-                let obj = {
-                    responseText: { State: 0, Message: "" }
-                };
-                resolve(obj);
-            });
+            return GetEasyPromise();
         }
 
         // Từ obj hiển thị tên, phone, địa chỉ lên checkout page
@@ -635,6 +650,11 @@
                 console.log("currentIndexInforObject: " + currentIndexInforObject);
                 console.log("obj: " + JSON.stringify(obj));
             }
+            // Chưa chọn địa chỉ nhận hàng
+            if (currentIndexInforObject == -1) {
+                return;
+            }
+
             document.getElementsByClassName("address-name-phone")[0].style.display = "block";
             document.getElementsByClassName("address-address")[0].style.display = "block";
 
@@ -647,8 +667,13 @@
             else {
                 document.getElementsByClassName("address-default")[0].style.display = "none";
             }
-            document.getElementsByClassName("change-address-btn")[0].innerHTML = "Thay đổi";
-            document.getElementsByClassName("change-address-btn")[0].addEventListener("click", ShowListCustomerInforModal);
+            let changeAddressBtnEle = document.getElementsByClassName("change-address-btn")[0];
+            changeAddressBtnEle.innerHTML = "Thay đổi";
+            if (funcOfChangeAddress !== null) {
+                changeAddressBtnEle.removeEventListener("click", funcOfChangeAddress);
+            }
+            funcOfChangeAddress = function () { ShowListCustomerInforModal();};
+            changeAddressBtnEle.addEventListener("click", funcOfChangeAddress);
         }
 
         function ShowListCustomerInforModal() {
@@ -712,6 +737,9 @@
                         }
                     }
                 }
+
+                // Chọn địa chỉ vừa chỉnh sửa làm địa chỉ nhận hàng
+                currentIndexInforObject = currentIndexInforUpdateObject;
             }
             else { // Thêm mới
                 //Kiểm tra có đặt mặc đinh
@@ -724,6 +752,8 @@
                     }
                 }
                 listCustomerInforCookieObject.push(obj);
+                // Chọn địa chỉ vừa thêm mới làm địa chỉ nhận hàng
+                currentIndexInforObject = listCustomerInforCookieObject.length - 1;
             }
 
             if (CheckAnonymousCustomer()) {// Khách vãng lai

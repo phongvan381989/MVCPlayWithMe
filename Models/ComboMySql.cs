@@ -26,7 +26,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(new Combo(rdr.GetInt32("Id"), rdr.GetString("Name")));
+                        ls.Add(new Combo(MyMySql.GetInt32(rdr, "Id"), MyMySql.GetString(rdr, "Name")));
                     }
                 }
                 if (rdr != null)

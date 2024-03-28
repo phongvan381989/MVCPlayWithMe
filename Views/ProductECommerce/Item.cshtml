@@ -64,11 +64,6 @@
             return type;
         }
 
-        function GetIdFromUrl() {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get('id');
-        }
-
         async function GetProductFromId(eType, id) {
             const searchParams = new URLSearchParams();
             searchParams.append("eType", eType);
@@ -82,7 +77,7 @@
         async function ViewProductFromId() {
             ShowCircleLoader();
 
-            let responseDB = await GetProductFromId(GetEEcommerceTypeFromUrl(), GetIdFromUrl());
+            let responseDB = await GetProductFromId(GetEEcommerceTypeFromUrl(), GetValueFromUrlName("id"));
             if (responseDB.responseText != null) {
                 commonItem = JSON.parse(responseDB.responseText);
             }
@@ -208,7 +203,7 @@
             let url = "/ProductECommerce/UpdateMapping";
             // tham số string gửi về server có dạng:
             // itemId,modelId,productId,productQuantity,...,itemId,modelId,productId,productQuantity
-            let itemid = GetIdFromUrl();
+            let itemid = GetValueFromUrlName("id");
             let str = "";
 
             let listModelOnly = GetListModelOnly();

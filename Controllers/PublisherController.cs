@@ -64,7 +64,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
 
-            if (string.IsNullOrEmpty(detail))
+            if (Common.ParameterOfURLQueryIsNullOrEmpty(detail))
                 detail = string.Empty;
 
             result = sqler.UpdatePublisher(name, detail);

@@ -628,6 +628,14 @@ function GetObjFromListAndId(id, list) {
     }
     return obj;
 }
+// Trả về định dạng giống truy vấn httpPost
+function GetEasyPromise() {
+    return new Promise(function (resolve, reject) {
+        let obj = { responseText: '{"State":0, "Message":""}' };
+        resolve(obj);
+    });
+}
+
 
 // Check khách vô danh
 // Chưa đăng nhập trả về true, ngược lại false
@@ -682,7 +690,7 @@ async function Logout() {
     }
     // Uidkey được xóa từ phía server
     // Quay về trang chủ
-    window.location.reload();// = "/Home/Index";
+    window.location.href = "/Home/Index";
 
 }
 
@@ -744,9 +752,7 @@ function ShowAccoutAction() {
     }
 
     ele.innerHTML = "";
-    if (DEBUG) {
-        console.log("ele" + ele.tagName);
-    }
+
     if (CheckAnonymousCustomer()) {
         // Đăng nhập
         CreateChildOfAccountElementV2(ele, "/Customer/Login", "Đăng nhập")
@@ -766,6 +772,12 @@ function ShowAccoutAction() {
         CreateChildOfAccountElement(ele, function () { Logout(); }, "Đăng xuất")
 
     }
+}
+
+// Lấy được giá trị của tham số từ url và tên tham số
+function GetValueFromUrlName(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
 }
 
 // Về trang chính
@@ -825,12 +837,29 @@ async function UpdateCartCount() {
 
 // Những hành động mà mọi page đều phải thực hiện sau khi load
 async function CommonAction() {
+    if (DEBUG) {
+        console.log("window.history.length: " + window.history.length);
+    }
+
     if (document.getElementById("biggestContainer_top") == null) {
         return;
     }
-
+    // Chỉ hiện tìm kiếm trên Home page
+    {
+        let href = window.location.href.toUpperCase();
+        if (DEBUG) {
+            console.log(href);
+        }
+        if (href.endsWith("/HOME/INDEX") || href.endsWith("/HOME")) {
+            document.getElementById("left_container").style.display = "flex";
+        }
+        else {
+            document.getElementById("left_container").style.display = "none";
+        }
+    }
     await ShowAccoutAction();
     await UpdateCartCount();
 }
 
 CommonAction();
+

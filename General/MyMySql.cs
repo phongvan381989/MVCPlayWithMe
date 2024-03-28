@@ -217,34 +217,68 @@ namespace MVCPlayWithMe.General
 
         public static int GetInt32(MySqlDataReader rdr, string columnName)
         {
-            if (Convert.IsDBNull(rdr[columnName]))
-                return -1;
-            else
+            //if (Convert.IsDBNull(rdr[columnName]))
+            //    return -1;
+            //else
+            //    return rdr.GetInt32(columnName);
+            try
+            {
                 return rdr.GetInt32(columnName);
+            }
+            catch(Exception)
+            {
+                return -1;
+            }
         }
 
         public static long GetInt64(MySqlDataReader rdr, string columnName)
         {
-            if (Convert.IsDBNull(rdr[columnName]))
-                return -1;
-            else
+            //if (Convert.IsDBNull(rdr[columnName]))
+            //    return -1;
+            //else
+            //    return rdr.GetInt64(columnName);
+            try
+            {
                 return rdr.GetInt64(columnName);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
         }
 
         public static string GetString(MySqlDataReader rdr, string columnName)
         {
-            if (Convert.IsDBNull(rdr[columnName]))
-                return string.Empty;
-            else
+            //if (Convert.IsDBNull(rdr[columnName]))
+            //    return string.Empty;
+            //else
+            //    return rdr.GetString(columnName);
+
+            try
+            {
                 return rdr.GetString(columnName);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
         }
 
         public static DateTime GetDateTime(MySqlDataReader rdr, string columnName)
         {
-            if (Convert.IsDBNull(rdr[columnName]))
-                return new DateTime();
-            else
+            //if (Convert.IsDBNull(rdr[columnName]))
+            //    return new DateTime();
+            //else
+            //    return rdr.GetDateTime(columnName);
+
+            try
+            {
                 return rdr.GetDateTime(columnName);
+            }
+            catch (Exception)
+            {
+                return new DateTime();
+            }
         }
     }
 }

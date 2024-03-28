@@ -55,6 +55,12 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        [HttpPost]
+        public string GetItemObjectFromId(int id)
+        {
+            return JsonConvert.SerializeObject(sqler.GetProductFromId(id));
+        }
+
         public ActionResult UpdateDelete(int id)
         {
             if (AuthentAdministrator() == null)
@@ -63,7 +69,6 @@ namespace MVCPlayWithMe.Controllers
             }
 
             GetViewDataForInput();
-            ViewData["itemObject"] = JsonConvert.SerializeObject(sqler.GetProductFromId(id));
 
             return View();
         }
@@ -491,9 +496,9 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetListImport(string fromDate, string toDate)
         {
-            if (string.IsNullOrEmpty(fromDate))
+            if (Common.ParameterOfURLQueryIsNullOrEmpty(fromDate))
                 fromDate = "2018-08-05";
-            if (string.IsNullOrEmpty(toDate))
+            if (Common.ParameterOfURLQueryIsNullOrEmpty(toDate))
                 toDate = DateTime.Now.ToString(Common.dateFormat);
             List<Import> ls = sqler.GetImportList(fromDate, toDate);
             return JsonConvert.SerializeObject(ls);

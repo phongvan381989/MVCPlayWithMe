@@ -54,6 +54,12 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        [HttpPost]
+        public string GetItemObjectFromId(int id)
+        {
+            return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -66,10 +72,8 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            //ViewDataGetListItemName();
             ViewDataGetListProductName();
             ViewDataGetListCombo();
-            ViewData["itemObject"] = JsonConvert.SerializeObject(sqler.GetItemFromId(id));
 
             return View();
         }

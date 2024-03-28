@@ -549,6 +549,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             {
                 errMessage = ex.ToString();
                 MyLogger.GetInstance().Warn(errMessage);
+                item = null;
             }
 
             conn.Close();

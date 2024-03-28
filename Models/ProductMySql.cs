@@ -416,7 +416,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(rdr.GetString("Barcode"));
+                        ls.Add(MyMySql.GetString(rdr, "Barcode"));
                     }
                 }
                 if (rdr != null)
@@ -453,7 +453,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(rdr.GetString("ComboName"));
+                        ls.Add(MyMySql.GetString(rdr, "ComboName"));
                     }
                 }
                 if (rdr != null)
@@ -490,7 +490,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(rdr.GetString("Author"));
+                        ls.Add(MyMySql.GetString(rdr, "Author"));
                     }
                 }
                 if (rdr != null)
@@ -527,7 +527,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(rdr.GetString("Translator"));
+                        ls.Add(MyMySql.GetString(rdr, "Translator"));
                     }
                 }
                 if (rdr != null)
@@ -564,7 +564,7 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(rdr.GetString("PublishingCompany"));
+                        ls.Add(MyMySql.GetString(rdr, "PublishingCompany"));
                     }
                 }
                 if (rdr != null)

@@ -658,24 +658,14 @@
             if (JSON.parse(res.responseText) == null) {
                 CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
                 // Trả về định dạng giống truy vấn httpPost
-                return new Promise(function (resolve, reject) {
-                    let obj = {
-                        responseText: { State: 0, Message: "" }
-                    };
-                    resolve(obj);
-                });
+                return GetEasyPromise();
             }
 
             ShowAccount();
             ShowAddress();
 
             // Trả về định dạng giống truy vấn httpPost
-            return new Promise(function (resolve, reject) {
-                let obj = {
-                    responseText: { State: 0, Message: "" }
-                };
-                resolve(obj);
-            });
+            return GetEasyPromise();
         }
 
         function SaveProfile() {

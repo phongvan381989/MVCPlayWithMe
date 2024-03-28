@@ -153,6 +153,23 @@ function RefreshRealOfCartCookieAndGet() {
     return listCartCookie;
 }
 
+async function CartPageLoadCart() {
+    if (DEBUG) {
+        console.log("CartPageLoadCart() CALL");
+    }
+    const searchParams = new URLSearchParams();
+    let query = "/Home/CartPageLoadCart";
+    return RequestHttpPostPromise(searchParams, query);
+}
+
+// cart được mã hóa 
+async function CheckoutPageLoadCart(cart) {
+    const searchParams = new URLSearchParams();
+    let query = "/Home/CheckoutPageLoadCart";
+    searchParams.append("cart", cart);
+    return RequestHttpPostPromise(searchParams, query);
+}
+
 function DeleteAllCartCookie() {
     DeleteCookie(cartKey);
 }
