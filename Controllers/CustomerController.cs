@@ -280,6 +280,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         /// <summary>
+        /// Không dùng hàm này nữa
         /// /// 0: UNPAID, 1:  READY_TO_SHIP,
         /// 2: PROCESSED, // Đây là trạng thái sau khi in đơn 3:  SHIPPED, 4:  COMPLETED,
         /// 5: IN_CANCEL, 6:  CANCELLED, 7:  INVOICE_PENDING, 8: ALL
@@ -302,6 +303,7 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        // Không dùng hàm này nữa
         [HttpGet]
         public string ChangePage(int statusOrder, int start, int offset)
         {
@@ -316,6 +318,26 @@ namespace MVCPlayWithMe.Controllers
             else
             {
                 result = ordersqler.SearchOrderChangePage(cus.id, statusOrder, start, offset);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        // Lấy tất cả đơn
+        [HttpPost]
+        public string GetAllOrder()
+        {
+            Customer cus = AuthentCustomer();
+
+            MySqlResultState result = new MySqlResultState();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                return JsonConvert.SerializeObject(result);
+            }
+            else
+            {
+                result = ordersqler.GetAllOrder(cus.id);
             }
 
             return JsonConvert.SerializeObject(result);

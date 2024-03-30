@@ -120,7 +120,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="GetAllOrder();">
 
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
@@ -168,57 +168,73 @@
                 <div class="result-content-container">
 
                 </div>
-                @Html.Partial("~/Views/Shared/GoToPage.cshtml")
             </div>
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
-    <script src="~/Scripts/web.play.with.me.paging.js"></script>
     <script>
         // Tham số tìm kiếm
         let status;
-        // Đảm bảo item trên 1 page chia hết số item trên 1 row
-        itemOnPage = 20;
+        let listOrder = null; // Danh sách tất cả đơn hàng người dùng
 
-        async function SearchOrderCount() {
+        // Hiện tất cả đơn trên 1 trang, không phân trang nên gọi hàm này ngay khi load trang
+        async function GetAllOrder() {
             if (DEBUG) {
-                console.log("SearchOrderCount CALL");
+                console.log("GetAllOrder CALL");
             }
             const searchParams = new URLSearchParams();
-            searchParams.append("statusOrder", status);
-            let query = "/Customer/SearchOrderCount";
-
-            return await RequestHttpPostPromise(searchParams, query);
-        }
-
-        function SetSearchParameter(searchParams) {
-            searchParams.append("statusOrder", status);
-        }
-
-        function ShowSearchingResult(res) {
-            if (DEBUG) {
-                console.log("ShowSearchingResult CALL");
+            let query = "/Customer/GetAllOrder";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            let resObj = JSON.parse(responseDB.responseText);
+            if (resObj.State != 0) {
+                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                listOrder = null;
+                return;
             }
+            listOrder = resObj.myJson;
+            if (DEBUG) {
+                console.log("listOrder: " + JSON.stringify(listOrder));
+            }
+            // HIển thị tất cả đơn hàng
+            ShowResult(document.getElementsByClassName("nvsflAB87")[0]);
+        }
+
+        function ShowResult(ele) {
+            // Bỏ màu bottom-border, chữ của button cũ
+            let lsBtn = document.getElementsByClassName("nvsflAB87");
+            for (let i = 0; i < lsBtn.length; i++) {
+                if (lsBtn[i] != ele) {
+                    lsBtn[i].style.color = "initial";
+                    lsBtn[i].style.borderBottom  = "none";
+                }
+                else {
+                    lsBtn[i].style.color = "#ee4d2d";
+                    lsBtn[i].style.borderBottom = "2px solid #ee4d2d";
+                }
+            }
+
             // Làm trống
             let container = document.getElementsByClassName("result-content-container")[0];
             container.innerHTML = "";
 
-            let resObj = JSON.parse(res.responseText);
-            if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+            // Hiển thị order
+            if (listOrder == null) {
                 return;
             }
-
-            // Hiển thị order
 
             let sample = document.getElementsByClassName("sample-order")[0];
             let sampleItem = document.getElementsByClassName("sample-item-container")[0];
             let samplePayment = document.getElementsByClassName("sample-payment")[0];
-
-            let length = resObj.myJson.length;
-            for (let i = 0; i < length; i++) {
-                let orderObj = resObj.myJson[i];
+            status = parseInt(ele.getAttribute("data-status"));
+            let length = listOrder.length;
+            // Duyệt từ cuối danh sách để lấy theo thời gian gần nhất hiển thị hàng trên ở web
+            for (let i = length - 1; i >=0; i--) {
+                let orderObj = listOrder[i];
+                if (status != 10 && orderObj.lsOrderTrack[orderObj.lsOrderTrack.length - 1].status != status)
+                    continue;
 
                 let clone = sample.cloneNode(true);
                 clone.style.display = "block";
@@ -265,7 +281,7 @@
                     }
 
                     clonePayment.getElementsByClassName("money-title")[0].innerHTML = paymentObj.strType;
-                    clonePayment.getElementsByClassName("money-padding")[0].innerHTML = 
+                    clonePayment.getElementsByClassName("money-padding")[0].innerHTML =
                         ConvertMoneyToTextWithIcon(paymentObj.value);
 
 
@@ -275,47 +291,6 @@
                 }
                 container.append(clone);
             }
-        }
-
-        async function ShowResult(ele) {
-            status = parseInt(ele.getAttribute("data-status"));
-            // Bỏ màu bottom-border, chữ của button cũ
-            let lsBtn = document.getElementsByClassName("nvsflAB87");
-            for (let i = 0; i < lsBtn.length; i++) {
-                if (lsBtn[i] != ele) {
-                    lsBtn[i].style.color = "initial";
-                    lsBtn[i].style.borderBottom  = "none";
-                }
-                else {
-                    lsBtn[i].style.color = "#ee4d2d";
-                    lsBtn[i].style.borderBottom = "2px solid #ee4d2d";
-                }
-            }
-
-            // Lấy dữ liệu server
-            let res = await SearchOrderCount();
-            let resObj = JSON.parse(res.responseText);
-            if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
-                return;
-            }
-            if (resObj.myAnything == 0)
-            {
-                // Làm trống
-                document.getElementsByClassName("result-content-container")[0].innerHTML = "";
-
-                EmptySomethingV2();
-                return;
-            }
-            // Lấy số lượng sản phẩm trong kết quả trả về
-            countItem = resObj.myAnything;
-
-            maxPage = Math.floor(countItem / itemOnPage);
-            if (countItem % itemOnPage != 0)
-                maxPage = maxPage + 1;
-            currentPage = -1; // Làm mới currentPage
-            // Lấy dữ liệu cho page 1
-            ChangePage(1, "/Customer/ChangePage");
         }
     </script>
 </body>

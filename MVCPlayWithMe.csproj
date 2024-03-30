@@ -241,6 +241,7 @@
     <Compile Include="Controllers\CategoryController.cs" />
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
+    <Compile Include="Controllers\DevController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
     <Compile Include="Controllers\OpenPlatform\ProductECommerceController.cs" />
@@ -506,7 +507,6 @@
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
     <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Contact.cshtml" />
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Scripts\web.play.with.me.common.js" />
     <Content Include="Views\Administrator\Index.cshtml" />
@@ -584,6 +584,8 @@
     <Content Include="Views\ProductECommerce\Index.cshtml" />
     <Content Include="Views\ProductECommerce\Item.cshtml" />
     <Content Include="Views\ProductECommerce\Order.cshtml" />
+    <Content Include="Views\Dev\Index.cshtml" />
+    <Content Include="Views\Shared\CommonHead.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
