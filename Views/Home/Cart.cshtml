@@ -6,12 +6,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Play with me</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
     <style>
         .stardust-checkbox {
@@ -27,8 +22,8 @@
         }
 
         .stardust-checkbox__input {
-            width:20px;
-            height:20px;
+            width: 20px;
+            height: 20px;
         }
 
         .stardust-checkbox__box {
@@ -46,17 +41,17 @@
             margin-right: 8px;
         }
 
-        .stardust-checkbox__box:before {
-            position: absolute;
-            content: "";
-            height: 5px;
-            width: 9px;
-            border-left: 2px solid #fff;
-            border-bottom: 2px solid #fff;
-            transform: rotate(-45deg);
-            left: 3px;
-            top: 3px;
-        }
+            .stardust-checkbox__box:before {
+                position: absolute;
+                content: "";
+                height: 5px;
+                width: 9px;
+                border-left: 2px solid #fff;
+                border-bottom: 2px solid #fff;
+                transform: rotate(-45deg);
+                left: 3px;
+                top: 3px;
+            }
 
         .BjIo5w {
             display: flex;
@@ -73,6 +68,7 @@
             color: #888;
             padding: 0 5px;
         }
+
         .checkbox-name-header, .price-quantity-sum-delete-header {
             display: flex;
             align-items: center;
@@ -86,8 +82,9 @@
             min-width: 40px;
             box-sizing: border-box;
         }
-        .mcsiKT-header{
-            visibility:hidden;
+
+        .mcsiKT-header {
+            visibility: hidden;
         }
 
         .yl931K {
@@ -109,26 +106,31 @@
             width: 20%;
             text-align: center;
         }
+
         ._4E7yJ {
             width: 15%;
             text-align: center;
         }
+
         .zoXdNN {
             display: flex;
             align-items: center;
             padding: 30px 0px;
             border-bottom: 1px solid rgba(0,0,0,.09);
         }
+
         .checkbox-name {
             display: flex;
             width: 50%;
             align-items: center;
         }
+
         .price-quantity-sum-delete {
             display: flex;
             align-items: center;
             width: 50%;
         }
+
         .eUrDQm {
             display: flex;
             width: 90%;
@@ -173,6 +175,7 @@
             line-height: 16px;
             overflow: hidden;
         }
+
         .contianer-selected-model {
             box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
             /*border-radius: 0.125rem;*/
@@ -190,10 +193,12 @@
         .M-AAFK {
             margin-right: 10px;
         }
+
         .vWt6ZL {
             color: rgba(0,0,0,.54);
             text-decoration: line-through;
         }
+
         .G7E4B7 {
             flex-direction: column;
             width: 30%;
@@ -201,6 +206,7 @@
             align-items: center;
             justify-content: center;
         }
+
         .MRh9G6 {
             display: flex;
             align-items: center;
@@ -208,6 +214,7 @@
             flex-direction: column;
             width: 35%;
         }
+
         ._8Xhu5_ {
             display: flex;
             align-items: center;
@@ -217,6 +224,7 @@
             border-top-right-radius: 0;
             border-bottom-right-radius: 0;
         }
+
         .EOdsa- {
             outline: none;
             cursor: pointer;
@@ -259,6 +267,7 @@
             width: 20%;
             color: #ee4d2d;
         }
+
         .mhcjog {
             width: 15%;
             text-transform: capitalize;
@@ -296,6 +305,7 @@
             color: #222;
             line-height: 19px;
         }
+
         .WC0us- {
             font-size: 24px;
             line-height: 28px;
@@ -304,12 +314,12 @@
         }
 
         .pay-container {
-            margin-top:20px;
+            margin-top: 20px;
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            box-sizing:border-box;
-            width:100%;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .shopee-button-solid {
@@ -355,18 +365,22 @@
             position: sticky;
             bottom: 0px;
         }
+
         .s1Gxkq-sum {
             display: flex;
             align-items: center;
         }
-        .main-container{
-            padding:5px;
+
+        .main-container {
+            padding: 5px;
         }
-        .cart-empty{
-            display:none;
+
+        .cart-empty {
+            display: none;
             text-align: center;
         }
-        .sample-selected-model{
+
+        .sample-selected-model {
             display: none;
         }
     </style>

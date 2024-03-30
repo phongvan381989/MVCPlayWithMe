@@ -5,22 +5,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Play with me</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
-    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css">
+    @Html.Partial("~/Views/Shared/Head.cshtml")
     <style>
-        .status-container{
-            display:flex;
-            padding:10px;
-            background-color:white;
-            flex-wrap:wrap;
-            border-radius:3px;
-            position:sticky;
-            top:0;
+        .status-container {
+            display: flex;
+            padding: 10px;
+            background-color: white;
+            flex-wrap: wrap;
+            border-radius: 3px;
+            position: sticky;
+            top: 0;
         }
+
         .sample-order {
             display: none;
             margin-top: 20px;
@@ -28,6 +24,7 @@
             background-color: white;
             width: 100%;
         }
+
         .nvsflAB87 {
             border: none;
             flex-grow: 1;
@@ -36,23 +33,25 @@
             padding-bottom: 10px;
         }
 
-        .nvsflAB87:hover {
-            color: #ee4d2d !important;
+            .nvsflAB87:hover {
+                color: #ee4d2d !important;
+            }
+
+        .order-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
 
-        .order-header{
-            display:flex;
-            justify-content: flex-end;
-            align-items:center;
-        }
         .fxASnxvd {
             line-height: 24px;
             color: #ee4d2d;
             text-align: right;
             text-transform: uppercase;
             white-space: nowrap;
-            margin:10px;
+            margin: 10px;
         }
+
         .sample-item-container {
             display: none;
             justify-content: center;
@@ -60,16 +59,19 @@
             padding: 10px;
             width: 100%;
         }
+
         .sample-payment {
             display: none;
             justify-content: flex-end;
             align-items: center;
             padding: 15px;
         }
+
         .name-quantity {
             width: 100%;
             padding: 5px 20px;
         }
+
         .model-icon {
             width: 80px;
             height: 80px;
@@ -77,12 +79,14 @@
             border: 1px solid #e1e1e1;
             background: #e1e1e1;
         }
+
         .item-money {
             /*white-space: nowrap;*/
             display: flex;
             justify-content: center;
             align-items: center;
         }
+
         .j2En5csA {
             margin: 0 4px 0 0;
             text-decoration-line: line-through;
@@ -91,12 +95,15 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        .ffZM87hf{
-            word-break:break-all;
+
+        .ffZM87hf {
+            word-break: break-all;
         }
-        .result-container{
-            width:100%;
+
+        .result-container {
+            width: 100%;
         }
+
         .payment-infor-container {
             background: #fffefb;
             /*box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);*/
@@ -105,13 +112,16 @@
             border-width: 0px;
             /*padding-top: 15px;*/
         }
+
         .money-title {
             width: 120px;
         }
+
         .money-padding {
             min-width: 130px;
             text-align: end;
         }
+
         .money-sum {
             height: 30px;
             font-size: 20px;
