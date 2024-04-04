@@ -68,19 +68,12 @@
 
         let discount = 0;
         function GetBasicInfoProduct(){
-            if (DEBUG) {
-                console.log("GetBasicInfoProduct function");
-            }
-
             const searchParams = new URLSearchParams();
             let query = "/Product/GetProductIdCodeBarcodeNameBooCoverkPrice";
 
             let OnloadFuntion = function () {
                 if (this.readyState == 4 && this.status == 200) {
                     listBasicInfo = JSON.parse(this.responseText);
-                    if (DEBUG) {
-                        console.log(listBasicInfo);
-                    }
                 }
             }
 
@@ -95,9 +88,6 @@
                 discount = 0;
             else if (discount > 100)
                 discount = 100;
-            if (DEBUG) {
-                console.log("discount: " + discount);
-            }
         });
 
         document.getElementById("code-or-isbn").addEventListener("keypress", function (event) {
@@ -128,12 +118,7 @@
             let name = document.getElementById("product-name-id").value;
             let isCodeOrISBN = false;
             let isProductName = false;
-            if (DEBUG) {
-                console.log(document.activeElement.id);
-                console.log("code: " + code);
-                console.log("name: " + name);
-                console.log("listBasicInfo.length: " + length);
-            }
+
             if (document.activeElement.id === "add-head-list") {
                 if (!isEmptyOrSpaces(code)) {
                     isCodeOrISBN = true;
@@ -160,9 +145,6 @@
                     for (let i = 0; i < length; i++) {
                         if (listBasicInfo[i].code === code) {
                             objBasicInfo = listBasicInfo[i];
-                            if (DEBUG) {
-                                console.log("Find success: " + code);
-                            }
                             break;
                         }
                     }
@@ -171,9 +153,7 @@
                     for (let i = 0; i < length; i++) {
                         if (listBasicInfo[i].barcode === code) {
                             objBasicInfo = listBasicInfo[i];
-                            if (DEBUG) {
-                                console.log("Find success: " + code);
-                            }
+
                             break;
                         }
                     }
@@ -183,16 +163,9 @@
                 for (let i = 0; i < length; i++) {
                     if (listBasicInfo[i].name === name) {
                         objBasicInfo = listBasicInfo[i];
-                        if (DEBUG) {
-                            console.log("Find success: " + name);
-                        }
                         break;
                     }
                 }
-            }
-
-            if (DEBUG) {
-                console.log(objBasicInfo);
             }
 
             if (objBasicInfo != null) { // Thêm vào hàng đầu tiên của table
@@ -217,11 +190,6 @@
                 var input2 = document.createElement("input");
                 input2.type = "number";
                 let importPrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
-                //// Làm tròn xuống đến 1000
-                //importPrice = Math.floor(importPrice / 1000) * 1000;
-                if (DEBUG) {
-                    console.log("giá nhập: " + importPrice);
-                }
                 input2.value = importPrice;
                 cell2.appendChild(input2);
 
@@ -289,9 +257,6 @@
                     Number(rows[i].cells[3].innerHTML)
                 );
                 listSaveInfo.push(obj);
-            }
-            if (DEBUG) {
-                console.log(listSaveInfo);
             }
 
             const searchParams = new URLSearchParams();

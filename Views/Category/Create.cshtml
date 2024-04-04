@@ -22,17 +22,10 @@
                 }
                 let id = GetDataIdFromCategoryDatalist(name);
                 if (id != null) {
-                    if (DEBUG) {
-                        console.log("Thể loại đã có, id is: " + id);
-                    }
+
                     ShowResult("Thể loại đã có.");
                     return;
                 }
-
-                if (DEBUG) {
-                    console.log("Thể loại hợp lệ có thể thêm mới!");
-                }
-
 
                 const searchParams = new URLSearchParams();
                 searchParams.append("name", name);

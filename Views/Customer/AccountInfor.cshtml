@@ -409,9 +409,6 @@
         LoadSomething();
 
         async function GetCustomer() {
-            if (DEBUG) {
-                console.log("GetCustomer CALL");
-            }
             const searchParams = new URLSearchParams();
             let query = "/Customer/GetCustomer";
 
@@ -426,9 +423,6 @@
 
         // Hiển thị thông tin tài khoản
         function ShowAccount() {
-            if (DEBUG) {
-                console.log("ShowAccount CALL");
-            }
             let container = document.getElementsByClassName("account-profile-container")[0];
 
             container.getElementsByClassName("uxYEXm")[0].innerHTML = customerObj.userName;
@@ -453,10 +447,6 @@
 
         // Hiển thị danh sách địa chỉ
         function ShowAddress() {
-            if (DEBUG) {
-                console.log("ShowAddress CALL");
-            }
-
             // Hiển thị danh sách địa chỉ
             // Lấy mẫu
             let sample = document.getElementsByClassName("sample-address-container")[0];
@@ -466,9 +456,6 @@
 
             listCustomerAddressObj = customerObj.lsAddress;
             let length = listCustomerAddressObj.length;
-            if (DEBUG) {
-                console.log("listCustomerAddressObj.length: " + length);
-            }
             for (let i = 0; i < length; i++) {
                 let obj = listCustomerAddressObj[i];
                 let clone = sample.cloneNode(true);
@@ -500,19 +487,11 @@
 
         function UpdateCustomerAddress(ele) {
             currentIndexAddressUpdateObject = parseInt(ele.parentElement.parentElement.parentElement.getAttribute("data-index"));
-            if (DEBUG) {
-                console.log("UpdateCustomerInfor CALL");
-                console.log("currentIndexAddressUpdateObject: " + currentIndexAddressUpdateObject);
-            }
             ShowCustomerInforModal(false, false, listCustomerAddressObj[currentIndexAddressUpdateObject]);
         }
 
         async function DeleteCustomerInfor(ele) {
             let index = parseInt(ele.parentElement.parentElement.parentElement.getAttribute("data-index"));
-            if (DEBUG) {
-                console.log("DeleteCustomerInfor CALL");
-                console.log("index: " + index);
-            }
             let obj = listCustomerAddressObj[index];
 
             let children = document.getElementsByClassName("list-address-container")[0].children;
@@ -538,15 +517,10 @@
 
         async function SetDefault(ele) {
             let index = parseInt(ele.parentElement.parentElement.getAttribute("data-index"));
-            if (DEBUG) {
-                console.log("SetDefault CALL");
-                console.log("index: " + index);
-            }
+
             let children = document.getElementsByClassName("list-address-container")[0].children;
             let length = listCustomerAddressObj.length;
-            if (DEBUG) {
-                console.log("listCustomerAddressObj.length: " + length);
-            }
+
             for (let i = 0; i < length; i++) {
                 if (i != index) {
                     children[i].getElementsByClassName("default-address")[0].style.display = "none";
@@ -646,10 +620,6 @@
         }
 
         async function LoadCustomer() {
-            if (DEBUG) {
-                console.log("LoadCustomer CALL");
-            }
-
             let res = await GetCustomer();
             customerObj = JSON.parse(res.responseText);
             if (JSON.parse(res.responseText) == null) {

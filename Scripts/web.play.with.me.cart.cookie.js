@@ -1,9 +1,6 @@
 ﻿// Constructor function for pair key/value in cart
 // format: id=123#q=10#real=1
 function objCartCookie(value) {
-    if (DEBUG) {
-        console.log("objCartCookie(value) CALL " + value);
-    }
     let myArray = value.split("#");
 
     this.id = parseInt(myArray[0].split("=")[1]);
@@ -12,10 +9,6 @@ function objCartCookie(value) {
 }
 
 function objCartCookieClone(obj) {
-    if (DEBUG) {
-        console.log("objCartCookieClone CALL");
-    }
-
     this.id = obj.id;
     this.q = obj.q;
     this.real = obj.real;
@@ -76,10 +69,6 @@ function InsertAtBeginToListCartCookieCheckExist(listCartCookie, cartCookieObj, 
 
 // listCartCookieObject: danh sách đối tượng cookie
 function SetCartCookieFromListCartCookieObject(listCartCookie) {
-    if (DEBUG) {
-        console.log("SetCartCookieFromListCartCookieObject CALL");
-        console.log("listCartCookie: " + JSON.stringify(listCartCookie));
-    }
     let newCart = GetCartCookieFromListCartCookie(listCartCookie);
     SetCookie(cartKey, newCart, 365);
 }
@@ -87,9 +76,6 @@ function SetCartCookieFromListCartCookieObject(listCartCookie) {
 // Từ trang giỏ hàng, khi xóa sản phẩm, cập nhật vào cookie
 function DeleteOneCartCookie(obj) {
     let listOld = GetOldListCartCookie();
-    if (DEBUG) {
-        console.log("DeleteOneCartCookie CALL listOld: " + JSON.stringify(listOld));
-    }
 
     for (let i = 0; i < listOld.length; i++) {
         if (listOld[i].id == obj.id) {
@@ -102,9 +88,6 @@ function DeleteOneCartCookie(obj) {
 // Từ trang giỏ hàng, khi thay đổi số lượng, cập nhật vào cookie
 function UpdateQuantityOfCookie(obj) {
     let listOld = GetOldListCartCookie();
-    if (DEBUG) {
-        console.log("UpdateQuantityOfCookie CALL listOld: " + JSON.stringify(listOld));
-    }
 
     for (let i = 0; i < listOld.length; i++) {
         if (listOld[i].id == obj.id) {
@@ -121,17 +104,11 @@ function GetOldListCartCookie() {
 
     let listCartCookie = GetListCartCookieFromCartCookie(oldCart);
 
-    if (DEBUG) {
-        console.log("listCartCookie of oldCart: " + JSON.stringify(listCartCookie));
-    }
     return listCartCookie;
 }
 
 // Làm mới real=0 của cart cookie
 function RefreshRealOfCartCookieAndGet() {
-    if (DEBUG) {
-        console.log("RefreshRealOfCartCookieAndGet CALL");
-    }
     // Lấy cookie cũ
     let oldCart = GetCookie(cartKey);
 
@@ -146,17 +123,11 @@ function RefreshRealOfCartCookieAndGet() {
         }
     }
 
-    if (DEBUG) {
-        console.log("listCartCookie of oldCart: " + JSON.stringify(listCartCookie));
-    }
     SetCartCookieFromListCartCookieObject(listCartCookie);
     return listCartCookie;
 }
 
 async function CartPageLoadCart() {
-    if (DEBUG) {
-        console.log("CartPageLoadCart() CALL");
-    }
     const searchParams = new URLSearchParams();
     let query = "/Home/CartPageLoadCart";
     return RequestHttpPostPromise(searchParams, query);

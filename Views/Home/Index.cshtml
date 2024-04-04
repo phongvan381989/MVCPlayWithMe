@@ -54,6 +54,8 @@
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
 
         @Html.Partial("~/Views/Shared/Home/SearchResult.cshtml")
+
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -61,21 +63,16 @@
     <script>
         // Tham số tìm kiếm
         let namePara;
-        let hasMapping;
         // Đảm bảo item trên 1 page chia hết số item trên 1 row
         itemOnPage = itemOnRow * rowOnPage;
         // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
         async function Search() {
             namePara = "";
-            hasMapping = 1;
 
             let url = "/Home/SearchItemCount";
             const searchParams = new URLSearchParams();
             SetSearchParameter(searchParams);
             let resObj = await RequestHttpGetPromise(searchParams, url);
-            if (DEBUG) {
-                console.log("responseText: " + resObj.responseText);
-            }
             // Lấy số lượng sản phẩm trong kết quả trả về
             countItem = parseInt(resObj.responseText);
             if (countItem == 0) {
@@ -96,10 +93,38 @@
 
         function SetSearchParameter(searchParams) {
             searchParams.append("namePara", namePara);
-            searchParams.append("hasMapping", hasMapping);
+        }
+        // Từ danh sách model tính được tổng số lượng model đã bán, model rẻ nhất, model đắt nhất
+        function SetPriceAndQuantity(item)
+        {
+            let cheapest = 100000000;
+            //let mostExpensive = 0;
+            let cheapestBookCoverPrice = 100000000;
+            let sumSoldQuantity = 0;
+            for (let i = 0; i < item.models.length; i++)
+            {
+                let model = item.models[i];
+                sumSoldQuantity = sumSoldQuantity + model.soldQuantity;
+                // giá bìa rẻ nhất
+                if (cheapest > model.price) {
+                    cheapest = model.price;
+                    cheapestBookCoverPrice = model.bookCoverPrice;
+                }
+
+                //// giá bìa đắt nhất
+                //if (mostExpensive < model.price) {
+                //    mostExpensive = model.price;
+                //}
+            }
+            item.cheapest = cheapest;
+            item.cheapestBookCoverPrice = cheapestBookCoverPrice;
+            item.discount = 100 - Math.floor((cheapest / cheapestBookCoverPrice) * 100);
+            //item.mostExpensive = mostExpensive;
+            item.sumSoldQuantity = sumSoldQuantity;
         }
 
         function ShowSearchingResult(resObj) {
+            TopFunction();
             let listItem = JSON.parse(resObj.responseText);
 
             // Làm trống
@@ -121,15 +146,16 @@
                 itemElement.getElementsByClassName("product-item")[0].href = "/Home/Item?id=" + item.id;
                 // Hiển thị vì sample đang ẩn
                 itemElement.style.display = "block";
-                itemElement.getElementsByClassName("card-img-top")[0].src = item.imageSrc[0];
+                itemElement.getElementsByClassName("card-img-top")[0].src = item.thumbnailFirst;
                 itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.name;
-                itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumQuantitySold + " bộ";
-                itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML = item.cheapestModel.price
+                SetPriceAndQuantity(item);
+                itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumSoldQuantity + " bộ";
+                itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML = item.cheapest;
                     + "<sup>₫</sup>";
-                itemElement.getElementsByClassName("price-original-detail")[0].innerHTML = item.cheapestModel.bookCoverPrice
+                itemElement.getElementsByClassName("price-original-detail")[0].innerHTML = item.cheapestBookCoverPrice
                     + "₫";
 
-                itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML = "-" + item.cheapestModel.discount + "%";
+                itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML = "-" + item.discount + "%";
 
                 table.appendChild(itemElement);
             }

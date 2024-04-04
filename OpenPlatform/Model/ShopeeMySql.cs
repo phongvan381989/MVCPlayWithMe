@@ -541,5 +541,56 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             return resultState;
         }
+
+        public MySqlResultState CopyShopeeProductImageToProduct()
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeMapping_Get_Media_For_Product", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                long longItemId = 0;
+                long longModelId = 0;
+                int productId = 0;
+                string shopeePath = "";//((App)Application.Current).temporaryShopee;
+                string productPath = @"C:\Users\phong\TUNM\Works\WebPlayWithMe\MVCPlayWithMe\MVCPlayWithMe\Media\Product";
+
+                MySqlDataReader rdr = null;
+                try
+                {
+                    rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        longItemId = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
+                        longModelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                        productId = MyMySql.GetInt32(rdr, "ProductId");
+
+                        //CopyImageToProduct(longItemId, longModelId, productId, shopeePath, productPath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
+                if (rdr != null)
+                    rdr.Close();
+                conn.Close();
+
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+
+            return resultState;
+        }
     }
 }

@@ -177,7 +177,7 @@
             <div class="vbcgh45367">
                 <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order"
                        onchange="FilterOrder()">
-                <label for="dont-pack-order">Chưa Gửi Hàng</label>
+                <label for="dont-pack-order">Gửi Hàng</label>
             </div>
             <div class="vbcgh45367">
                 <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order"
@@ -360,10 +360,6 @@
         // Kiểm tra đơn đang hiển thị "Đã Đóng" hết chưa
         function CheckPackedOrderEnough() {
             let list = FilterOrderByStatus(listOrderTemp, 1)
-            if (DEBUG) {
-                console.log("CheckPackedOrderEnough CALL");
-                console.log(JSON.stringify(list));
-            }
             let length = list.length;
             let isEnough = true;
             for (let i = 0; i < length; i++) {
@@ -381,15 +377,12 @@
         }
 
         function SearchOrderCodeInList() {
-            if (DEBUG) {
-                console.log("SearchOrderCodeInList CALL");
-                console.log(JSON.stringify(listOrderTemp));
-            }
             let orderCodeValue = document.getElementsByName("order-code")[0].value;
             let length = listOrderTemp.length;
             let orderTemp = null;
             for (let i = 0; i < length; i++) {
-                if (listOrderTemp[i].code == orderCodeValue) {
+                if (listOrderTemp[i].code == orderCodeValue ||
+                    listOrderTemp[i].shipCode == orderCodeValue) {
                     orderTemp = listOrderTemp[i];
                     break;
                 }
@@ -398,9 +391,6 @@
         }
 
         function EmptyAndFocusOrderCodeElement() {
-            if (DEBUG) {
-                console.log("EmptyAndFocusOrderCodeElement CALL");
-            }
             let code = document.getElementsByName("order-code")[0];
             code.value = "";
             code.focus();
@@ -621,9 +611,6 @@
         }
 
         function ClickItemCheckBox(ele) {
-            if (DEBUG) {
-                console.log("ClickItemCheckBox CALL");
-            }
             ResetBackgroundColorOfRowMappingAll();
             let itemMappingContainer = ele.parentElement.parentElement;
             let dataItemIndex = parseInt(itemMappingContainer.getAttribute("data-item-index"));
@@ -656,15 +643,9 @@
                         "0/" + num;
                 }
             }
-            if (DEBUG) {
-                console.log("currentOrder: " + JSON.stringify(currentOrder));
-            }
         }
 
         function ClickRowMappingCheckBox(ele) {
-            if (DEBUG) {
-                console.log("ClickRowMappingCheckBox CALL");
-            }
             ResetBackgroundColorOfRowMappingAll();
             let itemMappingContainer = ele.parentElement.parentElement.parentElement;
             let dataItemIndex = parseInt(itemMappingContainer.getAttribute("data-item-index"));
@@ -698,10 +679,6 @@
                 ele.parentElement.getElementsByClassName("need-quatity")[0].innerHTML =
                     "0/" + num;
                 itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = false;
-            }
-
-            if (DEBUG) {
-                console.log("currentOrder: " + JSON.stringify(currentOrder));
             }
         }
 
@@ -958,9 +935,6 @@
         // indexI = -1: Sản phẩm không có trong đơn hàng
         // indexJ = -1: Sản phẩm đã đủ số lượng
         function SearchProductCodeInOrder(code) {
-            if (DEBUG) {
-                console.log("SearchProductCodeInOrder CALL");
-            }
             let indexI = -1;
             let indexJ = -1;
             for (let i = 0; i < currentOrder.listItemId.length; i++) {
@@ -987,16 +961,9 @@
                 }
             }
 
-            if (DEBUG) {
-                console.log("currentOrder: " + JSON.stringify(currentOrder));
-            }
-
             let ls = [];
             ls.push(indexI);
             ls.push(indexJ);
-            if (DEBUG) {
-                console.log("return: " + JSON.stringify(ls));
-            }
             return ls;
         }
 
@@ -1048,9 +1015,6 @@
         }
 
         function EmptyAndFocusProductCodeElement() {
-            if (DEBUG) {
-                console.log("EmptyAndFocusProductCodeElement CALL");
-            }
             let code = document.getElementsByName("product-code-isbn")[0];
             code.value = "";
             code.focus();
@@ -1102,9 +1066,6 @@
         }
 
         async function EnoughProduct() {
-            if (DEBUG) {
-                console.log("EnoughProduct CALL");
-            }
             if (currentOrder == null)
                 return;
 
@@ -1166,10 +1127,6 @@
         }
 
         async function ReturnedOrder() {
-            if (DEBUG) {
-                console.log("EnoughProduct CALL");
-            }
-
             let text = "Bạn Muốn Hoàn Đơn Hàng?";
             if (confirm(text) == false) {
                 return;

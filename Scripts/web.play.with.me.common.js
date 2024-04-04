@@ -174,26 +174,16 @@ function GetCookie(cname) {
             break;
         }
     }
-    if (DEBUG) {
-        console.log(cname + ": " + cookie);
-    }
+
     return cookie;
 }
 
 // Kiểm tra 1 string có trong datalist
 function CheckExistInDatalist(str, datalistId) {
-    if (DEBUG) {
-        console.log("CheckExistInDatalist - str: " + str);
-    }
     const x = document.getElementById(datalistId);
     const y = x.getElementsByTagName("option");
     for (let i = 0; i < y.length; i++) {
         if (y[i].value == str) {
-            if (DEBUG) {
-                console.log("y.length: " + y.length);
-                console.log("i: " + i);
-                console.log("y[i].value: " + y[i].value);
-            }
             return true;
         }
     }
@@ -207,9 +197,6 @@ function CheckExistInBarcodeDatalist(str, datalistId) {
     // Bỏ - ở đầu và cuối str
     let newstr = str.replace(/-/g, " ").trim();
     const myArr = newstr.split(" ");
-    if (DEBUG) {
-        console.log("newstr: " + newstr);
-    }
     const x = document.getElementById(datalistId);
     const y = x.getElementsByTagName("option");
     for (let i = 0; i < y.length; i++) {
@@ -225,9 +212,6 @@ function CheckExistInBarcodeDatalist(str, datalistId) {
 // Lấy response và hiển thị thông báo
 function GetJsonResponse(responseText) {
     const obj = JSON.parse(responseText);
-    if (DEBUG) {
-        console.log(obj);
-    }
     if (obj == null)
         return false;
 
@@ -239,9 +223,6 @@ function GetJsonResponse(responseText) {
 
 function CheckStatusResponse(responseText) {
     const obj = JSON.parse(responseText);
-    if (DEBUG) {
-        console.log(obj);
-    }
     if (obj == null)
         return false;
 
@@ -253,9 +234,7 @@ function CheckStatusResponse(responseText) {
 
 function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError) {
     const obj = JSON.parse(responseText);
-    if (DEBUG) {
-        console.log(obj);
-    }
+
     let isOk = true;
     let mess = "";
     if (obj == null) {
@@ -283,9 +262,7 @@ function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError)
 // Check từ kết quả trả về của câu mysql
 function CheckStatusAndShowPromptFromResponseObject(responseText) {
     const obj = JSON.parse(responseText);
-    if (DEBUG) {
-        console.log(obj);
-    }
+
     let mess = "Thao tác lỗi.";
     if (obj != null) {
         mess = obj.Message;
@@ -295,9 +272,7 @@ function CheckStatusAndShowPromptFromResponseObject(responseText) {
 }
 
 function ShowResult(str) {
-    if (DEBUG) {
-        console.log(str);
-    }
+
     alert(str);
 }
 
@@ -366,10 +341,6 @@ function RequestHttpPost(onloadFunc, searchParams, url) {
     const xhttp = new XMLHttpRequest();
     xhttp.onload = onloadFunc;
 
-    if (DEBUG) {
-        console.log(url);
-        console.log(searchParams.toString());
-    }
     xhttp.open("POST", url);
     xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
     xhttp.send(searchParams.toString());
@@ -380,9 +351,9 @@ function RequestHttpPostPromise(searchParams, url) {
         const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
-                if (DEBUG) {
-                    console.log(this.responseText);
-                }
+                //if (DEBUG) {
+                //    console.log(this.responseText);
+                //}
                 resolve(this);
             }
         };
@@ -390,10 +361,10 @@ function RequestHttpPostPromise(searchParams, url) {
             reject(this.statusText);
         }
 
-        if (DEBUG) {
-            let lastQuery = url + "?" + searchParams.toString();
-            console.log(lastQuery);
-        }
+        //if (DEBUG) {
+        //    let lastQuery = url + "?" + searchParams.toString();
+        //    console.log(lastQuery);
+        //}
         xhttp.open("POST", url);
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp.send(searchParams.toString());
@@ -404,9 +375,9 @@ function RequestHttpPostUpFilePromise(xhttp, url, file) {
     return new Promise(function (resolve, reject) {
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
-                if (DEBUG) {
-                    console.log(this.responseText);
-                }
+                //if (DEBUG) {
+                //    console.log(this.responseText);
+                //}
                 resolve(this.responseText);
             }
         };
@@ -423,9 +394,9 @@ function RequestHttpGet(onloadFunc, searchParams, query) {
     xhttp.onload = onloadFunc;
 
     let lastQuery = query + "?" + searchParams.toString();
-    if (DEBUG) {
-        console.log(lastQuery);
-    }
+    //if (DEBUG) {
+    //    console.log(lastQuery);
+    //}
     xhttp.open("GET", lastQuery);
     xhttp.send();
 }
@@ -435,9 +406,9 @@ function RequestHttpGetPromise(searchParams, url) {
         const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
-                if (DEBUG) {
-                    console.log(this.responseText);
-                }
+                //if (DEBUG) {
+                //    console.log(this.responseText);
+                //}
                 resolve(this);
             }
         };
@@ -446,9 +417,9 @@ function RequestHttpGetPromise(searchParams, url) {
         }
 
         let lastQuery = url + "?" + searchParams.toString();
-        if (DEBUG) {
-            console.log(lastQuery);
-        }
+        //if (DEBUG) {
+        //    console.log(lastQuery);
+        //}
         xhttp.open("GET", lastQuery);
         xhttp.send();
     });
@@ -503,6 +474,11 @@ async function ReloadAndScrollToTop() {
     window.scrollTo(0, 0);
     await Sleep(1000);
     window.location.reload();
+}
+
+function TopFunction() {
+    document.body.scrollTop = 0;
+    document.documentElement.scrollTop = 0;
 }
 
 // Thêm nút xóa bên cạnh image/video trong <li>
@@ -562,9 +538,7 @@ function ConvertMoneyToText(money) {
             textMoney = "," + textMoney;
         }
     }
-    if (DEBUG) {
-        console.log(money + ": " + textMoney);
-    }
+
     return textMoney;
 }
 
@@ -640,9 +614,6 @@ function GetEasyPromise() {
 // Check khách vô danh
 // Chưa đăng nhập trả về true, ngược lại false
 function CheckAnonymousCustomer() {
-    if (DEBUG) {
-        console.log("CheckAnonymousCustomer CALL");
-    }
     let cookie = GetCookie(uidKey);
 
     if (isEmptyOrSpaces(cookie)) {
@@ -655,10 +626,6 @@ function CheckAnonymousCustomer() {
 // Check khách vô danh
 // Chưa đăng nhập trả về true, ngược lại false
 async function CheckAnonymousCustomerFromServer() {
-    if (DEBUG) {
-        console.log("CheckAnonymousCustomerFromServer CALL");
-    }
-
     const searchParams = new URLSearchParams();
     let query = "/Customer/CheckUidCookieValid";
 
@@ -673,10 +640,6 @@ function DeleteUidCookieWhenAuthentFail() {
 
 // Đăng xuất khỏi tài khoản
 async function Logout() {
-    if (DEBUG) {
-        console.log("Logout CALL");
-    }
-
     const searchParams = new URLSearchParams();
     let query = "/Customer/Logout";
 
@@ -837,20 +800,16 @@ async function UpdateCartCount() {
 
 // Những hành động mà mọi page đều phải thực hiện sau khi load
 async function CommonAction() {
-    if (DEBUG) {
-        console.log("window.history.length: " + window.history.length);
-    }
-
     if (document.getElementById("biggestContainer_top") == null) {
         return;
     }
     // Chỉ hiện tìm kiếm trên Home page
     {
         let href = window.location.href.toUpperCase();
-        if (DEBUG) {
-            console.log(href);
-        }
-        if (href.endsWith("/HOME/INDEX") || href.endsWith("/HOME")) {
+        if (href.endsWith("/HOME/INDEX") ||
+            href.endsWith("/HOME") ||
+            href.endsWith("COM/") || 
+            href.endsWith("56479/")) {
             document.getElementById("left_container").style.display = "flex";
         }
         else {

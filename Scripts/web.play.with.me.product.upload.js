@@ -129,9 +129,7 @@ async function AddNewProPromise() {
     try {
         // Cập nhật vào db
         let responseDB = await RequestHttpGetPromise(searchParams, urlAdd);
-        if (DEBUG) {
-            console.log("responseDB.then: " + responseDB.responseText);
-        }
+
         const obj = JSON.parse(responseDB.responseText);
         productID = obj.myAnything;
 
@@ -139,9 +137,7 @@ async function AddNewProPromise() {
         let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
     }
     catch (error) {
-        if (DEBUG) {
-            console.log(error);
-        }
+
         alert("Tạo sản phẩm lỗi.");
         return;
     }
@@ -149,10 +145,7 @@ async function AddNewProPromise() {
     // Đợi load ảnh xong
     while (true) {
         await Sleep(1000);
-        if (DEBUG) {
-            console.log("isFinishUploadImage = " + isFinishUploadImage);
-            console.log("isFinishUploadVideo = " + isFinishUploadVideo);
-        }
+
         if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
             alert("Tạo sản phẩm thành công.");
             break;
@@ -235,46 +228,9 @@ function SetProductInfomation(product) {
     InitializeVideoList(product.videoSrc);
 }
 
-//// Thay đổi tên sản phẩm, hiển thị tất cả thông tin tương ứng
-//function ProductNameChange(str) {
-//    if (DEBUG) {
-//        console.log("ProductNameChange function");
-//    }
-//    let id = GetDataIdFromProductNameDatalist(str);
-//    if (id == null) {
-//        SetProductInfomationToDefault();
-//        return;
-//    }
-
-//    // Lấy tất cả thông tin về sản phẩm và hiển thị
-//    const searchParams = new URLSearchParams();
-//    searchParams.append("id", id);
-//    let query = "/Product/GetProduct";
-
-//    let OnloadFuntion = function () {
-//        if (this.readyState == 4 && this.status == 200) {
-//            const product = JSON.parse(this.responseText);
-//            if (DEBUG) {
-//                console.log(product);
-//            }
-//            if (product == null) {
-//                SetProductInfomationToDefault();
-//                return;
-//            }
-
-//            SetProductInfomation(product);
-//        }
-//    }
-
-//    RequestHttpPost(OnloadFuntion, searchParams, query);
-//}
-
 // Thay đổi combo, hiển thị tất cả thông tin chung các sản phẩm cùng combo
 // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
 function ComboChange(str) {
-    if (DEBUG) {
-        console.log("ComboChange function");
-    }
     let id = GetDataIdFromComboDatalist(str);
     if (id == null) {
         SetProductCommonInfoWithComboToDefault();
@@ -289,9 +245,7 @@ function ComboChange(str) {
     let OnloadFuntion = function () {
         if (this.readyState == 4 && this.status == 200) {
             const product = JSON.parse(this.responseText);
-            if (DEBUG) {
-                console.log(product);
-            }
+
             if (product == null) {
                 SetProductCommonInfoWithComboToDefault();
                 return;
@@ -348,9 +302,6 @@ async function UpdateProductPromise() {
         let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
     }
     catch (error) {
-        if (DEBUG) {
-            console.log(error);
-        }
         //alert("Cập nhật sản phẩm lỗi.");
         CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         return;
@@ -359,10 +310,7 @@ async function UpdateProductPromise() {
     // Đợi load ảnh xong
     while (true) {
         await Sleep(1000);
-        if (DEBUG) {
-            console.log("isFinishUploadImage = " + isFinishUploadImage);
-            console.log("isFinishUploadVideo = " + isFinishUploadVideo);
-        }
+
         if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
             alert("Cập nhật sản phẩm thành công.");
             break;
@@ -452,9 +400,6 @@ async function UpdateName() {
         CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
     }
     catch (error) {
-        if (DEBUG) {
-            console.log(error);
-        }
         alert("Cập nhật tên lỗi.");
         return;
     }
@@ -481,9 +426,6 @@ async function UpdateCode() {
         CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
     }
     catch (error) {
-        if (DEBUG) {
-            console.log(error);
-        }
         alert("Cập nhật mã lỗi.");
         return;
     }
@@ -510,9 +452,6 @@ async function UpdateISBN() {
         CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
     }
     catch (error) {
-        if (DEBUG) {
-            console.log(error);
-        }
         alert("Cập nhật tên lỗi.");
         return;
     }
@@ -537,9 +476,6 @@ async function ShowProductFromObject() {
         product = null;
     }
 
-    if (DEBUG) {
-        console.log(product);
-    }
     if (product == null) {
         SetProductInfomationToDefault();
         return;

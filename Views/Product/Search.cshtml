@@ -37,9 +37,6 @@
             const searchParams = new URLSearchParams();
             SetSearchParameter(searchParams);
             let resObj = await RequestHttpGetPromise(searchParams, url);
-            if (DEBUG) {
-                console.log("responseText: " + resObj.responseText);
-            }
             // Lấy số lượng sản phẩm trong kết quả trả về
             countItem = parseInt(resObj.responseText);
             if (countItem == 0) {
@@ -120,10 +117,6 @@
         }
 
         function GoToDetailItem(id) {
-            if (DEBUG) {
-                console.log("GoToDetailItem Start");
-                console.log("product id: " + id);
-            }
             if (isNaN(id))
                 return;
 

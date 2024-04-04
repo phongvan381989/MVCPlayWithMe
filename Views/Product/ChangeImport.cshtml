@@ -65,9 +65,6 @@
         let listSaveInfo = [];
 
         function GetListImport(){
-            if (DEBUG) {
-                console.log("GetListImport function");
-            }
             // Xóa dữ liệu trước đó nếu có
             DeleteRowsExcludeHead(document.getElementById("myTable"));
 
@@ -81,9 +78,6 @@
             let OnloadFuntion = function () {
                 if (this.readyState == 4 && this.status == 200) {
                     listBasicInfo = JSON.parse(this.responseText);
-                    if (DEBUG) {
-                        console.log(listBasicInfo);
-                    }
                     if (listBasicInfo == null)
                         return;
 
@@ -156,9 +150,6 @@
                     Number(rows[i].cells[1].childNodes[0].value),
                         Number(rows[i].cells[2].childNodes[0].value)/*, ""*/);
                 listSaveInfo.push(obj);
-            }
-            if (DEBUG) {
-                console.log(listSaveInfo);
             }
 
             const searchParams = new URLSearchParams();

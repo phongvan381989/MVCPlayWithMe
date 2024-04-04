@@ -200,19 +200,10 @@
 
         // Hiện thị phân trang
         function ShowPaging() {
-            //<div class="pagination-item " onclick="ChangePage(4)">
-            //    <p title="4">4</p>
-            //</div>
-            if (DEBUG) {
-                console.log("ShowPaging CALL");
-            }
             let container = document.getElementsByClassName("paging-container")[0];
             container.innerHTML = "";
 
             let length = listItemAfterFilter.length;
-            if (DEBUG) {
-                console.log("listItemAfterFilter.length: " + listItemAfterFilter.length);
-            }
 
             let maxPage = Math.floor(length / sizePage);
             if (length % sizePage != 0)
@@ -289,9 +280,6 @@
 
         // Lọc theo trạng thái
         function FilterStatus() {
-            if (DEBUG) {
-                console.log("FilterStatus CALL");
-            }
             let obj = document.querySelector('input[name="status-radio"]:checked');
             if (obj == null) {
                 return;
@@ -326,9 +314,6 @@
 
         // Lọc theo liên kết
         function FilterMapping() {
-            if (DEBUG) {
-                console.log("FilterMapping CALL");
-            }
             let obj = document.querySelector('input[name="mapping-radio"]:checked');
             if (obj == null) {
                 return;
@@ -364,9 +349,6 @@
 
         // Lọc hết hàng
         function FilterOutOfStock() {
-            if (DEBUG) {
-                console.log("FilterOutOfStock CALL");
-            }
             let obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
             
             if (obj == null) {
@@ -413,10 +395,6 @@
 
         function FilterName() {
             let value = document.querySelector('input[id="product-name"]').value;
-            if (DEBUG) {
-                console.log("FilterName CALL");
-                console.log("value: " + value);
-            }
             if (isEmptyOrSpaces(value)) {
                 return;
             }

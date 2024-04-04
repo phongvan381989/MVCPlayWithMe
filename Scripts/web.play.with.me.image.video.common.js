@@ -66,9 +66,6 @@ function InitializeImageList(listImage) {
     // Làm trống
     imagefileList.innerHTML = "";
 
-    if (DEBUG) {
-        console.log(listImage);
-    }
     if (listImage == null)
         return;
 
@@ -116,10 +113,6 @@ function ImageHandleFiles() {
             imagefileList.appendChild(list);
         }
 
-        if (DEBUG) {
-            console.log(list);
-        }
-
         for (let i = 0; i < this.files.length; i++) {
             const li = document.createElement("li");
             //li.onclick = function () { RemoveImage(this) };
@@ -153,9 +146,6 @@ function InitializeVideoList(listVideo) {
     // Làm trống
     videofileList.innerHTML = "";
 
-    if (DEBUG) {
-        console.log(listVideo);
-    }
     if (listVideo == null)
         return;
 
@@ -210,10 +200,6 @@ function VideoHandleFiles() {
             videofileList.appendChild(list);
         }
 
-        if (DEBUG) {
-            console.log(list);
-        }
-
         for (let i = 0; i < this.files.length; i++) {
             const li = document.createElement("li");
             //li.onclick = function () { RemoveVideo(this) };
@@ -249,9 +235,6 @@ const isImage = "isImage";
 const isVideo = "isVideo";
 
 function DeleteAllFileWithType(url, productId, fileType) {
-    if (DEBUG) {
-        console.log("start DeleteAllFileWithType");
-    }
     const searchParams = new URLSearchParams();
     searchParams.append("id", productId);
     searchParams.append("fileType", fileType);
@@ -266,26 +249,15 @@ function DeleteAllFileWithType(url, productId, fileType) {
 //
 function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
     return new Promise(function (resolve, reject) {
-        if (DEBUG) {
-            console.log("Start up load image and video. productId = " + productId);
-        }
-
         const imgs = document.getElementsByClassName("objImage");
         isFinishUploadImage = imgs.length;
-        if (DEBUG) {
-            console.log("imgs.length: " + imgs.length);
-        }
+
         const videos = document.getElementsByClassName("objVideo");
         isFinishUploadVideo = videos.length;
-        if (DEBUG) {
-            console.log("videos.length: " + videos.length);
-        }
 
         // Upload ảnh lên server
         for (let i = 0; i < imgs.length; i++) {
-            if (DEBUG) {
-                console.log("image file name: " + imgs[i].fileName);
-            }
+
             let exist;
             if (imgs[i].file == null) {
                 exist = "true";
@@ -312,9 +284,6 @@ function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
         }
         // Upload video lên server
         for (let i = 0; i < videos.length; i++) {
-            if (DEBUG) {
-                console.log("videos file name: " + videos[i].fileName);
-            }
             let exist;
             if (videos[i].file == null) {
                 exist = "true";
@@ -341,9 +310,6 @@ function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
             }
         }
         resolve("done");
-        if (DEBUG) {
-            console.log("end SendFilesPromise");
-        }
     });
 }
 
@@ -352,18 +318,6 @@ let isFinishUploadVideo = 0;
 
 // exist: true nếu file này đã tồn tại trên server, ngược lại false
 function FileUpload(url, productId, fileElement, fileType, file, originalFileName, fileOrder, exist, finish) {
-    if (DEBUG) {
-        console.log("start FileUpload for image and video");
-        console.log("url: " + url);
-        console.log("productId: " + productId);
-        console.log("fileElement: " + fileElement.nodeName);
-        console.log("fileType: " + fileType);
-        console.log("originalFileName: " + originalFileName);
-        console.log("fileOrder: " + fileOrder);
-        console.log("exist: " + exist);
-        console.log("exist: " + exist);
-        console.log("Order: " + fileOrder);
-    }
     //const reader = new FileReader();
     this.ctrl = CreateThrobber(fileElement);
     const xhr = new XMLHttpRequest();
@@ -378,22 +332,14 @@ function FileUpload(url, productId, fileElement, fileType, file, originalFileNam
     }, false);
 
     xhr.upload.addEventListener("load", (e) => {
-        if (DEBUG) {
-            console.log("Upload done.");
-        }
+
         self.ctrl.update(100);
         //const canvas = self.ctrl.ctx.canvas;
         //canvas.parentNode.removeChild(canvas);
         if (fileType === isImage) {
             isFinishUploadImage = isFinishUploadImage - 1;
-            if (DEBUG) {
-                console.log("isFinishUploadImage = " + isFinishUploadImage);
-            }
         } else if (fileType === isVideo) {
             isFinishUploadVideo = isFinishUploadVideo - 1;
-            if (DEBUG) {
-                console.log("isFinishUploadVideo = " + isFinishUploadVideo);
-            }
         }
     }, false);
     xhr.open("POST", url);

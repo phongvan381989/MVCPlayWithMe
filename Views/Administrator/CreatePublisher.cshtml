@@ -46,9 +46,6 @@
                 query = query + "&detail=";
                 let detail = document.getElementById("detail").value;
                 query = query + detail;
-                if (DEBUG) {
-                    console.log(query);
-                }
                 xhttp.open("GET", query);
                 xhttp.send();
             }

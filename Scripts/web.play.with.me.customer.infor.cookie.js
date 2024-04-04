@@ -2,9 +2,6 @@
 // format: name=Hoàng Huệ#phone=0359127226#province=Hà Nội#district=Bắc Từ Liêm#subdistrict=Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
 // defaultAdd:1 địa chỉ nhận hàng mặc định, ngược lại là 0
 function objCustomerInforCookie(value) {
-    if (DEBUG) {
-        console.log("objCustomerInforCookie(value) CALL " + value);
-    }
     let myArray = value.split("#");
     this.id = -1;
     this.name = myArray[0].split("=")[1];

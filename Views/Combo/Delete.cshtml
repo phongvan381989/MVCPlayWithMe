@@ -26,16 +26,10 @@
                 }
                 let id = GetDataIdFromComboDatalist(name);
                 if (id == null) {
-                    if (DEBUG) {
-                        console.log("Combo không tồn tại.");
-                    }
                     ShowResult("Combo không tồn tại.");
                     return;
                 }
 
-                if (DEBUG) {
-                    console.log("Combo hợp lệ.");
-                }
                 const searchParams = new URLSearchParams();
                 searchParams.append("name", name);
                 let query = "/Combo/DeleteCombo";

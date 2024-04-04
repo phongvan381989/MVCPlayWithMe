@@ -22,16 +22,10 @@
                 }
                 let publisherId = GetDataIdFromPublisherDatalist(publisherName);
                 if (publisherId != null) {
-                    if (DEBUG) {
-                        console.log("Nhà phát hành đã có, publisherId is: " + publisherId);
-                    }
                     ShowResult("Tên nhà phát hành đã có.");
                     return;
                 }
 
-                if (DEBUG) {
-                    console.log("Tên nhà phát hành hợp lệ có thể thêm mới!");
-                }
                 const xhttp = new XMLHttpRequest();
                 xhttp.onload = function () {
                     if (this.readyState == 4 && this.status == 200) {
@@ -43,9 +37,6 @@
                 query = query + "&detail=";
                 let detail = document.getElementById("detail").value;
                 query = query + detail;
-                if (DEBUG) {
-                    console.log(query);
-                }
                 xhttp.open("GET", query);
                 xhttp.send();
             }

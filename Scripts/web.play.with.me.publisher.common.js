@@ -14,9 +14,6 @@ function loadPublishers() {
 function PublisherChange() {
     let publisherName = document.getElementById("publisher-id").value;
     let detail = GetDataFromDatalist("list-Publisher", "data-detail", publisherName);
-    if (DEBUG) {
-        console.log(detail);
-    }
 
     if (detail == null) {
         document.getElementById("detail").value = "";

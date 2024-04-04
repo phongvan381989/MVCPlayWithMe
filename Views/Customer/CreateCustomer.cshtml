@@ -89,9 +89,6 @@
 
             async function CreateCustomer_Add() {
 
-                if (DEBUG) {
-                    console.log("CreateCustomer_Add CALL");
-                }
                 let userName = document.getElementById("userName").value;
                 let passWord = document.getElementById("passWord").value;
                 let repassWord = document.getElementById("repassWord").value;
@@ -105,9 +102,6 @@
                 // Kiểm tra password và repassword hợp lệ
                 {
                     const obj = JSON.parse(CheckPassWordValid(passWord, repassWord));
-                    if (DEBUG) {
-                        console.log(obj);
-                    }
                     if (obj.isValid === false) {
                         CreateMustClickOkModal(obj.message, null);
                         return;

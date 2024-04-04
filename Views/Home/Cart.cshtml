@@ -534,10 +534,6 @@
         }
 
         function CreateSelectedModel() {
-            if (DEBUG) {
-                console.log("CreateSelectedModel CALL");
-                console.log("listCartCookieObject.length: " + listCartCookieObject.length);
-            }
             // Lấy mẫu
             let sample = document.getElementsByClassName("sample-selected-model")[0].firstElementChild;
             let containerModel = document.getElementsByClassName("contianer-selected-model")[0];
@@ -580,9 +576,6 @@
         }
 
         async function LoadCart() {
-            if (DEBUG) {
-                console.log("Cart page LoadCart() CALL");
-            }
             let responseDB = await CartPageLoadCart();
             if (responseDB.responseText != null) {
                 listCartCookieObject = JSON.parse(responseDB.responseText);
@@ -622,9 +615,6 @@
             }
             document.getElementsByClassName("A-CcKC")[0].innerHTML = "Tổng thanh toán (" + count + " Sản phẩm):"
             document.getElementsByClassName("WC0us-")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
-            if (DEBUG) {
-                console.log("ShowSumMoney CALL " + ConvertMoneyToText(sumMoney));
-            }
         }
 
         // Hiển thị tiền thanh toán 1 sản phẩm
@@ -648,9 +638,6 @@
                 }
             }
             document.getElementsByClassName("all-model-checkbox-input")[0].checked = isAll;
-            if (DEBUG) {
-                console.log("ShowCheckboxAll CALL isAll:" + isAll);
-            }
         }
 
         function ClickModelCheckBox(element) {
@@ -686,9 +673,6 @@
                 }
             }
 
-            if (DEBUG) {
-                console.log(JSON.stringify(listCartCookieObject));
-            }
             ShowSumMoney();
         }
 
@@ -700,9 +684,6 @@
         }
 
         async function UpdateCartQuantity(modelId, quantity) {
-            if (DEBUG) {
-                console.log("UpdateCartQuantity CALL");
-            }
             const searchParams = new URLSearchParams();
             searchParams.append("modelId", modelId);
             searchParams.append("quantity", quantity);
@@ -812,10 +793,6 @@
         }
 
         async function DeleteOneCart(modelId) {
-            if (DEBUG) {
-                console.log("DeleteOneCart CALL");
-            }
-
             const searchParams = new URLSearchParams();
             searchParams.append("modelId", modelId);
             let query = "/Home/DeleteOneCart";
@@ -883,9 +860,6 @@
             }
             let cookie = GetCartCookieFromListCartCookie(listReal);
             let cookieBase64 = window.btoa(cookie);
-            if (DEBUG) {
-                console.log("Cart page BuyNow CALL cookie: " + cookieBase64);
-            }
             location.href = "/Home/Checkout?cart=" + cookieBase64;
         }
 

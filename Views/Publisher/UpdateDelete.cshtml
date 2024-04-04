@@ -27,15 +27,8 @@
                 let publisherId = GetDataIdFromPublisherDatalist(publisherName);
                 if (publisherId === null) {
                     let str = "Nhà phát hành chưa tồn tại.";
-                    if (DEBUG) {
-                        console.log(str);
-                    }
                     ShowResult(str);
                     return false;
-                }
-
-                if (DEBUG) {
-                    console.log("publisherName: " + publisherName + ", publisherId: " + publisherId);
                 }
 
                 return true;

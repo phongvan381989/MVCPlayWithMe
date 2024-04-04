@@ -14,10 +14,6 @@ let loadedUrl;
 
 // Làm mới nút di chuyển trang
 function RefreshPaging(url) {
-    if (DEBUG) {
-        console.log("RefreshPaging");
-        console.log("url: " + url);
-    }
     let wraperPagination = document.getElementsByClassName("wraper-pagination")[0];
     wraperPagination.style.display = "flex";
     wraperPagination.innerHTML = "";
@@ -98,14 +94,6 @@ function RefreshPaging(url) {
 
 // page: là trang muốn đi tới, '<','>' hoặc '...'
 function CreateItem(textPage, isCurrentPage, ChangePage, goTo, url) {
-    if (DEBUG) {
-        console.log("CreateItem CALL");
-        console.log("textPage: " + textPage);
-        console.log("isCurrentPage: " + isCurrentPage);
-        //console.log("ChangePage function: " + ChangePage);
-        console.log("goTo: " + goTo);
-        console.log("url: " + url);
-    }
     let divItem = document.createElement("div");
     if (isCurrentPage == true) {
         divItem.className = "pagination-item active";
@@ -126,12 +114,6 @@ function CreateItem(textPage, isCurrentPage, ChangePage, goTo, url) {
 }
 
 async function ChangePage(page, url) {
-    if (DEBUG) {
-        console.log("ChangePage(" + page + ")");
-        console.log("page: " + page);
-        console.log("maxPage: " + maxPage);
-        console.log("url: " + url);
-    }
     const searchParams = new URLSearchParams();
     SetSearchParameter(searchParams);
     searchParams.append("start", (page - 1) * itemOnPage);
@@ -141,22 +123,11 @@ async function ChangePage(page, url) {
         return;
     }
 
-    if (loadedUrl == searchParams.toString()) {
-        if (DEBUG) {
-            console.log("loadedUrl: " + loadedUrl);
-            console.log("Dont ChangePage" );
-        }
-        return;
-    }
     loadedUrl = searchParams.toString();
-    if (DEBUG) {
-        console.log("new value of loadedUrl: " + loadedUrl);
-    }
+
     // Làm mới hiển thị phân trang
     currentPage = parseInt(page);
-    if (DEBUG) {
-        console.log("currentPage: " + currentPage);
-    }
+
     RefreshPaging(url);
 
     let resObj = await RequestHttpGetPromise(searchParams, url);

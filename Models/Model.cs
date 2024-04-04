@@ -65,7 +65,8 @@ namespace MVCPlayWithMe.Models
                 return;
 
             quantity = 0;
-            foreach(var map in mapping)
+            bookCoverPrice = 0;
+            foreach (var map in mapping)
             {
                 bookCoverPrice = bookCoverPrice + map.product.bookCoverPrice;
                 if (quantity < map.product.quantity)

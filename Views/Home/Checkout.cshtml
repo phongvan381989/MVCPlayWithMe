@@ -464,10 +464,6 @@
         }
 
         function CreateSelectedModel() {
-            if (DEBUG) {
-                console.log("CreateSelectedModel CALL");
-                console.log("listCartCookieObject.length: " + listCartCookieObject.length);
-            }
             // Lấy mẫu
             let sample = document.getElementsByClassName("sample-model")[0].firstElementChild;
             let containerModel = document.getElementsByClassName("model-container")[0];
@@ -532,10 +528,6 @@
         }
 
         function GetShipFee() {
-            if (DEBUG) {
-                console.log("GetShipFee CALL");
-                console.log("currentIndexInforObject: " + currentIndexInforObject);
-            }
             let fee = 0;
             if (currentIndexInforObject != -1) {
                 let obj = listCustomerInforCookieObject[currentIndexInforObject];
@@ -550,9 +542,6 @@
         }
 
         async function GetListAddress() {
-            if (DEBUG) {
-                console.log("GetListAddress CALL");
-            }
             const searchParams = new URLSearchParams();
             let query = "/Customer/GetListAddress";
 
@@ -573,9 +562,7 @@
         }
 
         async function LoadCustomerInfor() {
-            if (DEBUG) {
-                console.log("LoadCustomerInfor CALL");
-            }
+
             if (CheckAnonymousCustomer()) {// Khách vãng lai
                 // Lấy từ cookie
                 listCustomerInforCookieObject = GetListCustomerInforCookieFromCookie();
@@ -594,19 +581,12 @@
                 }
             }
 
-            if (DEBUG) {
-                console.log("listCustomerInforCookieObject: " + JSON.stringify(listCustomerInforCookieObject));
-            }
-
             let isDefaultAdd = false;
             // Tìm địa chỉ mặc định
             for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
                 let obj = listCustomerInforCookieObject[i];
                 if (obj.defaultAdd == 1) {
                     currentIndexInforObject = i;
-                    if (DEBUG) {
-                        console.log("defaultAdd = 1 currentIndexInforObject: " + currentIndexInforObject);
-                    }
                     ShowCustomerInforFromObj(obj);
                     isDefaultAdd = true;
                     break;
@@ -641,10 +621,6 @@
 
         // Từ obj hiển thị tên, phone, địa chỉ lên checkout page
         function ShowCustomerInforFromObj(obj) {
-            if (DEBUG) {
-                console.log("currentIndexInforObject: " + currentIndexInforObject);
-                console.log("obj: " + JSON.stringify(obj));
-            }
             // Chưa chọn địa chỉ nhận hàng
             if (currentIndexInforObject == -1) {
                 return;
@@ -680,10 +656,7 @@
             let container = document.getElementsByClassName("list-customer-infor-container")[0];
 
             let length = listCustomerInforCookieObject.length;
-            if (DEBUG) {
-                console.log("ShowListCustomerInforModal CALL");
-                console.log("listCustomerInforCookieObject.length: " + length);
-            }
+
             for (let i = 0; i < length; i++) {
                 let obj = listCustomerInforCookieObject[i];
                 let clone = sample.cloneNode(true);
@@ -806,21 +779,13 @@
 
         // Xác nhận dùng thông tin nào nhận hàng
         function ConfirmListCustomerInforModal() {
-            if (DEBUG) {
-                console.log("ConfirmListCustomerInforModal CALL");
-            }
             let list = document.getElementsByClassName("list-customer-infor-container")[0].children;
             let length = list.length;
             for (let i = 0; i < length; i++) {
                 let ele = list[i];
-                if (DEBUG) {
-                    console.log("ele.radio.checked: " + ele.getElementsByClassName("address-radio")[0].checked);
-                }
+
                 if (ele.getElementsByClassName("address-radio")[0].checked) {
                     currentIndexInforObject = parseInt(ele.getAttribute("data-index"));
-                    if (DEBUG) {
-                        console.log("currentIndexInforObject: " + currentIndexInforObject);
-                    }
                     ShowCustomerInforFromObj(listCustomerInforCookieObject[currentIndexInforObject]);
                     break;
                 }
@@ -833,18 +798,10 @@
 
         function UpdateCustomerInfor(ele) {
             currentIndexInforUpdateObject = parseInt(ele.parentElement.parentElement.getAttribute("data-index"));
-            if (DEBUG) {
-                //console.log(ele.parentElement.className );
-                console.log("UpdateCustomerInfor CALL");
-                console.log("currentIndexInforUpdateObject: " + currentIndexInforUpdateObject);
-            }
             ShowCustomerInforModal(false, true, listCustomerInforCookieObject[currentIndexInforUpdateObject]);
         }
 
         function objOrderPay(type, value) {
-            if (DEBUG) {
-                console.log("objOrderPay CALL ");
-            }
             this.type = type;
             this.value = value;
         }
@@ -893,9 +850,6 @@
             if (currentIndexInforObject == -1) {
                 CreateMustClickOkModal("Vui lòng cung cấp thông tin người nhận hàng.", null)
                 return;
-            }
-            if (DEBUG) {
-                console.log("listCartCookieObject before order:" + JSON.stringify(listCartCookieObject));
             }
             ShowCircleLoader();
             let responseDB = await CheckOrderOnSever();

@@ -329,10 +329,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         }
         #region Product
 
-
-       
-
-        
         #endregion
 
     }

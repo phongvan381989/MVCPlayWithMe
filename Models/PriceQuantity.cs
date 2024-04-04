@@ -15,14 +15,14 @@ namespace MVCPlayWithMe.Models
         public int bookCoverPrice { get; set; }
 
         /// <summary>
-        /// Giá bán thực tế, đã bao gồm các khuyến mại trực tiếp trên sản phẩm
+        /// Giá bán thực tế, chưa bao gồm các khuyến mại
         /// </summary>
         public int price { get; set; }
 
         /// <summary>
         /// Số lượng sản phẩm đã được bán
         /// </summary>
-        public int quantitySold { get; set; }
+        public int soldQuantity { get; set; }
 
         /// <summary>
         /// Số lượng sản phẩm khách có thể mua
@@ -44,12 +44,12 @@ namespace MVCPlayWithMe.Models
         }
 
         public PriceQuantity(
-            int iQuantitySold,
+            int isoldQuantity,
             int iBookCoverPrice,
             int iPrice
             )
         {
-            quantitySold = iQuantitySold;
+            soldQuantity = isoldQuantity;
             bookCoverPrice = iBookCoverPrice;
             price = iPrice;
         }
@@ -58,7 +58,7 @@ namespace MVCPlayWithMe.Models
         {
             this.bookCoverPrice = from.bookCoverPrice;
             this.price = from.price;
-            this.quantitySold = from.quantitySold;
+            this.soldQuantity = from.soldQuantity;
             this.quantity = from.quantity;
             this.discount = from.discount;
         }

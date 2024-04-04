@@ -443,32 +443,47 @@ namespace MVCPlayWithMe.Models.ItemModel
         public List<Item> SearchItemChangePage(ItemModelSearchParameter searchParameter)
         {
             List<Item> ls = new List<Item>();
-            List<int> lsId = new List<int>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbItem_Search", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbItemModel_Search", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inHasMapping", searchParameter.hasMapping);
                 cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
                 cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
-
+                int itemId = 0;
+                Item itemTemp = null;
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    lsId.Add(MyMySql.GetInt32(rdr, "ItemId"));
+                    itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    if(ls.Count == 0 || ls[ls.Count - 1].id != itemId) // Thêm mới item
+                    {
+                        Item item = new Item();
+                        item.id = MyMySql.GetInt32(rdr, "ItemId");
+                        item.name = MyMySql.GetString(rdr, "ItemName");
+                        item.SetThumbnailFirst();
+                        ls.Add(item);
+                    }
+                    itemTemp = ls[ls.Count - 1];
+                    // Thêm model
+                    {
+                        Model model = new Model();
+                        model.id = MyMySql.GetInt32(rdr, "ModelId");
+                        model.itemId = itemTemp.id;
+                        model.name = MyMySql.GetString(rdr, "ModelName");
+
+                        model.price = MyMySql.GetInt32(rdr, "ModelPrice");
+                        model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
+                        model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
+                        itemTemp.models.Add(model);
+                    }
                 }
 
                 if (rdr != null)
                     rdr.Close();
-                foreach (var id in lsId)
-                {
-                    Item item = GetItemFromIdWithReadyConn(id, conn);
-                    ls.Add(item);
-                }
             }
             catch (Exception ex)
             {
@@ -491,7 +506,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                 MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inHasMapping", searchParameter.hasMapping);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
@@ -543,7 +557,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
                 item.models = models;
-                item.SetPriceAndQuantity();
             }
             catch (Exception ex)
             {
@@ -584,7 +597,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
                 item.models = models;
-                item.SetPriceAndQuantity();
             }
             catch (Exception ex)
             {
@@ -627,7 +639,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                     model.SetPriceFromMappingPriceAndQuantity();
                 }
                 item.models = models;
-                item.SetPriceAndQuantity();
             }
             catch (Exception ex)
             {
@@ -671,7 +682,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                         model.SetPriceFromMappingPriceAndQuantity();
                     }
                     item.models = models;
-                    item.SetPriceAndQuantity();
                 }
             }
             catch (Exception ex)

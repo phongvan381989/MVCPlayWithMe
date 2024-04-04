@@ -178,9 +178,6 @@
 
                     listObj.push(obj);
                 }
-                if (DEBUG) {
-                    console.log(listObj);
-                }
 
                 for (let j = 0; j < listObj.length; j++) {
                     CheckObjExistAndInsert(table, listObj[j]);
@@ -189,9 +186,6 @@
         }
 
         async function UpdateEEcommerceMapping() {
-            if (DEBUG) {
-                console.log("UpdateEEcommerceMapping CALL ");
-            }
             if (commonItem == null) {
                 CreateMustClickOkModal("Sản phẩm không chính xác.", null);
                 return;
@@ -244,10 +238,6 @@
                 }
             }
             catch (err) {
-                if (DEBUG) {
-                    console.log(err.message);
-                    console.log(err);
-                }
                 //alert("Cập nhật sản phẩm lỗi.");
                 CreateMustClickOkModal("Cập nhật sản phẩm lỗi.",null);
                 RemoveCircleLoader();

@@ -3,17 +3,11 @@
 
 // Chỉ gọi 1 lần, vì option không thay đổi
 function AddProvince() {
-    //if (DEBUG) {
-    //    console.log("AddProvince CALL");
-    //}
-
     if (administrativeAddressObject == null)
         return;
     let ele = document.getElementById("province");
     let length = administrativeAddressObject.length;
-    //if (DEBUG) {
-    //    console.log("AddProvince CALL length: " + length);
-    //}
+
     for (let i = 0; i < length; i++) {
         let option = document.createElement("option");
         option.value = administrativeAddressObject[i].province;
@@ -24,9 +18,7 @@ function AddProvince() {
 }
 
 async function GetAdministrativeAddress() {
-    if (DEBUG) {
-        console.log("GetAdministrativeAddress CALL");
-    }
+
     // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
     const searchParams = new URLSearchParams();
 
@@ -135,9 +127,7 @@ function RefreshModalCustomerInfor() {
 // false: Cập nhật thông tin cũ
 // isModalUnder: true, có modal bên dưới, cần tăng zindex = 2 ngược lại không cần
 async function ShowCustomerInforModal(isCreate, isModalUnder, addressObj) {
-    if (DEBUG) {
-        console.log("ShowCustomerInforModal CALL");
-    }
+
     if (administrativeAddressObject == null) {
         // Lấy dữ liệu tỉnh, huyện xã từ db
         let responseDB = await GetAdministrativeAddress();
@@ -228,16 +218,11 @@ function CreateCookieValueFromInput() {
         document.getElementById("detail-subdistrict").value,
         isDefault
     );
-    if (DEBUG) {
-        console.log("CreateCookieValueFromInput CALL" + JSON.stringify(obj));
-    }
+
     return obj;
 }
 
 async function InsertAddress(obj) {
-    if (DEBUG) {
-        console.log("InsertAddress CALL");
-    }
     const searchParams = new URLSearchParams();
     searchParams.append("address", JSON.stringify(obj));
     let query = "/Customer/InsertAddress";
@@ -246,9 +231,6 @@ async function InsertAddress(obj) {
 }
 
 async function UpdateAddress(obj) {
-    if (DEBUG) {
-        console.log("UpdateAddress CALL");
-    }
     const searchParams = new URLSearchParams();
     searchParams.append("address", JSON.stringify(obj));
     let query = "/Customer/UpdateAddress";
@@ -257,9 +239,6 @@ async function UpdateAddress(obj) {
 }
 
 async function DeleteAddress(obj) {
-    if (DEBUG) {
-        console.log("DeleteAddress CALL");
-    }
     const searchParams = new URLSearchParams();
     searchParams.append("address", JSON.stringify(obj));
     let query = "/Customer/DeleteAddress";

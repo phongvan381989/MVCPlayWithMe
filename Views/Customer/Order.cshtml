@@ -190,9 +190,6 @@
 
         // Hiện tất cả đơn trên 1 trang, không phân trang nên gọi hàm này ngay khi load trang
         async function GetAllOrder() {
-            if (DEBUG) {
-                console.log("GetAllOrder CALL");
-            }
             const searchParams = new URLSearchParams();
             let query = "/Customer/GetAllOrder";
             ShowCircleLoader();
@@ -205,9 +202,6 @@
                 return;
             }
             listOrder = resObj.myJson;
-            if (DEBUG) {
-                console.log("listOrder: " + JSON.stringify(listOrder));
-            }
             // HIển thị tất cả đơn hàng
             ShowResult(document.getElementsByClassName("nvsflAB87")[0]);
         }

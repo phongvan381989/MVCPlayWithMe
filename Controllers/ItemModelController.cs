@@ -297,7 +297,6 @@ namespace MVCPlayWithMe.Controllers
             // Đếm số sản phẩm trong kết quả tìm kiếm
             ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
             searchParameter.name = namePara;
-            searchParameter.hasMapping = 2;
             int count = 0;
             count = sqler.SearchItemCount(searchParameter);
             return count.ToString();
@@ -311,7 +310,6 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = namePara;
             searchParameter.start = start;
             searchParameter.offset = offset;
-            searchParameter.hasMapping = 2;
             lsSearchResult = sqler.SearchItemChangePage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);

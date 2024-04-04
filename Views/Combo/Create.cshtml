@@ -22,16 +22,10 @@
                 }
                 let id = GetDataIdFromComboDatalist(name);
                 if (id != null) {
-                    if (DEBUG) {
-                        console.log("Combo đã có, id is: " + id);
-                    }
                     ShowResult("Combo đã có.");
                     return;
                 }
 
-                if (DEBUG) {
-                    console.log("Combo hợp lệ có thể thêm mới!");
-                }
                 const xhttp = new XMLHttpRequest();
                 xhttp.onload = function () {
                     if (this.readyState == 4 && this.status == 200) {
@@ -40,9 +34,6 @@
                 }
                 let query = "/Combo/CreateCombo?name=";
                 query = query + name;
-                if (DEBUG) {
-                    console.log(query);
-                }
                 xhttp.open("GET", query);
                 xhttp.send();
             }

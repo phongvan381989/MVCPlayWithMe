@@ -98,5 +98,6 @@ namespace MVCPlayWithMe.Models
             imageSrc = Common.GetImageSrc(id.ToString());
             videoSrc = Common.GetVideoSrc(id.ToString());
         }
+
     }
 }

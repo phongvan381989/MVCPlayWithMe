@@ -16,8 +16,8 @@ namespace MVCPlayWithMe.General
 {
     public class Common
     {
-        public static readonly List<string> ImageExtensions = new List<string> { ".apng", ".avif", ".gif", ".jpg", ".jpeg", ".jfif", ".pjpeg", ".pjp", ".png", ".svg", ".webp" };
-        public static readonly List<string> VideoExtensions = new List<string> { ".mp4", ".webm", ".ogg" };
+        public static readonly List<string> ImageExtensions = new List<string> { ".jpg", ".jpeg", ".jfif", ".png", ".svg"};
+        public static readonly List<string> VideoExtensions = new List<string> { ".mp4" };
         public static readonly string dateFormat = "yyyy-MM-dd";
         public static readonly int quota = 5;
         public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
@@ -218,7 +218,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="lsProductId"></param>
         /// <returns></returns>
-        public static List<string> GetListThumbnailImageSrd(List<int> lsProductId)
+        public static List<string> GetListThumbnailImageSrc(List<int> lsProductId)
         {
             List<string> ls = new List<string>();
             if (lsProductId == null)
@@ -410,7 +410,7 @@ namespace MVCPlayWithMe.General
             return rs;
         }
 
-        #region Xử lý ảnh lấy từ bên sàn thương mại điện tử, lưu vào Media/Temporary/Image
+        #region Xử lý ảnh lấy từ bên sàn thương mại điện tử
         /// <summary>
         ///  Từ url lấy được tên file
         /// </summary>
@@ -477,6 +477,63 @@ namespace MVCPlayWithMe.General
             }
 
             return Path.Combine(pathFolder, fileName);
+        }
+
+        /// <summary>
+        /// Tên ảnh được lấy từ url
+        /// Check xem ảnh đã tồn tại trong thư mục hay chưa? Nếu chưa ải ảnh từ địa chỉ web và lưu
+        /// </summary>
+        /// <param name="url">https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png</param>
+        ///                   https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
+        /// <param name="pathFolder">Thư mục chứa ảnh</param>
+        public static void DownloadImageAndSaveWithName(string url, string pathFolder, string fileName)
+        {
+            // Check xem ảnh đã tồn tại hay chưa?
+            if (File.Exists(Path.Combine(pathFolder, fileName)))
+                return;
+
+            RestClient client = new RestClient(url);
+            client.Timeout = -1;
+            RestRequest request = new RestRequest(Method.GET);
+            //IRestResponse response = client.Execute(request);
+
+            try
+            {
+                var fileBytes = client.DownloadData(request);
+                File.WriteAllBytes(Path.Combine(pathFolder, fileName), fileBytes);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Check xem ảnh đã tồn tại trong thư mục hay chưa? Nếu chưa ải ảnh từ địa chỉ web và lưu
+        /// </summary>
+        /// <param name="url">https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png</param>
+        ///                   https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
+        /// <param name="pathFolder">Thư mục chứa ảnh</param>
+        public static void DownloadVideoAndSaveWithName(string url, string pathFolder, string fileName)
+        {
+            // Check xem video đã tồn tại hay chưa?
+            if (File.Exists(Path.Combine(pathFolder, fileName)))
+                return;
+
+            RestClient client = new RestClient(url);
+            client.Timeout = -1;
+            RestRequest request = new RestRequest(Method.GET);
+            //IRestResponse response = client.Execute(request);
+
+            try
+            {
+                var fileBytes = client.DownloadData(request);
+                File.WriteAllBytes(Path.Combine(pathFolder, fileName), fileBytes);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
         #endregion
 
@@ -556,7 +613,7 @@ namespace MVCPlayWithMe.General
         public static string GetAbsoluteItemMediaFolderPath(int itemId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
-            MyLogger.GetInstance().Debug(path);
+            //MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -564,7 +621,6 @@ namespace MVCPlayWithMe.General
             }
             return path;
         }
-
 
         public static string CreateAbsoluteItemMediaFolderPath(int itemId)
         {
@@ -595,16 +651,6 @@ namespace MVCPlayWithMe.General
             return path;
         }
 
-        // Lấy tất cả file của item
-        static private string[] GetAllFileNameOfItem(int itemId)
-        {
-            string path = GetAbsoluteItemMediaFolderPath(itemId);
-            if (path == null)
-                return new string[0];
-
-            return Directory.GetFiles(path);
-        }
-
         /// <summary>
         /// Từ id item, lấy được đường dẫn tới ảnh dùng cho thẻ img
         /// </summary>
@@ -613,7 +659,18 @@ namespace MVCPlayWithMe.General
         public static List<string> GetItemImageSrc(int itemId)
         {
             List<string> src = new List<string>();
-            string[] files = GetAllFileNameOfItem(itemId);
+            string[] files = null;
+
+            try
+            {
+                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+
+                files = Directory.GetFiles(path);
+            }
+            catch(Exception)
+            {
+                return src;
+            }
 
             string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
 
@@ -628,6 +685,38 @@ namespace MVCPlayWithMe.General
             return src;
         }
 
+        // Từ id item, lấy được đường dẫn thumbnail
+        public static List<string> GetItemThumbnailSrc(int itemId)
+        {
+            List<string> src = new List<string>();
+            string[] files = null;
+
+            try
+            {
+                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + "_320" + @"/";
+
+                files = Directory.GetFiles(path,"*.jpg");
+            }
+            catch (Exception)
+            {
+                return src;
+            }
+
+            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
+
+            foreach (var file in files)
+            {
+                src.Add(relPath + Path.GetFileName(file));
+            }
+            SortSourceFile(src);
+            return src;
+        }
+
+        public static string GetItemthumbnailFirst(int itemId)
+        {
+            return ItemMediaFolderPath + itemId.ToString() + @"_320/0.jpg"; ;
+        }
+
         /// <summary>
         /// Từ id item, lấy được đường dẫn tới video dùng cho thẻ video
         /// </summary>
@@ -636,7 +725,18 @@ namespace MVCPlayWithMe.General
         public static string GetItemVideoSrc(int itemId)
         {
             string src= "";
-            string[] files = GetAllFileNameOfItem(itemId);
+            string[] files = null;
+
+            try
+            {
+                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+
+                files = Directory.GetFiles(path);
+            }
+            catch (Exception)
+            {
+                return src;
+            }
 
             string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
 
@@ -904,6 +1004,9 @@ namespace MVCPlayWithMe.General
 
             return DateTime.ParseExact(str, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
         }
+        #endregion
+
+        #region Shopee
         #endregion
     }
 }

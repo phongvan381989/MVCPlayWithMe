@@ -22,9 +22,7 @@ function AddDeleteButtonForModel(container) {
     let btn = document.createElement("BUTTON");
     let btnContent = document.createTextNode("Xóa phân loại");
     btn.onclick = function () {
-        if (DEBUG) {
-            console.log("countModel: " + countModel);
-        }
+
         let model = this.parentElement.parentElement;
         if (model.modelId == -1) { // Tạo mới, model chưa có trên server nên không cần hỏi
             countModel = countModel - 1;
@@ -73,9 +71,6 @@ function AddMappingButtonForModel(container) {
 
 // Thêm table mapping vào model
 function CreateModelTableMapping(container) {
-    if (DEBUG) {
-        console.log("Start CreateModelTableMapping");
-    }
     const div = document.createElement("div");
     div.style.marginLeft = "50px";
     let tab = document.createElement("table");
@@ -164,20 +159,12 @@ function CheckObjExistAndInsert(modelTable, obj) {
 // listObj: sản phẩm được chọn từ modal gồm: id, img, name, quantity
 // Lưu mapping được chọn tới model tương ứng
 function AddToTableMapping(container, listObj) {
-    if (DEBUG) {
-        console.log(listObj);
-    }
     // Check container chứa table mapping chưa? Nếu không thì tạo mới
     let modelTable;
     if (container.getElementsByClassName(classOfModelTable).length == 0) {
         CreateModelTableMapping(container);
     }
     modelTable = container.getElementsByClassName(classOfModelTable)[0];
-
-    if (DEBUG) {
-        console.log(modelTable);
-        console.log(modelTable.nodeName);
-    }
 
     // Insert listObj vào table, có check obj đã tồn tại trong table theo id
     let length = listObj.length;
@@ -268,10 +255,7 @@ function AddLabelSelectOfStatus(container, label, id) {
 function AddModelToScreen() {
     countModel = countModel + 1;
     autoIncrease = autoIncrease + 1;
-    if (DEBUG) {
-        console.log("countModel: " + countModel);
-        console.log("autoIncrease: " + autoIncrease);
-    }
+
     const modelContainer = document.createElement("div");
     modelContainer.style.marginLeft = "10px";
     modelContainer.style.backgroundColor = "#e6e6e6";
@@ -354,11 +338,6 @@ function AddModelToScreen() {
 // Chọn 1 ảnh làm thumbnail từ local
 function SetThumbnail() {
     if (this.files.length){
-        if (DEBUG) {
-            console.log("files.length: " + this.files.length);
-            console.log("image selected: " + this.files[0].name);
-        }
-
         let img = this.previousSibling;
 
         for (let i = 0; i < this.files.length; i++) {
@@ -379,12 +358,7 @@ function SetThumbnail() {
 function CheckValidModelName() {
     const ls = document.getElementsByClassName(classOfModelName);
     let length = ls.length;
-    if (DEBUG) {
-        console.log("length of list model name: " + length);
-        for (let i = 0; i < length; i++) {
-            console.log(ls[i].value);
-        }
-    }
+
     let isValid = true;
     for (let i = 0; i < length; i++) {
         if (isEmptyOrSpaces(ls[i].value)){
@@ -406,9 +380,6 @@ function CheckValidModelName() {
 function CheckModelHasImage() {
     const ls = document.getElementsByClassName(classOfModelImage);
     let length = ls.length;
-    if (DEBUG) {
-        console.log("length of list model image: " + length);
-    }
 
     let isValid = true;
     for (let i = 0; i < length; i++) {
@@ -431,9 +402,6 @@ function GetListModelOnly() {
             listModelOnly.push(ls[i]);
         }
     }
-    if (DEBUG) {
-        console.log("length of list model: " + listModelOnly.length);
-    }
     return listModelOnly;
 }
 
@@ -445,17 +413,11 @@ function GetListModelId() {
     for (let i = 0; i < length; i++) {
             listModelId.push(listModelOnly[i].modelId);
     }
-    if (DEBUG) {
-        console.log(listModelId);
-    }
+
     return JSON.stringify(listModelId);
 }
 
 function GetListProIdMapping(table) {
-    if (DEBUG) {
-        console.log("Start GetListProIdMapping");
-    }
-
     let listProIdMapping = [];
     if ( table != null) {
         let rows = table.rows;
@@ -470,10 +432,6 @@ function GetListProIdMapping(table) {
 }
 
 function GetListQuantityMapping(table) {
-    if (DEBUG) {
-        console.log("Start GetListQuantityMapping");
-    }
-
     let listQuantityMapping = [];
     if (table != null) {
         let rows = table.rows;
@@ -491,17 +449,7 @@ function GetListQuantityMapping(table) {
 // Thay đổi màu nền giúp dễ nhìn các model
 function EasyViewListModel() {
     const ls = document.getElementsByClassName("model-container");
-    if (ls) {
-        if (DEBUG) {
-            console.log("ls: " + ls.length);
-        }
-    }
-    //let length = ls.length;
-    //if (DEBUG) {
-    //    for (let i = 0; i < length; i++) {
-    //        console.log(ls[i].value);
-    //    }
-    //}
+
     for (let i = 0; i < ls.length; i++) {
         if ((i % 2) == 0) {
             ls[i].style.backgroundColor = "#cccccc";
@@ -512,9 +460,6 @@ function EasyViewListModel() {
 // Thêm đối số cho item
 // string name, int status, int quota, string detail
 function AddItemParameters(searchParams) {
-    if (DEBUG) {
-        console.log(" AddItemParameters CALL ");
-    }
     let name = document.getElementById("item-name-id").value;
     searchParams.append("name", name);
 
@@ -533,10 +478,6 @@ function AddItemParameters(searchParams) {
 function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, exist,
      itemId, discount, imageExtension,
     listProIdMapping, listQuantityMapping) {
-    if (DEBUG) {
-        console.log(" Start upload image of modelId: " + modelId);
-        //console.log(" this of ModelUpload: " + this.nodeName);
-    }
 
     isFinishUploadImageModel++;
     //const reader = new FileReader();
@@ -554,9 +495,6 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     }, false);
 
     //xhr.upload.addEventListener("load", (e) => {
-    //    if (DEBUG) {
-    //        console.log("Upload image model done.");
-    //    }
     //    self.ctrl.update(100);
 
     //    isFinishUploadImageModel--;
@@ -574,26 +512,11 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     xhr.setRequestHeader("imageExtension", imageExtension);
     xhr.setRequestHeader("listProIdMapping", listProIdMapping);
     xhr.setRequestHeader("listQuantityMapping", listQuantityMapping);
-    if (DEBUG) {
-        console.log("modelId: " + modelId);
-        console.log("encodeModelName: " + encodeURI(modelName));
-        console.log("exist: " + exist);
-        console.log("quota: " + quota);
-        console.log("itemId: " + itemId);
-        console.log("discount: " + discount);
-        console.log("imageExtension: " + imageExtension);
-        console.log("listProIdMapping: " + listProIdMapping);
-        console.log("listQuantityMapping: " + listQuantityMapping);
-    }
     //xhr.send(file);
     let response = RequestHttpPostUpFilePromise(xhr, url, file);
     response.then(function (resolve) {
         const obj = JSON.parse(resolve);
         model.modelId = obj.myAnything;
-        if (DEBUG) {
-            console.log("resolve: " + resolve);
-            console.log("new modelId: " + model.modelId);
-        }
         self.ctrl.update(100);
 
         isFinishUploadImageModel--;
@@ -629,9 +552,6 @@ async function AddItemModel() {
     try {
         // Cập nhật item vào db
         let responseDB = await RequestHttpGetPromise(searchParams, urlAdd);
-        if (DEBUG) {
-            console.log("responseDB.then: " + responseDB.responseText);
-        }
         const obj = JSON.parse(responseDB.responseText);
         if (obj == null || obj.myAnything == -1) {
             alert("Tạo sản phẩm (item) lỗi.");
@@ -669,10 +589,6 @@ async function AddItemModel() {
         }
     }
     catch (err) {
-        if (DEBUG) {
-            console.log(err.message);
-            console.log(err);
-        }
         alert("Tạo sản phẩm lỗi.");
         RemoveCircleLoader();
         return;
@@ -681,10 +597,6 @@ async function AddItemModel() {
     // Đợi upload xong ảnh/video của item
     while (true) {
         await Sleep(1000);
-        if (DEBUG) {
-            console.log("isFinishUploadImage = " + isFinishUploadImage);
-            console.log("isFinishUploadVideo = " + isFinishUploadVideo);
-        }
         if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
             break;
         }
@@ -693,9 +605,6 @@ async function AddItemModel() {
     // Đợi upload xong ảnh của model
     while (true) {
         await Sleep(1000);
-        if (DEBUG) {
-            console.log("isFinishUploadImageModel = " + isFinishUploadImageModel);
-        }
         if (isFinishUploadImageModel == 0) {
             alert("Tạo sản phẩm thành công.");
             break;
@@ -760,10 +669,6 @@ async function UpdateItemModel() {
         }
     }
     catch (err) {
-        if (DEBUG) {
-            console.log(err.message);
-            console.log(err);
-        }
         //alert("Cập nhật sản phẩm lỗi.");
         CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         RemoveCircleLoader();
@@ -773,10 +678,6 @@ async function UpdateItemModel() {
     // Đợi upload xong ảnh/video của item
     while (true) {
         await Sleep(1000);
-        if (DEBUG) {
-            console.log("isFinishUploadImage = " + isFinishUploadImage);
-            console.log("isFinishUploadVideo = " + isFinishUploadVideo);
-        }
         if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
             break;
         }
@@ -785,9 +686,6 @@ async function UpdateItemModel() {
     // Đợi upload xong ảnh của model
     while (true) {
         await Sleep(1000);
-        if (DEBUG) {
-            console.log("isFinishUploadImageModel = " + isFinishUploadImageModel);
-        }
         if (isFinishUploadImageModel == 0) {
             alert("Cập nhật sản phẩm thành công.");
             break;
@@ -812,10 +710,6 @@ async function DeleteModel(id) {
         let responseDB = await RequestHttpGetPromise(searchParams, "/ItemModel/DeleteModel");
     }
     catch (err) {
-        if (DEBUG) {
-            console.log(err.message);
-            console.log(err);
-        }
         rs = -1;
         alert("Xóa phân loại lỗi.");
     }
@@ -876,9 +770,7 @@ function EmptyModal() {
 function AddRowToTableMapping(pro, quantity) {
     if (pro == null)
         return;
-    if (DEBUG) {
-        console.log(pro);
-    }
+
     let table = document.getElementById("myTableMapping");
     let src;
     if (pro.imageSrc.length > 0) {
@@ -917,11 +809,6 @@ function FindProductFromList(listProduct, id) {
 
 // Khi xóa sản phẩm đã chọn mapping, bỏ checkbox tương ứng
 function UncheckboxWhenDeleteProductMapping(id) {
-    if (DEBUG) {
-        console.log("UncheckboxWhenDeleteProductMapping CALL");
-        console.log("id = " + id);
-    }
-
     let table = document.getElementById("myTable");
     let rows = table.rows;
     if (rows == null)
@@ -946,13 +833,7 @@ async function SearchProduct() {
 
     let url = "/ItemModel/SearchProduct";
     let resObj = await RequestHttpGetPromise(searchParams, url);
-    if (DEBUG) {
-        console.log("responseText: " + resObj.responseText);
-    }
     let listProduct = JSON.parse(resObj.responseText);
-    if (DEBUG) {
-        console.log(listProduct);
-    }
 
     // Làm trống bảng
     DeleteRowsExcludeHead(document.getElementById("myTable"));
@@ -1010,9 +891,6 @@ async function SearchProduct() {
 // 1: save mapping tới sản phẩm của web
 // 2: save mapping tới sản phẩm trên sàn shopee, tiki, lazada
 function SaveMappingToModel() {
-    if (DEBUG) {
-        console.log("SaveMappingToModel CALL " );
-    }
     // Lấy danh sách sản phẩm đã chọn trên modal
     let rows = document.getElementById("myTableMapping").rows;
     let length = rows.length;
@@ -1020,10 +898,6 @@ function SaveMappingToModel() {
         return;
     }
 
-    if (DEBUG) {
-        console.log("myTableMapping length: " + length);
-        console.log("url: " + window.location.href);
-    }
     // Danh sách đối tượng lưu về db
     let listObj = [];
     for (let i = 1; i < length; i++) {
@@ -1033,11 +907,6 @@ function SaveMappingToModel() {
             rows[i].cells[2].innerHTML,
             rows[i].cells[3].children[0].value
         );
-        if (DEBUG) {
-            console.log(rows[i].cells[1].childNodes[0].nodeName);
-            console.log(rows[i].cells[1].children[0].src);
-            console.log(obj);
-        }
         listObj.push(obj);
     }
 
@@ -1071,9 +940,6 @@ async function ShowItemFromItemObject() {
         item = null;
     }
 
-    if (DEBUG) {
-        console.log(item);
-    }
     if (item == null)
         return;
 
@@ -1142,10 +1008,6 @@ async function ShowItemFromItemObject() {
             
             listObj.push(obj);
         }
-        if (DEBUG) {
-            console.log(listObj);
-        }
-
 
         for (let j = 0; j < listObj.length; j++) {
             CheckObjExistAndInsert(table, listObj[j]);

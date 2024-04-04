@@ -435,12 +435,6 @@ namespace MVCPlayWithMe.Controllers
         public string GetProduct(int id)
         {
             Product pro = sqler.GetProductFromId(id);
-            //List<string> lsImage = Common.GetImageSrc(id.ToString());
-            //List<string> lsVideo = Common.GetVideoSrc(id.ToString());
-            //List<List<string>> ls = new List<List<string>>();
-            //ls.Add(lsImage);
-            //ls.Add(lsVideo);
-            //pro.anything = JsonConvert.SerializeObject(ls);
             return JsonConvert.SerializeObject(pro);
         }
 

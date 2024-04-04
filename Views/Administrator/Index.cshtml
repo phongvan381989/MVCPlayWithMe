@@ -7,22 +7,48 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <style>
-        input {
-            width: 100%;
+        .fmx09gx8 {
+            background-color: white;
+            padding: 10px;
+            margin: 10px 0px 10px 0px;
+            border-radius: 2px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .gmxk9381 {
+            margin: 10px 5px 10px 5px;
+            width:100%;
+        }
+        button {
+            padding: 10px;
+            margin: 10px 10px 10px 10px;
+            border-radius: 5px;
         }
     </style>
 </head>
 <body>
-
     <div id="biggestContainer">
-        <div>
-            <button onclick="location.href='/Administrator/New'">Tạo người quản trị</button>
+        <div class="fmx09gx8">
+            <button title="Xem đơn hàng" onclick="GetOrder()"> Đơn Hàng</button>
         </div>
-        <div>
+        <div class="fmx09gx8">
+            <button> Nhập Sách</button>
+        </div>
+        <div class="fmx09gx8">
+            <div class="gmxk9381"> Thêm người quản trị</div>
+            <button onclick="location.href='/Administrator/New'">Tạo người quản trị</button>
             <button type="button" onclick="Logout()">Đăng xuất</button>
+        </div>
+
+        <div class="fmx09gx8">
+            <div class="gmxk9381"> Dành cho lập trình viên</div>
+            <button onclick="location.href='/Dev/Index'">Dev</button>
         </div>
     </div>
     <script>
+        function GetOrder() {
+            window.location.href = '/ProductECommerce/Order';
+        }
         function Logout() {
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function () {
@@ -33,10 +59,6 @@
             }
 
             let query = "/Administrator/Logout";
-            if (DEBUG) {
-                console.log(query);
-                //console.log(searchParams.toString());
-            }
             xhttp.open("POST", query);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xhttp.send(/*searchParams.toString()*/);
