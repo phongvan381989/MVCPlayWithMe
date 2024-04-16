@@ -31,7 +31,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListCategory();
+            //ViewDataGetListCategory();
             return View();
         }
 
@@ -93,8 +93,15 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListCategory();
+            //ViewDataGetListCategory();
             return View();
+        }
+
+        [HttpPost]
+        public string GetListCategory()
+        {
+            List<Category> ls = sqler.GetListCategory();
+            return JsonConvert.SerializeObject(ls);
         }
     }
 }

@@ -295,32 +295,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
-        /// <summary>
-        /// Dùng chung cho nhiều sàn
-        /// </summary>
-        /// <param name="commonOrder"></param>
-        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
-        public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder, ECommerceOrderStatus status,
-            EECommerceType eCommerceType)
+        // Cập nhật số bảng output và products khi đóng đơn / hoàn đơn
+        // Kết nối được mở đóng bên ngoài hàm
+        public MySqlResultState UpdateOutputAndProductTable(MySqlConnection conn,
+            CommonOrder commonOrder, ECommerceOrderStatus status,
+            EECommerceType eCommerceType,
+            Boolean isReturnedOrder)
         {
             MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
-                // Lưu vào bảng tbECommerceOrder
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
-                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-                    cmd.ExecuteNonQuery();
-                }
-
                 // Lưu vào bảng tbOutput
                 {
                     MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn);
@@ -331,13 +315,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inQuantity", 0);
                     int productId = 0;
                     int quantity = 0;
-                    for(int i = 0; i < commonOrder.listMapping.Count; i++)
+                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
                     {
-                        for(int j = 0; j <commonOrder.listMapping[i].Count; j++)
+                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
                         {
                             productId = commonOrder.listMapping[i][j].product.id;
                             quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
                             cmd.Parameters[2].Value = productId;
+                            if(isReturnedOrder)
+                            cmd.Parameters[3].Value = quantity * -1;
+                                else
                             cmd.Parameters[3].Value = quantity;
 
                             cmd.ExecuteNonQuery();
@@ -360,12 +347,53 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             productId = commonOrder.listMapping[i][j].product.id;
                             quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
                             cmd.Parameters[0].Value = productId;
-                            cmd.Parameters[1].Value = quantity * -1;// Giảm số lượng tồn kho
-
+                            if (isReturnedOrder)
+                                cmd.Parameters[1].Value = quantity;// Tăng số lượng tồn kho
+                            else
+                                cmd.Parameters[1].Value = quantity * -1;// Giảm số lượng tồn kho
                             cmd.ExecuteNonQuery();
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, resultState);
+            }
+
+            return resultState;
+        }
+
+        /// <summary>
+        /// Dùng chung cho nhiều sàn
+        /// </summary>
+        /// <param name="commonOrder"></param>
+        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
+        public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder,
+            ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Lưu vào bảng tbECommerceOrder
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                resultState = UpdateOutputAndProductTable(conn, commonOrder, status, eCommerceType, false);
             }
             catch (Exception ex)
             {
@@ -399,36 +427,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.ExecuteNonQuery();
                 }
 
-                // Xóa dữ liệu ở bảng tbOutput
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_Delete_From_Order_Code", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    cmd.ExecuteNonQuery();
-                }
-
-                // Cập nhật số lượng sản phẩm trong kho
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inAdd", 0);
-                    int productId = 0;
-                    int quantity = 0;
-                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
-                    {
-                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
-                        {
-                            productId = commonOrder.listMapping[i][j].product.id;
-                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
-                            cmd.Parameters[0].Value = productId;
-                            cmd.Parameters[1].Value = quantity;// tăng số lượng tồn kho
-
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
+                resultState = UpdateOutputAndProductTable(conn, commonOrder, status, eCommerceType, true);
             }
             catch (Exception ex)
             {

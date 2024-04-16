@@ -31,7 +31,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListCombo();
+            //ViewDataGetListCombo();
             return View();
         }
 
@@ -87,13 +87,20 @@ namespace MVCPlayWithMe.Controllers
             return sb.ToString();
         }
 
+        [HttpPost]
+        public string GetListCombo()
+        {
+            List<Combo> ls = sqler.GetListCombo();
+            return JsonConvert.SerializeObject(ls);
+        }
+
         public ActionResult Delete()
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListCombo();
+            //ViewDataGetListCombo();
             return View();
         }
     }

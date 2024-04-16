@@ -1,7 +1,13 @@
 ﻿@Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
 <div>
     <form>
-        @Html.Partial("~/Views/Shared/PublisherSelect.cshtml")
+        <div>
+            <label for="publisher-id">Nhà phát hành:</label>
+            <input list="list-Publisher" class="config-max-width margin-vertical" id="publisher-id" oninput="PublisherChange()">
+
+            <datalist id="list-Publisher">
+            </datalist>
+        </div>
         <label for="detail">Thông tin chi tiết thêm:</label><br>
         <textarea id="detail" rows="10"></textarea>
     </form>

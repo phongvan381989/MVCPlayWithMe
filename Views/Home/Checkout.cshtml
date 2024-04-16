@@ -478,7 +478,7 @@
                 clone.setAttribute("data-model-id", obj.id.toString());
 
                 // Cập nhật dữ liệu bản sao
-                clone.getElementsByClassName("rTOisL")[0].src = obj.imageSrc;
+                clone.getElementsByClassName("rTOisL")[0].src = Get320VersionOfImageSrc(obj.imageSrc);
                 clone.getElementsByClassName("item-name")[0].innerHTML = obj.itemName;
                 clone.getElementsByClassName("model-name")[0].innerHTML = obj.modelName;
                 clone.getElementsByClassName("price-model")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.price);
@@ -570,9 +570,7 @@
             else {
                 let res = await GetListAddress();
                 if (JSON.parse(res.responseText) == null) {
-                    // uid cookie có nhưng xác thực thất bại, xóa bỏ uid, thành khách vãng lai
-                    //DeleteUidCookieWhenAuthentFail();
-                    CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
+                    await CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
                     // Trả về định dạng giống truy vấn httpPost
                     return GetEasyPromise();
                 }
@@ -732,7 +730,7 @@
                     let res = await UpdateAddress(obj);
                     let resObj = JSON.parse(res.responseText);
                     if (resObj.State != 0) {
-                        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                        await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                         return;
                     }
                 }
@@ -740,7 +738,7 @@
                     let res = await InsertAddress(obj);
                     let resObj = JSON.parse(res.responseText);
                     if (resObj.State != 0) {
-                        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                        await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                         return;
                     }
 
@@ -848,7 +846,7 @@
 
         async function Order() {
             if (currentIndexInforObject == -1) {
-                CreateMustClickOkModal("Vui lòng cung cấp thông tin người nhận hàng.", null)
+                await CreateMustClickOkModal("Vui lòng cung cấp thông tin người nhận hàng.", null)
                 return;
             }
             ShowCircleLoader();
@@ -857,11 +855,11 @@
 
             let result = JSON.parse(responseDB.responseText);
             if (result == null) {
-                CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.");
+                await CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.");
                 return;
             }
             if (result.State != 0) {
-                CreateMustClickOkModal(result.Message);
+                await CreateMustClickOkModal(result.Message);
                 return;
             }
             // Với khách vãng lai
@@ -871,7 +869,7 @@
                 DeleteOneCartCookie(listCartCookieObject[i]);
             }
 
-            CreateMustClickOkModal("Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại shop.", function () { location.replace("/"); });
+            await CreateMustClickOkModal("Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại shop.", function () { location.replace("/"); });
         }
     </script>
 </body>

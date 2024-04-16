@@ -10,43 +10,43 @@
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
 </head>
 <body>
-
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/Category.cshtml")
-
-        <script>
-            function CreateCategory() {
-                let name = document.getElementById("category-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(name, "Thể loại không hợp lệ.")) {
-                    return;
-                }
-                let id = GetDataIdFromCategoryDatalist(name);
-                if (id != null) {
-
-                    ShowResult("Thể loại đã có.");
-                    return;
-                }
-
-                const searchParams = new URLSearchParams();
-                searchParams.append("name", name);
-                let query = "/Category/CreateCategory";
-
-                let OnloadFuntion = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        GetJsonResponse(this.responseText);
-                    }
-                }
-                RequestHttpGet(OnloadFuntion, searchParams, query);
-            }
-
-            function DeleteCategory() {
-                window.location.href = "/Category/Delete";
-            }
-
-        </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.category.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+
+    <script>
+        GetListCategory();
+        function CreateCategory() {
+            let name = document.getElementById("category-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Thể loại không hợp lệ.")) {
+                return;
+            }
+            let id = GetDataIdFromCategoryDatalist(name);
+            if (id != null) {
+
+                ShowResult("Thể loại đã có.");
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("name", name);
+            let query = "/Category/CreateCategory";
+
+            let OnloadFuntion = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    GetJsonResponse(this.responseText);
+                }
+            }
+            RequestHttpGet(OnloadFuntion, searchParams, query);
+        }
+
+        function DeleteCategory() {
+            window.location.href = "/Category/Delete";
+        }
+
+    </script>
 </body>
 </html>

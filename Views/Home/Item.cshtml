@@ -677,7 +677,7 @@
             }
             else {
                 const img = document.createElement("img");
-                img.src = ItemData.src;
+                img.src = Get320VersionOfImageSrc(ItemData.src);
                 container.appendChild(img);
             }
             container.addEventListener("mouseenter", function (event) {
@@ -1027,7 +1027,7 @@
 
                     let variationImg = document.createElement("img");
                     variationImg.className = "variation-image";
-                    variationImg.src = itemObject.models[i].imageSrc;
+                    variationImg.src = Get320VersionOfImageSrc(itemObject.models[i].imageSrc);
                     variationButton.appendChild(variationImg);
 
                     variationContainer.appendChild(variationButton);

@@ -510,7 +510,7 @@
             let res = await DeleteAddress(obj);
             let resObj = JSON.parse(res.responseText);
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
         }
@@ -547,7 +547,7 @@
             let res = await UpdateAddress(obj);
             let resObj = JSON.parse(res.responseText);
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
         }
@@ -595,7 +595,7 @@
                 let res = await UpdateAddress(obj);
                 let resObj = JSON.parse(res.responseText);
                 if (resObj.State != 0) {
-                    CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                    await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                     return;
                 }
             }
@@ -603,7 +603,7 @@
                 let res = await InsertAddress(obj);
                 let resObj = JSON.parse(res.responseText);
                 if (resObj.State != 0) {
-                    CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                    await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                     return;
                 }
 
@@ -623,7 +623,7 @@
             let res = await GetCustomer();
             customerObj = JSON.parse(res.responseText);
             if (JSON.parse(res.responseText) == null) {
-                CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
                 // Trả về định dạng giống truy vấn httpPost
                 return GetEasyPromise();
             }

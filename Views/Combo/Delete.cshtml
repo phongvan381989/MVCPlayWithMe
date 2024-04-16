@@ -13,40 +13,42 @@
 
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/Combo.cshtml")
-
-        <script>
-            function CreateCombo() {
-                window.location.href = "/Combo/Create";
-            }
-
-            function DeleteCombo() {
-                let name = document.getElementById("combo-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
-                    return;
-                }
-                let id = GetDataIdFromComboDatalist(name);
-                if (id == null) {
-                    ShowResult("Combo không tồn tại.");
-                    return;
-                }
-
-                const searchParams = new URLSearchParams();
-                searchParams.append("name", name);
-                let query = "/Combo/DeleteCombo";
-
-                let OnloadFuntion = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        GetJsonResponse(this.responseText);
-                        document.getElementById("combo-id").value = "";
-                    }
-                }
-
-                RequestHttpPost(OnloadFuntion, searchParams, query);
-            }
-        </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.combo.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+
+    <script>
+        GetListCombo();
+
+        function CreateCombo() {
+            window.location.href = "/Combo/Create";
+        }
+
+        function DeleteCombo() {
+            let name = document.getElementById("combo-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
+                return;
+            }
+            let id = GetDataIdFromComboDatalist(name);
+            if (id == null) {
+                ShowResult("Combo không tồn tại.");
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("name", name);
+            let query = "/Combo/DeleteCombo";
+
+            let OnloadFuntion = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    GetJsonResponse(this.responseText);
+                    document.getElementById("combo-id").value = "";
+                }
+            }
+
+            RequestHttpPost(OnloadFuntion, searchParams, query);
+        }
+    </script>
 </body>
 </html>

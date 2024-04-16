@@ -25,6 +25,7 @@ namespace MVCPlayWithMe
 
             Common.ProductMediaFolderPath = ConfigurationManager.AppSettings["ProductMediaFolderPath"];
             Common.ItemMediaFolderPath = ConfigurationManager.AppSettings["ItemMediaFolderPath"];
+            Common.MediaFolderPath = ConfigurationManager.AppSettings["MediaFolderPath"];
             Common.ThongTinBaoMatPath = ConfigurationManager.AppSettings["ThongTinBaoMatPath"];
             Common.TemporaryImageShopeeMediaFolderPath = 
                 ConfigurationManager.AppSettings["TemporaryImageShopeeMediaFolderPath"];

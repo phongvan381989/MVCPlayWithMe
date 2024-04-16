@@ -263,10 +263,6 @@
         let listOrderTemp = []; // Lưu danh sách common order sau khi lọc, và được hiển thị
         let currentOrder; // Đơn hàng đang view chi tiết trên modal
 
-        function myFunction() {
-            CreateMustClickOkModal("vãi nhái.", null);
-        }
-
         // Get the modal
         let modal = document.getElementById("order-detail-modal");
 
@@ -347,7 +343,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
             if (responseDB.responseText == null) {
-                CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
                 return;
             }
 
@@ -358,7 +354,7 @@
         }
 
         // Kiểm tra đơn đang hiển thị "Đã Đóng" hết chưa
-        function CheckPackedOrderEnough() {
+        async function CheckPackedOrderEnough() {
             let list = FilterOrderByStatus(listOrderTemp, 1)
             let length = list.length;
             let isEnough = true;
@@ -370,7 +366,7 @@
             }
 
             if (!isEnough) {
-                CreateMustClickOkModal("Có đơn chưa đóng hàng.", null);
+                await CreateMustClickOkModal("Có đơn chưa đóng hàng.", null);
                 return;
             }
             alert("Các đơn đều đã được đóng hàng.");
@@ -396,11 +392,11 @@
             code.focus();
         }
 
-        function OrderDetail() {
+        async function OrderDetail() {
 
             let orderTemp = SearchOrderCodeInList();
             if (orderTemp == null) {
-                CreateMustClickOkModal("Không tìm thấy đơn hàng.",
+                await CreateMustClickOkModal("Không tìm thấy đơn hàng.",
                     function () { EmptyAndFocusOrderCodeElement(); });
                 return;
             }
@@ -905,7 +901,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
             if (responseDB.responseText == null) {
-                CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
                 return;
             }
 
@@ -1020,23 +1016,23 @@
             code.focus();
         }
 
-        function AddProduct() {
+        async function AddProduct() {
             let code = document.getElementsByName("product-code-isbn")[0];
             if (!CheckValidProductCode(code.value) &&
                 !CheckValidProductISBN(code.value)) {
-                CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusProductCodeElement(); });
+                await CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
             let lsIndex = SearchProductCodeInOrder(code.value);
 
             if (lsIndex[1] == -1) {
-                CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusProductCodeElement(); });
+                await CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
             if (lsIndex[0] == -1) {
-                CreateMustClickOkModal("Sản phẩm không có trong đơn hàng.", function () { EmptyAndFocusProductCodeElement(); });
+                await CreateMustClickOkModal("Sản phẩm không có trong đơn hàng.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
@@ -1096,7 +1092,7 @@
                 }
             }
             if (isFull == false) {
-                CreateMustClickOkModal("Chưa đủ sản phẩm!", null);
+                await CreateMustClickOkModal("Chưa đủ sản phẩm!", null);
                 return;
             }
 
@@ -1112,7 +1108,7 @@
             let resObj = JSON.parse(responseDB.responseText);
 
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
 
@@ -1147,7 +1143,7 @@
             let resObj = JSON.parse(responseDB.responseText);
 
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
 

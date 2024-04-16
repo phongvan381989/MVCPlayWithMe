@@ -670,7 +670,7 @@ async function UpdateItemModel() {
     }
     catch (err) {
         //alert("Cập nhật sản phẩm lỗi.");
-        CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         RemoveCircleLoader();
         return;
     }

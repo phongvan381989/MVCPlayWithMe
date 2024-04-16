@@ -40,6 +40,23 @@ namespace MVCPlayWithMe.General
             return cookieResut;
         }
 
+        /// <summary>
+        /// Chỉ có cookie này khi đăng nhập như người quản trị
+        /// </summary>
+        /// <param name="httpContext"></param>
+        /// <returns></returns>
+        public static void SetVistorTypeCookie(HttpContextBase httpContext)
+        {
+            HttpCookie vistorType = new HttpCookie(Common.vistorType);
+            vistorType.Value = "admin";
+            vistorType.Expires = SetExpires(1);
+            //uId.HttpOnly = true;
+
+            httpContext.Response.Cookies.Add(vistorType);
+
+            return;
+        }
+
         public static CookieResultState GetUserIdCookie(HttpContextBase httpContext)
         {
             CookieResultState cookie = new CookieResultState();
@@ -54,18 +71,28 @@ namespace MVCPlayWithMe.General
         /// Sau khi đăng xuất, xóa uid
         /// </summary>
         /// <param name="httpContext"></param>
-        public static CookieResultState DeleteUserIdCookie(HttpContextBase httpContext)
+        public static void DeleteUserIdCookie(HttpContextBase httpContext)
         {
-            CookieResultState cookieResut = new CookieResultState();
-
             HttpCookie uId = new HttpCookie(Common.userIdKey);
-            Guid guidVal = Guid.NewGuid();
-            cookieResut.cookieValue = "";
-            uId.Value = cookieResut.cookieValue;
+            uId.Value = "";
             uId.Expires = SetExpires(-1);
             //uId.HttpOnly = true;
             httpContext.Response.Cookies.Add(uId);
-            return cookieResut;
+            return;
+        }
+
+        /// <summary>
+        /// Sau khi đăng xuất, xóa VistorType cookie
+        /// </summary>
+        /// <param name="httpContext"></param>
+        public static void DeleteVistorTypeCookie(HttpContextBase httpContext)
+        {
+            HttpCookie vistorType = new HttpCookie(Common.vistorType);
+            vistorType.Value = "";
+            vistorType.Expires = SetExpires(-1);
+            //uId.HttpOnly = true;
+            httpContext.Response.Cookies.Add(vistorType);
+            return;
         }
 
         public static CookieResultState GetCartCookie(HttpContextBase httpContext)

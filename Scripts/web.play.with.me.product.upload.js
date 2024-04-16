@@ -128,7 +128,7 @@ async function AddNewProPromise() {
 
     try {
         // Cập nhật vào db
-        let responseDB = await RequestHttpGetPromise(searchParams, urlAdd);
+        let responseDB = await RequestHttpPostPromise(searchParams, urlAdd);
 
         const obj = JSON.parse(responseDB.responseText);
         productID = obj.myAnything;
@@ -152,10 +152,10 @@ async function AddNewProPromise() {
         }
     }
 
-    // Refresh page
-    window.scrollTo(0, 0);
-    await Sleep(1000)
-    window.location.reload();
+    //// Refresh page
+    //window.scrollTo(0, 0);
+    //await Sleep(1000)
+    //window.location.reload();
 }
 
 // Set thông tin chung của những sản phẩm thuộc combo về mặc định trừ trường combo
@@ -214,6 +214,7 @@ function SetProductCommonInfoWithCombo(product) {
 
 // Set thông tin sản phẩm trừ tên
 function SetProductInfomation(product) {
+    document.getElementById("quantity").value = product.quantity;
     document.getElementById("code").value = product.code;
     document.getElementById("barcode").value = product.barcode;
     document.getElementById("product-name-id").value = product.name;
@@ -303,7 +304,7 @@ async function UpdateProductPromise() {
     }
     catch (error) {
         //alert("Cập nhật sản phẩm lỗi.");
-        CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         return;
     }
 
@@ -482,4 +483,14 @@ async function ShowProductFromObject() {
     }
 
     SetProductInfomation(product);
+}
+
+function GetSomeData() {
+    GetListCombo();
+    GetListCategory();
+    GetListAuthor();
+    GetListTranslator();
+    GetListPublisher();
+    GetListPublishingCompany();
+    SetListPublishingTime();
 }

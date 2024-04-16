@@ -46,6 +46,8 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.item.model.js"></script>
     <script>
+        GetListProductName();
+        GetListCombo();
         InitializeModal();
         ViewProductFromId();
         let commonItem = null;
@@ -187,7 +189,7 @@
 
         async function UpdateEEcommerceMapping() {
             if (commonItem == null) {
-                CreateMustClickOkModal("Sản phẩm không chính xác.", null);
+                await CreateMustClickOkModal("Sản phẩm không chính xác.", null);
                 return;
             }
             ShowCircleLoader();
@@ -231,7 +233,7 @@
                 let responseDB = await RequestHttpPostPromise(searchParams, url);
                 let result = JSON.parse(responseDB.responseText);
                 if (result.State != 0) {
-                    CreateMustClickOkModal(result.Message);
+                    await CreateMustClickOkModal(result.Message);
                 }
                 else {
                     alert("Cập nhật thành công.");
@@ -239,7 +241,7 @@
             }
             catch (err) {
                 //alert("Cập nhật sản phẩm lỗi.");
-                CreateMustClickOkModal("Cập nhật sản phẩm lỗi.",null);
+                await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.",null);
                 RemoveCircleLoader();
                 return;
             }

@@ -38,8 +38,8 @@ namespace MVCPlayWithMe.Controllers
             }
 
             ViewDataGetListItemName();
-            ViewDataGetListProductName();
-            ViewDataGetListCombo();
+            //ViewDataGetListProductName();
+            //ViewDataGetListCombo();
 
             return View();
         }
@@ -72,8 +72,8 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListProductName();
-            ViewDataGetListCombo();
+            //ViewDataGetListProductName();
+            //ViewDataGetListCombo();
 
             return View();
         }
@@ -239,6 +239,11 @@ namespace MVCPlayWithMe.Controllers
                 var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
                 fileStream.Write(bytes, 0, length);
                 fileStream.Close();
+
+                // Model chỉ có ảnh không có video
+                // Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
+                string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
+                Common.ReduceImageSizeAndSave(newsaveToFileLoc);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -260,7 +265,7 @@ namespace MVCPlayWithMe.Controllers
                 string[] files = Directory.GetFiles(path, id.ToString() + ".*");
                 if (files.Length != 0) // Chỉ có 1 ảnh
                 {
-                    System.IO.File.Delete(files[0]);
+                    Common.DeleteNormalAnd320Image(files[0]);
                 }
             }
             return JsonConvert.SerializeObject(result);
@@ -320,5 +325,12 @@ namespace MVCPlayWithMe.Controllers
         //{
         //    return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
         //}
+
+        // Lấy tên và id của item
+        [HttpPost]
+        public string GetListItem()
+        {
+            return JsonConvert.SerializeObject(sqler.GetListItemName());
+        }
     }
 }

@@ -5,17 +5,19 @@ var avatarVideoHeight = 120;
 var srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
 var itemModelQuota = 5;
 var standardShipFeeInHaNoi = 15000; // Phí ship tiêu chuẩn trong Hà Nội
-var standardShipFeeOutHaNoi = 30000; // Phí ship tiêu chuẩn trong Hà Nội
+var standardShipFeeOutHaNoi = 30000; // Phí ship tiêu chuẩn ngoài Hà Nội
 var HaNoiCity = "Thành phố Hà Nội";
 var cartKey = "cart";
 var customerInforKey = "cusinfor";
 var uidKey = "uid";
+var vistorType = "vistorType"; // Chỉ có cookie này khi đăng nhập như người quản trị
 var eShopee = "SHOPEE";
 var eTiki = "TIKI";
 var eLazada = "LAZADA";
 var ePlayWithMe = "PLAYWITHME";
 var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
+var promoteMustClickOkModal; /* resolve-function reference */
 
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
@@ -351,9 +353,9 @@ function RequestHttpPostPromise(searchParams, url) {
         const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
-                //if (DEBUG) {
-                //    console.log(this.responseText);
-                //}
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
                 resolve(this);
             }
         };
@@ -361,10 +363,10 @@ function RequestHttpPostPromise(searchParams, url) {
             reject(this.statusText);
         }
 
-        //if (DEBUG) {
-        //    let lastQuery = url + "?" + searchParams.toString();
-        //    console.log(lastQuery);
-        //}
+        if (DEBUG) {
+            let lastQuery = url + "?" + searchParams.toString();
+            console.log(lastQuery);
+        }
         xhttp.open("POST", url);
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp.send(searchParams.toString());
@@ -406,9 +408,9 @@ function RequestHttpGetPromise(searchParams, url) {
         const xhttp = new XMLHttpRequest();
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
-                //if (DEBUG) {
-                //    console.log(this.responseText);
-                //}
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
                 resolve(this);
             }
         };
@@ -417,9 +419,9 @@ function RequestHttpGetPromise(searchParams, url) {
         }
 
         let lastQuery = url + "?" + searchParams.toString();
-        //if (DEBUG) {
-        //    console.log(lastQuery);
-        //}
+        if (DEBUG) {
+            console.log(lastQuery);
+        }
         xhttp.open("GET", lastQuery);
         xhttp.send();
     });
@@ -565,6 +567,31 @@ function ConvertIntToPixel(value) {
     return value.toString() + "px";
 }
 
+// Từ src ảnh lấy được src phiên bản 320
+// /Media/Item/578/2.jpg =>/Media/Item/578_320/2.jpg
+function Get320VersionOfImageSrc(src) {
+    let filename = src.replace(/^.*[\\/]/, '')
+    let lastIndex = src.lastIndexOf(filename);
+    let newSrc = src.substring(0, lastIndex - 1) + "_320/" + filename;
+    if (DEBUG) {
+        console.log("Get320VersionOfImageSrc CALL newSrc: " + newSrc);
+    }
+    return newSrc;
+}
+
+//  Set dữ liệu cho tag nếu có list-publishing-time
+function SetListPublishingTime() {
+    let ele = document.getElementById("list-publishing-time");
+    const d = new Date();
+    let year = d.getFullYear();
+    let option = null;
+    for (let i = 0; i < 10; i++) {
+        option = document.createElement("option");
+        option.text = year - i;
+        ele.appendChild(option);
+    }
+}
+
 // Tạo modal, bắt buộc phải click button ok để tắt modal
 // text tham số hiển thị thông báo của modal
 //<div class='my-modal-must-click-ok'>
@@ -576,7 +603,7 @@ function ConvertIntToPixel(value) {
 //        </div>
 //    </div>
 //</div>
-function CreateMustClickOkModal(text, okFunction) {
+async function CreateMustClickOkModal(text, okFunction) {
     let container = document.createElement("div");
     container.className = "container-my-modal-must-click-ok";
     container.innerHTML = "<div class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><button class='btn-modal-must-click-ok' type='button'>OK</button></div></div></div>";
@@ -586,9 +613,13 @@ function CreateMustClickOkModal(text, okFunction) {
         if (okFunction != null) {
             okFunction();
         }
+        promoteMustClickOkModal("");
     });
     document.getElementsByTagName("body")[0].appendChild(container);
     document.getElementsByClassName("btn-modal-must-click-ok")[0].focus();
+    promoteMustClickOkModal = null;
+    let promise = new Promise((resolve) => { promoteMustClickOkModal = resolve });
+    await promise.then((result) => {});
 }
 
 // Lấy được obj từ danh sách obj thỏa obj.id = id
@@ -610,13 +641,21 @@ function GetEasyPromise() {
     });
 }
 
-
 // Check khách vô danh
 // Chưa đăng nhập trả về true, ngược lại false
 function CheckAnonymousCustomer() {
     let cookie = GetCookie(uidKey);
 
     if (isEmptyOrSpaces(cookie)) {
+        return true;
+    }
+
+    return false;
+}
+
+function CheckIsCustomer() {
+    let visTypeCookie = GetCookie(vistorType);
+    if (isEmptyOrSpaces(visTypeCookie)) {
         return true;
     }
 
@@ -632,25 +671,13 @@ async function CheckAnonymousCustomerFromServer() {
     return await RequestHttpPostPromise(searchParams, query);
 }
 
-// Xóa bỏ uid cookie khi uid cookie có giá trị nhưng xác thực sai.
-// Có thể bị người dùng sửa bằng tay hoặc bên thứ 3
-function DeleteUidCookieWhenAuthentFail() {
-    DeleteCookie(uidKey);
-}
-
 // Đăng xuất khỏi tài khoản
 async function Logout() {
     const searchParams = new URLSearchParams();
     let query = "/Customer/Logout";
 
-    let res = await RequestHttpPostPromise(searchParams, query);
-    let resObj = JSON.parse(res.responseText);
+    await RequestHttpPostPromise(searchParams, query);
 
-    if (resObj.State != 0) {
-        CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
-        // Xóa cookie ở thiết bị gửi request, ở thiết bị khác không được xóa
-        DeleteCookie(uidKey);
-    }
     // Uidkey được xóa từ phía server
     // Quay về trang chủ
     window.location.href = "/Home/Index";
@@ -754,10 +781,10 @@ function GoMyCart() {
     window.location.href = "/Home/Cart";
 }
 
-function AuthenFail() {
-    CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
-    // Xóa uid
-    DeleteCookie(uidKey);
+async function AuthenFail() {
+
+    await CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
+
     // Quay về trang chủ
     window.location.href = "/Home/Index";
 }
@@ -798,8 +825,11 @@ async function UpdateCartCount() {
     document.getElementsByClassName("cart-count")[0].innerHTML = length;
 }
 
-// Những hành động mà mọi page đều phải thực hiện sau khi load
+// Với khách mọi page đều phải thực hiện sau khi load 
 async function CommonAction() {
+    if (DEBUG) {
+        console.log("CommonAction CALL");
+    }
     if (document.getElementById("biggestContainer_top") == null) {
         return;
     }
@@ -807,8 +837,12 @@ async function CommonAction() {
     {
         let href = window.location.href.toUpperCase();
         if (href.endsWith("/HOME/INDEX") ||
+            href.endsWith("/HOME/INDEX/") ||
             href.endsWith("/HOME") ||
-            href.endsWith("COM/") || 
+            href.endsWith("/HOME/") ||
+            href.endsWith("COM") ||
+            href.endsWith("COM/") ||
+            href.endsWith("56479") ||
             href.endsWith("56479/")) {
             document.getElementById("left_container").style.display = "flex";
         }
@@ -816,9 +850,154 @@ async function CommonAction() {
             document.getElementById("left_container").style.display = "none";
         }
     }
-    await ShowAccoutAction();
-    await UpdateCartCount();
+    if (CheckIsCustomer()) {
+        await ShowAccoutAction();
+        await UpdateCartCount();
+    }
 }
 
 CommonAction();
 
+
+// ele là <datalist>
+// list là danh sách dữ liệu có cấu trúc: id, name
+function SetDataListOfIdName(ele, list) {
+    if (ele == null || list == null)
+        return;
+
+    let length = list.length;
+    let option = null;
+    for (let i = 0; i < length; i++) {
+        option = document.createElement("option");
+        option.setAttribute("data-id", list[i].id);
+        option.text = list[i].name;
+        ele.appendChild(option);
+    }
+}
+
+// ele là <datalist>
+// List<string>
+function SetDataListOfString(ele, list) {
+    if (ele == null || list == null)
+        return;
+
+    let length = list.length;
+    let option = null;
+    for (let i = 0; i < length; i++) {
+        option = document.createElement("option");
+        option.text = list[i];
+        ele.appendChild(option);
+    }
+}
+
+async function GetListProductName() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Product/GetListProductName";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-product-name");
+        SetDataListOfIdName(ele, list);
+    }
+}
+
+async function GetListCombo() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Combo/GetListCombo";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-combo");
+        SetDataListOfIdName(ele, list);
+    }
+}
+
+async function GetListCategory() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Category/GetListCategory";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-category");
+        SetDataListOfIdName(ele, list);
+    }
+}
+
+async function GetListAuthor() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Product/GetListAuthor";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-author");
+        SetDataListOfString(ele, list);
+    }
+}
+
+async function GetListTranslator() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Product/GetListTranslator";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-translator");
+        SetDataListOfString(ele, list);
+    }
+}
+
+async function GetListPublisher() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Publisher/GetListPublisher";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-Publisher");
+        SetDataListOfIdName(ele, list);
+    }
+}
+
+async function GetListPublishingCompany() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/Product/GetListPublishingCompany";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-publishing-company");
+        SetDataListOfString(ele, list);
+    }
+}
+
+async function GetListItem() {
+    const searchParams = new URLSearchParams();
+
+    let query = "/ItemModel/GetListItem";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = null;
+    if (responseDB.responseText != null) {
+        list = JSON.parse(responseDB.responseText);
+        let ele = document.getElementById("list-item-name");
+        SetDataListOfIdName(ele, list);
+    }
+}

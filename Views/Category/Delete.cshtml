@@ -14,39 +14,41 @@
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/Category.cshtml")
 
-        <script>
-            function CreateCategory() {
-                window.location.href = "/Category/Create";
-            }
-
-            function DeleteCategory() {
-                let name = document.getElementById("category-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(name, "Thể loại không hợp lệ.")) {
-                    return;
-                }
-                let id = GetDataIdFromCategoryDatalist(name);
-                if (id == null) {
-                    ShowResult("Thể loại không tồn tại.");
-                    return;
-                }
-
-                const searchParams = new URLSearchParams();
-                searchParams.append("name", name);
-                let query = "/Category/DeleteCategory";
-
-                let OnloadFuntion = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        GetJsonResponse(this.responseText);
-                        document.getElementById("category-id").value = "";
-                    }
-                }
-
-                RequestHttpPost(OnloadFuntion, searchParams, query);
-            }
-        </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.category.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+
+    <script>
+        GetListCategory();
+        function CreateCategory() {
+            window.location.href = "/Category/Create";
+        }
+
+        function DeleteCategory() {
+            let name = document.getElementById("category-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Thể loại không hợp lệ.")) {
+                return;
+            }
+            let id = GetDataIdFromCategoryDatalist(name);
+            if (id == null) {
+                ShowResult("Thể loại không tồn tại.");
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("name", name);
+            let query = "/Category/DeleteCategory";
+
+            let OnloadFuntion = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    GetJsonResponse(this.responseText);
+                    document.getElementById("category-id").value = "";
+                }
+            }
+
+            RequestHttpPost(OnloadFuntion, searchParams, query);
+        }
+    </script>
 </body>
 </html>

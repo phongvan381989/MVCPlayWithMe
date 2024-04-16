@@ -13,46 +13,48 @@
 
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/Publisher.cshtml")
-
-        <script>
-            function CreatePublisher() {
-                let publisherName = document.getElementById("publisher-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "Tên nhà phát hành không hợp lệ.")) {
-                    return;
-                }
-                let publisherId = GetDataIdFromPublisherDatalist(publisherName);
-                if (publisherId != null) {
-                    ShowResult("Tên nhà phát hành đã có.");
-                    return;
-                }
-
-                const xhttp = new XMLHttpRequest();
-                xhttp.onload = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        GetJsonResponse(this.responseText);
-                    }
-                }
-                let query = "/Publisher/CreatePublisher?name=";
-                query = query + publisherName;
-                query = query + "&detail=";
-                let detail = document.getElementById("detail").value;
-                query = query + detail;
-                xhttp.open("GET", query);
-                xhttp.send();
-            }
-
-            function UpdatePublisher() {
-                window.location.href = "/Publisher/UpdateDelete";
-            }
-
-            function DeletePublisher() {
-                window.location.href = "/Publisher/UpdateDelete";
-            }
-
-        </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.publisher.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script>
+
+        GetListPublisher();
+
+        function CreatePublisher() {
+            let publisherName = document.getElementById("publisher-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "Tên nhà phát hành không hợp lệ.")) {
+                return;
+            }
+            let publisherId = GetDataIdFromPublisherDatalist(publisherName);
+            if (publisherId != null) {
+                ShowResult("Tên nhà phát hành đã có.");
+                return;
+            }
+
+            const xhttp = new XMLHttpRequest();
+            xhttp.onload = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    GetJsonResponse(this.responseText);
+                }
+            }
+            let query = "/Publisher/CreatePublisher?name=";
+            query = query + publisherName;
+            query = query + "&detail=";
+            let detail = document.getElementById("detail").value;
+            query = query + detail;
+            xhttp.open("GET", query);
+            xhttp.send();
+        }
+
+        function UpdatePublisher() {
+            window.location.href = "/Publisher/UpdateDelete";
+        }
+
+        function DeletePublisher() {
+            window.location.href = "/Publisher/UpdateDelete";
+        }
+
+    </script>
 </body>
 </html>

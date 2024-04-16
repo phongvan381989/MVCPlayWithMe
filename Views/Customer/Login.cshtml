@@ -72,12 +72,14 @@
         async function Login_Login( ) {
             let userName = document.getElementById("userName").value;
             if (isEmptyOrSpaces(userName)) {
-                CreateMustClickOkModal("Nhập tài khoản.", null);
+                await CreateMustClickOkModal("Nhập tài khoản.", null);
+                return;
             }
 
             let passWord = document.getElementById("passWord").value;
             if (isEmptyOrSpaces(passWord)) {
-                CreateMustClickOkModal("Nhập mật khẩu.", null);
+                await CreateMustClickOkModal("Nhập mật khẩu.", null);
+                return;
             }
             const searchParams = new URLSearchParams();
             searchParams.append("userName", userName);
@@ -95,9 +97,8 @@
             let resObj = JSON.parse(res.responseText);
 
             if (resObj.State != 0) {
-                CreateMustClickOkModal(resObj.Message, null);
-                //// Xóa cookie ở web, ở thiết bị khác không được xóa
-                //DeleteCookie(uidKey);
+                await CreateMustClickOkModal(resObj.Message, null);
+
                 return;
             }
             //// Xóa cart cookie bên javascript

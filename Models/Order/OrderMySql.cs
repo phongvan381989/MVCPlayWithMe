@@ -98,7 +98,7 @@ namespace MVCPlayWithMe.Models.Order
             if (cusInfor == null)
                 return id;
 
-            MySqlParameter[] paras = new MySqlParameter[8];
+            MySqlParameter[] paras = new MySqlParameter[9];
 
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
             paras[1] = new MySqlParameter("@inName", cusInfor.name);
@@ -108,6 +108,7 @@ namespace MVCPlayWithMe.Models.Order
             paras[5] = new MySqlParameter("@inSubDistrict", cusInfor.subdistrict);
             paras[6] = new MySqlParameter("@inDetail", cusInfor.detail);
             paras[7] = new MySqlParameter("@inNote", note);
+            paras[8] = new MySqlParameter("@inIsNotWeb", 0);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try

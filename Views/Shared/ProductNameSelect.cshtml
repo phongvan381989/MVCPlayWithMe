@@ -3,10 +3,6 @@
     <input list="list-product-name" class="config-max-width margin-vertical" id="product-name-id">
 
     <datalist id="list-product-name">
-        @foreach (var pub in ViewData["lsProductName"] as IList<MVCPlayWithMe.Models.ProductIdName>)
-        {
-            <option data-id=@pub.id>@pub.name</option>
-        }
     </datalist>
     <button type="button" onclick="UpdateName()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
 

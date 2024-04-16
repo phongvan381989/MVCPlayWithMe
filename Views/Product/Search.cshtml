@@ -27,6 +27,9 @@
         let name;
         let combo;
 
+        GetListProductName();
+        GetListCombo();
+
         // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
         async function Search() {
             codeOrBarcode = GetValueInputById("code-or-isbn","");

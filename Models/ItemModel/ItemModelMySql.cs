@@ -429,6 +429,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             item.date = MyMySql.GetDateTime(rdr, "ItemDate");
             item.detail = MyMySql.GetString(rdr, "ItemDetail");
             item.SetSrcImageVideo();
+            //ite
 
             return item;
         }

@@ -33,14 +33,36 @@
         <div class="fmx09gx8">
             <div class="gmxk9381"> Sản phẩm trong kho</div>
             <button onclick="CopyShopeeProductImageToProduct()"
-                    title="Sản phẩm trong kho chưa có ảnh, video. 
+                    title="Sản phẩm trong kho chưa có ảnh, video.
                     Copy ảnh sản phẩm trên sàn Shopee tới sản phẩm trong kho">
-            Chép Ảnh Từ Shopee Tới Sản Phẩm Trong Kho</button>
+                Chép Ảnh Từ Shopee Tới Sản Phẩm Trong Kho
+            </button>
+
+            <button onclick="AddWaterMark()"
+                    title="Thêm waterMark logo voi bé nhỏ vào giữa ảnh cho tất cả anh trong thư mục.
+                    Cân nhắc khi dùng hàm này">
+                Thêm Water mark logo voi bé nhỏ tất cả ảnh
+            </button>
         </div>
     </div>
     <script>
         function CopyShopeeProductImageToProduct() {
 
+        }
+
+        async function AddWaterMark() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/AddWaterMarkAllExistImage";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            let result = JSON.parse(responseDB.responseText);
+
+            if (result.State != 0) {
+                await CreateMustClickOkModal(result.Message)
+                return;
+            }
+            alert("Thêm logo voi bé nhỏ thành công.");
         }
     </script>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>

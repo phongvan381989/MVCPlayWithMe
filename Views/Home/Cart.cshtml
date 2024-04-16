@@ -547,7 +547,7 @@
                 clone.setAttribute("data-model-id", obj.id.toString());
                 // Cập nhật dữ liệu bản sao
                 clone.getElementsByClassName("model-checkbox-input")[0].checked = Boolean(obj.real);
-                clone.getElementsByClassName("WanNdG")[0].src = obj.imageSrc;
+                clone.getElementsByClassName("WanNdG")[0].src = Get320VersionOfImageSrc(obj.imageSrc);
 
                 let listA = clone.getElementsByClassName("item-url");
                 listA[0].title = obj.itemName;
@@ -726,7 +726,7 @@
 
                 if (iInput > maxQuantity) {
                     iInput = maxQuantity;
-                    CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
+                    await CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
                 }
             }
             element.value = iInput.toString();
@@ -735,7 +735,7 @@
 
             let resObj = JSON.parse(res.responseText);
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
 
@@ -757,7 +757,7 @@
             let res = await UpdateWhenChangeInputQuantity(model, eInput);
             let resObj = JSON.parse(res.responseText);
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
 
@@ -778,13 +778,13 @@
                 eInput.value = iInput.toString();
             }
             else {
-                CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
+                await CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
             }
 
             let res = await UpdateWhenChangeInputQuantity(model, eInput);
             let resObj = JSON.parse(res.responseText);
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 return;
             }
 
@@ -815,7 +815,7 @@
                         let res = await DeleteOneCart(id);
                         let resObj = JSON.parse(res.responseText);
                         if (resObj.State != 0) {
-                            CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                            await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                             return;
                         }
                     }
@@ -836,7 +836,7 @@
             }
         }
 
-        function BuyNow() {
+        async function BuyNow() {
             // Khách vãng lai
             // Chưa sản phẩm / model nào được chọn để mua
             let isSelected = false;
@@ -848,7 +848,7 @@
                 }
             }
             if (!isSelected) {
-                CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.", null)
+                await CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.", null)
                 return;
             }
             // Tạo string dạng cookie của những sản phẩm chọn mua

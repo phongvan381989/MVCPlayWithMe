@@ -93,23 +93,13 @@ namespace MVCPlayWithMe.Controllers
             return sb.ToString();
         }
 
-        //public ActionResult CreatePublisher()
-        //{
-        //    if (AuthentAdministrator() == null)
-        //    {
-        //        return AuthenticationFail();
-        //    }
-
-        //    return View();
-        //}
-
         public ActionResult Create()
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListPublisher();
+            //ViewDataGetListPublisher();
             return View();
         }
 
@@ -119,8 +109,14 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListPublisher();
+            //ViewDataGetListPublisher();
             return View();
+        }
+
+        [HttpPost]
+        public string GetListPublisher()
+        {
+            return JsonConvert.SerializeObject(sqler.GetListPublisher());
         }
     }
 }

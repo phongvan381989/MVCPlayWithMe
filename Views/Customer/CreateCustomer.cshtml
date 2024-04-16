@@ -96,14 +96,14 @@
                 if (isEmptyOrSpaces(userName)
                     || isEmptyOrSpaces(passWord)
                     || isEmptyOrSpaces(repassWord)) {
-                    CreateMustClickOkModal("Vui lòng không để trống thông tin tài khoản, mật khẩu.", null);
+                    await CreateMustClickOkModal("Vui lòng không để trống thông tin tài khoản, mật khẩu.", null);
                     return;
                 }
                 // Kiểm tra password và repassword hợp lệ
                 {
                     const obj = JSON.parse(CheckPassWordValid(passWord, repassWord));
                     if (obj.isValid === false) {
-                        CreateMustClickOkModal(obj.message, null);
+                        await CreateMustClickOkModal(obj.message, null);
                         return;
                     }
                 }
@@ -112,11 +112,11 @@
                 let result = JSON.parse(responseDB.responseText);
 
                 if (result == null) {
-                    CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.", null);
+                    await CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.", null);
                     return;
                 }
                 if (result.State != 0 && result.Message == "Ok") {
-                    CreateMustClickOkModal("Tài khoản đã tồn tại. Vui lòng nhâp tài khoản khác.", null);
+                    await CreateMustClickOkModal("Tài khoản đã tồn tại. Vui lòng nhâp tài khoản khác.", null);
                     return;
                 }
 
@@ -124,15 +124,15 @@
                 result = JSON.parse(responseDB.responseText);
 
                 if (result == null) {
-                    CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.", null);
+                    await CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.", null);
                     return;
                 }
 
                 if (result.State != 0) {
-                    CreateMustClickOkModal("Tạo tài khoản thất bại. Vui lòng thử lại sau.", null);
+                    await CreateMustClickOkModal("Tạo tài khoản thất bại. Vui lòng thử lại sau.", null);
                     return;
                 }
-                CreateMustClickOkModal("Tạo tài khoản thành công",
+                await CreateMustClickOkModal("Tạo tài khoản thành công",
                     function () {window.location.replace("/Customer/Login"); });
             }
 

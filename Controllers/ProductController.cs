@@ -26,13 +26,13 @@ namespace MVCPlayWithMe.Controllers
 
         private void GetViewDataForInput()
         {
-            ViewDataGetListCombo();
-            ViewDataGetListCategory();
-            ViewDataGetListAuthor();
-            ViewDataGetListTranslator();
-            ViewDataGetListPublisher();
-            ViewDataGetListPublishingCompany();
-            ViewDataGetListProductName();
+            //ViewDataGetListCombo();
+            //ViewDataGetListCategory();
+            //ViewDataGetListAuthor();
+            //ViewDataGetListTranslator();
+            //ViewDataGetListPublisher();
+            //ViewDataGetListPublishingCompany();
+            //ViewDataGetListProductName();
 
             ViewDataGetListProductLong();
             ViewDataGetListProductHigh();
@@ -50,7 +50,7 @@ namespace MVCPlayWithMe.Controllers
                 return AuthenticationFail();
             }
 
-            GetViewDataForInput();
+            //GetViewDataForInput();
 
             return View();
         }
@@ -68,7 +68,7 @@ namespace MVCPlayWithMe.Controllers
                 return AuthenticationFail();
             }
 
-            GetViewDataForInput();
+            //GetViewDataForInput();
 
             return View();
         }
@@ -80,7 +80,7 @@ namespace MVCPlayWithMe.Controllers
                 return AuthenticationFail();
             }
 
-            GetViewDataForInput();
+            //GetViewDataForInput();
 
             return View();
         }
@@ -91,7 +91,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListProductName();
+            //ViewDataGetListProductName();
 
             return View();
         }
@@ -112,8 +112,8 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            ViewDataGetListCombo();
-            ViewDataGetListProductName();
+            //ViewDataGetListCombo();
+            //ViewDataGetListProductName();
             return View();
         }
 
@@ -209,8 +209,6 @@ namespace MVCPlayWithMe.Controllers
                  );
 
              MySqlResultState result = sqler.AddNewPro(pro);
-            // Lấy id của sản phẩm vừa thêm mới thành công
-            result.myAnything = sqler.GetProductIdFromName(name);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -298,8 +296,11 @@ namespace MVCPlayWithMe.Controllers
             }
 
             MySqlResultState result = sqler.DeleteProduct(id);
-            // xóa file của sản phẩm
-            DeleteOldFile(id);
+
+            // xóa thư mục ảnh video của sản phẩm
+            string path = Common.GetAbsoluteProductMediaFolderPath(id.ToString());
+            Common.DeleteMediaFolder(path);
+
             return JsonConvert.SerializeObject(result);
         }
 
@@ -357,32 +358,6 @@ namespace MVCPlayWithMe.Controllers
                 );
             MySqlResultState result = sqler.UpdateCommonInfoWithCombo(pro);
             return JsonConvert.SerializeObject(result);
-        }
-
-        /// <summary>
-        /// Xóa ảnh, video cũ
-        /// </summary>
-        /// <param name="productId"></param>
-        /// <returns></returns>
-        public string DeleteOldFile(int productId)
-        {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
-            }
-
-            string path = Common.GetAbsoluteProductMediaFolderPath(productId.ToString());
-            if (path != null)
-            {
-                System.IO.DirectoryInfo di = new DirectoryInfo(path);
-                //foreach (FileInfo file in di.GetFiles())
-                //{
-                //    file.Delete();
-                //}
-                di.Delete(true);
-            }
-
-            return JsonConvert.SerializeObject(new MySqlResultState());
         }
 
         /// <summary>
@@ -577,6 +552,31 @@ namespace MVCPlayWithMe.Controllers
         public string UpdateISBN(int id, string isbn)
         {
             return JsonConvert.SerializeObject(sqler.UpdateISBN(id, isbn));
+        }
+
+        [HttpPost]
+        public string GetListAuthor()
+        {
+            return JsonConvert.SerializeObject(sqler.GetListAuthor());
+        }
+
+        
+        [HttpPost]
+        public string GetListTranslator()
+        {
+            return JsonConvert.SerializeObject(sqler.GetListTranslator());
+        }
+
+        [HttpPost]
+        public string GetListPublishingCompany()
+        {
+            return JsonConvert.SerializeObject(sqler.GetListPublishingCompany());
+        }
+
+        [HttpPost]
+        public string GetListProductName()
+        {
+            return JsonConvert.SerializeObject(sqler.GetListProductName());
         }
     }
 }

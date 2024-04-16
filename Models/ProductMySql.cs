@@ -48,6 +48,7 @@ namespace MVCPlayWithMe.Models
             product.republish = MyMySql.GetInt32(rdr, "Republish");
             product.detail = MyMySql.GetString(rdr, "Detail");
             product.status = MyMySql.GetInt32(rdr, "Status");
+            product.quantity = MyMySql.GetInt32(rdr, "Quantity");
             product.SetSrcImageVideo();
 
             return product;
@@ -241,16 +242,74 @@ namespace MVCPlayWithMe.Models
             MyMySql.AddOutParameters(paras);
         }
 
+        // Thêm mới sản phẩm và trả về id sản phẩm thêm mới như outResult
         public MySqlResultState AddNewPro(
             Product pro
         )
         {
-            MySqlResultState result = null;
+            MySqlResultState result = new MySqlResultState();
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[25];
-            AddUpdateParameters(pro, paras);
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Insert", paras);
+            paras = new MySqlParameter[23];
+            paras[0] = new MySqlParameter("@proCode", pro.code);
+            paras[1] = new MySqlParameter("@barcode", pro.barcode);
+            paras[2] = new MySqlParameter("@productName", pro.name);
+            paras[3] = new MySqlParameter("@comboId", pro.comboId);
+            paras[4] = new MySqlParameter("@categoryId", pro.categoryId);
+            paras[5] = new MySqlParameter("@bookCoverPrice", pro.bookCoverPrice);
+            paras[6] = new MySqlParameter("@author", pro.author);
+            paras[7] = new MySqlParameter("@translator", pro.translator);
+            paras[8] = new MySqlParameter("@publisherId", pro.publisherId);
+            paras[9] = new MySqlParameter("@publishingCompany", pro.publishingCompany);
+            paras[10] = new MySqlParameter("@publishingTime", pro.publishingTime);
+            paras[11] = new MySqlParameter("@productLong", pro.productLong);
+            paras[12] = new MySqlParameter("@productWide", pro.productWide);
+            paras[13] = new MySqlParameter("@productHigh", pro.productHigh);
+            paras[14] = new MySqlParameter("@productWeight", pro.productWeight);
+            paras[15] = new MySqlParameter("@positionInWarehouse", pro.positionInWarehouse);
+            paras[16] = new MySqlParameter("@hardCover", pro.hardCover);
+            paras[17] = new MySqlParameter("@minAge", pro.minAge);
+            paras[18] = new MySqlParameter("@maxAge", pro.maxAge);
+            paras[19] = new MySqlParameter("@parentId", pro.parentId);
+            paras[20] = new MySqlParameter("@republish", pro.republish);
+            paras[21] = new MySqlParameter("@detail", pro.detail);
+            paras[22] = new MySqlParameter("@proStatus", pro.status);
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr != null && rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                        if(result.myAnything == -2)
+                        {
+                            result.Message = "Code is exist";
+                        }
+                        else if (result.myAnything == -3)
+                        {
+                            result.Message = "Barcode is exist";
+                        }
+                    }
+                }
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
 
             return result;
         }
@@ -321,7 +380,7 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        public List<ProductIdName> GetListParent()
+        public List<ProductIdName> GetListProductName()
         {
             List<ProductIdName> ls = new List<ProductIdName>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);

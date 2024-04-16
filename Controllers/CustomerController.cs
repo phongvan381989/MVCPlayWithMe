@@ -279,49 +279,49 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        /// <summary>
-        /// Không dùng hàm này nữa
-        /// /// 0: UNPAID, 1:  READY_TO_SHIP,
-        /// 2: PROCESSED, // Đây là trạng thái sau khi in đơn 3:  SHIPPED, 4:  COMPLETED,
-        /// 5: IN_CANCEL, 6:  CANCELLED, 7:  INVOICE_PENDING, 8: ALL
-        /// </summary>
-        /// <param name="status"></param>
-        /// <returns></returns>
-        [HttpPost]
-        public string SearchOrderCount(int statusOrder)
-        {
-            Customer cus = AuthentCustomer();
-            MySqlResultState result = new MySqlResultState();
-            if (cus == null)
-            {
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-            }
-            else
-            {
-                result = ordersqler.SearchOrderCount(cus.id, statusOrder);
-            }
-            return JsonConvert.SerializeObject(result);
-        }
+        ///// <summary>
+        ///// Không dùng hàm này nữa
+        ///// /// 0: UNPAID, 1:  READY_TO_SHIP,
+        ///// 2: PROCESSED, // Đây là trạng thái sau khi in đơn 3:  SHIPPED, 4:  COMPLETED,
+        ///// 5: IN_CANCEL, 6:  CANCELLED, 7:  INVOICE_PENDING, 8: ALL
+        ///// </summary>
+        ///// <param name="status"></param>
+        ///// <returns></returns>
+        //[HttpPost]
+        //public string SearchOrderCount(int statusOrder)
+        //{
+        //    Customer cus = AuthentCustomer();
+        //    MySqlResultState result = new MySqlResultState();
+        //    if (cus == null)
+        //    {
+        //        result.State = EMySqlResultState.AUTHEN_FAIL;
+        //    }
+        //    else
+        //    {
+        //        result = ordersqler.SearchOrderCount(cus.id, statusOrder);
+        //    }
+        //    return JsonConvert.SerializeObject(result);
+        //}
 
-        // Không dùng hàm này nữa
-        [HttpGet]
-        public string ChangePage(int statusOrder, int start, int offset)
-        {
-            Customer cus = AuthentCustomer();
+        //// Không dùng hàm này nữa
+        //[HttpGet]
+        //public string ChangePage(int statusOrder, int start, int offset)
+        //{
+        //    Customer cus = AuthentCustomer();
 
-            MySqlResultState result = new MySqlResultState();
-            if (cus == null)
-            {
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-                return JsonConvert.SerializeObject(result);
-            }
-            else
-            {
-                result = ordersqler.SearchOrderChangePage(cus.id, statusOrder, start, offset);
-            }
+        //    MySqlResultState result = new MySqlResultState();
+        //    if (cus == null)
+        //    {
+        //        result.State = EMySqlResultState.AUTHEN_FAIL;
+        //        return JsonConvert.SerializeObject(result);
+        //    }
+        //    else
+        //    {
+        //        result = ordersqler.SearchOrderChangePage(cus.id, statusOrder, start, offset);
+        //    }
 
-            return JsonConvert.SerializeObject(result);
-        }
+        //    return JsonConvert.SerializeObject(result);
+        //}
 
         // Lấy tất cả đơn
         [HttpPost]

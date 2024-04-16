@@ -118,6 +118,7 @@
     <Reference Include="MySql.Data.EntityFrameworkCore, Version=8.0.22.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.EntityFrameworkCore.8.0.22\lib\netstandard2.0\MySql.Data.EntityFrameworkCore.dll</HintPath>
     </Reference>
+    <Reference Include="PresentationCore" />
     <Reference Include="Renci.SshNet, Version=2016.1.0.0, Culture=neutral, PublicKeyToken=1cee9f8bde3db106, processorArchitecture=MSIL">
       <HintPath>..\packages\SSH.NET.2016.1.0\lib\net40\Renci.SshNet.dll</HintPath>
     </Reference>
@@ -223,6 +224,7 @@
       <Private>True</Private>
       <HintPath>..\packages\Antlr.3.5.0.2\lib\Antlr3.Runtime.dll</HintPath>
     </Reference>
+    <Reference Include="WindowsBase" />
     <Reference Include="ZstdNet, Version=1.4.5.0, Culture=neutral, PublicKeyToken=c5687fc88969c44d, processorArchitecture=MSIL">
       <HintPath>..\packages\MySql.Data.8.0.31\lib\net452\ZstdNet.dll</HintPath>
     </Reference>
@@ -516,45 +518,28 @@
     <Content Include="Views\Customer\Login.cshtml" />
     <Content Include="Views\Customer\Update.cshtml" />
     <Content Include="Views\Shared\biggestContainer_Top.cshtml" />
-    <Content Include="Views\Administrator\CreatePublisher.cshtml" />
     <Content Include="Views\Product\Create.cshtml" />
-    <Content Include="Views\Shared\PublisherSelect.cshtml" />
     <Content Include="Views\Publisher\Create.cshtml" />
     <Content Include="Views\Publisher\Index.cshtml" />
-    <Content Include="Views\Shared\PublisherSelectAndGoPage.cshtml" />
     <Content Include="Views\Publisher\UpdateDelete.cshtml" />
     <Content Include="Views\Shared\Publisher.cshtml" />
     <Content Include="Views\Combo\Create.cshtml" />
     <Content Include="Views\Shared\ComboSelect.cshtml" />
-    <Content Include="Views\Shared\ComboSelectAndGoPage.cshtml" />
     <Content Include="Views\Shared\Combo.cshtml" />
     <Content Include="Views\Combo\Delete.cshtml" />
-    <Content Include="Views\Shared\CategorySelect.cshtml" />
-    <Content Include="Views\Shared\CategorySelectAndGoPage.cshtml" />
     <Content Include="Views\Shared\Category.cshtml" />
     <Content Include="Views\Category\Create.cshtml" />
     <Content Include="Views\Category\Delete.cshtml" />
     <Content Include="Views\Product\UpdateDelete.cshtml" />
-    <Content Include="Views\Shared\ParentIdSelect.cshtml" />
-    <Content Include="Views\Shared\PublishingCompanySelect.cshtml" />
-    <Content Include="Views\Shared\AuthorSelect.cshtml" />
     <Content Include="Views\Shared\TranslatorSelect.cshtml" />
     <Content Include="Views\Shared\ProductInput.cshtml" />
     <Content Include="Views\Shared\Head.cshtml" />
     <Content Include="Views\Shared\ProductNameSelect.cshtml" />
     <Content Include="Views\Product\UpdateWithCombo.cshtml" />
-    <Content Include="Views\Shared\ProductLongSelect.cshtml" />
-    <Content Include="Views\Shared\ProductWideSelect.cshtml" />
-    <Content Include="Views\Shared\ProductHighSelect.cshtml" />
-    <Content Include="Views\Shared\ProductWeightSelect.cshtml" />
-    <Content Include="Views\Shared\ProductMinAgeSelect.cshtml" />
-    <Content Include="Views\Shared\ProductMaxAgeSelect.cshtml" />
-    <Content Include="Views\Shared\ProductPublishingTimeSelect.cshtml" />
     <Content Include="Views\Shared\ProductInputCommon.cshtml" />
     <Content Include="Views\Product\Import.cshtml" />
     <Content Include="Views\Product\ChangeImport.cshtml" />
     <Content Include="Views\ItemModel\Create.cshtml" />
-    <Content Include="Views\Shared\ItemModel.cshtml" />
     <Content Include="Views\Shared\VideoSelect.cshtml" />
     <Content Include="Views\Shared\ImageSelect.cshtml" />
     <Content Include="Views\Shared\RowsDistance.cshtml" />

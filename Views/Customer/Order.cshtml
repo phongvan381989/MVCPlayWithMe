@@ -197,12 +197,12 @@
             RemoveCircleLoader();
             let resObj = JSON.parse(responseDB.responseText);
             if (resObj.State != 0) {
-                CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
                 listOrder = null;
                 return;
             }
             listOrder = resObj.myJson;
-            // HIển thị tất cả đơn hàng
+            // Hiển thị tất cả đơn hàng
             ShowResult(document.getElementsByClassName("nvsflAB87")[0]);
         }
 

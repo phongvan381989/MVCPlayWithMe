@@ -19,10 +19,11 @@ namespace MVCPlayWithMe.Controllers
             /// Check cookie đã được lưu trong db
             AdministratorMySql sqler = new AdministratorMySql();
             Administrator administrator = sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
-            //if(administrator == null)
-            //{
-            //    Cookie.DeleteUserIdCookie(HttpContext);
-            //}
+            if (administrator == null)
+            {
+                Cookie.DeleteUserIdCookie(HttpContext);
+                Cookie.DeleteVistorTypeCookie(HttpContext);
+            }
             return administrator;
 
         }
@@ -34,10 +35,10 @@ namespace MVCPlayWithMe.Controllers
             /// Check cookie đã được lưu trong db
             CustomerMySql sqler = new CustomerMySql();
             Customer customer = sqler.GetCustomerFromCookie(cookieResult.cookieValue);
-            //if (customer == null)
-            //{
-            //    Cookie.DeleteUserIdCookie(HttpContext);
-            //}
+            if (customer == null)
+            {
+                Cookie.DeleteUserIdCookie(HttpContext);
+            }
             return customer;
         }
 
@@ -47,7 +48,8 @@ namespace MVCPlayWithMe.Controllers
         /// <returns></returns>
         public ActionResult AuthenticationFail()
         {
-            return View("~/Views/Administrator/Login.cshtml");
+            //return View("~/Views/Administrator/Login.cshtml");
+            return Redirect("~/Administrator/Login");
         }
 
         public void ViewDataGetListPublisher()
@@ -70,11 +72,11 @@ namespace MVCPlayWithMe.Controllers
             List<Category> ls = sqler.GetListCategory();
             ViewData["lsCategory"] = ls;
         }
-        
+
         public void ViewDataGetListProductName()
         {
             ProductMySql sqler = new ProductMySql();
-            List<ProductIdName> ls = sqler.GetListParent();
+            List<ProductIdName> ls = sqler.GetListProductName();
             ViewData["lsProductName"] = ls;
         }
 
@@ -166,7 +168,8 @@ namespace MVCPlayWithMe.Controllers
 
             var fileName = Request.Headers["fileName"];
             var id = Request.Headers["productId"];
-            // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media, ta lấy chỉ tên
+            // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media,
+            //ta lấy chỉ tên
             var originalFileName = Request.Headers["originalFileName"];
             var exist = Request.Headers["exist"];
             var finish = Request.Headers["finish"];
@@ -215,9 +218,18 @@ namespace MVCPlayWithMe.Controllers
                 var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
                 fileStream.Write(bytes, 0, length);
                 fileStream.Close();
+
+                // Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
+                if (Common.ImageExtensions.Contains(Path.GetExtension(saveToFileLoc).ToLower()))
+                {
+                    string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
+                    Common.ReduceImageSizeAndSave(newsaveToFileLoc);
+                }
             }
 
-            if (finish == "true")// Xóa bỏ ảnh/video không cần lưu nữa. Những file có tên lớn hơn tên cuối cùng được lưu
+            // Xóa bỏ ảnh/video không cần lưu nữa.
+            // Những file có tên lớn hơn tên cuối cùng được lưu
+            if (finish == "true")
             {
                 Common.DeleteImageVideoNameGreat(path + fileName);
             }

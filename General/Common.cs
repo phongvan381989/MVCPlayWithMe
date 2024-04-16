@@ -11,6 +11,12 @@ using System.Web;
 using System.Web.Mvc;
 using System.Globalization;
 using RestSharp;
+using System.Drawing.Imaging;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Windows;
 
 namespace MVCPlayWithMe.General
 {
@@ -26,6 +32,8 @@ namespace MVCPlayWithMe.General
         // Cookie const
         #region Cookie
         public static readonly string userIdKey = "uid";
+        // Chỉ có cookie này khi đăng nhập như người quản trị
+        public static readonly string vistorType = "vistorType";
         // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         // id: mã model, q: số lượng thêm vào giỏ hàng, real: 1-thực sự chọn mua, 0-có thể mua sau này
         public static readonly string cartKey = "cart";
@@ -67,6 +75,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string ProductMediaFolderPath;
         public static string ItemMediaFolderPath;
+        public static string MediaFolderPath;
         public static string ThongTinBaoMatPath;
         public static string TemporaryImageShopeeMediaFolderPath;
         public static string TemporaryImageTikiMediaFolderPath;
@@ -131,6 +140,35 @@ namespace MVCPlayWithMe.General
                 return new string[0] ;
 
             return Directory.GetFiles(path);
+        }
+
+        // Không lấy file trong subfolder không sắp xếp tăng dần
+        // mediaType: 0-lấy video và ảnh, 1-lấy ảnh, 2-lấy video
+        public static void GetAllMediaFilesIncludeSubfolderDontSort(List<string> listMediaFiles, string folderPath, int mediaType)
+        {
+            listMediaFiles.Clear();
+
+            // Check thư mục chứa tồn tại
+            if (String.IsNullOrEmpty(folderPath))
+                return;
+            if (!Directory.Exists(folderPath))
+                return;
+
+            if (mediaType == 0 || mediaType == 1)
+            {
+                // Image formats
+                foreach (string str in ImageExtensions)
+                {
+                    listMediaFiles.AddRange(Directory.GetFiles(folderPath, "*" + str, SearchOption.AllDirectories).ToList());
+                }
+            }
+            if (mediaType == 0 || mediaType == 2)
+            {
+                    foreach (string str in VideoExtensions)
+                    {
+                        listMediaFiles.AddRange(Directory.GetFiles(folderPath, str, SearchOption.AllDirectories).ToList());
+                    }
+            }
         }
 
         /// <summary>
@@ -299,6 +337,42 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
+        /// VD: file ảnh gốc là: C:\Users\phong\OneDrive\Desktop\576\0.jfif.
+        /// Ta tạo có check exist thư mục C:\Users\phong\OneDrive\Desktop\576_320 và lưu ảnh mới 0.jpg
+        /// Ảnh mới có kính thước 320, chất lượng 100% ảnh gốc
+        /// </summary>
+        /// <param name="path"> Gồm cả tên file</param>
+        /// <param name="isCreateFolder">Có tạo thư mục chứa phiên bản 320 không?</param>
+        /// <returns></returns>
+        public static string Get320PathFromOriginal(string path, bool isCreateFolder)
+        {
+            string newPath = string.Empty;
+
+            // Lấy được foler ông
+            string dir = Path.GetDirectoryName(path) + "_320";
+            if(isCreateFolder)
+            {
+                Directory.CreateDirectory(dir);
+            }
+            string x = Path.GetExtension(path);
+            if (Path.GetExtension(path).ToLower() == ".png")
+                newPath = dir + "\\" + Path.GetFileNameWithoutExtension(path) + ".png";
+            else
+                newPath = dir + "\\" + Path.GetFileNameWithoutExtension(path) + ".jpg";
+            return newPath;
+        }
+
+        // Từ đường dẫn đến ảnh bình thường, xóa ảnh bình thường và ảnh nhỏ 320 
+        public static void DeleteNormalAnd320Image(string path)
+        {
+            // Xóa ảnh gốc
+            System.IO.File.Delete(path);
+
+            // Xóa ảnh phiên bản 320
+            System.IO.File.Delete(Get320PathFromOriginal(path, false));
+        }
+
+        /// <summary>
         /// Xóa file ảnh hoặc video có tên không kể đuôi giống tên file trong tham số
         /// </summary>
         /// <param name="path">tên gồm đường dẫn</param>
@@ -319,7 +393,7 @@ namespace MVCPlayWithMe.General
                 {
                     if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
                     {
-                        System.IO.File.Delete(f);
+                        DeleteNormalAnd320Image(f);
                         MyLogger.GetInstance().Info("Delete: " + f);
                         break;
                     }
@@ -366,6 +440,11 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="path">Folder chứa image/video</param>
+        /// <param name="productId"></param>
         public static void DeleteAllImage(string path, string productId)
         {
             string[] files =  Directory.GetFiles(path);
@@ -376,6 +455,13 @@ namespace MVCPlayWithMe.General
                 {
                     System.IO.File.Delete(f);
                 }
+            }
+
+            // Xóa cả thư mục ảnh phiên bản 320
+            string x = Path.GetDirectoryName(path) + "_320";
+            if(Directory.Exists(x))
+            {
+                Directory.Delete(x, true);
             }
             return;
         }
@@ -392,6 +478,25 @@ namespace MVCPlayWithMe.General
                 }
             }
             return;
+        }
+
+        /// <summary>
+        /// Xóa ảnh, video cũ trong thư mục
+        /// </summary>
+        /// <param name="path">Thư mục ảnh/video</param>
+        /// <returns></returns>
+        public static void DeleteMediaFolder(string path)
+        {
+            // Xóa thư mục ảnh/ video gốc
+            Directory.Delete(path, true);
+
+            // Xóa cả thư mục ảnh phiên bản 320
+            string x = Path.GetDirectoryName(path) + "_320";
+            if (Directory.Exists(x))
+            {
+                Directory.Delete(x, true);
+            }
+
         }
 
         public static Int32 ConvertStringToInt32(string str)
@@ -613,7 +718,6 @@ namespace MVCPlayWithMe.General
         public static string GetAbsoluteItemMediaFolderPath(int itemId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
-            //MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -685,36 +789,25 @@ namespace MVCPlayWithMe.General
             return src;
         }
 
-        // Từ id item, lấy được đường dẫn thumbnail
-        public static List<string> GetItemThumbnailSrc(int itemId)
+        public static string GetItemThumbnailFirst(int itemId)
         {
-            List<string> src = new List<string>();
+            // Lấy ảnh đầu tiên tức có tên là 0
             string[] files = null;
-
+            string itemthumbnailFirst = string.Empty;
             try
             {
-                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + "_320" + @"/";
-
-                files = Directory.GetFiles(path,"*.jpg");
+                files = Directory.GetFiles(System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"_320", "0.*");
+                if (files.Length > 0)
+                {
+                    itemthumbnailFirst = ItemMediaFolderPath +
+                        itemId.ToString() + @"_320/" + Path.GetFileName(files[0]);
+                }
             }
-            catch (Exception)
+            catch(Exception ex)
             {
-                return src;
+                MyLogger.GetInstance().Warn(ex.Message);
             }
-
-            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
-
-            foreach (var file in files)
-            {
-                src.Add(relPath + Path.GetFileName(file));
-            }
-            SortSourceFile(src);
-            return src;
-        }
-
-        public static string GetItemthumbnailFirst(int itemId)
-        {
-            return ItemMediaFolderPath + itemId.ToString() + @"_320/0.jpg"; ;
+            return itemthumbnailFirst;
         }
 
         /// <summary>
@@ -1007,6 +1100,212 @@ namespace MVCPlayWithMe.General
         #endregion
 
         #region Shopee
+        #endregion
+
+        #region Giảm kích thước ảnh về 320
+        /// <summary> 
+        /// Returns the image codec with the given mime type 
+        /// </summary> 
+        static private ImageCodecInfo GetEncoderInfo(string mimeType)
+        {
+            // Get image codecs for all image formats 
+            ImageCodecInfo[] codecs = ImageCodecInfo.GetImageEncoders();
+
+            // Find the correct image codec 
+            for (int i = 0; i < codecs.Length; i++)
+                if (codecs[i].MimeType == mimeType)
+                    return codecs[i];
+
+            return null;
+        }
+
+        /// <summary> 
+        /// Saves an image as a jpeg image, with the given quality 
+        /// </summary> 
+        /// <param name="path"> Path to which the image would be saved. </param> 
+        /// <param name="quality"> An integer from 0 to 100, with 100 being the highest quality. </param> 
+        static void SaveJpeg(string path, System.Drawing.Image img, int quality)
+        {
+            // Encoder parameter for image quality 
+            EncoderParameter qualityParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+            // JPEG image codec 
+            ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
+            EncoderParameters encoderParams = new EncoderParameters(1);
+            encoderParams.Param[0] = qualityParam;
+            img.Save(path, jpegCodec, encoderParams);
+            encoderParams.Dispose();
+        }
+
+        static System.Drawing.Image ResizeImage(System.Drawing.Image imgToResize, System.Drawing.Size size)
+        {
+            int sourceWidth = imgToResize.Width;
+            int sourceHeight = imgToResize.Height;
+
+            float nPercent = 0;
+            float nPercentW = 0;
+            float nPercentH = 0;
+
+            nPercentW = ((float)size.Width / (float)sourceWidth);
+            nPercentH = ((float)size.Height / (float)sourceHeight);
+
+            if (nPercentH < nPercentW)
+                nPercent = nPercentH;
+            else
+                nPercent = nPercentW;
+
+            int destWidth = (int)(sourceWidth * nPercent);
+            int destHeight = (int)(sourceHeight * nPercent);
+
+            Bitmap b = new Bitmap(destWidth, destHeight);
+            using (Graphics g = Graphics.FromImage((System.Drawing.Image)b))
+            {
+                g.SmoothingMode = SmoothingMode.HighQuality;
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                g.DrawImage(imgToResize, 0, 0, destWidth, destHeight);
+            }
+            return (System.Drawing.Image)b;
+        }
+
+        /// <summary>
+        /// Giảm kích thước ảnh về 320 và lưu vào thư mục tương ứng có thêm _320 VD: 570_320
+        /// </summary>
+        /// <param name="path">Đường dẫn và tên file</param>
+        public static void ReduceImageSizeAndSave(string path)
+        {
+            System.Drawing.Image myImage = null;
+            System.Drawing.Image newImage = null;
+
+            System.Drawing.Size size = new System.Drawing.Size(320, 320);
+            string path320 = Get320PathFromOriginal(path, true);
+            try
+            {
+                // First load the image somehow
+                using (myImage = System.Drawing.Image.FromFile(path, true))
+                {
+                    using (newImage = ResizeImage(myImage, size))
+                    {
+                        if (Path.GetExtension(path).ToLower() == ".png" ||
+                            Path.GetExtension(path).ToLower() == ".jpg")
+                        {
+                            newImage.Save(path320);
+                        }
+                        else
+                        {
+                            SaveJpeg(path320, newImage, 100);
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Debug(ex.Message);
+            }
+        }
+        #endregion
+
+        #region Add water mark logo voi bé nhỏ vào giữa ảnh
+
+        private static BitmapSource ToBitmapSource(DrawingImage source)
+        {
+            DrawingVisual drawingVisual = new DrawingVisual();
+            DrawingContext drawingContext = drawingVisual.RenderOpen();
+            drawingContext.DrawImage(source, new Rect(new System.Windows.Point(0, 0), new System.Windows.Size(source.Width, source.Height)));
+            drawingContext.Close();
+
+            RenderTargetBitmap bmp = new RenderTargetBitmap((int)source.Width, (int)source.Height, 96, 96, PixelFormats.Pbgra32);
+            bmp.Render(drawingVisual);
+            return bmp;
+        }
+
+        /// <summary>
+        /// Thêm watermark logo voi bé nhỏ vào ảnh, xóa ảnh cũ thay bằng ảnh mới
+        /// </summary>
+        /// <param name="inputPathFull"> Đường dẫn cả tên file ảnh đầu vào</param>
+        public static string AddWatermark_DeleteOriginalImageFunc(string inputPathFull)
+        {
+            string outputFileNameWithoutExtension = System.IO.Path.GetFileNameWithoutExtension(inputPathFull);
+            BitmapImage bitmapLogo = new BitmapImage(
+                new Uri(System.Web.HttpContext.Current.Server.MapPath(Common.MediaFolderPath) + @"\200_200LOGO.png"));
+            BitmapImage bitmapInput = new BitmapImage();// new BitmapImage(new Uri(inputPathFull, UriKind.Absolute));
+
+            using (var stream = File.OpenRead(inputPathFull))
+            {
+                bitmapInput.BeginInit();
+                bitmapInput.StreamSource = stream;
+                bitmapInput.CacheOption = BitmapCacheOption.OnLoad;
+                bitmapInput.EndInit();
+            }
+
+            // Create a DrawingGroup to combine the ImageDrawing objects.
+            DrawingGroup watermarkDrawings = new DrawingGroup();
+
+            ImageDrawing watermark = new ImageDrawing();
+            watermark.ImageSource = bitmapLogo;
+            watermark.Rect = new Rect((bitmapInput.PixelWidth - bitmapLogo.PixelWidth) / 2,
+                                        (bitmapInput.PixelHeight - bitmapLogo.PixelHeight) / 2,
+                                        bitmapLogo.PixelWidth, bitmapLogo.PixelHeight);
+
+            watermarkDrawings.Children.Add(watermark);
+            watermarkDrawings.Opacity = 0.3;
+
+            ImageDrawing inputImage = new ImageDrawing();
+            inputImage.Rect = new Rect(0, 0, bitmapInput.PixelWidth, bitmapInput.PixelHeight);
+            inputImage.ImageSource = bitmapInput;
+
+            DrawingGroup imageDrawings = new DrawingGroup();
+            imageDrawings.Children.Add(inputImage);
+            imageDrawings.Children.Add(watermarkDrawings);
+
+            DrawingImage drawingImageSource = new DrawingImage(imageDrawings);
+
+            drawingImageSource.Freeze();
+            // Xóa ảnh cũ
+            // Tên file ảnh mới do có thể thay đổi định dạng, thay đổi đuôi
+            System.IO.File.Delete(inputPathFull);
+            //string outputPathFull = string.Empty;
+            string newPathFile = string.Empty;
+            if (System.IO.Path.GetExtension(inputPathFull).ToLower() == ".png")
+            {
+                newPathFile = inputPathFull;
+                var encoderPNG = new PngBitmapEncoder();
+                encoderPNG.Frames.Add(BitmapFrame.Create(ToBitmapSource(drawingImageSource)));
+                using (FileStream stream = new FileStream(newPathFile, FileMode.Create))
+                    encoderPNG.Save(stream);
+            }
+            else
+            {
+                newPathFile = System.IO.Path.ChangeExtension(inputPathFull, ".jpg");
+                var encoderJPG = new JpegBitmapEncoder();
+                encoderJPG.Frames.Add(BitmapFrame.Create(ToBitmapSource(drawingImageSource)));
+                using (FileStream stream = new FileStream(newPathFile, FileMode.Create))
+                    encoderJPG.Save(stream);
+            }
+            return newPathFile;
+        }
+
+        //// Thêm logo voi bé nhỏ, xóa ảnh gốc, và thêm phiên bản thu nhỏ 320
+        //// Hàm chỉ gọi 1 lần trong đời do thư mục ảnh chưa được add logo, thêm phiên bản thu nhỏ 320
+        //static public void AddWatermark_DeleteOriginalImageFunc_ReduceSize_Folder(string folderPath)
+        //{
+        //    try
+        //    {
+        //        List<string> ls = new List<string>();
+        //        GetAllMediaFilesIncludeSubfolderDontSort(ls,
+        //            folderPath,
+        //            1);
+        //        foreach (var fi in ls)
+        //        {
+        //            AddWatermark_DeleteOriginalImageFunc(fi);
+        //            ReduceImageSizeAndSave(fi);
+        //        }
+        //    }
+        //    catch(Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Debug(ex.Message);
+        //    }
+
+        //}
         #endregion
     }
 }

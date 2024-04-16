@@ -26,9 +26,6 @@ namespace MVCPlayWithMe.Models
 
         public List<string> imageSrc { get; set; }
 
-        // Phiên bản kích thước nhỏ của imageSrc
-        public List<string> thumbnailSrc { get; set; }
-
         // Chứa ảnh đầu tiên, phiên bản nhỏ
         public string thumbnailFirst { get; set; }
 
@@ -40,7 +37,6 @@ namespace MVCPlayWithMe.Models
             quota = Common.quota;
             models = new List<Model>();
             imageSrc = new List<string>();
-            thumbnailSrc = new List<string>();
         }
 
         public Item(string inName,
@@ -56,7 +52,6 @@ namespace MVCPlayWithMe.Models
             detail = inDetail;
             models = new List<Model>();
             imageSrc = new List<string>();
-            thumbnailSrc = new List<string>();
         }
 
         public Item(int inId, 
@@ -73,7 +68,6 @@ namespace MVCPlayWithMe.Models
             detail = inDetail;
             models = new List<Model>();
             imageSrc = new List<string>();
-            thumbnailSrc = new List<string>();
         }
 
         public void SetSrcImageVideo()
@@ -82,15 +76,9 @@ namespace MVCPlayWithMe.Models
             videoSrc = Common.GetItemVideoSrc(id);
         }
 
-        // 
-        public void SetThumbnailSrc()
-        {
-            thumbnailSrc = Common.GetItemThumbnailSrc(id);
-        }
-
         public void SetThumbnailFirst()
         {
-            thumbnailFirst = Common.GetItemthumbnailFirst(id);
+            thumbnailFirst = Common.GetItemThumbnailFirst(id);
         }
     }
 }

@@ -4,26 +4,40 @@
 
     @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
 
-    @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
+    <div>
+        <label for="product-name-id">Tên:</label>
+        <input type="text" class="config-max-width margin-vertical" id="product-name-id">
+
+        <button type="button" onclick="UpdateName()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
+
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
+
+    <label for="quantity">Tồn kho:</label><br>
+    <input class="config-max-width margin-vertical" type="number" id="quantity" value="">
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     <label for="code">Mã sản phẩm(bắt đầu bằng 89):</label><br>
     <input class="config-max-width margin-vertical" type="text" id="code" value="">
     <button type="button" onclick="UpdateCode()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
-    <br>
-    <br>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     <label for="barcode">Mã vạch(ISBN,không chứa ký tự đặc biệt -,/,..):</label><br>
     <input class="config-max-width margin-vertical" type="text" id="barcode" value="">
     <button type="button" onclick="UpdateISBN()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
-    <br>
-    <br>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
 
-    @Html.Partial("~/Views/Shared/ParentIdSelect.cshtml")
+    <div>
+        <label for="parent-id">Sản phẩm cha:</label>
+        <input list="list-parent" class="config-max-width margin-vertical" id="parent-id">
+
+        <datalist id="list-parent"></datalist>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
 
     <label for="detail">Thông tin chi tiết thêm:</label><br>
     <textarea id="detail" rows="10" style="width:100%" value=""></textarea>
-    <br>
-    <br>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 </form>

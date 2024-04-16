@@ -447,35 +447,35 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="commonOrder"></param>
-        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
-        public void ShopeeEnoughProductInOrder(CommonOrder commonOrder, int status)
-        {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="commonOrder"></param>
+        ///// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
+        //public void ShopeeEnoughProductInOrder(CommonOrder commonOrder, int status)
+        //{
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
-                cmd.Parameters.AddWithValue("@inStatus", status);
-                cmd.Parameters.AddWithValue("@inECommmerce", 2);
+        //        MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+        //        cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+        //        cmd.Parameters.AddWithValue("@inStatus", status);
+        //        cmd.Parameters.AddWithValue("@inECommmerce", 2);
 
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
+        //        cmd.ExecuteNonQuery();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        errMessage = ex.ToString();
+        //        MyLogger.GetInstance().Warn(errMessage);
+        //    }
 
-            conn.Close();
-        }
+        //    conn.Close();
+        //}
 
         public ShopeeAuthen ShopeeGetAuthen()
         {

@@ -13,39 +13,41 @@
 
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/Combo.cshtml")
-
-        <script>
-            function CreateCombo() {
-                let name = document.getElementById("combo-id").value;
-                if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
-                    return;
-                }
-                let id = GetDataIdFromComboDatalist(name);
-                if (id != null) {
-                    ShowResult("Combo đã có.");
-                    return;
-                }
-
-                const xhttp = new XMLHttpRequest();
-                xhttp.onload = function () {
-                    if (this.readyState == 4 && this.status == 200) {
-                        GetJsonResponse(this.responseText);
-                    }
-                }
-                let query = "/Combo/CreateCombo?name=";
-                query = query + name;
-                xhttp.open("GET", query);
-                xhttp.send();
-            }
-
-            function DeleteCombo() {
-                window.location.href = "/Combo/Delete";
-            }
-
-        </script>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.combo.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+
+    <script>
+        GetListCombo();
+
+        function CreateCombo() {
+            let name = document.getElementById("combo-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
+                return;
+            }
+            let id = GetDataIdFromComboDatalist(name);
+            if (id != null) {
+                ShowResult("Combo đã có.");
+                return;
+            }
+
+            const xhttp = new XMLHttpRequest();
+            xhttp.onload = function () {
+                if (this.readyState == 4 && this.status == 200) {
+                    GetJsonResponse(this.responseText);
+                }
+            }
+            let query = "/Combo/CreateCombo?name=";
+            query = query + name;
+            xhttp.open("GET", query);
+            xhttp.send();
+        }
+
+        function DeleteCombo() {
+            window.location.href = "/Combo/Delete";
+        }
+
+    </script>
 </body>
 </html>

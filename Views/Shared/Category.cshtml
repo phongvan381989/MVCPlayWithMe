@@ -1,6 +1,11 @@
 ﻿@Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
 <div>
-    @Html.Partial("~/Views/Shared/CategorySelect.cshtml")
+    <label for="category-id">Category:</label>
+    <input list="list-category" class="config-max-width margin-vertical" id="category-id">
+
+    <datalist id="list-category">
+
+    </datalist>
 </div>
 
 <div>

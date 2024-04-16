@@ -46,8 +46,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (AuthentAdministrator() == null)
                 return View("~/Views/Administrator/Login.cshtml");
 
-            ViewDataGetListProductName();
-            ViewDataGetListCombo();
+            //ViewDataGetListProductName();
+            //ViewDataGetListCombo();
 
             return View();
         }
