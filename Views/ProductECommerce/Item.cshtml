@@ -22,8 +22,8 @@
             padding: 10px;
             align-items: center;
         }
-        .item-name-vsfc{
-            margin-left:20px;
+        .fcpaxm09zf {
+            margin: 5px 5px 5px 20px;
         }
     </style>
 </head>
@@ -32,7 +32,9 @@
         <div class="config-max-width padding-container">
             <div class="one-item-container">
                 <img class="item-image-ACvv">
-                <div class="item-name-vsfc">
+                <div class="fcpaxm09zf">
+                    <div class="item-status-azc"></div>
+                    <div class="item-name-vsfc"></div>
                 </div>
             </div>
             <div id="model-list">
@@ -49,8 +51,26 @@
         GetListProductName();
         GetListCombo();
         InitializeModal();
-        ViewProductFromId();
+        ViewItemFromId();
         let commonItem = null;
+        let vbnItemId = 0;
+
+        //async function GetVBNItemId(vbnModelId) {
+        //    const searchParams = new URLSearchParams();
+        //    searchParams.append("modelId", vbnModelId);
+        //    let query = "/ItemModel/GetVBNItemIdFromModelId";
+
+        //    let responseDB = await RequestHttpPostPromise(searchParams, query);
+
+        //    if (responseDB.responseText != "null") {
+        //        let result = JSON.parse(responseDB.responseText);
+        //        if (result.State == 0) {
+        //            return result.myAnything;
+        //        }
+        //    }
+        //    return 0; // Không lấy được item id
+        //}
+
         function GetEEcommerceTypeFromUrl() {
             let type = "SHOPEE";
 
@@ -66,21 +86,21 @@
             return type;
         }
 
-        async function GetProductFromId(eType, id) {
+        async function GetItemFromId(eType, id) {
             const searchParams = new URLSearchParams();
             searchParams.append("eType", eType);
             searchParams.append("id", id);
 
-            let query = "/ProductECommerce/GetProductFromId";
+            let query = "/ProductECommerce/GetItemFromId";
 
             return RequestHttpPostPromise(searchParams, query);
         }
 
-        async function ViewProductFromId() {
+        async function ViewItemFromId() {
             ShowCircleLoader();
 
-            let responseDB = await GetProductFromId(GetEEcommerceTypeFromUrl(), GetValueFromUrlName("id"));
-            if (responseDB.responseText != null) {
+            let responseDB = await GetItemFromId(GetEEcommerceTypeFromUrl(), GetValueFromUrlName("id"));
+            if (responseDB.responseText != "null") {
                 commonItem = JSON.parse(responseDB.responseText);
             }
             else {
@@ -97,12 +117,87 @@
                 document.getElementsByClassName("item-image-ACvv")[0].src = srcNoImageThumbnail;
             }
             document.getElementsByClassName("item-name-vsfc")[0].innerHTML = commonItem.name;
-
+            let itemStatus;
+            if (commonItem.bActive) {
+                itemStatus = "Đang Bật Bán Trên Sàn";
+            }
+            else {
+                itemStatus = "Đang Tắt Bán Trên Sàn";
+            }
+            document.getElementsByClassName("item-status-azc")[0].innerHTML = itemStatus;
             // Hiển thị danh sách mapping
             ShowModelEEcommerce(commonItem);
         }
 
-        function AddModelToScreenEEcommerce(modelObj) {
+        // Thêm nút sinh model trên web voibenho
+        function AddBornModelForVoiBeNhoButton(itemObj, modelObj, container) {
+            let btn = document.createElement("BUTTON");
+            btn.title = "Sinh model sản phẩm trên web voibenho";
+            let btnContent = document.createTextNode("Sinh model");
+            btn.itemObj = itemObj;
+            btn.modelObj = modelObj;
+
+            btn.onclick = function () {
+                if (this.modelObj.pWMMappingModelId != -1) {
+                    if (confirm("Bạn muốn xóa model sản phẩm đã sinh và sinh mới") == false) {
+                        return;
+                    }
+                }
+                ShopeeBornModelForVoiBeNho(JSON.stringify(this.itemObj),
+                    this.modelObj.modelId,
+                    this.modelObj.pWMMappingModelId);
+            }
+            btn.appendChild(btnContent);
+            //btn.className = "margin-vertical";
+            //btn.style.cssFloat = "right";
+
+            const div = document.createElement("div");
+            //div.style.display = "flex";
+            //div.style.flexDirection = "row-reverse";
+
+            // Đã sinh ra model tương ứng trên web voibenho
+            if (modelObj.pWMMappingModelId != -1) {
+                const p = document.createElement("p");
+                p.innerHTML = "Đã sinh trên voibenho";
+                p.title = "Xem sản phẩm tương ứng trên voibenho";
+                p.style.cursor = "pointer";
+                p.onclick = async function () {
+                    if (vbnItemId == 0) {
+                        const searchParams = new URLSearchParams();
+                        searchParams.append("modelId", modelObj.pWMMappingModelId);
+                        let query = "/ItemModel/GetVBNItemIdFromModelId";
+
+                        let responseDB = await RequestHttpPostPromise(searchParams, query);
+
+                        if (responseDB.responseText != "null") {
+                            let result = JSON.parse(responseDB.responseText);
+                            if (DEBUG) {
+                                console.log(JSON.stringify(result));
+                            }
+                            if (result.State == 0) {
+                                vbnItemId = result.myAnything;
+                            }
+                            else {
+                                CreateMustClickOkModal(result.Message, null);
+                                return;
+                            }
+                        }
+                    }
+                    if (vbnItemId != 0) {
+                        let url = "/ItemModel/UpdateDelete?id=" + vbnItemId.toString();
+                        window.open(url);
+                    }
+                    else {
+                        CreateMustClickOkModal("Không lấy được thông tin sản phẩm. Thử lại sau.", null);
+                    }
+                }
+                div.appendChild(p);
+            }
+            div.appendChild(btn);
+            container.appendChild(div);
+        }
+
+        function AddModelToScreenEEcommerce(itemObj, modelObj) {
             const modelContainer = document.createElement("div");
             modelContainer.style.marginLeft = "10px";
             modelContainer.style.backgroundColor = "#e6e6e6";
@@ -139,6 +234,9 @@
                 div.style.alignItems = "center";
                 modelContainer.appendChild(div);
             }
+            // Thêm nút sinh model trên web voibenho
+            AddBornModelForVoiBeNhoButton(itemObj, modelObj, modelContainer);
+
             // Thêm nút mapping
             AddMappingButtonForModel(modelContainer);
 
@@ -148,15 +246,15 @@
             return modelContainer;
         }
 
-        function ShowModelEEcommerce(item) {
+        function ShowModelEEcommerce(itemObj) {
             // Hiển thị các model
-            let length = item.models.length;
+            let length = itemObj.models.length;
             countModel = 0;
             for (let i = 0; i < length; i++) {
                 // Hiển thị mapping sản phẩm trong kho nếu có
-                let modelObj = item.models[i];
+                let modelObj = itemObj.models[i];
 
-                let model = AddModelToScreenEEcommerce(modelObj);
+                let model = AddModelToScreenEEcommerce(itemObj, modelObj);
 
                 // Hiển thị mapping
                 let table = CreateModelTableMapping(model);
@@ -165,7 +263,7 @@
                 for (let j = 0; j < modelObj.mapping.length; j++) {
                     let src;
                     if (modelObj.mapping[j].product.imageSrc.length > 0) {
-                        src = modelObj.mapping[j].product.imageSrc[0];
+                        src = Get320VersionOfImageSrc(modelObj.mapping[j].product.imageSrc[0]);
                     }
                     else {
                         src = srcNoImageThumbnail;
@@ -233,7 +331,7 @@
                 let responseDB = await RequestHttpPostPromise(searchParams, url);
                 let result = JSON.parse(responseDB.responseText);
                 if (result.State != 0) {
-                    await CreateMustClickOkModal(result.Message);
+                    await CreateMustClickOkModal(result.Message, null);
                 }
                 else {
                     alert("Cập nhật thành công.");
@@ -249,6 +347,35 @@
             // Refresh page
             RemoveCircleLoader();
             window.scrollTo(0, 0);
+        }
+
+        async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId)
+        {
+            ShowCircleLoader();
+            const searchParams = new URLSearchParams();
+            searchParams.append("strCommonItem", strCommonItem);
+            searchParams.append("shopeeModelId", shopeeModelId);
+            searchParams.append("pWMMappingModelId", pWMMappingModelId);
+            let url = "/ProductECommerce/ShopeeBornModelForVoiBeNho";
+
+            try {
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                let result = JSON.parse(responseDB.responseText);
+                if (result.State != 0) {
+                    await CreateMustClickOkModal(result.Message, null);
+                }
+                else {
+                    alert("Sinh model sản phẩm thành công.");
+                }
+            }
+            catch (err) {
+
+                await CreateMustClickOkModal("Sinh model sản phẩm lỗi.", null);
+                RemoveCircleLoader();
+                return;
+            }
+
+            RemoveCircleLoader();
         }
     </script>
 </body>

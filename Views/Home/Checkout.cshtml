@@ -435,7 +435,6 @@
         </div>
         @Html.Partial("~/Views/Shared/Home/CustomerInfor.cshtml")
         @Html.Partial("~/Views/Shared/Home/ListCustomerInfor.cshtml")
-        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -481,9 +480,11 @@
                 clone.getElementsByClassName("rTOisL")[0].src = Get320VersionOfImageSrc(obj.imageSrc);
                 clone.getElementsByClassName("item-name")[0].innerHTML = obj.itemName;
                 clone.getElementsByClassName("model-name")[0].innerHTML = obj.modelName;
-                clone.getElementsByClassName("price-model")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.price);
+                clone.getElementsByClassName("price-model")[0].innerHTML =
+                    ConvertMoneyToTextWithIcon(obj.price);
                 clone.getElementsByClassName("quantity-model")[0].innerHTML = obj.q;
-                clone.getElementsByClassName("money-model")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.q * obj.price);
+                clone.getElementsByClassName("money-model")[0].innerHTML =
+                    ConvertMoneyToTextWithIcon(obj.q * obj.price);
 
                 containerModel.appendChild(clone);
             }
@@ -493,7 +494,7 @@
 
         async function LoadCart() {
             let responseDB = await CheckoutPageLoadCart(GetValueFromUrlName("cart"));
-            if (responseDB.responseText != null) {
+            if (responseDB.responseText != "null") {
                 listCartCookieObject = JSON.parse(responseDB.responseText);
             }
             else {
@@ -519,12 +520,15 @@
                 sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
             }
 
-            document.getElementsByClassName("model-money-sum")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
+            document.getElementsByClassName("model-money-sum")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(sumMoney);
 
             let shipFee = GetShipFee();
             sumMoney = shipFee + sumMoney;
-            document.getElementsByClassName("shipee-fee")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(shipFee);
-            document.getElementsByClassName("money-sum")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
+            document.getElementsByClassName("shipee-fee")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(shipFee);
+            document.getElementsByClassName("money-sum")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(sumMoney);
         }
 
         function GetShipFee() {

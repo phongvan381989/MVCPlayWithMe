@@ -131,62 +131,36 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// <summary>
         /// Từ item_id, model_id sản phẩm cập nhật số lượng
         /// </summary>
-        /// <param name="itemId"></param>
+        /// <param name="shopeeItemId"></param>
         /// <returns></returns>
-        public static Boolean ShopeeProductUpdateStock(ShopeeItemId itemId)
+        public static Boolean ShopeeProductUpdateStock(ShopeeItemId shopeeItemId)
         {
-            //if (!NeedUpdateQuantityOfProTMDT(itemId))
-            //{
-            //    //// Cập nhật vào db ModelTonKhoSanTMDT
-            //    //ModelTonKhoSanTMDT.SynchronizeThongTinChiTietToTonKhoSanTMDT(itemId.model_id.ToString(), EnumCommerceType.SHOPEE);
-            //    ModelMappingSanPhamTMDT_SanPhamKho.Shopee_UpdateQuantityOnTMDT(itemId.model_id.ToString(), itemId.quantity);
-            //    return true;
-            //}
 
-            //int quantity = 0;
-            //quantity = ModelThongTinChiTiet.GetQuantityForProTMDT(Common.commerceNameShopee, itemId.model_id.ToString());
-            ////if (quantity == -1)
-            ////{
-            ////    MyLogger.GetInstance().Info("Số lượng tồn kho của mã sản phẩm " + itemId.model_id.ToString() + " là -1");
+            OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock stock = 
+                new OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
 
-            ////    // Ta set số lượng sản phẩm trên sàn về 0
-            ////    quantity = 0;
-            ////}
+            stock.item_id = shopeeItemId.item_id;
+            if (shopeeItemId.model_id == -1)// Không có model
+                stock.stock_list.Add(new ShopeeUpdateStockStock(0, shopeeItemId.quantity));
+            else
+                stock.stock_list.Add(new ShopeeUpdateStockStock(shopeeItemId.model_id, shopeeItemId.quantity));
 
-            //Model.Dev.ShopeeApp.ShopeeProduct.ShopeeUpdateStock stock = new Model.Dev.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
+            ShopeeUpdateStockResponse rs = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(stock);
 
-            //stock.item_id = itemId.item_id;
-            //if (itemId.item_id == itemId.model_id)// Không có model
-            //    stock.stock_list.Add(new ShopeeUpdateStockStock(0, quantity));
-            //else
-            //    stock.stock_list.Add(new ShopeeUpdateStockStock(itemId.model_id, quantity));
-
-            //ShopeeUpdateStockResponse rs = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(stock);
-            //if (rs == null)
-            //{
-            //    MyLogger.GetInstance().Info("Shopee sản phẩm cập nhật tồn kho lỗi item_id: " + itemId.item_id.ToString() + ", model_id: " + itemId.model_id.ToString());
-            //    return false;
-            //}
-
-            //Boolean isOk = true;
-            //Common.CommonErrorMessage = string.Empty;
-            //foreach (var eFailed in rs.failure_list)
-            //{
-            //    // Lưu vào db update mã sản phẩm lỗi
-            //    //ModelUpdateStockFailure.Shopee_Update(stock.item_id.ToString(), eFailed.model_id.ToString());
-            //    isOk = false;
-            //    Common.CommonErrorMessage = Common.CommonErrorMessage + eFailed.model_id.ToString() + ":" + eFailed.failed_reason + "; ";
-            //    //break;
-            //}
-            //if (!isOk)
-            //{
-            //    MyLogger.GetInstance().Info(Common.CommonErrorMessage);
-            //    return false;
-            //}
-
-            ////// Cập nhật vào db ModelTonKhoSanTMDT
-            ////ModelTonKhoSanTMDT.SynchronizeThongTinChiTietToTonKhoSanTMDT(itemId.model_id.ToString(), EnumCommerceType.SHOPEE);
-            //ModelMappingSanPhamTMDT_SanPhamKho.Shopee_UpdateQuantityOnTMDT(itemId.model_id.ToString(), quantity);
+            Boolean isOk = true;
+            Common.CommonErrorMessage = string.Empty;
+            foreach (var eFailed in rs.failure_list)
+            {
+                // Lưu vào db update mã sản phẩm lỗi
+                isOk = false;
+                Common.CommonErrorMessage = Common.CommonErrorMessage + eFailed.model_id.ToString() + ":" + eFailed.failed_reason + "; ";
+                //break;
+            }
+            if (!isOk)
+            {
+                MyLogger.GetInstance().Info(Common.CommonErrorMessage);
+                return false;
+            }
             return true;
         }
 

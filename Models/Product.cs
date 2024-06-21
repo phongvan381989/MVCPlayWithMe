@@ -8,6 +8,7 @@ namespace MVCPlayWithMe.Models
 {
     public class Product : ProductCommonInfoWithCombo
     {
+        // id trong tbProducts
         public int id { get; set; }
         public string code { get; set; }
         public string barcode { get; set; }

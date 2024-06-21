@@ -22,10 +22,19 @@ namespace MVCPlayWithMe.Controllers
             if (administrator == null)
             {
                 Cookie.DeleteUserIdCookie(HttpContext);
-                Cookie.DeleteVistorTypeCookie(HttpContext);
+                Cookie.DeleteVisitorTypeCookie(HttpContext);
+                MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
             }
             return administrator;
 
+        }
+
+        public MySqlResultState AuthentFailReturnState()
+        {
+            MySqlResultState result = new MySqlResultState();
+            result.State = EMySqlResultState.AUTHEN_FAIL;
+            result.Message = MySqlResultState.authenFailMessage;
+            return result;
         }
 
         public Customer AuthentCustomer()
@@ -38,6 +47,8 @@ namespace MVCPlayWithMe.Controllers
             if (customer == null)
             {
                 Cookie.DeleteUserIdCookie(HttpContext);
+                MyLogger.GetInstance().Warn("Authent customer fail." + cookieResult.cookieValue);
+
             }
             return customer;
         }
@@ -159,12 +170,11 @@ namespace MVCPlayWithMe.Controllers
 
         // Nhận và lưu image/video khi upload cho sản phẩm
         // trong kho hoặc item (ProductControler và ItemModelControler)
-        public string SaveImageVideo(string path)
+        public MySqlResultState SaveImageVideo(string path)
         {
             var length = Request.ContentLength;
             var bytes = new byte[length];
             Request.InputStream.Read(bytes, 0, length);
-
 
             var fileName = Request.Headers["fileName"];
             var id = Request.Headers["productId"];
@@ -201,7 +211,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     Common.DeleteImageVideoNameGreat(path + fileName);
                 }
-                return JsonConvert.SerializeObject(rs);
+                return rs;
             }
 
             // Xóa file cũ cùng tên không kể đuôi nếu có
@@ -234,7 +244,7 @@ namespace MVCPlayWithMe.Controllers
                 Common.DeleteImageVideoNameGreat(path + fileName);
             }
 
-            return JsonConvert.SerializeObject(new MySqlResultState());
+            return new MySqlResultState();
         }
 
         // Xóa file trong thư mục tương ứng với id

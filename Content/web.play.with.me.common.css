@@ -49,14 +49,17 @@
 #biggestContainer_top div[class="logo-menu"] {
     width: 50px;
 }
-#biggestContainer_bottom div[class="logo-menu"] {
+/*#biggestContainer_bottom div[class="logo-menu"] {
     width: 50px;
-}
-#biggestContainer_bottom div[class="cvsdf097"] {
+}*/
+/*#biggestContainer_bottom div[class="cvsdf097"] {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
     margin:10px 0px 10px 20px;
+}*/
+#biggestContainer_bottom {
+    margin-top: 20px;
 }
 
 #biggestContainer_top div[class="search_wrapper"] {
@@ -77,11 +80,11 @@
         object-fit: contain;
     }
 
-#biggestContainer_bottom img[class="playwithme-logo"] {
+/*#biggestContainer_bottom img[class="playwithme-logo"] {
     width: 100%;
     height: 100%;
     object-fit: contain;
-}
+}*/
 
 .icon24 {
     width: 24px;
@@ -171,7 +174,7 @@
         background: #e1e1e1;
     }
 
-.dropdown:hover .dropdown-content {
+.top-account-container:hover .dropdown-content {
     display: block;
 }
 .search-button {
@@ -267,10 +270,11 @@
 }
 /*Để các phần tử cách nhau*/
 .margin-vertical {
-    margin-top: 2px;
+    /*margin-top: 2px;
     margin-right: 2px;
     margin-bottom: 2px;
-    margin-left: 2px;
+    margin-left: 2px;*/
+    margin:2px 2px 2px 2px;
 }
 
 /* Tooltip container */

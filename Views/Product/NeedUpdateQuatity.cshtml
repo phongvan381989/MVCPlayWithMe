@@ -1,0 +1,161 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .fmx09gx8 {
+            background-color: white;
+            padding: 10px;
+            margin: 10px 0px 10px 0px;
+            border-radius: 2px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 10px;
+            margin: 10px 10px 10px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="fmx09gx8">
+            <button onclick="UpdateQuantityToTMDT()"
+                    title="Cập nhật số lượng sản phẩm lên Tiki, Shopee, Lazada và hiện kết quả">
+                Cập Nhật Số Lượng Trên Tiki, Shopee, Lazada
+            </button>
+
+            <button onclick="GetListProductInWarehoueChangedQuantity()"
+                    title="Lấy danh sách sản phẩm trong kho có thay đổi tồn kho">
+                Sản Phẩm Trong Kho Thay Đổi Tồn
+            </button>
+
+        </div>
+        <div class="config-max-width padding-container">
+            <table id="myTableTMDT" style="display:none;">
+                <tr>
+                    <th style="display:none">Mã Item</th>
+                    <th style="display:none">Mã Model</th>
+                    <th style="width:200px">Ảnh</th>
+                    <th>Sàn</th>
+                    <th>Tên</th>
+                    <th>Liên Kết</th>
+                    <th>Kết Quả</th>
+                </tr>
+            </table>
+            <table id="myTableWarehouese" style="display:none;">
+                <tr>
+                    <th style="display:none">Mã</th>
+                    <th style="width:150px">Ảnh</th>
+                    <th>Tên</th>
+                    <th>Tồn Kho</th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script>
+        // mảng sản phẩm cần cập nhật
+        let listUpdateInfo = [];
+        let listPro = [];
+
+        async function GetListProductInWarehoueChangedQuantity() {
+            listPro = [];
+            const searchParams = new URLSearchParams();
+            let query = "/Product/GetListProductInWarehoueChangedQuantity";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            if (responseDB.responseText != "null") {
+                listPro = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listPro = [];
+            }
+            ShowListProductInWarehoueChangedQuatity(listPro);
+        }
+
+        function ShowListProductInWarehoueChangedQuatity(list) {
+            // Ẩn table kia
+            document.getElementById("myTableTMDT").style.display = "none";
+
+            // Show
+            let table = document.getElementById("myTableWarehouese");
+            DeleteRowsExcludeHead(table);
+
+            table.style.display = "initial";
+            let length = list.length;
+            if (length == 0) {
+                return;
+            }
+
+            for (let i = 0; i < length; i++) {
+                let item = list[i];
+                let row = table.insertRow(-1);
+
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+
+
+                // Id
+                cell1.innerHTML = item.id;
+                cell1.style.display = "none";
+
+                // Image
+                let img = document.createElement("img");
+                if (item.imageSrc.length > 0) {
+                    img.setAttribute("src", item.imageSrc[0]);
+                } else {
+                    img.setAttribute("src", srcNoImageThumbnail);
+                }
+                img.height = thumbnailHeight;
+                img.width = thumbnailWidth;
+                img.className = "go-to-detail-item";
+                img.onclick = function () {
+                    // Lấy id
+                    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+                    window.open("MappingOfProduct?id=" + id);
+                };
+                cell2.append(img);
+
+                // Tên
+                cell3.innerHTML = item.name;
+
+                // Tồn kho
+                cell4.innerHTML = item.quantity;
+            }
+        }
+
+        async function GetListNeedUpdateQuantity() {
+            const searchParams = new URLSearchParams();
+            let query = "/Product/GetListNeedUpdateQuantityAndUpdate";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText != "null") {
+                listUpdateInfo = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listUpdateInfo = [];
+            }
+            let ele = document.getElementById("list-product-name");
+            SetDataListOfIdName(ele, listBasicInfo);
+            document.getElementById("code-or-isbn").value = "";
+            document.getElementById("product-name-id").value = "";
+        }
+    </script>
+</body>
+</html>

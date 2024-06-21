@@ -1,8 +1,16 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
+using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Web;
@@ -58,6 +66,11 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetItemObjectFromId(int id)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             return JsonConvert.SerializeObject(sqler.GetProductFromId(id));
         }
 
@@ -176,8 +189,9 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
+
             int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
             AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
                 ref publisherId, publisherName, ref parentId, parentName);
@@ -243,7 +257,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
@@ -292,7 +306,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             MySqlResultState result = sqler.DeleteProduct(id);
@@ -330,7 +344,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
@@ -371,8 +385,9 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
+
             string path = Common.GetAbsoluteProductMediaFolderPath(id.ToString());
             // Folder được tạo khi có image/video tương ứng
             if (path == null)
@@ -388,7 +403,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             var productId = Request.Headers["productId"];
@@ -398,7 +413,47 @@ namespace MVCPlayWithMe.Controllers
                 path = Common.CreateAbsoluteProductMediaFolderPath(productId);
             }
 
-            return SaveImageVideo(path);
+            return JsonConvert.SerializeObject(SaveImageVideo(path));
+        }
+
+        [HttpPost]
+        public string UploadExcelFile(object obj)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                var length = Request.ContentLength;
+                if (length > 0)
+                {
+                    var bytes = new byte[length];
+                    Request.InputStream.Read(bytes, 0, length);
+
+                
+                    // Lưu file tạm ở thưc mục Media/Temporary/temp.xlsx
+                    var saveToFileLoc = System.Web.HttpContext.Current.Server.MapPath(ConfigurationManager.AppSettings["TemporaryMediaFolderPath"]) + "temp.xlsx";
+
+                    // xóa file nếu đã tồn tại
+                    System.IO.File.Delete(saveToFileLoc);
+
+                    // save the file.
+                    var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
+                    fileStream.Write(bytes, 0, length);
+                    fileStream.Close();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+                result.State = EMySqlResultState.ERROR;
+            }
+
+            return JsonConvert.SerializeObject(new MySqlResultState());
         }
 
         /// <summary>
@@ -409,6 +464,11 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetProduct(int id)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             Product pro = sqler.GetProductFromId(id);
             return JsonConvert.SerializeObject(pro);
         }
@@ -421,85 +481,101 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetProductCommonInfoWithComboFromFirst(int id)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             Product pro = sqler.GetProductFromFirstComboId(id);
 
             return JsonConvert.SerializeObject(pro);
         }
 
         [HttpPost]
-        public string GetProductIdCodeBarcodeNameBooCoverkPrice()
+        public string GetProductIdCodeBarcodeNameBooCoverkPrice(string publisher)
         {
-            List<ProductIdCodeBarcodeNameBookCoverPrice> ls = sqler.GetProductIdCodeBarcodeNameBookCoverPrice();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            List<Product> ls = sqler.GetProductIdCodeBarcodeNameBookCoverPrice(publisher);
             return JsonConvert.SerializeObject(ls);
         }
 
         [HttpPost]
         public string AddImport(string listObject)
         {
-            string strResult = string.Empty;
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             List<Import> ls = null;
+            MySqlResultState result = new MySqlResultState();
             try
             {
                 ls = JsonConvert.DeserializeObject<List<Import>>(listObject);
-                if(ls == null || ls.Count == 0)
+                if (ls == null || ls.Count == 0)
                 {
-                    MySqlResultState rss = new MySqlResultState();
-                    rss.State = EMySqlResultState.ERROR;
-                    rss.Message = "Danh sách cần nhập không đúng.";
-                    strResult = JsonConvert.SerializeObject(rss);
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Danh sách cần nhập rỗng hoặc lỗi.";
                 }
-                strResult = JsonConvert.SerializeObject(sqler.AddListImport(ls));
+                else
+                {
+                    result = sqler.AddListImport(ls);
+                }
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Error(ex.ToString());
-                MySqlResultState rss = new MySqlResultState();
-                rss.State = EMySqlResultState.ERROR;
-                rss.Message = ex.ToString();
-                strResult = JsonConvert.SerializeObject(rss);
+                Common.SetResultException(ex, result);
             }
 
-            return strResult;
+            return JsonConvert.SerializeObject(result);
         }
 
-        [HttpPost]
-        public string GetListImport(string fromDate, string toDate)
+        [HttpGet]
+        public string GetListImport(string fromDate, string toDate, string publisher)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Import>());
+            }
+
             if (Common.ParameterOfURLQueryIsNullOrEmpty(fromDate))
                 fromDate = "2018-08-05";
             if (Common.ParameterOfURLQueryIsNullOrEmpty(toDate))
                 toDate = DateTime.Now.ToString(Common.dateFormat);
-            List<Import> ls = sqler.GetImportList(fromDate, toDate);
+            List<Import> ls = sqler.GetImportList(fromDate, toDate, publisher);
             return JsonConvert.SerializeObject(ls);
         }
 
         [HttpPost]
         public string UpdateImport(string listObject)
         {
-            string strResult = string.Empty;
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
             List<Import> ls = null;
             try
             {
                 ls = JsonConvert.DeserializeObject<List<Import>>(listObject);
                 if (ls == null || ls.Count == 0)
                 {
-                    MySqlResultState rss = new MySqlResultState();
-                    rss.State = EMySqlResultState.ERROR;
-                    rss.Message = "Danh sách cần cập nhât không đúng.";
-                    strResult = JsonConvert.SerializeObject(rss);
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Danh sách cần cập nhât không đúng.";
                 }
-                strResult = JsonConvert.SerializeObject(sqler.UpdateListImport(ls));
+                result = sqler.UpdateListImport(ls);
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Error(ex.ToString());
-                MySqlResultState rss = new MySqlResultState();
-                rss.State = EMySqlResultState.ERROR;
-                rss.Message = ex.ToString();
-                strResult = JsonConvert.SerializeObject(rss);
+                Common.SetResultException(ex, result);
             }
 
-            return strResult;
+            return JsonConvert.SerializeObject(result);
         }
 
         /// <summary>
@@ -508,11 +584,18 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="namePara"></param>
         /// <returns></returns>
         [HttpGet]
-        public string SearchProductCount(string codeOrBarcode, string name, string combo)
+        public string SearchProductCount(string publisher,
+            string codeOrBarcode, string name, string combo)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return "0";
+            }
+
             // Đếm số sản phẩm trong kết quả tìm kiếm
             int count = 0;
             ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.publisher = publisher;
             searchParameter.codeOrBarcode = codeOrBarcode;
             searchParameter.name = name;
             searchParameter.combo = combo;
@@ -520,10 +603,45 @@ namespace MVCPlayWithMe.Controllers
             return count.ToString();
         }
 
+
+        /// <summary>
+        /// Tìm kiếm sản phẩm trong kho không phân trang
+        /// </summary>
+        /// <param name="namePara"></param>
+        /// <returns></returns>
         [HttpGet]
-        public string ChangePage(string codeOrBarcode, string name, string combo, int start, int offset)
+        public string SearchProduct(string publisher,
+            string codeOrBarcode, string name, string combo, int status)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
             ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.publisher = publisher;
+            searchParameter.codeOrBarcode = codeOrBarcode;
+            searchParameter.name = name;
+            searchParameter.combo = combo;
+            searchParameter.status = status;
+            List<Product> lsSearchResult;
+            lsSearchResult = sqler.SearchProduct(searchParameter);
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
+        [HttpGet]
+        public string ChangePage(string publisher, string codeOrBarcode,
+            string name, string combo,
+            int start, int offset)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.publisher = publisher;
             searchParameter.codeOrBarcode = codeOrBarcode;
             searchParameter.name = name;
             searchParameter.combo = combo;
@@ -539,24 +657,44 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public string UpdateName(int id, string name)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             return JsonConvert.SerializeObject(sqler.UpdateName(id, name));
         }
 
         [HttpGet]
         public string UpdateCode(int id, string code)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             return JsonConvert.SerializeObject(sqler.UpdateCode(id, code));
         }
 
         [HttpGet]
         public string UpdateISBN(int id, string isbn)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             return JsonConvert.SerializeObject(sqler.UpdateISBN(id, isbn));
         }
 
         [HttpPost]
         public string GetListAuthor()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<string>());
+            }
+
             return JsonConvert.SerializeObject(sqler.GetListAuthor());
         }
 
@@ -564,19 +702,369 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetListTranslator()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<string>());
+            }
+
             return JsonConvert.SerializeObject(sqler.GetListTranslator());
         }
 
         [HttpPost]
         public string GetListPublishingCompany()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<string>());
+            }
+
             return JsonConvert.SerializeObject(sqler.GetListPublishingCompany());
         }
 
         [HttpPost]
         public string GetListProductName()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<ProductIdName>());
+            }
             return JsonConvert.SerializeObject(sqler.GetListProductName());
         }
+
+        [HttpGet]
+        public ActionResult NeedUpdateQuatity()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
+        // Hàm này tạm thời chưa dùng vì trạng thái item/model ở db chưa được cập nhật realtime
+        // Nếu db chưa lưu image src của item, model ta lấy và lưu
+        private void ShopeeUpdateImageSrcToDbIfNeed(List<CommonItem> shopeeList, MySqlConnection conn)
+        {
+            foreach (var item in shopeeList)
+            {
+                Boolean isNeedDownloadImage = false;
+
+                if (string.IsNullOrEmpty(item.imageSrc))
+                {
+                    isNeedDownloadImage = true;
+                }
+                foreach (var model in item.models)
+                {
+                    if (string.IsNullOrEmpty(model.imageSrc))
+                    {
+                        isNeedDownloadImage = true;
+                        break;
+                    }
+                }
+                if (isNeedDownloadImage)
+                {
+                    ShopeeGetItemBaseInfoItem pro = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(item.itemId);
+                    if (pro != null)
+                    {
+                        // Lấy imageSrc cho item
+                        if (string.IsNullOrEmpty(item.imageSrc))
+                        {
+                            item.imageSrc = pro.image.image_url_list[0];
+                            sqler.UpdateImageSrcShopeeItem(item.itemId, item.imageSrc, conn);
+                        }
+
+                        // Lấy imageSrc cho model nếu có
+                        if (pro.has_model)
+                        {
+                            ShopeeGetModelListResponse obj = ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
+                            if (obj != null)
+                            {
+                                ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
+                                int count = tierVar.option_list.Count;
+                                for (int i = 0; i < count; i++)
+                                {
+                                    ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
+                                    ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
+                                    if (option.image != null)
+                                    {
+                                        foreach (var m in item.models)
+                                        {
+                                            if (!string.IsNullOrEmpty(m.imageSrc))
+                                                continue;
+
+                                            if (m.modelId == model.model_id)
+                                            {
+                                                m.imageSrc = option.image.image_url;
+                                                sqler.UpdateImageSrcShopeeModel(m.modelId, m.imageSrc, conn);
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Lấy trạng thái sản phẩm, image đại diện, số lượng trên sàn Shopee.
+        // Cập nhật số lượng với sản phẩm NORMAL
+        private void ShopeeGetStatusImageSrcQuantitySellable(List<CommonItem> shopeeList)
+        {
+            foreach (var item in shopeeList)
+            {
+                ShopeeGetItemBaseInfoItem pro = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(item.itemId);
+                if (pro != null)
+                {
+                    item.imageSrc = pro.image.image_url_list[0];
+                    if (pro.item_status != "NORMAL")
+                    {
+                        item.bActive = false;
+                        continue;
+                    }
+
+                    item.bActive = true;
+
+                    // Lấy imageSrc cho model nếu có
+                    if (pro.has_model)
+                    {
+                        ShopeeGetModelListResponse obj = ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
+                        if (obj != null)
+                        {
+                            ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
+                            int count = tierVar.option_list.Count;
+                            for (int i = 0; i < count; i++)
+                            {
+                                ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
+                                ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
+                                // Lấy ảnh đại diện
+                                if (option.image != null)
+                                {
+                                    foreach (var m in item.models)
+                                    {
+                                        if (m.modelId == model.model_id)
+                                        {
+                                            m.imageSrc = option.image.image_url;
+                                            break;
+                                        }
+                                    }
+                                }
+                                // Lấy số lượng có thể bán trên sàn
+                                foreach (var m in item.models)
+                                {
+                                    if (m.modelId == model.model_id)
+                                    {
+                                        m.quantity_sellable = model.stock_info_v2.seller_stock[0].stock; ;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        item.models[0].imageSrc = item.imageSrc;
+                        item.models[0].quantity_sellable = pro.stock_info_v2.seller_stock[0].stock;
+                    }
+                }
+            }
+        }
+
+        // Cập nhật số lượng lên sàn Shopee
+        private void ShopeeUpdateQuatity(List<CommonItem> shopeeList)
+        {
+            int qty = 0;
+            foreach (var item in shopeeList)
+            {
+                if (!item.bActive)
+                    continue;
+
+                foreach (var model in item.models)
+                {
+                    qty = model.GetQuatityFromListMapping();
+                    ShopeeItemId shopeeitemId = new ShopeeItemId(item.itemId,
+                        model.modelId, qty);
+                    Boolean isOk = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(shopeeitemId);
+                    if (!isOk)
+                    {
+                        model.whyUpdateFail = Common.CommonErrorMessage;
+                    }
+                }
+            }
+        }
+
+        private List<CommonItem> ShopeeGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
+        {
+            // Danh sách sản phẩm Shopee
+            List<CommonItem> shopeeList = sqler.ShopeeGetListNeedUpdateQuantity(conn);
+            ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
+            ShopeeUpdateQuatity(shopeeList);
+
+            return shopeeList;
+        }
+
+        // Lấy trạng thái sản phẩm, image đại diện, số lượng trên sàn Tiki.
+        // Cập nhật số lượng với sản phẩm active
+        private void TikiGetStatusImageSrcQuantitySellable(List<CommonItem> tikiList)
+        {
+            foreach (var item in tikiList)
+            {
+                TikiProduct pro = null;
+                pro = GetListProductTiki.GetProductFromOneShop((int)item.itemId);
+                if (pro == null)
+                    continue;
+
+                item.imageSrc = pro.thumbnail;
+                item.models[0].imageSrc = pro.thumbnail;
+
+                if (pro.active == 1)
+                    item.bActive = true;
+                else
+                    item.bActive = false;
+
+                item.models[0].quantity_sellable = TikiUpdateStock.GetQuantityFromTikiProduct(pro);
+                item.has_model = false;
+
+                //// Lấy tên của super item nếu có
+                //if(item.tikiSuperId != 0)
+                //{
+                //    pro = GetListProductTiki.GetProductFromOneShop(item.tikiSuperId);
+                //    item.tikiSuperName = pro.name;
+                //}
+            }
+        }
+
+        // Cập nhật số lượng lên sàn Tiki
+        private void TikiUpdateQuatity(List<CommonItem> tikiList)
+        {
+            int qty = 0;
+            foreach (var item in tikiList)
+            {
+                if (!item.bActive)
+                    continue;
+
+                TikiUpdateQuantity st = new TikiUpdateQuantity((int)item.itemId, TikiConstValues.intIdKho28Ngo3TTDL);
+                // Cập nhật tồn kho cho tham số
+                qty = item.models[0].GetQuatityFromListMapping();
+
+                st.UpdateQuantity(qty);
+                Boolean isOk = TikiUpdateStock.TikiProductUpdateQuantity(st);
+                if (!isOk)
+                {
+                    // Tiếp tục cập nhật số lượng sp khác, lưu lý do cập nhật lỗi
+                    item.models[0].whyUpdateFail = Common.CommonErrorMessage;
+                }
+            }
+        }
+
+        private List<CommonItem>TikiGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
+        {
+            // Danh sách sản phẩm Tiki
+            List<CommonItem> tikiList = sqler.TikiGetListNeedUpdateQuantity(conn);
+            TikiGetStatusImageSrcQuantitySellable(tikiList);
+            TikiUpdateQuatity(tikiList);
+            return tikiList;
+        }
+
+        [HttpPost]
+        public string GetListNeedUpdateQuantityAndUpdate()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<CommonItem>());
+            }
+
+            // CommonItem chưa có ảnh đại diện cho item, model ta lấy và lưu vào db
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            List<CommonItem> ls = new List<CommonItem>();
+            try
+            {
+                conn.Open();
+                List<CommonItem> shopeeList = ShopeeGetListNeedUpdateQuantityAndUpdate(conn);
+                List<CommonItem> tikiList = TikiGetListNeedUpdateQuantityAndUpdate(conn);
+
+                ls.AddRange(tikiList);
+                ls.AddRange(shopeeList);
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
+            // Lấy danh sách sản phẩm
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        [HttpPost]
+        public string GetListProductInWarehoueChangedQuantity()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+            List<Product> ls = null;
+            ls = sqler.GetListProductInWarehoueChangedQuantity();
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        [HttpGet]
+        public ActionResult MappingOfProduct(int id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
+        private List<CommonItem> ShopeeGetListMappingOfProduct(int id, MySqlConnection conn)
+        {
+            // Danh sách sản phẩm Shopee
+            List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfProduct(id, conn);
+            ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
+            return shopeeList;
+        }
+
+        private List<CommonItem> TikiGetListMappingOfProduct(int id, MySqlConnection conn)
+        {
+            // Danh sách sản phẩm Tiki
+            List<CommonItem> tikiList = sqler.TikiGetListMappingOfProduct(id, conn);
+            TikiGetStatusImageSrcQuantitySellable(tikiList);
+            return tikiList;
+        }
+
+        [HttpPost]
+        public string GetListMappingOfProduct(int id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<CommonItem>());
+            }
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            List<CommonItem> ls = new List<CommonItem>();
+            try
+            {
+                conn.Open();
+
+                List<CommonItem> shopeeList = ShopeeGetListMappingOfProduct(id, conn);
+                List<CommonItem> tikiList = TikiGetListMappingOfProduct(id, conn);
+
+                ls.AddRange(tikiList);
+                ls.AddRange(shopeeList);
+
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
+            // Lấy danh sách sản phẩm
+            return JsonConvert.SerializeObject(ls);
+        }
+
     }
 }

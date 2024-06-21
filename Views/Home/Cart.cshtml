@@ -482,7 +482,6 @@
                 </div>
             </div>
         </div>
-        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
@@ -559,14 +558,17 @@
                 clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.itemName;
                 clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;
 
-                clone.getElementsByClassName("vWt6ZL")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.bookCoverPrice);
-                clone.getElementsByClassName("M-AAFK")[1].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.price);
+                clone.getElementsByClassName("vWt6ZL")[0].innerHTML =
+                    ConvertMoneyToTextWithIcon(obj.bookCoverPrice);
+                clone.getElementsByClassName("M-AAFK")[1].innerHTML =
+                    ConvertMoneyToTextWithIcon(obj.price);
 
                 clone.getElementsByClassName("v3H4Zf")[0].value = obj.q;
 
                 clone.getElementsByClassName("max-quantity")[0].innerHTML = obj.quantity + " sản phẩm có sẵn";
 
-                clone.getElementsByClassName("ofQLuG")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.q * obj.price);
+                clone.getElementsByClassName("ofQLuG")[0].innerHTML =
+                    ConvertMoneyToTextWithIcon(obj.q * obj.price);
 
                 containerModel.appendChild(clone);
             }
@@ -577,7 +579,7 @@
 
         async function LoadCart() {
             let responseDB = await CartPageLoadCart();
-            if (responseDB.responseText != null) {
+            if (responseDB.responseText != "null") {
                 listCartCookieObject = JSON.parse(responseDB.responseText);
             }
             else {
@@ -614,14 +616,16 @@
                 }
             }
             document.getElementsByClassName("A-CcKC")[0].innerHTML = "Tổng thanh toán (" + count + " Sản phẩm):"
-            document.getElementsByClassName("WC0us-")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(sumMoney);
+            document.getElementsByClassName("WC0us-")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(sumMoney);
         }
 
         // Hiển thị tiền thanh toán 1 sản phẩm
         function ShowMoney(model) {
             let id = parseInt(model.getAttribute("data-model-id"));
             let obj = GetObjFromListAndId(id, listCartCookieObject);
-            model.getElementsByClassName("ofQLuG")[0].innerHTML = "<sup>₫</sup>" + ConvertMoneyToText(obj.q * obj.price);
+            model.getElementsByClassName("ofQLuG")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(obj.q * obj.price);
         }
 
         // Hiển thị checkbox tất cả

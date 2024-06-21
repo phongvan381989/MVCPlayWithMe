@@ -58,26 +58,26 @@ namespace MVCPlayWithMe.Models
         //    mappingProductImageSrc = Common.GetListThumbnailImageSrd(mapping);
         //}
 
-        // Từ mapping tính được giá bìa model, số lượng tồn kho
-        public void SetPriceFromMappingPriceAndQuantity()
-        {
-            if (mapping.Count() == 0)
-                return;
+        //// Từ mapping tính được giá bìa model, số lượng tồn kho
+        //public void SetPriceFromMappingPriceAndQuantity()
+        //{
+        //    if (mapping.Count() == 0)
+        //        return;
 
-            quantity = 0;
-            bookCoverPrice = 0;
-            foreach (var map in mapping)
-            {
-                bookCoverPrice = bookCoverPrice + map.product.bookCoverPrice;
-                if (quantity < map.product.quantity)
-                    quantity = map.product.quantity;
-            }
+        //    quantity = 0;
+        //    bookCoverPrice = 0;
+        //    foreach (var map in mapping)
+        //    {
+        //        bookCoverPrice = bookCoverPrice + map.product.bookCoverPrice;
+        //        if (quantity < map.product.quantity)
+        //            quantity = map.product.quantity;
+        //    }
 
-            // Giá sau chiết khấu
-            price = bookCoverPrice * (100 - discount) / 100;
+        //    // Giá sau chiết khấu
+        //    price = bookCoverPrice * (100 - discount) / 100;
             
-            // Giá làm tròn xuống
-            price = Common.FloorMoney(price);
-        }
+        //    // Giá làm tròn xuống
+        //    price = Common.FloorMoney(price);
+        //}
     }
 }

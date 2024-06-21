@@ -14,6 +14,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public long modelId { get; set; }
 
+        // model id tương ứng trong tbShopeeModelId
+        public int dbModelId { get; set; }
+
         public string name { get; set; }
 
         /// <summary>
@@ -38,6 +41,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public int quantity_sellable { get; set; }
 
+        // Nếu sản phẩm là shopee, đây là id sản phẩm trên web voibenho đã được sinh ra nếu có
+        public int pWMMappingModelId { get; set; }
+
         /// <summary>
         /// product is active (1) or inactive
         /// </summary>
@@ -46,13 +52,27 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// <summary>
         /// Lý do cập nhật số lượng lỗi
         /// </summary>
-        public string pwhyUpdateFail { get; set; }
+        public string whyUpdateFail { get; set; }
 
         public List<Mapping> mapping { set; get; }
 
         public CommonModel()
         {
             mapping = new List<Mapping>();
+        }
+
+        // Từ list mapping tính được tồn kho sản phẩm
+        public int GetQuatityFromListMapping()
+        {
+            int qty = Int32.MaxValue;
+            if (mapping.Count == 0)
+                qty = 0;
+            foreach (var m in mapping)
+            {
+                if (qty < m.product.quantity / m.quantity)
+                    qty = m.product.quantity / m.quantity;
+            }
+            return qty;
         }
     }
 }

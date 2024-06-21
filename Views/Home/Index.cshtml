@@ -94,6 +94,7 @@
         function SetSearchParameter(searchParams) {
             searchParams.append("namePara", namePara);
         }
+
         // Từ danh sách model tính được tổng số lượng model đã bán, model rẻ nhất, model đắt nhất
         function SetPriceAndQuantity(item)
         {
@@ -146,14 +147,19 @@
                 itemElement.getElementsByClassName("product-item")[0].href = "/Home/Item?id=" + item.id;
                 // Hiển thị vì sample đang ẩn
                 itemElement.style.display = "block";
-                itemElement.getElementsByClassName("card-img-top")[0].src = item.thumbnailFirst;
+                if (item.imageSrc.length > 0) {
+                    itemElement.getElementsByClassName("card-img-top")[0].src = Get320VersionOfImageSrc(item.imageSrc[0]);
+                } else {
+                    itemElement.getElementsByClassName("card-img-top")[0].src = srcNoImageThumbnail;
+                }
+                
                 itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.name;
                 SetPriceAndQuantity(item);
-                itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumSoldQuantity + " bộ";
-                itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML = item.cheapest;
-                    + "<sup>₫</sup>";
-                itemElement.getElementsByClassName("price-original-detail")[0].innerHTML = item.cheapestBookCoverPrice
-                    + "₫";
+                //itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumSoldQuantity + " bộ";
+                itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML =
+                    ConvertMoneyToTextWithIcon(item.cheapest);
+                itemElement.getElementsByClassName("price-original-detail")[0].innerHTML = 
+                    ConvertMoneyToTextWithIcon(item.cheapestBookCoverPrice);
 
                 itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML = "-" + item.discount + "%";
 

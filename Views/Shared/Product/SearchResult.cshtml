@@ -3,14 +3,15 @@
         <p>Kết quả trống</p>
     </div>
     <div id="search-result" style="display:none">
+        <div id="count-result"></div>
         <table id="myTable">
             <tr>
                 <th style="display:none"></th>
                 <th style="width:200px">Ảnh</th>
-                <th>Tên</th>
+                <th title="Tên đỏ biểu hiện sản phẩm hết hàng, xanh lơ biểu hiện không kinh doanh">Tên</th>
+                <th title="Đỏ biểu hiện số lượng tồn kho là 0. Click để sắp xếp tăng hoặc giảm dần tồn kho"
+                    style="cursor:pointer;" onclick="ArrangeQuantity()">Số Lượng</th>
             </tr>
         </table>
-        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
-        @Html.Partial("~/Views/Shared/GoToPage.cshtml")
     </div>
 </div>

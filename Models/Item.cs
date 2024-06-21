@@ -1,14 +1,17 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.ItemModel;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
     public class Item
     {
         public int id { get; set; }
+
+        // item id của sản phẩm trên sàn shopee tương ứng
+        public long shopeeItemId { get; set; }
+
         public string name { get; set; }
 
         /// <summary>
@@ -22,12 +25,14 @@ namespace MVCPlayWithMe.Models
 
         public DateTime date { get; set; }
 
+        /// <summary>
+        /// mặc định là 0, chưa xét thể loại
+        /// </summary>
+        public int categoryId { get; set; }
+
         public List<Model> models { get; set; }
 
         public List<string> imageSrc { get; set; }
-
-        // Chứa ảnh đầu tiên, phiên bản nhỏ
-        public string thumbnailFirst { get; set; }
 
         public string videoSrc { get; set; }
 
@@ -42,7 +47,8 @@ namespace MVCPlayWithMe.Models
         public Item(string inName,
             int inStatus,
             int inQuota,
-            string inDetail
+            string inDetail,
+            int inCategoryId
             )
         {
             id = -1;
@@ -50,6 +56,7 @@ namespace MVCPlayWithMe.Models
             status = inStatus;
             quota = inQuota;
             detail = inDetail;
+            categoryId = inCategoryId;
             models = new List<Model>();
             imageSrc = new List<string>();
         }
@@ -58,7 +65,8 @@ namespace MVCPlayWithMe.Models
             string inName,
             int inStatus,
             int inQuota,
-            string inDetail
+            string inDetail,
+            int inCategoryId
             )
         {
             id = inId;
@@ -66,6 +74,7 @@ namespace MVCPlayWithMe.Models
             status = inStatus;
             quota = inQuota;
             detail = inDetail;
+            categoryId = inCategoryId;
             models = new List<Model>();
             imageSrc = new List<string>();
         }
@@ -76,9 +85,21 @@ namespace MVCPlayWithMe.Models
             videoSrc = Common.GetItemVideoSrc(id);
         }
 
-        public void SetThumbnailFirst()
+        public void SetShopeeItemId()
         {
-            thumbnailFirst = Common.GetItemThumbnailFirst(id);
+            ItemModelMySql sqler = new ItemModelMySql();
+            if (models.Count > 0)
+            {
+                MySqlResultState result = sqler.GetTMDTShopeeItemIdFromModelId(models[0].id);
+                if (result.State == EMySqlResultState.OK)
+                {
+                    shopeeItemId = result.myAnythingLong;
+                }
+                else
+                {
+                    shopeeItemId = 0;
+                }
+            }
         }
     }
 }

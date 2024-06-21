@@ -71,7 +71,9 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetItemFromId(int id)
         {
-            return JsonConvert.SerializeObject(itemModelsqler.GetItemFromId(id));
+            Item item = itemModelsqler.GetItemFromId(id);
+            item.SetShopeeItemId();
+            return JsonConvert.SerializeObject(item);
         }
 
         /// <summary>

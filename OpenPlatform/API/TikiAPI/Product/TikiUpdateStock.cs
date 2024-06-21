@@ -125,56 +125,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         }
 
         /// <summary>
-        /// Từ id sản phẩm trên sàn cập nhật số lượng sản phẩm trên sàn theo số lượng trong kho
-        /// </summary>
-        /// <param name="proId"></param>
-        /// <param name="quantity">Số lượng thực tế trên sàn. Nếu = -1 Không check số lượng trên sàn TMDT và số lượng trong kho có khác nhau.</param>
-        /// <returns></returns>
-        public static Boolean TikiProductUpdateQuantity(int proId, long quantity)
-        {
-            // Check số lượng trên sàn TMDT và số lượng trong kho có khác nhau
-            if(quantity != -1)
-            {
-                if (!NeedUpdateQuantityOfProTMDT(proId.ToString(), quantity))
-                {
-                    //// Cập nhật vào db ModelTonKhoSanTMDT
-                    //ModelTonKhoSanTMDT.SynchronizeThongTinChiTietToTonKhoSanTMDT(proId.ToString(), EnumCommerceType.TIKI);
-                    //ModelMappingSanPhamTMDT_SanPhamKho.Tiki_UpdateQuantityOnTMDT(proId.ToString(), quantity);
-                    return true;
-                }
-            }
-
-            // Cập nhật số lượng trên sàn Tiki
-            TikiUpdateQuantity st = new TikiUpdateQuantity(proId, TikiConstValues.intIdKho28Ngo3TTDL);
-            // Cập nhật tồn kho cho tham số
-            int qty = 0;
-            //qty = ModelThongTinChiTiet.GetQuantityForProTMDT(Common.commerceNameTiki, proId.ToString());
-            //if (qty == -1)
-            //{
-            //    MyLogger.GetInstance().Info("Số lượng tồn kho của mã sản phẩm " + proId.ToString() + " là -1");
-
-            //    // Ta set số lượng sản phẩm trên sàn về 0
-            //    qty = 0;
-            //}
-
-            st.UpdateQuantity(qty);
-            Boolean isOk = TikiProductUpdateQuantity(st);
-            if (!isOk)
-            {
-                //// Lưu vào db update mã sản phẩm lỗi
-                //ModelUpdateStockFailure.Tiki_Update(proId.ToString());
-                MyLogger.GetInstance().Info("Tiki sản phẩm cập nhật lỗi: " + proId.ToString());
-                return false;
-            }
-
-            //// Cập nhật vào db ModelTonKhoSanTMDT
-            //ModelTonKhoSanTMDT.SynchronizeThongTinChiTietToTonKhoSanTMDT(proId.ToString(), EnumCommerceType.TIKI);
-            //ModelMappingSanPhamTMDT_SanPhamKho.Tiki_UpdateQuantityOnTMDT(proId.ToString(), qty);
-            Thread.Sleep(200);
-            return true;
-        }
-
-        /// <summary>
         /// Set giá bán thực tế cho id sản phẩm
         /// </summary>
         /// <param name="proId"></param>

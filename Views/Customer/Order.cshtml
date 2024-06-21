@@ -265,10 +265,10 @@
 
                     // Tiền giá bìa
                     cloneItem.getElementsByClassName("j2En5csA")[0].innerHTML =
-                        "<sup>₫</sup>" + ConvertMoneyToText(itemObj.bookCoverPrice * itemObj.quantity);
+                        ConvertMoneyToTextWithIcon(itemObj.bookCoverPrice * itemObj.quantity);
                     // Thành tiền
                     cloneItem.getElementsByClassName("ndAKDn90")[0].innerHTML =
-                        "<sup>₫</sup>" + ConvertMoneyToText(itemObj.price * itemObj.quantity);
+                        ConvertMoneyToTextWithIcon(itemObj.price * itemObj.quantity);
 
                     containerItem.append(cloneItem);
                 }

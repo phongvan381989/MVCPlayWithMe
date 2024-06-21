@@ -791,7 +791,7 @@
                         let img = document.createElement("img");
                         img.className = "nvzlfksjgs095 img-cursor";
                         if (order.listMapping[i][j].product.imageSrc.length > 0) {
-                            img.setAttribute("src", order.listMapping[i][j].product.imageSrc[0]);
+                            img.setAttribute("src", Get320VersionOfImageSrc(order.listMapping[i][j].product.imageSrc[0]));
                         } else {
                             img.setAttribute("src", srcNoImageThumbnail);
                         }

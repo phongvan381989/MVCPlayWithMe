@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.Models
         public string publishingCompany { get; set; }
         public int publishingTime { get; set; }
         ///// <summary>
-        ///// publishingTimeyyyyMMdd định dạng string yyy-MM-dd của publishingTime
+        ///// publishingTimeyyyyMMdd định dạng string yyyy-MM-dd của publishingTime
         ///// </summary>
         //public string publishingTimeyyyyMMdd { get; set; }
         public int productLong { get; set; }

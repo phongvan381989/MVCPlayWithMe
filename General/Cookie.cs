@@ -45,14 +45,14 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="httpContext"></param>
         /// <returns></returns>
-        public static void SetVistorTypeCookie(HttpContextBase httpContext)
+        public static void SetVisitorTypeCookie(HttpContextBase httpContext)
         {
-            HttpCookie vistorType = new HttpCookie(Common.vistorType);
-            vistorType.Value = "admin";
-            vistorType.Expires = SetExpires(1);
+            HttpCookie visitorType = new HttpCookie(Common.visitorType);
+            visitorType.Value = "admin";
+            visitorType.Expires = SetExpires(1);
             //uId.HttpOnly = true;
 
-            httpContext.Response.Cookies.Add(vistorType);
+            httpContext.Response.Cookies.Add(visitorType);
 
             return;
         }
@@ -82,16 +82,16 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Sau khi đăng xuất, xóa VistorType cookie
+        /// Sau khi đăng xuất, xóa VisitorType cookie
         /// </summary>
         /// <param name="httpContext"></param>
-        public static void DeleteVistorTypeCookie(HttpContextBase httpContext)
+        public static void DeleteVisitorTypeCookie(HttpContextBase httpContext)
         {
-            HttpCookie vistorType = new HttpCookie(Common.vistorType);
-            vistorType.Value = "";
-            vistorType.Expires = SetExpires(-1);
+            HttpCookie visitorType = new HttpCookie(Common.visitorType);
+            visitorType.Value = "";
+            visitorType.Expires = SetExpires(-1);
             //uId.HttpOnly = true;
-            httpContext.Response.Cookies.Add(vistorType);
+            httpContext.Response.Cookies.Add(visitorType);
             return;
         }
 

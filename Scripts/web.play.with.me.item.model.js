@@ -63,7 +63,38 @@ function AddMappingButtonForModel(container) {
     }
     btn.appendChild(btnContent);
     btn.className = "margin-vertical";
-    btn.style.cssFloat = "right";
+    //btn.style.cssFloat = "right";
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.flexDirection = "row-reverse";
+    div.appendChild(btn);
+    container.appendChild(div);
+}
+
+// Thêm nút cập nhật mapping
+function AddMappingUpdateButtonForModel(container) {
+    let btn = document.createElement("BUTTON");
+    let btnContent = document.createTextNode("Cập nhật liên kết");
+    btn.addEventListener("click", function (event) {
+        ModelUpdateMapping(event.currentTarget);
+    });
+    btn.appendChild(btnContent);
+    btn.className = "margin-vertical";
+    const div = document.createElement("div");
+    div.style.display = "flex";
+    div.style.flexDirection = "row-reverse";
+    div.appendChild(btn);
+    container.appendChild(div);
+}
+
+function AddModelNameUpdateButtonForModel(container) {
+    let btn = document.createElement("BUTTON");
+    let btnContent = document.createTextNode("Cập nhật tên");
+    btn.addEventListener("click", function (event) {
+        ModelUpdateName(event.currentTarget);
+    });
+    btn.appendChild(btnContent);
+    btn.className = "margin-vertical";
     const div = document.createElement("div");
     div.appendChild(btn);
     container.appendChild(div);
@@ -106,9 +137,15 @@ function InsertObjToTable(table, obj) {
 
     // Image
     let img = document.createElement("img");
-    img.setAttribute("src", obj.imageSrc);
-    img.height = thumbnailHeight;
-    img.width = thumbnailWidth;
+    img.setAttribute("src", Get320VersionOfImageSrc(obj.imageSrc));
+    img.height = thumbnailHeight / 2;
+    img.width = thumbnailWidth / 2;
+    img.style.cursor = "pointer";
+    img.title = "Click để cập nhật thông tin sản phẩm trong kho như: Vị trí lưu kho, mã sản phẩm";
+    img.onclick = function () {
+        let url = "/Product/UpdateDelete?id=" + obj.id.toString();
+        window.open(url);
+    }
     cell2.append(img);
 
     // Tên
@@ -177,6 +214,11 @@ function AddDistanceRows(modelContainer) {
     modelContainer.appendChild(document.createElement("br"));
 }
 
+function ValidateDiscount(ele) {
+    if (ele.value < 0)
+        ele.value = 0;
+}
+
 function AddLabelInput(container, label, id, inputType, disabled) {
     // Thêm tên
     const div = document.createElement("div");
@@ -206,7 +248,7 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     if (id == "id-book-cover-price-") {
         inp.className = classOfModelBookCoverPrice;
     }
-    // Set class cho input giá bìa
+    // Set class cho input tồn kho
     if (id == "id-quatity-") {
         inp.className = classOfModelQuantity;
     }
@@ -220,6 +262,103 @@ function AddLabelInput(container, label, id, inputType, disabled) {
     container.appendChild(div);
 }
 
+function AddDiscount(container) {
+    // Thêm tên
+    const div = document.createElement("div");
+    let lab = document.createElement("label");
+    lab.htmlFor = "id-discount-" + autoIncrease;
+    lab.innerHTML = "Chiết khấu:";
+
+    let inp = document.createElement("INPUT");
+    inp.setAttribute("type", "number");
+    inp.id = "id-discount-" + autoIncrease;
+    inp.className = classOfModelDiscount;
+    inp.addEventListener("input", function (event) {
+        ValidateDiscount(event.currentTarget);
+    });
+
+    let labPercent = document.createElement("label");
+    labPercent.innerHTML = "%";
+
+    let btnUpdateDiscount = document.createElement("button");
+    var t = document.createTextNode("Cập nhật chiết khấu");
+    btnUpdateDiscount.appendChild(t);
+    btnUpdateDiscount.addEventListener("click", function (event) {
+        ModelUpdateDiscount(event.currentTarget);
+    });
+
+    div.appendChild(lab);
+    div.appendChild(inp);
+    div.appendChild(labPercent);
+    div.appendChild(btnUpdateDiscount);
+
+    container.appendChild(div);
+}
+
+async function ModelUpdateDiscount(element) {
+    // modelId, discount
+    let modelContainer = element.parentElement.parentElement;
+    let modelId = modelContainer.modelId;
+    let discount = modelContainer.getElementsByClassName(classOfModelDiscount)[0].value;
+    if (DEBUG) {
+        console.log("ModelUpdateDiscount CALL ");
+        console.log("element.tagName " + element.tagName);
+        console.log("modelContainer.tagName " + modelContainer.tagName);
+        console.log("modelId: " + modelId);
+        console.log("discount: " + discount);
+    }
+
+    let url = "/ItemModel/UpdateDiscount";
+    const searchParams = new URLSearchParams();
+    searchParams.append("modelId", modelId);
+    searchParams.append("discount", discount);
+    ShowCircleLoader();
+    await RequestHttpPostPromise(searchParams, url);
+    RemoveCircleLoader();
+}
+
+async function ModelUpdateMapping(element) {
+    let modelContainer = element.parentElement.parentElement;
+    let modelId = modelContainer.modelId;
+    if (DEBUG) {
+        console.log("ModelUpdateMapping CALL ");
+        console.log("element.tagName " + element.tagName);
+        console.log("modelContainer.tagName " + modelContainer.tagName);
+        console.log("modelId: " + modelId);
+    }
+    let listProIdMapping = JSON.stringify(GetListProIdMapping(modelContainer.getElementsByClassName(classOfModelTable)[0]));
+    let listQuantityMapping = JSON.stringify(GetListQuantityMapping(modelContainer.getElementsByClassName(classOfModelTable)[0]));
+
+    let url = "/ItemModel/UpdateMapping";
+    const searchParams = new URLSearchParams();
+    searchParams.append("modelId", modelId);
+    searchParams.append("listProIdMapping", listProIdMapping);
+    searchParams.append("listQuantityMapping", listQuantityMapping);
+    ShowCircleLoader();
+    await RequestHttpPostPromise(searchParams, url);
+    RemoveCircleLoader();
+}
+
+async function ModelUpdateName(element) {
+    let modelContainer = element.parentElement.parentElement;
+    let modelId = modelContainer.modelId;
+    if (DEBUG) {
+        console.log("ModelUpdateMapping CALL ");
+        console.log("element.tagName " + element.tagName);
+        console.log("modelContainer.tagName " + modelContainer.tagName);
+        console.log("modelId: " + modelId);
+    }
+    let name = modelContainer.getElementsByClassName(classOfModelName)[0].value;
+
+    let url = "/ItemModel/UpdateModelName";
+    const searchParams = new URLSearchParams();
+    searchParams.append("modelId", modelId);
+    searchParams.append("name", name);
+    ShowCircleLoader();
+    await RequestHttpPostPromise(searchParams, url);
+    RemoveCircleLoader();
+}
+
 function AddLabelSelectOfStatus(container, label, id) {
     // Thêm tên
     const div = document.createElement("div");
@@ -229,7 +368,7 @@ function AddLabelSelectOfStatus(container, label, id) {
 
     let selectList  = document.createElement("SELECT");
     selectList.id = id + autoIncrease;
-    selectList.className = "config-max-width margin-vertical class-model-status";
+    selectList.className = "margin-vertical class-model-status";
 
     let option = document.createElement("option");
     option.value = 0;
@@ -267,7 +406,9 @@ function AddModelToScreen() {
     modelContainer.modelId = -1;
     // Tên:
     AddLabelInput(modelContainer, "Tên:", "id-name-", "text", false);
-
+    if (window.location.href.toUpperCase().includes("/ItemModel/UpdateDelete".toUpperCase())) {
+        AddModelNameUpdateButtonForModel(modelContainer);
+    }
     AddDistanceRows(modelContainer);
 
     // Thêm ảnh
@@ -300,7 +441,12 @@ function AddModelToScreen() {
     AddDistanceRows(modelContainer);
 
     // Thêm chiết khấu
-    AddLabelInput(modelContainer, "Chiết khấu:", "id-discount-", "number", false);
+    if (window.location.href.toUpperCase().includes("/ItemModel/UpdateDelete".toUpperCase())) {
+        AddDiscount(modelContainer);
+    }
+    else {
+        AddLabelInput(modelContainer, "Chiết khấu:", "id-discount-", "number", false);
+    }
     AddDistanceRows(modelContainer);
 
     // Thêm giá bán, giá bán lấy từ các chương trình khyến mại, giảm giá
@@ -329,7 +475,7 @@ function AddModelToScreen() {
     // Thêm nút mapping
     AddMappingButtonForModel(modelContainer);
 
-    AddDistanceRows(modelContainer);
+    //AddDistanceRows(modelContainer);
     AddDistanceRows(modelList);
     //EasyViewListModel();
     return modelContainer;
@@ -471,6 +617,12 @@ function AddItemParameters(searchParams) {
 
     let detail = document.getElementById("detail-id").value;
     searchParams.append("detail", detail);
+
+    let category = GetDataIdFromCategoryDatalist(document.getElementById("category-id").value);
+    if (category == null) {
+        category = 0;// giá trị mặc định
+    }
+    searchParams.append("categoryId", category);
 }
 
 // Thông tin gồm ảnh, tên, quota,...
@@ -523,13 +675,28 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
     }, null);
 }
 
+function ItemModelCheckValidInputProperty() {
+    if (isEmptyOrSpaces(document.getElementById("item-name-id").value)) {
+        CreateMustClickOkModal("Tên sản phẩm không hợp lệ.", null);
+        document.getElementById("item-name-id").focus();
+        return false;
+    }
+
+    if (GetDataIdFromCategoryDatalist(document.getElementById("category-id").value) === null) {
+        CreateMustClickOkModal("Thể loại không hợp lệ.", null);
+        document.getElementById("category-id").focus();
+        return false;
+    }
+
+    return true;
+}
+
 //Lưu item, model vào db
 async function AddItemModel() {
-    if (isEmptyOrSpaces(document.getElementById("item-name-id").value)) {
-        alert("Tên sản phẩm không hợp lệ.");
-        document.getElementById("item-name-id").focus();
+    if (ItemModelCheckValidInputProperty() === false) {
         return;
     }
+
     ShowCircleLoader();
     //if (!CheckValidModelName()) {
     //    alert("Tên phân loại không hợp lệ.");
@@ -622,6 +789,10 @@ async function UpdateItemModel() {
     let itemId = item.id;
     if (itemId == null) {
         ShowResult("Sản phẩm không chính xác.")
+        return;
+    }
+
+    if (ItemModelCheckValidInputProperty() === false) {
         return;
     }
 
@@ -837,6 +1008,9 @@ async function SearchProduct() {
 
     // Làm trống bảng
     DeleteRowsExcludeHead(document.getElementById("myTable"));
+    if (listProduct == null) {
+        return;
+    }
 
     // Show
     let table = document.getElementById("myTable");
@@ -874,7 +1048,7 @@ async function SearchProduct() {
         // Image
         let img = document.createElement("img");
         if (pro.imageSrc.length > 0) {
-            img.setAttribute("src", pro.imageSrc[0]);
+            img.setAttribute("src", Get320VersionOfImageSrc(pro.imageSrc[0]));
         } else {
             img.setAttribute("src", srcNoImageThumbnail);
         }
@@ -929,11 +1103,91 @@ async function GetItemObjectFromId(id) {
     return RequestHttpPostPromise(searchParams, query);
 }
 
+function AddItemNameUpdateButtonForModel(container) {
+    let btn = document.createElement("BUTTON");
+    let btnContent = document.createTextNode("Cập nhật tên");
+    btn.addEventListener("click", function (event) {
+        ItemUpdateName(event.currentTarget);
+    });
+    btn.appendChild(btnContent);
+    btn.className = "margin-vertical";
+    const div = document.createElement("div");
+    div.appendChild(btn);
+    container.appendChild(div);
+}
+
+async function ItemUpdateName() {
+    let itemId = GetValueFromUrlName("id");
+    if (isEmptyOrSpaces(itemId)) {
+        CreateMustClickOkModal("Định danh sản phẩm lỗi", null);
+        return;
+    }
+
+    let name = document.getElementById("item-name-id").value;
+    if (isEmptyOrSpaces(name)) {
+        CreateMustClickOkModal("Tên sản phẩm lỗi", null);
+        document.getElementById("item-name-id").focus();
+        return;
+    }
+
+    let url = "/ItemModel/UpdateItemName";
+    const searchParams = new URLSearchParams();
+    searchParams.append("itemId", itemId);
+    searchParams.append("name", name);
+    ShowCircleLoader();
+    await RequestHttpPostPromise(searchParams, url);
+    RemoveCircleLoader();
+}
+
+async function ItemUpdateCategory() {
+    let itemId = GetValueFromUrlName("id");
+    if (isEmptyOrSpaces(itemId)) {
+        CreateMustClickOkModal("Định danh sản phẩm lỗi", null);
+        return;
+    }
+
+    let categoryId = GetDataIdFromCategoryDatalist(document.getElementById("category-id").value);
+    if (categoryId === null) {
+        CreateMustClickOkModal("Thể loại không hợp lệ.", null);
+        document.getElementById("category-id").focus();
+        return;
+    }
+
+    let url = "/ItemModel/UpdateItemCategory";
+    const searchParams = new URLSearchParams();
+    searchParams.append("itemId", itemId);
+    searchParams.append("categoryId", categoryId);
+    ShowCircleLoader();
+    await RequestHttpPostPromise(searchParams, url);
+    RemoveCircleLoader();
+}
+
+function ShowCategoryFromCategoryId(categoryId) {
+    if (DEBUG){
+        console.log("ShowCategoryFromCategoryId CALL");
+        console.log("categoryId: " + categoryId);
+    }
+    if (categoryId == 0)// giá trị mặc định chưa chọn thể loại
+        return;
+
+    let option = document.getElementById("list-category").options;
+    if (option == null)
+        return null;
+
+    let length = option.length;
+    for (let i = 0; i < length; i++) {
+        if (option.item(i).getAttribute("data-id") == categoryId) {
+            document.getElementById("category-id").value = option.item(i).value;
+            break;
+        }
+    }
+}
+
 // Từ item object hiển thị ra màn hình
 async function ShowItemFromItemObject() {
 
     let responseDB = await GetItemObjectFromId(GetValueFromUrlName("id"));
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         item = JSON.parse(responseDB.responseText);
     }
     else {
@@ -945,6 +1199,24 @@ async function ShowItemFromItemObject() {
 
     // Hiển thị dữ liệu, image, video của item
     document.getElementById("item-name-id").value = item.name;
+    if (window.location.href.toUpperCase().includes("/ItemModel/UpdateDelete".toUpperCase())) {
+        document.getElementById("afx902njnf").style.display = "initial";
+        document.getElementById("gjdtc78dhjc").style.display = "initial";
+
+        // Lấy danh sách thể loại
+        const searchParams = new URLSearchParams();
+
+        let query = "/Category/GetListCategory";
+
+        let responseDB = await RequestHttpPostPromise(searchParams, query);
+        let list = null;
+        if (responseDB.responseText != "null") {
+            list = JSON.parse(responseDB.responseText);
+            let ele = document.getElementById("list-category");
+            SetDataListOfIdName(ele, list);
+        }
+        ShowCategoryFromCategoryId(item.categoryId);
+    }
     document.getElementById("item-status-id").value = item.status;
     document.getElementById("item-quota-id").value = item.quota;
     document.getElementById("detail-id").value = item.detail;
@@ -1011,6 +1283,11 @@ async function ShowItemFromItemObject() {
 
         for (let j = 0; j < listObj.length; j++) {
             CheckObjExistAndInsert(table, listObj[j]);
+        }
+
+        // Thêm nút cập nhật mapping
+        if (window.location.href.toUpperCase().includes("/ItemModel/UpdateDelete".toUpperCase())) {
+            AddMappingUpdateButtonForModel(model);
         }
     }
 }

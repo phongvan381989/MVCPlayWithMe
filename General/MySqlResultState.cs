@@ -105,6 +105,11 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public int myAnything { get; set; }
 
+        /// <summary>
+        /// Chứa giá trị bất kỳ số nguyên kiểu long
+        /// </summary>
+        public long myAnythingLong { get; set; }
+
         // Chứa json của đối tượng server trả về
         public object myJson { get; set; }
     }

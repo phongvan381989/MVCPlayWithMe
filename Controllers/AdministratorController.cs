@@ -72,7 +72,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 sqler.AdministratorLogout(cookieResult.cookieValue);
                 Cookie.DeleteUserIdCookie(HttpContext);
-                Cookie.DeleteVistorTypeCookie(HttpContext);
+                Cookie.DeleteVisitorTypeCookie(HttpContext);
             }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
         }
@@ -87,7 +87,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
-                Cookie.SetVistorTypeCookie(HttpContext);
+                Cookie.SetVisitorTypeCookie(HttpContext);
 
                 // Lấy thông tin adminstrator
                 Administrator administrator = sqler.GetAdministratorFromUserName(userName);

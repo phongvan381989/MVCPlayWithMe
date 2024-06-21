@@ -1,25 +1,47 @@
 ﻿<div>
-    @Html.Partial("~/Views/Shared/ItemModel/ItemName.cshtml")
+    <div>
+        <label for="item-name-id">Tên:</label>
+        <input type="text" class="config-max-width margin-vertical" id="item-name-id">
+        <button id="afx902njnf" style="display:none;" onclick="ItemUpdateName()"> Cập nhật tên</button>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
 
     @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
 
     @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
 
-    <label for="item-status-id">Trạng thái:</label><br>
-    <select class="config-max-width margin-vertical" id="item-status-id">
-        <option value="0" selected="selected">Đang kinh doanh</option>
-        <option value="1">Ngừng kinh doanh</option>
-        <option value="2">Hết hàng</option>
-    </select>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    <div>
+        <label for="category-id">Thể loại:</label><br>
+        <input type="text" list="list-category" class="margin-vertical" id="category-id">
+
+        <datalist id="list-category"></datalist>
+        <button id="gjdtc78dhjc" style="display:none;" onclick="ItemUpdateCategory()"> Cập nhật thể loại</button>
+    </div>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
-    <label for="item-quota-id">Quota:</label><br>
-    <input class="config-max-width margin-vertical" id="item-quota-id" type="number" value="5">
+    <div>
+        <label for="item-status-id">Trạng thái:</label><br>
+        <select class="margin-vertical" id="item-status-id">
+            <option value="0" selected="selected">Đang kinh doanh</option>
+            <option value="1">Ngừng kinh doanh</option>
+            <option value="2">Hết hàng</option>
+        </select>
+    </div>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
-    <label for="detail-id">Mô tả:</label><br>
-    <textarea id="detail-id" rows="10" style="width:100%" value=""></textarea>
+    <div>
+        <label for="item-quota-id">Quota:</label><br>
+        <input class="margin-vertical" id="item-quota-id" type="number" value="5">
+    </div>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
+    <div>
+        <label for="detail-id">Mô tả:</label><br>
+        <textarea id="detail-id" rows="10" style="width:100%" value=""></textarea>
+    </div>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
     <div id="model-list">
         @*<ul id="model-list" style="list-style-type:none;"></ul>*@
     </div>

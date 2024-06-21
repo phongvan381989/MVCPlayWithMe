@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.OpenPlatform.Model;
 using Newtonsoft.Json;
 using System;
@@ -11,6 +12,13 @@ namespace MVCPlayWithMe.Controllers
 {
     public class DevController : BasicController
     {
+        public DevMySql sqler { get; set; }
+
+        public DevController() : base()
+        {
+            sqler = new DevMySql();
+        }
+
         // GET: Dev
         public ActionResult Index()
         {
@@ -56,5 +64,19 @@ namespace MVCPlayWithMe.Controllers
         //        System.Web.HttpContext.Current.Server.MapPath(Common.ProductMediaFolderPath));
         //    return JsonConvert.SerializeObject(rss);
         //}
+
+        [HttpPost]
+        public string DeleteDuplicateDataOftbShopeeModel()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (AuthentAdministrator() == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Xác thực thất bại.";
+                return JsonConvert.SerializeObject(result);
+            }
+
+            return JsonConvert.SerializeObject(sqler.DeleteDuplicateDataOftbShopeeModel());
+        }
     }
 }

@@ -25,8 +25,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public long itemId { get; set; }
 
+        // Item id tương ứng trong tbShopeeItem
+        public int dbItemId { get; set; }
+
         // Lưu supper_id sàn Tiki, khi sản phẩm không có super_id giá trị này mặc định là 0.
         public int tikiSuperId { get; set; }
+
+        //// Tiki cấu trúc sản phẩm cũng thể hiện item/model nhưng không rõ ràng, có thể lấy thông tin từ modelId
+        //// trực tiếp (không như bên shopee lấy phải gián tiếp qua item).
+        //// Ngoài ra, sản phẩm không có sản phẩm cha(item) sẽ có super_id = 0,
+        //// khác với shopee bắt buộc có item, rồi mới có model
+        //// Class CommonItem này đang tương
+        //// ứng với model trên sàn Tiki, vì thế thêm trường tikiSuperName
+        //// Vấn đề lịch sử để lại, giờ chuyển item/model rõ ràng như Shopee thì hợp lý hơn nhưng lười
+        //public string tikiSuperName { get; set; }
+
         /// <summary>
         /// SKU of product
         /// </summary>
@@ -36,6 +49,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Name of product
         /// </summary>
         public string name { get; set; }
+
+        /// <summary>
+        /// Thuộc tính theo SHOPEE
+        /// Enumerated type that defines the current status of the item.
+        /// Applicable values: NORMAL, DELETED, BANNED and UNLIST.
+        /// </summary>
+        public string item_status { get; set; }
 
         /// <summary>
         /// product is active (1) or inactive
@@ -64,9 +84,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string imageSrc { get; set; }
 
+        /// <summary>
+        ///  Lấy url ảnh, video của item shopee phục vụ sinh item trên voibenho
+        /// </summary>
+        public List<string> imageSrcList { get; set; }
+        public string videoSrc { get; set; }
+
         public List<CommonModel> models { get; set; }
 
         public string detail { get; set; }
+
+        public CommonItem()
+        {
+            eType = EECommerceType.SHOPEE;
+            models = new List<CommonModel>();
+        }
 
         public CommonItem(EECommerceType inEtype)
         {
@@ -74,7 +106,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             models = new List<CommonModel>();
         }
 
-        private ShopeeGetModelList_Model GetModelFromModelListResponse(ShopeeGetModelListResponse obj, int tierIndex)
+        public static ShopeeGetModelList_Model GetModelFromModelListResponse(ShopeeGetModelListResponse obj, int tierIndex)
         {
             ShopeeGetModelList_Model model = null;
             foreach(var m in obj.model)
@@ -105,13 +137,25 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             itemId = pro.item_id;
             sku = pro.item_sku;
             name = pro.item_name;
-
+            item_status = pro.item_status;
             if (pro.item_status == "NORMAL")
                 bActive = true;
             else
                 bActive = false;
             has_model = pro.has_model;
             imageSrc = pro.image.image_url_list[0];
+
+            // Lấy url ảnh, video của item shopee phục vụ sinh item trên voibenho
+            imageSrcList = new List<string>();
+            foreach(var s in pro.image.image_url_list)
+            {
+                imageSrcList.Add(s);
+            }
+            if (pro.video_info != null && pro.video_info.Count > 0)
+            {
+                videoSrc = pro.video_info[0].video_url;
+            }
+
             if (pro.description_type == "normal")
             {
                 detail = pro.description;
@@ -203,6 +247,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             models.Add(commonModel);
         }
+
         static private Boolean SumProductQuantity(Dictionary<string, int> sumDic, Dictionary<string, int> paraDic)
         {
             if (sumDic == null)

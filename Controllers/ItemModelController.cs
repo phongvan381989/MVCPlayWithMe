@@ -28,8 +28,6 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-
-
         public ActionResult Create()
         {
             if (AuthentAdministrator() == null)
@@ -57,6 +55,11 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetItemObjectFromId(int id)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
         }
 
@@ -80,14 +83,14 @@ namespace MVCPlayWithMe.Controllers
 
         // Thêm item vào db, không xử lý image/video
         [HttpGet]
-        public string AddItem(string name, int status, int quota, string detail)
+        public string AddItem(string name, int status, int quota, string detail, int categoryId)
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(null);
             }
 
-            Item it = new Item(name, status, quota, detail);
+            Item it = new Item(name, status, quota, detail, categoryId);
             int id = sqler.AddItem(it);
             MySqlResultState result = new MySqlResultState();
             // Lấy id của sản phẩm vừa thêm mới thành công
@@ -97,14 +100,14 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string UpdateItem(int id, string name, int status, int quota, string detail)
+        public string UpdateItem(int id, string name, int status, int quota, string detail, int categoryId)
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(null);
             }
 
-            Item it = new Item(id, name, status, quota, detail);
+            Item it = new Item(id, name, status, quota, detail, categoryId);
 
             MySqlResultState result = sqler.UpdateItem(it);
 
@@ -122,7 +125,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(null);
             }
             string path = Common.GetAbsoluteItemMediaFolderPath(id);
             // Folder được tạo khi có image/video tương ứng
@@ -144,7 +147,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(null);
             }
 
             var itemId =Common.ConvertStringToInt32(Request.Headers["productId"]);
@@ -155,7 +158,7 @@ namespace MVCPlayWithMe.Controllers
                 path = Common.CreateAbsoluteItemMediaFolderPath(itemId);
             }
 
-            return SaveImageVideo(path);
+            return JsonConvert.SerializeObject(SaveImageVideo(path));
         }
 
         /// <summary>
@@ -169,7 +172,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(null);
             }
 
             var length = Request.ContentLength;
@@ -202,7 +205,7 @@ namespace MVCPlayWithMe.Controllers
                 result = sqler.UpdateModel(model);
 
                 // Xóa mapping cũ
-                sqler.DeleteMapping(model);
+                sqler.DeleteMapping(model.id);
 
                 // Tạo mapping mới
                 sqler.AddMapping(model);
@@ -257,6 +260,11 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public string DeleteModel(int id)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             // Xóa ảnh làm thumbnail
             MySqlResultState result = sqler.DeleteModel(id);
             string path = Common.GetAbsoluteModelMediaFolderPath(id);
@@ -281,6 +289,11 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public string SearchProduct(string codeOrBarcode, string name, string combo)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             ProductSearchParameter searchParameter = new ProductSearchParameter();
             searchParameter.codeOrBarcode = codeOrBarcode;
             searchParameter.name = name;
@@ -297,21 +310,23 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="namePara"></param>
         /// <returns></returns>
         [HttpGet]
-        public string SearchItemCount(string namePara)
+        public string SearchItemCount(int publisherId, string namePara)
         {
             // Đếm số sản phẩm trong kết quả tìm kiếm
             ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
             searchParameter.name = namePara;
+            searchParameter.publisherId = publisherId;
             int count = 0;
             count = sqler.SearchItemCount(searchParameter);
             return count.ToString();
         }
 
         [HttpGet]
-        public string ChangePage(string namePara, int start, int offset)
+        public string ChangePage(int publisherId, string namePara, int start, int offset)
         {
             List<Item> lsSearchResult;
             ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.publisherId = publisherId;
             searchParameter.name = namePara;
             searchParameter.start = start;
             searchParameter.offset = offset;
@@ -319,6 +334,27 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
+
+        // Tương tự hàm ChangePage nhưng trả về toàn bộ kết quả tới người dùng
+        [HttpGet]
+        public string SearchItem(int publisherId, string namePara)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
+            List<Item> lsSearchResult;
+            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.publisherId = publisherId;
+            searchParameter.name = namePara;
+            searchParameter.start = 0;
+            searchParameter.offset = 1000000;
+            lsSearchResult = sqler.SearchItemChangePage(searchParameter);
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
 
         //[HttpGet]
         //public string GetItemFromId(int id)
@@ -330,7 +366,107 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetListItem()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
             return JsonConvert.SerializeObject(sqler.GetListItemName());
+        }
+
+        // Cập nhật chiết khấu
+        [HttpPost]
+        public string UpdateDiscount(int modelId, int discount)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            return JsonConvert.SerializeObject(sqler.UpdateDiscount(modelId, discount));
+        }
+
+        // Cập nhật mapping
+        [HttpPost]
+        public string UpdateMapping(int modelId, string listProIdMapping, string listQuantityMapping)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            List<int> mappingOnlyProductId = JsonConvert.DeserializeObject<List<int>>(listProIdMapping);
+            List<int> mappingOnlyQuantity = JsonConvert.DeserializeObject<List<int>>(listQuantityMapping);
+
+            return JsonConvert.SerializeObject(
+                sqler.UpdateMapping(modelId, mappingOnlyProductId, mappingOnlyQuantity));
+        }
+
+        // Cập nhật tên model
+        [HttpPost]
+        public string UpdateModelName(int modelId, string name)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            return JsonConvert.SerializeObject(sqler.UpdateModelName(modelId, name));
+        }
+
+        // Cập nhật tên item
+        [HttpPost]
+        public string UpdateItemName(int itemId, string name)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            return JsonConvert.SerializeObject(sqler.UpdateItemName(itemId, name));
+        }
+
+        // Cập nhật chiết khấu cho danh sách item/model
+        // listItemId có dạng: 1,2,3
+        [HttpPost]
+        public string UpdateDiscountForListItem(int discount, string listItemId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            return JsonConvert.SerializeObject(sqler.UpdateDiscountForListItem(discount, listItemId));
+        }
+
+        // Cập nhật chiết khấu cho danh sách item/model
+        // listItemId có dạng: 1,2,3
+        [HttpPost]
+        public string UpdateDiscountForListModelId(int discount, string listModelId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            return JsonConvert.SerializeObject(sqler.UpdateDiscountForListModleId(discount, listModelId));
+        }
+
+        // Cập nhật tên item
+        [HttpPost]
+        public string UpdateItemCategory(int itemId, int categoryId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+            return JsonConvert.SerializeObject(sqler.UpdateItemCategory(itemId, categoryId));
+        }
+
+        // Lấy được item id từ model id
+        [HttpPost]
+        public string GetVBNItemIdFromModelId(int modelId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
+            return JsonConvert.SerializeObject(sqler.GetVBNItemIdFromModelId(modelId));
         }
     }
 }

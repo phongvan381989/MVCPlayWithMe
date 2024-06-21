@@ -13,7 +13,10 @@ namespace MVCPlayWithMe.General
 {
     public class MyMySql
     {
+        // Đây là admin connect với nhiều quyền hơn
         public static string connStr;
+
+        public static string customerConnStr;
 
         private static string errMessage;
 
@@ -249,10 +252,8 @@ namespace MVCPlayWithMe.General
 
         public static string GetString(MySqlDataReader rdr, string columnName)
         {
-            //if (Convert.IsDBNull(rdr[columnName]))
-            //    return string.Empty;
-            //else
-            //    return rdr.GetString(columnName);
+            if (Convert.IsDBNull(rdr[columnName]))
+                return string.Empty;
 
             try
             {

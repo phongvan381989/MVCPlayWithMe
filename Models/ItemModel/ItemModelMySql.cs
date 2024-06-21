@@ -50,6 +50,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             paras[2] = new MySqlParameter("@inStatus", item.status);
             paras[3] = new MySqlParameter("@inDetail", item.detail);
             paras[4] = new MySqlParameter("@inQuota", item.quota);
+            paras[5] = new MySqlParameter("@inCategoryId", item.categoryId);
 
             MyMySql.AddOutParameters(paras);
         }
@@ -58,11 +59,12 @@ namespace MVCPlayWithMe.Models.ItemModel
         {
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[4];
+            paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@inName", item.name);
             paras[1] = new MySqlParameter("@inStatus", item.status);
             paras[2] = new MySqlParameter("@inDetail", item.detail);
             paras[3] = new MySqlParameter("@inQuota", item.quota);
+            paras[4] = new MySqlParameter("@inCategoryId", item.categoryId);
 
             int id = -1;
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -93,12 +95,88 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
+        public int AddItem(string itemName, int itemStatus, string itemDetail)
+        {
+            MySqlParameter[] paras = null;
+
+            paras = new MySqlParameter[5];
+            paras[0] = new MySqlParameter("@inName", itemName);
+            paras[1] = new MySqlParameter("@inStatus", itemStatus);
+            paras[2] = new MySqlParameter("@inDetail", itemDetail);
+            paras[3] = new MySqlParameter("@inQuota",5);
+            paras[4] = new MySqlParameter("@inCategoryId", 0);
+
+            int id = -1;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    id = MyMySql.GetInt32(rdr, "LastId");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
+
+            return id;
+        }
+
+        public int GetItemIdFromName(string itemName)
+        {
+            MySqlParameter[] paras = null;
+
+            paras = new MySqlParameter[1];
+            paras[0] = new MySqlParameter("@inName", itemName);
+
+            int id = -1;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Get_Id_From_Name", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    id = MyMySql.GetInt32(rdr, "Id");
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+            conn.Close();
+
+            return id;
+        }
+
         public MySqlResultState UpdateItem(Item it)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[7];
+            paras = new MySqlParameter[8];
             ItemParameters(it, paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbItem_Update", paras);
@@ -335,14 +413,14 @@ namespace MVCPlayWithMe.Models.ItemModel
         }
 
         // Xóa tất cả mapping của model
-        public MySqlResultState DeleteMapping(Model model)
+        public MySqlResultState DeleteMapping( int modelId)
         {
             MySqlResultState result = new MySqlResultState();
 
             MySqlParameter[] paras = null;
 
             paras = new MySqlParameter[3];
-            paras[0] = new MySqlParameter("@inModelId", model.id);
+            paras[0] = new MySqlParameter("@inModelId", modelId);
             MyMySql.AddOutParameters(paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbMapping_Delete_From_ModelId", paras);
@@ -407,12 +485,19 @@ namespace MVCPlayWithMe.Models.ItemModel
 
                     model.quota = MyMySql.GetInt32(rdr, "ModelQuota");
                     model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                    model.price = MyMySql.GetInt32(rdr, "ModelPrice");
+                    model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
+                    model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
                     model.SetSrcImage();
 
                     models.Add(model);
                 }
 
-                Product pro = ConvertOneRowFromDataMySqlToProduct(rdr);
+                Product pro = new Product();
+                pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                pro.name = MyMySql.GetString(rdr, "ProductName");
+                pro.SetSrcImageVideo();
+
                 int quan = MyMySql.GetInt32(rdr, "MappingQuantity");
                 if (pro.id != -1)
                     models[models.Count() - 1].mapping.Add( new Mapping(pro, quan));
@@ -428,6 +513,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             item.status = MyMySql.GetInt32(rdr, "ItemStatus");
             item.date = MyMySql.GetDateTime(rdr, "ItemDate");
             item.detail = MyMySql.GetString(rdr, "ItemDetail");
+            item.categoryId = MyMySql.GetInt32(rdr, "ItemCategoryId");
             item.SetSrcImageVideo();
             //ite
 
@@ -451,6 +537,7 @@ namespace MVCPlayWithMe.Models.ItemModel
 
                 MySqlCommand cmd = new MySqlCommand("st_tbItemModel_Search", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
                 cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
                 cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
                 cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
@@ -465,7 +552,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                         Item item = new Item();
                         item.id = MyMySql.GetInt32(rdr, "ItemId");
                         item.name = MyMySql.GetString(rdr, "ItemName");
-                        item.SetThumbnailFirst();
+                        item.SetSrcImageVideo();
                         ls.Add(item);
                     }
                     itemTemp = ls[ls.Count - 1];
@@ -479,6 +566,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                         model.price = MyMySql.GetInt32(rdr, "ModelPrice");
                         model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
                         model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
+                        model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
                         itemTemp.models.Add(model);
                     }
                 }
@@ -506,6 +594,7 @@ namespace MVCPlayWithMe.Models.ItemModel
 
                 MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
                 cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
@@ -553,10 +642,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in models)
-                {
-                    model.SetPriceFromMappingPriceAndQuantity();
-                }
+                //foreach (var model in models)
+                //{
+                //    model.SetPriceFromMappingPriceAndQuantity();
+                //}
                 item.models = models;
             }
             catch (Exception ex)
@@ -593,10 +682,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in models)
-                {
-                    model.SetPriceFromMappingPriceAndQuantity();
-                }
+                //foreach (var model in models)
+                //{
+                //    model.SetPriceFromMappingPriceAndQuantity();
+                //}
                 item.models = models;
             }
             catch (Exception ex)
@@ -635,10 +724,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                 if (rdr != null)
                     rdr.Close();
 
-                foreach (var model in models)
-                {
-                    model.SetPriceFromMappingPriceAndQuantity();
-                }
+                //foreach (var model in models)
+                //{
+                //    model.SetPriceFromMappingPriceAndQuantity();
+                //}
                 item.models = models;
             }
             catch (Exception ex)
@@ -678,10 +767,10 @@ namespace MVCPlayWithMe.Models.ItemModel
 
                 if (item != null)
                 {
-                    foreach (var model in models)
-                    {
-                        model.SetPriceFromMappingPriceAndQuantity();
-                    }
+                    //foreach (var model in models)
+                    //{
+                    //    model.SetPriceFromMappingPriceAndQuantity();
+                    //}
                     item.models = models;
                 }
             }
@@ -714,6 +803,309 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             cart.Copy((PriceQuantity)item.models[0]);
             cart.UpdateQ();
+        }
+
+        public MySqlResultState UpdateDiscount(int modelId, int discount)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Update_Discount", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", modelId);
+                cmd.Parameters.AddWithValue("@inDiscount", discount);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateMapping(int modelId,
+            List<int> mappingOnlyProductId,
+            List<int> mappingOnlyQuantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            result = DeleteMapping(modelId);
+            if(result.State != EMySqlResultState.OK)
+            {
+                return result;
+            }
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbMapping_Insert_V2", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                cmd.Parameters.AddWithValue("@inProductId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+
+                int length = mappingOnlyProductId.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    cmd.Parameters[1].Value = mappingOnlyProductId[i];
+                    cmd.Parameters[2].Value = mappingOnlyQuantity[i];
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateModelName(int modelId, string name)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Update_Name", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", modelId);
+                cmd.Parameters.AddWithValue("@inName", name);
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateItemName(int itemId, string name)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Name", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", itemId);
+                cmd.Parameters.AddWithValue("@inName", name);
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        // listItemId có dạng: 1,2,3
+        public MySqlResultState UpdateDiscountForListItem(int discount, string listItemId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Discount", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inDiscount", discount);
+                cmd.Parameters.AddWithValue("@inListItemId", listItemId);
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        // listModelId có dạng: 1,2,3
+        public MySqlResultState UpdateDiscountForListModleId(int discount, string listModelId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Update_Discount_ListModelId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inDiscount", discount);
+                cmd.Parameters.AddWithValue("@inListModelId", listModelId);
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateItemCategory(int itemId, int categoryId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Category", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", itemId);
+                cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        /// <summary>
+        /// Xóa nếu tồn tại và insert vào bảng tbModel. Lấy được id mới
+        /// </summary>
+        /// <param name="itemId"></param>
+        /// <param name="modelId">Nếu chưa tồn tại mặc định là 0</param>
+        /// <param name="modelName"></param>
+        /// <param name="quota"></param>
+        /// <param name="discount"></param>
+        /// <param name="shopeeItemId"></param>
+        /// <param name="shopeeModelId"></param>
+        /// <returns></returns>
+        public MySqlResultState BornModelFromShopeeModel( int itemId, int modelId,
+            string modelName,
+            int quota, int discount, int price, int bookCoverPrice,
+            long shopeeItemId,
+            long shopeeModelId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbModel_Insert_From_Shopee_Model", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inItemId", itemId);
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                cmd.Parameters.AddWithValue("@inName", modelName);
+                cmd.Parameters.AddWithValue("@inQuota", quota);
+                cmd.Parameters.AddWithValue("@inDiscount", discount);
+                cmd.Parameters.AddWithValue("@inPrice", price);
+                cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
+                cmd.Parameters.AddWithValue("@inShopeeItemId", shopeeItemId);
+                cmd.Parameters.AddWithValue("@inShopeeModelId", shopeeModelId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        // Từ model Id sản phẩm trên voibenho lấy được item id
+        public MySqlResultState GetVBNItemIdFromModelId(int modelId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("SELECT ItemId FROM tbModel WHERE Id=@inModelId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    result.myAnything = MyMySql.GetInt32(rdr, "ItemId");
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        // Từ model id voibenho lấy được item id shopee
+        public MySqlResultState GetTMDTShopeeItemIdFromModelId(int modelId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbPWMMappingOTher_Get_Shopee_Item_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    result.myAnythingLong = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
         }
     }
 }

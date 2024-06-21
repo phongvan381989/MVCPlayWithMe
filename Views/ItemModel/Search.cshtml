@@ -7,57 +7,386 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .avasf931{
+            margin:5px;
+        }
+
+        .fmx09gx8 {
+            background-color: white;
+            padding: 10px;
+            margin: 10px 0px 10px 0px;
+            border-radius: 2px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .vbcgh45367 {
+            margin: 10px 20px 10px 5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .kmaZvc29 {
+            margin-left: 20px;
+        }
+        .fksnvjsl092n{
+            margin: 10px 10px 15px 10px;
+        }
+        .gfdgdgdxg676 {
+            width: 60px;
+        }
+        .gfdgfghxg676 {
+            width: 120px;
+        }
+    </style>
 </head>
 <body>
 
     <div id="biggestContainer">
         <div class="config-max-width padding-container">
-            @Html.Partial("~/Views/Shared/ItemModel/SearchParameter.cshtml")
+            <div>
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input type="text" list="list-Publisher" class="config-max-width margin-vertical"
+                       id="publisher-id">
+                <datalist id="list-Publisher"></datalist>
+            </div>
+            <div>
+                <label for="item-model-name">Tên sản phẩm:</label><br>
+                <input class="config-max-width margin-vertical" type="text" id="item-model-name" value="">
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+            </div>
 
             <button type="button" onclick="Search()">Tìm kiếm</button>
 
-            @Html.Partial("~/Views/Shared/ItemModel/SearchResult.cshtml")
+            <div>
+                <div id="empty-result" style="display:none">
+                    <p>Kết quả trống</p>
+                </div>
+
+                <div id="search-result" style="display:none">
+                    <div class="fmx09gx8">
+                        <div class="vbcgh45367">
+                            <input type="radio" id="sgdhgf567xbx" name="price-filter-type" class="kmaZvc29"
+                                   onInput="FilterItemAll()">
+                            <label for="sgdhgf567xbx">Tất Cả</label>
+                        </div>
+                        <div class="vbcgh45367">
+                            <input type="radio" id="nskzfh09fjzn" name="price-filter-type" class="kmaZvc29"
+                                   title="Giá bìa/giá bán nhỏ hơn hoặc bằng 0"
+                                   onchange="FilterItemNoPrice()">
+                            <label for="nskzfh09fjzn">Chưa Xét Giá</label>
+                        </div>
+                        <div class="vbcgh45367">
+                            <input type="radio" id="fzafgrj9567af" name="price-filter-type" class="kmaZvc29"
+                                   title="Giá bán có chiết khấu lớn hơn hoặc bằng giá trị % bên cạnh"
+                                   onchange="FilterItemDiscountBigger()">
+                            <label for="fzafgrj9567af">Chiết Khấu Lớn Hơn</label>
+                            <input type="number" class="discout-bigger gfdgdgdxg676"
+                                   value="0" oninput="ValidateDiscount(this)" />
+                            <label>%</label>
+                        </div>
+                        <div class="vbcgh45367">
+                            <input type="radio" id="ghjsf8345sg" name="price-filter-type" class="kmaZvc29"
+                                   title="Giá bán có chiết khấu nhỏ hơn hoặc bằng giá trị % bên cạnh"
+                                   onchange="FilterItemDiscountSmaller()">
+                            <label for="ghjsf8345sg">Chiết Khấu Nhỏ Hơn</label>
+                            <input type="number" class="discout-smaller gfdgdgdxg676"
+                                   value="0" oninput="ValidateDiscount(this)" />
+                            <label>%</label>
+                        </div>
+                        <div class="vbcgh45367">
+                            <input type="radio" id="fzadgfgrj9567af" name="price-filter-type" class="kmaZvc29"
+                                   title="Giá bán có giá lớn hơn hoặc bằng giá trị bên cạnh"
+                                   onchange="FilterItemPriceBigger()">
+                            <label for="fzadgfgrj9567af">Giá Lớn Hơn</label>
+                            <input type="number" class="price-bigger gfdgfghxg676"
+                                   value="0" oninput="ValidateDiscount(this)" />
+                            <label>đ</label>
+                        </div>
+                        <div class="vbcgh45367">
+                            <input type="radio" id="ghjsf834gh5sg" name="price-filter-type" class="kmaZvc29"
+                                   title="Giá bán nhỏ hơn hoặc bằng giá trị bên cạnh"
+                                   onchange="FilterItemPriceSmaller()">
+                            <label for="ghjsf834gh5sg">Giá Nhỏ Hơn</label>
+                            <input type="number" class="price-smaller gfdgfghxg676"
+                                   value="0" oninput="ValidateDiscount(this)" />
+                            <label>đ</label>
+                        </div>
+                    </div>
+                    <div class="fksnvjsl092n" title="Set chiếu khấu cho phân loại có giá lớn hơn hoặc bằng của item đang hiển thị">
+                        <label>Nhập chiết khấu</label>
+                        <input type="number" class="discout-for-list-item-bigger gfdgdgdxg676"
+                               value="0" oninput="ValidateDiscount(this)" />
+                        <label>% với phân loại có giá lớn hơn</label>
+                        <input type="number" class="price-for-list-item-bigger gfdgfghxg676"
+                               value="0" oninput="ValidateDiscount(this)" />
+                        <label>đ</label>
+                        <button onclick="UpdateDiscountForListItemBigger()">
+                            Set chiết khấu
+                        </button>
+                    </div>
+
+                    <div class="fksnvjsl092n" title="Set chiếu khấu cho phân loại có giá nhỏ hơn hoặc bằng của item đang hiển thị">
+                        <label>Nhập chiết khấu</label>
+                        <input type="number" class="discout-for-list-item-smaller gfdgdgdxg676"
+                               value="0" oninput="ValidateDiscount(this)" />
+                        <label>% với phân loại có giá nhỏ hơn</label>
+                        <input type="number" class="price-for-list-item-smaller gfdgfghxg676"
+                               value="0" oninput="ValidateDiscount(this)" />
+                        <label>đ</label>
+                        <button onclick="UpdateDiscountForListItemSmaller()">
+                            Set chiết khấu
+                        </button>
+                    </div>
+                    <p class="avasf931"></p>
+                    <table id="myTable">
+                        <tr>
+                            <th style="display:none"></th>
+                            <th style="width:200px">Ảnh</th>
+                            <th>Tên</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
-    <script src="~/Scripts/web.play.with.me.paging.js"></script>
     <script>
+        let listItem; // Danh sách item kết quả tìm kiếm
+        let listItemTemp; // Danh sách item hiển thị ra màn hình
         // Tham số tìm kiếm
-        let namePara;
-        GetListProductName();
-        GetListCombo();
+        GetListPublisher();
         // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
         async function Search() {
-            namePara = document.getElementById("item-model-name").value;
-
-            let url = "/ItemModel/SearchItemCount";
             const searchParams = new URLSearchParams();
-            SetSearchParameter(searchParams);
+            if (!SetSearchParameter(searchParams)) {
+                return;
+            }
+            let url = "/ItemModel/SearchItem";
+            ShowCircleLoader();
             let resObj = await RequestHttpGetPromise(searchParams, url);
-            // Lấy số lượng sản phẩm trong kết quả trả về
-            countItem = parseInt(resObj.responseText);
-            if (countItem == 0) {
-                EmptySomethingV1();
+            RemoveCircleLoader();
+            listItem = [];
+            if (resObj.responseText != "null") {
+                listItem = JSON.parse(resObj.responseText);
+            }
+
+            let length = listItem.length;
+            if (length == 0) {
+                document.getElementById("empty-result").style.display = "block";
+                document.getElementById("search-result").style.display = "none";
                 return;
             }
 
             document.getElementById("empty-result").style.display = "none";
             document.getElementById("search-result").style.display = "block";
 
-            maxPage = Math.floor(countItem / itemOnPage);
-            if (countItem % itemOnPage != 0)
-                maxPage = maxPage + 1;
-            currentPage = -1; // Làm mới currentPage
-            // Lấy dữ liệu cho page 1
-            ChangePage(1, "/ItemModel/ChangePage");
+            // Hiển thị tất cả kết quả sau tìm kiếm
+            document.getElementById("sgdhgf567xbx").checked = true;
+            FilterItemAll();
+        }
+
+        function ValidateDiscount(ele) {
+            if (ele.value < 0)
+                ele.value = 0;
         }
 
         function SetSearchParameter(searchParams) {
-            searchParams.append("namePara", namePara);
+            let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value)
+            if (DEBUG) {
+                console.log("SetSearchParameter CALL publisherId: " + publisherId);
+            }
+            if (publisherId == null) {
+                CreateMustClickOkModal("Chưa chọn đúng nhà phát hành.", null);
+                return false;
+            }
+            searchParams.append("publisherId", publisherId);
+            let namePara = document.getElementById("item-model-name").value;
+           searchParams.append("namePara", namePara);
+           return true;
         }
 
-        function ShowSearchingResult(resObj) {
+        function FilterItemAll() {
+            if (DEBUG) {
+                console.log("FilterItemAll CALL");
+            }
+            listItemTemp = listItem;
+            ShowFilteringResult(listItemTemp);
+        }
+
+        // Trả lại những item có model giá bìa hoặc giá bán <= 0
+        function FilterItemNoPrice() {
+            if (DEBUG) {
+                console.log("FilterItemNoPrice CALL");
+            }
+            listItemTemp = [];
+            let length = listItem.length;
+            for (let i = 0; i < length; i++) {
+                if (listItem[i].models.length > 0) {
+                    for (let j = 0; j < listItem[i].models.length; j++) {
+                        if (listItem[i].models[j].bookCoverPrice <= 0 ||
+                            listItem[i].models[j].price <= 0) {
+                            listItemTemp.push(listItem[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ShowFilteringResult(listItemTemp);
+        }
+
+        function FilterItemDiscountBigger() {
+            if (DEBUG) {
+                console.log("FilterItemDiscountBigger CALL");
+            }
+            let discount = document.getElementsByClassName("discout-bigger")[0].value;
+            listItemTemp = [];
+            let length = listItem.length;
+            for (let i = 0; i < length; i++) {
+                if (listItem[i].models.length > 0) {
+                    for (let j = 0; j < listItem[i].models.length; j++) {
+                        if (listItem[i].models[j].discount >= discount) {
+                            listItemTemp.push(listItem[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ShowFilteringResult(listItemTemp);
+        }
+
+        function FilterItemDiscountSmaller() {
+            if (DEBUG) {
+                console.log("FilterItemDiscountSmaller CALL");
+            }
+            let discount = document.getElementsByClassName("discout-smaller")[0].value;
+            listItemTemp = [];
+            let length = listItem.length;
+            for (let i = 0; i < length; i++) {
+                if (listItem[i].models.length > 0) {
+                    for (let j = 0; j < listItem[i].models.length; j++) {
+                        if (listItem[i].models[j].discount <= discount) {
+                            listItemTemp.push(listItem[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ShowFilteringResult(listItemTemp);
+        }
+
+        function FilterItemPriceBigger() {
+            if (DEBUG) {
+                console.log("FilterItemPriceBigger CALL");
+            }
+            let price = document.getElementsByClassName("price-bigger")[0].value;
+            listItemTemp = [];
+            let length = listItem.length;
+            for (let i = 0; i < length; i++) {
+                if (listItem[i].models.length > 0) {
+                    for (let j = 0; j < listItem[i].models.length; j++) {
+                        if (listItem[i].models[j].price >= price) {
+                            listItemTemp.push(listItem[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ShowFilteringResult(listItemTemp);
+        }
+
+        function FilterItemPriceSmaller() {
+            if (DEBUG) {
+                console.log("FilterItemPriceSmaller CALL");
+            }
+            let price = document.getElementsByClassName("price-smaller")[0].value;
+            listItemTemp = [];
+            let length = listItem.length;
+            for (let i = 0; i < length; i++) {
+                if (listItem[i].models.length > 0) {
+                    for (let j = 0; j < listItem[i].models.length; j++) {
+                        if (listItem[i].models[j].price <= price) {
+                            listItemTemp.push(listItem[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ShowFilteringResult(listItemTemp);
+        }
+
+        function UpdateDiscountForListItemBigger() {
+            if (listItemTemp == null || listItemTemp.length == 0) {
+                CreateMustClickOkModal("Danh sách sản phẩm trống.", null);
+                return;
+            }
+            let discount = document.getElementsByClassName("discout-for-list-item-bigger")[0].value;
+            let price = document.getElementsByClassName("price-for-list-item-bigger")[0].value;
+            let listModelId = [];
+            let length = listItemTemp.length;
+            for (let i = 0; i < length; i++) {
+                if (listItemTemp[i].models.length > 0) {
+                    for (let j = 0; j < listItemTemp[i].models.length; j++) {
+                        if (listItemTemp[i].models[j].price >= price) {
+                            listModelId.push(listItemTemp[i].models[j].id);
+                        }
+                    }
+                }
+            }
+            UpdateDiscountForListModelId(discount, listModelId);
+        }
+        
+        function UpdateDiscountForListItemSmaller() {
+            if (listItemTemp == null || listItemTemp.length == 0) {
+                CreateMustClickOkModal("Danh sách sản phẩm trống.", null);
+                return;
+            }
+            let discount = document.getElementsByClassName("discout-for-list-item-smaller")[0].value;
+            let price = document.getElementsByClassName("price-for-list-item-smaller")[0].value;
+            let listModelId = [];
+            let length = listItemTemp.length;
+            for (let i = 0; i < length; i++) {
+                if (listItemTemp[i].models.length > 0) {
+                    for (let j = 0; j < listItemTemp[i].models.length; j++) {
+                        if (listItemTemp[i].models[j].price <= price) {
+                            listModelId.push(listItemTemp[i].models[j].id);
+                        }
+                    }
+                }
+            }
+            if (DEBUG) {
+                console.log("discount: " + discount);
+                console.log("price: " + price);
+                console.log("listModelId: " + listModelId.toString());
+            }
+            UpdateDiscountForListModelId(discount, listModelId);
+        }
+
+        async function UpdateDiscountForListModelId(discount, listModelId) {
+            if (listModelId == null || listModelId.length == 0)
+                return;
+
+            if (DEBUG) {
+                console.log("UpdateDiscountForListModelId CALL");
+                console.log("discount: " + discount);
+                console.log("listModelId: " + listModelId.toString());
+            }
+            let url = "/ItemModel/UpdateDiscountForListModelId";
+            const searchParams = new URLSearchParams();
+            searchParams.append("discount", discount);
+            searchParams.append("listModelId", listModelId.toString());
+            ShowCircleLoader();
+            await RequestHttpPostPromise(searchParams, url);
+            RemoveCircleLoader();
+        }
+
+        function ShowFilteringResult(list) {
             // Danh sách item
             //int id
             //string name
@@ -67,22 +396,23 @@
             //List < Model > models
             //List < string > imageSrc
             //string videoSrc
-            let listItem = JSON.parse(resObj.responseText);
-
-            // Làm trống bảng
-            DeleteRowsExcludeHead(document.getElementById("myTable"));
+            let length = list.length;
+            document.getElementsByClassName("avasf931")[0].innerHTML = length + " sản phẩm";
 
             // Show
             let table = document.getElementById("myTable");
-            let length = listItem.length;
+            // Làm trống bảng
+            DeleteRowsExcludeHead(table);
+
             for (let i = 0; i < length; i++) {
-                let item = listItem[i];
+                let item = list[i];
                 let row = table.insertRow(-1);
 
                 // Insert new cells (<td> elements)
                 let cell1 = row.insertCell(0);
                 let cell2 = row.insertCell(1);
                 let cell3 = row.insertCell(2);
+
 
                 // Id
                 cell1.innerHTML = item.id;
@@ -91,7 +421,7 @@
                 // Image
                 let img = document.createElement("img");
                 if (item.imageSrc.length > 0) {
-                    img.setAttribute("src", item.imageSrc[0]);
+                    img.setAttribute("src", Get320VersionOfImageSrc(item.imageSrc[0]));
                 } else {
                     img.setAttribute("src", srcNoImageThumbnail);
                 }

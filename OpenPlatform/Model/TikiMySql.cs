@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -118,6 +119,56 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                 if (rdr != null)
                     rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
+            conn.Close();
+        }
+
+        public void TikiGetListCommonItemFromListTikiProduct(
+            List<TikiProduct> lsTikiItem,
+            List<CommonItem> lsCommonItem)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
+
+                foreach (var pro in lsTikiItem)
+                {
+                    cmd.Parameters[0].Value = pro.product_id;
+                    MySqlDataReader rdr = cmd.ExecuteReader();
+
+                    CommonItem item = new CommonItem(pro);
+
+                    while (rdr.Read())
+                    {
+                        if (MyMySql.GetInt32(rdr, "TikiMappingId") != -1)
+                        {
+                            Mapping map = new Mapping();
+                            map.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
+                            //map.product = ItemModelMySql.ConvertOneRowFromDataMySqlToProduct(rdr);
+                            Product product = new Product();
+                            product.id = MyMySql.GetInt32(rdr, "ProductId");
+                            product.name = MyMySql.GetString(rdr, "ProductName");
+                            product.SetSrcImageVideo();
+                            map.product = product;
+                            item.models[0].mapping.Add(map);
+                        }
+                    }
+
+                    if (rdr != null)
+                        rdr.Close();
+                    lsCommonItem.Add(item);
+                }
             }
             catch (Exception ex)
             {
@@ -299,8 +350,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Kết nối được mở đóng bên ngoài hàm
         public MySqlResultState UpdateOutputAndProductTable(MySqlConnection conn,
             CommonOrder commonOrder, ECommerceOrderStatus status,
-            EECommerceType eCommerceType,
-            Boolean isReturnedOrder)
+            EECommerceType eCommerceType)
         {
             MySqlResultState resultState = new MySqlResultState();
             try
@@ -322,7 +372,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             productId = commonOrder.listMapping[i][j].product.id;
                             quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
                             cmd.Parameters[2].Value = productId;
-                            if(isReturnedOrder)
+                            if(status == ECommerceOrderStatus.RETURNED)
                             cmd.Parameters[3].Value = quantity * -1;
                                 else
                             cmd.Parameters[3].Value = quantity;
@@ -332,34 +382,32 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                 }
 
-                // Cập nhật số lượng sản phẩm trong kho
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inAdd", 0);
-                    int productId = 0;
-                    int quantity = 0;
-                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
-                    {
-                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
-                        {
-                            productId = commonOrder.listMapping[i][j].product.id;
-                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
-                            cmd.Parameters[0].Value = productId;
-                            if (isReturnedOrder)
-                                cmd.Parameters[1].Value = quantity;// Tăng số lượng tồn kho
-                            else
-                                cmd.Parameters[1].Value = quantity * -1;// Giảm số lượng tồn kho
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
+                //// Cập nhật số lượng sản phẩm trong kho
+                //{
+                //    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn);
+                //    cmd.CommandType = CommandType.StoredProcedure;
+                //    cmd.Parameters.AddWithValue("@inProductId", 0);
+                //    cmd.Parameters.AddWithValue("@inAdd", 0);
+                //    int productId = 0;
+                //    int quantity = 0;
+                //    for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                //    {
+                //        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                //        {
+                //            productId = commonOrder.listMapping[i][j].product.id;
+                //            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                //            cmd.Parameters[0].Value = productId;
+                //            if (isReturnedOrder)
+                //                cmd.Parameters[1].Value = quantity;// Tăng số lượng tồn kho
+                //            else
+                //                cmd.Parameters[1].Value = quantity * -1;// Giảm số lượng tồn kho
+                //            cmd.ExecuteNonQuery();
+                //        }
+                //    }
+                //}
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
                 Common.SetResultException(ex, resultState);
             }
 
@@ -367,11 +415,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         /// <summary>
-        /// Dùng chung cho nhiều sàn
+        /// Cập nhật số lượng sản phẩm trong kho khi đóng đơn/ hoàn đơn
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
-        public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder,
+        public MySqlResultState UpdateQuantityOfProductInOrder(CommonOrder commonOrder,
             ECommerceOrderStatus status,
             EECommerceType eCommerceType)
         {
@@ -393,12 +441,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.ExecuteNonQuery();
                 }
 
-                resultState = UpdateOutputAndProductTable(conn, commonOrder, status, eCommerceType, false);
+                resultState = UpdateOutputAndProductTable(conn, commonOrder, status, eCommerceType);
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
                 Common.SetResultException(ex, resultState);
             }
 
@@ -406,38 +452,25 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public MySqlResultState ReturnedOrder (CommonOrder commonOrder, ECommerceOrderStatus status,
+
+        /// <summary>
+        /// Trừ số lượng sản phẩm trong kho khi đóng đơn
+        /// </summary>
+        /// <param name="commonOrder"></param>
+        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
+        public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder,
+            ECommerceOrderStatus status,
             EECommerceType eCommerceType)
         {
-            MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+            return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
+        }
 
-                // Lưu vào bảng tbECommerceOrder
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
-                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-                    cmd.ExecuteNonQuery();
-                }
-
-                resultState = UpdateOutputAndProductTable(conn, commonOrder, status, eCommerceType, true);
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                Common.SetResultException(ex, resultState);
-            }
-
-            conn.Close();
-            return resultState;
+        /// Cộng số lượng sản phẩm trong kho khi hoàn đơn
+        public MySqlResultState ReturnedOrder (CommonOrder commonOrder,
+            ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
         }
 
         public TikiConfigApp GetTikiConfigApp()
@@ -501,8 +534,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
                 Common.SetResultException(ex, resultState);
             }
 

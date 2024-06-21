@@ -15,6 +15,7 @@ namespace MVCPlayWithMe.Models
 
         // Trạng thái sản phẩm. 0: Đang kinh doanh bình thường,
         // 1: Nhà phát hành tạm thời hết hàng, 2: Ngừng kinh doanh
+        // 10: lấy tất cả các trạng thái
         public int status { get; set; }
 
         // Index record trả về từ câu truy vấn

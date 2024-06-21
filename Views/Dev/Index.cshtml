@@ -43,6 +43,12 @@
                     Cân nhắc khi dùng hàm này">
                 Thêm Water mark logo voi bé nhỏ tất cả ảnh
             </button>
+
+            <button onclick="DeleteDuplicateDataOftbShopeeModel()"
+                    title="Xóa dữ liệu trùng lặp ở bảng tbShopeeModel.
+                    Nhiều dữ liệu của sản phẩm có TMDTShopeeModelId = -1 đang bị trùng lặp">
+                Xóa dữ liệu trùng lặp ở bảng tbShopeeModel
+            </button>
         </div>
     </div>
     <script>
@@ -51,18 +57,33 @@
         }
 
         async function AddWaterMark() {
-            const searchParams = new URLSearchParams();
-            let query = "/Dev/AddWaterMarkAllExistImage";
-            ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            RemoveCircleLoader();
-            let result = JSON.parse(responseDB.responseText);
+            //const searchParams = new URLSearchParams();
+            //let query = "/Dev/AddWaterMarkAllExistImage";
+            //ShowCircleLoader();
+            //let responseDB = await RequestHttpPostPromise(searchParams, query);
+            //RemoveCircleLoader();
+            //let result = JSON.parse(responseDB.responseText);
 
-            if (result.State != 0) {
-                await CreateMustClickOkModal(result.Message)
-                return;
-            }
-            alert("Thêm logo voi bé nhỏ thành công.");
+            //if (result.State != 0) {
+            //    await CreateMustClickOkModal(result.Message)
+            //    return;
+            //}
+            //alert("Thêm logo voi bé nhỏ thành công.");
+        }
+
+        async function DeleteDuplicateDataOftbShopeeModel() {
+            //const searchParams = new URLSearchParams();
+            //let query = "/Dev/DeleteDuplicateDataOftbShopeeModel";
+            //ShowCircleLoader();
+            //let responseDB = await RequestHttpPostPromise(searchParams, query);
+            //RemoveCircleLoader();
+            //let result = JSON.parse(responseDB.responseText);
+
+            //if (result.State != 0) {
+            //    await CreateMustClickOkModal(result.Message)
+            //    return;
+            //}
+            //alert("Thêm logo voi bé nhỏ thành công.");
         }
     </script>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>

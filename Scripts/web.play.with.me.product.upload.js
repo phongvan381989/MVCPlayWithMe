@@ -258,32 +258,8 @@ function ComboChange(str) {
     RequestHttpPost(OnloadFuntion, searchParams, query);
 }
 
-//function UpdateProduct() {
-//    let productID = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
-//    if (productID == null) {
-//        ShowResult("Tên sản phẩm không chính xác.")
-//        return;
-//    }
-//    const searchParams = new URLSearchParams();
-//    AddUpdateParameters(searchParams);
-
-//    let query = "/Product/UpdateProduct";
-//    let OnloadFuntion = function () {
-//        if (this.readyState == 4 && this.status == 200) {
-//            if (GetJsonResponse(this.responseText)) {
-//                // Bắt đầu upload ảnh/video sản phẩm lên server
-//                SendFiles(productID);
-//                if (CheckStatusResponseAndShowPrompt(this.responseText,true, "Cập nhật thành công", "Cập nhật thất bại")) {
-//                    ReloadAndScrollToTop();
-//                }
-//            }
-//        }
-//    }
-//    RequestHttpGet(OnloadFuntion, searchParams, query);
-//}
-
 async function UpdateProductPromise() {
-    let productID = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
+    let productID = GetValueFromUrlName("id");
     if (productID == null) {
         ShowResult("Tên sản phẩm không chính xác.")
         return;
@@ -329,8 +305,7 @@ function DeleteProduct(){
     if (confirm(text) == false)
         return;
 
-    let str = document.getElementById("product-name-id").value;
-    let id = GetDataIdFromProductNameDatalist(str);
+    let id = GetValueFromUrlName("id");
     if (id == null)
         return;
 
@@ -467,7 +442,6 @@ async function GetItemObjectFromId(id) {
     return RequestHttpPostPromise(searchParams, query);
 }
 
-// Từ product object json lưu trong thẻ p, hiển thị
 async function ShowProductFromObject() {
     let responseDB = await GetItemObjectFromId(GetValueFromUrlName("id"));
     if (responseDB.responseText != null) {

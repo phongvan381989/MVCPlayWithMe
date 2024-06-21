@@ -7,47 +7,76 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .akfhz95nzk{
+            margin:5px 25px 5px 5px;
+        }
+        .sfxvsg90svx{
+            display:flex;
+        }
+    </style>
 </head>
-<body onload="GetBasicInfoProduct()">
+<body @*onload="GetBasicInfoProduct()"*@>
     <div id="biggestContainer">
         <div class="config-max-width padding-container">
             <div>
-                <label for="discount">Chiết khấu(%):</label>
-                <div>
-                    <input type="number" min="0" max="100" step="5" class="margin-vertical" id="discount" value="0">
-                </div>
-                <br />
-                <br />
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input list="list-Publisher" class="config-max-width margin-vertical"
+                       id="publisher-id" onchange="GetBasicInfoProduct()">
+                <datalist id="list-Publisher"></datalist>
             </div>
+            <br>
 
             <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
             <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
             <br>
-            <br>
-
             @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
-
-            <div class="config-max-width">
-                <button type="button" onclick="AddHeadList()" id="add-head-list">Thêm vào danh sách</button>
-                <br />
-                <br />
+            <br />
+            <div title="Chiết khấu 100% mang ý nghĩa cập nhật số lượng lại đúng thực tế do không
+                 rõ sai sót ở đâu. Số lượng có thể là số âm">
+                <label for="discount">Chiết khấu(%):</label>
+                <div>
+                    <input type="number" min="0" max="100" step="5" class="margin-vertical" id="discount" value="0">
+                </div>
             </div>
+            <br />
+
+            <div class="config-max-width sfxvsg90svx">
+                <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
+                        title="Thêm sản phẩm vào danh sách nhập kho bên dưới" id="add-head-list">
+                    Thêm vào danh sách
+                </button>
+                <div style="display:none;" title="Nhập Từ File Excel. File excel có định dạng:
+            Mã | Tên | Giá Bìa | Chiết Khấu | Giá Bán | Số Lượng | Tổng Tiền">
+                    <label for="import-excel-file">Chọn file excel:</label>
+                    <input type="file" id="import-excel-file"
+                           accept=".xlsx"><br>
+                    <button onclick="UploadExcelFile()">Gửi File Excel</button>
+                </div>
+            </div>
+            <br />
+            <div class="config-max-width">
+                <a href="/Product/Create">Tạo Sản Phẩm Mới Trong Kho</a>
+            </div>
+            <br />
             <table id="myTable">
                 <tr>
-                    <th>Tên</th>
-                    <th>Giá nhập</th>
-                    <th>Số lượng</th>
-                    <th>Giá bìa</th>
-                    <th></th>
                     <th style="display:none"></th>
+                    <th style="width:200px">Ảnh</th>
+                    <th>Tên</th>
+                    <th>Giá Bìa</th>
+                    <th>Chiết Khấu</th>
+                    <th>Giá Nhập</th>
+                    <th>Số Lượng</th>
+                    <th></th>
                 </tr>
                 @*<tr>
-                    <td>Maria Anders</td>
-                    <td><input type="number"></td>
-                    <td><input type="number"></td>
-                    <td>Giá bìa</td>
-                    <td><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>
-                </tr>*@
+                        <td>Maria Anders</td>
+                        <td><input type="number"></td>
+                        <td><input type="number"></td>
+                        <td>Giá bìa</td>
+                        <td><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>
+                    </tr>*@
             </table>
 
             <div class="config-max-width">
@@ -57,9 +86,11 @@
             </div>
         </div>
     </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script>
-        // mảng đối tượng id, code, barcode, name
-        let listBasicInfo;
+        // mảng đối tượng product
+        let listBasicInfo=[];
 
         let objBasicInfo;
 
@@ -67,17 +98,27 @@
         let listSaveInfo = [];
 
         let discount = 0;
-        function GetBasicInfoProduct(){
+
+        GetListPublisher();
+
+        async function GetBasicInfoProduct() {
+            let publisher = GetValueInputById("publisher-id", "");
             const searchParams = new URLSearchParams();
+            searchParams.append("publisher", publisher);
             let query = "/Product/GetProductIdCodeBarcodeNameBooCoverkPrice";
-
-            let OnloadFuntion = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    listBasicInfo = JSON.parse(this.responseText);
-                }
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText != "null") {
+                listBasicInfo = JSON.parse(responseDB.responseText);
             }
-
-            RequestHttpPost(OnloadFuntion, searchParams, query);
+            else {
+                listBasicInfo = [];
+            }
+            let ele = document.getElementById("list-product-name");
+            SetDataListOfIdName(ele, listBasicInfo);
+            document.getElementById("code-or-isbn").value = "";
+            document.getElementById("product-name-id").value = "";
         }
 
         document.getElementById("discount").addEventListener("input", function (event) {
@@ -96,6 +137,7 @@
                 document.getElementById("add-head-list").click();
             }
         });
+
         document.getElementById("code-or-isbn").addEventListener("focus", function (event) {
             document.getElementById("product-name-id").value = "";
         });
@@ -112,8 +154,12 @@
         });
 
         function AddHeadList() {
-            //alert(document.activeElement.id);
+            objBasicInfo = null;
             let length = listBasicInfo.length;
+            if (length == 0) {
+                CreateMustClickOkModal("Danh sách sản phẩm chưa được tải về. Vui lòng chọn nhà phát hành, để tải danh sách sản phẩm tương ứng. Hoặc thử lại sau nếu đã chọn nhà phát hành", null);
+                return;
+            }
             let code = document.getElementById("code-or-isbn").value;
             let name = document.getElementById("product-name-id").value;
             let isCodeOrISBN = false;
@@ -127,18 +173,19 @@
                     isProductName = true;
                 }
                 if (!isCodeOrISBN && !isProductName) {
-                    alert("Chưa nhập mã, ISBN hoặc tên sản phẩm.");
+                    CreateMustClickOkModal("Chưa nhập mã, ISBN hoặc tên sản phẩm.", null);
                     return;
                 }
             }
+
             if (document.activeElement.id === "code-or-isbn" || isCodeOrISBN) {
                 if (code.length != 13) {
-                    alert("Mã sản phẩm hoặc ISBN không chính xác");
+                    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
                     return;
                 }
                 if (code.substring(0, 2) != "89" &&
                     code.substring(0, 6) != "978604") {
-                    alert("Mã sản phẩm hoặc ISBN không chính xác");
+                    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
                     return;
                 }
                 if (code.substring(0, 2) == "89") {// Tìm theo mã sản phẩm
@@ -153,7 +200,6 @@
                     for (let i = 0; i < length; i++) {
                         if (listBasicInfo[i].barcode === code) {
                             objBasicInfo = listBasicInfo[i];
-
                             break;
                         }
                     }
@@ -170,36 +216,60 @@
 
             if (objBasicInfo != null) { // Thêm vào hàng đầu tiên của table
                 // Find a <table> element with id="myTable":
-                var table = document.getElementById("myTable");
+                let table = document.getElementById("myTable");
 
                 // Create an empty <tr> element and add it to the 1st position of the table:
-                var row = table.insertRow(1);
+                let row = table.insertRow(1);
 
                 // Insert new cells (<td> elements)
-                var cell1 = row.insertCell(0);
-                var cell2 = row.insertCell(1);
-                var cell3 = row.insertCell(2);
-                var cell4 = row.insertCell(3);
-                var cell5 = row.insertCell(4);
-                var cell6 = row.insertCell(5);
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+                let cell5 = row.insertCell(4);
+                let cell6 = row.insertCell(5);
+                let cell7 = row.insertCell(6);
+                let cell8 = row.insertCell(7);
+
+                // Id
+                cell1.innerHTML = objBasicInfo.id;
+                cell1.style.display = "none";
+
+                // Image
+                let img = document.createElement("img");
+                if (objBasicInfo.imageSrc.length > 0) {
+                    img.setAttribute("src", Get320VersionOfImageSrc(objBasicInfo.imageSrc[0]));
+                } else {
+                    img.setAttribute("src", srcNoImageThumbnail);
+                }
+                img.height = thumbnailHeight;
+                img.width = thumbnailWidth;
+                img.className = "go-to-detail-product";
+                img.onclick = function () {
+                    window.open("UpdateDelete?id=" + objBasicInfo.id);
+                };
+                cell2.append(img);
 
                 // Tên
-                cell1.innerHTML = objBasicInfo.name;
+                cell3.innerHTML = objBasicInfo.name;
+
+                // Giá bìa
+                cell4.innerHTML = objBasicInfo.bookCoverPrice;
+
+                // Chiết khấu
+                cell5.innerHTML = discount;
 
                 // Giá nhập
-                var input2 = document.createElement("input");
-                input2.type = "number";
                 let importPrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
-                input2.value = importPrice;
-                cell2.appendChild(input2);
+                cell6.innerHTML = importPrice;
 
                 // Số lượng nhập
                 // Focus vào đây
-                var input3 = document.createElement("input");
-                input3.type = "number";
-                cell3.appendChild(input3);
-                input3.focus();
-                input3.addEventListener("keypress", function (event) {
+                let input7 = document.createElement("input");
+                input7.type = "number";
+                cell7.appendChild(input7);
+                input7.focus();
+                input7.addEventListener("keypress", function (event) {
                     if (event.key === "Enter") {
                         event.preventDefault();
                         let codeTemp = document.getElementById("code-or-isbn").value;
@@ -218,75 +288,84 @@
                     }
                 });
 
-                // Giá bìa
-                cell4.innerHTML = objBasicInfo.bookCoverPrice;
-
                 // Nút xóa
-                var btn = document.createElement("button");
+                let btn = document.createElement("button");
                 btn.onclick = function () {
                     this.parentElement.parentElement.remove();
                 };
                 btn.innerHTML = "Xóa";
-                cell5.appendChild(btn)
-
-                // Id
-                cell6.innerHTML = objBasicInfo.id;
-                cell6.style.display = "none";
+                cell8.appendChild(btn)
 
                 //alert(JSON.stringify(objBasicInfo));
             }
+            else {
+                CreateMustClickOkModal("Không tìm thấy sản phẩm phù hợp", null);
+            }
         }
+
         // Constructor function for objects
-        function objImport(productId, priceImport, quantity, bookCoverPrice) {
+        function objImport(productId, price, quantity, bookCoverPrice, discount) {
             this.productId = productId;
-            this.priceImport = priceImport;
+            this.price = price;
             this.quantity = quantity;
             this.bookCoverPrice = bookCoverPrice;
+            this.discount = discount;
         }
 
         // Lưu db
-        function Save() {
+        async function Save() {
             listSaveInfo = [];
             let rows = document.getElementById("myTable").rows;
             let length = rows.length;
             for (let i = 1; i < length; i++) {
                 let obj = new objImport(
+                    Number(rows[i].cells[0].innerHTML),
                     Number(rows[i].cells[5].innerHTML),
-                    Number(rows[i].cells[1].childNodes[0].value),
-                    Number(rows[i].cells[2].childNodes[0].value),
-                    Number(rows[i].cells[3].innerHTML)
+                    Number(rows[i].cells[6].childNodes[0].value),
+                    Number(rows[i].cells[3].innerHTML),
+                    Number(rows[i].cells[4].innerHTML)
                 );
                 listSaveInfo.push(obj);
             }
 
             const searchParams = new URLSearchParams();
             searchParams.append("listObject", JSON.stringify(listSaveInfo));
-            let query = "/Product/AddImport";
+            let url = "/Product/AddImport";
 
-            let OnloadFuntion = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    CheckStatusResponseAndShowPrompt(this.responseText, "Cập nhật thành công", "Cập nhật thất bại");
-                }
+            let responseDB = await RequestHttpPostPromise(searchParams, url);
+            if (responseDB.responseText != "null") {
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
             }
-
-            RequestHttpPost(OnloadFuntion, searchParams, query);
+            else {
+                CreateMustClickOkModal("Cập nhật thất bại", null);
+            }
         }
 
         function Delete() {
-            let text = "Bạn chắc chắn muốn XÓA dữ liệu đang hiển thị?";
+            let text = "Bạn chắc chắn muốn XÓA dữ liệu nhập kho đang hiển thị?";
             if (confirm(text) == false)
                 return;
 
             DeleteRowsExcludeHead(document.getElementById("myTable"));
-            //let rows = document.getElementById("myTable").rows;
-            //let length = rows.length;
-            //for (let i = length - 1; i > 0 ; i--) {
-            //    document.getElementById("myTable").deleteRow(i);
-            //}
+        }
+
+        async function UploadExcelFile() {
+            let inputExcel = document.getElementById("import-excel-file");
+            if (!inputExcel.files.length) {
+                CreateMustClickOkModal("Chưa chọn file excel.", null);
+                return;
+            }
+
+            let url = "/Product/UploadExcelFile";
+            let responseDB = await RequestHttpPotstPromiseUploadFile(inputExcel.files[0], url);
+            if (responseDB.responseText != "null") {
+                let lisImportFromExcel = JSON.parse(responseDB.responseText);
+            }
+            else {
+                CreateMustClickOkModal("Đọc file excel thất bại", null);
+            }
         }
     </script>
-    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.common.js"></script>
 </body>
 </html>
 

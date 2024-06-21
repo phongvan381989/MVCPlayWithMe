@@ -8,6 +8,8 @@ namespace MVCPlayWithMe.Models.ItemModel
 {
     public class ItemModelSearchParameter
     {
+        public int publisherId { get; set; }
+
         public string name { get; set; }
 
         // Index record trả về từ câu truy vấn

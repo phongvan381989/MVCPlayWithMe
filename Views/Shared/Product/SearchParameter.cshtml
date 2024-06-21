@@ -1,16 +1,37 @@
 ﻿<div>
-    @*<label for="product-name">Tên sản phẩm:</label><br>
-    <input class="config-max-width margin-vertical" type="text" id="product-name" value="">
-    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")*@
-
-    <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
-    <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+    <div>
+        <label for="publisher-id">Nhà phát hành:</label>
+        <input list="list-Publisher" class="config-max-width margin-vertical"
+               id="publisher-id">
+        <datalist id="list-Publisher"></datalist>
+    </div>
     <br>
+    <div>
+        <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
+        <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+    </div>
     <br>
 
     @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
-
+    <br>
     @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
-
+    <br />
+    <div class="cvAncz980">
+        <div class="pro-status">
+            <input type="radio" id="status-all" name="status-avxgbhf"
+                   class="kmaZvc29" value="10">
+            <label for="status-all">Tất Cả</label>
+        </div>
+        <div class="pro-status">
+            <input type="radio" id="status-normal" name="status-avxgbhf"
+                   class="kmaZvc29" checked value="0">
+            <label for="status-normal">Đang Bán</label>
+        </div>
+        <div class="pro-status">
+            <input type="radio" id="status-banned" name="status-avxgbhf"
+                   class="kmaZvc29" value="2">
+            <label for="status-banned">Dừng Bán</label>
+        </div>
+    </div>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 </div>

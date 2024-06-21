@@ -10,10 +10,11 @@ namespace MVCPlayWithMe.Models
         public int id { get; set; }
         public int productId { get; set; }
         public string productName { get; set; }
-        public int priceImport { get; set; }
+        public int price { get; set; }
         public int quantity { get; set; }
         public int bookCoverPrice { get; set; }
-        public string dateImport { get; set; } // định dạng yyyy-MM-dd
+        public int discount { get; set; }
+        public string dateImport { get; set; } // định dạng yyyy-MM-dd tên date vi phạm kiểu Date
 
         public Import()
         {

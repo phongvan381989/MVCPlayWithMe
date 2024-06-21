@@ -33,7 +33,7 @@ namespace MVCPlayWithMe.General
         #region Cookie
         public static readonly string userIdKey = "uid";
         // Chỉ có cookie này khi đăng nhập như người quản trị
-        public static readonly string vistorType = "vistorType";
+        public static readonly string visitorType = "visitorType";
         // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         // id: mã model, q: số lượng thêm vào giỏ hàng, real: 1-thực sự chọn mua, 0-có thể mua sau này
         public static readonly string cartKey = "cart";
@@ -440,6 +440,52 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        // Xóa file trong thư mục, không xóa thư mục con
+        // Xóa ảnh ở phiên bản _320
+        public static void DeleteAllMediaFileInclude320(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+
+            foreach (var f in files)
+            {
+                System.IO.File.Delete(f);
+            }
+
+            // Xóa cả thư mục ảnh phiên bản 320
+            string x = Path.GetDirectoryName(path) + "_320";
+            if (Directory.Exists(x))
+            {
+                Directory.Delete(x, true);
+            }
+            return;
+        }
+
+        // Xóa dữ liệu media ở Media\Item\itemId\Model
+        public static void DeleteImageModelInclude320(int itemId, int modelId)
+        {
+            string path = Common.GetAbsoluteModelMediaFolderPath(itemId);
+            if (path == null)
+            {
+                return;
+            }
+
+            string[] files = Directory.GetFiles(path, modelId.ToString() + ".*");
+            foreach(var f in files)
+            {
+                System.IO.File.Delete(f);
+            }
+
+            // Xóa phiên bản 320
+            // Vì path có "/" cuối cùng, ta xử lý cắt bỏ
+            path = path + @"_320";
+            path = Path.GetDirectoryName(path) + @"_320";
+            string[] files320 = Directory.GetFiles(path, modelId.ToString() + ".*");
+            foreach (var f in files320)
+            {
+                System.IO.File.Delete(f);
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -586,15 +632,45 @@ namespace MVCPlayWithMe.General
 
         /// <summary>
         /// Tên ảnh được lấy từ url
+        /// Check xem ảnh đã tồn tại trong thư mục hay chưa? Nếu chưa tải ảnh từ địa chỉ web và lưu
+        /// </summary>
+        /// <param name="url">https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png</param>
+        ///                   https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
+        /// <param name="fileName">Tên gồm đường dẫn</param>
+        public static int DownloadImageAndSaveWithName(string url, string fileName)
+        {
+            // Check xem ảnh đã tồn tại hay chưa?
+            if (File.Exists(fileName))
+                return 0;
+
+            RestClient client = new RestClient(url);
+            client.Timeout = -1;
+            RestRequest request = new RestRequest(Method.GET);
+            //IRestResponse response = client.Execute(request);
+
+            try
+            {
+                var fileBytes = client.DownloadData(request);
+                File.WriteAllBytes(fileName, fileBytes);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                return -1;
+            }
+            return 1;
+        }
+
+        /// <summary>
         /// Check xem ảnh đã tồn tại trong thư mục hay chưa? Nếu chưa ải ảnh từ địa chỉ web và lưu
         /// </summary>
         /// <param name="url">https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png</param>
         ///                   https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
-        /// <param name="pathFolder">Thư mục chứa ảnh</param>
-        public static void DownloadImageAndSaveWithName(string url, string pathFolder, string fileName)
+        /// <param name="fileName">Tên gồm đường dẫn</param>
+        public static void DownloadVideoAndSaveWithName(string url, string fileName)
         {
-            // Check xem ảnh đã tồn tại hay chưa?
-            if (File.Exists(Path.Combine(pathFolder, fileName)))
+            // Check xem video đã tồn tại hay chưa?
+            if (File.Exists(fileName))
                 return;
 
             RestClient client = new RestClient(url);
@@ -605,7 +681,7 @@ namespace MVCPlayWithMe.General
             try
             {
                 var fileBytes = client.DownloadData(request);
-                File.WriteAllBytes(Path.Combine(pathFolder, fileName), fileBytes);
+                File.WriteAllBytes(fileName, fileBytes);
             }
             catch (Exception ex)
             {
@@ -614,30 +690,17 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Check xem ảnh đã tồn tại trong thư mục hay chưa? Nếu chưa ải ảnh từ địa chỉ web và lưu
+        /// Tải ảnh từ url, và sinh phiên bản _320
         /// </summary>
-        /// <param name="url">https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png</param>
-        ///                   https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
-        /// <param name="pathFolder">Thư mục chứa ảnh</param>
-        public static void DownloadVideoAndSaveWithName(string url, string pathFolder, string fileName)
+        /// <param name="url"></param>
+        /// <param name="fileName"></param>
+        public static void DownloadImageAndReduce(string url, string fileName)
         {
-            // Check xem video đã tồn tại hay chưa?
-            if (File.Exists(Path.Combine(pathFolder, fileName)))
-                return;
-
-            RestClient client = new RestClient(url);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.GET);
-            //IRestResponse response = client.Execute(request);
-
-            try
+            int rs = DownloadImageAndSaveWithName(url, fileName);
+            if(rs == 1)
             {
-                var fileBytes = client.DownloadData(request);
-                File.WriteAllBytes(Path.Combine(pathFolder, fileName), fileBytes);
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
+                // sinh phiên bản _320
+                ReduceImageSizeAndSave(fileName);
             }
         }
         #endregion
@@ -683,6 +746,7 @@ namespace MVCPlayWithMe.General
 
         public static void SetResultException(Exception ex, MySqlResultState result)
         {
+            MyLogger.GetInstance().Warn(ex.ToString());
             result.State = EMySqlResultState.ERROR;
             result.Message = ex.ToString();
         }
@@ -787,27 +851,6 @@ namespace MVCPlayWithMe.General
             }
             SortSourceFile(src);
             return src;
-        }
-
-        public static string GetItemThumbnailFirst(int itemId)
-        {
-            // Lấy ảnh đầu tiên tức có tên là 0
-            string[] files = null;
-            string itemthumbnailFirst = string.Empty;
-            try
-            {
-                files = Directory.GetFiles(System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"_320", "0.*");
-                if (files.Length > 0)
-                {
-                    itemthumbnailFirst = ItemMediaFolderPath +
-                        itemId.ToString() + @"_320/" + Path.GetFileName(files[0]);
-                }
-            }
-            catch(Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.Message);
-            }
-            return itemthumbnailFirst;
         }
 
         /// <summary>

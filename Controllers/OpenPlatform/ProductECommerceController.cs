@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
@@ -13,6 +14,7 @@ using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
@@ -23,11 +25,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
     {
         public ShopeeMySql shopeeSqler;
         public TikiMySql tikiSqler;
+        public ItemModelMySql itemModelSqler;
 
         public ProductECommerceController ()
         {
             shopeeSqler = new ShopeeMySql();
             tikiSqler = new TikiMySql();
+            itemModelSqler = new ItemModelMySql();
 
         }
         #region Xử lý item
@@ -71,7 +75,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string GetProductFromId(string eType, string id)
+        public string GetItemFromId(string eType, string id)
         {
             CommonItem commonItem = null;
             if (AuthentAdministrator() == null)
@@ -101,13 +105,19 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<ShopeeGetItemBaseInfoItem> lsShopeeItem = new List<ShopeeGetItemBaseInfoItem>();
+
+            // Lấy toàn bộ sản phẩm Shopee mất thời gian, giai đoạn test chỉ lấy 1 page ~ 50 sản phẩm
+            //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
             lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
-            foreach(var pro in lsShopeeItem)
-            {
-                CommonItem item = new CommonItem(pro);
-                shopeeSqler.ShopeeGetItemFromId(pro.item_id, item);
-                lsCommonItem.Add(item);
-            }
+            //foreach (var pro in lsShopeeItem)
+            //{
+            //    CommonItem item = new CommonItem(pro);
+            //    shopeeSqler.ShopeeGetItemFromId(pro.item_id, item);
+            //    lsCommonItem.Add(item);
+            //}
+
+            shopeeSqler.ShopeeGetListCommonItemFromListShopeeItem(lsShopeeItem, lsCommonItem);
+
             return lsCommonItem;
         }
 
@@ -116,12 +126,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
             lsTikiItem = GetListProductTiki.GetListLatestProductsFromOneShop();
-            foreach (var pro in lsTikiItem)
-            {
-                CommonItem item = new CommonItem(pro);
-                tikiSqler.TikiGetItemFromId(pro.product_id, item);
-                lsCommonItem.Add(item);
-            }
+            //foreach (var pro in lsTikiItem)
+            //{
+            //    CommonItem item = new CommonItem(pro);
+            //    tikiSqler.TikiGetItemFromId(pro.product_id, item);
+            //    lsCommonItem.Add(item);
+            //}
+            tikiSqler.TikiGetListCommonItemFromListTikiProduct(lsTikiItem, lsCommonItem);
             return lsCommonItem;
         }
 
@@ -294,8 +305,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             else if (order.ecommerceName == eShopee)
             {
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
-                shopeeMySql.ShopeeUpdateMappingToCommonOrder(order);
+                shopeeSqler.ShopeeUpdateMappingToCommonOrder(order);
             }
             else if (order.ecommerceName == ePlayWithMe)
             {
@@ -373,6 +383,146 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             TikiMySql tikiMySql = new TikiMySql();
             resultState = tikiMySql.ReturnedOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
+
+            return JsonConvert.SerializeObject(resultState);
+        }
+
+        /// <summary>
+        /// Lưu ảnh/video item shopee vào item voibenho.Xóa ảnh/video của item voibenho nếu đã tồn tại
+        /// Không xóa ảnh của model
+        /// </summary>
+        /// <param name="commonItem"></param>
+        /// <param name="vbnItemId"></param>
+        private void SaveShopeeItemMediaToVoiBeNhoItem(CommonItem commonItem, int vbnItemId)
+        {
+            string path = Common.GetAbsoluteItemMediaFolderPath(vbnItemId);
+            if(path == null)
+            {
+                path = Common.CreateAbsoluteItemMediaFolderPath(vbnItemId);
+            }
+            else // Xóa ảnh/video của item voibenho nếu đã tồn tại. Không xóa ảnh của model
+            {
+                Common.DeleteAllMediaFileInclude320(path);
+            }
+
+            // Tải ảnh
+            int i = 0;
+            foreach(var s in commonItem.imageSrcList)
+            {
+                Common.DownloadImageAndReduce(s, Path.Combine(path, i.ToString() + ".jfif"));
+                i++;
+            }
+
+            // Tải video nếu có
+            if(!string.IsNullOrEmpty(commonItem.videoSrc))
+                Common.DownloadVideoAndSaveWithName(commonItem.videoSrc, Path.Combine(path, "0.mp4"));
+        }
+
+        /// <summary>
+        /// Từ model sản phẩm trên sàn Shopee sinh model trên web voibenho
+        /// Nếu trên web voibenho chưa có item tương ứng ta sinh item trước rồi sinh model sau
+        /// </summary>
+        /// <param name="strCommonItem"> đối tượng commmon item dạng string json</param>
+        /// <param name="shopeeModelId"> shopee model id của sản phẩm cần sinh trên web voibenho</param>
+        /// <param name="pWMMappingModelId"> model id của sản phẩm mappin gtrên web voibenho.
+        /// 0: nếu chưa tồn tại</param>
+        /// <returns></returns>
+        [HttpPost]
+        public string ShopeeBornModelForVoiBeNho(string strCommonItem, long shopeeModelId, int pWMMappingModelId)
+        {
+            MySqlResultState resultState = null;
+            if (AuthentAdministrator() == null)
+            {
+                resultState = new MySqlResultState();
+                resultState.State = EMySqlResultState.AUTHEN_FAIL;
+                resultState.Message = "Xác thực thất bại";
+                return JsonConvert.SerializeObject(resultState);
+            }
+
+            CommonItem commonItem = JsonConvert.DeserializeObject<CommonItem>(strCommonItem);
+
+            // Check xem item đã được sinh ra trên voibenho
+            int itemId = 0;
+            itemId = itemModelSqler.GetItemIdFromName(commonItem.name);
+
+            // Chưa sinh item tương ứng trên web voibenho.
+            if (itemId <= 0)
+            {
+                // Sinh item trên web voibenho
+                int status = 0;
+                if (commonItem.item_status == "NORMAL")
+                    status = 0;
+                else
+                    status = 1;
+                itemId = itemModelSqler.AddItem(commonItem.name, status, commonItem.detail);
+
+                // Lưu ảnh vào thư mục \Media\Item\ItemId\
+                SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
+            }
+            else
+            {
+                string path = Common.GetAbsoluteItemMediaFolderPath(itemId);
+                if (path == null) // Chưa lưu image/video của item
+                {
+                    SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
+                }
+            }
+
+            // Lấy được đối tượng common model shopee
+            CommonModel commonModel = null;
+            foreach(var m in commonItem.models)
+            {
+                if(m.modelId == shopeeModelId)
+                {
+                    commonModel = m;
+                    break;
+                }
+            }
+
+            // Nếu model đã có trên voibenho, xóa dữ liệu ở tbMapping, tbpwmmappingother, tbModel
+            // Từ giá bìa, giá bán tính toán chiết khấu làm tròn , giá bán theo chiết khấu
+            int discount = 100 - commonModel.price * 100/ commonModel.market_price;
+            int price = (100 - discount) * commonModel.market_price / 100;
+            //price = price / 1000 * 1000; // Lấy đơn vị tròn 1000 vnđ
+            resultState = itemModelSqler.BornModelFromShopeeModel(itemId, pWMMappingModelId,
+                commonModel.name, 5, discount, price, commonModel.market_price, commonItem.itemId, commonModel.modelId);
+
+            if(resultState.State != EMySqlResultState.OK)
+            {
+                return JsonConvert.SerializeObject(resultState);
+            }
+            // Xóa dữ liệu media cũ ở Media\Item\itemId\Model nếu có
+            Common.DeleteImageModelInclude320(itemId, pWMMappingModelId);
+
+            // Thêm dữ liệu media ở Media\Item\itemId\Model
+            // Lấy model Id
+            int newModelId = 0;
+            newModelId = resultState.myAnything;
+            // Thêm dữ liệu media  ở Media\Item\itemId\Model nếu có
+            {
+                string path = Common.GetAbsoluteModelMediaFolderPath(itemId);
+                if(path == null)
+                {
+                    path = Common.CreateAbsoluteModelMediaFolderPath(itemId);
+                }
+
+                DownloadImageAndReduce(commonModel.imageSrc, Path.Combine(path,
+                    newModelId.ToString() + ".jfif"));
+            }
+
+            // Insert dữ liệu cho tbMapping từ mapping của model shopee
+            if (commonModel.mapping.Count > 0)
+            {
+                List<int> mappingOnlyProductId = new List<int>();
+                List<int> mappingOnlyQuantity = new List<int>();
+
+                foreach(var m in commonModel.mapping)
+                {
+                    mappingOnlyProductId.Add(m.product.id);
+                    mappingOnlyQuantity.Add(m.quantity);
+                }
+                resultState = itemModelSqler.UpdateMapping(newModelId, mappingOnlyProductId, mappingOnlyQuantity);
+            }
 
             return JsonConvert.SerializeObject(resultState);
         }

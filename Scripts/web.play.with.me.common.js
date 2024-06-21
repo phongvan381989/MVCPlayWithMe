@@ -10,7 +10,7 @@ var HaNoiCity = "Thành phố Hà Nội";
 var cartKey = "cart";
 var customerInforKey = "cusinfor";
 var uidKey = "uid";
-var vistorType = "vistorType"; // Chỉ có cookie này khi đăng nhập như người quản trị
+var visitorType = "visitorType"; // Chỉ có cookie này khi đăng nhập như người quản trị
 var eShopee = "SHOPEE";
 var eTiki = "TIKI";
 var eLazada = "LAZADA";
@@ -234,29 +234,25 @@ function CheckStatusResponse(responseText) {
     return false;
 }
 
+// Thành công thông báo alert, lỗi thông báo modal
 function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError) {
     const obj = JSON.parse(responseText);
 
     let isOk = true;
-    let mess = "";
     if (obj == null) {
         isOk = false;
-        //alert("Thao tác thất bại.");
     }
     else {
         if (obj.State != 0) {
-            //alert("Thao tác thành công.");
             isOk = false;
         }
-        //alert("Thao tác có lỗi.");
     }
     if (isOk) {
-        mess = messageOk;
+        alert(messageOk);
     }
     else {
-        mess = messageError;
+        CreateMustClickOkModal(messageError + " " + obj.Message, null);
     }
-    alert(mess);
 
     return isOk;
 }
@@ -295,6 +291,9 @@ function CheckIsEmptyOrSpacesAndShowResult(st, strResult) {
 // str: giá trị text đầu vào
 function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
 {
+    if (DEBUG) {
+        console.log("GetDataFromDatalist CALL value: " + str);
+    }
     let option = document.getElementById(datalistId).options;
     if (option == null)
         return null;
@@ -302,6 +301,9 @@ function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
     let length = option.length;
     for (let i = 0; i < length; i++) {
         if (option.item(i).value === str) {
+            if (DEBUG) {
+                console.log(option.item(i).getAttribute(dataIdAttributeName));
+            }
             return option.item(i).getAttribute(dataIdAttributeName);
         }
     }
@@ -370,6 +372,30 @@ function RequestHttpPostPromise(searchParams, url) {
         xhttp.open("POST", url);
         xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
         xhttp.send(searchParams.toString());
+    });
+}
+
+function RequestHttpPotstPromiseUploadFile(file, url) {
+    return new Promise(function (resolve, reject) {
+        const xhttp = new XMLHttpRequest();
+        xhttp.onload = function () {
+            if (this.readyState == 4 && this.status == 200) {
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
+                resolve(this);
+            }
+        };
+        xhttp.onerror = function () {
+            reject(this.statusText);
+        }
+
+        if (DEBUG) {
+            console.log(url);
+        }
+        xhttp.open("POST", url);
+        xhttp.setRequestHeader("Content-Type", "multipart/form-data");
+        xhttp.send(file);
     });
 }
 
@@ -544,7 +570,7 @@ function ConvertMoneyToText(money) {
     return textMoney;
 }
 
-// 
+// Convert số tiền sang text dạng: đ123,456,700
 function ConvertMoneyToTextWithIcon(money) {
     let text = ConvertMoneyToText(money);
     return "<sup>₫</sup>" + text;
@@ -570,12 +596,16 @@ function ConvertIntToPixel(value) {
 // Từ src ảnh lấy được src phiên bản 320
 // /Media/Item/578/2.jpg =>/Media/Item/578_320/2.jpg
 function Get320VersionOfImageSrc(src) {
+    // Nếu đã là phiên bản 320 bỏ qua
+    if (src.includes("_320"))
+        return src;
+    // Nếu là NoImageThumbnail.png bỏ qua
+    if (src.includes("NoImageThumbnail"))
+        return src;
+
     let filename = src.replace(/^.*[\\/]/, '')
     let lastIndex = src.lastIndexOf(filename);
     let newSrc = src.substring(0, lastIndex - 1) + "_320/" + filename;
-    if (DEBUG) {
-        console.log("Get320VersionOfImageSrc CALL newSrc: " + newSrc);
-    }
     return newSrc;
 }
 
@@ -654,7 +684,7 @@ function CheckAnonymousCustomer() {
 }
 
 function CheckIsCustomer() {
-    let visTypeCookie = GetCookie(vistorType);
+    let visTypeCookie = GetCookie(visitorType);
     if (isEmptyOrSpaces(visTypeCookie)) {
         return true;
     }
@@ -772,7 +802,7 @@ function GetValueFromUrlName(name) {
 
 // Về trang chính
 function GoHomePage() {
-    if (!window.location.href.includes("/Home/Index")) {
+    if (!window.location.href.toUpperCase().includes("/Home/Index".toUpperCase())) {
         window.location.href = "/Home/Index";
     }
 }
@@ -803,7 +833,7 @@ async function UpdateCartCount() {
     if (CheckAnonymousCustomer()) {
         // Lấy giỏ hàng từ cookie
         let cartCookie = GetCookie(cartKey);
-        let myArray = cartCookie.split("$");
+        let myArray = GetListCartCookieFromCartCookie(cartCookie);
         length = myArray.length;
     }
     else {
@@ -854,23 +884,34 @@ async function CommonAction() {
         await ShowAccoutAction();
         await UpdateCartCount();
     }
+    else {
+        // Ẩn thông tin account
+        document.getElementsByClassName("top-account-container")[0].style.display = "none";
+        document.getElementsByClassName("top-account-container")[0].style.display = "none";
+
+        // Ẩn thông tin giỏ hàng
+        document.getElementsByClassName("cart-container")[0].style.display = "none";
+    }
 }
 
 CommonAction();
 
-
 // ele là <datalist>
 // list là danh sách dữ liệu có cấu trúc: id, name
 function SetDataListOfIdName(ele, list) {
-    if (ele == null || list == null)
+    if (ele != null) {
+        ele.innerHTML = "";
+    }
+    if (ele == null || list == null) {
         return;
+    }
 
     let length = list.length;
     let option = null;
     for (let i = 0; i < length; i++) {
         option = document.createElement("option");
         option.setAttribute("data-id", list[i].id);
-        option.text = list[i].name;
+        option.value = list[i].name;
         ele.appendChild(option);
     }
 }
@@ -897,7 +938,7 @@ async function GetListProductName() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-product-name");
         SetDataListOfIdName(ele, list);
@@ -911,7 +952,7 @@ async function GetListCombo() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-combo");
         SetDataListOfIdName(ele, list);
@@ -925,7 +966,7 @@ async function GetListCategory() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-category");
         SetDataListOfIdName(ele, list);
@@ -939,7 +980,7 @@ async function GetListAuthor() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-author");
         SetDataListOfString(ele, list);
@@ -953,7 +994,7 @@ async function GetListTranslator() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-translator");
         SetDataListOfString(ele, list);
@@ -967,7 +1008,7 @@ async function GetListPublisher() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-Publisher");
         SetDataListOfIdName(ele, list);
@@ -981,7 +1022,7 @@ async function GetListPublishingCompany() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-publishing-company");
         SetDataListOfString(ele, list);
@@ -995,9 +1036,23 @@ async function GetListItem() {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     let list = null;
-    if (responseDB.responseText != null) {
+    if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-item-name");
         SetDataListOfIdName(ele, list);
     }
+}
+
+function GetShopeeItemUrl(itemid) {
+    return "https://shopee.vn/product/137637267/" + itemid;
+}
+
+// https://tiki.vn/p76217978.html
+// id: 76217978
+function GetTikiItemUrl(id) {
+    return "https://tiki.vn/p" + id + ".html";
+}
+
+function GetProductUrl(id) {
+    return "/Product/UpdateDelete?Id=" + id;
 }

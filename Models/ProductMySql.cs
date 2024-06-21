@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.OpenPlatform.Model;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,7 @@ using System.Data;
 using System.Linq;
 using System.Text;
 using System.Web;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Models
 {
@@ -49,6 +51,26 @@ namespace MVCPlayWithMe.Models
             product.detail = MyMySql.GetString(rdr, "Detail");
             product.status = MyMySql.GetInt32(rdr, "Status");
             product.quantity = MyMySql.GetInt32(rdr, "Quantity");
+            product.SetSrcImageVideo();
+
+            return product;
+        }
+
+        /// <summary>
+        /// TỪ dữ liệu select db, ta trả về đối tượng Product với 1 vài thuộc tính cần thiết
+        /// Dùng trong trường hợp câu select chỉ trả về 1 row
+        /// </summary>
+        /// <param name="rdr">Trả về ngay từ câu select</param>
+        /// <returns></returns>
+        private Product ConvertQuicklyOneRowFromDataMySql(MySqlDataReader rdr)
+        {
+            Product product = new Product();
+            product.id = MyMySql.GetInt32(rdr, "Id");
+            product.code = MyMySql.GetString(rdr, "Code");
+            product.barcode = MyMySql.GetString(rdr, "Barcode");
+            product.name = MyMySql.GetString(rdr, "Name");
+            product.quantity = MyMySql.GetInt32(rdr, "Quantity");
+            product.status = MyMySql.GetInt32(rdr, "Status");
             product.SetSrcImageVideo();
 
             return product;
@@ -304,8 +326,6 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
                 Common.SetResultException(ex, result);
             }
 
@@ -684,27 +704,28 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public List<ProductIdCodeBarcodeNameBookCoverPrice> GetProductIdCodeBarcodeNameBookCoverPrice()
+        public List<Product> GetProductIdCodeBarcodeNameBookCoverPrice(string publisher)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            List<ProductIdCodeBarcodeNameBookCoverPrice> ls = new List<ProductIdCodeBarcodeNameBookCoverPrice>();
+            List<Product> ls = new List<Product>();
             try
             {
                 conn.Open();
 
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Id_Code_Barcode_Name_BookCoverPrice_All", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisher", publisher);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    ProductIdCodeBarcodeNameBookCoverPrice product = new ProductIdCodeBarcodeNameBookCoverPrice();
+                    Product product = new Product();
                     product.id = MyMySql.GetInt32(rdr, "Id");
                     product.code = MyMySql.GetString(rdr, "Code");
                     product.barcode = MyMySql.GetString(rdr, "Barcode");
                     product.name = MyMySql.GetString(rdr, "Name");
                     product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-
+                    product.SetSrcImageVideo();
                     ls.Add(product);
                 }
 
@@ -730,10 +751,10 @@ namespace MVCPlayWithMe.Models
             foreach (var obj in ls)
             {
                 paras[0] = new MySqlParameter("@inProductId", obj.productId);
-                paras[1] = new MySqlParameter("@inPrice", obj.priceImport);
+                paras[1] = new MySqlParameter("@inPrice", obj.price);
                 paras[2] = new MySqlParameter("@inQuantity", obj.quantity);
-                paras[3] = new MySqlParameter("@inDate", DateTime.Now.ToString("yyy-MM-dd"));
-                paras[4] = new MySqlParameter("@inBookCoverPrice", obj.bookCoverPrice);
+                paras[3] = new MySqlParameter("@inBookCoverPrice", obj.bookCoverPrice);
+                paras[4] = new MySqlParameter("@inDiscount", obj.discount);
                 MyMySql.AddOutParameters(paras);
                 result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbImport_Insert", paras);
                 if (result.State != EMySqlResultState.OK) // Có lỗi vẫn thực hiện tiếp check lại thủ công sau
@@ -746,7 +767,7 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        public List<Import> GetImportList(string fromDate, string toDate)
+        public List<Import> GetImportList(string fromDate, string toDate, string publisher)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<Import> ls = new List<Import>();
@@ -758,6 +779,7 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inFromDate", fromDate);
                 cmd.Parameters.AddWithValue("@inToDate", toDate);
+                cmd.Parameters.AddWithValue("@inPublisher", publisher);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
@@ -766,10 +788,11 @@ namespace MVCPlayWithMe.Models
                     imp.id = MyMySql.GetInt32(rdr, "Id");
                     imp.productId = MyMySql.GetInt32(rdr, "ProductId");
                     imp.productName = MyMySql.GetString(rdr, "Name");
-                    imp.priceImport = MyMySql.GetInt32(rdr, "PriceImport");
+                    imp.price = MyMySql.GetInt32(rdr, "Price");
                     imp.quantity = MyMySql.GetInt32(rdr, "Quantity");
                     imp.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                    imp.dateImport = MyMySql.GetString(rdr, "DateImport");
+                    imp.dateImport = MyMySql.GetString(rdr, "Date");
+                    imp.discount = MyMySql.GetInt32(rdr, "Discount");
 
                     ls.Add(imp);
                 }
@@ -796,7 +819,7 @@ namespace MVCPlayWithMe.Models
             paras = new MySqlParameter[lengthPara];
             paras[0] = new MySqlParameter("@inId", 0);
             paras[1] = new MySqlParameter("@inPrice", 0);
-            paras[2] = new MySqlParameter("@inQuantity", 0);
+            paras[2] = new MySqlParameter("@inDiscount", 0);
             MyMySql.AddOutParameters(paras);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -811,25 +834,21 @@ namespace MVCPlayWithMe.Models
                 foreach (var obj in ls)
                 {
                     paras[0].Value = obj.id;
-                    paras[1].Value = obj.priceImport;
-                    paras[2].Value = obj.quantity;
+                    paras[1].Value = obj.price;
+                    paras[2].Value = obj.discount;
                     cmd.ExecuteNonQuery();
                     rsTemp = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
                     result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
                     if (rsTemp != EMySqlResultState.OK) // Có lỗi vẫn thực hiện tiếp check lại thủ công sau
                     {
                         result.State = rsTemp;
-                        //result.Message = "Chả có gì đâu";
                     }
                 }
 
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
 
             conn.Close();
@@ -838,7 +857,7 @@ namespace MVCPlayWithMe.Models
         }
 
         // Tìm kiếm không phân trang
-        public List<Product> SearchProduct(string codeOrBarcode, string name, string combo)
+        public List<Product> SearchProduct(ProductSearchParameter searchParameter)
         {
             List<Product> ls = new List<Product>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -848,14 +867,16 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Product", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCodeOrBarcode", codeOrBarcode);
-                cmd.Parameters.AddWithValue("@inName", name);
-                cmd.Parameters.AddWithValue("@inCombo", combo);
+                cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
+                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+                cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    ls.Add(ConvertOneRowFromDataMySql(rdr));
+                    ls.Add(ConvertQuicklyOneRowFromDataMySql(rdr));
                 }
 
                 if (rdr != null)
@@ -882,6 +903,7 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Count_Record", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
                 cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
                 cmd.Parameters.AddWithValue("@inName", searchParameter.name);
                 cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
@@ -916,6 +938,7 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
                 cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
                 cmd.Parameters.AddWithValue("@inName", searchParameter.name);
                 cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
@@ -925,7 +948,7 @@ namespace MVCPlayWithMe.Models
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    ls.Add(ConvertOneRowFromDataMySql(rdr));
+                    ls.Add(ConvertQuicklyOneRowFromDataMySql(rdr));
                 }
 
                 if (rdr != null)
@@ -979,6 +1002,372 @@ namespace MVCPlayWithMe.Models
 
             MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode", paras);
             return result;
+        }
+
+        private void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        {
+            CommonItem commonItem = null;
+            CommonModel commonModel = null;
+            int dbItemId = MyMySql.GetInt32(rdr, "ShopeeItemId");
+            int dbModelId = MyMySql.GetInt32(rdr, "ShopeeModelId");
+            if (list.Count() == 0)
+            {
+                commonItem = new CommonItem();
+                list.Add(commonItem);
+            }
+            else
+            {
+                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                if (list[list.Count() - 1].dbItemId != dbItemId)
+                {
+                    commonItem = new CommonItem();
+                    list.Add(commonItem);
+                }
+            }
+            if (commonItem != null)
+            {
+                commonItem.dbItemId = dbItemId;
+                commonItem.itemId = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
+                commonItem.name = MyMySql.GetString(rdr, "ShopeeItemName");
+                commonItem.imageSrc = MyMySql.GetString(rdr, "ShopeeItemImage");
+
+                // Tạm thời đóng lấy trạng thái từ db, sẽ lấy từ Shopee
+                //int status = MyMySql.GetInt32(rdr, "ShopeeItemStatus");
+                //if (status != 1)
+                //    commonItem.bActive = true;
+                //else
+                //    commonItem.bActive = false;
+            }
+            else
+            {
+                commonItem = list[list.Count() - 1];
+            }
+
+            if (commonItem.models.Count() == 0)
+            {
+                commonModel = new CommonModel();
+                commonItem.models.Add(commonModel);
+            }
+            else
+            {
+                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                if (commonItem.models[commonItem.models.Count() - 1].dbModelId != dbModelId)
+                {
+                    commonModel = new CommonModel();
+                    commonItem.models.Add(commonModel);
+                }
+            }
+            if (commonModel != null)
+            {
+                commonModel.dbModelId = dbModelId;
+                commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                commonModel.name = MyMySql.GetString(rdr, "ShopeeModelName");
+                commonModel.imageSrc = MyMySql.GetString(rdr, "ShopeeModelImage");
+                // Tạm thời đóng lấy trạng thái từ db, sẽ lấy từ Shopee
+                //int status = MyMySql.GetInt32(rdr, "ShopeeModelStatus");
+                //if (status != 1)
+                //    commonModel.bActive = true;
+                //else
+                //    commonModel.bActive = false;
+            }
+            else
+            {
+                commonModel = commonItem.models[commonItem.models.Count() - 1];
+            }
+            // Thêm mapping
+            Mapping mapping = new Mapping();
+            mapping.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
+
+            Product product = new Product();
+            product.id = MyMySql.GetInt32(rdr, "ProductId");
+            product.name = MyMySql.GetString(rdr, "ProductName");
+            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+            mapping.product = product;
+
+            commonModel.mapping.Add(mapping);
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm shopee có thay đổi số lượng
+        // cần cập nhật
+        public List<CommonItem> ShopeeGetListNeedUpdateQuantity(MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_Need_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    ShopeeReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listCI.Clear();
+            }
+            return listCI;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy được Shopee Item mapping với sản phẩm trong kho
+        public List<CommonItem> ShopeeGetListMappingOfProduct(int productId, MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_Mapping_Product_Id", conn);
+                cmd.Parameters.AddWithValue("@inProductId", productId);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    ShopeeReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listCI.Clear();
+            }
+            return listCI;
+        }
+
+        private void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        {
+            CommonItem commonItem = null;
+            CommonModel commonModel = null;
+            int dbItemId = MyMySql.GetInt32(rdr, "TikiItemId");
+            if (list.Count() == 0)
+            {
+                commonItem = new CommonItem(EECommerceType.TIKI);
+                list.Add(commonItem);
+            }
+            else
+            {
+                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                if (list[list.Count() - 1].dbItemId != dbItemId)
+                {
+                    commonItem = new CommonItem(EECommerceType.TIKI);
+                    list.Add(commonItem);
+                }
+            }
+            if (commonItem != null)
+            {
+                commonItem.dbItemId = dbItemId;
+                commonItem.itemId = MyMySql.GetInt32(rdr, "TMDTTikiItemId");
+                commonItem.name = MyMySql.GetString(rdr, "TikiItemName");
+                commonItem.imageSrc = MyMySql.GetString(rdr, "TikiItemImage");
+                commonItem.tikiSuperId = MyMySql.GetInt32(rdr, "TMDTTikiItemSuperId");
+
+                // Tạm thời đóng lấy trạng thái từ db, sẽ lấy từ Tiki
+                //int status = MyMySql.GetInt32(rdr, "TikiItemStatus");
+                //if (status != 1)
+                //    commonItem.bActive = true;
+                //else
+                //    commonItem.bActive = false;
+            }
+            else
+            {
+                commonItem = list[list.Count() - 1];
+            }
+
+            if (commonItem.models.Count() == 0)
+            {
+                commonItem.models.Add(new CommonModel());
+            }
+            commonModel = commonItem.models[commonItem.models.Count() - 1];
+            commonModel.modelId = -1;
+
+            // Thêm mapping
+            Mapping mapping = new Mapping();
+            mapping.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
+
+            Product product = new Product();
+            product.id = MyMySql.GetInt32(rdr, "ProductId");
+            product.name = MyMySql.GetString(rdr, "ProductName");
+            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+            mapping.product = product;
+
+            commonModel.mapping.Add(mapping);
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm Tiki có thay đổi số lượng
+        // cần cập nhật
+        public List<CommonItem> TikiGetListNeedUpdateQuantity(MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Need_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    TikiReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listCI.Clear();
+            }
+            return listCI;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy được Tiki Item mapping với sản phẩm trong kho
+        public List<CommonItem> TikiGetListMappingOfProduct(int productId, MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_From_Mapping_Product_Id", conn);
+                cmd.Parameters.AddWithValue("@inProductId", productId);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                
+                while (rdr.Read())
+                {
+                    TikiReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listCI.Clear();
+            }
+            return listCI;
+        }
+
+        public List<Product> GetListProductInWarehoueChangedQuantity()
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            List<Product> ls = new List<Product>();
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbNeedUpdateQuantity_Get_List", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    Product pro = new Product();
+                    pro.id = MyMySql.GetInt32(rdr, "Id");
+                    pro.name  = MyMySql.GetString(rdr, "Name");
+                    pro.quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    pro.SetSrcImageVideo();
+
+                    ls.Add(pro);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls.Clear();
+            }
+
+            conn.Close();
+            return ls;
+        }
+
+        /// <summary>
+        ///  Cập nhật trạng thái từ 1 sang 0 của tbNeedUpdateQuantity
+        /// </summary>
+        /// <param name="listProId"></param>
+        public void UpdateStatusOfNeedUpdateQuantity(List<int> listProId)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inProductId", 0);
+                foreach(int id in listProId)
+                {
+                    cmd.Parameters[0].Value = id;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+        }
+
+        // Cập nhật url ảnh đại diện shopee item từ TMDTShopeeItemId
+        // Mở đóng kết nối bên ngoài
+        public void UpdateImageSrcShopeeItem(long TMDTShopeeItemId, string imageSrc, MySqlConnection conn)
+        {
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeItem SET Image = @inImage WHERE TMDTShopeeItemId=@inTMDTShopeeItemId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inImage", imageSrc);
+                cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", TMDTShopeeItemId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        // Cập nhật url ảnh đại diện shopee model từ inTMDTShopeeModelId
+        // Mở đóng kết nối bên ngoài
+        public void UpdateImageSrcShopeeModel(long TMDTShopeeModelId, string imageSrc, MySqlConnection conn)
+        {
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeModel SET Image = @inImage WHERE TMDTShopeeModelId=@inTMDTShopeeModelId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inImage", imageSrc);
+                cmd.Parameters.AddWithValue("@inTMDTShopeeModelId", TMDTShopeeModelId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        // Cập nhật url ảnh đại diện Tiki item từ TikiId
+        // Mở đóng kết nối bên ngoài
+        public void UpdateImageSrcTikiItem(int TikiId, string imageSrc, MySqlConnection conn)
+        {
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("UPDATE tbTikiItem SET Image = @inImage WHERE TikiId=@inTikiId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inImage", imageSrc);
+                cmd.Parameters.AddWithValue("@inTikiId", TikiId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
     }
 }

@@ -83,6 +83,7 @@
         .fcnal986j {
             margin-right: 40px;
             border: 1px solid #e9ecef;
+            background-color: rgba(0, 0, 0, 0.1);
             border-radius: 3px 4px;
             padding: 5px;
             margin: 5px;
@@ -100,78 +101,97 @@
             <div>
                 <div class="cvAncz980">
                     <div class="e-ecommonerce-type">
-                        <input type="radio" id="tiki-e-ecommonerce-type" name="name-e-ecommonerce-type" class="kmaZvc29">
+                        <input type="radio" id="tiki-e-ecommonerce-type" name="name-e-ecommonerce-type"
+                               onchange="ECommerceTypeChange()"
+                               class="kmaZvc29">
                         <label for="tiki-e-ecommonerce-type">Tiki</label>
                     </div>
                     <div class="e-ecommonerce-type">
-                        <input type="radio" id="shopee-e-ecommonerce-type" name="name-e-ecommonerce-type" class="kmaZvc29" checked>
+                        <input type="radio" id="shopee-e-ecommonerce-type" name="name-e-ecommonerce-type"
+                               onchange="ECommerceTypeChange()"
+                               class="kmaZvc29" checked>
                         <label for="shopee-e-ecommonerce-type">Shopee</label>
                     </div>
                     <div class="e-ecommonerce-type">
-                        <input type="radio" id="lazada-e-ecommonerce-type" name="name-e-ecommonerce-type" class="kmaZvc29">
+                        <input type="radio" id="lazada-e-ecommonerce-type" name="name-e-ecommonerce-type"
+                               onchange="ECommerceTypeChange()"
+                               class="kmaZvc29">
                         <label for="lazada-e-ecommonerce-type">Lazada</label>
                     </div>
                 </div>
             </div>
             <div class="KLMx09fs">
-                <div class="fcnal986j" title="Trạng thái">
+                <div class="fcnal986j" title="Trạng thái sản phẩm trên sàn thương mại điện tử. 
+                     Đang bật bán bình thường hoặc đăng tắt (shop dừng bán, shop đã xóa, sàn đã xóa, bị sàn khóa,...)">
                     <div class="lk09Jbvrd">
-                        <input type="radio" id="nvnlFxjg" name="status-radio" value="On" checked/>
+                        <input type="radio" id="nvnlFxjg" name="status-radio" value="On" @*checked*@ />
                         <label for="nvnlFxjg">Đang bật</label>
                     </div>
                     <div class="lk09Jbvrd">
-                        <input type="radio" id="nvnlFfesg" name="status-radio" value="Off"/>
+                        <input type="radio" id="nvnlFfesg" name="status-radio" value="Off" />
                         <label for="nvnlFfesg">Đang tắt</label>
                     </div>
                 </div>
 
-                <div class="fcnal986j" title="Liên kết">
+                <div class="fcnal986j" title="Liên kết sản phẩm trên sàn thương mại điện tử với sản phẩm trong kho">
                     <div class="lk09Jbvrd">
-                        <input type="radio" id="cbstdhagzb" name="mapping-radio" value="On"/>
+                        <input type="radio" id="cbstdhagzb" name="mapping-radio" value="On" />
                         <label for="cbstdhagzb">Đã liên kết</label>
                     </div>
                     <div class="lk09Jbvrd">
-                        <input type="radio" id="jfhsgsefzc" name="mapping-radio" value="Off"/>
+                        <input type="radio" id="jfhsgsefzc" name="mapping-radio" value="Off" />
                         <label for="jfhsgsefzc">Chưa liên kết</label>
                     </div>
                 </div>
 
-                <div class="fcnal986j" title="Hết hàng">
+                <div class="fcnal986j" title="Hết hàng trên sàn thương mại điện tử">
                     <div class="lk09Jbvrd">
-                        <input type="radio" id="vxbdh567" name="out-of-stock-radio" value="On" checked/>
+                        <input type="radio" id="vxbdh567" name="out-of-stock-radio" value="On" @*checked*@ />
                         <label for="vxbdh567">Còn hàng</label>
                     </div>
                     <div class="lk09Jbvrd">
-                        <input type="radio" id="vxbdh879" name="out-of-stock-radio" value="Off"/>
+                        <input type="radio" id="vxbdh879" name="out-of-stock-radio" value="Off" />
                         <label for="vxbdh879">Hết hàng</label>
                     </div>
                 </div>
+
+                <div class="fcnal986j avszg947scb" title="Sản phẩm trên sàn SHOPEE được dùng để sinh sản phẩm trên web voibenho.
+                     Hiển thị sản phẩm nào trên sàn SHOPEE đã/ chưa sinh sản phẩm trên voibenho">
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="vxbaadh567" name="shopee-born-voibenho" value="On" />
+                        <label for="vxbaadh567">Đã sinh sản phẩm trên voibenho</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="czfaegfsgbq534" name="shopee-born-voibenho" value="Off" />
+                        <label for="czfaegfsgbq534">Chưa sinh sản phẩm trên voibenho</label>
+                    </div>
+                </div>
                 @*<div class="fcnal986j" title="Nhà phát hành">
-                    <label for="publisher-id">Nhà phát hành</label>
-                    <input list="list-Publisher" id="publisher-id">
-                    <datalist id="list-Publisher">
-                        @foreach (var pub in ViewData["lsPublisher"] as IList<MVCPlayWithMe.Models.Publisher>)
-                        {
-                            <option data-id=@pub.id data-detail="@pub.detail">@pub.name</option>
-                        }
-                    </datalist>
-                </div>*@
+            <label for="publisher-id">Nhà phát hành</label>
+            <input list="list-Publisher" id="publisher-id">
+            <datalist id="list-Publisher">
+                @foreach (var pub in ViewData["lsPublisher"] as IList<MVCPlayWithMe.Models.Publisher>)
+                {
+                    <option data-id=@pub.id data-detail="@pub.detail">@pub.name</option>
+                }
+            </datalist>
+        </div>*@
 
                 <div class="fcnal986j" title="Tên sản phẩm">
                     <label for="product-name">Tên sản phẩm</label>
                     <input type="text" id="product-name">
                 </div>
             </div>
-            <div title="Lấy tất cả sản phẩm trên sàn (mất thời gian), sau đó lọc theo các tiêu chí người dùng chọn.">
+            <div title="Lấy tất cả sản phẩm trên sàn (mất thời gian), sau đó lọc theo các tiêu chí người dùng chọn bên trên.">
                 <button class="pwm-btn-common" onclick="Filter()"><span class="pwm-btn-text-common">Lọc sản phẩm</span></button>
             </div>
         </div>
 
-        <div class="e-product-container">
+        <div>
             <div class="paging-container">
 
             </div>
-            <div class="e-paging-product-container">
+            <div class="product-container">
 
             </div>
         </div>
@@ -182,9 +202,9 @@
     <script>
         let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
         let listItemAfterFilter = []; // Danh sách common item sau khi lọc
-        let sizePage = 5; // số lượng common Item trên mỗi page hiển thị.
+        let sizePage = 50; // số lượng common Item trên mỗi page hiển thị.
         function GetEEcommerceType() {
-            let type = "SHOPEE";
+            let type = eShopee;
             let radio = document.getElementsByClassName("kmaZvc29");
             if (radio[0].checked) {
                 type = eTiki;
@@ -196,6 +216,47 @@
                 type = eLazada;
             }
             return type;
+        }
+
+        function RefreshRadioFilter() {
+            let obj = document.querySelector('input[name="status-radio"]:checked');
+            if (obj != null) {
+                obj.checked = false;
+            }
+
+            obj = document.querySelector('input[name="mapping-radio"]:checked');
+            if (obj != null) {
+                obj.checked = false;
+            }
+
+            obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
+            if (obj != null) {
+                obj.checked = false;
+            }
+
+            obj = document.querySelector('input[name="shopee-born-voibenho"]:checked');
+            if (obj != null) {
+                obj.checked = false;
+            }
+
+            document.querySelector('input[id="product-name"]').value = "";
+        }
+
+        function ECommerceTypeChange() {
+            listItem = [];
+            document.getElementsByClassName("paging-container")[0].innerHTML = "";
+            document.getElementsByClassName("product-container")[0].innerHTML = "";
+
+            // Bỏ chọn radio filter
+            RefreshRadioFilter();
+
+            // Hiển / không hiện radio filter Sản phẩm SHOPEE sinh sản phẩm voibenho tùy theo sàn TMDT
+            if (document.getElementsByClassName("kmaZvc29")[1].checked) {
+                document.getElementsByClassName("avszg947scb")[0].style.display = "block";
+            }
+            else {
+                document.getElementsByClassName("avszg947scb")[0].style.display = "none";
+            }
         }
 
         // Hiện thị phân trang
@@ -218,12 +279,24 @@
                 }
 
                 let p = document.createElement("p");
-                p.title = i + 1;
+                //if (i < maxPage - 1) {
+                //    p.title = sizePage + " sản phẩm ở trang này";
+                //}
+                //else {
+                //    p.title = length % sizePage + " sản phẩm ở trang này. Có tất cả " + length + " sản phẩm.";
+                //}
                 p.innerHTML = i + 1;
 
                 div.appendChild(p);
 
                 container.appendChild(div);
+            }
+
+            // Tổng sản phẩm kết quả trả về
+            {
+                let p = document.createElement("p");
+                p.innerHTML = "Tổng " + length + " sản phẩm. " + sizePage + " sản phẩm / trang.";
+                container.appendChild(p);
             }
         }
 
@@ -252,7 +325,7 @@
                 }
             }
 
-            let container = document.getElementsByClassName("e-paging-product-container")[0];
+            let container = document.getElementsByClassName("product-container")[0];
             container.innerHTML = "";
             let length = listItemAfterFilter.length;
             for (let i = (page - 1) * sizePage; i < length && i < page * sizePage; i++) {
@@ -282,6 +355,9 @@
         function FilterStatus() {
             let obj = document.querySelector('input[name="status-radio"]:checked');
             if (obj == null) {
+                if (DEBUG) {
+                    console.log("FilterStatus radio dont checked.");
+                }
                 return;
             }
             let value = obj.value;
@@ -331,6 +407,41 @@
                 }
             }
 
+            listItemAfterFilter = listItemTemp;
+        }
+
+        // Kiểm tra item có model đã sinh ra sản phẩm trên voibenho
+        // Trả về: true nếu đã sinh, ngược lại false
+        function CheckItemHasBornVoibenho(commonItemObj) {
+            let length = commonItemObj.models.length;
+            for (let i = 0; i < length; i++) {
+                if (commonItemObj.models[i].pWMMappingModelId === -1 || 
+                    commonItemObj.models[i].pWMMappingModelId === 0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        // Lọc sản phẩm SHOPEE đã sinh / chưa sinh sản phẩm voibenho
+        function FilterShopeeBornVoibenho() {
+            let obj = document.querySelector('input[name="shopee-born-voibenho"]:checked');
+            if (obj == null) {
+                return;
+            }
+            let value = obj.value;
+            let listItemTemp = [];
+            let length = listItemAfterFilter.length;
+            let bAc = true;
+            if (value == "Off") {
+                bAc = false;
+            }
+            for (let i = 0; i < length; i++) {
+                if (CheckItemHasBornVoibenho(listItemAfterFilter[i]) === bAc) {
+                    listItemTemp.push(listItemAfterFilter[i]);
+                }
+            }
             listItemAfterFilter = listItemTemp;
         }
 
@@ -419,15 +530,19 @@
             FilterOutOfStock();
 
             FilterName();
+
+            if (GetEEcommerceType() == eShopee) {
+                FilterShopeeBornVoibenho();
+            }
         }
 
         // Từ tham số lọc
         async function Filter() {
-            // Chưa lấy tất cả sản phẩm của sàn, việc lấy tất cả sản phẩm của sàn mất thời gian vãi nhái
+            // Lấy tất cả sản phẩm của sàn, mất thời gian
             if (listItem.length == 0) {
                 ShowCircleLoader();
                 let responseDB = await GetProductAll(GetEEcommerceType());
-                if (responseDB.responseText != null) {
+                if (responseDB.responseText != "null") {
                     listItem = JSON.parse(responseDB.responseText);
                 }
                 RemoveCircleLoader();
