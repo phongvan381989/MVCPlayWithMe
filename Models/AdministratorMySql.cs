@@ -17,29 +17,37 @@ namespace MVCPlayWithMe.Models
         /// <returns></returns>
         public Administrator GetAdministratorFromCookie(string userCookieIdentify)
         {
-            if(string.IsNullOrEmpty(userCookieIdentify))
-            {
-                return null;
-            }
             Administrator administrator = new Administrator();
 
-            MySqlParameter[] paras = new MySqlParameter[4];
-            paras[0] = new MySqlParameter("@inAdministratorCookieIdentify", userCookieIdentify);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
 
-            MySqlParameter paraoutId = new MySqlParameter();
-            paraoutId.ParameterName = @"outId";
-            paraoutId.Value = -1;
-            paraoutId.Direction = ParameterDirection.Output;
-            paras[1] = paraoutId;
+                MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
 
-            MyMySql.AddOutParameters(paras);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    administrator.id = MyMySql.GetInt32(rdr, "AdministratorId");
+                    //if(MyMySql.GetDateTime(rdr, "Logout")!= DateTime.MinValue)
+                    //{
+                    //    administrator.isLogout = true;
+                    //}
+                }
 
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Administrator_Get_AdminId", paras);
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                administrator = null;
+            }
 
-            if (result.State != EMySqlResultState.OK)
-                return null;
+            conn.Close();
 
-            administrator.id = (int)paras[1].Value;
             return administrator;
         }
 

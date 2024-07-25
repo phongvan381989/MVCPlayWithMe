@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Dev;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.Model;
 using Newtonsoft.Json;
 using System;
@@ -68,15 +69,69 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string DeleteDuplicateDataOftbShopeeModel()
         {
-            MySqlResultState result = new MySqlResultState();
             if (AuthentAdministrator() == null)
             {
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-                result.Message = "Xác thực thất bại.";
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             return JsonConvert.SerializeObject(sqler.DeleteDuplicateDataOftbShopeeModel());
+        }
+
+        [HttpPost]
+        public string ShopeeGetAuthorizationURL()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            result.Message = CommonShopeeAPI.ShopeeGenerateAuthPartnerUrl();
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string ShopeeSaveLivePartnerKey(string key)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = sqler.ShopeeSaveLivePartnerKey(key);
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string ShopeeSaveCode(string code)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = sqler.ShopeeSaveCode(code);
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string ShopeeGetTokenShopLevelAfterAuthorization()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            if(CommonShopeeAPI.ShopeeGetTokenShopLevel() == null)
+            {
+                result.State = EMySqlResultState.ERROR;
+            }
+
+            return JsonConvert.SerializeObject(result);
         }
     }
 }

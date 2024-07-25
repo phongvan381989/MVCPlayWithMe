@@ -9,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
+using MVCPlayWithMe.OpenPlatform.Model;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 {
@@ -82,7 +83,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
         static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(EnumOrderItemFilterByDate interval)
         {
             if (CommonTikiAPI.tikiConfigApp == null)
-                return null;
+            {
+                // Thử lấy
+                TikiMySql tikiMySql = new TikiMySql();
+                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+                if (CommonTikiAPI.tikiConfigApp == null)
+                    return null;
+            }
 
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrder = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();
             //GET /integration/v2/orders?page=1&limit=20&status=queueing&item_inventory_type=backorder&item_confirmation_status=waiting&filter_date_by=last30days

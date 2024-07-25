@@ -8,6 +8,7 @@ using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using RestSharp;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
+using MVCPlayWithMe.OpenPlatform.Model;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
@@ -37,8 +38,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         public static List<TikiProduct> GetListLatestProductsFromOneShop()
         {
             List<TikiProduct> lsProduct = new List<TikiProduct>();
+
             if (CommonTikiAPI.tikiConfigApp == null)
-                return lsProduct;
+            {
+                // Thử lấy
+                TikiMySql tikiMySql = new TikiMySql();
+                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+                if (CommonTikiAPI.tikiConfigApp == null)
+                    return lsProduct;
+            }
 
             // GET https://api.tiki.vn/integration/v2/products?page=2&limit=20
             List<DevNameValuePair> listValuePair = new List<DevNameValuePair>();
@@ -111,7 +119,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         public static TikiProduct GetProductFromOneShop(int id)
         {
             if (CommonTikiAPI.tikiConfigApp == null)
-                return null;
+            {
+                // Thử lấy
+                TikiMySql tikiMySql = new TikiMySql();
+                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+                if (CommonTikiAPI.tikiConfigApp == null)
+                    return null;
+            }
 
             // Thêm ?includes=seller,categories,inventory,attributes,images để lấy full thông tin
             //string http = TikiConstValues.cstrProductsHTTPAddress + "/" + code + "?includes=seller,categories,inventory,attributes,images";

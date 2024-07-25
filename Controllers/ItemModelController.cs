@@ -252,30 +252,36 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        /// <summary>
-        /// Xóa model
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
+        // Xóa model sản phẩm, mapping sản phẩm trong kho tương ứng,
+        // mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng
         [HttpGet]
-        public string DeleteModel(int id)
+        public string DeleteModel(int itemId, int modelId)
         {
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(null);
             }
 
+            MySqlResultState result = sqler.DeleteModel(modelId);
+
             // Xóa ảnh làm thumbnail
-            MySqlResultState result = sqler.DeleteModel(id);
-            string path = Common.GetAbsoluteModelMediaFolderPath(id);
-            if (path != null)
+            Common.DeleteImageModelInclude320(itemId, modelId);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        // Xóa item, model thuộc item, mapping sản phẩm trong kho tương ứng,
+        // mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng
+        public string DeleteItem(int itemId)
+        {
+            if (AuthentAdministrator() == null)
             {
-                string[] files = Directory.GetFiles(path, id.ToString() + ".*");
-                if (files.Length != 0) // Chỉ có 1 ảnh
-                {
-                    Common.DeleteNormalAnd320Image(files[0]);
-                }
+                return JsonConvert.SerializeObject(null);
             }
+
+            MySqlResultState result = sqler.DeleteItem(itemId);
+
+            // Xóa media file
+            Common.DeleteMediaItemInclude320(itemId);
             return JsonConvert.SerializeObject(result);
         }
 

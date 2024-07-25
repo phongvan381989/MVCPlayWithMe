@@ -131,7 +131,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             }
 
              return token;
-
         }
 
         /// <summary>

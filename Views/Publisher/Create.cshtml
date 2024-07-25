@@ -12,49 +12,114 @@
 <body>
 
     <div id="biggestContainer">
-        @Html.Partial("~/Views/Shared/Publisher.cshtml")
+        <div>
+            <div>
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input class="config-max-width margin-vertical" 
+                       id="publisher-id">
+
+            </div>
+            <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
+            <textarea id="publisher-detail" class="config-max-width margin-vertical" rows="10"></textarea>
+        </div>
+
+        <div>
+            <button onclick="CreatePublisher()" style="margin-right:20px;">Thêm Mới</button>
+            <button onclick="ShowListPublisher()"> Lấy Danh Sách Nhà Phát Hành</button>
+        </div>
+        <div>
+            <table id="publisher-table" style="display:none;">
+                <tr>
+                    <th style="display:none">Id</th>
+                    <th>STT</th>
+                    <th>Tên</th>
+                </tr>
+            </table>
+        </div>
+
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.publisher.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script>
+        let listPublisher = [];
 
-        GetListPublisher();
-
-        function CreatePublisher() {
-            let publisherName = document.getElementById("publisher-id").value;
-            if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "Tên nhà phát hành không hợp lệ.")) {
-                return;
-            }
-            let publisherId = GetDataIdFromPublisherDatalist(publisherName);
-            if (publisherId != null) {
-                ShowResult("Tên nhà phát hành đã có.");
-                return;
-            }
-
-            const xhttp = new XMLHttpRequest();
-            xhttp.onload = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    GetJsonResponse(this.responseText);
+        async function ShowListPublisher() {
+            // Lấy dữ liệu danh sách nhà phát hành
+            {
+                const searchParams = new URLSearchParams();
+                let query = "/Publisher/GetListPublisher";
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                RemoveCircleLoader();
+                if (responseDB.responseText != "null") {
+                    listPublisher = JSON.parse(responseDB.responseText);
+                }
+                else {
+                    listPublisher = [];
                 }
             }
-            let query = "/Publisher/CreatePublisher?name=";
-            query = query + publisherName;
-            query = query + "&detail=";
-            let detail = document.getElementById("detail").value;
-            query = query + detail;
-            xhttp.open("GET", query);
-            xhttp.send();
+
+            let table = document.getElementById("publisher-table");
+            if (DEBUG) {
+                console.log(JSON.stringify(listPublisher));
+                console.log("length = " + listPublisher.length);
+            }
+            let length = listPublisher.length;
+            if (length == 0) {
+                table.style.display = "none";
+                return;
+            }
+            table.style.display = "initial";
+            DeleteRowsExcludeHead(table);
+
+            for (let i = 0; i < length; i++) {
+                let publisher = listPublisher[i];
+
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+
+                // Id
+                cell1.innerHTML = publisher.id;
+                cell1.style.display = "none";
+
+                // STT
+                cell2.innerHTML = i + 1;
+
+                // Name 
+                let name = document.createElement("p");
+                name.innerHTML = publisher.name;
+                name.className = "go-to-detail-item";
+                name.title = "Xem chi tiết nhà phát hành";
+                name.onclick = function () {
+                    // Lấy id
+                    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+                    window.open("/Publisher/UpdateDelete?id=" + id);
+                };
+                cell3.append(name);
+            }
         }
 
-        function UpdatePublisher() {
-            window.location.href = "/Publisher/UpdateDelete";
-        }
+        async function CreatePublisher() {
+            let publisherName = document.getElementById("publisher-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "Tên nhà phát hành không hợp lệ.")) {
+                document.getElementById("publisher-id").focus();
+                return;
+            }
+            let publisherDetail = document.getElementById("publisher-detail").value;
+            const searchParams = new URLSearchParams();
+            searchParams.append("name", publisherName);
+            searchParams.append("detail", publisherDetail);
+            let query = "/Publisher/CreatePublisher";
 
-        function DeletePublisher() {
-            window.location.href = "/Publisher/UpdateDelete";
-        }
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
 
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Tạo thành công", "Có lỗi sẩy ra.");
+        }
     </script>
 </body>
 </html>

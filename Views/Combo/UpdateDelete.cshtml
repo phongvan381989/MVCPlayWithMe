@@ -1,0 +1,188 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .fkagvoa08fv {
+            background-color: lightgrey;
+            margin:20px 0px 20px 20px;
+            padding:10px 5px 5px 5px;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body onload="GetCombo()">
+    <div id="biggestContainer">
+        <div>
+            <label for="combo-id">Combo:</label>
+            <input type="text" class="config-max-width margin-vertical"
+                   id="combo-id">
+            <div>
+                <table id="product-table" style="display:none;">
+                    <tr>
+                        <th style="display:none">Id</th>
+                        <th>STT</th>
+                        <th>Ảnh</th>
+                        <th>Tên</th>
+                    </tr>
+                </table>
+            </div>
+            <div class="fkagvoa08fv">
+                <div style="padding:10px 0px 10px 0px;"> Thông tin chung của các sản phẩm thuộc combo </div>
+                @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
+                <button style="margin-right:20px;" onclick="UpdateCommonInfor()" 
+                        title="Cập nhật thông tin chung cho các sản phẩm thuộc combo">
+                Cập Nhật Thông Tin Chung</button>
+            </div>
+        </div>
+        <br />
+        <div id="button_group_id">
+            <button style="margin-right:20px;" onclick="UpdateCombo()">Cập Nhật</button>
+            <button style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
+            <button onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
+
+    <script>
+        GetListCategory();
+        GetListPublisher();
+        GetListPublishingCompany();
+        SetListPublishingTime();
+        let combo = null;
+        document.getElementById("adjxn90snkx").remove();
+        function ShowProductTable(list) {
+            let length = list.length;
+            if (length == 0)
+                return;
+            let table = document.getElementById("product-table");
+            table.style.display = "initial";
+            for (let i = 0; i < length; i++) {
+                let pro = list[i];
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+
+                // Id
+                cell1.innerHTML = pro.id;
+                cell1.style.display = "none";
+
+                // STT
+                cell2.innerHTML = i +1;
+
+                // Image
+                let img = document.createElement("img");
+                if (pro.imageSrc.length > 0) {
+                    img.setAttribute("src", Get320VersionOfImageSrc(pro.imageSrc[0]));
+                } else {
+                    img.setAttribute("src", srcNoImageThumbnail);
+                }
+                img.height = thumbnailHeight;
+                img.width = thumbnailWidth;
+                img.className = "go-to-detail-item";
+                img.title = "Xem sản phẩm";
+                img.onclick = function () {
+                    window.open("/Product/UpdateDelete?id=" + pro.id);
+                };
+                cell3.append(img);
+
+                // Tên
+                cell4.innerHTML = pro.name;
+            }
+        }
+
+        async function GetCombo() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", GetValueFromUrlName("id"));
+            let query = "/Combo/GetCombo";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText == "null") {
+                document.getElementById("button_group_id").style.display = "none";
+            }
+            else {
+                combo = JSON.parse(responseDB.responseText);
+                document.getElementById("combo-id").value = combo.name;
+
+                ShowProductTable(combo.products);
+
+                if (combo.products.length > 0) {
+                    SetProductCommonInfoWithCombo(combo.products[0]);
+                }
+            }
+        }
+
+        async function UpdateCombo() {
+            let name = document.getElementById("combo-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
+                document.getElementById("combo-id").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", GetValueFromUrlName("id"));
+            searchParams.append("name", name);
+            let query = "/Combo/UpdateCombo";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+        }
+
+        async function DeleteCombo() {
+            if (combo.products.length > 0) {
+                CreateMustClickOkModal("Bạn không thể xóa vì có sản phẩm thuộc combo này.", null);
+                return;
+            }
+
+            let text = "Nếu còn sản phẩm thuộc combo này bạn sẽ không thể xóa. Bạn chắc chắn muốn XÓA?";
+            if (confirm(text) == false)
+                return;
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", GetValueFromUrlName("id"));
+            let query = "/Combo/DeleteCombo";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+        }
+
+        function MappingOfCombo() {
+            window.open("/Combo/MappingOfCombo?id=" + GetValueFromUrlName("id"));
+        }
+
+
+        async function UpdateCommonInfor() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+            if (AddUpdateWithCommonParameters(searchParams) === false) {
+                return false;
+            }
+
+            let query = "/Product/UpdateCommonInfoWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+        }
+    </script>
+</body>
+</html>

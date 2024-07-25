@@ -353,6 +353,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
+        // Xóa model sản phẩm, mapping sản phẩm trong kho tương ứng,
+        // mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng
         public MySqlResultState DeleteModel(int id)
         {
             MySqlResultState result = new MySqlResultState();
@@ -364,6 +366,31 @@ namespace MVCPlayWithMe.Models.ItemModel
             MyMySql.AddOutParameters(paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbModel_Delete_From_Id", paras);
+
+            return result;
+        }
+
+        // Xóa item, model thuộc item, mapping sản phẩm trong kho tương ứng,
+        // mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng
+        public MySqlResultState DeleteItem(int id)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Delete_From_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            conn.Close();
 
             return result;
         }
@@ -552,7 +579,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                         Item item = new Item();
                         item.id = MyMySql.GetInt32(rdr, "ItemId");
                         item.name = MyMySql.GetString(rdr, "ItemName");
-                        item.SetSrcImageVideo();
+                        item.SetFirstSrcImage();
                         ls.Add(item);
                     }
                     itemTemp = ls[ls.Count - 1];
@@ -859,6 +886,12 @@ namespace MVCPlayWithMe.Models.ItemModel
                     cmd.Parameters[2].Value = mappingOnlyQuantity[i];
                     cmd.ExecuteNonQuery();
                 }
+
+                // Cập nhật giá bìa, giá theo chiết khấu (thực tế bán) sau khi thay đổi mapping, chiết khấu,...
+                MySqlCommand cmdTemp = new MySqlCommand("st_tbModel_Update_Price", conn);
+                cmdTemp.CommandType = CommandType.StoredProcedure;
+                cmdTemp.Parameters.AddWithValue("@inModelId", modelId);
+                cmdTemp.ExecuteNonQuery();
             }
             catch (Exception ex)
             {
@@ -929,7 +962,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Discount", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Discount_ListItemId", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inDiscount", discount);
                 cmd.Parameters.AddWithValue("@inListItemId", listItemId);

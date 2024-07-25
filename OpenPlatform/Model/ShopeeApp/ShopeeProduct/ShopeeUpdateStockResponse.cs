@@ -16,6 +16,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct
         /// <summary>
         /// Success model list.
         /// </summary>
-        public List<ShopeeUpdateStock> success_list { get; set; }
+        public List<ShopeeUpdateStockSuccess> success_list { get; set; }
     }
 }

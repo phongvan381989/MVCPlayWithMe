@@ -12,30 +12,44 @@
 <body>
 
     <div id="biggestContainer">
-        @Html.Partial("~/Views/Shared/Combo.cshtml")
+        <div>
+            <label for="combo-id">Combo:</label>
+            <input class="config-max-width margin-vertical" id="combo-id" title="Tên combo cần thêm mới">
+        </div>
+        <br />
+        <div>
+            <button onclick="CreateCombo()" style="margin-right:20px;">Thêm Mới</button>
+            <button onclick="ShowListCombo()" title="Tải lại trang để lấy danh sách mới nhất">Danh Sách Combo</button>
+        </div>
+
+        <br />
+        <div>
+            <table id="combo-table" style="display:none;">
+                <tr>
+                    <th style="display:none">Id</th>
+                    <th>STT</th>
+                    <th>Tên</th>
+                </tr>
+            </table>
+        </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.combo.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
 
     <script>
-        GetListCombo();
+        let listCombo = [];
 
         function CreateCombo() {
             let name = document.getElementById("combo-id").value;
             if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
-                return;
-            }
-            let id = GetDataIdFromComboDatalist(name);
-            if (id != null) {
-                ShowResult("Combo đã có.");
+                document.getElementById("combo-id").focus();
                 return;
             }
 
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function () {
                 if (this.readyState == 4 && this.status == 200) {
-                    GetJsonResponse(this.responseText);
+                    CheckStatusResponseAndShowPrompt(this.responseText, "Thêm combo thành công.", "Thêm combo lỗi.");
                 }
             }
             let query = "/Combo/CreateCombo?name=";
@@ -44,10 +58,79 @@
             xhttp.send();
         }
 
-        function DeleteCombo() {
-            window.location.href = "/Combo/Delete";
+        async function GetListCombo() {
+            const searchParams = new URLSearchParams();
+
+            let query = "/Combo/GetListCombo";
+
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            let list = [];
+            if (responseDB.responseText != "null") {
+                list = JSON.parse(responseDB.responseText);
+                let ele = document.getElementById("list-combo");
+                SetDataListOfIdName(ele, list);
+            }
         }
 
+        async function ShowListCombo() {
+            // Lấy dữ liệu danh sách combo
+            {
+                const searchParams = new URLSearchParams();
+
+                let query = "/Combo/GetListCombo";
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                RemoveCircleLoader();
+                if (responseDB.responseText != "null") {
+                    listCombo = JSON.parse(responseDB.responseText);
+                }
+                else {
+                    listCombo = [];
+                }
+            }
+
+            let table = document.getElementById("combo-table");
+            if (DEBUG) {
+                console.log(JSON.stringify(listCombo));
+                console.log("length = " + listCombo.length);
+            }
+            let length = listCombo.length;
+            if (length == 0) {
+                table.style.display = "none";
+                return;
+            }
+            table.style.display = "initial";
+            DeleteRowsExcludeHead(table);
+
+            for (let i = 0; i < length; i++) {
+                let combo = listCombo[i];
+
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+
+                // Id
+                cell1.innerHTML = combo.id;
+                cell1.style.display = "none";
+
+                // STT
+                cell2.innerHTML = i + 1;
+
+                // Name 
+                let name = document.createElement("p");
+                name.innerHTML = combo.name;
+                name.className = "go-to-detail-item";
+                name.title = "Xem chi tiết combo";
+                name.onclick = function () {
+                    // Lấy id
+                    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+                    window.open("/Combo/UpdateDelete?id=" + id);
+                };
+                cell3.append(name);
+            }
+        }
     </script>
 </body>
 </html>

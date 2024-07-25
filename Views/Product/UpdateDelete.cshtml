@@ -14,7 +14,9 @@
             @Html.Partial("~/Views/Shared/ProductInput.cshtml")
             <div class="config-max-width">
                 <br />
-                <button type="button" onclick="UpdateProductPromise()">Cập nhật</button>
+                <button onclick="MappingOfProduct()" title="Xem sản phẩm liên kết trên sàn Tiki, Shopee, Lazada">
+                Sản Phẩm Liên Kết Trên Sàn</button>
+                <button type="button" style="margin-left: 30px;" onclick="UpdateProductPromise()">Cập Nhật</button>
                 <button type="button" style="margin-left: 30px;" onclick="DeleteProduct()">Xóa</button>
             </div>
         </div>
@@ -29,6 +31,12 @@
         ShowProductFromObject();
 
         GetSomeData();
+
+        function MappingOfProduct() {
+            // Lấy id
+            let id = GetValueFromUrlName("id");
+            window.open("MappingOfProduct?id=" + id);
+        }
     </script>
 </body>
 </html>

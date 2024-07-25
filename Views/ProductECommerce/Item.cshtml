@@ -132,13 +132,13 @@
         // Thêm nút sinh model trên web voibenho
         function AddBornModelForVoiBeNhoButton(itemObj, modelObj, container) {
             let btn = document.createElement("BUTTON");
-            btn.title = "Sinh model sản phẩm trên web voibenho";
+            btn.title = "Sinh model sản phẩm tương ứng trên web voibenho";
             let btnContent = document.createTextNode("Sinh model");
             btn.itemObj = itemObj;
             btn.modelObj = modelObj;
 
             btn.onclick = function () {
-                if (this.modelObj.pWMMappingModelId != -1) {
+                if (this.modelObj.pWMMappingModelId != -1 && this.modelObj.pWMMappingModelId != 0) {
                     if (confirm("Bạn muốn xóa model sản phẩm đã sinh và sinh mới") == false) {
                         return;
                     }
@@ -156,7 +156,7 @@
             //div.style.flexDirection = "row-reverse";
 
             // Đã sinh ra model tương ứng trên web voibenho
-            if (modelObj.pWMMappingModelId != -1) {
+            if (modelObj.pWMMappingModelId != -1 && modelObj.pWMMappingModelId != 0) {
                 const p = document.createElement("p");
                 p.innerHTML = "Đã sinh trên voibenho";
                 p.title = "Xem sản phẩm tương ứng trên voibenho";

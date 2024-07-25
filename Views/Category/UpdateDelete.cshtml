@@ -1,0 +1,68 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body>
+
+    <div id="biggestContainer">
+        <div>
+            <label for="category-id">Category:</label>
+            <input class="config-max-width margin-vertical" id="category-id"
+                   value="@ViewData["categoryName"]">
+        </div>
+
+        <div>
+            <button style="margin-right:20px;" onclick="UpdateCategory()">Cập Nhật</button>
+            <button onclick="DeleteCategory()"> Xóa</button>
+        </div>
+
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+
+    <script>
+        async function UpdateCategory() {
+            let categoryName = document.getElementById("category-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(categoryName, "Tên nhà thể loại không hợp lệ.")) {
+                document.getElementById("category-id").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", GetValueFromUrlName("id"));
+            searchParams.append("name", categoryName);
+            let query = "/Category/UpdateCategory";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+        }
+
+        async function DeleteCategory() {
+            let text = "Nếu còn sản phẩm trong kho / sản phẩm trên voibenho thuộc thể loại này bạn sẽ không thể xóa. Bạn chắc chắn muốn XÓA?";
+            if (confirm(text) == false)
+                return;
+
+            let id = GetValueFromUrlName("id");
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", id);
+            let query = "/Category/DeleteCategory";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+        }
+    </script>
+</body>
+</html>

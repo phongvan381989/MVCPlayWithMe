@@ -220,10 +220,9 @@ namespace MVCPlayWithMe.General
 
         public static int GetInt32(MySqlDataReader rdr, string columnName)
         {
-            //if (Convert.IsDBNull(rdr[columnName]))
-            //    return -1;
-            //else
-            //    return rdr.GetInt32(columnName);
+            if (Convert.IsDBNull(rdr[columnName]))
+                return -1;
+
             try
             {
                 return rdr.GetInt32(columnName);
@@ -236,10 +235,9 @@ namespace MVCPlayWithMe.General
 
         public static long GetInt64(MySqlDataReader rdr, string columnName)
         {
-            //if (Convert.IsDBNull(rdr[columnName]))
-            //    return -1;
-            //else
-            //    return rdr.GetInt64(columnName);
+            if (Convert.IsDBNull(rdr[columnName]))
+                return -1;
+
             try
             {
                 return rdr.GetInt64(columnName);
@@ -267,10 +265,8 @@ namespace MVCPlayWithMe.General
 
         public static DateTime GetDateTime(MySqlDataReader rdr, string columnName)
         {
-            //if (Convert.IsDBNull(rdr[columnName]))
-            //    return new DateTime();
-            //else
-            //    return rdr.GetDateTime(columnName);
+            if (Convert.IsDBNull(rdr[columnName]))
+                return DateTime.MinValue;
 
             try
             {
@@ -278,7 +274,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception)
             {
-                return new DateTime();
+                return DateTime.MinValue;
             }
         }
     }

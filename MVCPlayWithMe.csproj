@@ -381,6 +381,7 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockResponse_Success.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockStock.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockStock_SellerStock.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeProduct\ShopeeUpdateStockSuccess.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeMySql.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiAuthorization.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiConfigApp.cs" />
@@ -519,14 +520,12 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
-    <Content Include="Scripts\web.play.with.me.category.common.js" />
     <Content Include="Scripts\web.play.with.me.combo.common.js" />
     <Content Include="Scripts\web.play.with.me.customer.infor.cookie.js" />
     <Content Include="Scripts\web.play.with.me.image.video.common.js" />
     <Content Include="Scripts\web.play.with.me.item.model.js" />
     <Content Include="Scripts\web.play.with.me.mapping.of.item.model.js" />
     <Content Include="Scripts\web.play.with.me.order.js" />
-    <Content Include="Scripts\web.play.with.me.publisher.common.js" />
     <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />
     <Content Include="Scripts\web.play.with.me.paging.js" />
@@ -558,22 +557,17 @@
     <Content Include="Views\Shared\biggestContainer_Top.cshtml" />
     <Content Include="Views\Product\Create.cshtml" />
     <Content Include="Views\Publisher\Create.cshtml" />
-    <Content Include="Views\Publisher\Index.cshtml" />
     <Content Include="Views\Publisher\UpdateDelete.cshtml" />
-    <Content Include="Views\Shared\Publisher.cshtml" />
     <Content Include="Views\Combo\Create.cshtml" />
     <Content Include="Views\Shared\ComboSelect.cshtml" />
-    <Content Include="Views\Shared\Combo.cshtml" />
-    <Content Include="Views\Combo\Delete.cshtml" />
-    <Content Include="Views\Shared\Category.cshtml" />
+    <Content Include="Views\Combo\UpdateDelete.cshtml" />
     <Content Include="Views\Category\Create.cshtml" />
-    <Content Include="Views\Category\Delete.cshtml" />
+    <Content Include="Views\Category\UpdateDelete.cshtml" />
     <Content Include="Views\Product\UpdateDelete.cshtml" />
     <Content Include="Views\Shared\TranslatorSelect.cshtml" />
     <Content Include="Views\Shared\ProductInput.cshtml" />
     <Content Include="Views\Shared\Head.cshtml" />
     <Content Include="Views\Shared\ProductNameSelect.cshtml" />
-    <Content Include="Views\Product\UpdateWithCombo.cshtml" />
     <Content Include="Views\Shared\ProductInputCommon.cshtml" />
     <Content Include="Views\Product\Import.cshtml" />
     <Content Include="Views\Product\ChangeImport.cshtml" />
@@ -610,6 +604,7 @@
     <Content Include="Views\Dev\Index.cshtml" />
     <Content Include="Views\Product\NeedUpdateQuatity.cshtml" />
     <Content Include="Views\Product\MappingOfProduct.cshtml" />
+    <Content Include="Views\Combo\MappingOfCombo.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

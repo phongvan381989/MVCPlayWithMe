@@ -240,7 +240,6 @@ function DeleteAllFileWithType(url, productId, fileType) {
     searchParams.append("fileType", fileType);
     let OnloadFuntion = function () {
         if (this.readyState == 4 && this.status == 200) {
-            //GetJsonResponse(this.responseText);
         }
     }
     RequestHttpPost(OnloadFuntion, searchParams, url);

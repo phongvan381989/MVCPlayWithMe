@@ -20,6 +20,12 @@
             display: flex;
             flex-wrap: wrap;
         }
+        .amzof92nxj{
+            background-color: white;
+            padding: 10px;
+            margin: 5px 0px 10px 0px;
+            border-radius: 2px;
+        }
         .vbcgh45367 {
             margin: 10px 20px 10px 5px;
             display: flex;
@@ -44,27 +50,29 @@
 
     <div id="biggestContainer">
         <div class="config-max-width padding-container">
-            <div>
-                <label for="publisher-id">Nhà phát hành:</label>
-                <input type="text" list="list-Publisher" class="config-max-width margin-vertical"
-                       id="publisher-id">
-                <datalist id="list-Publisher"></datalist>
-            </div>
-            <div>
-                <label for="item-model-name">Tên sản phẩm:</label><br>
-                <input class="config-max-width margin-vertical" type="text" id="item-model-name" value="">
-                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
-            </div>
+            <div class="amzof92nxj" title="Tìm kiếm từ cơ sở dữ liệu">
+                @*<div>
+                    <label for="publisher-id">Nhà phát hành:</label>
+                    <input type="text" list="list-Publisher" class="config-max-width margin-vertical"
+                           id="publisher-id">
+                    <datalist id="list-Publisher"></datalist>
+                </div>*@
+                <div>
+                    <label for="item-model-name">Tên sản phẩm:</label><br>
+                    <input class="config-max-width margin-vertical" type="text" id="item-model-name" value=""
+                           title="Tìm theo tên. Để trống nếu tìm tất cả sản phẩm">
+                    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+                </div>
 
-            <button type="button" onclick="Search()">Tìm kiếm</button>
-
+                <button type="button" onclick="Search()">Tìm kiếm</button>
+            </div>
             <div>
                 <div id="empty-result" style="display:none">
                     <p>Kết quả trống</p>
                 </div>
 
                 <div id="search-result" style="display:none">
-                    <div class="fmx09gx8">
+                    <div class="fmx09gx8"  title="Lọc kết quả tìm kiếm và hiển thị">
                         <div class="vbcgh45367">
                             <input type="radio" id="sgdhgf567xbx" name="price-filter-type" class="kmaZvc29"
                                    onInput="FilterItemAll()">
@@ -193,15 +201,15 @@
         }
 
         function SetSearchParameter(searchParams) {
-            let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value)
-            if (DEBUG) {
-                console.log("SetSearchParameter CALL publisherId: " + publisherId);
-            }
-            if (publisherId == null) {
-                CreateMustClickOkModal("Chưa chọn đúng nhà phát hành.", null);
-                return false;
-            }
-            searchParams.append("publisherId", publisherId);
+            //let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value)
+            //if (DEBUG) {
+            //    console.log("SetSearchParameter CALL publisherId: " + publisherId);
+            //}
+            //if (publisherId == null) {
+            //    CreateMustClickOkModal("Chưa chọn đúng nhà phát hành.", null);
+            //    return false;
+            //}
+            searchParams.append("publisherId", 0);
             let namePara = document.getElementById("item-model-name").value;
            searchParams.append("namePara", namePara);
            return true;

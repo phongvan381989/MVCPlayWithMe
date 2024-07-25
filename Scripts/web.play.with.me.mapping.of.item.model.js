@@ -46,7 +46,158 @@ function GenerateDivMapping(cell, listMapping) {
     cell.append(clone);
 }
 
-function ShowListCommonItemFromProductId(list, table) {
+// Từ list common item server trả về ta hiển thị kết quả cập nhật mà các sàn thương mại điện tử trả về
+function ShowWhyUpdateFail(listCommonItemTemp) {
+    // Hiển thị trạng thái cập nhật
+    let updateOk = true;
+    let length = listCommonItemTemp.length;
+    for (let i = 0; i < length; i++) {
+        let item = listCommonItemTemp[i];
+        if (item.result == null) // item không ở trạng thái NORMAL
+        {
+            continue;
+        }
+
+        if (item.eType == eTiki) {
+            let eleWhyUpdateFail = document.getElementById(item.eType + "_" + item.itemId + "_" + item.models[0].modelId + "_whyUpdateFail");
+            let responseHTTP = item.result.myJson;
+            let errors = responseHTTP.errors;
+            if (errors != null) {
+                eleWhyUpdateFail.innerHTML = errors[0];
+                updateOk = false;
+            }
+            else {
+                eleWhyUpdateFail.innerHTML = "Xong";
+            }
+        }
+        else if (item.eType == eShopee) {
+            let responseHTTP = item.result.myJson;
+            let failure_list = responseHTTP.response.failure_list;
+            let leng_failure_list = failure_list.length;
+
+            //let success_list = responseHTTP.response.success_list;
+            //let leng_success_list = success_list.length;
+
+            let modelLength = item.models.length;
+            for (let j = 0; j < modelLength; j++) {
+                let model = item.models[j];
+                let mes = "Xong";
+                let eleWhyUpdateFail = document.getElementById(item.eType + "_" + item.itemId + "_" + model.modelId + "_whyUpdateFail");
+                for (let k = 0; k < leng_failure_list; k++) {
+                    if (model.modelId == failure_list[k].model_id ||
+                        failure_list[k].model_id == 0)// item shopee không có model
+                    {
+                        mes = failure_list[k].failed_reason;
+                        updateOk = false;
+                        break;
+                    }
+                }
+                eleWhyUpdateFail.innerHTML = mes;
+                //if (UpdateOk) {// Hiển thị số lượng sản phẩm trên sàn
+                //    let eleQuantity = document.getElementById(item.eType + "_" + item.itemId + "_" + model.modelId + "_quantity");
+                //    for (let k = 0; k < leng_success_list; k++) {
+                //        if (model.modelId == success_list[k].model_id ||
+                //            success_list[k].model_id == 0)// item shopee không có model
+                //        {
+                //            eleQuantity.innerHTML = success_list[k].stock;
+                //            break;
+                //        }
+                //    }
+                //}
+            }
+        }
+    }
+
+    return updateOk;
+}
+
+// Từ list common item server trả về ta kiểm tra tất cả các sản phẩm trên sàn cập nhật thành công hay không
+function CheckUpdateQuantitySuccessAll(listCommonItemTemp) {
+    // Hiển thị trạng thái cập nhật
+    let updateOk = true;
+    let length = listCommonItemTemp.length;
+    for (let i = 0; i < length; i++) {
+        let item = listCommonItemTemp[i];
+        if (item.result == null) // item không ở trạng thái NORMAL
+        {
+            continue;
+        }
+
+        if (item.eType == eTiki) {
+            let responseHTTP = item.result.myJson;
+            let errors = responseHTTP.errors;
+            if (errors != null) {
+                updateOk = false;
+                break;
+            }
+
+        }
+        else if (item.eType == eShopee) {
+            let responseHTTP = item.result.myJson;
+            let failure_list = responseHTTP.response.failure_list;
+            let leng_failure_list = failure_list.length;
+
+            let modelLength = item.models.length;
+            for (let j = 0; j < modelLength; j++) {
+                let model = item.models[j];
+                for (let k = 0; k < leng_failure_list; k++) {
+                    if (model.modelId == failure_list[k].model_id ||
+                        failure_list[k].model_id == 0)// item shopee không có model
+                    {
+                        updateOk = false;
+                        break;
+                    }
+                }
+            }
+            if (!updateOk) {
+                break;
+            }
+        }
+    }
+
+    return updateOk;
+}
+
+// Cập nhật số lượng 1 model lên sàn
+// ele show kết quả cập nhật
+async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", eType);
+    searchParams.append("itemId", itemId);
+    searchParams.append("modelId", modelId);
+    let query = "/Product/UpdateQuantityOfOneItemModel";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    let result = JSON.parse(responseDB.responseText);
+    if (eType == eTiki) {
+        if (result.myJson == null)
+        {
+            ele.innerHTML = "Có lỗi không xác định. Vui lòng thử lại sau.";
+        }
+        else if (result.myJson.errors != null && result.myJson.errors.length > 0) {
+            ele.innerHTML = result.myJson.errors[0];
+        }
+        else {
+            ele.innerHTML = "Xong";
+        }
+    }
+    else if (eType = eShopee) {
+        if (result.myJson == null) {
+            ele.innerHTML = "Có lỗi không xác định. Vui lòng thử lại sau.";
+        }
+        else if (result.myJson.response.failure_list.length > 0) {
+            ele.innerHTML = result.myJson.failure_list[0].failed_reason;
+        }
+        else {
+            ele.innerHTML = "Xong";
+        }
+    }
+}
+
+function ShowListCommonItem(list, table, disableUpdateButton) {
     // Show
     DeleteRowsExcludeHead(table);
 
@@ -78,6 +229,7 @@ function ShowListCommonItemFromProductId(list, table) {
             let cell6 = row.insertCell(5);
             let cell7 = row.insertCell(6);
             let cell8 = row.insertCell(7);
+            let cell9 = row.insertCell(8);
 
             // item Id
             cell1.innerHTML = item.itemId;
@@ -89,7 +241,7 @@ function ShowListCommonItemFromProductId(list, table) {
 
             // Image
             let img = document.createElement("img");
-            if (model.imageSrc.length > 0) {
+            if (model.imageSrc !=null && model.imageSrc.length > 0) {
                 img.setAttribute("src", model.imageSrc);
             } else {
                 img.setAttribute("src", srcNoImageThumbnail);
@@ -103,11 +255,11 @@ function ShowListCommonItemFromProductId(list, table) {
                 let id = Number(this.parentElement.parentElement.children[0].innerHTML);
                 let url;
                 // Item là Tiki
-                if (item.eType == 1) {
+                if (item.eType == eTiki) {
                     url = GetTikiItemUrl(id);
                 }
                 // Item là shopee
-                else if (item.eType == 2) {
+                else if (item.eType == eShopee) {
                     url = GetShopeeItemUrl(id);
                 }
                 window.open(url);
@@ -115,17 +267,11 @@ function ShowListCommonItemFromProductId(list, table) {
             cell3.append(img);
 
             // Tên sàn
-            // Item là Tiki
-            if (item.eType == 1) {
-                cell4.innerHTML = eTiki;
-            }
-            // Item là shopee
-            else if (item.eType == 2) {
-                cell4.innerHTML = eShopee;
-            }
+            cell4.innerHTML = item.eType;
 
             // Số lượng model trên sàn
             cell5.innerHTML = model.quantity_sellable;
+            cell5.id = item.eType + "_" + item.itemId + "_" + model.modelId + "_quantity";
 
             // Tên
             if (model.modelId == -1) {
@@ -140,16 +286,51 @@ function ShowListCommonItemFromProductId(list, table) {
 
             // Nút cập nhật
             let btn = document.createElement("button");
-            btn.innerHTML = "Cập nhật";
-            btn.onclick = function () {
-                // Lấy id
-                let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+            btn.innerHTML = "Cập nhật.";
+            btn.title = "Nếu Item không hoạt động bình thường, nút này được vô hiệu.";
+            if (disableUpdateButton == false && item.bActive) {
+                btn.onclick = function () {
+                    let grandFather = this.parentElement.parentElement;
+                    // Lấy id
+                    let itemId = Number(grandFather.children[0].innerHTML);
+                    let modelId = Number(grandFather.children[1].innerHTML);
+                    let eType = grandFather.children[3].innerHTML;
+                    let ele = grandFather.children[8];
+                    UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele);
+                }
             }
-            cell7.append(btn);
+            else {
+                btn.disabled = true;
+            }
+            cell8.append(btn);
 
             // Kết quả
-            if (model.whyUpdateFail != null)
-            cell8.innerHTML = model.whyUpdateFail;
+            cell9.id = item.eType + "_" + item.itemId + "_" + model.modelId + "_whyUpdateFail";
+            cell9.title = "Item không hoạt động bình thường sẽ không cập nhật, dữ liệu ô này sẽ trống";
+        }
+    }
+}
+
+async function UpdateQuantityToTMDTFromListCommonItem(listCommonItem) {
+    if (listCommonItem == null || listCommonItem.length == 0) {
+        return;
+    }
+    const searchParams = new URLSearchParams();
+    searchParams.append("productId", GetValueFromUrlName("id"));
+    searchParams.append("listCommonItem", JSON.stringify(listCommonItem));
+    let query = "/Product/UpdateQuantityToTMDTFromListCommonItem";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+    if (responseDB.responseText != "null") {
+        let listCommonItemTemp = JSON.parse(responseDB.responseText);
+        // listCommonItem và listCommonItemTemp chỉ khác nhau trường result
+        let updateOk = ShowWhyUpdateFail(listCommonItemTemp);
+        if (updateOk) {
+            alert("Cập nhật thành công.")
+        }
+        else {
+            CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
         }
     }
 }

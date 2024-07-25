@@ -36,7 +36,7 @@ function AddDeleteButtonForModel(container) {
                 return;
             }
             let rs = DeleteModel(model.modelId);
-            if (rs == 0) {// Xóa trên server thành công
+            if (rs) {// Xóa trên server thành công
                 countModel = countModel - 1;
                 this.parentElement.parentElement.nextSibling.remove(); // Xóa tag <br>
                 this.parentElement.parentElement.remove();
@@ -682,11 +682,11 @@ function ItemModelCheckValidInputProperty() {
         return false;
     }
 
-    if (GetDataIdFromCategoryDatalist(document.getElementById("category-id").value) === null) {
-        CreateMustClickOkModal("Thể loại không hợp lệ.", null);
-        document.getElementById("category-id").focus();
-        return false;
-    }
+    //if (GetDataIdFromCategoryDatalist(document.getElementById("category-id").value) === null) {
+    //    CreateMustClickOkModal("Thể loại không hợp lệ.", null);
+    //    document.getElementById("category-id").focus();
+    //    return false;
+    //}
 
     return true;
 }
@@ -870,23 +870,44 @@ async function UpdateItemModel() {
     //window.location.reload();
 }
 
-async function DeleteModel(id) {
+async function DeleteModel(modelId) {
+
+    let text = "Xóa model sản phẩm, mapping sản phẩm trong kho tương ứng, mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng. Bạn chắc chắn muốn XÓA?";
+    if (confirm(text) == false)
+        return;
+
     const searchParams = new URLSearchParams();
-    searchParams.append("id", id);
-    AddItemParameters(searchParams);
-    let rs = 0;
+    let itemId = GetValueFromUrlName("id");
+    searchParams.append("itemId", itemId);
+    searchParams.append("modelId", modelId);
+    let query = "/ItemModel/DeleteModel";
     ShowCircleLoader();
-    try {
-        // Cập nhật vào db
-        let responseDB = await RequestHttpGetPromise(searchParams, "/ItemModel/DeleteModel");
-    }
-    catch (err) {
-        rs = -1;
-        alert("Xóa phân loại lỗi.");
-    }
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
-    alert("Xóa phân loại thành công.");
+
+    let rs = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
     return rs;
+}
+
+async function DeleteItemModel(id) {
+    let text = "Xóa item, model thuộc item, mapping sản phẩm trong kho tương ứng, mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng. Bạn chắc chắn muốn XÓA?";
+    if (confirm(text) == false)
+        return;
+
+    const searchParams = new URLSearchParams();
+    let itemId = GetValueFromUrlName("id");
+    searchParams.append("itemId", itemId);
+
+    let query = "/ItemModel/DeleteItem";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+    if (isOk) {
+        window.location.href = "/Administrator/Index";
+    }
 }
 
 function CloseModal(modal) {

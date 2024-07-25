@@ -128,19 +128,19 @@ namespace MVCPlayWithMe.General
             return path;
         }
 
-        /// </summary>
-        /// <param name="productId"></param>
-        /// <summary>
-        /// Lấy tất cả file của sản phẩm
-        /// <returns></returns>
-        static private string[] GetAllAbsoluteFileNameOfProduct(string productId)
-        {
-            string path = GetAbsoluteProductMediaFolderPath(productId);
-            if (path == null)
-                return new string[0] ;
+        ///// </summary>
+        ///// <param name="productId"></param>
+        ///// <summary>
+        ///// Lấy tất cả file của sản phẩm
+        ///// <returns></returns>
+        //static private string[] GetAllAbsoluteFileNameOfProduct(string productId)
+        //{
+        //    string path = GetAbsoluteProductMediaFolderPath(productId);
+        //    if (path == null)
+        //        return new string[0] ;
 
-            return Directory.GetFiles(path);
-        }
+        //    return Directory.GetFiles(path);
+        //}
 
         // Không lấy file trong subfolder không sắp xếp tăng dần
         // mediaType: 0-lấy video và ảnh, 1-lấy ảnh, 2-lấy video
@@ -176,10 +176,17 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="productId"></param>
         /// <returns></returns>
-        public static List<string> GetImageSrc(string productId)
+        public static List<string> GetProductImageSrc(string productId)
         {
             List<string> src = new List<string>();
-            string[] files = GetAllAbsoluteFileNameOfProduct(productId);
+
+            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            if (!Directory.Exists(path))
+            {
+                return src;
+            }
+
+            string[] files = Directory.GetFiles(path);
 
             string relPath = ProductMediaFolderPath + productId + @"/";
 
@@ -191,6 +198,32 @@ namespace MVCPlayWithMe.General
                 }
             }
             SortSourceFile(src);
+            return src;
+        }
+
+        // Lấy ảnh đầu tiên của imageSrc cho nhanh
+        public static string GetFirstProductImageSrc(string productId)
+        {
+            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            MyLogger.GetInstance().Info(path);
+            if (!Directory.Exists(path))
+            {
+                return string.Empty;
+            }
+
+            string src = string.Empty;
+            string[] files = Directory.GetFiles(path, "0.*");
+
+            string relPath = ProductMediaFolderPath + productId + @"/";
+
+            foreach (var file in files)
+            {
+                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                {
+                    src = relPath + Path.GetFileName(file);
+                    break;
+                }
+            }
             return src;
         }
 
@@ -274,10 +307,17 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="productId"></param>
         /// <returns></returns>
-        public static List<string> GetVideoSrc(string productId)
+        public static List<string> GetProductVideoSrc(string productId)
         {
             List<string> src = new List<string>();
-            string[] files = GetAllAbsoluteFileNameOfProduct(productId);
+
+            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            if (!Directory.Exists(path))
+            {
+                return src;
+            }
+
+            string[] files = Directory.GetFiles(path);
 
             string relPath = ProductMediaFolderPath + productId + @"/";
 
@@ -484,6 +524,24 @@ namespace MVCPlayWithMe.General
             {
                 System.IO.File.Delete(f);
             }
+        }
+
+        // Xóa dữ liệu media ở Media\Item\itemId
+        public static void DeleteMediaItemInclude320(int itemId)
+        {
+            string path = Common.GetAbsoluteItemMediaFolderPath(itemId);
+            if (path == null)
+            {
+                return;
+            }
+
+            Directory.Delete(path,true);
+
+            // Xóa phiên bản 320
+            // Vì path có "/" cuối cùng, ta xử lý cắt bỏ
+            path = path + @"_320";
+            path = Path.GetDirectoryName(path) + @"_320";
+            Directory.Delete(path, true);
         }
 
         /// <summary>
@@ -798,7 +856,7 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Lấy được đường dẫn tuyệt đối thư mục chứa media của item hoặc trả về null nếu không có.
+        /// Lấy được đường dẫn tuyệt đối thư mục chứa media của model hoặc trả về null nếu không có.
         /// </summary>
         /// <returns></returns>
         public static string GetAbsoluteModelMediaFolderPath(int itemId)
@@ -850,6 +908,36 @@ namespace MVCPlayWithMe.General
                 }
             }
             SortSourceFile(src);
+            return src;
+        }
+
+        // Lấy ảnh đầu tiên của imageSrc cho nhanh
+        public static string GetFirstItemImageSrc(int itemId)
+        {
+            string src = string.Empty;
+            string[] files = null;
+
+            try
+            {
+                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+
+                files = Directory.GetFiles(path, "0.*"); // trả về file ảnh và video nếu có
+            }
+            catch (Exception)
+            {
+                return src;
+            }
+
+            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
+
+            foreach (var file in files)
+            {
+                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                {
+                    src = relPath + Path.GetFileName(file);
+                    break;
+                }
+            }
             return src;
         }
 

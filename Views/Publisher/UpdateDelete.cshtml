@@ -12,71 +12,64 @@
 <body>
 
     <div id="biggestContainer">
-        @Html.Partial("~/Views/Shared/Publisher.cshtml")
+        <div>
+            <div>
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input class="config-max-width margin-vertical"
+                       id="publisher-id" value="@ViewData["publisherName"]">
+
+            </div>
+            <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
+            <textarea id="publisher-detail" rows="10"
+                class="config-max-width margin-vertical" value="@ViewData["publisherDetail"]">@ViewData["publisherDetail"]</textarea>
+        </div>
+
+        <div>
+            <button onclick="UpdatePublisher()" style="margin-right:20px;">Cập Nhật</button>
+            <button onclick="DeletePublisher()">Xóa</button>
+        </div>
+
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.publisher.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script>
-        GetListPublisher();
 
-        function CreatePublisher() {
-            window.location.href = "/Publisher/Create";
-        }
-
-        function PreCheck() {
+        async function UpdatePublisher() {
             let publisherName = document.getElementById("publisher-id").value;
             if (CheckIsEmptyOrSpacesAndShowResult(publisherName, "Tên nhà phát hành không hợp lệ.")) {
-                return false;
-            }
-            let publisherId = GetDataIdFromPublisherDatalist(publisherName);
-            if (publisherId === null) {
-                let str = "Nhà phát hành chưa tồn tại.";
-                ShowResult(str);
-                return false;
-            }
-
-            return true;
-        }
-
-        function UpdatePublisher() {
-            if (!PreCheck())
+                document.getElementById("publisher-id").focus();
                 return;
+            }
 
-            let publisherName = document.getElementById("publisher-id").value;
-            let publisherDetail = document.getElementById("detail").value;
+            let publisherDetail = document.getElementById("publisher-detail").value;
             const searchParams = new URLSearchParams();
+            searchParams.append("id", GetValueFromUrlName("id"));
             searchParams.append("name", publisherName);
             searchParams.append("detail", publisherDetail);
             let query = "/Publisher/UpdatePublisher";
 
-            let OnloadFuntion = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    GetJsonResponse(this.responseText);
-                }
-            }
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
 
-            RequestHttpPost(OnloadFuntion, searchParams, query);
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
         }
 
-        function DeletePublisher() {
-            if (!PreCheck())
+        async function DeletePublisher() {
+            let text = "Nếu còn sản phẩm thuộc nhà phát hành này bạn sẽ không thể xóa. Bạn chắc chắn muốn XÓA?";
+            if (confirm(text) == false)
                 return;
 
-            let publisherName = document.getElementById("publisher-id").value;
+            let publisherId = GetValueFromUrlName("id");
             const searchParams = new URLSearchParams();
-            searchParams.append("name", publisherName);
+            searchParams.append("id", publisherId);
             let query = "/Publisher/DeletePublisher";
 
-            let OnloadFuntion = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    GetJsonResponse(this.responseText);
-                    document.getElementById("publisher-id").value = "";
-                    document.getElementById("detail").value = "";
-                }
-            }
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
 
-            RequestHttpPost(OnloadFuntion, searchParams, query);
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
         }
     </script>
 </body>

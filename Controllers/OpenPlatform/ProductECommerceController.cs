@@ -107,14 +107,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<ShopeeGetItemBaseInfoItem> lsShopeeItem = new List<ShopeeGetItemBaseInfoItem>();
 
             // Lấy toàn bộ sản phẩm Shopee mất thời gian, giai đoạn test chỉ lấy 1 page ~ 50 sản phẩm
-            //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
-            lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
-            //foreach (var pro in lsShopeeItem)
-            //{
-            //    CommonItem item = new CommonItem(pro);
-            //    shopeeSqler.ShopeeGetItemFromId(pro.item_id, item);
-            //    lsCommonItem.Add(item);
-            //}
+            lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
+            //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
 
             shopeeSqler.ShopeeGetListCommonItemFromListShopeeItem(lsShopeeItem, lsCommonItem);
 
@@ -126,12 +120,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
             lsTikiItem = GetListProductTiki.GetListLatestProductsFromOneShop();
-            //foreach (var pro in lsTikiItem)
-            //{
-            //    CommonItem item = new CommonItem(pro);
-            //    tikiSqler.TikiGetItemFromId(pro.product_id, item);
-            //    lsCommonItem.Add(item);
-            //}
+
             tikiSqler.TikiGetListCommonItemFromListTikiProduct(lsTikiItem, lsCommonItem);
             return lsCommonItem;
         }

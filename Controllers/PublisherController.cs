@@ -18,18 +18,13 @@ namespace MVCPlayWithMe.Controllers
             sqler = new PublisherMySql();
         }
 
-        // GET: Publisher
-        public ActionResult Index()
-        {
-            return View();
-        }
-
+        [HttpPost]
         public string CreatePublisher(string name, string detail)
         {
-            //if (AuthentAdministrator() == null)
-            //{
-            //    return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
-            //}
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
 
             MySqlResultState result = null;
             if (string.IsNullOrWhiteSpace(name))
@@ -42,56 +37,55 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        public string DeletePublisher(string name)
+        [HttpPost]
+        public string DeletePublisher(int id)
         {
-            MySqlResultState result = null;
-            if (string.IsNullOrWhiteSpace(name))
+            if (AuthentAdministrator() == null)
             {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            result = sqler.DeletePublisher(name);
+            MySqlResultState result = null;
+
+            result = sqler.DeletePublisher(id);
             return JsonConvert.SerializeObject(result);
         }
 
-        public string UpdatePublisher(string name, string detail)
+        [HttpPost]
+        public string UpdatePublisher(int id, string name, string detail)
         {
-            MySqlResultState result = null;
-            if (string.IsNullOrWhiteSpace(name))
+            if (AuthentAdministrator() == null)
             {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            if (Common.ParameterOfURLQueryIsNullOrEmpty(detail))
-                detail = string.Empty;
+            MySqlResultState result = null;
 
-            result = sqler.UpdatePublisher(name, detail);
+            result = sqler.UpdatePublisher(id, name, detail);
             return JsonConvert.SerializeObject(result);
         }
 
-        public string LoadPublisher()
-        {
-            StringBuilder sb = new StringBuilder();
-            List<Publisher> ls = sqler.GetListPublisher();
-            if (ls != null && ls.Count() > 0)
-            {
-                sb.Append(@"<tr>
-                            <th> Tên Nhà Phát Hành </th>
-                            <th> Thông Tin </th>
-                          </tr>");
-                foreach (var pub in ls)
-                {
-                    sb.Append(@"<tr>");
-                    sb.Append("<td>" + pub.name + @"</td >");
-                    sb.Append("<td>" + pub.detail + @"</td >");
-                    sb.Append(@"</ tr>");
-                }
-            }
+        //public string LoadPublisher()
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    List<Publisher> ls = sqler.GetListPublisher();
+        //    if (ls != null && ls.Count() > 0)
+        //    {
+        //        sb.Append(@"<tr>
+        //                    <th> Tên Nhà Phát Hành </th>
+        //                    <th> Thông Tin </th>
+        //                  </tr>");
+        //        foreach (var pub in ls)
+        //        {
+        //            sb.Append(@"<tr>");
+        //            sb.Append("<td>" + pub.name + @"</td >");
+        //            sb.Append("<td>" + pub.detail + @"</td >");
+        //            sb.Append(@"</ tr>");
+        //        }
+        //    }
 
-            return sb.ToString();
-        }
+        //    return sb.ToString();
+        //}
 
         public ActionResult Create()
         {
@@ -103,19 +97,29 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public ActionResult UpdateDelete()
+        public ActionResult UpdateDelete(int id)
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-            //ViewDataGetListPublisher();
+            Publisher publisher = sqler.GetPublisher(id);
+            if (publisher != null)
+            {
+                ViewData["publisherName"] = publisher.name;
+                ViewData["publisherDetail"] = publisher.detail;
+            } 
             return View();
         }
 
         [HttpPost]
         public string GetListPublisher()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Publisher>());
+            }
+
             return JsonConvert.SerializeObject(sqler.GetListPublisher());
         }
     }

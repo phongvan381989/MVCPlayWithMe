@@ -187,41 +187,41 @@ namespace MVCPlayWithMe.Models
             return product;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"> combo id</param>
-        /// <returns></returns>
-        public Product GetProductFromFirstComboId(int id)
-        {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            Product product = null;
-            try
-            {
-                conn.Open();
+        ///// <summary>
+        ///// 
+        ///// </summary>
+        ///// <param name="id"> combo id</param>
+        ///// <returns></returns>
+        //public Product GetProductFromFirstComboId(int id)
+        //{
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    Product product = null;
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_First_Product_From_Combo_Id", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inId", id);
+        //        MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_First_Product_From_Combo_Id", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inId", id);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    product = ConvertOneRowFromDataMySql(rdr);
-                }
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                product = null;
-            }
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        while (rdr.Read())
+        //        {
+        //            product = ConvertOneRowFromDataMySql(rdr);
+        //        }
+        //        if (rdr != null)
+        //            rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        errMessage = ex.ToString();
+        //        MyLogger.GetInstance().Warn(errMessage);
+        //        product = null;
+        //    }
 
-            conn.Close();
-            return product;
-        }
+        //    conn.Close();
+        //    return product;
+        //}
 
         public MySqlResultState UpdateProductBarcode(int id, string newBarcode)
         {
@@ -235,34 +235,35 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        private void AddUpdateParameters(Product pro, MySqlParameter[] paras)
-        {
-            paras[0]  = new MySqlParameter("@proCode", pro.code);
-            paras[1]  = new MySqlParameter("@barcode", pro.barcode);
-            paras[2]  = new MySqlParameter("@productName", pro.name);
-            paras[3]  = new MySqlParameter("@comboId", pro.comboId);
-            paras[4]  = new MySqlParameter("@categoryId", pro.categoryId);
-            paras[5]  = new MySqlParameter("@bookCoverPrice", pro.bookCoverPrice);
-            paras[6]  = new MySqlParameter("@author", pro.author);
-            paras[7]  = new MySqlParameter("@translator", pro.translator);
-            paras[8]  = new MySqlParameter("@publisherId", pro.publisherId);
-            paras[9]  = new MySqlParameter("@publishingCompany", pro.publishingCompany);
-            paras[10] = new MySqlParameter("@publishingTime", pro.publishingTime);
-            paras[11] = new MySqlParameter("@productLong", pro.productLong);
-            paras[12] = new MySqlParameter("@productWide", pro.productWide);
-            paras[13] = new MySqlParameter("@productHigh", pro.productHigh);
-            paras[14] = new MySqlParameter("@productWeight", pro.productWeight);
-            paras[15] = new MySqlParameter("@positionInWarehouse", pro.positionInWarehouse);
-            paras[16] = new MySqlParameter("@hardCover", pro.hardCover);
-            paras[17] = new MySqlParameter("@minAge", pro.minAge);
-            paras[18] = new MySqlParameter("@maxAge", pro.maxAge);
-            paras[19] = new MySqlParameter("@parentId", pro.parentId);
-            paras[20] = new MySqlParameter("@republish", pro.republish);
-            paras[21] = new MySqlParameter("@detail", pro.detail);
-            paras[22] = new MySqlParameter("@proStatus", pro.status);
+        //private void AddUpdateParameters(Product pro, MySqlParameter[] paras)
+        //{
+        //    paras[0] = new MySqlParameter("@inproductId", pro.id);
+        //    paras[1]  = new MySqlParameter("@proCode", pro.code);
+        //    paras[2]  = new MySqlParameter("@barcode", pro.barcode);
+        //    paras[3]  = new MySqlParameter("@productName", pro.name);
+        //    paras[4]  = new MySqlParameter("@comboId", pro.comboId);
+        //    paras[5]  = new MySqlParameter("@categoryId", pro.categoryId);
+        //    paras[6]  = new MySqlParameter("@bookCoverPrice", pro.bookCoverPrice);
+        //    paras[7]  = new MySqlParameter("@author", pro.author);
+        //    paras[8]  = new MySqlParameter("@translator", pro.translator);
+        //    paras[9]  = new MySqlParameter("@publisherId", pro.publisherId);
+        //    paras[10]  = new MySqlParameter("@publishingCompany", pro.publishingCompany);
+        //    paras[11] = new MySqlParameter("@publishingTime", pro.publishingTime);
+        //    paras[12] = new MySqlParameter("@productLong", pro.productLong);
+        //    paras[13] = new MySqlParameter("@productWide", pro.productWide);
+        //    paras[14] = new MySqlParameter("@productHigh", pro.productHigh);
+        //    paras[15] = new MySqlParameter("@productWeight", pro.productWeight);
+        //    paras[16] = new MySqlParameter("@positionInWarehouse", pro.positionInWarehouse);
+        //    paras[17] = new MySqlParameter("@hardCover", pro.hardCover);
+        //    paras[18] = new MySqlParameter("@minAge", pro.minAge);
+        //    paras[19] = new MySqlParameter("@maxAge", pro.maxAge);
+        //    paras[20] = new MySqlParameter("@parentId", pro.parentId);
+        //    paras[21] = new MySqlParameter("@republish", pro.republish);
+        //    paras[22] = new MySqlParameter("@detail", pro.detail);
+        //    paras[23] = new MySqlParameter("@proStatus", pro.status);
 
-            MyMySql.AddOutParameters(paras);
-        }
+        //    MyMySql.AddOutParameters(paras);
+        //}
 
         // Thêm mới sản phẩm và trả về id sản phẩm thêm mới như outResult
         public MySqlResultState AddNewPro(
@@ -273,29 +274,29 @@ namespace MVCPlayWithMe.Models
             MySqlParameter[] paras = null;
 
             paras = new MySqlParameter[23];
-            paras[0] = new MySqlParameter("@proCode", pro.code);
-            paras[1] = new MySqlParameter("@barcode", pro.barcode);
-            paras[2] = new MySqlParameter("@productName", pro.name);
-            paras[3] = new MySqlParameter("@comboId", pro.comboId);
-            paras[4] = new MySqlParameter("@categoryId", pro.categoryId);
-            paras[5] = new MySqlParameter("@bookCoverPrice", pro.bookCoverPrice);
-            paras[6] = new MySqlParameter("@author", pro.author);
-            paras[7] = new MySqlParameter("@translator", pro.translator);
-            paras[8] = new MySqlParameter("@publisherId", pro.publisherId);
-            paras[9] = new MySqlParameter("@publishingCompany", pro.publishingCompany);
-            paras[10] = new MySqlParameter("@publishingTime", pro.publishingTime);
-            paras[11] = new MySqlParameter("@productLong", pro.productLong);
-            paras[12] = new MySqlParameter("@productWide", pro.productWide);
-            paras[13] = new MySqlParameter("@productHigh", pro.productHigh);
-            paras[14] = new MySqlParameter("@productWeight", pro.productWeight);
-            paras[15] = new MySqlParameter("@positionInWarehouse", pro.positionInWarehouse);
-            paras[16] = new MySqlParameter("@hardCover", pro.hardCover);
-            paras[17] = new MySqlParameter("@minAge", pro.minAge);
-            paras[18] = new MySqlParameter("@maxAge", pro.maxAge);
-            paras[19] = new MySqlParameter("@parentId", pro.parentId);
-            paras[20] = new MySqlParameter("@republish", pro.republish);
-            paras[21] = new MySqlParameter("@detail", pro.detail);
-            paras[22] = new MySqlParameter("@proStatus", pro.status);
+            paras[0] = new MySqlParameter("@inproCode", pro.code);
+            paras[1] = new MySqlParameter("@inbarcode", pro.barcode);
+            paras[2] = new MySqlParameter("@inproductName", pro.name);
+            paras[3] = new MySqlParameter("@incomboId", pro.comboId);
+            paras[4] = new MySqlParameter("@incategoryId", pro.categoryId);
+            paras[5] = new MySqlParameter("@inbookCoverPrice", pro.bookCoverPrice);
+            paras[6] = new MySqlParameter("@inauthor", pro.author);
+            paras[7] = new MySqlParameter("@intranslator", pro.translator);
+            paras[8] = new MySqlParameter("@inpublisherId", pro.publisherId);
+            paras[9] = new MySqlParameter("@inpublishingCompany", pro.publishingCompany);
+            paras[10] = new MySqlParameter("@inpublishingTime", pro.publishingTime);
+            paras[11] = new MySqlParameter("@inproductLong", pro.productLong);
+            paras[12] = new MySqlParameter("@inproductWide", pro.productWide);
+            paras[13] = new MySqlParameter("@inproductHigh", pro.productHigh);
+            paras[14] = new MySqlParameter("@inproductWeight", pro.productWeight);
+            paras[15] = new MySqlParameter("@inpositionInWarehouse", pro.positionInWarehouse);
+            paras[16] = new MySqlParameter("@inhardCover", pro.hardCover);
+            paras[17] = new MySqlParameter("@inminAge", pro.minAge);
+            paras[18] = new MySqlParameter("@inmaxAge", pro.maxAge);
+            paras[19] = new MySqlParameter("@inparentId", pro.parentId);
+            paras[20] = new MySqlParameter("@inrepublish", pro.republish);
+            paras[21] = new MySqlParameter("@indetail", pro.detail);
+            paras[22] = new MySqlParameter("@inproStatus", pro.status);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -313,10 +314,12 @@ namespace MVCPlayWithMe.Models
                         result.myAnything = MyMySql.GetInt32(rdr, "LastId");
                         if(result.myAnything == -2)
                         {
+                            result.State = EMySqlResultState.EXIST;
                             result.Message = "Code is exist";
                         }
                         else if (result.myAnything == -3)
                         {
+                            result.State = EMySqlResultState.EXIST;
                             result.Message = "Barcode is exist";
                         }
                     }
@@ -360,24 +363,24 @@ namespace MVCPlayWithMe.Models
             MySqlParameter[] paras = null;
 
             paras = new MySqlParameter[20];
-            paras[0] = new MySqlParameter("@comboId", pro.comboId);
-            paras[1] = new MySqlParameter("@categoryId", pro.categoryId);
-            paras[2] = new MySqlParameter("@bookCoverPrice", pro.bookCoverPrice);
-            paras[3] = new MySqlParameter("@author", pro.author);
-            paras[4] = new MySqlParameter("@translator", pro.translator);
-            paras[5] = new MySqlParameter("@publisherId", pro.publisherId);
-            paras[6] = new MySqlParameter("@publishingCompany", pro.publishingCompany);
-            paras[7] = new MySqlParameter("@publishingTime", pro.publishingTime);
-            paras[8] = new MySqlParameter("@productLong", pro.productLong);
-            paras[9] = new MySqlParameter("@productWide", pro.productWide);
-            paras[10] = new MySqlParameter("@productHigh", pro.productHigh);
-            paras[11] = new MySqlParameter("@productWeight", pro.productWeight);
-            paras[12] = new MySqlParameter("@positionInWarehouse", pro.positionInWarehouse);
-            paras[13] = new MySqlParameter("@hardCover", pro.hardCover);
-            paras[14] = new MySqlParameter("@minAge", pro.minAge);
-            paras[15] = new MySqlParameter("@maxAge", pro.maxAge);
-            paras[16] = new MySqlParameter("@republish", pro.republish);
-            paras[17] = new MySqlParameter("@proStatus", pro.status);
+            paras[0] = new MySqlParameter("@inComboId", pro.comboId);
+            paras[1] = new MySqlParameter("@inCategoryId", pro.categoryId);
+            paras[2] = new MySqlParameter("@inBookCoverPrice", pro.bookCoverPrice);
+            paras[3] = new MySqlParameter("@inAuthor", pro.author);
+            paras[4] = new MySqlParameter("@inTranslator", pro.translator);
+            paras[5] = new MySqlParameter("@inPublisherId", pro.publisherId);
+            paras[6] = new MySqlParameter("@inPublishingCompany", pro.publishingCompany);
+            paras[7] = new MySqlParameter("@inPublishingTime", pro.publishingTime);
+            paras[8] = new MySqlParameter("@inProductLong", pro.productLong);
+            paras[9] = new MySqlParameter("@inProductWide", pro.productWide);
+            paras[10] = new MySqlParameter("@inProductHigh", pro.productHigh);
+            paras[11] = new MySqlParameter("@inProductWeight", pro.productWeight);
+            paras[12] = new MySqlParameter("@inPositionInWarehouse", pro.positionInWarehouse);
+            paras[13] = new MySqlParameter("@inHardCover", pro.hardCover);
+            paras[14] = new MySqlParameter("@inMinAge", pro.minAge);
+            paras[15] = new MySqlParameter("@inMaxAge", pro.maxAge);
+            paras[16] = new MySqlParameter("@inRepublish", pro.republish);
+            paras[17] = new MySqlParameter("@inProStatus", pro.status);
 
             MyMySql.AddOutParameters(paras);
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Common_Info_With_Combo", paras);
@@ -389,13 +392,68 @@ namespace MVCPlayWithMe.Models
             Product pro
         )
         {
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
+            MySqlResultState result = new MySqlResultState();
+            MySqlParameter[] paras = new MySqlParameter[24];
+            paras[0] = new MySqlParameter("@inproductId", pro.id);
+            paras[1] = new MySqlParameter("@inproCode", pro.code);
+            paras[2] = new MySqlParameter("@inbarcode", pro.barcode);
+            paras[3] = new MySqlParameter("@inproductName", pro.name);
+            paras[4] = new MySqlParameter("@incomboId", pro.comboId);
+            paras[5] = new MySqlParameter("@incategoryId", pro.categoryId);
+            paras[6] = new MySqlParameter("@inbookCoverPrice", pro.bookCoverPrice);
+            paras[7] = new MySqlParameter("@inauthor", pro.author);
+            paras[8] = new MySqlParameter("@intranslator", pro.translator);
+            paras[9] = new MySqlParameter("@inpublisherId", pro.publisherId);
+            paras[10] = new MySqlParameter("@inpublishingCompany", pro.publishingCompany);
+            paras[11] = new MySqlParameter("@inpublishingTime", pro.publishingTime);
+            paras[12] = new MySqlParameter("@inproductLong", pro.productLong);
+            paras[13] = new MySqlParameter("@inproductWide", pro.productWide);
+            paras[14] = new MySqlParameter("@inproductHigh", pro.productHigh);
+            paras[15] = new MySqlParameter("@inproductWeight", pro.productWeight);
+            paras[16] = new MySqlParameter("@inpositionInWarehouse", pro.positionInWarehouse);
+            paras[17] = new MySqlParameter("@inhardCover", pro.hardCover);
+            paras[18] = new MySqlParameter("@inminAge", pro.minAge);
+            paras[19] = new MySqlParameter("@inmaxAge", pro.maxAge);
+            paras[20] = new MySqlParameter("@inparentId", pro.parentId);
+            paras[21] = new MySqlParameter("@inrepublish", pro.republish);
+            paras[22] = new MySqlParameter("@indetail", pro.detail);
+            paras[23] = new MySqlParameter("@inproStatus", pro.status);
 
-            paras = new MySqlParameter[25];
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
 
-            AddUpdateParameters(pro, paras);
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update", paras);
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddRange(paras);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                if (rdr != null && rdr.HasRows)
+                {
+                    while (rdr.Read())
+                    {
+                        result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                        if (result.myAnything == -2)
+                        {
+                            result.State = EMySqlResultState.EXIST;
+                            result.Message = "Code is exist";
+                        }
+                        else if (result.myAnything == -3)
+                        {
+                            result.State = EMySqlResultState.EXIST;
+                            result.Message = "Barcode is exist";
+                        }
+                    }
+                }
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
 
             return result;
         }
@@ -1004,7 +1062,7 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
-        private void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        public void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
         {
             CommonItem commonItem = null;
             CommonModel commonModel = null;
@@ -1090,7 +1148,7 @@ namespace MVCPlayWithMe.Models
         // Kết nối đóng mở bên ngoài
         // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm shopee có thay đổi số lượng
         // cần cập nhật
-        public List<CommonItem> ShopeeGetListNeedUpdateQuantity(MySqlConnection conn)
+        public List<CommonItem> ShopeeGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -1141,14 +1199,14 @@ namespace MVCPlayWithMe.Models
             return listCI;
         }
 
-        private void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        public void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
         {
             CommonItem commonItem = null;
             CommonModel commonModel = null;
             int dbItemId = MyMySql.GetInt32(rdr, "TikiItemId");
             if (list.Count() == 0)
             {
-                commonItem = new CommonItem(EECommerceType.TIKI);
+                commonItem = new CommonItem(Common.eTiki);
                 list.Add(commonItem);
             }
             else
@@ -1156,7 +1214,7 @@ namespace MVCPlayWithMe.Models
                 // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
                 if (list[list.Count() - 1].dbItemId != dbItemId)
                 {
-                    commonItem = new CommonItem(EECommerceType.TIKI);
+                    commonItem = new CommonItem(Common.eTiki);
                     list.Add(commonItem);
                 }
             }
@@ -1203,7 +1261,7 @@ namespace MVCPlayWithMe.Models
         // Kết nối đóng mở bên ngoài
         // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm Tiki có thay đổi số lượng
         // cần cập nhật
-        public List<CommonItem> TikiGetListNeedUpdateQuantity(MySqlConnection conn)
+        public List<CommonItem> TikiGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -1316,6 +1374,52 @@ namespace MVCPlayWithMe.Models
             conn.Close();
         }
 
+        //
+        /// <summary>
+        ///  Cập nhật trạng thái từ 1 sang 0 của tbNeedUpdateQuantity
+        /// </summary>
+        /// <param name="listProId"></param>
+        public void UpdateStatusOfNeedUpdateQuantityConnectOut(List<int> listProId, MySqlConnection conn)
+        {
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inProductId", 0);
+                foreach (int id in listProId)
+                {
+                    cmd.Parameters[0].Value = id;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        public List<int> GetListProductOfNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        {
+            List<int> listProductId = new List<int>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `Status`=1;", conn);
+                cmd.CommandType = CommandType.Text;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    listProductId.Add( MyMySql.GetInt32(rdr, "ProductId"));
+                }
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listProductId.Clear();
+            }
+            return listProductId;
+        }
+
         // Cập nhật url ảnh đại diện shopee item từ TMDTShopeeItemId
         // Mở đóng kết nối bên ngoài
         public void UpdateImageSrcShopeeItem(long TMDTShopeeItemId, string imageSrc, MySqlConnection conn)
@@ -1368,6 +1472,132 @@ namespace MVCPlayWithMe.Models
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
+        }
+
+        // Lấy được số lượng thực tế trong kho của sản phẩm sàn Shopee
+        public int ShopeeGetQuantityOfOneItemModel(long itemId, long modelId)
+        {
+            int quantity = 0;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inItemId", itemId);
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+
+                    quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    if (quantity == -1)
+                        quantity = 0;
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                quantity = 0;
+            }
+
+            conn.Close();
+            return quantity;
+        }
+
+        // Lấy được số lượng thực tế trong kho của sản phẩm sàn Tiki
+        public int TikiGetQuantityOfOneItemModel(int itemId)
+        {
+            int quantity = 0;
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    if (quantity == -1)
+                        quantity = 0;
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                quantity = 0;
+            }
+
+            conn.Close();
+            return quantity;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy được số lượng thực tế trong kho của sản phẩm sàn Shopee
+        public int ShopeeGetQuantityOfOneItemModelConnectOut(long itemId, long modelId, MySqlConnection conn)
+        {
+            int quantity = 0;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inItemId", itemId);
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+
+                    quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    if (quantity == -1)
+                        quantity = 0;
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                quantity = 0;
+            }
+
+            return quantity;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy được số lượng thực tế trong kho của sản phẩm sàn Tiki
+        public int TikiGetQuantityOfOneItemModelConnectOut(int itemId, MySqlConnection conn)
+        {
+            int quantity = 0;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    if (quantity == -1)
+                        quantity = 0;
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                quantity = 0;
+            }
+
+            return quantity;
         }
     }
 }

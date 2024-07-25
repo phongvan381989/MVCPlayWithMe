@@ -86,18 +86,6 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public ActionResult UpdateWithCombo()
-        {
-            if (AuthentAdministrator() == null)
-            {
-                return AuthenticationFail();
-            }
-
-            //GetViewDataForInput();
-
-            return View();
-        }
-
         public ActionResult Import()
         {
             if (AuthentAdministrator() == null)
@@ -130,47 +118,44 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        private void AddUpdateParasCommon(
-            ref int comboId, string comboName,
-            ref int categoryId, string categoryName,
-            ref int publisherId, string publisherName,
-            ref int parentId, string parentName
-            )
-        {
-            if (string.IsNullOrWhiteSpace(comboName))
-                comboId = -1;
-            else
-                comboId = comboSqler.GetComboIdFromName(comboName);
+        //private void AddUpdateParasCommon(
+        //    ref int comboId, string comboName,
+        //    ref int categoryId, string categoryName,
+        //    ref int publisherId, string publisherName,
+        //    ref int parentId, string parentName
+        //    )
+        //{
+        //    if (string.IsNullOrWhiteSpace(comboName))
+        //        comboId = -1;
+        //    else
+        //        comboId = comboSqler.GetComboIdFromName(comboName);
 
-            if (string.IsNullOrWhiteSpace(categoryName))
-                categoryId = -1;
-            else
-                categoryId = categorySqler.GetCategoryIdFromName(categoryName);
+        //    if (string.IsNullOrWhiteSpace(categoryName))
+        //        categoryId = -1;
+        //    else
+        //        categoryId = categorySqler.GetCategoryIdFromName(categoryName);
 
-            if (string.IsNullOrWhiteSpace(publisherName))
-                publisherId = -1;
-            else
-                publisherId = publisherSqler.GetPublisherIdFromName(publisherName);
+        //    if (string.IsNullOrWhiteSpace(publisherName))
+        //        publisherId = -1;
+        //    else
+        //        publisherId = publisherSqler.GetPublisherIdFromName(publisherName);
 
-            if (string.IsNullOrWhiteSpace(parentName))
-                parentId = -1;
-            else
-                parentId = sqler.GetProductIdFromName(parentName);
-        }
+        //    if (string.IsNullOrWhiteSpace(parentName))
+        //        parentId = -1;
+        //    else
+        //        parentId = sqler.GetProductIdFromName(parentName);
+        //}
 
         public string AddNewPro(
                 string code,
                 string barcode,
                 string name,
-                //int comboId,
-                string comboName, // Nếu comboId = -1, ta thêm mới comboName
-                //int categoryId,
-                string categoryName, // Nếu categoryId = -1, ta thêm mới categoryName
+                int comboId,
+                int categoryId,
                 int bookCoverPrice,
                 string author,
                 string translator,
-                //int publisherId,
-                string publisherName, // Nếu publisherId = -1, ta thêm mới publisherName
+                int publisherId,
                 string publishingCompany,
                 int publishingTime,
                 int productLong,
@@ -181,7 +166,7 @@ namespace MVCPlayWithMe.Controllers
                 int hardCover,
                 int minAge,
                 int maxAge,
-                string parentName, // Nếu không có sản phẩm cha, parentId = -1
+                int parentId, // Nếu không có sản phẩm cha, parentId = -1
                 int republish,// Nếu không xác định, parentId = -1
                 string detail,
                 int status
@@ -191,10 +176,6 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-
-            int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
-            AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
-                ref publisherId, publisherName, ref parentId, parentName);
 
             Product pro = new Product(-1,
                  code,
@@ -227,18 +208,16 @@ namespace MVCPlayWithMe.Controllers
         }
 
         public string UpdateProduct(
+                int productId,
                 string code,
                 string barcode,
                 string name,
-                //int comboId,
-                string comboName, // Nếu comboId = -1, ta thêm mới comboName
-                                  //int categoryId,
-                string categoryName, // Nếu categoryId = -1, ta thêm mới categoryName
+                int comboId,
+                int categoryId,
                 int bookCoverPrice,
                 string author,
                 string translator,
-                //int publisherId,
-                string publisherName, // Nếu publisherId = -1, ta thêm mới publisherName
+                int publisherId,
                 string publishingCompany,
                 int publishingTime,
                 int productLong,
@@ -249,7 +228,7 @@ namespace MVCPlayWithMe.Controllers
                 int hardCover,
                 int minAge,
                 int maxAge,
-                string parentName, // Nếu không có sản phẩm cha, parentId = -1
+                int parentId, // Nếu không có sản phẩm cha, parentId = -1
                 int republish,// Nếu không xác định, parentId = -1
                 string detail,
                 int status
@@ -260,12 +239,8 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
-            AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
-                ref publisherId, publisherName, ref parentId, parentName);
-
             Product pro = new Product(
-                -1,
+                productId,
                 code,
                 barcode,
                  name,
@@ -319,15 +294,12 @@ namespace MVCPlayWithMe.Controllers
         }
 
         public string UpdateCommonInfoWithCombo(
-                //int comboId,
-                string comboName, // Nếu comboId = -1, ta thêm mới comboName
-                                  //int categoryId,
-                string categoryName, // Nếu categoryId = -1, ta thêm mới categoryName
+                int comboId,
+                int categoryId,
                 int bookCoverPrice,
                 string author,
                 string translator,
-                //int publisherId,
-                string publisherName, // Nếu publisherId = -1, ta thêm mới publisherName
+                int publisherId,
                 string publishingCompany,
                 int publishingTime,
                 int productLong,
@@ -338,7 +310,7 @@ namespace MVCPlayWithMe.Controllers
                 int hardCover,
                 int minAge,
                 int maxAge,
-                int republish,   // Nếu không xác định, parentId = -1
+                int republish,
                 int status
             )
         {
@@ -347,9 +319,6 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            int comboId = 0, categoryId = 0, publisherId = 0, parentId = 0;
-            AddUpdateParasCommon(ref comboId, comboName, ref categoryId, categoryName,
-                ref publisherId, publisherName, ref parentId, string.Empty);
             ProductCommonInfoWithCombo pro = new ProductCommonInfoWithCombo(
                  comboId,
                  categoryId,
@@ -473,23 +442,23 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(pro);
         }
 
-        /// <summary>
-        /// Lấy thông tin chung của combo từ sản phẩm đầu tiên thuộc combo
-        /// </summary>
-        /// <param name="id">id combo</param>
-        /// <returns></returns>
-        [HttpPost]
-        public string GetProductCommonInfoWithComboFromFirst(int id)
-        {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(null);
-            }
+        ///// <summary>
+        ///// Lấy thông tin chung của combo từ sản phẩm đầu tiên thuộc combo
+        ///// </summary>
+        ///// <param name="id">id combo</param>
+        ///// <returns></returns>
+        //[HttpPost]
+        //public string GetProductCommonInfoWithComboFromFirst(int id)
+        //{
+        //    if (AuthentAdministrator() == null)
+        //    {
+        //        return JsonConvert.SerializeObject(null);
+        //    }
 
-            Product pro = sqler.GetProductFromFirstComboId(id);
+        //    Product pro = sqler.GetProductFromFirstComboId(id);
 
-            return JsonConvert.SerializeObject(pro);
-        }
+        //    return JsonConvert.SerializeObject(pro);
+        //}
 
         [HttpPost]
         public string GetProductIdCodeBarcodeNameBooCoverkPrice(string publisher)
@@ -811,7 +780,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Lấy trạng thái sản phẩm, image đại diện, số lượng trên sàn Shopee.
         // Cập nhật số lượng với sản phẩm NORMAL
-        private void ShopeeGetStatusImageSrcQuantitySellable(List<CommonItem> shopeeList)
+        public void ShopeeGetStatusImageSrcQuantitySellable(List<CommonItem> shopeeList)
         {
             foreach (var item in shopeeList)
             {
@@ -875,7 +844,7 @@ namespace MVCPlayWithMe.Controllers
         // Cập nhật số lượng lên sàn Shopee
         private void ShopeeUpdateQuatity(List<CommonItem> shopeeList)
         {
-            int qty = 0;
+            //int qty = 0;
             foreach (var item in shopeeList)
             {
                 if (!item.bActive)
@@ -883,14 +852,14 @@ namespace MVCPlayWithMe.Controllers
 
                 foreach (var model in item.models)
                 {
-                    qty = model.GetQuatityFromListMapping();
-                    ShopeeItemId shopeeitemId = new ShopeeItemId(item.itemId,
-                        model.modelId, qty);
-                    Boolean isOk = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(shopeeitemId);
-                    if (!isOk)
-                    {
-                        model.whyUpdateFail = Common.CommonErrorMessage;
-                    }
+                    //qty = model.GetQuatityFromListMapping();
+                    //ShopeeItemId shopeeitemId = new ShopeeItemId(item.itemId,
+                    //    model.modelId, qty);
+                    //Boolean isOk = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(shopeeitemId);
+                    //if (!isOk)
+                    //{
+                    //    model.whyUpdateFail = Common.CommonErrorMessage;
+                    //}
                 }
             }
         }
@@ -898,16 +867,20 @@ namespace MVCPlayWithMe.Controllers
         private List<CommonItem> ShopeeGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
         {
             // Danh sách sản phẩm Shopee
-            List<CommonItem> shopeeList = sqler.ShopeeGetListNeedUpdateQuantity(conn);
-            ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
-            ShopeeUpdateQuatity(shopeeList);
+            List<CommonItem> listCommonItem = sqler.ShopeeGetListNeedUpdateQuantityConnectOut(conn);
+            ShopeeGetStatusImageSrcQuantitySellable(listCommonItem);
+            ShopeeUpdateQuatity(listCommonItem);
+            foreach(var commonItem in listCommonItem)
+            {
+                ShopeeUpdateQuantityOfOneItem(commonItem, conn);
+            }
 
-            return shopeeList;
+            return listCommonItem;
         }
 
         // Lấy trạng thái sản phẩm, image đại diện, số lượng trên sàn Tiki.
         // Cập nhật số lượng với sản phẩm active
-        private void TikiGetStatusImageSrcQuantitySellable(List<CommonItem> tikiList)
+        public void TikiGetStatusImageSrcQuantitySellable(List<CommonItem> tikiList)
         {
             foreach (var item in tikiList)
             {
@@ -950,22 +923,88 @@ namespace MVCPlayWithMe.Controllers
                 qty = item.models[0].GetQuatityFromListMapping();
 
                 st.UpdateQuantity(qty);
-                Boolean isOk = TikiUpdateStock.TikiProductUpdateQuantity(st);
-                if (!isOk)
-                {
-                    // Tiếp tục cập nhật số lượng sp khác, lưu lý do cập nhật lỗi
-                    item.models[0].whyUpdateFail = Common.CommonErrorMessage;
-                }
+                TikiUpdateQuantityResponse rs = TikiUpdateStock.TikiProductUpdateQuantity(st);
+                //if (!isOk)
+                //{
+                //    // Tiếp tục cập nhật số lượng sp khác, lưu lý do cập nhật lỗi
+                //    item.models[0].whyUpdateFail = Common.CommonErrorMessage;
+                //}
             }
         }
 
         private List<CommonItem>TikiGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
         {
             // Danh sách sản phẩm Tiki
-            List<CommonItem> tikiList = sqler.TikiGetListNeedUpdateQuantity(conn);
-            TikiGetStatusImageSrcQuantitySellable(tikiList);
-            TikiUpdateQuatity(tikiList);
-            return tikiList;
+            List<CommonItem> listCommonItem = sqler.TikiGetListNeedUpdateQuantityConnectOut(conn);
+            TikiGetStatusImageSrcQuantitySellable(listCommonItem);
+            //TikiUpdateQuatity(listCommonItem);
+            foreach( var commonItem in listCommonItem)
+            {
+                 TikiUpdateQuantityOfOneItem(commonItem, conn);
+            }
+            return listCommonItem;
+        }
+
+        /// <summary>
+        /// Tìm product id cập nhật số lượng thất bại qua thông tin sàn trả về
+        /// </summary>
+        /// <param name="listCommonItem"></param>
+        /// <param name="listProductIdChanged"></param>
+        /// <returns></returns>
+        private List<int> GetListProductIdUpdateFail(List<CommonItem> listCommonItem, List<int> listProductIdChanged)
+        {
+            List<int> listProductIdUpdateFail = new List<int>();
+            foreach(var commonItem in listCommonItem)
+            {
+                if (!commonItem.bActive) // tương ứng với commonItem.result = null
+                    continue;
+
+                if(commonItem.eType == Common.eTiki)
+                {
+                    // Sàn Tiki trả về cập nhật lỗi
+                    if(commonItem.result.myJson == null ||
+                        ((TikiUpdateQuantityResponse)commonItem.result.myJson).errors != null)
+                    {
+                        foreach(var mapping in commonItem.models[0].mapping)
+                        {
+                            if(listProductIdChanged.Contains(mapping.product.id) &&
+                                !listProductIdUpdateFail.Contains(mapping.product.id))
+                            {
+                                listProductIdUpdateFail.Add(mapping.product.id);
+                            }
+                        }
+                    }
+                }
+                else if(commonItem.eType == Common.eShopee)
+                {
+                    // Sàn Shoppee trả về cập nhật lỗi
+                    if (commonItem.result.myJson == null ||
+                        ((ShopeeUpdateStockResponseHTTP)commonItem.result.myJson).response.failure_list != null)
+                    {
+                        foreach (var fai in ((ShopeeUpdateStockResponseHTTP)commonItem.result.myJson).response.failure_list)
+                        {
+                            // Méo biết khi item không có model thì modelIdFail = 0 hay -1,...?
+                            long modelIdFail = fai.model_id;
+                            foreach(var model in commonItem.models)
+                            {
+                                if(modelIdFail == model.modelId || modelIdFail == 0)
+                                {
+                                    foreach (var mapping in model.mapping)
+                                    {
+                                        if (listProductIdChanged.Contains(mapping.product.id) &&
+                                            !listProductIdUpdateFail.Contains(mapping.product.id))
+                                        {
+                                            listProductIdUpdateFail.Add(mapping.product.id);
+                                        }
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return listProductIdUpdateFail;
         }
 
         [HttpPost]
@@ -982,13 +1021,31 @@ namespace MVCPlayWithMe.Controllers
             try
             {
                 conn.Open();
+                // Danh sách sản phẩm trong kho có thay đổi số lượng cần cập nhật
+                List<int> listProductId = sqler.GetListProductOfNeedUpdateQuantityConnectOut(conn);
+
                 List<CommonItem> shopeeList = ShopeeGetListNeedUpdateQuantityAndUpdate(conn);
                 List<CommonItem> tikiList = TikiGetListNeedUpdateQuantityAndUpdate(conn);
 
                 ls.AddRange(tikiList);
                 ls.AddRange(shopeeList);
+
+                // Danh sách sản phẩm chưa cập nhật số lượng thành công
+                List<int> listProductIdUpdateFail = GetListProductIdUpdateFail(ls, listProductId);
+
+                // Danh sách sản phẩm cập nhật thành công
+                List<int> listProductIdUpdateSuccess = new List<int>();
+                foreach(var id in listProductId)
+                {
+                    if(!listProductIdUpdateFail.Contains(id))
+                    {
+                        listProductIdUpdateSuccess.Add(id);
+                    }
+                }
+
+                sqler.UpdateStatusOfNeedUpdateQuantityConnectOut(listProductIdUpdateSuccess, conn);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
@@ -1066,5 +1123,178 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(ls);
         }
 
+        // Cập nhật số lượng sản phẩm của 1 model từ itemId, modelId
+        private MySqlResultState ShopeeUpdateQuantityOfOneItemModel(long itemId, long modelId)
+        {
+            MySqlResultState result = new MySqlResultState();
+            int quantity = sqler.ShopeeGetQuantityOfOneItemModel(itemId, modelId);
+
+            ShopeeItemId shopeeitemId = new ShopeeItemId(itemId,
+                modelId, quantity);
+            result.myJson = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(shopeeitemId);
+
+            return result;
+        }
+
+        // Cập nhật số lượng sản phẩm của nhiều model nếu có trong model từ commonItem
+        private void ShopeeUpdateQuantityOfOneItem(CommonItem commonItem, MySqlConnection conn)
+        {
+            if (!commonItem.bActive)
+            {
+                commonItem.result = null;
+                return;
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            long itemId = commonItem.itemId;
+            long modelId = 0;
+            int quantity = 0;
+            MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st =
+                    new MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
+            st.item_id = itemId;
+            foreach (var model in commonItem.models)
+            {
+                modelId = model.modelId;
+                quantity = sqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
+                
+                if(modelId == -1)
+                {
+                    st.stock_list.Add(new ShopeeUpdateStockStock(0, quantity));
+                }
+                else
+                {
+                    st.stock_list.Add(new ShopeeUpdateStockStock(modelId, quantity));
+                }
+            }
+
+            result.myJson = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(st);
+            commonItem.result = result;
+        }
+
+        private MySqlResultState TikiUpdateQuantityOfOneItemModel(int itemId)
+        {
+            MySqlResultState result = new MySqlResultState();
+            int quantity = sqler.TikiGetQuantityOfOneItemModel(itemId);
+
+            TikiUpdateQuantity st = new TikiUpdateQuantity(itemId, TikiConstValues.intIdKho28Ngo3TTDL);
+
+            st.UpdateQuantity(quantity);
+            TikiUpdateQuantityResponse rs = TikiUpdateStock.TikiProductUpdateQuantity(st);
+
+            result.myJson = rs;
+
+            return result;
+        }
+
+        // Với Tiki TikiUpdateQuantityOfOneItemModel, và TikiUpdateQuantityOfOneItem giống nhau, khác tham số truyền vào
+        // TikiUpdateQuantityOfOneItem có thể check item active
+        private void TikiUpdateQuantityOfOneItem(CommonItem commonItem, MySqlConnection conn)
+        {
+            if (!commonItem.bActive)
+            {
+                commonItem.result = null;
+                return;
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            int quantity = sqler.TikiGetQuantityOfOneItemModelConnectOut((int)commonItem.itemId, conn);
+
+            TikiUpdateQuantity st = new TikiUpdateQuantity((int)commonItem.itemId, TikiConstValues.intIdKho28Ngo3TTDL);
+
+            st.UpdateQuantity(quantity);
+            TikiUpdateQuantityResponse rs = TikiUpdateStock.TikiProductUpdateQuantity(st);
+
+            result.myJson = rs;
+
+            commonItem.result = result;
+        }
+
+        // Update số lượng của 1 model lên sàn
+        [HttpPost]
+        public string UpdateQuantityOfOneItemModel(string eType, long itemId, long modelId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = null;
+            if (eType == Common.eTiki)
+            {
+                result = TikiUpdateQuantityOfOneItemModel((int)itemId);
+            }
+            else if(eType == Common.eShopee)
+            {
+                result = ShopeeUpdateQuantityOfOneItemModel(itemId, modelId);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        private void UpdateQuantityToTMDTFromListCommonItemConnectOut(List<CommonItem> listCommonItem,
+            MySqlConnection conn
+            )
+        {
+            foreach (CommonItem commonItem in listCommonItem)
+            {
+                if (commonItem.eType == Common.eTiki)
+                {
+                    TikiUpdateQuantityOfOneItem(commonItem, conn);
+                }
+                else if (commonItem.eType == Common.eShopee)
+                {
+                    ShopeeUpdateQuantityOfOneItem(commonItem, conn);
+                }
+            }
+        }
+
+        // Cập nhật số lượng lên sàn và cập nhật trạng thái sản phẩm ở tbNeedUpdateQuantity
+        private void UpdateQuantityToTMDT_DbFromListCommonItem(
+            List<CommonItem> listCommonItem,
+            List<int> listProductId)
+        {
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                UpdateQuantityToTMDTFromListCommonItemConnectOut(listCommonItem, conn);
+                // Cập nhật lên sàn ok, ta cập nhật trạng thái status = 0 ở tbNeedUpdateQuantity
+                sqler.UpdateStatusOfNeedUpdateQuantityConnectOut(listProductId, conn);
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        // Update số lượng của 1 list common item tương ứng với 1 sản phẩm trong kho
+        [HttpPost]
+        public string UpdateQuantityToTMDTFromListCommonItem(int productId, string listCommonItem)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            List<CommonItem> ls = null;
+            try
+            {
+                ls = JsonConvert.DeserializeObject<List<CommonItem>>(listCommonItem);
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            if (ls != null)
+            {
+                List<int> listProductId = new List<int>();
+                listProductId.Add(productId);
+                UpdateQuantityToTMDT_DbFromListCommonItem(ls, listProductId);
+            }
+
+            return JsonConvert.SerializeObject(ls);
+        }
     }
 }

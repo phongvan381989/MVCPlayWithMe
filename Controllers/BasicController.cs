@@ -15,14 +15,19 @@ namespace MVCPlayWithMe.Controllers
         public Administrator AuthentAdministrator()
         {
             CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
-
+            if (string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                MyLogger.GetInstance().Warn("cookieValue is null or empty");
+                return null;
+            }
             /// Check cookie đã được lưu trong db
             AdministratorMySql sqler = new AdministratorMySql();
             Administrator administrator = sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
             if (administrator == null)
             {
-                Cookie.DeleteUserIdCookie(HttpContext);
-                Cookie.DeleteVisitorTypeCookie(HttpContext);
+                // Lỗi ví dụ timeout,... không lấy được admin id từ cookie, nên ta không xóa cookie nữa
+                //Cookie.DeleteUserIdCookie(HttpContext);
+                //Cookie.DeleteVisitorTypeCookie(HttpContext);
                 MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
             }
             return administrator;
@@ -252,7 +257,7 @@ namespace MVCPlayWithMe.Controllers
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
             if (fileType == "isImage")
             {

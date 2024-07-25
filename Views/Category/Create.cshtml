@@ -11,40 +11,103 @@
 </head>
 <body>
     <div id="biggestContainer">
-        @Html.Partial("~/Views/Shared/Category.cshtml")
+        <div>
+            <label for="category-id">Category:</label>
+            <input class="config-max-width margin-vertical" id="category-id">
+        </div>
+
+        <div>
+            <button style="margin-right:20px;" onclick="CreateCategory()">Thêm Mới</button>
+            <button onclick="ShowListCategory()"> Danh Sách Thể Loại</button>
+        </div>
+        <table id="category-table" style="display:none;">
+            <tr>
+                <th style="display:none">Id</th>
+                <th>STT</th>
+                <th>Tên</th>
+            </tr>
+        </table>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.category.common.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
 
     <script>
-        GetListCategory();
-        function CreateCategory() {
-            let name = document.getElementById("category-id").value;
-            if (CheckIsEmptyOrSpacesAndShowResult(name, "Thể loại không hợp lệ.")) {
-                return;
-            }
-            let id = GetDataIdFromCategoryDatalist(name);
-            if (id != null) {
 
-                ShowResult("Thể loại đã có.");
-                return;
-            }
+        let listCategory = [];
 
-            const searchParams = new URLSearchParams();
-            searchParams.append("name", name);
-            let query = "/Category/CreateCategory";
-
-            let OnloadFuntion = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    GetJsonResponse(this.responseText);
+        async function ShowListCategory() {
+            // Lấy dữ liệu danh sách thể loại
+            {
+                const searchParams = new URLSearchParams();
+                let query = "/Category/GetListCategory";
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                RemoveCircleLoader();
+                if (responseDB.responseText != "null") {
+                    listCategory = JSON.parse(responseDB.responseText);
+                }
+                else {
+                    listCategory = [];
                 }
             }
-            RequestHttpGet(OnloadFuntion, searchParams, query);
+
+            let table = document.getElementById("category-table");
+
+            let length = listCategory.length;
+            if (length == 0) {
+                table.style.display = "none";
+                return;
+            }
+            table.style.display = "initial";
+            DeleteRowsExcludeHead(table);
+
+            for (let i = 0; i < length; i++) {
+                let category = listCategory[i];
+
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+
+                // Id
+                cell1.innerHTML = category.id;
+                cell1.style.display = "none";
+
+                // STT
+                cell2.innerHTML = i + 1;
+
+                // Name 
+                let name = document.createElement("p");
+                name.innerHTML = category.name;
+                name.className = "go-to-detail-item";
+                name.title = "Xem chi tiết thể loại";
+                name.onclick = function () {
+                    // Lấy id
+                    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+                    window.open("/Category/UpdateDelete?id=" + id);
+                };
+                cell3.append(name);
+            }
         }
 
-        function DeleteCategory() {
-            window.location.href = "/Category/Delete";
+        async function CreateCategory() {
+            let categoryName = document.getElementById("category-id").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(categoryName, "Tên thể loại không hợp lệ.")) {
+                document.getElementById("category-id").focus();
+                return;
+            }
+
+            
+            const searchParams = new URLSearchParams();
+            searchParams.append("name", categoryName);
+            let query = "/Category/CreateCategory";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Tạo thành công", "Có lỗi sẩy ra.");
         }
 
     </script>

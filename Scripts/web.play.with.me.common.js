@@ -211,18 +211,6 @@ function CheckExistInBarcodeDatalist(str, datalistId) {
     return false;
 }
 
-// Lấy response và hiển thị thông báo
-function GetJsonResponse(responseText) {
-    const obj = JSON.parse(responseText);
-    if (obj == null)
-        return false;
-
-    if (obj.State == 0)
-        return true;
-
-    return false;
-}
-
 function CheckStatusResponse(responseText) {
     const obj = JSON.parse(responseText);
     if (obj == null)
@@ -234,6 +222,7 @@ function CheckStatusResponse(responseText) {
     return false;
 }
 
+// responseText là 1 đối tượng result
 // Thành công thông báo alert, lỗi thông báo modal
 function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError) {
     const obj = JSON.parse(responseText);
@@ -251,7 +240,12 @@ function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError)
         alert(messageOk);
     }
     else {
-        CreateMustClickOkModal(messageError + " " + obj.Message, null);
+        if (obj == null) {
+            CreateMustClickOkModal(messageError + ". Server trả về null", null);
+        }
+        else {
+            CreateMustClickOkModal(messageError + " " + obj.Message, null);
+        }
     }
 
     return isOk;
@@ -276,7 +270,7 @@ function ShowResult(str) {
 
 // str: text cần check
 // id của <p> hiển thị kết quả nếu text empty or space
-function CheckIsEmptyOrSpacesAndShowResult(st, strResult) {
+function CheckIsEmptyOrSpacesAndShowResult(str, strResult) {
     if (isEmptyOrSpaces(str)) {
         ShowResult(strResult);
         return true;
@@ -486,7 +480,7 @@ function CheckFocus(id) {
     return isFocused;
 }
 
-// Xóa tất cả dữ liệu của bảng, để lại dòng đầu tiên
+// Xóa tất cả dữ liệu của bảng, để lại dòng đầu tiên chứa tên cột
 function DeleteRowsExcludeHead(table) {
     let rows = table.rows;
     if (rows == null)
@@ -604,8 +598,17 @@ function Get320VersionOfImageSrc(src) {
         return src;
 
     let filename = src.replace(/^.*[\\/]/, '')
+
+
     let lastIndex = src.lastIndexOf(filename);
-    let newSrc = src.substring(0, lastIndex - 1) + "_320/" + filename;
+    // Nếu đuôi file khác .png, .jpg thì mặc định là .jpeg
+    let newFileName = filename;
+    const myArray = filename.split(".");
+    if (myArray[1].toLowerCase() != "png" &&
+        myArray[1].toLowerCase() != "jpg") {
+        newFileName = myArray[0] + ".jpg";
+    }
+    let newSrc = src.substring(0, lastIndex - 1) + "_320/" + newFileName;
     return newSrc;
 }
 
@@ -946,20 +949,23 @@ async function GetListProductName() {
 }
 
 async function GetListCombo() {
+    document.getElementById("combo-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Combo/GetListCombo";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
+    let list = [];
     if (responseDB.responseText != "null") {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-combo");
         SetDataListOfIdName(ele, list);
+        document.getElementById("combo-id").disabled = false;
     }
 }
 
 async function GetListCategory() {
+    document.getElementById("category-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Category/GetListCategory";
@@ -970,6 +976,7 @@ async function GetListCategory() {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-category");
         SetDataListOfIdName(ele, list);
+        document.getElementById("category-id").disabled = false;
     }
 }
 
@@ -1002,6 +1009,7 @@ async function GetListTranslator() {
 }
 
 async function GetListPublisher() {
+    document.getElementById("publisher-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Publisher/GetListPublisher";
@@ -1012,10 +1020,12 @@ async function GetListPublisher() {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-Publisher");
         SetDataListOfIdName(ele, list);
+        document.getElementById("publisher-id").disabled = false;
     }
 }
 
 async function GetListPublishingCompany() {
+    document.getElementById("publishing-company-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Product/GetListPublishingCompany";
@@ -1027,6 +1037,7 @@ async function GetListPublishingCompany() {
         let ele = document.getElementById("list-publishing-company");
         SetDataListOfString(ele, list);
     }
+    document.getElementById("publishing-company-id").disabled = false;
 }
 
 async function GetListItem() {
@@ -1054,5 +1065,5 @@ function GetTikiItemUrl(id) {
 }
 
 function GetProductUrl(id) {
-    return "/Product/UpdateDelete?Id=" + id;
+    return "/Product/UpdateDelete?id=" + id;
 }

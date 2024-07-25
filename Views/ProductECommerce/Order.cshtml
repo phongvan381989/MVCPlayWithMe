@@ -342,7 +342,7 @@
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
-            if (responseDB.responseText == null) {
+            if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
                 return;
             }
@@ -900,7 +900,7 @@
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
-            if (responseDB.responseText == null) {
+            if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
                 return;
             }

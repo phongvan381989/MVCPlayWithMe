@@ -85,6 +85,14 @@ namespace MVCPlayWithMe.Models
             videoSrc = Common.GetItemVideoSrc(id);
         }
 
+        // Lấy ảnh đầu tiên của imageSrc cho nhanh
+        public void SetFirstSrcImage()
+        {
+            string src = Common.GetFirstItemImageSrc(id);
+            if (!string.IsNullOrEmpty(src))
+                imageSrc.Add(src);
+        }
+
         public void SetShopeeItemId()
         {
             ItemModelMySql sqler = new ItemModelMySql();

@@ -5,11 +5,18 @@
         ShowResult("Tên nhà phát hành trống.");
         return false;
     }
-    let comboName = document.getElementById("combo-id").value;
-    searchParams.append("comboName", comboName);
+
+    //let comboName = document.getElementById("combo-id").value;
+    //searchParams.append("comboName", comboName);
 
     let categoryName = document.getElementById("category-id").value;
-    searchParams.append("categoryName", categoryName);
+    let categoryId = GetDataIdFromCategoryDatalist(categoryName);
+    if (categoryId == null) {
+        searchParams.append("categoryId", -1);
+    }
+    else {
+        searchParams.append("categoryId", categoryId);
+    }
 
     let bookCoverPrice = GetValueInputById("book-cover-price", 0);
     searchParams.append("bookCoverPrice", bookCoverPrice);
@@ -18,7 +25,13 @@
 
     searchParams.append("translator", document.getElementById("translator-id").value);
 
-    searchParams.append("publisherName", publisherName)
+    let publisherId = GetDataIdFromPublisherDatalist(publisherName);
+    if (publisherId == null) {
+        searchParams.append("publisherId", -1);
+    }
+    else {
+        searchParams.append("publisherId", publisherId);
+    }
 
     searchParams.append("publishingCompany", document.getElementById("publishing-company-id").value);
 
@@ -68,7 +81,7 @@ function AddUpdateParameters(searchParams) {
         if (code.length != 13 || code.substring(0, 2) != "89") {
             ShowResult("Mã sản phẩm không chính xác.");
             return false;
-            }
+        }
     }
 
     let barcode = document.getElementById("barcode").value;
@@ -89,8 +102,14 @@ function AddUpdateParameters(searchParams) {
 
     searchParams.append("name", productName);
 
-    let parentName = document.getElementById("parent-id").value;
-    searchParams.append("parentName", parentName);
+
+    let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value);
+    if (comboId == null) {
+        comboId = -1;
+    }
+    searchParams.append("comboId", comboId);
+
+    searchParams.append("parentId", -1);
 
     searchParams.append("detail", document.getElementById("detail").value);
     return true;
@@ -105,7 +124,7 @@ function AddUpdateParameters(searchParams) {
 //    let productID = 0;
 //    let OnloadFuntion = function () {
 //        if (this.readyState == 4 && this.status == 200) {
-//            if (GetJsonResponse(this.responseText)) {
+//            if (CheckStatusResponse(this.responseText)) {
 //                // Bắt đầu upload ảnh/video sản phẩm lên server
 //                const obj = JSON.parse(this.responseText);
 //                productID = obj.myAnything;
@@ -127,18 +146,30 @@ async function AddNewProPromise() {
     let productID = 0;
 
     try {
+        ShowCircleLoader();
         // Cập nhật vào db
         let responseDB = await RequestHttpPostPromise(searchParams, urlAdd);
 
         const obj = JSON.parse(responseDB.responseText);
+        if (obj == null) {
+            CreateMustClickOkModal("Có lỗi xẩy ra.", null);
+            RemoveCircleLoader();
+            return;
+        }
+        if (obj.State != 0) {
+            CreateMustClickOkModal("Có lỗi xẩy ra." + " " + obj.Message, null);
+            RemoveCircleLoader();
+            return;
+        }
+
         productID = obj.myAnything;
 
         // Upload ảnh/video sản phẩm lên server
         let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
     }
     catch (error) {
-
-        alert("Tạo sản phẩm lỗi.");
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Tạo sản phẩm lỗi.", null);
         return;
     }
 
@@ -151,7 +182,7 @@ async function AddNewProPromise() {
             break;
         }
     }
-
+    RemoveCircleLoader();
     //// Refresh page
     //window.scrollTo(0, 0);
     //await Sleep(1000)
@@ -199,16 +230,32 @@ function SetProductCommonInfoWithCombo(product) {
     document.getElementById("translator-id").value = product.translator;
     document.getElementById("publisher-id").value = product.publisherName;
     document.getElementById("publishing-company-id").value = product.publishingCompany;
-    document.getElementById("publishing-time").value = product.publishingTime;
-    document.getElementById("product-long").value = product.productLong;
-    document.getElementById("product-wide").value = product.productWide;
-    document.getElementById("product-high").value = product.productHigh;
-    document.getElementById("product-weight").value = product.productWeight;
+    if (product.publishingTime != -1) {
+        document.getElementById("publishing-time").value = product.publishingTime;
+    }
+    if (product.productLong != -1) {
+        document.getElementById("product-long").value = product.productLong;
+    }
+    if (product.productWide != -1) {
+        document.getElementById("product-wide").value = product.productWide;
+    }
+    if (product.productHigh != -1) {
+        document.getElementById("product-high").value = product.productHigh;
+    }
+    if (product.productWeight != -1) {
+        document.getElementById("product-weight").value = product.productWeight;
+    }
     document.getElementById("position-in-warehouse").value = product.positionInWarehouse;
     document.getElementById("hard-cover").value = product.hardCover;
-    document.getElementById("min-age").value = product.minAge;
-    document.getElementById("max-age").value = product.maxAge;
-    document.getElementById("republish").value = product.republish;
+    if (product.minAge != -1) {
+        document.getElementById("min-age").value = product.minAge;
+    }
+    if (product.maxAge != -1) {
+        document.getElementById("max-age").value = product.maxAge;
+    }
+    if (product.republish != -1) {
+        document.getElementById("republish").value = product.republish;
+    }
     document.getElementById("product-status").value = product.status;
 }
 
@@ -229,35 +276,6 @@ function SetProductInfomation(product) {
     InitializeVideoList(product.videoSrc);
 }
 
-// Thay đổi combo, hiển thị tất cả thông tin chung các sản phẩm cùng combo
-// Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
-function ComboChange(str) {
-    let id = GetDataIdFromComboDatalist(str);
-    if (id == null) {
-        SetProductCommonInfoWithComboToDefault();
-        return;
-    }
-
-    // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
-    const searchParams = new URLSearchParams();
-    searchParams.append("id", id);
-    let query = "/Product/GetProductCommonInfoWithComboFromFirst";
-
-    let OnloadFuntion = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            const product = JSON.parse(this.responseText);
-
-            if (product == null) {
-                SetProductCommonInfoWithComboToDefault();
-                return;
-            }
-            SetProductCommonInfoWithCombo(product);
-        }
-    }
-
-    RequestHttpPost(OnloadFuntion, searchParams, query);
-}
-
 async function UpdateProductPromise() {
     let productID = GetValueFromUrlName("id");
     if (productID == null) {
@@ -265,6 +283,7 @@ async function UpdateProductPromise() {
         return;
     }
     const searchParams = new URLSearchParams();
+    searchParams.append("productId", productID);
     AddUpdateParameters(searchParams);
 
     let url = "/Product/UpdateProduct";
@@ -272,13 +291,26 @@ async function UpdateProductPromise() {
     let urlDeleteAllFileWithType = "/Product/DeleteAllFileWithType";
 
     try {
+        ShowCircleLoader();
         // Cập nhật vào db
         let responseDB = await RequestHttpGetPromise(searchParams, url);
+        const obj = JSON.parse(responseDB.responseText);
+        if (obj == null) {
+            CreateMustClickOkModal("Có lỗi xẩy ra.", null);
+            RemoveCircleLoader();
+            return;
+        }
+        if (obj.State != 0) {
+            CreateMustClickOkModal("Có lỗi xẩy ra." + " " + obj.Message, null);
+            RemoveCircleLoader();
+            return;
+        }
 
         // Upload ảnh/video sản phẩm lên server
         let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
     }
     catch (error) {
+        RemoveCircleLoader();
         //alert("Cập nhật sản phẩm lỗi.");
         await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
         return;
@@ -293,7 +325,7 @@ async function UpdateProductPromise() {
             break;
         }
     }
-
+    RemoveCircleLoader();
     // Refresh page
     //window.scrollTo(0, 0);
     //await Sleep(1000)
@@ -314,7 +346,6 @@ function DeleteProduct(){
     let query = "/Product/DeleteProduct";
     let OnloadFuntion = function () {
         if (this.readyState == 4 && this.status == 200) {
-            GetJsonResponse(this.responseText);
             if (CheckStatusResponse(this.responseText)) {
                 window.location.reload();
             }
@@ -323,23 +354,6 @@ function DeleteProduct(){
     RequestHttpPost(OnloadFuntion, searchParams, query);
 };
 
-function UpdateCommonInfoWithCombo() {
-    const searchParams = new URLSearchParams();
-    if (AddUpdateWithCommonParameters(searchParams) === false) {
-        return false;
-    }
-
-    let query = "/Product/UpdateCommonInfoWithCombo";
-    let OnloadFuntion = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            GetJsonResponse(this.responseText);
-            if (CheckStatusResponseAndShowPrompt(this.responseText, "Cập nhật thành công", "Cập nhật thất bại")) {
-                ReloadAndScrollToTop();
-            }
-        }
-    }
-    RequestHttpPost(OnloadFuntion, searchParams, query);
-}
 
 // HIển thị nút cập nhật cho riêng tên, isbn và mã sản phẩm
 function ShowUpdateButtonForOne() {
@@ -376,7 +390,7 @@ async function UpdateName() {
         CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
     }
     catch (error) {
-        alert("Cập nhật tên lỗi.");
+        CreateMustClickOkModal("Cập nhật tên lỗi.", null);
         return;
     }
 }
@@ -402,7 +416,7 @@ async function UpdateCode() {
         CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
     }
     catch (error) {
-        alert("Cập nhật mã lỗi.");
+        CreateMustClickOkModal("Cập nhật mã lỗi.", null);
         return;
     }
 }
@@ -428,7 +442,7 @@ async function UpdateISBN() {
         CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
     }
     catch (error) {
-        alert("Cập nhật tên lỗi.");
+        CreateMustClickOkModal("Cập nhật tên lỗi.", null);
         return;
     }
 }
@@ -462,8 +476,6 @@ async function ShowProductFromObject() {
 function GetSomeData() {
     GetListCombo();
     GetListCategory();
-    GetListAuthor();
-    GetListTranslator();
     GetListPublisher();
     GetListPublishingCompany();
     SetListPublishingTime();

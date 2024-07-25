@@ -23,6 +23,7 @@ namespace MVCPlayWithMe.Models
         // Số lượng hàng tồn kho, giá trị này được cập nhật khi có thông tin nhập / xuất kho
         public int quantity { get; set; }
 
+        // Ảnh đầu tiên tên 0.* sẽ là ảnh dùng làm avartar
         public List<string> imageSrc { get; set; }
         public List<string> videoSrc { get; set; }
 
@@ -96,9 +97,16 @@ namespace MVCPlayWithMe.Models
 
         public void SetSrcImageVideo()
         {
-            imageSrc = Common.GetImageSrc(id.ToString());
-            videoSrc = Common.GetVideoSrc(id.ToString());
+            imageSrc = Common.GetProductImageSrc(id.ToString());
+            videoSrc = Common.GetProductVideoSrc(id.ToString());
         }
 
+        // Lấy ảnh đầu tiên của imageSrc cho nhanh
+        public void SetFirstSrcImage()
+        {
+            string src = Common.GetFirstProductImageSrc(id.ToString());
+            if (!string.IsNullOrEmpty(src))
+                imageSrc.Add(src);
+        }
     }
 }

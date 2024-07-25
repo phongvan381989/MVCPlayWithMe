@@ -15,7 +15,10 @@
         <div class="config-max-width padding-container">
             @Html.Partial("~/Views/Shared/ItemModel/ItemModelInputCommon.cshtml")
 
-            <button type="button" onclick="UpdateItemModel()">Cập nhật</button>
+            <button type="button" onclick="UpdateItemModel()" style="margin-right:20px;">Cập nhật</button>
+            <button type="button" onclick="DeleteItemModel()" 
+                    title="Xóa item, model thuộc item, mapping sản phẩm trong kho tương ứng,
+                    mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng">Xóa</button>
             @Html.Partial("~/Views/Shared/ItemModel/Mapping.cshtml")
         </div>
     </div>

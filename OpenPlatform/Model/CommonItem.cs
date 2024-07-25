@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
@@ -11,7 +12,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
     public class CommonItem
     {
         //
-        public EECommerceType eType { get; set; }
+        public string eType { get; set; }
         /// <summary>
         /// Does it contain model.
         /// SHopee có has_model = false, ta vẫn tạo commonModel danh sách, nhưng chỉ có 1 phần tử
@@ -94,13 +95,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public string detail { get; set; }
 
+        // Shopee cập nhật số lượng trả về kết quả ở đây
+        public MySqlResultState result { get; set; }
+
         public CommonItem()
         {
-            eType = EECommerceType.SHOPEE;
+            eType = Common.eShopee;
             models = new List<CommonModel>();
         }
 
-        public CommonItem(EECommerceType inEtype)
+        public CommonItem(string inEtype)
         {
             eType = inEtype;
             models = new List<CommonModel>();
@@ -131,7 +135,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public CommonItem(ShopeeGetItemBaseInfoItem pro)
         {
-            eType = EECommerceType.SHOPEE;
+            eType = Common.eShopee;
             models = new List<CommonModel>();
 
             itemId = pro.item_id;
@@ -220,7 +224,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public CommonItem(TikiProduct pro)
         {
-            eType = EECommerceType.TIKI;
+            eType = Common.eTiki;
             models = new List<CommonModel>();
             itemId = pro.product_id;
             tikiSuperId = pro.super_id;

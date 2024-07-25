@@ -50,15 +50,31 @@
             <a href="/ProductECommerce" title="Sản phẩm đăng bán trên sàn Tiki, Shopee, Lazada"> Sản Phẩm</a>
         </div>
         <div class="fmx09gx8">
-            <div class="gmxk9381"> Sản phẩm trong kho</div>
-            <a href="/Product/Import"> Nhập Sách</a>
-            <a href="/Product/NeedUpdateQuatity" title="Cập nhật tồn kho lên sàn Tiki, Shopee,Lazada">
-            Cập Nhật Tồn Kho Lên Sàn</a>
+            <div class="gmxk9381"> Web voibenho</div>
+            <a href="/ItemModel/Create" title="Tạo sản phẩm mới trên web voibenho"> Tạo Sản Phẩm</a>
+            <a href="/ItemModel/Search" title="Tìm kiếm sản phẩm trên voibenho"> Tìm Kiếm</a>
         </div>
         <div class="fmx09gx8">
-            <div class="gmxk9381"> Thêm người quản trị</div>
+            <div class="gmxk9381"> Sản phẩm trong kho</div>
+            <a href="/Product/Create" title="Tạo sản phẩm mới nếu trong kho chưa tồn tại"> Thêm Mới Sách</a>
+            <a href="/Product/Import" title="Nhập sản phẩm đã có trong kho"> Nhập Sách Cũ</a>
+            <a href="/Product/Search" title="Tìm kiếm sản phẩm trong kho"> Tìm Kiếm</a>
+            <a href="/Product/NeedUpdateQuatity" title="Cập nhật tồn kho lên sàn Tiki, Shopee,Lazada">
+                Cập Nhật Tồn Kho Lên Sàn
+            </a>
+        </div>
+        <div class="fmx09gx8">
+            <div class="gmxk9381"> Combo, Nhà phát hành, Thể Loại</div>
+            <a href="/Combo/Create"> Combo</a>
+            <a href="/Publisher/Create">
+                Nhà Phát Hành
+            </a>
+            <a href="/Category/Create"> Thể Loại</a>
+        </div>
+        <div class="fmx09gx8">
+            <div class="gmxk9381"> Người quản trị</div>
             <a href="/Administrator/New" title="Thêm mới người quản trị"> Tạo người quản trị</a>
-            <button type="button" title="Đăng xuất tài khoản người quản trị" onclick="Logout()">Đăng xuất</button>
+            <button type="button" title="Đăng xuất tài khoản người quản trị" onclick="AdminLogout()">Đăng xuất</button>
         </div>
 
         <div class="fmx09gx8">
@@ -68,19 +84,18 @@
     </div>
     <script>
 
-        function Logout() {
+        function AdminLogout() {
             const xhttp = new XMLHttpRequest();
             xhttp.onload = function () {
                 if (this.readyState == 4 && this.status == 200) {
-                    GetJsonResponse(this.responseText);
                     window.location.href = "/Administrator/Login";
                 }
             }
-
+            const searchParams = new URLSearchParams();
             let query = "/Administrator/Logout";
             xhttp.open("POST", query);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-            xhttp.send(/*searchParams.toString()*/);
+            xhttp.send(searchParams.toString());
         }
     </script>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>

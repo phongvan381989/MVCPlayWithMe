@@ -21,6 +21,11 @@ namespace MVCPlayWithMe.Controllers
         // GET:  Category
         public ActionResult Index()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
             return View();
         }
 
@@ -35,71 +40,92 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        [HttpPost]
         public string CreateCategory(string name)
         {
-            //if (AuthentAdministrator() == null)
-            //{
-            //    return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
-            //}
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
 
             MySqlResultState result = null;
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
-            }
+
 
             result = sqler.CreateNewCategory(name);
             return JsonConvert.SerializeObject(result);
         }
 
-        public string DeleteCategory(string name)
+        [HttpPost]
+        public string DeleteCategory(int id)
         {
-            MySqlResultState result = null;
-            if (string.IsNullOrWhiteSpace(name))
+            if (AuthentAdministrator() == null)
             {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            result = sqler.DeleteCategory(name);
+            MySqlResultState result = null;
+
+            result = sqler.DeleteCategory(id);
             return JsonConvert.SerializeObject(result);
         }
 
-        public string LoadCategory()
-        {
-            StringBuilder sb = new StringBuilder();
-            List<Category> ls = sqler.GetListCategory();
-            if (ls != null && ls.Count() > 0)
-            {
-                sb.Append(@"<tr>
-                            <th> Tên Nhà Phát Hành </th>
-                          </tr>");
-                foreach (var pub in ls)
-                {
-                    sb.Append(@"<tr>");
-                    sb.Append("<td>" + pub.name + @"</td >");
+        //public string LoadCategory()
+        //{
+        //    StringBuilder sb = new StringBuilder();
+        //    List<Category> ls = sqler.GetListCategory();
+        //    if (ls != null && ls.Count() > 0)
+        //    {
+        //        sb.Append(@"<tr>
+        //                    <th> Tên Nhà Phát Hành </th>
+        //                  </tr>");
+        //        foreach (var pub in ls)
+        //        {
+        //            sb.Append(@"<tr>");
+        //            sb.Append("<td>" + pub.name + @"</td >");
 
-                    sb.Append(@"</ tr>");
-                }
-            }
+        //            sb.Append(@"</ tr>");
+        //        }
+        //    }
 
-            return sb.ToString();
-        }
+        //    return sb.ToString();
+        //}
 
-        public ActionResult Delete()
+        public ActionResult UpdateDelete(int id)
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-            //ViewDataGetListCategory();
+            Category category = sqler.GetCategory(id);
+            if (category != null)
+            {
+                ViewData["categoryName"] = category.name;
+            }
             return View();
+        }
+
+        [HttpPost]
+        public string UpdateCategory(int id, string name)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = null;
+
+            result = sqler.UpdateCategory(id, name);
+            return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
         public string GetListCategory()
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Category>());
+            }
+
             List<Category> ls = sqler.GetListCategory();
             return JsonConvert.SerializeObject(ls);
         }

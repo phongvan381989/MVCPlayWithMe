@@ -28,7 +28,7 @@
 <body>
     <div id="biggestContainer">
         <div class="fmx09gx8">
-            <button onclick="UpdateQuantityToTMDT()"
+            <button onclick="GetListNeedUpdateQuantityAndUpdate()"
                     title="Cập nhật số lượng sản phẩm lên Tiki, Shopee, Lazada và hiện kết quả">
                 Cập Nhật Số Lượng Trên Tiki, Shopee, Lazada
             </button>
@@ -46,9 +46,11 @@
                     <th style="display:none">Mã Model</th>
                     <th style="width:200px">Ảnh</th>
                     <th>Sàn</th>
+                    <th>SL Sàn</th>
                     <th>Tên</th>
                     <th>Liên Kết</th>
-                    <th>Kết Quả</th>
+                    <th>Cập Nhật</th>
+                    <th title="Item không hoạt động bình thường sẽ không cập nhật, dữ liệu ô này sẽ trống">Kết Quả</th>
                 </tr>
             </table>
             <table id="myTableWarehouese" style="display:none;">
@@ -60,12 +62,25 @@
                 </tr>
             </table>
         </div>
+
+        <div class="mapping_sample" style="display:none;">
+            <table>
+                <tr>
+                    <th style="display:none">Mã Item</th>
+                    <th>STT</th>
+                    <th>Tên</th>
+                    <th>SL</th>
+                    <th>SL Kho</th>
+                </tr>
+            </table>
+        </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.mapping.of.item.model.js"></script>
     <script>
         // mảng sản phẩm cần cập nhật
-        let listUpdateInfo = [];
+        let listCommonItem = [];
         let listPro = [];
 
         async function GetListProductInWarehoueChangedQuantity() {
@@ -89,15 +104,18 @@
             // Ẩn table kia
             document.getElementById("myTableTMDT").style.display = "none";
 
-            // Show
             let table = document.getElementById("myTableWarehouese");
             DeleteRowsExcludeHead(table);
 
-            table.style.display = "initial";
             let length = list.length;
             if (length == 0) {
+                alert("Không có sản phẩm thay đổi số lượng.")
+                table.style.display = "none";
                 return;
             }
+
+            // Show
+            table.style.display = "initial";
 
             for (let i = 0; i < length; i++) {
                 let item = list[i];
@@ -124,6 +142,7 @@
                 img.height = thumbnailHeight;
                 img.width = thumbnailWidth;
                 img.className = "go-to-detail-item";
+                img.title = "Xem sản phẩm liên kết trên sàn";
                 img.onclick = function () {
                     // Lấy id
                     let id = Number(this.parentElement.parentElement.children[0].innerHTML);
@@ -139,22 +158,45 @@
             }
         }
 
-        async function GetListNeedUpdateQuantity() {
+        async function GetListNeedUpdateQuantityAndUpdate() {
+            // Ẩn table kia
+            document.getElementById("myTableWarehouese").style.display = "none";
+
+            let table = document.getElementById("myTableTMDT");
+
             const searchParams = new URLSearchParams();
             let query = "/Product/GetListNeedUpdateQuantityAndUpdate";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
+
             if (responseDB.responseText != "null") {
-                listUpdateInfo = JSON.parse(responseDB.responseText);
+                listCommonItem = JSON.parse(responseDB.responseText);
             }
             else {
-                listUpdateInfo = [];
+                listCommonItem = [];
+                table.style.display = "none";
+                CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
+                return;
             }
-            let ele = document.getElementById("list-product-name");
-            SetDataListOfIdName(ele, listBasicInfo);
-            document.getElementById("code-or-isbn").value = "";
-            document.getElementById("product-name-id").value = "";
+
+            if (listCommonItem.length == 0) {
+                table.style.display = "none";
+                alert("Không có sản phẩm trên sàn cần cập nhật số lượng.")
+                return;
+            }
+
+            // Show table
+            table.style.display = "initial";
+            ShowListCommonItem(listCommonItem, table, true);
+
+            let updateOk = ShowWhyUpdateFail(listCommonItem);
+            if (updateOk) {
+                alert("Cập nhật thành công.")
+            }
+            else {
+                CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
+            }
         }
     </script>
 </body>

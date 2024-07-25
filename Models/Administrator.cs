@@ -15,6 +15,8 @@ namespace MVCPlayWithMe.Models
         public string userName { get; set; }
         public int privilege { get; set; }
 
+        public Boolean isLogout { get; set; }
+
         public Administrator()
         {
             id = -1;// default. Ý chưa lấy được

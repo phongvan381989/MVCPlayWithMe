@@ -25,7 +25,7 @@
         }
     </style>
 </head>
-<body onload="GetListCommonItemMappingFromProductId()">
+<body onload="GetListCommonItemMappingFromComboId()">
     <div id="biggestContainer">
         <div class="fmx09gx8">
             <button onclick="UpdateQuantityToTMDTFromListCommonItem(listCommonItem)"
@@ -69,12 +69,12 @@
         // mảng sản phẩm cần cập nhật
         let listCommonItem = [];
 
-        async function GetListCommonItemMappingFromProductId() {
+        async function GetListCommonItemMappingFromComboId() {
             listCommonItem = [];
             let id = GetValueFromUrlName("id");
             const searchParams = new URLSearchParams();
             searchParams.append("id", id);
-            let query = "/Product/GetListMappingOfProduct";
+            let query = "/Combo/GetListMappingOfCombo";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

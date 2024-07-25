@@ -1,5 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.OpenPlatform.Model;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -37,10 +39,10 @@ namespace MVCPlayWithMe.Controllers
 
         public string CreateCombo(string name)
         {
-            //if (AuthentAdministrator() == null)
-            //{
-            //    return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.authenFailMessage));
-            //}
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
 
             MySqlResultState result = null;
             if (string.IsNullOrWhiteSpace(name))
@@ -53,16 +55,29 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        public string DeleteCombo(string name)
+        [HttpPost]
+        public string DeleteCombo(int id)
         {
-            MySqlResultState result = null;
-            if (string.IsNullOrWhiteSpace(name))
+            if (AuthentAdministrator() == null)
             {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            result = sqler.DeleteCombo(name);
+            MySqlResultState result = null;
+
+            result = sqler.DeleteCombo(id);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string UpdateCombo(int id, string name)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = sqler.UpdateCombo(id, name);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -90,18 +105,92 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string GetListCombo()
         {
-            List<Combo> ls = sqler.GetListCombo();
+            List<Combo> ls = new List<Combo>();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(ls);
+            }
+
+            ls = sqler.GetListCombo();
             return JsonConvert.SerializeObject(ls);
         }
 
-        public ActionResult Delete()
+        [HttpPost]
+        public string GetCombo(int id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
+            Combo combo = sqler.GetCombo(id);
+            return JsonConvert.SerializeObject(combo);
+        }
+
+        public ActionResult UpdateDelete(int id)
         {
             if (AuthentAdministrator() == null)
             {
                 return AuthenticationFail();
             }
-            //ViewDataGetListCombo();
+
             return View();
+        }
+
+        [HttpGet]
+        public ActionResult MappingOfCombo(int id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
+        private List<CommonItem> ShopeeGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
+        {
+            // Danh sách sản phẩm Shopee
+            List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfCombo(id, conn);
+            productController.ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
+            return shopeeList;
+        }
+
+        private List<CommonItem> TikiGetListMappingOfProduct(int id, MySqlConnection conn, ProductController productController)
+        {
+            // Danh sách sản phẩm Tiki
+            List<CommonItem> tikiList = sqler.TikiGetListMappingOfCombo(id, conn);
+            productController.TikiGetStatusImageSrcQuantitySellable(tikiList);
+            return tikiList;
+        }
+
+        [HttpPost]
+        public string GetListMappingOfCombo(int id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<CommonItem>());
+            }
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            List<CommonItem> ls = new List<CommonItem>();
+            ProductController productController = new ProductController();
+            try
+            {
+                conn.Open();
+                List<CommonItem> shopeeList = ShopeeGetListMappingOfCombo(id, conn, productController);
+                List<CommonItem> tikiList = TikiGetListMappingOfProduct(id, conn, productController);
+
+                ls.AddRange(tikiList);
+                ls.AddRange(shopeeList);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
+            // Lấy danh sách sản phẩm
+            return JsonConvert.SerializeObject(ls);
         }
     }
 }

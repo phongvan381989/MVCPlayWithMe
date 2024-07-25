@@ -296,13 +296,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 long modelIdTemp;
                 while (rdr.Read())
                 {
+                    modelIdTemp = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+
+                    // Lấy dữ liệu về mapping
                     if (MyMySql.GetInt32(rdr, "ShopeeMappingId") != -1)
                     {
                         Mapping map = new Mapping();
                         map.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
-                        map.product = ItemModelMySql.ConvertOneRowFromDataMySqlToProduct(rdr);
 
-                        modelIdTemp = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                        Product product = new Product();
+                        product.id = MyMySql.GetInt32(rdr, "ProductId");
+                        product.name = MyMySql.GetString(rdr, "ProductName");
+                        product.SetSrcImageVideo();
+                        map.product = product;
+
                         // Tìm model object
                         foreach (var model in item.models)
                         {
@@ -314,6 +321,24 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                     model.pWMMappingModelId = MyMySql.GetInt32(rdr, "PWMMappingModelId");
                                 }
                                 model.mapping.Add(map);
+                                break;
+                            }
+                        }
+                    }
+
+                    // Lấy dữ liệu về sản phẩm trên voibenho tương ứng
+                    if (MyMySql.GetInt32(rdr, "PWMMappingModelId") != -1)
+                    {
+                        // Tìm model object
+                        foreach (var model in item.models)
+                        {
+                            if (model.modelId == modelIdTemp)
+                            {
+                                // Chưa được xét
+                                if (model.pWMMappingModelId == 0)
+                                {
+                                    model.pWMMappingModelId = MyMySql.GetInt32(rdr, "PWMMappingModelId");
+                                }
                                 break;
                             }
                         }
@@ -358,7 +383,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         {
                             Mapping map = new Mapping();
                             map.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
-                            //map.product = ItemModelMySql.ConvertOneRowFromDataMySqlToProduct(rdr);
 
                             Product product = new Product();
                             product.id = MyMySql.GetInt32(rdr, "ProductId");

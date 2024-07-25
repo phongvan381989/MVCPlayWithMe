@@ -16,48 +16,41 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
     public class TikiUpdateStock
     {
-        public static Boolean TikiProductUpdate(TikiUpdate st)
+        public static TikiUpdateQuantityResponse TikiProductUpdate(TikiUpdate st)
         {
             string http = TikiConstValues.cstrProductUpdate;
             IRestResponse response = CommonTikiAPI.PutExcuteRequest(http, st);
-            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            //if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            //{
+            try
             {
-                try
+                JsonSerializerSettings settings = new JsonSerializerSettings
                 {
-                    JsonSerializerSettings settings = new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        MissingMemberHandling = MissingMemberHandling.Ignore
-                    };
-                    TikiUpdateQuantityResponse updateResponse = JsonConvert.DeserializeObject<TikiUpdateQuantityResponse>(response.Content, settings);
-                    Common.CommonErrorMessage = string.Empty;
-                    foreach (var s in updateResponse.errors)
-                    {
-                        Common.CommonErrorMessage = Common.CommonErrorMessage + s + ". ";
-                    }
-                    MyLogger.GetInstance().Info(Common.CommonErrorMessage);
-                    return false;
-                }
-                catch (Exception ex)
-                {
-                    Common.CommonErrorMessage = ex.Message;
-                    MyLogger.GetInstance().Warn(ex.Message);
-                    return false;
-                }
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                TikiUpdateQuantityResponse updateResponse = JsonConvert.DeserializeObject<TikiUpdateQuantityResponse>(response.Content, settings);
+                return updateResponse;
             }
-            return true;
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                //return null;
+            }
+            //}
+            return null;
         }
-        public static Boolean TikiProductUpdateQuantity(TikiUpdateQuantity st)
+        public static TikiUpdateQuantityResponse TikiProductUpdateQuantity(TikiUpdateQuantity st)
         {
             return TikiProductUpdate(st);
         }
 
-        public static Boolean TikiProductUpdatePrice(TikiUpdatePrice st)
+        public static TikiUpdateQuantityResponse TikiProductUpdatePrice(TikiUpdatePrice st)
         {
             return TikiProductUpdate(st);
         }
 
-        public static Boolean TikiProductUpdateStatus(TikiUpdateStatus st)
+        public static TikiUpdateQuantityResponse TikiProductUpdateStatus(TikiUpdateStatus st)
         {
             return TikiProductUpdate(st);
         }
@@ -130,22 +123,22 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="proId"></param>
         /// <param name="price"></param>
         /// <returns></returns>
-        public static Boolean TikiProductUpdatePrice(int proId, int price)
+        public static TikiUpdateQuantityResponse TikiProductUpdatePrice(int proId, int price)
         {
 
             TikiUpdatePrice st = new TikiUpdatePrice(proId);
             // Cập nhật tồn kho cho tham số
 
             st.UpdatePrice(price);
-            Boolean isOk = TikiProductUpdatePrice(st);
-            if (!isOk)
+            try
             {
-                MyLogger.GetInstance().Info("Tiki sản phẩm cập nhật giá bán lỗi: " + proId.ToString());
-                return false;
+                return TikiProductUpdatePrice(st);
             }
-
-            Thread.Sleep(200);
-            return true;
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+            }
+            return null;
         }
 
         /// <summary>
@@ -154,22 +147,22 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="proId"></param>
         /// <param name="status">enum {1: enabled, 2: disabled, 3: hided}</param>
         /// <returns></returns>
-        public static Boolean TikiProductUpdateStatus(int proId, int status)
+        public static TikiUpdateQuantityResponse TikiProductUpdateStatus(int proId, int status)
         {
 
             TikiUpdateStatus st = new TikiUpdateStatus(proId);
             // Cập nhật tồn kho cho tham số
 
             st.UpdateStatus(status);
-            Boolean isOk = TikiProductUpdateStatus(st);
-            if (!isOk)
+            try
             {
-                MyLogger.GetInstance().Info("Tiki sản phẩm cập nhật trạng thái lỗi: " + proId.ToString());
-                return false;
+                return TikiProductUpdateStatus(st);
             }
-
-            Thread.Sleep(200);
-            return true;
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+            }
+            return null;
         }
 
 
