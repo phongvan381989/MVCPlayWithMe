@@ -359,7 +359,7 @@
             <div class="account-header-container">
                 <div class="SbCTde">Địa chỉ của tôi</div>
                 <div class="lpxAGdgh">
-                    <button class="create-address" onclick="ShowCustomerInforModal(true, false, null)">
+                    <button type="button" class="create-address" onclick="ShowCustomerInforModal(true, false, null)">
                         <svg viewBox="0 0 10 10" class="mblfAtcf">
                             <path stroke="none" d="m10 4.5h-4.5v-4.5h-1v4.5h-4.5v1h4.5v4.5h1v-4.5h4.5z"></path>
                         </svg>
@@ -384,10 +384,10 @@
                     </div>
                     <div class="klhkjcvf">
                         <div class="htlhtxbv">
-                            <button onclick="UpdateCustomerAddress(this)">Cập Nhật</button>
-                            <button onclick="DeleteCustomerInfor(this)">Xóa</button>
+                            <button type="button" onclick="UpdateCustomerAddress(this)">Cập Nhật</button>
+                            <button type="button" onclick="DeleteCustomerInfor(this)">Xóa</button>
                         </div>
-                        <button class="mgW0lg" disabled onclick="SetDefault(this)">Thiết lập mặc định</button>
+                        <button type="button" class="mgW0lg" disabled onclick="SetDefault(this)">Thiết lập mặc định</button>
                     </div>
                 </div>
                 <div class="list-address-container">
@@ -401,6 +401,7 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
     <script src="~/Scripts/web.play.with.me.address.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let customerObj = null; // Đối tượng khách hàng server trả về
         let listCustomerAddressObj;

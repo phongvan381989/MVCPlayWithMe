@@ -16,9 +16,11 @@
             @Html.Partial("~/Views/Shared/ItemModel/ItemModelInputCommon.cshtml")
 
             <button type="button" onclick="UpdateItemModel()" style="margin-right:20px;">Cập nhật</button>
-            <button type="button" onclick="DeleteItemModel()" 
+            <button type="button" onclick="DeleteItemModel()"
                     title="Xóa item, model thuộc item, mapping sản phẩm trong kho tương ứng,
-                    mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng">Xóa</button>
+                    mapping sản phẩm trên Shopee, Tiki, Lazada tương ứng">
+                Xóa
+            </button>
             @Html.Partial("~/Views/Shared/ItemModel/Mapping.cshtml")
         </div>
     </div>
@@ -26,6 +28,7 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.image.video.common.js"></script>
     <script src="~/Scripts/web.play.with.me.item.model.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         GetListProductName();
         GetListCombo();

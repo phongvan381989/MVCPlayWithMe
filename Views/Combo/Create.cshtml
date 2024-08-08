@@ -18,8 +18,8 @@
         </div>
         <br />
         <div>
-            <button onclick="CreateCombo()" style="margin-right:20px;">Thêm Mới</button>
-            <button onclick="ShowListCombo()" title="Tải lại trang để lấy danh sách mới nhất">Danh Sách Combo</button>
+            <button type="button" onclick="CreateCombo()" style="margin-right:20px;">Thêm Mới</button>
+            <button type="button" onclick="ShowListCombo()" title="Tải lại trang để lấy danh sách mới nhất">Danh Sách Combo</button>
         </div>
 
         <br />
@@ -35,7 +35,7 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
-
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listCombo = [];
 
@@ -90,10 +90,10 @@
             }
 
             let table = document.getElementById("combo-table");
-            if (DEBUG) {
-                console.log(JSON.stringify(listCombo));
-                console.log("length = " + listCombo.length);
-            }
+            //if (DEBUG) {
+            //    console.log(JSON.stringify(listCombo));
+            //    console.log("length = " + listCombo.length);
+            //}
             let length = listCombo.length;
             if (length == 0) {
                 table.style.display = "none";
@@ -118,7 +118,7 @@
                 // STT
                 cell2.innerHTML = i + 1;
 
-                // Name 
+                // Name
                 let name = document.createElement("p");
                 name.innerHTML = combo.name;
                 name.className = "go-to-detail-item";

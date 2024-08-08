@@ -480,12 +480,12 @@
                     <div class="flex-items-center">
                         <div style="margin-right: 15px;">
                             <div class="shopee-input-quantity">
-                                <button class="xNxl-t" onclick="Decrease()">
+                                <button type="button" class="xNxl-t" onclick="Decrease()">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="4.5 4.5 3.5 4.5 0 4.5 0 5.5 3.5 5.5 4.5 5.5 10 5.5 10 4.5"></polygon></svg>
                                 </button>
                                 <input class="VWjjde" type="text" value="1" id="quantity-input"
                                        oninput="ValidateInput(event)">
-                                <button class="xNxl-t" onclick="Increase()">
+                                <button type="button" class="xNxl-t" onclick="Increase()">
                                     <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="10 4.5 5.5 4.5 5.5 0 4.5 0 4.5 4.5 0 4.5 0 5.5 4.5 5.5 4.5 10 5.5 10 5.5 5.5 10 5.5"></polygon></svg>
                                 </button>
                             </div>
@@ -552,6 +552,7 @@
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let maxSmallMediaCanShow; // Số lượng iten có thể hiển thị
         let countOfSmallMedia; // Số lượng media gồm video + image
@@ -578,7 +579,7 @@
             this.isVideo = itemIsVideo;
         }
 
-        async function GetItemFromId( id) {
+        async function GetItemFromId(id) {
             const searchParams = new URLSearchParams();
             searchParams.append("id", id);
 
@@ -588,11 +589,10 @@
         }
 
         // Từ danh sách model tính được tổng số lượng model đã bán, model rẻ nhất, model đắt nhất
-        function SetPriceAndQuantity(item) {
+        function SetPriceAndQuantityItemPage(item) {
             let cheapestModel = null;
             let mostExpensiveModel = null;
-            for (let i = 0; i < item.models.length; i++)
-            {
+            for (let i = 0; i < item.models.length; i++) {
 
                 // Model giá bìa rẻ nhất
                 if (cheapestModel == null) {
@@ -623,7 +623,7 @@
             RemoveCircleLoader();
             if (responseDB.responseText != "null") {
                 itemObject = JSON.parse(responseDB.responseText);
-                SetPriceAndQuantity(itemObject);
+                SetPriceAndQuantityItemPage(itemObject);
             }
             else {
                 return;
@@ -975,12 +975,12 @@
                 // Giá bìa
                 document.getElementById("book-cover-price").innerHTML =
                     ConvertMoneyToTextWithIcon(itemObject.cheapestModel.bookCoverPrice) + " - " +
-                ConvertMoneyToTextWithIcon(itemObject.mostExpensiveModel.bookCoverPrice);
+                    ConvertMoneyToTextWithIcon(itemObject.mostExpensiveModel.bookCoverPrice);
 
                 // Giá bán thực tế
                 document.getElementById("price").innerHTML =
                     ConvertMoneyToTextWithIcon(itemObject.cheapestModel.price) + " - " +
-                ConvertMoneyToTextWithIcon(itemObject.mostExpensiveModel.price);
+                    ConvertMoneyToTextWithIcon(itemObject.mostExpensiveModel.price);
 
                 // % Chiết khấu
                 let discount = itemObject.cheapestModel.discount;
@@ -1162,7 +1162,7 @@
                 SetCartCookieFromListCartCookieObject(listCartCookie);
             }
             else { // Khách đăng nhập
-                // 
+                //
                 let responseDB = await Item_AddModelToCart(obj, maxQuantity);
                 let resultObj = JSON.parse(responseDB.responseText);
                 if (resultObj.State == 4) { // Hiện thị modal thông báo vượt tồn kho

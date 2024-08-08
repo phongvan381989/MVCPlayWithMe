@@ -136,14 +136,14 @@
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <div>
             <div class="status-container">
-                <button class="nvsflAB87" data-status="10" onclick="ShowResult(this);">Tất cả</button>
-                <button class="nvsflAB87" data-status="0" onclick="ShowResult(this);">Chờ thanh toán</button>
-                <button class="nvsflAB87" data-status="1" onclick="ShowResult(this);">Chuẩn bị hàng</button>
-                <button class="nvsflAB87" data-status="2" onclick="ShowResult(this);">Chờ giao ĐVVC</button>
-                <button class="nvsflAB87" data-status="4" onclick="ShowResult(this);">Chờ giao khách</button>
-                <button class="nvsflAB87" data-status="9" onclick="ShowResult(this);">Hoàn thành</button>
-                <button class="nvsflAB87" data-status="7" onclick="ShowResult(this);">Đã hủy</button>
-                <button class="nvsflAB87" data-status="8" onclick="ShowResult(this);">Trả hàng/Hoàn tiền</button>
+                <button type="button" class="nvsflAB87" data-status="10" onclick="ShowResult(this);">Tất cả</button>
+                <button type="button" class="nvsflAB87" data-status="0" onclick="ShowResult(this);">Chờ thanh toán</button>
+                <button type="button" class="nvsflAB87" data-status="1" onclick="ShowResult(this);">Chuẩn bị hàng</button>
+                <button type="button" class="nvsflAB87" data-status="2" onclick="ShowResult(this);">Chờ giao ĐVVC</button>
+                <button type="button" class="nvsflAB87" data-status="4" onclick="ShowResult(this);">Chờ giao khách</button>
+                <button type="button" class="nvsflAB87" data-status="9" onclick="ShowResult(this);">Hoàn thành</button>
+                <button type="button" class="nvsflAB87" data-status="7" onclick="ShowResult(this);">Đã hủy</button>
+                <button type="button" class="nvsflAB87" data-status="8" onclick="ShowResult(this);">Trả hàng/Hoàn tiền</button>
             </div>
             <div class="sample-item-container">
                 <img class="model-icon" src="~/Media/searchIcon.png" />
@@ -183,6 +183,7 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         // Tham số tìm kiếm
         let status;
@@ -212,7 +213,7 @@
             for (let i = 0; i < lsBtn.length; i++) {
                 if (lsBtn[i] != ele) {
                     lsBtn[i].style.color = "initial";
-                    lsBtn[i].style.borderBottom  = "none";
+                    lsBtn[i].style.borderBottom = "none";
                 }
                 else {
                     lsBtn[i].style.color = "#ee4d2d";
@@ -235,7 +236,7 @@
             status = parseInt(ele.getAttribute("data-status"));
             let length = listOrder.length;
             // Duyệt từ cuối danh sách để lấy theo thời gian gần nhất hiển thị hàng trên ở web
-            for (let i = length - 1; i >=0; i--) {
+            for (let i = length - 1; i >= 0; i--) {
                 let orderObj = listOrder[i];
                 if (status != 10 && orderObj.lsOrderTrack[orderObj.lsOrderTrack.length - 1].status != status)
                     continue;

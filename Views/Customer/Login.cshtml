@@ -66,10 +66,11 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
-    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-        async function Login_Login( ) {
+        async function Login_Login() {
             let userName = document.getElementById("userName").value;
             if (isEmptyOrSpaces(userName)) {
                 await CreateMustClickOkModal("Nhập tài khoản.", null);

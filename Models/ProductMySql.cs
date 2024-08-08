@@ -70,7 +70,9 @@ namespace MVCPlayWithMe.Models
             product.barcode = MyMySql.GetString(rdr, "Barcode");
             product.name = MyMySql.GetString(rdr, "Name");
             product.quantity = MyMySql.GetInt32(rdr, "Quantity");
+            product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
             product.status = MyMySql.GetInt32(rdr, "Status");
+            product.comboName = MyMySql.GetString(rdr, "ComboName");
             product.SetSrcImageVideo();
 
             return product;
@@ -337,6 +339,7 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        //
         public MySqlResultState DeleteProduct(int id)
         {
             MySqlResultState result = null;
@@ -929,7 +932,7 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
                 cmd.Parameters.AddWithValue("@inName", searchParameter.name);
                 cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
-                cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
+                //cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
@@ -950,40 +953,40 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        // Đếm số record kết quả trả về, phục vụ phân trang
-        public int SearchProductCount(ProductSearchParameter searchParameter)
-        {
-            int count = 0;
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+        //// Đếm số record kết quả trả về, phục vụ phân trang
+        //public int SearchProductCount(ProductSearchParameter searchParameter)
+        //{
+        //    int count = 0;
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Count_Record", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
-                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
-                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+        //        MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Count_Record", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
+        //        cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+        //        cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+        //        cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    count = MyMySql.GetInt32(rdr, "CountRecord");
-                }
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        while (rdr.Read())
+        //        {
+        //            count = MyMySql.GetInt32(rdr, "CountRecord");
+        //        }
 
-                if (rdr != null)
-                    rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-            }
+        //        if (rdr != null)
+        //            rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        errMessage = ex.ToString();
+        //        MyLogger.GetInstance().Warn(errMessage);
+        //    }
 
-            conn.Close();
-            return count;
-        }
+        //    conn.Close();
+        //    return count;
+        //}
 
         //Tìm kiếm có phân trang
         public List<Product> SearchProductChangePage(ProductSearchParameter searchParameter)
@@ -1059,6 +1062,102 @@ namespace MVCPlayWithMe.Models
             MyMySql.AddOutParameters(paras);
 
             MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode", paras);
+            return result;
+        }
+
+        public MySqlResultState UpdateBookCoverPrice(int id, int bookCoverPrice)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_BookeCoverPrice", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+        
+        public MySqlResultState UpdateComboId(int id, int comboId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_ComboId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inComboId", comboId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateCategoryId(int id, int categoryId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_CategoryId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdatePublisherId(int id, int publisherId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_PublisherId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
             return result;
         }
 

@@ -54,42 +54,5 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
 
             return objResponse.response;
         }
-
-
-        /// <summary>
-        /// Cập nhật giá.
-        /// </summary>
-        /// <param name="item_id"></param>
-        /// <param name="model_id"> 0 for no model item</param>
-        /// <param name="price"></param>
-        /// <returns></returns>
-        public static Boolean ShopeeProductUpdatePrice(long item_id, long model_id, int price)
-        {
-            ShopeeUpdatePrice_Request st = new ShopeeUpdatePrice_Request();
-            st.item_id = item_id;
-            st.price_list.Add(new ShopeeUpdatePrice_Request_Price_List(model_id, price));
-
-            ShopeeUpdatePrice_Response rs = MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdatePrice.ShopeeProductUpdatePrice(st);
-            if (rs == null)
-            {
-                MyLogger.GetInstance().Info("Shopee sản phẩm cập nhật giá lỗi item_id: " + item_id.ToString() + ", model_id: " + model_id.ToString());
-                return false;
-            }
-
-            Boolean isOk = true;
-            Common.CommonErrorMessage = string.Empty;
-            foreach (var eFailed in rs.failure_list)
-            {
-                isOk = false;
-                Common.CommonErrorMessage = Common.CommonErrorMessage + eFailed.model_id.ToString() + ":" + eFailed.failed_reason + "; ";
-            }
-            if (!isOk)
-            {
-                MyLogger.GetInstance().Info(Common.CommonErrorMessage);
-                return false;
-            }
-
-            return true;
-        }
     }
 }

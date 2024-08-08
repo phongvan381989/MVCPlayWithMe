@@ -3,10 +3,12 @@ using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Web;
 using System.Web.Mvc;
 
@@ -27,23 +29,86 @@ namespace MVCPlayWithMe.Controllers
             admiAddsqler = new AdministrativeAddressMySql();
         }
 
-        // GET: AllProduts
-        public ActionResult Index()
+        [HttpGet]
+        public ActionResult Search(string keyword, int? page)
         {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+
+            // Đếm số sản phẩm trong kết quả tìm kiếm
+            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.name = keyword;
+            int count = 0;
+            count = itemModelsqler.SearchItemCountConnectOut(searchParameter, conn);
+            ViewData["dataCountResult"] = count.ToString();
+
+            // Json kết quả
+            List<Item> lsSearchResult;
+            int intPage = 1;
+            if (page != null)
+                intPage = page.Value;
+
+            int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
+            if (itemOnRow == -1)
+            {
+                itemOnRow = 6;
+            }
+            searchParameter.offset = itemOnRow * Common.rowOnPage;
+            searchParameter.start = (intPage - 1) * searchParameter.offset;
+            lsSearchResult = itemModelsqler.SearchItemPageConnectOut(searchParameter, conn);
+            ViewData["dataListItem"] = JsonConvert.SerializeObject(lsSearchResult);
+
+            conn.Close();
             return View();
+        }
+
+        // Trả về khi click button tìm kiếm item
+        // Object trả về gồm cả số lượng kết quả
+        [HttpGet]
+        public string HomeSearch(string keyword, int? page)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+
+            // Đếm số sản phẩm trong kết quả tìm kiếm
+            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.name = keyword;
+            int count = 0;
+            count = itemModelsqler.SearchItemCountConnectOut(searchParameter, conn);
+
+            // Json kết quả
+            List<Item> lsSearchResult;
+            int intPage = 1;
+            if (page != null)
+                intPage = page.Value;
+
+            int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
+            if (itemOnRow == -1)
+            {
+                itemOnRow = 6;
+            }
+            searchParameter.offset = itemOnRow * Common.rowOnPage;
+            searchParameter.start = (intPage - 1) * searchParameter.offset;
+            lsSearchResult = itemModelsqler.SearchItemPageConnectOut(searchParameter, conn);
+            conn.Close();
+            StringBuilder sb = new StringBuilder();
+            sb.Append("{\"countResult\":" + count.ToString() + ",\"listItem\":" + JsonConvert.SerializeObject(lsSearchResult) + @"}");
+
+            string strTemp = sb.ToString();
+            return sb.ToString();
         }
 
         /// <summary>
         /// Tìm kiếm sản phẩm trên sàn
         /// </summary>
-        /// <param name="namePara"></param>
+        /// <param name="keyword"></param>
         /// <returns></returns>
         [HttpGet]
-        public string SearchItemCount(string namePara)
+        public string SearchItemCount(string keyword)
         {
             // Đếm số sản phẩm trong kết quả tìm kiếm
             ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
-            searchParameter.name = namePara;
+            searchParameter.name = keyword;
             int count = 0;
             count = itemModelsqler.SearchItemCount(searchParameter);
             return count.ToString();
@@ -57,7 +122,26 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = namePara;
             searchParameter.start = start;
             searchParameter.offset = offset;
-            lsSearchResult = itemModelsqler.SearchItemChangePage(searchParameter);
+            lsSearchResult = itemModelsqler.SearchItemPage(searchParameter);
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
+        [HttpGet]
+        public string SearchPage(string keyword, int page)
+        {
+            List<Item> lsSearchResult;
+            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+            searchParameter.name = keyword;
+
+            int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
+            if (itemOnRow == -1)
+            {
+                itemOnRow = 6;
+            }
+            searchParameter.offset = itemOnRow * Common.rowOnPage;
+            searchParameter.start = (page - 1) * searchParameter.offset;
+            lsSearchResult = itemModelsqler.SearchItemPage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }

@@ -52,11 +52,11 @@
         <div class="config-max-width padding-container">
             <div class="amzof92nxj" title="Tìm kiếm từ cơ sở dữ liệu">
                 @*<div>
-                    <label for="publisher-id">Nhà phát hành:</label>
-                    <input type="text" list="list-Publisher" class="config-max-width margin-vertical"
-                           id="publisher-id">
-                    <datalist id="list-Publisher"></datalist>
-                </div>*@
+                        <label for="publisher-id">Nhà phát hành:</label>
+                        <input type="text" list="list-Publisher" class="config-max-width margin-vertical"
+                               id="publisher-id">
+                        <datalist id="list-Publisher"></datalist>
+                    </div>*@
                 <div>
                     <label for="item-model-name">Tên sản phẩm:</label><br>
                     <input class="config-max-width margin-vertical" type="text" id="item-model-name" value=""
@@ -72,10 +72,10 @@
                 </div>
 
                 <div id="search-result" style="display:none">
-                    <div class="fmx09gx8"  title="Lọc kết quả tìm kiếm và hiển thị">
+                    <div class="fmx09gx8" title="Lọc kết quả tìm kiếm và hiển thị">
                         <div class="vbcgh45367">
                             <input type="radio" id="sgdhgf567xbx" name="price-filter-type" class="kmaZvc29"
-                                   onInput="FilterItemAll()">
+                                   onchange="FilterItemAll()">
                             <label for="sgdhgf567xbx">Tất Cả</label>
                         </div>
                         <div class="vbcgh45367">
@@ -90,7 +90,7 @@
                                    onchange="FilterItemDiscountBigger()">
                             <label for="fzafgrj9567af">Chiết Khấu Lớn Hơn</label>
                             <input type="number" class="discout-bigger gfdgdgdxg676"
-                                   value="0" oninput="ValidateDiscount(this)" />
+                                   value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>%</label>
                         </div>
                         <div class="vbcgh45367">
@@ -99,7 +99,7 @@
                                    onchange="FilterItemDiscountSmaller()">
                             <label for="ghjsf8345sg">Chiết Khấu Nhỏ Hơn</label>
                             <input type="number" class="discout-smaller gfdgdgdxg676"
-                                   value="0" oninput="ValidateDiscount(this)" />
+                                   value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>%</label>
                         </div>
                         <div class="vbcgh45367">
@@ -108,7 +108,7 @@
                                    onchange="FilterItemPriceBigger()">
                             <label for="fzadgfgrj9567af">Giá Lớn Hơn</label>
                             <input type="number" class="price-bigger gfdgfghxg676"
-                                   value="0" oninput="ValidateDiscount(this)" />
+                                   value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>đ</label>
                         </div>
                         <div class="vbcgh45367">
@@ -117,19 +117,19 @@
                                    onchange="FilterItemPriceSmaller()">
                             <label for="ghjsf834gh5sg">Giá Nhỏ Hơn</label>
                             <input type="number" class="price-smaller gfdgfghxg676"
-                                   value="0" oninput="ValidateDiscount(this)" />
+                                   value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>đ</label>
                         </div>
                     </div>
                     <div class="fksnvjsl092n" title="Set chiếu khấu cho phân loại có giá lớn hơn hoặc bằng của item đang hiển thị">
                         <label>Nhập chiết khấu</label>
                         <input type="number" class="discout-for-list-item-bigger gfdgdgdxg676"
-                               value="0" oninput="ValidateDiscount(this)" />
+                               value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                         <label>% với phân loại có giá lớn hơn</label>
                         <input type="number" class="price-for-list-item-bigger gfdgfghxg676"
-                               value="0" oninput="ValidateDiscount(this)" />
+                               value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                         <label>đ</label>
-                        <button onclick="UpdateDiscountForListItemBigger()">
+                        <button type="button" onclick="UpdateDiscountForListItemBigger()">
                             Set chiết khấu
                         </button>
                     </div>
@@ -137,12 +137,12 @@
                     <div class="fksnvjsl092n" title="Set chiếu khấu cho phân loại có giá nhỏ hơn hoặc bằng của item đang hiển thị">
                         <label>Nhập chiết khấu</label>
                         <input type="number" class="discout-for-list-item-smaller gfdgdgdxg676"
-                               value="0" oninput="ValidateDiscount(this)" />
+                               value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                         <label>% với phân loại có giá nhỏ hơn</label>
                         <input type="number" class="price-for-list-item-smaller gfdgfghxg676"
-                               value="0" oninput="ValidateDiscount(this)" />
+                               value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                         <label>đ</label>
-                        <button onclick="UpdateDiscountForListItemSmaller()">
+                        <button type="button" onclick="UpdateDiscountForListItemSmaller()">
                             Set chiết khấu
                         </button>
                     </div>
@@ -160,6 +160,7 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listItem; // Danh sách item kết quả tìm kiếm
         let listItemTemp; // Danh sách item hiển thị ra màn hình
@@ -195,10 +196,6 @@
             FilterItemAll();
         }
 
-        function ValidateDiscount(ele) {
-            if (ele.value < 0)
-                ele.value = 0;
-        }
 
         function SetSearchParameter(searchParams) {
             //let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value)
@@ -211,23 +208,23 @@
             //}
             searchParams.append("publisherId", 0);
             let namePara = document.getElementById("item-model-name").value;
-           searchParams.append("namePara", namePara);
-           return true;
+            searchParams.append("namePara", namePara);
+            return true;
         }
 
         function FilterItemAll() {
-            if (DEBUG) {
-                console.log("FilterItemAll CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("FilterItemAll CALL");
+            //}
             listItemTemp = listItem;
             ShowFilteringResult(listItemTemp);
         }
 
         // Trả lại những item có model giá bìa hoặc giá bán <= 0
         function FilterItemNoPrice() {
-            if (DEBUG) {
-                console.log("FilterItemNoPrice CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("FilterItemNoPrice CALL");
+            //}
             listItemTemp = [];
             let length = listItem.length;
             for (let i = 0; i < length; i++) {
@@ -246,9 +243,9 @@
         }
 
         function FilterItemDiscountBigger() {
-            if (DEBUG) {
-                console.log("FilterItemDiscountBigger CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("FilterItemDiscountBigger CALL");
+            //}
             let discount = document.getElementsByClassName("discout-bigger")[0].value;
             listItemTemp = [];
             let length = listItem.length;
@@ -267,9 +264,9 @@
         }
 
         function FilterItemDiscountSmaller() {
-            if (DEBUG) {
-                console.log("FilterItemDiscountSmaller CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("FilterItemDiscountSmaller CALL");
+            //}
             let discount = document.getElementsByClassName("discout-smaller")[0].value;
             listItemTemp = [];
             let length = listItem.length;
@@ -288,9 +285,9 @@
         }
 
         function FilterItemPriceBigger() {
-            if (DEBUG) {
-                console.log("FilterItemPriceBigger CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("FilterItemPriceBigger CALL");
+            //}
             let price = document.getElementsByClassName("price-bigger")[0].value;
             listItemTemp = [];
             let length = listItem.length;
@@ -309,9 +306,9 @@
         }
 
         function FilterItemPriceSmaller() {
-            if (DEBUG) {
-                console.log("FilterItemPriceSmaller CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("FilterItemPriceSmaller CALL");
+            //}
             let price = document.getElementsByClassName("price-smaller")[0].value;
             listItemTemp = [];
             let length = listItem.length;
@@ -349,7 +346,7 @@
             }
             UpdateDiscountForListModelId(discount, listModelId);
         }
-        
+
         function UpdateDiscountForListItemSmaller() {
             if (listItemTemp == null || listItemTemp.length == 0) {
                 CreateMustClickOkModal("Danh sách sản phẩm trống.", null);
@@ -368,11 +365,11 @@
                     }
                 }
             }
-            if (DEBUG) {
-                console.log("discount: " + discount);
-                console.log("price: " + price);
-                console.log("listModelId: " + listModelId.toString());
-            }
+            //if (DEBUG) {
+            //    console.log("discount: " + discount);
+            //    console.log("price: " + price);
+            //    console.log("listModelId: " + listModelId.toString());
+            //}
             UpdateDiscountForListModelId(discount, listModelId);
         }
 
@@ -380,11 +377,11 @@
             if (listModelId == null || listModelId.length == 0)
                 return;
 
-            if (DEBUG) {
-                console.log("UpdateDiscountForListModelId CALL");
-                console.log("discount: " + discount);
-                console.log("listModelId: " + listModelId.toString());
-            }
+            //if (DEBUG) {
+            //    console.log("UpdateDiscountForListModelId CALL");
+            //    console.log("discount: " + discount);
+            //    console.log("listModelId: " + listModelId.toString());
+            //}
             let url = "/ItemModel/UpdateDiscountForListModelId";
             const searchParams = new URLSearchParams();
             searchParams.append("discount", discount);

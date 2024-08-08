@@ -36,23 +36,25 @@
             <div class="fkagvoa08fv">
                 <div style="padding:10px 0px 10px 0px;"> Thông tin chung của các sản phẩm thuộc combo </div>
                 @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
-                <button style="margin-right:20px;" onclick="UpdateCommonInfor()" 
+                <button type="button" style="margin-right:20px;" onclick="UpdateCommonInfor()"
                         title="Cập nhật thông tin chung cho các sản phẩm thuộc combo">
-                Cập Nhật Thông Tin Chung</button>
+                    Cập Nhật Thông Tin Chung
+                </button>
             </div>
         </div>
         <br />
         <div id="button_group_id">
-            <button style="margin-right:20px;" onclick="UpdateCombo()">Cập Nhật</button>
-            <button style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
-            <button onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
+            <button type="button" style="margin-right:20px;" onclick="UpdateCombo()"
+                    title="Cập nhật tên combom, không cập nhật thông tin chung cho các sản phẩm thuộc combo">Cập Nhật</button>
+            <button type="button" style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
+            <button type="button" onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
         </div>
     </div>
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
-
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         GetListCategory();
         GetListPublisher();
@@ -80,7 +82,7 @@
                 cell1.style.display = "none";
 
                 // STT
-                cell2.innerHTML = i +1;
+                cell2.innerHTML = i + 1;
 
                 // Image
                 let img = document.createElement("img");
@@ -149,7 +151,7 @@
                 return;
             }
 
-            let text = "Nếu còn sản phẩm thuộc combo này bạn sẽ không thể xóa. Bạn chắc chắn muốn XÓA?";
+            let text = "Nếu còn sản phẩm thuộc combo này bạn sẽ không thể xóa dù thông báo đã xóa thành công. Bạn chắc chắn muốn XÓA?";
             if (confirm(text) == false)
                 return;
 
@@ -166,7 +168,6 @@
         function MappingOfCombo() {
             window.open("/Combo/MappingOfCombo?id=" + GetValueFromUrlName("id"));
         }
-
 
         async function UpdateCommonInfor() {
             const searchParams = new URLSearchParams();

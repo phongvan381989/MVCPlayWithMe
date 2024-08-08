@@ -91,6 +91,10 @@ namespace MVCPlayWithMe.Models
             string src = Common.GetFirstItemImageSrc(id);
             if (!string.IsNullOrEmpty(src))
                 imageSrc.Add(src);
+            else
+            {
+                imageSrc.Add(Common.srcNoImageThumbnail);
+            }
         }
 
         public void SetShopeeItemId()

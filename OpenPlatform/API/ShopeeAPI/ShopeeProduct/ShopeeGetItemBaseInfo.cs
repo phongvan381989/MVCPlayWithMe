@@ -189,10 +189,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             ShopeeGetItemBaseInfoResponseHTTP objResponse = ShopeeProductGetItemBaseInfo(ls);
             if (objResponse == null || objResponse.response == null || objResponse.response.item_list == null)
             {
-                if (objResponse != null)
-                {
-                    Common.CommonErrorMessage = CommonShopeeAPI.GetResponseErrorMessage((CommonResponseHTTP)objResponse);
-                }
                 return null;
             }
 

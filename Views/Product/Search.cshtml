@@ -25,20 +25,138 @@
         .kmaZvc29 {
             margin-left: 20px;
         }
+
+        .fmx09gx8 {
+            background-color: white;
+            padding: 10px;
+            margin: 10px 0px 10px 0px;
+            border-radius: 2px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .gfdgfghxg676 {
+            width: 120px;
+        }
     </style>
 </head>
 <body>
     <div id="biggestContainer">
         <div class="config-max-width padding-container">
-            @Html.Partial("~/Views/Shared/Product/SearchParameter.cshtml")
+            <div>
+                <div>
+                    <label for="publisher-id">Nhà phát hành:</label>
+                    <input list="list-Publisher" class="config-max-width margin-vertical"
+                           id="publisher-id">
+                    <datalist id="list-Publisher"></datalist>
+                </div>
+                <br>
+                <div>
+                    <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
+                    <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+                </div>
+                <br>
 
-            <button type="button" onclick="Search()">Tìm kiếm</button>
+                @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
+                <br>
+                @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
+                <br />
+            </div>
 
-            @Html.Partial("~/Views/Shared/Product/SearchResult.cshtml")
+            <button type="button" title="Kết quả trả về được sắp xếp tồn kho tăng dần"
+                    onclick="Search()">
+                Tìm kiếm
+            </button>
+            <br />
+
+            <div>
+                <div id="empty-result" style="display:none">
+                    <p>Kết quả trống</p>
+                </div>
+                <div id="search-result" style="display:none">
+                    <div class="fmx09gx8" title="Lọc kết quả tìm kiếm và hiển thị">
+                        <div class="pro-status">
+                            <input type="radio" id="status-all" name="status-avxgbhf"
+                                   class="kmaZvc29" checked
+                                   onchange="FilterProductAll()">
+                            <label for="status-all">Tất Cả</label>
+                        </div>
+                        <div class="pro-status">
+                            <input type="radio" id="status-normal" name="status-avxgbhf"
+                                   class="kmaZvc29"
+                                   onchange="FilterProductNormal()">
+                            <label for="status-normal">Đang Bán</label>
+                        </div>
+                        <div class="pro-status">
+                            <input type="radio" id="status-banned" name="status-avxgbhf"
+                                   class="kmaZvc29"
+                                   onchange="FilterProductDisable()">
+                            <label for="status-banned">Dừng Bán</label>
+                        </div>
+
+                        <div class="pro-status"
+                             title="Sản phẩm có tồn kho bằng 0. Bao gồm cả sản phẩm dừng kinh doanh">
+                            <input type="radio" id="quantity-zero" name="status-avxgbhf"
+                                   class="kmaZvc29"
+                                   onchange="FilterProductQuantityZero()">
+                            <label for="quantity-zero">Hết Hàng</label>
+                        </div>
+
+                        <div class="pro-status"
+                             title="Sản phẩm có tồn kho bằng 0. Không bao gồm sản phẩm dừng kinh doanh">
+                            <input type="radio" id="quantity-zero" name="status-avxgbhf"
+                                   class="kmaZvc29"
+                                   onchange="FilterProductNormalQuantityZero()">
+                            <label for="quantity-zero">Đang Bán Và Hết Hàng</label>
+                        </div>
+
+                        <div class="pro-status">
+                            <input type="radio" id="pro-no-price" name="status-avxgbhf"
+                                   class="kmaZvc29"
+                                   title="Sản phẩm có giá bằng 0, thậm chí nhỏ hơn 0"
+                                   onchange="FilterProductNoPrice()">
+                            <label for="pro-no-price">Chưa Set Giá</label>
+                        </div>
+
+                        <div class="pro-status">
+                            <input type="radio" id="fzadgfgrj9567af" name="status-avxgbhf" class="kmaZvc29"
+                                   title="Giá bán có giá lớn hơn hoặc bằng giá trị bên cạnh"
+                                   onchange="FilterProductPriceBigger()">
+                            <label for="fzadgfgrj9567af">Giá Lớn Hơn</label>
+                            <input type="number" class="price-bigger gfdgfghxg676"
+                                   value="0" />
+                            <label>đ</label>
+                        </div>
+
+                        <div class="pro-status">
+                            <input type="radio" id="ghjsf834gh5sg" name="status-avxgbhf" class="kmaZvc29"
+                                   title="Giá bán nhỏ hơn hoặc bằng giá trị bên cạnh"
+                                   onchange="FilterProductPriceSmaller()">
+                            <label for="ghjsf834gh5sg">Giá Nhỏ Hơn</label>
+                            <input type="number" class="price-smaller gfdgfghxg676"
+                                   value="0" />
+                            <label>đ</label>
+                        </div>
+                    </div>
+                    <div id="count-result"></div>
+                    <table id="myTable">
+                        <tr>
+                            <th style="display:none"></th>
+                            <th style="width:200px">Ảnh</th>
+                            <th title="Gồm tên combo sau dấu - nếu có. Tên đỏ biểu hiện sản phẩm hết hàng, xanh lơ biểu hiện không kinh doanh">Tên</th>
+                            <th> Giá Bìa</th>
+                            <th title="Đỏ biểu hiện số lượng tồn kho là 0. Click để sắp xếp tăng hoặc giảm dần tồn kho sản phẩm ĐANG HIỂN THỊ"
+                                style="cursor:pointer;" onclick="ArrangeQuantity()">Số Lượng</th>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         // Tham số tìm kiếm
         let publisher;
@@ -54,7 +172,8 @@
 
         // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
         async function Search() {
-            listProduct = [];// làm trống
+            listProduct = [];// danh sách server trả về sắp xếp tồn kho tăng dần
+            listProductWillShow = [];// danh sách sau khi lọc và được hiển thị
 
             let url = "/Product/SearchProduct";
             const searchParams = new URLSearchParams();
@@ -65,6 +184,10 @@
             if (responseDB.responseText != "null") {
                 // Kết quả trả về đã được sắp xếp tăng dần tồn kho
                 listProduct = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listProduct = [];
+                listProductWillShow = [];
             }
 
             // Lấy số lượng sản phẩm trong kết quả trả về
@@ -77,7 +200,8 @@
 
             document.getElementById("empty-result").style.display = "none";
             document.getElementById("search-result").style.display = "block";
-            ShowSearchingResult(listProduct);
+            document.getElementById("status-all").checked = true;
+            FilterProductAll();
         }
 
         function SetSearchParameter(searchParams) {
@@ -85,27 +209,26 @@
             codeOrBarcode = GetValueInputById("code-or-isbn", "");
             name = GetValueInputById("product-name-id", "");
             combo = GetValueInputById("combo-id", "");
-            proStatus = document.querySelector('input[name="status-avxgbhf"]:checked').value
+            //proStatus = document.querySelector('input[name="status-avxgbhf"]:checked').value
 
             searchParams.append("publisher", publisher);
             searchParams.append("codeOrBarcode", codeOrBarcode);
             searchParams.append("name", name);
             searchParams.append("combo", combo);
-            searchParams.append("status", proStatus);
         }
 
         function ShowSearchingResult(list) {
             document.getElementById("count-result").innerHTML = "";
+            let table = document.getElementById("myTable");
             // Làm trống bảng
-            DeleteRowsExcludeHead(document.getElementById("myTable"));
+            DeleteRowsExcludeHead(table);
 
             let length = list.length;
+            document.getElementById("count-result").innerHTML = length + " sản phẩm";
             if (length == 0)
                 return;
-            document.getElementById("count-result").innerHTML = length + " sản phẩm";
-            // Show
-            let table = document.getElementById("myTable");
 
+            // Show
             for (let i = 0; i < length; i++) {
                 let product = list[i];
                 let row = table.insertRow(-1);
@@ -115,6 +238,7 @@
                 let cell2 = row.insertCell(1);
                 let cell3 = row.insertCell(2);
                 let cell4 = row.insertCell(3);
+                let cell5 = row.insertCell(4);
 
                 // Id
                 cell1.innerHTML = product.id;
@@ -137,9 +261,14 @@
                 };
                 cell2.append(img);
 
-                // Tên
+                // Tên: tên + " - " + tên combo
                 let pName = document.createElement("p");
-                pName.innerHTML = product.name;
+                if (product.comboName == "null" || product.comboName.length == 0) {
+                    pName.innerHTML = product.name;
+                }
+                else {
+                    pName.innerHTML = product.name + " - " + product.comboName;
+                }
                 if (product.status == 2)// ngừng kinh doanh
                 {
                     pName.className = "fjavmsiin89";
@@ -155,13 +284,16 @@
                 //};
                 cell3.append(pName);
 
+                // Giá Bìa
+                cell4.innerHTML = product.bookCoverPrice;
+
                 // Tồn kho
                 let pQuantity = document.createElement("p");
                 pQuantity.innerHTML = product.quantity;
                 if (product.quantity == 0) {
                     pQuantity.className = "ffxafj8kafn8";
                 }
-                cell4.append(pQuantity);
+                cell5.append(pQuantity);
             }
         }
 
@@ -173,18 +305,117 @@
         }
 
         function ArrangeQuantity() {
-            length = listProduct.length;
+            length = listProductWillShow.length;
             if (length == 0) {
                 return;
             }
 
             let listProductTemp = [];
+            // listProductWillShow được lọc cũng sắp xếp tăng dần tồn kho
             for (let i = 0; i < length - 1; i++) {
-                listProductTemp.push(listProduct[length - 1 - i]);
+                listProductTemp.push(listProductWillShow[length - 1 - i]);
             }
-            listProduct = listProductTemp;
+            listProductWillShow = listProductTemp;
 
-            ShowSearchingResult(listProduct);
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductAll() {
+            listProductWillShow = listProduct;
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductNormal() {
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].status == 0) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductDisable() {
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].status != 0) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductQuantityZero() {
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].quantity == 0) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductNormalQuantityZero() {
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].quantity == 0 && listProduct[i].status == 0) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductPriceBigger() {
+            let checkedPrice = document.getElementsByClassName("price-bigger")[0].value;
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].bookCoverPrice >= checkedPrice) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductPriceSmaller() {
+            let checkedPrice = document.getElementsByClassName("price-smaller")[0].value;
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].bookCoverPrice >= checkedPrice) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function FilterProductNoPrice() {
+            listProductWillShow = [];
+            let length = listProduct.length;
+            if (length == 0)
+                return;
+            for (let i = 0; i < length; i++) {
+                if (listProduct[i].bookCoverPrice <= 0) {
+                    listProductWillShow.push(listProduct[i]);
+                }
+            }
+            ShowSearchingResult(listProductWillShow);
         }
     </script>
 </body>

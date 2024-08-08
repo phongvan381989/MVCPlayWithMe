@@ -14,10 +14,17 @@
             @Html.Partial("~/Views/Shared/ProductInput.cshtml")
             <div class="config-max-width">
                 <br />
-                <button onclick="MappingOfProduct()" title="Xem sản phẩm liên kết trên sàn Tiki, Shopee, Lazada">
-                Sản Phẩm Liên Kết Trên Sàn</button>
+                <button type="button" onclick="MappingOfProduct()"
+                        title="Xem sản phẩm liên kết trên sàn Tiki, Shopee, Lazada">
+                    Sản Phẩm Liên Kết Trên Sàn
+                </button>
                 <button type="button" style="margin-left: 30px;" onclick="UpdateProductPromise()">Cập Nhật</button>
-                <button type="button" style="margin-left: 30px;" onclick="DeleteProduct()">Xóa</button>
+                <button type="button" style="margin-left: 30px;"
+                        title="Sản phẩm chỉ có thế xóa khi đang không liên kết với sản phẩm nào trên
+                        Shopee, Tiki, Lazada, web voibenho, trong đơn hàng đã được bán, thông tin nhập xuất thực tế,..."
+                        onclick="DeleteProduct()">
+                    Xóa
+                </button>
             </div>
         </div>
     </div>
@@ -25,6 +32,7 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.image.video.common.js"></script>
     <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         ShowUpdateButtonForOne();
 

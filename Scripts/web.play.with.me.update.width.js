@@ -1,7 +1,18 @@
 ﻿//Số item hiển thị trên 1 hàng
 let itemOnRow;
 // Hardcode số row trên 1 page
-let rowOnPage = 5;
+let rowOnPage = 6;
+
+function SetCookie(name, value, days) {
+    //document.cookie = name + '=' + value + '; Path=/;';
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
 
 // Chiều rộng hiển thị nội dung.
 let scrWidth; 
@@ -64,6 +75,8 @@ function orientationChange() {
     // scrWidth = scrWidth.toString() + "px";
     document.getElementById("biggestContainer").style.width = scrWidth.toString() + "px";
 
+    //var itemOnRowCookie = "itemOnRow"; // Số item hiển thị trên 1 hàng trên trang kết quả tìm kiếm sản phẩm
+    SetCookie("itemOnRow", itemOnRow, 1000);
     return scrWidth;
 }
 

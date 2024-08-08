@@ -41,19 +41,19 @@
     <div id="biggestContainer">
         <div class="fmx09gx8">
             <div class="gmxk9381"> Sản phẩm trong kho</div>
-            <button onclick="CopyShopeeProductImageToProduct()"
+            <button type="button" onclick="CopyShopeeProductImageToProduct()"
                     title="Sản phẩm trong kho chưa có ảnh, video.
                     Copy ảnh sản phẩm trên sàn Shopee tới sản phẩm trong kho">
                 Chép Ảnh Từ Shopee Tới Sản Phẩm Trong Kho
             </button>
 
-            <button onclick="AddWaterMark()"
+            <button type="button" onclick="AddWaterMark()"
                     title="Thêm waterMark logo voi bé nhỏ vào giữa ảnh cho tất cả anh trong thư mục.
                     Cân nhắc khi dùng hàm này">
                 Thêm Water mark logo voi bé nhỏ tất cả ảnh
             </button>
 
-            <button onclick="DeleteDuplicateDataOftbShopeeModel()"
+            <button type="button" onclick="DeleteDuplicateDataOftbShopeeModel()"
                     title="Xóa dữ liệu trùng lặp ở bảng tbShopeeModel.
                     Nhiều dữ liệu của sản phẩm có TMDTShopeeModelId = -1 đang bị trùng lặp">
                 Xóa dữ liệu trùng lặp ở bảng tbShopeeModel
@@ -65,7 +65,7 @@
             <div class="flpzni5136">
                 <input type="text" id="live_partner_key" class="config-max-width margin-vertical"
                        title="Live Partner Key của shop, lấy từ open shopee platform. Chỉ thay đổi khi làm mới Live Partner Key" />
-                <button onclick="ShopeeSaveLivePartnerKey()"
+                <button type="button" onclick="ShopeeSaveLivePartnerKey()"
                         title="Cập nhật Live Partner Key từ input trên">
                     Cập Nhật Live Partner Key
                 </button>
@@ -74,7 +74,7 @@
             <div class="flpzni5136">
                 <input type="text" id="authorization_url" class="config-max-width margin-vertical"
                        title="URL gửi chủ shop server trả về sau khi click button ngay dưới" />
-                <button onclick="ShopeeGetAuthorizationURL()"
+                <button type="button" onclick="ShopeeGetAuthorizationURL()"
                         title="Lấy được url gửi chủ shop, chủ shop vào url xác thực ủy quyền phần mềm. Hiển thị ở input ngay trên">
                     Sinh URL Ủy Quyền
                 </button>
@@ -83,13 +83,13 @@
             <div class="flpzni5136">
                 <input type="text" id="code" class="config-max-width margin-vertical"
                        title="Code của shope nhận được sau khi chủ shop ủy quyền. Chỉ thay đổi khi làm mới ủy quyền" />
-                <button onclick="ShopeeSaveCode()"
+                <button type="button" onclick="ShopeeSaveCode()"
                         title="Cập nhật code từ input trên">
                     Cập Nhật Code
                 </button>
             </div>
 
-            <button onclick="ShopeeGetTokenShopLevelAfterAuthorization()"
+            <button type="button" onclick="ShopeeGetTokenShopLevelAfterAuthorization()"
                     title="Lấy được và lưu refresh, access token ngay sau khi chủ shop ủy quyền.
                     DB đã có live partner key, code">
                 Lấy Và Lưu Refresh Access Token Ngay Sau Ủy Quyền
@@ -97,6 +97,9 @@
 
         </div>
     </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         function CopyShopeeProductImageToProduct() {
 
@@ -197,7 +200,5 @@
             CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi sẩy ra.");
         }
     </script>
-    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.common.js"></script>
 </body>
 </html>

@@ -2,7 +2,7 @@
 
     let publisherName = document.getElementById("publisher-id").value;
     if (isEmptyOrSpaces(publisherName)) {
-        ShowResult("Tên nhà phát hành trống.");
+        CreateMustClickOkModal("Tên nhà phát hành trống.", null);
         return false;
     }
 
@@ -27,7 +27,8 @@
 
     let publisherId = GetDataIdFromPublisherDatalist(publisherName);
     if (publisherId == null) {
-        searchParams.append("publisherId", -1);
+        CreateMustClickOkModal("Tên nhà phát hành không chính xác. Vui lòng kiểm tra lại.", null);
+        return false;
     }
     else {
         searchParams.append("publisherId", publisherId);
@@ -72,14 +73,14 @@
 function AddUpdateParameters(searchParams) {
     let productName = document.getElementById("product-name-id").value;
     if (isEmptyOrSpaces(productName)) {
-        ShowResult("Tên sản phẩm trống.");
+        CreateMustClickOkModal("Tên sản phẩm trống.", null);
         return false;
     }
 
     let code = document.getElementById("code").value;
     if (!isEmptyOrSpaces(code)){
         if (code.length != 13 || code.substring(0, 2) != "89") {
-            ShowResult("Mã sản phẩm không chính xác.");
+            CreateMustClickOkModal("Mã sản phẩm không chính xác.", null);
             return false;
         }
     }
@@ -87,7 +88,7 @@ function AddUpdateParameters(searchParams) {
     let barcode = document.getElementById("barcode").value;
     if (!isEmptyOrSpaces(barcode)) {
         if (barcode.length != 13 || barcode.substring(0, 6) != "978604") {
-            ShowResult("Mã ISBN không chính xác.");
+            CreateMustClickOkModal("Mã ISBN không chính xác.", null);
             return false;
         }
     }
@@ -278,13 +279,11 @@ function SetProductInfomation(product) {
 
 async function UpdateProductPromise() {
     let productID = GetValueFromUrlName("id");
-    if (productID == null) {
-        ShowResult("Tên sản phẩm không chính xác.")
-        return;
-    }
     const searchParams = new URLSearchParams();
     searchParams.append("productId", productID);
-    AddUpdateParameters(searchParams);
+    if (!AddUpdateParameters(searchParams)) {
+        return;
+    }
 
     let url = "/Product/UpdateProduct";
     let urlUp = "/Product/UploadFile";
@@ -332,8 +331,8 @@ async function UpdateProductPromise() {
     //window.location.reload();
 }
 
-function DeleteProduct(){
-    let text = "Bạn chắc chắn muốn XÓA?";
+async function DeleteProduct(){
+    let text = "Sản phẩm chỉ có thế xóa khi đang không liên kết với sản phẩm nào trên Shopee, Tiki, Lazada, web voibenho, trong đơn hàng đã được bán, thông tin nhập xuất thực tế,.... Bạn sẽ vẫn thấy sản phẩm dù thông báo xóa thành công.  Bạn chắc chắn muốn XÓA?";
     if (confirm(text) == false)
         return;
 
@@ -344,14 +343,19 @@ function DeleteProduct(){
     const searchParams = new URLSearchParams();
     searchParams.append("id", id);
     let query = "/Product/DeleteProduct";
-    let OnloadFuntion = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            if (CheckStatusResponse(this.responseText)) {
-                window.location.reload();
-            }
-        }
-    }
-    RequestHttpPost(OnloadFuntion, searchParams, query);
+    //let OnloadFuntion = function () {
+    //    if (this.readyState == 4 && this.status == 200) {
+    //        if (CheckStatusResponse(this.responseText)) {
+    //            window.location.reload();
+    //        }
+    //    }
+    //}
+    //RequestHttpPost(OnloadFuntion, searchParams, query);
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
 };
 
 
@@ -366,28 +370,24 @@ function ShowUpdateButtonForOne() {
 }
 
 async function UpdateName() {
-    const product = JSON.parse(document.getElementById("product-object").textContent);
-    if (product == null) {
-        ShowResult("Chưa chọn sản phẩm.");
-        return false
-    }
-
     let productName = document.getElementById("product-name-id").value;
     if (isEmptyOrSpaces(productName)) {
-        ShowResult("Tên sản phẩm trống.");
+        CreateMustClickOkModal("Tên sản phẩm trống.", null);
         return false;
     }
 
     const searchParams = new URLSearchParams();
-    searchParams.append("id", product.id);
+    searchParams.append("id", GetValueFromUrlName("id"));
     searchParams.append("name", productName);
 
     let url = "/Product/UpdateName";
 
     try {
         // Cập nhật vào db
+        ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
-        CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật tên lỗi.", null);
@@ -396,24 +396,20 @@ async function UpdateName() {
 }
 
 async function UpdateCode() {
-    const product = JSON.parse(document.getElementById("product-object").textContent);
-    if (product == null) {
-        ShowResult("Chưa chọn sản phẩm.");
-        return false
-    }
-
     let productCode = document.getElementById("code").value;
 
     const searchParams = new URLSearchParams();
-    searchParams.append("id", product.id);
+    searchParams.append("id", GetValueFromUrlName("id"));
     searchParams.append("code", productCode);
 
     let url = "/Product/UpdateCode";
 
     try {
         // Cập nhật vào db
+        ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
-        CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật mã lỗi.", null);
@@ -422,27 +418,123 @@ async function UpdateCode() {
 }
 
 async function UpdateISBN() {
-    const product = JSON.parse(document.getElementById("product-object").textContent);
-    if (product == null) {
-        ShowResult("Chưa chọn sản phẩm.");
-        return false
-    }
-
     let productISBN = document.getElementById("barcode").value;
 
     const searchParams = new URLSearchParams();
-    searchParams.append("id", product.id);
+    searchParams.append("id", GetValueFromUrlName("id"));
     searchParams.append("isbn", productISBN);
 
     let url = "/Product/UpdateISBN";
 
     try {
         // Cập nhật vào db
+        ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
-        CheckStatusAndShowPromptFromResponseObject(responseDB.responseText);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật tên lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateBookCoverPrice() {
+    let bookCoverPrice = document.getElementById("book-cover-price").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("bookCoverPrice", bookCoverPrice);
+
+    let url = "/Product/UpdateBookCoverPrice";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật giá bìa lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateComboId() {
+    let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value);
+    if (comboId == null) {
+        CreateMustClickOkModal("Không lấy được thông tin combo cập nhật.", null);
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("comboId", comboId);
+
+    let url = "/Product/UpdateComboId";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật combo lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateCategoryId() {
+    let categoryId = GetDataIdFromCategoryDatalist(document.getElementById("category-id").value);
+    if (categoryId == null) {
+        CreateMustClickOkModal("Không lấy được thông tin thể loại cập nhật.", null);
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("categoryId", categoryId);
+
+    let url = "/Product/UpdateCategoryId";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật thể loại lỗi.", null);
+        return;
+    }
+}
+
+async function UpdatePublisherId() {
+    let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
+    if (publisherId == null) {
+        CreateMustClickOkModal("Không lấy được thông tin nhà phát hành cập nhật.", null);
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("publisherId", publisherId);
+
+    let url = "/Product/UpdatePublisherId";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật nhà phát hành lỗi.", null);
         return;
     }
 }

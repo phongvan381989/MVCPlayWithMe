@@ -13,10 +13,10 @@ namespace MVCPlayWithMe.Models
         public string combo { get; set; }
         public string publisher { get; set; }
 
-        // Trạng thái sản phẩm. 0: Đang kinh doanh bình thường,
-        // 1: Nhà phát hành tạm thời hết hàng, 2: Ngừng kinh doanh
-        // 10: lấy tất cả các trạng thái
-        public int status { get; set; }
+        //// Trạng thái sản phẩm. 0: Đang kinh doanh bình thường,
+        //// 1: Nhà phát hành tạm thời hết hàng, 2: Ngừng kinh doanh
+        //// 10: lấy tất cả các trạng thái
+        //public int status { get; set; }
 
         // Index record trả về từ câu truy vấn
         // mặc định = -1; Lấy tất cả record
@@ -34,7 +34,7 @@ namespace MVCPlayWithMe.Models
             publisher = string.Empty;
             start = -1;
 
-            status = 0;
+            //status = 0;
         }
     }
 }

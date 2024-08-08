@@ -60,6 +60,7 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listImportObj = [];
 
@@ -135,9 +136,9 @@
                 input4.value = obj.discount;
                 cell4.appendChild(input4);
                 input4.addEventListener("change", function (event) {
-                    if (DEBUG) {
-                        console.log("discount onchange");
-                    }
+                    //if (DEBUG) {
+                    //    console.log("discount onchange");
+                    //}
                     this.isChange = true; // Cần cập nhật
                     let bookCoverPrice = this.parentElement.previousSibling.innerHTML;
                     this.parentElement.nextSibling.innerHTML =

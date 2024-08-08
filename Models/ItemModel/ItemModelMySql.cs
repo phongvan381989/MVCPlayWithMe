@@ -554,7 +554,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         /// <param name="start">Tính từ 0</param>
         /// <param name="offset">Số item max trên 1 page</param>
         /// <returns></returns>
-        public List<Item> SearchItemChangePage(ItemModelSearchParameter searchParameter)
+        public List<Item> SearchItemPage(ItemModelSearchParameter searchParameter)
         {
             List<Item> ls = new List<Item>();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -603,11 +603,63 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls.Clear();
             }
 
             conn.Close();
+            return ls;
+        }
+
+        public List<Item> SearchItemPageConnectOut(ItemModelSearchParameter searchParameter, MySqlConnection conn)
+        {
+            List<Item> ls = new List<Item>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbItemModel_Search", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
+                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
+                int itemId = 0;
+                Item itemTemp = null;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    if (ls.Count == 0 || ls[ls.Count - 1].id != itemId) // Thêm mới item
+                    {
+                        Item item = new Item();
+                        item.id = MyMySql.GetInt32(rdr, "ItemId");
+                        item.name = MyMySql.GetString(rdr, "ItemName");
+                        item.SetFirstSrcImage();
+                        ls.Add(item);
+                    }
+                    itemTemp = ls[ls.Count - 1];
+                    // Thêm model
+                    {
+                        Model model = new Model();
+                        model.id = MyMySql.GetInt32(rdr, "ModelId");
+                        model.itemId = itemTemp.id;
+                        model.name = MyMySql.GetString(rdr, "ModelName");
+
+                        model.price = MyMySql.GetInt32(rdr, "ModelPrice");
+                        model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
+                        model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
+                        model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                        itemTemp.models.Add(model);
+                    }
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls.Clear();
+            }
+
             return ls;
         }
 
@@ -640,6 +692,33 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
 
             conn.Close();
+            return count;
+        }
+
+        public int SearchItemCountConnectOut(ItemModelSearchParameter searchParameter, MySqlConnection conn)
+        {
+            int count = 0;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
+                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    count = MyMySql.GetInt32(rdr, "CountRecord");
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+            }
+
             return count;
         }
 

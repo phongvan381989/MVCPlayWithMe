@@ -21,17 +21,18 @@
             </div>
             <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
             <textarea id="publisher-detail" rows="10"
-                class="config-max-width margin-vertical" value="@ViewData["publisherDetail"]">@ViewData["publisherDetail"]</textarea>
+                      class="config-max-width margin-vertical" value="@ViewData["publisherDetail"]">@ViewData["publisherDetail"]</textarea>
         </div>
 
         <div>
-            <button onclick="UpdatePublisher()" style="margin-right:20px;">Cập Nhật</button>
-            <button onclick="DeletePublisher()">Xóa</button>
+            <button type="button" onclick="UpdatePublisher()" style="margin-right:20px;">Cập Nhật</button>
+            <button type="button" onclick="DeletePublisher()">Xóa</button>
         </div>
 
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
 
         async function UpdatePublisher() {

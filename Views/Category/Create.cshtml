@@ -17,8 +17,8 @@
         </div>
 
         <div>
-            <button style="margin-right:20px;" onclick="CreateCategory()">Thêm Mới</button>
-            <button onclick="ShowListCategory()"> Danh Sách Thể Loại</button>
+            <button type="button" style="margin-right:20px;" onclick="CreateCategory()">Thêm Mới</button>
+            <button type="button" onclick="ShowListCategory()"> Danh Sách Thể Loại</button>
         </div>
         <table id="category-table" style="display:none;">
             <tr>
@@ -30,7 +30,7 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
-
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
 
         let listCategory = [];
@@ -77,7 +77,7 @@
                 // STT
                 cell2.innerHTML = i + 1;
 
-                // Name 
+                // Name
                 let name = document.createElement("p");
                 name.innerHTML = category.name;
                 name.className = "go-to-detail-item";
@@ -98,7 +98,7 @@
                 return;
             }
 
-            
+
             const searchParams = new URLSearchParams();
             searchParams.append("name", categoryName);
             let query = "/Category/CreateCategory";

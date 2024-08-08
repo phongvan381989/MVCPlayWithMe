@@ -28,7 +28,7 @@ namespace MVCPlayWithMe.General
         public static readonly int quota = 5;
         public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
         public static readonly int offset = 20;
-
+        public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
         // Cookie const
         #region Cookie
         public static readonly string userIdKey = "uid";
@@ -39,12 +39,8 @@ namespace MVCPlayWithMe.General
         public static readonly string cartKey = "cart";
 
         public static readonly string customerInforKey = "cusinfor";
+        public static readonly string itemOnRowSearchPage = "itemOnRow";
         #endregion
-
-        /// <summary>
-        /// Hàm trả về fail, chi tiết lỗi sẽ được lưu trong biến này
-        /// </summary>
-        public static string CommonErrorMessage;
 
         public enum EECommerceType
         {
@@ -112,7 +108,7 @@ namespace MVCPlayWithMe.General
         public static string GetAbsoluteProductMediaFolderPath(string productId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
-            MyLogger.GetInstance().Info(path);
+            //MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -205,7 +201,7 @@ namespace MVCPlayWithMe.General
         public static string GetFirstProductImageSrc(string productId)
         {
             string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
-            MyLogger.GetInstance().Info(path);
+            //MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
                 return string.Empty;
@@ -418,7 +414,7 @@ namespace MVCPlayWithMe.General
         /// <param name="path">tên gồm đường dẫn</param>
         public static void DeleteImageVideoWithoutExtension(string path)
         {
-            MyLogger.GetInstance().Info(" Start DeleteImageVideoWithoutExtension: " + path);
+            //MyLogger.GetInstance().Info(" Start DeleteImageVideoWithoutExtension: " + path);
             //// Check tên file là image hoặc video.
             Boolean isImage = ImageExtensions.Contains(Path.GetExtension(path).ToLower());
 
@@ -434,7 +430,7 @@ namespace MVCPlayWithMe.General
                     if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
                     {
                         DeleteNormalAnd320Image(f);
-                        MyLogger.GetInstance().Info("Delete: " + f);
+                        //MyLogger.GetInstance().Info("Delete: " + f);
                         break;
                     }
                 }
@@ -443,7 +439,7 @@ namespace MVCPlayWithMe.General
                     if (VideoExtensions.Contains(Path.GetExtension(f).ToLower()))
                     {
                         System.IO.File.Delete(f);
-                        MyLogger.GetInstance().Info("Delete: " + f);
+                        //MyLogger.GetInstance().Info("Delete: " + f);
                         break;
                     }
                 }
@@ -585,7 +581,7 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Xóa ảnh, video cũ trong thư mục
+        /// Xóa ảnh, video trong thư mục
         /// </summary>
         /// <param name="path">Thư mục ảnh/video</param>
         /// <returns></returns>
@@ -612,7 +608,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Info(ex.ToString());
+                MyLogger.GetInstance().Warn(ex.ToString());
                 rs = System.Int32.MinValue;
             }
 
@@ -773,7 +769,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Info(ex.ToString());
+                MyLogger.GetInstance().Warn(ex.ToString());
                 rs = System.Int64.MinValue;
             }
 
@@ -909,6 +905,36 @@ namespace MVCPlayWithMe.General
             }
             SortSourceFile(src);
             return src;
+        }
+
+        // Từ src ảnh lấy được src phiên bản 320
+        // path là tên gồm đường dẫn
+        public static string Get320VersionOfImageSrc(string path)
+        {
+            // Nếu đã là phiên bản 320 bỏ qua
+            if (path.Contains("_320"))
+                return path;
+            // Nếu là NoImageThumbnail.png bỏ qua
+            if (path.Contains("NoImageThumbnail"))
+                return path;
+
+            var fileNameWithoutExtention = Path.GetFileNameWithoutExtension(path);
+            var fileExtention = Path.GetExtension(path);
+            var fileDir = Path.GetDirectoryName(path);
+
+
+            var newFileName = "";
+            if (fileExtention != "png" &&
+                fileExtention != "jpg")
+            {
+                newFileName = fileNameWithoutExtention + ".jpg";
+            }
+            else
+            {
+                newFileName = Path.GetFileName(path);
+            }
+            var newSrc = fileDir + "_320/" + newFileName;
+            return newSrc;
         }
 
         // Lấy ảnh đầu tiên của imageSrc cho nhanh
@@ -1437,6 +1463,20 @@ namespace MVCPlayWithMe.General
         //    }
 
         //}
+        #endregion
+
+        #region Encode/Decode base64
+        public static string Base64Encode(string plainText)
+        {
+            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
+            return System.Convert.ToBase64String(plainTextBytes);
+        }
+
+        public static string Base64Decode(string base64EncodedData)
+        {
+            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
+            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+        }
         #endregion
     }
 }

@@ -385,7 +385,7 @@
                             <div class="address-name-phone">Huệ hoàng (+84) 383519872</div>
                             <div class="address-address">Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Hà Nội</div>
                             <div class="address-default">Mặc định</div>
-                            <button class="change-address-btn">Thay đổi</button>
+                            <button type="button" class="change-address-btn">Thay đổi</button>
                         </div>
                     </div>
                 </div>
@@ -429,7 +429,7 @@
                     <div class="money-padding money-sum">₫0</div>
                 </div>
                 <div class="flex-end">
-                    <button class="order-btn" onclick="Order()">Đặt hàng</button>
+                    <button type="button" class="order-btn" onclick="Order()">Đặt hàng</button>
                 </div>
             </div>
         </div>
@@ -441,6 +441,7 @@
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
     <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
     <script src="~/Scripts/web.play.with.me.address.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listCartCookieObject; // list cart cookie object server trả về, đã check real == 1 trên server
 
@@ -645,7 +646,7 @@
             if (funcOfChangeAddress !== null) {
                 changeAddressBtnEle.removeEventListener("click", funcOfChangeAddress);
             }
-            funcOfChangeAddress = function () { ShowListCustomerInforModal();};
+            funcOfChangeAddress = function () { ShowListCustomerInforModal(); };
             changeAddressBtnEle.addEventListener("click", funcOfChangeAddress);
         }
 

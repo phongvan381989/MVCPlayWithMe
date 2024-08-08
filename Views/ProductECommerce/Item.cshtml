@@ -47,6 +47,7 @@
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.item.model.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         GetListProductName();
         GetListCombo();
@@ -171,9 +172,9 @@
 
                         if (responseDB.responseText != "null") {
                             let result = JSON.parse(responseDB.responseText);
-                            if (DEBUG) {
-                                console.log(JSON.stringify(result));
-                            }
+                            //if (DEBUG) {
+                            //    console.log(JSON.stringify(result));
+                            //}
                             if (result.State == 0) {
                                 vbnItemId = result.myAnything;
                             }
@@ -339,7 +340,7 @@
             }
             catch (err) {
                 //alert("Cập nhật sản phẩm lỗi.");
-                await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.",null);
+                await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
                 RemoveCircleLoader();
                 return;
             }
@@ -349,8 +350,7 @@
             window.scrollTo(0, 0);
         }
 
-        async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId)
-        {
+        async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId) {
             ShowCircleLoader();
             const searchParams = new URLSearchParams();
             searchParams.append("strCommonItem", strCommonItem);

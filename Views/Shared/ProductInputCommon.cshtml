@@ -6,7 +6,16 @@
 
             <datalist id="list-combo"></datalist>
         </div>
-        <button type="submit" id="button-go-page-combo-id" formaction="/Combo/Create" formtarget="_self" style="float: right;">Thêm combo</button>
+        <div style="float: right; display:flex;">
+            <button type="submit" id="button-go-page-combo-id" formaction="/Combo/Create" formtarget="_self">
+                Thêm Mới Combo
+            </button>
+
+            <button type="button" onclick="UpdateComboId()" class="diplay-none-when-create"
+                    style="display:none; margin-left:20px;">
+                Cập nhật
+            </button>
+        </div>
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 
@@ -17,12 +26,23 @@
 
             <datalist id="list-category"></datalist>
         </div>
-        <button type="submit" formaction="/Category/Create" formtarget="_self" style="float: right;">Thêm thể loại</button>
+        
+        <div style="float: right; display:flex;">
+            <button type="submit" formaction="/Category/Create" formtarget="_self"
+                    style="float: right;">Thêm Mới Thể Loại</button>
+
+            <button type="button" onclick="UpdateCategoryId()" class="diplay-none-when-create"
+                    style="display:none; margin-left:20px;">
+                Cập nhật
+            </button>
+        </div>
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 
     <label for="book-cover-price">Giá bìa:</label><br>
-    <input class="config-max-width margin-vertical" type="number" id="book-cover-price" value="">
+    <input class="config-max-width margin-vertical" type="number" id="book-cover-price" value=""
+           oninput="ValidatePositiveIntegerNumber(this)">
+    <button type="button" onclick="UpdateBookCoverPrice()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     <label for="hard-cover">Bìa:</label><br>
@@ -55,7 +75,18 @@
                    id="publisher-id">
             <datalist id="list-Publisher"></datalist>
         </div>
-        <button type="submit" formaction="/Publisher/Create" formtarget="_self" style="float: right;">Thêm nhà phát hành</button>
+
+        <div style="float: right; display:flex;">
+            <button type="submit" formaction="/Publisher/Create" formtarget="_self"
+                    style="float: right;">
+                Thêm Mới Nhà Phát Hành
+            </button>
+
+            <button type="button" onclick="UpdatePublisherId()" class="diplay-none-when-create"
+                    style="display:none; margin-left:20px;">
+                Cập nhật
+            </button>
+        </div>
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 

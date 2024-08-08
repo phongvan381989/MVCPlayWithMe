@@ -34,6 +34,11 @@ function CheckValidateEmail(email) {
     );
 }
 
+function ValidatePositiveIntegerNumber(ele) {
+    if (ele.value < 0)
+        ele.value = 0;
+}
+
 // Có thể dùng SDT, Email hoặc tên đăng nhập làm tên tài khoản
 function CheckUserNameValid(userName) {
     if (isEmptyOrSpaces(userName)) {
@@ -146,17 +151,6 @@ function CheckPassWordValid(passWord, repassWord) {
     return '{"isValid":true, "message":"Mật khẩu ok"}';
 }
 
-function SetCookie(name, value, days) {
-    //document.cookie = name + '=' + value + '; Path=/;';
-    var expires = "";
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
 function DeleteCookie(name) {
     document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
 }
@@ -251,28 +245,11 @@ function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError)
     return isOk;
 }
 
-// Check từ kết quả trả về của câu mysql
-function CheckStatusAndShowPromptFromResponseObject(responseText) {
-    const obj = JSON.parse(responseText);
-
-    let mess = "Thao tác lỗi.";
-    if (obj != null) {
-        mess = obj.Message;
-    }
-
-    alert(mess);
-}
-
-function ShowResult(str) {
-
-    alert(str);
-}
-
 // str: text cần check
 // id của <p> hiển thị kết quả nếu text empty or space
 function CheckIsEmptyOrSpacesAndShowResult(str, strResult) {
     if (isEmptyOrSpaces(str)) {
-        ShowResult(strResult);
+        CreateMustClickOkModal(strResult, null);
         return true;
     }
 
@@ -285,9 +262,9 @@ function CheckIsEmptyOrSpacesAndShowResult(str, strResult) {
 // str: giá trị text đầu vào
 function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
 {
-    if (DEBUG) {
-        console.log("GetDataFromDatalist CALL value: " + str);
-    }
+    //if (DEBUG) {
+    //    console.log("GetDataFromDatalist CALL value: " + str);
+    //}
     let option = document.getElementById(datalistId).options;
     if (option == null)
         return null;
@@ -295,9 +272,9 @@ function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
     let length = option.length;
     for (let i = 0; i < length; i++) {
         if (option.item(i).value === str) {
-            if (DEBUG) {
-                console.log(option.item(i).getAttribute(dataIdAttributeName));
-            }
+            //if (DEBUG) {
+            //    console.log(option.item(i).getAttribute(dataIdAttributeName));
+            //}
             return option.item(i).getAttribute(dataIdAttributeName);
         }
     }
@@ -499,6 +476,9 @@ async function ReloadAndScrollToTop() {
 }
 
 function TopFunction() {
+    if (DEBUG) {
+        console.log("TopFunction CALL");
+    }
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
 }
@@ -597,7 +577,7 @@ function Get320VersionOfImageSrc(src) {
     if (src.includes("NoImageThumbnail"))
         return src;
 
-    let filename = src.replace(/^.*[\\/]/, '')
+    let filename = src.replace(/^.*[\\/]/, '');
 
 
     let lastIndex = src.lastIndexOf(filename);
@@ -765,38 +745,6 @@ function CreateImageElement(/*width, height, */src, className) {
     return img;
 }
 
-// Check khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
-// menu Tài Khoản góc trên phải màn hình
-// Hàm này phải gọi mỗi khi load page
-function ShowAccoutAction() {
-    let ele = document.getElementsByClassName("dropdown-content")[0];
-    if (ele == null) { // Đăng nhập với vai trò admin
-        return;
-    }
-
-    ele.innerHTML = "";
-
-    if (CheckAnonymousCustomer()) {
-        // Đăng nhập
-        CreateChildOfAccountElementV2(ele, "/Customer/Login", "Đăng nhập")
-
-        // Đăng ký
-        CreateChildOfAccountElementV2(ele, "/Customer/CreateCustomer", "Đăng ký")
-    }
-    else {
-
-        // Thông tin tài khoản
-        CreateChildOfAccountElementV2(ele, "/Customer/AccountInfor", "Thông tin tài khoản")
-
-        // Đơn hàng của tôi
-        CreateChildOfAccountElementV2(ele, "/Customer/Order", "Đơn hàng của tôi")
-
-        // Đăng xuất
-        CreateChildOfAccountElement(ele, function () { Logout(); }, "Đăng xuất")
-
-    }
-}
-
 // Lấy được giá trị của tham số từ url và tên tham số
 function GetValueFromUrlName(name) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -805,9 +753,9 @@ function GetValueFromUrlName(name) {
 
 // Về trang chính
 function GoHomePage() {
-    if (!window.location.href.toUpperCase().includes("/Home/Index".toUpperCase())) {
-        window.location.href = "/Home/Index";
-    }
+    //if (!window.location.href.toUpperCase().includes("/Home/Index".toUpperCase())) {
+        window.location.href = "/";
+    //}
 }
 
 function GoMyCart() {
@@ -829,75 +777,6 @@ function SetMinWidth(ele, minValue) {
         ele.style.minWidth = scrWidth + "px";
     }
 }
-
-// Cập nhật số sản phẩm trong giỏ hàng ( menu top), ẩn hiện icon giỏ hàng nếu cần thiết
-async function UpdateCartCount() {
-    let length = 0;
-    if (CheckAnonymousCustomer()) {
-        // Lấy giỏ hàng từ cookie
-        let cartCookie = GetCookie(cartKey);
-        let myArray = GetListCartCookieFromCartCookie(cartCookie);
-        length = myArray.length;
-    }
-    else {
-        const searchParams = new URLSearchParams();
-
-        let query = "/Customer/GetCartCount";
-
-        let responseDB = await RequestHttpPostPromise(searchParams, query);
-        let result = JSON.parse(responseDB.responseText);
-
-        // AUTHEN_FAIL
-        if (result.State == 6) {
-            AuthenFail();
-            return;
-        }
-        length = result.myAnything;
-    }
-
-    document.getElementsByClassName("cart-count")[0].innerHTML = length;
-}
-
-// Với khách mọi page đều phải thực hiện sau khi load 
-async function CommonAction() {
-    if (DEBUG) {
-        console.log("CommonAction CALL");
-    }
-    if (document.getElementById("biggestContainer_top") == null) {
-        return;
-    }
-    // Chỉ hiện tìm kiếm trên Home page
-    {
-        let href = window.location.href.toUpperCase();
-        if (href.endsWith("/HOME/INDEX") ||
-            href.endsWith("/HOME/INDEX/") ||
-            href.endsWith("/HOME") ||
-            href.endsWith("/HOME/") ||
-            href.endsWith("COM") ||
-            href.endsWith("COM/") ||
-            href.endsWith("56479") ||
-            href.endsWith("56479/")) {
-            document.getElementById("left_container").style.display = "flex";
-        }
-        else {
-            document.getElementById("left_container").style.display = "none";
-        }
-    }
-    if (CheckIsCustomer()) {
-        await ShowAccoutAction();
-        await UpdateCartCount();
-    }
-    else {
-        // Ẩn thông tin account
-        document.getElementsByClassName("top-account-container")[0].style.display = "none";
-        document.getElementsByClassName("top-account-container")[0].style.display = "none";
-
-        // Ẩn thông tin giỏ hàng
-        document.getElementsByClassName("cart-container")[0].style.display = "none";
-    }
-}
-
-CommonAction();
 
 // ele là <datalist>
 // list là danh sách dữ liệu có cấu trúc: id, name

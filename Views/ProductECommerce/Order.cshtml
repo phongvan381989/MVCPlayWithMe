@@ -164,8 +164,8 @@
         </div>
 
         <div class="cvAncz980">
-            <button class="vndejhx90" onclick="GetListOrder()">Danh Sách Đơn Hàng</button>
-            <button class="vndejhx90" onclick="CheckPackedOrderEnough()">Kiểm Tra Đủ Đơn</button>
+            <button type="button" class="vndejhx90" onclick="GetListOrder()">Danh Sách Đơn Hàng</button>
+            <button type="button" class="vndejhx90" onclick="CheckPackedOrderEnough()">Kiểm Tra Đủ Đơn</button>
         </div>
 
         <div class="cvAncz980">
@@ -216,7 +216,7 @@
 
         <div class="cvAncz980">
             <input type="text" class="vndejhx90" name="order-code" />
-            <button class="vndejhx90 btn-order-detail" onclick="OrderDetail()">Chi Tiết Đơn Hàng</button>
+            <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetail()">Chi Tiết Đơn Hàng</button>
         </div>
 
         <div>
@@ -243,21 +243,22 @@
                         <p class="zcx6768SF cccaaa4545 nvns63099"></p>
                     </div>
                     <input type="text" class="nvns63099" name="product-code-isbn" />
-                    <button class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
-                    <button class="nvns63099 btn-return-order" onclick="ReturnedOrder()">Hoàn Hàng</button>
+                    <button type="button" class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
+                    <button type="button" class="nvns63099 btn-return-order" onclick="ReturnedOrder()">Hoàn Hàng</button>
                 </div>
             </div>
 
             <div class="order-detail">
             </div>
             <div class="xcvxvdgdfw">
-                <button class="nvns63099 btn-enough-product" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
+                <button type="button" class="nvns63099 btn-enough-product" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
             </div>
         </div>
     </div>
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listOrder; // Lưu danh sách common order trả về
         let listOrderTemp = []; // Lưu danh sách common order sau khi lọc, và được hiển thị

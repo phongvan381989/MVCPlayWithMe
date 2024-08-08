@@ -518,6 +518,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\web.play.with.me.action.common.js" />
     <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
     <Content Include="Scripts\web.play.with.me.combo.common.js" />
@@ -545,8 +546,6 @@
     <Content Include="Views\_ViewStart.cshtml" />
     <Content Include="Views\Shared\Error.cshtml" />
     <Content Include="Views\Shared\_Layout.cshtml" />
-    <Content Include="Views\Home\About.cshtml" />
-    <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Scripts\web.play.with.me.common.js" />
     <Content Include="Views\Administrator\Index.cshtml" />
     <Content Include="Views\Administrator\Login.cshtml" />
@@ -605,6 +604,7 @@
     <Content Include="Views\Product\NeedUpdateQuatity.cshtml" />
     <Content Include="Views\Product\MappingOfProduct.cshtml" />
     <Content Include="Views\Combo\MappingOfCombo.cshtml" />
+    <Content Include="Views\Home\Search.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

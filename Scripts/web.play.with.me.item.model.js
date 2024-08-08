@@ -214,11 +214,6 @@ function AddDistanceRows(modelContainer) {
     modelContainer.appendChild(document.createElement("br"));
 }
 
-function ValidateDiscount(ele) {
-    if (ele.value < 0)
-        ele.value = 0;
-}
-
 function AddLabelInput(container, label, id, inputType, disabled) {
     // Thêm tên
     const div = document.createElement("div");
@@ -274,7 +269,7 @@ function AddDiscount(container) {
     inp.id = "id-discount-" + autoIncrease;
     inp.className = classOfModelDiscount;
     inp.addEventListener("input", function (event) {
-        ValidateDiscount(event.currentTarget);
+        ValidatePositiveIntegerNumber(event.currentTarget);
     });
 
     let labPercent = document.createElement("label");
@@ -300,13 +295,13 @@ async function ModelUpdateDiscount(element) {
     let modelContainer = element.parentElement.parentElement;
     let modelId = modelContainer.modelId;
     let discount = modelContainer.getElementsByClassName(classOfModelDiscount)[0].value;
-    if (DEBUG) {
-        console.log("ModelUpdateDiscount CALL ");
-        console.log("element.tagName " + element.tagName);
-        console.log("modelContainer.tagName " + modelContainer.tagName);
-        console.log("modelId: " + modelId);
-        console.log("discount: " + discount);
-    }
+    //if (DEBUG) {
+    //    console.log("ModelUpdateDiscount CALL ");
+    //    console.log("element.tagName " + element.tagName);
+    //    console.log("modelContainer.tagName " + modelContainer.tagName);
+    //    console.log("modelId: " + modelId);
+    //    console.log("discount: " + discount);
+    //}
 
     let url = "/ItemModel/UpdateDiscount";
     const searchParams = new URLSearchParams();
@@ -320,12 +315,12 @@ async function ModelUpdateDiscount(element) {
 async function ModelUpdateMapping(element) {
     let modelContainer = element.parentElement.parentElement;
     let modelId = modelContainer.modelId;
-    if (DEBUG) {
-        console.log("ModelUpdateMapping CALL ");
-        console.log("element.tagName " + element.tagName);
-        console.log("modelContainer.tagName " + modelContainer.tagName);
-        console.log("modelId: " + modelId);
-    }
+    //if (DEBUG) {
+    //    console.log("ModelUpdateMapping CALL ");
+    //    console.log("element.tagName " + element.tagName);
+    //    console.log("modelContainer.tagName " + modelContainer.tagName);
+    //    console.log("modelId: " + modelId);
+    //}
     let listProIdMapping = JSON.stringify(GetListProIdMapping(modelContainer.getElementsByClassName(classOfModelTable)[0]));
     let listQuantityMapping = JSON.stringify(GetListQuantityMapping(modelContainer.getElementsByClassName(classOfModelTable)[0]));
 
@@ -342,12 +337,12 @@ async function ModelUpdateMapping(element) {
 async function ModelUpdateName(element) {
     let modelContainer = element.parentElement.parentElement;
     let modelId = modelContainer.modelId;
-    if (DEBUG) {
-        console.log("ModelUpdateMapping CALL ");
-        console.log("element.tagName " + element.tagName);
-        console.log("modelContainer.tagName " + modelContainer.tagName);
-        console.log("modelId: " + modelId);
-    }
+    //if (DEBUG) {
+    //    console.log("ModelUpdateMapping CALL ");
+    //    console.log("element.tagName " + element.tagName);
+    //    console.log("modelContainer.tagName " + modelContainer.tagName);
+    //    console.log("modelId: " + modelId);
+    //}
     let name = modelContainer.getElementsByClassName(classOfModelName)[0].value;
 
     let url = "/ItemModel/UpdateModelName";
@@ -788,7 +783,7 @@ async function AddItemModel() {
 async function UpdateItemModel() {
     let itemId = item.id;
     if (itemId == null) {
-        ShowResult("Sản phẩm không chính xác.")
+        CreateMustClickOkModal("Sản phẩm không chính xác.", null);
         return;
     }
 
@@ -1184,10 +1179,10 @@ async function ItemUpdateCategory() {
 }
 
 function ShowCategoryFromCategoryId(categoryId) {
-    if (DEBUG){
-        console.log("ShowCategoryFromCategoryId CALL");
-        console.log("categoryId: " + categoryId);
-    }
+    //if (DEBUG){
+    //    console.log("ShowCategoryFromCategoryId CALL");
+    //    console.log("categoryId: " + categoryId);
+    //}
     if (categoryId == 0)// giá trị mặc định chưa chọn thể loại
         return;
 

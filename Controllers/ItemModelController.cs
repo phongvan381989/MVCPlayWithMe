@@ -336,7 +336,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = namePara;
             searchParameter.start = start;
             searchParameter.offset = offset;
-            lsSearchResult = sqler.SearchItemChangePage(searchParameter);
+            lsSearchResult = sqler.SearchItemPage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -356,7 +356,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = namePara;
             searchParameter.start = 0;
             searchParameter.offset = 1000000;
-            lsSearchResult = sqler.SearchItemChangePage(searchParameter);
+            lsSearchResult = sqler.SearchItemPage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
