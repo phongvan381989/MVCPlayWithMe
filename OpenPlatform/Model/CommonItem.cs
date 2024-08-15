@@ -22,7 +22,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// <summary>
         /// Unique product ID
         /// Shopee: Nếu sản phẩm không có phân loại, đây là id sản phẩm, modelId = -1, nếu có phân loại thì modelId != -1
-        /// Tiki: Đây là id sản phẩm
+        /// Tiki: Đây là id sản phẩm, modelId = -1
         /// </summary>
         public long itemId { get; set; }
 

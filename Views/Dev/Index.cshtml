@@ -166,7 +166,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Có lỗi xảy ra.");
         }
 
         async function ShopeeSaveCode() {
@@ -183,7 +183,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Có lỗi xảy ra.");
         }
 
         async function ShopeeGetTokenShopLevelAfterAuthorization() {
@@ -197,7 +197,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi xảy ra.");
         }
     </script>
 </body>

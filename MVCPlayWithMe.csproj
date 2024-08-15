@@ -605,6 +605,9 @@
     <Content Include="Views\Product\MappingOfProduct.cshtml" />
     <Content Include="Views\Combo\MappingOfCombo.cshtml" />
     <Content Include="Views\Home\Search.cshtml" />
+    <Content Include="Views\Shared\DoesntFindId.cshtml" />
+    <Content Include="Views\Shared\Product\TableOfMapping.cshtml" />
+    <Content Include="Views\ProductECommerce\ItemOnDB.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

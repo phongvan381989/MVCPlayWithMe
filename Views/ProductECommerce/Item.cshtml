@@ -29,7 +29,7 @@
 </head>
 <body>
     <div id="biggestContainer">
-        <div class="config-max-width padding-container">
+        <div class="config-max-width padding-container" id="result-find-id">
             <div class="one-item-container">
                 <img class="item-image-ACvv">
                 <div class="fcpaxm09zf">
@@ -43,34 +43,17 @@
 
             <button type="button" onclick="UpdateEEcommerceMapping()">Cập nhật</button>
         </div>
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.item.model.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-        GetListProductName();
-        GetListCombo();
         InitializeModal();
         ViewItemFromId();
         let commonItem = null;
         let vbnItemId = 0;
-
-        //async function GetVBNItemId(vbnModelId) {
-        //    const searchParams = new URLSearchParams();
-        //    searchParams.append("modelId", vbnModelId);
-        //    let query = "/ItemModel/GetVBNItemIdFromModelId";
-
-        //    let responseDB = await RequestHttpPostPromise(searchParams, query);
-
-        //    if (responseDB.responseText != "null") {
-        //        let result = JSON.parse(responseDB.responseText);
-        //        if (result.State == 0) {
-        //            return result.myAnything;
-        //        }
-        //    }
-        //    return 0; // Không lấy được item id
-        //}
 
         function GetEEcommerceTypeFromUrl() {
             let type = "SHOPEE";
@@ -101,15 +84,17 @@
             ShowCircleLoader();
 
             let responseDB = await GetItemFromId(GetEEcommerceTypeFromUrl(), GetValueFromUrlName("id"));
+            RemoveCircleLoader();
             if (responseDB.responseText != "null") {
+                GetListProductName();
+                GetListCombo();
                 commonItem = JSON.parse(responseDB.responseText);
             }
             else {
-                RemoveCircleLoader();
+                ShowDoesntFindId();
                 return;
             }
 
-            RemoveCircleLoader();
             // Hiển thị sản phẩm của sàn
             if (commonItem.imageSrc) {
                 document.getElementsByClassName("item-image-ACvv")[0].src = commonItem.imageSrc;

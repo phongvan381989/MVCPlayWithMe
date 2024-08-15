@@ -156,7 +156,10 @@ namespace MVCPlayWithMe.Controllers
         public string GetItemFromId(int id)
         {
             Item item = itemModelsqler.GetItemFromId(id);
-            item.SetShopeeItemId();
+            if (item != null)
+            {
+                item.SetShopeeItemId();
+            }
             return JsonConvert.SerializeObject(item);
         }
 

@@ -880,7 +880,7 @@ async function DeleteModel(modelId) {
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
 
-    let rs = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+    let rs = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
     return rs;
 }
 
@@ -899,7 +899,7 @@ async function DeleteItemModel(id) {
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
 
-    let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+    let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
     if (isOk) {
         window.location.href = "/Administrator/Index";
     }
@@ -1204,14 +1204,15 @@ async function ShowItemFromItemObject() {
 
     let responseDB = await GetItemObjectFromId(GetValueFromUrlName("id"));
     if (responseDB.responseText != "null") {
+        GetListProductName();
+        GetListCombo();
         item = JSON.parse(responseDB.responseText);
     }
     else {
         item = null;
-    }
-
-    if (item == null)
+        ShowDoesntFindId();
         return;
+    }
 
     // Hiển thị dữ liệu, image, video của item
     document.getElementById("item-name-id").value = item.name;

@@ -10,7 +10,7 @@
 <body>
 
     <div id="biggestContainer">
-        <div class="config-max-width padding-container">
+        <div class="config-max-width padding-container" id="result-find-id">
             @Html.Partial("~/Views/Shared/ProductInput.cshtml")
             <div class="config-max-width">
                 <br />
@@ -27,6 +27,7 @@
                 </button>
             </div>
         </div>
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -37,8 +38,6 @@
         ShowUpdateButtonForOne();
 
         ShowProductFromObject();
-
-        GetSomeData();
 
         function MappingOfProduct() {
             // Lấy id

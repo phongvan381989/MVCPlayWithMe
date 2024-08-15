@@ -195,6 +195,8 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
             ele.innerHTML = "Xong";
         }
     }
+    return new Promise(function (resolve, reject) {
+    });
 }
 
 function ShowListCommonItem(list, table, disableUpdateButton) {
@@ -250,19 +252,18 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
             img.width = thumbnailWidth;
             img.className = "go-to-detail-item";
             img.title = "Xem sản phẩm trên sàn thương mại";
+            // Item là Tiki
+            if (item.eType == eTiki) {
+                img.itemUrl = GetTikiItemUrl(item.itemId);
+            }
+            // Item là shopee
+            else if (item.eType == eShopee) {
+                img.itemUrl = GetShopeeItemUrl(item.itemId);
+            }
             img.onclick = function () {
                 // Lấy id
                 let id = Number(this.parentElement.parentElement.children[0].innerHTML);
-                let url;
-                // Item là Tiki
-                if (item.eType == eTiki) {
-                    url = GetTikiItemUrl(id);
-                }
-                // Item là shopee
-                else if (item.eType == eShopee) {
-                    url = GetShopeeItemUrl(id);
-                }
-                window.open(url);
+                window.open(this.itemUrl);
             };
             cell3.append(img);
 
@@ -289,14 +290,14 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
             btn.innerHTML = "Cập nhật.";
             btn.title = "Nếu Item không hoạt động bình thường, nút này được vô hiệu.";
             if (disableUpdateButton == false && item.bActive) {
-                btn.onclick = function () {
+                btn.onclick = async function () {
                     let grandFather = this.parentElement.parentElement;
                     // Lấy id
                     let itemId = Number(grandFather.children[0].innerHTML);
                     let modelId = Number(grandFather.children[1].innerHTML);
                     let eType = grandFather.children[3].innerHTML;
                     let ele = grandFather.children[8];
-                    UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele);
+                    await UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele);
                 }
             }
             else {

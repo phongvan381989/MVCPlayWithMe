@@ -19,36 +19,41 @@
 </head>
 <body onload="GetCombo()">
     <div id="biggestContainer">
-        <div>
-            <label for="combo-id">Combo:</label>
-            <input type="text" class="config-max-width margin-vertical"
-                   id="combo-id">
+        <div id="result-find-id">
             <div>
-                <table id="product-table" style="display:none;">
-                    <tr>
-                        <th style="display:none">Id</th>
-                        <th>STT</th>
-                        <th>Ảnh</th>
-                        <th>Tên</th>
-                    </tr>
-                </table>
+                <label for="combo-id">Combo:</label>
+                <input type="text" class="config-max-width margin-vertical"
+                       id="combo-id">
+                <div>
+                    <table id="product-table" style="display:none;">
+                        <tr>
+                            <th style="display:none">Id</th>
+                            <th>STT</th>
+                            <th>Ảnh</th>
+                            <th>Tên</th>
+                        </tr>
+                    </table>
+                </div>
+                <div class="fkagvoa08fv">
+                    <div style="padding:10px 0px 10px 0px;"> Thông tin chung của các sản phẩm thuộc combo </div>
+                    @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonInfor()"
+                            title="Cập nhật thông tin chung cho các sản phẩm thuộc combo">
+                        Cập Nhật Thông Tin Chung
+                    </button>
+                </div>
             </div>
-            <div class="fkagvoa08fv">
-                <div style="padding:10px 0px 10px 0px;"> Thông tin chung của các sản phẩm thuộc combo </div>
-                @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
-                <button type="button" style="margin-right:20px;" onclick="UpdateCommonInfor()"
-                        title="Cập nhật thông tin chung cho các sản phẩm thuộc combo">
-                    Cập Nhật Thông Tin Chung
+            <br />
+            <div id="button_group_id">
+                <button type="button" style="margin-right:20px;" onclick="UpdateCombo()"
+                        title="Cập nhật tên combom, không cập nhật thông tin chung cho các sản phẩm thuộc combo">
+                    Cập Nhật
                 </button>
+                <button type="button" style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
+                <button type="button" onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
             </div>
         </div>
-        <br />
-        <div id="button_group_id">
-            <button type="button" style="margin-right:20px;" onclick="UpdateCombo()"
-                    title="Cập nhật tên combom, không cập nhật thông tin chung cho các sản phẩm thuộc combo">Cập Nhật</button>
-            <button type="button" style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
-            <button type="button" onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
-        </div>
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
@@ -56,10 +61,6 @@
     <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-        GetListCategory();
-        GetListPublisher();
-        GetListPublishingCompany();
-        SetListPublishingTime();
         let combo = null;
         document.getElementById("adjxn90snkx").remove();
         function ShowProductTable(list) {
@@ -113,7 +114,8 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
             if (responseDB.responseText == "null") {
-                document.getElementById("button_group_id").style.display = "none";
+                ShowDoesntFindId();
+                return;
             }
             else {
                 combo = JSON.parse(responseDB.responseText);
@@ -142,7 +144,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi xảy ra.");
         }
 
         async function DeleteCombo() {
@@ -162,7 +164,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
         }
 
         function MappingOfCombo() {
@@ -182,7 +184,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi xảy ra.");
         }
     </script>
 </body>

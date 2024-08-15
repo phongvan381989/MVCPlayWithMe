@@ -58,20 +58,6 @@
             xhttp.send();
         }
 
-        async function GetListCombo() {
-            const searchParams = new URLSearchParams();
-
-            let query = "/Combo/GetListCombo";
-
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            let list = [];
-            if (responseDB.responseText != "null") {
-                list = JSON.parse(responseDB.responseText);
-                let ele = document.getElementById("list-combo");
-                SetDataListOfIdName(ele, list);
-            }
-        }
-
         async function ShowListCombo() {
             // Lấy dữ liệu danh sách combo
             {

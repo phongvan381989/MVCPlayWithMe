@@ -41,17 +41,7 @@
         </div>
         <div class="config-max-width padding-container">
             <table id="myTableTMDT" style="display:none;">
-                <tr>
-                    <th style="display:none">Mã Item</th>
-                    <th style="display:none">Mã Model</th>
-                    <th style="width:200px">Ảnh</th>
-                    <th>Sàn</th>
-                    <th>SL Sàn</th>
-                    <th>Tên</th>
-                    <th>Liên Kết</th>
-                    <th>Cập Nhật</th>
-                    <th title="Item không hoạt động bình thường sẽ không cập nhật, dữ liệu ô này sẽ trống">Kết Quả</th>
-                </tr>
+                @Html.Partial("~/Views/Shared/Product/TableOfMapping.cshtml")
             </table>
             <table id="myTableWarehouese" style="display:none;">
                 <tr>

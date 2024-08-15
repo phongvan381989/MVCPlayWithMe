@@ -267,6 +267,7 @@ function SetProductInfomation(product) {
     document.getElementById("barcode").value = product.barcode;
     document.getElementById("product-name-id").value = product.name;
     document.getElementById("combo-id").value = product.comboName;
+    document.getElementById("combo-id").comboIdValue = product.comboId;
 
     SetProductCommonInfoWithCombo(product);
 
@@ -355,11 +356,11 @@ async function DeleteProduct(){
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
 
-    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
 };
 
 
-// HIển thị nút cập nhật cho riêng tên, isbn và mã sản phẩm
+// HIển thị nút cập nhật cho riêng tên, isbn, mã sản phẩm,...
 function ShowUpdateButtonForOne() {
     const collection = document.getElementsByClassName("diplay-none-when-create");
 
@@ -487,6 +488,19 @@ async function UpdateComboId() {
     }
 }
 
+function ComboOfProductPage() {
+    let comboId = document.getElementById("combo-id").comboIdValue;
+    if (comboId == null || comboId == -1) {
+        if (DEBUG) {
+            console.log("comboIdValue: " + comboId);
+        }
+        CreateMustClickOkModal("Sản phẩm không thuộc combo nào hoặc không lấy được thông tin combo.", null);
+        return;
+    }
+
+    window.open("/Combo/UpdateDelete?id=" + comboId);
+}
+
 async function UpdateCategoryId() {
     let categoryId = GetDataIdFromCategoryDatalist(document.getElementById("category-id").value);
     if (categoryId == null) {
@@ -539,29 +553,26 @@ async function UpdatePublisherId() {
     }
 }
 
-async function GetItemObjectFromId(id) {
+async function GetProductFromId(id) {
     const searchParams = new URLSearchParams();
     searchParams.append("id", id);
 
-    let query = "/Product/GetItemObjectFromId";
+    let query = "/Product/GetProductFromId";
 
     return RequestHttpPostPromise(searchParams, query);
 }
 
 async function ShowProductFromObject() {
-    let responseDB = await GetItemObjectFromId(GetValueFromUrlName("id"));
-    if (responseDB.responseText != null) {
+    let responseDB = await GetProductFromId(GetValueFromUrlName("id"));
+    let product;
+    if (responseDB.responseText != "null") {
+        GetSomeData();
         product = JSON.parse(responseDB.responseText);
     }
     else {
-        product = null;
-    }
-
-    if (product == null) {
-        SetProductInfomationToDefault();
+        ShowDoesntFindId();
         return;
     }
-
     SetProductInfomation(product);
 }
 

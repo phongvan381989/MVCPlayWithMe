@@ -423,6 +423,105 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
+        public List<CommonItem> ShopeeGetItemOnDB()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_Item_Model_From_TMDTShopeeItem_Id", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                long itemId = long.MaxValue;
+                long itemIdTem = long.MinValue;
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                CommonItem commonItem = null;
+                while (rdr.Read())
+                {
+                    itemIdTem = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
+                    if(itemId != itemIdTem)
+                    {
+                        itemId = itemIdTem;
+                        commonItem = new CommonItem(Common.eShopee);
+                        lsCommonItem.Add(commonItem);
+
+                        commonItem.itemId = itemId;
+                        commonItem.name = MyMySql.GetString(rdr, "ShopeeItemName");
+                    }
+                    CommonModel commonModel = new CommonModel();
+                    commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                    commonModel.name = MyMySql.GetString(rdr, "ShopeeModelName");
+                    commonItem.models.Add(commonModel);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                lsCommonItem = null;
+            }
+
+            conn.Close();
+            return lsCommonItem;
+        }
+
+        public MySqlResultState ShopeeDeleteItemOnDB(long itemId)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Delete_From_TMDTShopeeItemId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", itemId);
+
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+            return resultState;
+        }
+
+        // Trường hợp item chỉ có 1 modelId, modelId khác -1 hàm dưới chưa xóa dữ liệu tương ứng trong bảng tbShopeeItem
+        // Kết quả là có 1 item không có model nào trong DB
+        public MySqlResultState ShopeeDeleteModelOnDB(long modelId)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            if (modelId == -1)
+                return resultState;
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Delete_From_TMDTShopeeModeId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTShopeeModelId", modelId);
+
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+            return resultState;
+        }
 
         public MySqlResultState ShopeeUpdateMapping(List<CommonForMapping> ls)
         {

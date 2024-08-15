@@ -209,6 +209,60 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(result);
         }
 
+        [HttpGet]
+        public ActionResult ItemOnDB()
+        {
+            if (AuthentAdministrator() == null)
+                return View("~/Views/Administrator/Login.cshtml");
+
+            return View();
+        }
+
+        [HttpPost]
+        public string GetItemOnDB(string eType)
+        {
+            List<CommonItem> ls = null;
+            if (eType == Common.eShopee)
+            {
+                ls = shopeeSqler.ShopeeGetItemOnDB();
+            }
+            else if (eType == Common.eTiki)
+            {
+                ls = tikiSqler.TikiGetItemOnDB();
+            }
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        // Xóa item trên db
+        [HttpPost]
+        public string DeleteItemOnDB(string eType, string itemId)
+        {
+            MySqlResultState resultState = null;
+            if (eType == Common.eShopee)
+            {
+                long id = Common.ConvertStringToInt64(itemId);
+                resultState = shopeeSqler.ShopeeDeleteItemOnDB(id);
+            }
+            else if (eType == Common.eTiki)
+            {
+                int id = Common.ConvertStringToInt32(itemId);
+                resultState = tikiSqler.TikiDeleteItemOnDB(id);
+            }
+            return JsonConvert.SerializeObject(resultState);
+        }
+
+        // Xóa model Shopee trên db
+        [HttpPost]
+        public string DeleteShopeeModelOnDB(string eType, string modelId)
+        {
+            MySqlResultState resultState = null;
+            if (eType == Common.eShopee)
+            {
+                long id = Common.ConvertStringToInt64(modelId);
+                resultState = shopeeSqler.ShopeeDeleteModelOnDB(id);
+            }
+            return JsonConvert.SerializeObject(resultState);
+        }
         #endregion
 
         #region Xử lý đơn hàng

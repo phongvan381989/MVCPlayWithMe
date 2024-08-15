@@ -72,6 +72,7 @@ namespace MVCPlayWithMe.Models
             product.quantity = MyMySql.GetInt32(rdr, "Quantity");
             product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
             product.status = MyMySql.GetInt32(rdr, "Status");
+            product.comboId = MyMySql.GetInt32(rdr, "ComboId");
             product.comboName = MyMySql.GetString(rdr, "ComboName");
             product.SetSrcImageVideo();
 

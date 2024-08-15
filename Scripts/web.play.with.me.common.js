@@ -814,6 +814,10 @@ function SetDataListOfString(ele, list) {
 }
 
 async function GetListProductName() {
+    if (document.getElementById("product-name-id") == null) {
+        return;
+    }
+    document.getElementById("product-name-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Product/GetListProductName";
@@ -824,10 +828,14 @@ async function GetListProductName() {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-product-name");
         SetDataListOfIdName(ele, list);
+        document.getElementById("product-name-id").disabled = false;
     }
 }
 
 async function GetListCombo() {
+    if (document.getElementById("combo-id") == null) {
+        return;
+    }
     document.getElementById("combo-id").disabled = true;
     const searchParams = new URLSearchParams();
 
@@ -844,6 +852,9 @@ async function GetListCombo() {
 }
 
 async function GetListCategory() {
+    if (document.getElementById("category-id") == null) {
+        return;
+    }
     document.getElementById("category-id").disabled = true;
     const searchParams = new URLSearchParams();
 
@@ -860,6 +871,10 @@ async function GetListCategory() {
 }
 
 async function GetListAuthor() {
+    if (document.getElementById("author-id") == null) {
+        return;
+    }
+    document.getElementById("author-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Product/GetListAuthor";
@@ -870,10 +885,15 @@ async function GetListAuthor() {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-author");
         SetDataListOfString(ele, list);
+        document.getElementById("author-id").disabled = false;
     }
 }
 
 async function GetListTranslator() {
+    if (document.getElementById("translator-id") == null) {
+        return;
+    }
+    document.getElementById("translator-id").disabled = true;
     const searchParams = new URLSearchParams();
 
     let query = "/Product/GetListTranslator";
@@ -884,10 +904,14 @@ async function GetListTranslator() {
         list = JSON.parse(responseDB.responseText);
         let ele = document.getElementById("list-translator");
         SetDataListOfString(ele, list);
+        document.getElementById("translator-id").disabled = false;
     }
 }
 
 async function GetListPublisher() {
+    if (document.getElementById("publisher-id") == null) {
+        return;
+    }
     document.getElementById("publisher-id").disabled = true;
     const searchParams = new URLSearchParams();
 
@@ -904,6 +928,9 @@ async function GetListPublisher() {
 }
 
 async function GetListPublishingCompany() {
+    if (document.getElementById("publishing-company-id") == null) {
+        return;
+    }
     document.getElementById("publishing-company-id").disabled = true;
     const searchParams = new URLSearchParams();
 
@@ -945,4 +972,13 @@ function GetTikiItemUrl(id) {
 
 function GetProductUrl(id) {
     return "/Product/UpdateDelete?id=" + id;
+}
+
+// Không tìm thấy đối tượng, hiển thông báo
+function ShowDoesntFindId() {
+    document.getElementById("result-find-id").remove();
+    let ele = document.getElementById("doesnt-find-id");
+    ele.style.display = "flex";
+    ele.style.alignItems = "center";
+    ele.style.justifyContent = "center";
 }

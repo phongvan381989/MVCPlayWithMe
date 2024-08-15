@@ -64,7 +64,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string GetItemObjectFromId(int id)
+        public string GetProductFromId(int id)
         {
             if (AuthentAdministrator() == null)
             {
@@ -428,23 +428,6 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(new MySqlResultState());
-        }
-
-        /// <summary>
-        /// Lấy thông tin sản phẩm từ id sản phẩm
-        /// </summary>
-        /// <param name="id">id sản phẩm</param>
-        /// <returns></returns>
-        [HttpPost]
-        public string GetProduct(int id)
-        {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(null);
-            }
-
-            Product pro = sqler.GetProductFromId(id);
-            return JsonConvert.SerializeObject(pro);
         }
 
         ///// <summary>

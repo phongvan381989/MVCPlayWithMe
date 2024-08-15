@@ -179,6 +179,70 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
+        public List<CommonItem> TikiGetItemOnDB()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbtikiitem", conn);
+                cmd.CommandType = CommandType.Text;
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                CommonItem commonItem = null;
+                while (rdr.Read())
+                {
+                    commonItem = new CommonItem(Common.eTiki);
+                    lsCommonItem.Add(commonItem);
+
+                    commonItem.itemId = MyMySql.GetInt32(rdr, "TikiId");
+                    commonItem.name = MyMySql.GetString(rdr, "Name");
+
+                    CommonModel commonModel = new CommonModel();
+                    commonModel.modelId = -1;
+                    commonItem.models.Add(commonModel);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                errMessage = ex.ToString();
+                MyLogger.GetInstance().Warn(errMessage);
+                lsCommonItem = null;
+            }
+
+            conn.Close();
+            return lsCommonItem;
+        }
+
+        public MySqlResultState TikiDeleteItemOnDB(int itemId)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Delete_From_TMDTItemId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTId", itemId);
+
+                cmd.ExecuteNonQuery();
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            conn.Close();
+            return resultState;
+        }
+
         public MySqlResultState TikiUpdateMapping(List<CommonForMapping> ls)
         {
             CommonForMapping commonForMapping = ls[0];

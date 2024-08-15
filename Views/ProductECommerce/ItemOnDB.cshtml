@@ -1,0 +1,229 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .cvAncz980 {
+            display: flex;
+        }
+
+        .e-ecommonerce-type {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .kmaZvc29 {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="e-product-filter">
+            <div>
+                <div class="cvAncz980">
+                    <div class="e-ecommonerce-type">
+                        <input type="radio" id="tiki-e-ecommonerce-type" name="name-e-ecommonerce-type"
+                               onchange="ECommerceTypeChange()"
+                               class="kmaZvc29">
+                        <label for="tiki-e-ecommonerce-type">Tiki</label>
+                    </div>
+                    <div class="e-ecommonerce-type">
+                        <input type="radio" id="shopee-e-ecommonerce-type" name="name-e-ecommonerce-type"
+                               onchange="ECommerceTypeChange()"
+                               class="kmaZvc29" checked>
+                        <label for="shopee-e-ecommonerce-type">Shopee</label>
+                    </div>
+                    <div class="e-ecommonerce-type">
+                        <input type="radio" id="lazada-e-ecommonerce-type" name="name-e-ecommonerce-type"
+                               onchange="ECommerceTypeChange()"
+                               class="kmaZvc29">
+                        <label for="lazada-e-ecommonerce-type">Lazada</label>
+                    </div>
+                </div>
+            </div>
+
+            <div title="Lấy itemid, modelid sản phẩm Shopee, Tiki, Lazada đã được lưu trên db.">
+                <button type="button" class="pwm-btn-common" onclick="GetItemOnDB()"><span class="pwm-btn-text-common">Lấy Sản Phẩm</span></button>
+            </div>
+        </div>
+
+        <div>
+            <div id="count-common-item-result"></div>
+            <div class="config-max-width padding-container">
+                <table id="myTable">
+                    <tr>
+                        @*<th>STT</th>*@
+                        <th>Mã Item</th>
+                        <th>Mã Model</th>
+                        <th title="Gồm tên item phía trước">Tên</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.paging.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+    <script>
+        let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
+        function GetEEcommerceType() {
+            let type = eShopee;
+            let radio = document.getElementsByClassName("kmaZvc29");
+            if (radio[0].checked) {
+                type = eTiki;
+            }
+            else if (radio[1].checked) {
+                type = eShopee;
+            }
+            else if (radio[2].checked) {
+                type = eLazada;
+            }
+            return type;
+        }
+
+        function ECommerceTypeChange() {
+            listItem = [];
+            DeleteRowsExcludeHead(document.getElementById("myTable"));
+            document.getElementById("count-common-item-result").innerHTML = "";
+        }
+
+        async function GetItemOnDB() {
+            if (GetEEcommerceType() == eLazada)
+                return;
+
+            // Lấy tất cả sản phẩm của sàn, mất thời gian
+            if (listItem.length == 0) {
+                const searchParams = new URLSearchParams();
+                searchParams.append("eType", GetEEcommerceType());
+
+                let query = "/ProductECommerce/GetItemOnDB";
+
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                if (responseDB.responseText != "null") {
+                    listItem = JSON.parse(responseDB.responseText);
+                }
+                else {
+                    listItem = [];
+                }
+                RemoveCircleLoader();
+
+                let table = document.getElementById("myTable");
+                ShowListCommonItemOnDB(listItem, table);
+            }
+        }
+
+        function ShowListCommonItemOnDB(list, table) {
+            // Show
+            DeleteRowsExcludeHead(table);
+            document.getElementById("count-common-item-result").innerHTML = "Tổng " + list.length + " item sản phẩm";
+
+            let length = list.length;
+            if (length == 0) {
+                return;
+            }
+
+            // enum {
+            //    PLAY_WITH_ME  0,
+            //    TIKI  1,
+            //    SHOPEE  2,
+            //    LAZADA  3
+            //}
+            for (let i = 0; i < length; i++) {
+                let item = list[i];
+
+                let modelLength = item.models.length;
+                for (let j = 0; j < modelLength; j++) {
+
+                    let row = table.insertRow(-1);
+                    let model = item.models[j];
+                    // Insert new cells (<td> elements)
+                    let cell1 = row.insertCell(0);
+                    let cell2 = row.insertCell(1);
+                    let cell3 = row.insertCell(2);
+                    //let cell4 = row.insertCell(3);
+
+                    //// STT
+                    //cell1.innerHTML = i+1;
+
+                    // item Id
+                    cell1.innerHTML = item.itemId;
+                    cell1.className = "go-to-detail-item";
+                    cell1.title = "Xóa item khỏi cơ sở dữ liệu";
+                    cell1.onclick = async function () {
+                        if (confirm("Chỉ xóa khi item không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA item và thông tin liên quan?") == false) {
+                            return;
+                        }
+                        // Lấy id
+                        let id = Number(this.innerHTML);
+                        const searchParams = new URLSearchParams();
+                        searchParams.append("eType", GetEEcommerceType());
+                        searchParams.append("itemId", id);
+                        let query = "/ProductECommerce/DeleteItemOnDB";
+                        ShowCircleLoader();
+                        let responseDB = await RequestHttpPostPromise(searchParams, query);
+                        RemoveCircleLoader();
+
+                        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
+                    };
+
+                    // Model Id
+                    if (model.modelId != -1) {
+                        cell2.innerHTML = model.modelId;
+                        cell2.className = "go-to-detail-item";
+                        cell2.title = "Xóa model khỏi cơ sở dữ liệu";
+                        cell2.onclick = async function () {
+                            if (confirm("Chỉ xóa khi model không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA model và thông tin liên quan?") == false) {
+                                return;
+                            }
+                            // Lấy id
+                            let id = Number(this.innerHTML);
+                            const searchParams = new URLSearchParams();
+                            searchParams.append("eType", GetEEcommerceType());
+                            searchParams.append("modelId", id);
+                            let query = "/ProductECommerce/DeleteShopeeModelOnDB";
+                            ShowCircleLoader();
+                            let responseDB = await RequestHttpPostPromise(searchParams, query);
+                            RemoveCircleLoader();
+
+                            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
+                        };
+                    }
+
+                    // Tên
+                    if (model.modelId == -1) {
+                        cell3.innerHTML = item.name;
+                    }
+                    else {
+                        cell3.innerHTML = item.name + "--" + model.name;
+                    }
+                    cell3.className = "go-to-detail-item";
+                    cell3.title = "Xem sản phẩm trên sàn thương mại";
+                    // Item là Tiki
+                    if (item.eType == eTiki) {
+                        cell3.itemUrl = GetTikiItemUrl(item.itemId);
+                    }
+                    // Item là shopee
+                    else if (item.eType == eShopee) {
+                        cell3.itemUrl = GetShopeeItemUrl(item.itemId);
+                    }
+                    cell3.onclick = function () {
+                        // Lấy id
+                        let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+                        window.open(this.itemUrl);
+                    };
+                }
+            }
+        }
+
+    </script>
+</body>
+</html>

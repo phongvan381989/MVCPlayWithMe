@@ -27,40 +27,34 @@
 </head>
 <body onload="GetListCommonItemMappingFromProductId()">
     <div id="biggestContainer">
-        <div class="fmx09gx8">
-            <button type="button" onclick="UpdateQuantityToTMDTFromListCommonItem(listCommonItem)"
-                    title="Cập nhật số lượng sản phẩm lên Tiki, Shopee, Lazada và hiện kết quả">
-                Cập Nhật Số Lượng Trên Sàn
-            </button>
+        <div class="config-max-width padding-container" id="result-find-id">
+            <div class="fmx09gx8">
+                <button type="button" onclick="UpdateQuantityToTMDTFromListCommonItem(listCommonItem)"
+                        title="Cập nhật số lượng sản phẩm lên Tiki, Shopee, Lazada và hiện kết quả">
+                    Cập Nhật Số Lượng Trên Sàn
+                </button>
 
-        </div>
-        <div class="config-max-width padding-container">
-            <table id="myTable">
-                <tr>
-                    <th style="display:none">Mã Item</th>
-                    <th style="display:none">Mã Model</th>
-                    <th style="width:200px">Ảnh</th>
-                    <th>Sàn</th>
-                    <th>SL Sàn</th>
-                    <th>Tên</th>
-                    <th>Liên Kết</th>
-                    <th>Cập Nhật</th>
-                    <th>Kết Quả</th>
-                </tr>
-            </table>
+            </div>
+            <div class="config-max-width padding-container">
+                <table id="myTable">
+                    @Html.Partial("~/Views/Shared/Product/TableOfMapping.cshtml")
+                </table>
+            </div>
+
+            <div class="mapping_sample" style="display:none;">
+                <table>
+                    <tr>
+                        <th style="display:none">Mã Item</th>
+                        <th>STT</th>
+                        <th>Tên</th>
+                        <th>SL</th>
+                        <th>SL Kho</th>
+                    </tr>
+                </table>
+            </div>
         </div>
 
-        <div class="mapping_sample" style="display:none;">
-            <table>
-                <tr>
-                    <th style="display:none">Mã Item</th>
-                    <th>STT</th>
-                    <th>Tên</th>
-                    <th>SL</th>
-                    <th>SL Kho</th>
-                </tr>
-            </table>
-        </div>
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -85,6 +79,10 @@
             }
             else {
                 listCommonItem = [];
+            }
+            if (listCommonItem.length == 0) {
+                ShowDoesntFindId();
+                return;
             }
             let table = document.getElementById("myTable");
             ShowListCommonItem(listCommonItem, table, false);

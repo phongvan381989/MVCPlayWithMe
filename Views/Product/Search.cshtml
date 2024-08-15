@@ -141,12 +141,13 @@
                     <div id="count-result"></div>
                     <table id="myTable">
                         <tr>
-                            <th style="display:none"></th>
+                            <th style="display:none">productId</th>
                             <th style="width:200px">Ảnh</th>
                             <th title="Gồm tên combo sau dấu - nếu có. Tên đỏ biểu hiện sản phẩm hết hàng, xanh lơ biểu hiện không kinh doanh">Tên</th>
                             <th> Giá Bìa</th>
                             <th title="Đỏ biểu hiện số lượng tồn kho là 0. Click để sắp xếp tăng hoặc giảm dần tồn kho sản phẩm ĐANG HIỂN THỊ"
                                 style="cursor:pointer;" onclick="ArrangeQuantity()">Số Lượng</th>
+                            <th style="display:none;">comboId</th>
                         </tr>
                     </table>
                 </div>
@@ -239,6 +240,7 @@
                 let cell3 = row.insertCell(2);
                 let cell4 = row.insertCell(3);
                 let cell5 = row.insertCell(4);
+                let cell6 = row.insertCell(5);
 
                 // Id
                 cell1.innerHTML = product.id;
@@ -263,6 +265,8 @@
 
                 // Tên: tên + " - " + tên combo
                 let pName = document.createElement("p");
+                pName.className = "go-to-detail-product";
+                pName.title ="Xem thông tin combo của sản phẩm"
                 if (product.comboName == "null" || product.comboName.length == 0) {
                     pName.innerHTML = product.name;
                 }
@@ -271,17 +275,21 @@
                 }
                 if (product.status == 2)// ngừng kinh doanh
                 {
-                    pName.className = "fjavmsiin89";
+                    pName.className = "fjavmsiin89 go-to-detail-product";
                 }
                 else if (product.quantity == 0) {
-                    pName.className = "ffxafj8kafn8";
+                    pName.className = "ffxafj8kafn8 go-to-detail-product";
                 }
-                //pName.className = "go-to-detail-product";
-                //pName.onclick = function () {
-                //    // Lấy id
-                //    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
-                //    GoToDetailItem(id);
-                //};
+                pName.onclick = function () {
+                    // Lấy combo id
+                    let id = Number(this.parentElement.parentElement.children[5].innerHTML);
+                    if (isNaN(id) || id == -1) {
+                        CreateMustClickOkModal("Sản phẩm không thuộc combo nào hoặc không lấy được thông tin combo.")
+                        return;
+                    }
+                    window.open("/Combo/UpdateDelete?id=" + id);
+                };
+
                 cell3.append(pName);
 
                 // Giá Bìa
@@ -294,6 +302,10 @@
                     pQuantity.className = "ffxafj8kafn8";
                 }
                 cell5.append(pQuantity);
+
+                // Combo Id
+                cell6.innerHTML = product.comboId;
+                cell6.style.display = "none";
             }
         }
 

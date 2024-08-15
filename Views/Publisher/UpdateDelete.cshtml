@@ -12,28 +12,40 @@
 <body>
 
     <div id="biggestContainer">
-        <div>
+        <div id="result-find-id">
             <div>
-                <label for="publisher-id">Nhà phát hành:</label>
-                <input class="config-max-width margin-vertical"
-                       id="publisher-id" value="@ViewData["publisherName"]">
+                <div>
+                    <label for="publisher-id">Nhà phát hành:</label>
+                    <input class="config-max-width margin-vertical"
+                           id="publisher-id" value="@ViewData["publisherName"]">
 
+                </div>
+                <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
+                <textarea id="publisher-detail" rows="10"
+                          class="config-max-width margin-vertical" value="@ViewData["publisherDetail"]">@ViewData["publisherDetail"]</textarea>
             </div>
-            <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
-            <textarea id="publisher-detail" rows="10"
-                      class="config-max-width margin-vertical" value="@ViewData["publisherDetail"]">@ViewData["publisherDetail"]</textarea>
+            <div>
+                <button type="button" onclick="UpdatePublisher()" style="margin-right:20px;">Cập Nhật</button>
+                <button type="button" onclick="DeletePublisher()">Xóa</button>
+            </div>
         </div>
-
-        <div>
-            <button type="button" onclick="UpdatePublisher()" style="margin-right:20px;">Cập Nhật</button>
-            <button type="button" onclick="DeletePublisher()">Xóa</button>
-        </div>
-
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
+        // Không tìm thấy đối tượng, hiển thông báo
+        function ShowDoesntFindIdPublisher() {
+            if (document.getElementById("publisher-id").value == "") {
+                document.getElementById("result-find-id").remove();
+                let ele = document.getElementById("doesnt-find-id");
+                ele.style.display = "flex";
+                ele.style.alignItems = "center";
+                ele.style.justifyContent = "center";
+            }
+        }
+        ShowDoesntFindIdPublisher();
 
         async function UpdatePublisher() {
             let publisherName = document.getElementById("publisher-id").value;
@@ -53,7 +65,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi xảy ra.");
         }
 
         async function DeletePublisher() {
@@ -70,7 +82,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
         }
     </script>
 </body>

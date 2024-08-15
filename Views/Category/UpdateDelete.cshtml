@@ -12,22 +12,35 @@
 <body>
 
     <div id="biggestContainer">
-        <div>
-            <label for="category-id">Category:</label>
-            <input class="config-max-width margin-vertical" id="category-id"
-                   value="@ViewData["categoryName"]">
-        </div>
+        <div id="result-find-id">
+            <div>
+                <label for="category-id">Category:</label>
+                <input class="config-max-width margin-vertical" id="category-id"
+                       value="@ViewData["categoryName"]">
+            </div>
 
-        <div>
-            <button type="button" style="margin-right:20px;" onclick="UpdateCategory()">Cập Nhật</button>
-            <button type="button" onclick="DeleteCategory()"> Xóa</button>
+            <div>
+                <button type="button" style="margin-right:20px;" onclick="UpdateCategory()">Cập Nhật</button>
+                <button type="button" onclick="DeleteCategory()"> Xóa</button>
+            </div>
         </div>
-
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
+        // Không tìm thấy đối tượng, hiển thông báo
+        function ShowDoesntFindIdCategory() {
+            if (document.getElementById("category-id").value == "" ) {
+                document.getElementById("result-find-id").remove();
+                let ele = document.getElementById("doesnt-find-id");
+                ele.style.display = "flex";
+                ele.style.alignItems = "center";
+                ele.style.justifyContent = "center";
+            }
+        }
+        ShowDoesntFindIdCategory();
         async function UpdateCategory() {
             let categoryName = document.getElementById("category-id").value;
             if (CheckIsEmptyOrSpacesAndShowResult(categoryName, "Tên nhà thể loại không hợp lệ.")) {
@@ -44,7 +57,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi xảy ra.");
         }
 
         async function DeleteCategory() {
@@ -61,7 +74,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi sẩy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
         }
     </script>
 </body>

@@ -12,7 +12,7 @@
 <body>
 
     <div id="biggestContainer">
-        <div class="config-max-width padding-container">
+        <div class="config-max-width padding-container" id="result-find-id">
             @Html.Partial("~/Views/Shared/ItemModel/ItemModelInputCommon.cshtml")
 
             <button type="button" onclick="UpdateItemModel()" style="margin-right:20px;">Cập nhật</button>
@@ -23,6 +23,7 @@
             </button>
             @Html.Partial("~/Views/Shared/ItemModel/Mapping.cshtml")
         </div>
+        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -30,13 +31,8 @@
     <script src="~/Scripts/web.play.with.me.item.model.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-        GetListProductName();
-        GetListCombo();
-
-        ShowItemFromItemObject();
-    </script>
-    <script>
         InitializeModal();
+        ShowItemFromItemObject();
     </script>
 </body>
 </html>
