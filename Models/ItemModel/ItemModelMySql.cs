@@ -523,6 +523,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                 Product pro = new Product();
                 pro.id = MyMySql.GetInt32(rdr, "ProductId");
                 pro.name = MyMySql.GetString(rdr, "ProductName");
+                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
                 pro.SetSrcImageVideo();
 
                 int quan = MyMySql.GetInt32(rdr, "MappingQuantity");
@@ -720,6 +721,83 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
 
             return count;
+        }
+
+        /// <summary>
+        /// Giống hàm SearchItemPage nhưng thêm thông tin mapping phục vụ lọc kết quả ở trang quản trị /ItemModel/Search
+        /// </summary>
+        /// <param name="namePara"></param>
+        /// <param name="start">Tính từ 0</param>
+        /// <param name="offset">Số item max trên 1 page</param>
+        /// <returns></returns>
+        public List<Item> SearchItemPageIncludeMapping(ItemModelSearchParameter searchParameter)
+        {
+            List<Item> ls = new List<Item>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbItemModel_Search_Include_Mapping", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
+                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
+                int itemId = 0;
+                int modelId = 0;
+                Item itemTemp = null;
+                Model modelTemp = null;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    if (ls.Count == 0 || ls[ls.Count - 1].id != itemId) // Thêm mới item
+                    {
+                        itemTemp = new Item();
+                        itemTemp.id = MyMySql.GetInt32(rdr, "ItemId");
+                        itemTemp.name = MyMySql.GetString(rdr, "ItemName");
+                        itemTemp.SetFirstSrcImage();
+                        ls.Add(itemTemp);
+                    }
+                    itemTemp = ls[ls.Count - 1];
+                    // Thêm model
+                    {
+                        modelId = MyMySql.GetInt32(rdr, "ModelId");
+                        if (itemTemp.models.Count == 0 || itemTemp.models[itemTemp.models.Count - 1].id != modelId) // Thêm mới item
+                        {
+                            modelTemp = new Model();
+                            modelTemp.id = modelId;
+                            modelTemp.itemId = itemTemp.id;
+                            modelTemp.name = MyMySql.GetString(rdr, "ModelName");
+
+                            modelTemp.price = MyMySql.GetInt32(rdr, "ModelPrice");
+                            modelTemp.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
+                            modelTemp.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
+                            modelTemp.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                            itemTemp.models.Add(modelTemp);
+                        }
+                        modelTemp = itemTemp.models[itemTemp.models.Count - 1];
+                    }
+                    // Thêm mapping
+                    {
+                        Mapping mapping = new Mapping();
+                        mapping.id = MyMySql.GetInt32(rdr, "MappingId");
+                        modelTemp.mapping.Add(mapping);
+                    }
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls.Clear();
+            }
+
+            conn.Close();
+            return ls;
         }
 
         // Lấy được thông tin chi tiết

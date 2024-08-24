@@ -111,8 +111,23 @@
                 itemStatus = "Đang Tắt Bán Trên Sàn";
             }
             document.getElementsByClassName("item-status-azc")[0].innerHTML = itemStatus;
+
+            UpdateModelNameIfNeed(commonItem);
             // Hiển thị danh sách mapping
             ShowModelEEcommerce(commonItem);
+        }
+
+        function UpdateModelNameIfNeed(item) {
+            // SHOPEE Nếu Item có nhiều model, tên model có định dạng VD: TÊN SÁCH--Xình xịch Xình xịch,
+            // ta cập nhật tên mới: Xình xịch Xình xịch
+            if (item.eType == eShopee) {
+                for (let i = 0; i < item.models.length; i++) {
+                    if (item.models[i].name != null && item.models[i].name.includes("--")) {
+                        const myArray = item.models[i].name.split("--");
+                        item.models[i].name = myArray[myArray.length - 1];
+                    }
+                }
+            }
         }
 
         // Thêm nút sinh model trên web voibenho
@@ -125,7 +140,7 @@
 
             btn.onclick = function () {
                 if (this.modelObj.pWMMappingModelId != -1 && this.modelObj.pWMMappingModelId != 0) {
-                    if (confirm("Bạn muốn xóa model sản phẩm đã sinh và sinh mới") == false) {
+                     if (confirm("Bạn CHẮC CHẮN muốn XÓA model sản phẩm đã sinh và sinh mới?") == false) {
                         return;
                     }
                 }
@@ -179,6 +194,30 @@
                 }
                 div.appendChild(p);
             }
+            div.appendChild(btn);
+            container.appendChild(div);
+        }
+
+        async function ModelUpdateMapping_ProductEEcomerce(element) {
+            let listModelOnly = [];
+            listModelOnly.push(element.parentElement.parentElement);
+            await UpdateEEcommerceMapping_Core(listModelOnly);
+        }
+
+        // Thêm nút cập nhật mapping
+        function AddMappingUpdateButtonForModel_ProductEEcomerce(container) {
+            let btn = document.createElement("BUTTON");
+            let btnContent = document.createTextNode("Cập nhật liên kết");
+            btn.addEventListener("click", async function (event) {
+                let listModelOnly = [];
+                listModelOnly.push(event.currentTarget.parentElement.parentElement);
+                await UpdateEEcommerceMapping_Core(listModelOnly);
+            });
+            btn.appendChild(btnContent);
+            btn.className = "margin-vertical";
+            const div = document.createElement("div");
+            div.style.display = "flex";
+            div.style.flexDirection = "row-reverse";
             div.appendChild(btn);
             container.appendChild(div);
         }
@@ -268,15 +307,12 @@
                 for (let j = 0; j < listObj.length; j++) {
                     CheckObjExistAndInsert(table, listObj[j]);
                 }
+
+                AddMappingUpdateButtonForModel_ProductEEcomerce(model);
             }
         }
 
-        async function UpdateEEcommerceMapping() {
-            if (commonItem == null) {
-                await CreateMustClickOkModal("Sản phẩm không chính xác.", null);
-                return;
-            }
-            ShowCircleLoader();
+        async function UpdateEEcommerceMapping_Core(listModelOnly) {
             const searchParams = new URLSearchParams();
             searchParams.append("eType", GetEEcommerceTypeFromUrl());
 
@@ -286,7 +322,6 @@
             let itemid = GetValueFromUrlName("id");
             let str = "";
 
-            let listModelOnly = GetListModelOnly();
             let length = listModelOnly.length;
 
             for (let i = 0; i < length; i++) {
@@ -314,24 +349,26 @@
             searchParams.append("str", str);
 
             try {
+                ShowCircleLoader();
                 let responseDB = await RequestHttpPostPromise(searchParams, url);
-                let result = JSON.parse(responseDB.responseText);
-                if (result.State != 0) {
-                    await CreateMustClickOkModal(result.Message, null);
-                }
-                else {
-                    alert("Cập nhật thành công.");
-                }
+                RemoveCircleLoader();
+
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật lỗi.");
             }
             catch (err) {
                 //alert("Cập nhật sản phẩm lỗi.");
                 await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
-                RemoveCircleLoader();
+            }
+            return GetEasyPromise();
+        }
+
+        async function UpdateEEcommerceMapping() {
+            if (commonItem == null) {
+                CreateMustClickOkModal("Sản phẩm không chính xác.", null);
                 return;
             }
-
-            // Refresh page
-            RemoveCircleLoader();
+            let listModelOnly = GetListModelOnly();
+            await UpdateEEcommerceMapping_Core(listModelOnly);
             window.scrollTo(0, 0);
         }
 

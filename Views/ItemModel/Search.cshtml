@@ -78,42 +78,42 @@
                                    onchange="FilterItemAll()">
                             <label for="sgdhgf567xbx">Tất Cả</label>
                         </div>
-                        <div class="vbcgh45367">
+                        <div class="vbcgh45367" title="Item có model chưa liên kết với sản phẩm trong kho">
+                            <input type="radio" id="cbcbsg78447823" name="price-filter-type" class="kmaZvc29"
+                                   onchange="FilterItemNoMapping()">
+                            <label for="cbcbsg78447823">Chưa Liên Kết</label>
+                        </div>
+                        <div class="vbcgh45367" title="Giá bìa/giá bán nhỏ hơn hoặc bằng 0">
                             <input type="radio" id="nskzfh09fjzn" name="price-filter-type" class="kmaZvc29"
-                                   title="Giá bìa/giá bán nhỏ hơn hoặc bằng 0"
                                    onchange="FilterItemNoPrice()">
                             <label for="nskzfh09fjzn">Chưa Xét Giá</label>
                         </div>
-                        <div class="vbcgh45367">
+                        <div class="vbcgh45367" title="Giá bán có chiết khấu lớn hơn hoặc bằng giá trị % bên cạnh">
                             <input type="radio" id="fzafgrj9567af" name="price-filter-type" class="kmaZvc29"
-                                   title="Giá bán có chiết khấu lớn hơn hoặc bằng giá trị % bên cạnh"
                                    onchange="FilterItemDiscountBigger()">
                             <label for="fzafgrj9567af">Chiết Khấu Lớn Hơn</label>
                             <input type="number" class="discout-bigger gfdgdgdxg676"
                                    value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>%</label>
                         </div>
-                        <div class="vbcgh45367">
+                        <div class="vbcgh45367" title="Giá bán có chiết khấu nhỏ hơn hoặc bằng giá trị % bên cạnh">
                             <input type="radio" id="ghjsf8345sg" name="price-filter-type" class="kmaZvc29"
-                                   title="Giá bán có chiết khấu nhỏ hơn hoặc bằng giá trị % bên cạnh"
                                    onchange="FilterItemDiscountSmaller()">
                             <label for="ghjsf8345sg">Chiết Khấu Nhỏ Hơn</label>
                             <input type="number" class="discout-smaller gfdgdgdxg676"
                                    value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>%</label>
                         </div>
-                        <div class="vbcgh45367">
+                        <div class="vbcgh45367" title="Giá bán có giá lớn hơn hoặc bằng giá trị bên cạnh">
                             <input type="radio" id="fzadgfgrj9567af" name="price-filter-type" class="kmaZvc29"
-                                   title="Giá bán có giá lớn hơn hoặc bằng giá trị bên cạnh"
                                    onchange="FilterItemPriceBigger()">
                             <label for="fzadgfgrj9567af">Giá Lớn Hơn</label>
                             <input type="number" class="price-bigger gfdgfghxg676"
                                    value="0" oninput="ValidatePositiveIntegerNumber(this)" />
                             <label>đ</label>
                         </div>
-                        <div class="vbcgh45367">
+                        <div class="vbcgh45367" title="Giá bán nhỏ hơn hoặc bằng giá trị bên cạnh">
                             <input type="radio" id="ghjsf834gh5sg" name="price-filter-type" class="kmaZvc29"
-                                   title="Giá bán nhỏ hơn hoặc bằng giá trị bên cạnh"
                                    onchange="FilterItemPriceSmaller()">
                             <label for="ghjsf834gh5sg">Giá Nhỏ Hơn</label>
                             <input type="number" class="price-smaller gfdgfghxg676"
@@ -232,6 +232,27 @@
                     for (let j = 0; j < listItem[i].models.length; j++) {
                         if (listItem[i].models[j].bookCoverPrice <= 0 ||
                             listItem[i].models[j].price <= 0) {
+                            listItemTemp.push(listItem[i]);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            ShowFilteringResult(listItemTemp);
+        }
+        //
+        // Trả lại những item có model chưa liên kết sản phẩm trong kho
+        function FilterItemNoMapping() {
+            //if (DEBUG) {
+            //    console.log("FilterItemNoMapping CALL");
+            //}
+            listItemTemp = [];
+            let length = listItem.length;
+            for (let i = 0; i < length; i++) {
+                if (listItem[i].models.length > 0) {
+                    for (let j = 0; j < listItem[i].models.length; j++) {
+                        if (listItem[i].models[j].mapping[0].id == -1) {
                             listItemTemp.push(listItem[i]);
                             break;
                         }
@@ -458,7 +479,7 @@
             if (isNaN(id))
                 return;
 
-            window.open("UpdateDelete?id=" + id);
+            window.open("/ItemModel/UpdateDelete?id=" + id);
         }
     </script>
 </body>

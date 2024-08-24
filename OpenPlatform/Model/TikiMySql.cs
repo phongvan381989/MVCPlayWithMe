@@ -243,6 +243,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ls">luôn có 1 phần tử</param>
+        /// <returns></returns>
         public MySqlResultState TikiUpdateMapping(List<CommonForMapping> ls)
         {
             CommonForMapping commonForMapping = ls[0];
@@ -289,7 +294,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     for (int j = 0; j < commonForMapping.lsProductId.Count; j++)
                     {
                         // Nếu model chưa được mapping productId, productQuantity là: System.Int32.MinValue;
-                        if (commonForMapping.lsProductId[j] > 0)
+                        if (commonForMapping.lsProductId.Count > 0)
                         {
                             cmd.Parameters[1].Value = commonForMapping.lsProductId[j];
                             cmd.Parameters[2].Value = commonForMapping.lsProductQuantity[j];

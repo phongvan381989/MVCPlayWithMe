@@ -71,6 +71,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string ProductMediaFolderPath;
         public static string ItemMediaFolderPath;
+        public static string absoluteItemMediaFolderPath;
         public static string MediaFolderPath;
         public static string ThongTinBaoMatPath;
         public static string TemporaryImageShopeeMediaFolderPath;
@@ -530,14 +531,18 @@ namespace MVCPlayWithMe.General
             {
                 return;
             }
+            if (!Directory.Exists(path))
+                return;
 
             Directory.Delete(path,true);
 
             // Xóa phiên bản 320
             // Vì path có "/" cuối cùng, ta xử lý cắt bỏ
-            path = path + @"_320";
             path = Path.GetDirectoryName(path) + @"_320";
-            Directory.Delete(path, true);
+            if (Directory.Exists(path))
+            {
+                Directory.Delete(path, true);
+            }
         }
 
         /// <summary>
@@ -588,6 +593,11 @@ namespace MVCPlayWithMe.General
         public static void DeleteMediaFolder(string path)
         {
             // Xóa thư mục ảnh/ video gốc
+            if(!Directory.Exists(path))
+            {
+                return;
+            }
+
             Directory.Delete(path, true);
 
             // Xóa cả thư mục ảnh phiên bản 320
@@ -744,17 +754,19 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Tải ảnh từ url, và sinh phiên bản _320
+        /// Tải ảnh từ url, add water mark và sinh phiên bản _320
         /// </summary>
         /// <param name="url"></param>
         /// <param name="fileName"></param>
-        public static void DownloadImageAndReduce(string url, string fileName)
+        public static void DownloadImageAddWaterMarkAndReduce(string url, string fileName)
         {
             int rs = DownloadImageAndSaveWithName(url, fileName);
             if(rs == 1)
             {
+                // Thêm water mark
+                string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(fileName);
                 // sinh phiên bản _320
-                ReduceImageSizeAndSave(fileName);
+                ReduceImageSizeAndSave(newsaveToFileLoc);
             }
         }
         #endregion
@@ -937,33 +949,54 @@ namespace MVCPlayWithMe.General
             return newSrc;
         }
 
+        //// Lấy ảnh đầu tiên của imageSrc cho nhanh
+        //public static string GetFirstItemImageSrc(int itemId)
+        //{
+        //    string src = string.Empty;
+        //    string[] files = null;
+
+        //    try
+        //    {
+        //        string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+
+        //        files = Directory.GetFiles(path, "0.*"); // trả về file ảnh và video nếu có
+        //    }
+        //    catch (Exception)
+        //    {
+        //        return src;
+        //    }
+
+        //    string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
+
+        //    foreach (var file in files)
+        //    {
+        //        if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+        //        {
+        //            src = relPath + Path.GetFileName(file);
+        //            break;
+        //        }
+        //    }
+
+        //    return src;
+        //}
+
         // Lấy ảnh đầu tiên của imageSrc cho nhanh
-        public static string GetFirstItemImageSrc(int itemId)
+        public static string GetFirstItemImageSrc(int itemId )
         {
             string src = string.Empty;
-            string[] files = null;
-
-            try
+            string path = Common.absoluteItemMediaFolderPath + itemId.ToString() + @"/0.jpg";
+            if(!File.Exists(path))
             {
-                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
-
-                files = Directory.GetFiles(path, "0.*"); // trả về file ảnh và video nếu có
-            }
-            catch (Exception)
-            {
-                return src;
-            }
-
-            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
-
-            foreach (var file in files)
-            {
-                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                path = Common.absoluteItemMediaFolderPath + itemId.ToString() + @"/0.png";
+                if (!File.Exists(path))
                 {
-                    src = relPath + Path.GetFileName(file);
-                    break;
+                    path = Common.absoluteItemMediaFolderPath + itemId.ToString() + @"/0.jfif";
+                    if (!File.Exists(path))
+                        return src;
                 }
             }
+            src = ItemMediaFolderPath + itemId.ToString() + @"/" + Path.GetFileName(path);
+
             return src;
         }
 

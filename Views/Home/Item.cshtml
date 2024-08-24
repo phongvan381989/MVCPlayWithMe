@@ -46,7 +46,7 @@
 
         #item-small-media-container {
             display: flex;
-            width: 100%;
+            /*width: 100%;*/
             padding: 5px;
             height: 120px;
             /*border: 1px solid rgb(255, 0, 0);*/
@@ -621,6 +621,24 @@
             item.mostExpensiveModel = mostExpensiveModel;
         }
 
+        // Từ danh sách mapping của model tính được tồn kho của model
+        function SetMaxQuantityOfModel(item) {
+            let maxQuan = 0;
+            let maxQuanTem = 0;
+            for (let i = 0; i < item.models.length; i++) {
+                let model = item.models[i];
+                maxQuan = 4444;
+                for (let j = 0; j < model.mapping.length; j++) {
+                    maxQuanTem = Math.floor(model.mapping[j].product.quantity / model.mapping[j].quantity);
+                    if (maxQuan > maxQuanTem) {
+                        maxQuan = maxQuanTem;
+                    }
+                }
+
+                model.quantity = maxQuan;
+            }
+        }
+
         async function HomePageShowItem() {
             ShowCircleLoader();
             let responseDB = await GetItemFromId(GetValueFromUrlName("id"));
@@ -628,6 +646,7 @@
             if (responseDB.responseText != "null") {
                 itemObject = JSON.parse(responseDB.responseText);
                 SetPriceAndQuantityItemPage(itemObject);
+                SetMaxQuantityOfModel(itemObject);
             }
             else {
                 ShowDoesntFindId();
@@ -646,7 +665,7 @@
                 document.getElementById("item-medium-media").style.height = scrWidth + "px";
             }
 
-            // Mỗi video, image item sẽ chiếm 100(width) + 5(margin lef) + 5(margin lef) + 2(border) = 111 px
+            // Mỗi video, image item sẽ chiếm 100(width) + 5(margin lef) + 5(margin lef) + 2(border) = 112 px
             // Tính số item có thể hiển thị
             maxSmallMediaCanShow = Math.floor(scrWidth / 112);
             if (isEmptyOrSpaces(itemObject.videoSrc)) {

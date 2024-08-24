@@ -23,7 +23,8 @@
             <div>
                 <label for="combo-id">Combo:</label>
                 <input type="text" class="config-max-width margin-vertical"
-                       id="combo-id">
+                       id="combo-id"
+                       title="Tên combo mới cần chưa tồn tại">
                 <div>
                     <table id="product-table" style="display:none;">
                         <tr>
@@ -46,7 +47,7 @@
             <br />
             <div id="button_group_id">
                 <button type="button" style="margin-right:20px;" onclick="UpdateCombo()"
-                        title="Cập nhật tên combom, không cập nhật thông tin chung cho các sản phẩm thuộc combo">
+                        title="Cập nhật tên combo, không cập nhật thông tin chung cho các sản phẩm thuộc combo">
                     Cập Nhật
                 </button>
                 <button type="button" style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
@@ -61,6 +62,8 @@
     <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
+        GetListPublisher();
+
         let combo = null;
         document.getElementById("adjxn90snkx").remove();
         function ShowProductTable(list) {

@@ -85,16 +85,28 @@ namespace MVCPlayWithMe.Models
             videoSrc = Common.GetItemVideoSrc(id);
         }
 
+        //// Lấy ảnh đầu tiên của imageSrc cho nhanh
+        //public void SetFirstSrcImage()
+        //{
+        //    string src = Common.GetFirstItemImageSrc(id);
+        //    if (!string.IsNullOrEmpty(src))
+        //        imageSrc.Add(src);
+        //    else
+        //    {
+        //        imageSrc.Add(Common.srcNoImageThumbnail);
+        //    }
+        //}
+
         // Lấy ảnh đầu tiên của imageSrc cho nhanh
         public void SetFirstSrcImage()
         {
             string src = Common.GetFirstItemImageSrc(id);
             if (!string.IsNullOrEmpty(src))
                 imageSrc.Add(src);
-            else
-            {
-                imageSrc.Add(Common.srcNoImageThumbnail);
-            }
+            //else
+            //{
+            //    imageSrc.Add(Common.srcNoImageThumbnail);
+            //}
         }
 
         public void SetShopeeItemId()

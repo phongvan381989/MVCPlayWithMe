@@ -185,7 +185,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             // item_id_list Required item_id  limit [0,50]
             ls.Add(new DevNameValuePair("item_id_list", id.ToString()));
 
-
             ShopeeGetItemBaseInfoResponseHTTP objResponse = ShopeeProductGetItemBaseInfo(ls);
             if (objResponse == null || objResponse.response == null || objResponse.response.item_list == null)
             {

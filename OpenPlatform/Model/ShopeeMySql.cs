@@ -578,8 +578,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         cmd.Parameters[0].Value = lsShopeeModelId[i];
                         for (int j = 0; j < ls[i].lsProductId.Count; j++)
                         {
-                            // Nếu model chưa được mapping productId, productQuantity là: System.Int32.MinValue;
-                            if (ls[i].lsProductId[j] > 0)
+                            // Nếu model chưa được mapping
+                            if (ls[i].lsProductId.Count > 0)
                             {
                                 cmd.Parameters[1].Value = ls[i].lsProductId[j];
                                 cmd.Parameters[2].Value = ls[i].lsProductQuantity[j];

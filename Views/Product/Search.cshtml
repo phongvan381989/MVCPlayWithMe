@@ -104,10 +104,10 @@
 
                         <div class="pro-status"
                              title="Sản phẩm có tồn kho bằng 0. Không bao gồm sản phẩm dừng kinh doanh">
-                            <input type="radio" id="quantity-zero" name="status-avxgbhf"
+                            <input type="radio" id="quantity-zero-disable" name="status-avxgbhf"
                                    class="kmaZvc29"
                                    onchange="FilterProductNormalQuantityZero()">
-                            <label for="quantity-zero">Đang Bán Và Hết Hàng</label>
+                            <label for="quantity-zero-disable">Đang Bán Và Hết Hàng</label>
                         </div>
 
                         <div class="pro-status">
@@ -143,7 +143,9 @@
                         <tr>
                             <th style="display:none">productId</th>
                             <th style="width:200px">Ảnh</th>
-                            <th title="Gồm tên combo sau dấu - nếu có. Tên đỏ biểu hiện sản phẩm hết hàng, xanh lơ biểu hiện không kinh doanh">Tên</th>
+                            <th title="Tên đỏ biểu hiện sản phẩm hết hàng, xanh lơ biểu hiện không kinh doanh">Tên</th>
+                            <th title="Click để sắp xếp các sản phẩm ĐANG HIỂN THỊ cùng combo cạnh nhau, tên combo id tăng dần"
+                                style="cursor:pointer;" onclick="ArrangeCombo()">Tên Combo</th>
                             <th> Giá Bìa</th>
                             <th title="Đỏ biểu hiện số lượng tồn kho là 0. Click để sắp xếp tăng hoặc giảm dần tồn kho sản phẩm ĐANG HIỂN THỊ"
                                 style="cursor:pointer;" onclick="ArrangeQuantity()">Số Lượng</th>
@@ -241,6 +243,7 @@
                 let cell4 = row.insertCell(3);
                 let cell5 = row.insertCell(4);
                 let cell6 = row.insertCell(5);
+                let cell7 = row.insertCell(6);
 
                 // Id
                 cell1.innerHTML = product.id;
@@ -263,37 +266,45 @@
                 };
                 cell2.append(img);
 
-                // Tên: tên + " - " + tên combo
+                // Tên
                 let pName = document.createElement("p");
-                pName.className = "go-to-detail-product";
-                pName.title ="Xem thông tin combo của sản phẩm"
-                if (product.comboName == "null" || product.comboName.length == 0) {
-                    pName.innerHTML = product.name;
-                }
-                else {
-                    pName.innerHTML = product.name + " - " + product.comboName;
-                }
+                //pName.className = "go-to-detail-product";
+                pName.innerHTML = product.name;
+
                 if (product.status == 2)// ngừng kinh doanh
                 {
-                    pName.className = "fjavmsiin89 go-to-detail-product";
+                    pName.className = "fjavmsiin89";
                 }
                 else if (product.quantity == 0) {
-                    pName.className = "ffxafj8kafn8 go-to-detail-product";
+                    pName.className = "ffxafj8kafn8";
                 }
-                pName.onclick = function () {
+
+                cell3.append(pName);
+
+                // Tên combo
+                let pComboName = document.createElement("p");
+                pComboName.className = "go-to-detail-product";
+                pComboName.title = "Xem thông tin combo của sản phẩm"
+                if (product.comboName == "null" || product.comboName.length == 0) {
+                    pComboName.innerHTML = "";
+                }
+                else {
+                    pComboName.innerHTML = product.comboName;
+                }
+
+                pComboName.onclick = function () {
                     // Lấy combo id
-                    let id = Number(this.parentElement.parentElement.children[5].innerHTML);
+                    let id = Number(this.parentElement.parentElement.children[6].innerHTML);
                     if (isNaN(id) || id == -1) {
                         CreateMustClickOkModal("Sản phẩm không thuộc combo nào hoặc không lấy được thông tin combo.")
                         return;
                     }
                     window.open("/Combo/UpdateDelete?id=" + id);
                 };
-
-                cell3.append(pName);
+                cell4.append(pComboName);
 
                 // Giá Bìa
-                cell4.innerHTML = product.bookCoverPrice;
+                cell5.innerHTML = product.bookCoverPrice;
 
                 // Tồn kho
                 let pQuantity = document.createElement("p");
@@ -301,11 +312,11 @@
                 if (product.quantity == 0) {
                     pQuantity.className = "ffxafj8kafn8";
                 }
-                cell5.append(pQuantity);
+                cell6.append(pQuantity);
 
                 // Combo Id
-                cell6.innerHTML = product.comboId;
-                cell6.style.display = "none";
+                cell7.innerHTML = product.comboId;
+                cell7.style.display = "none";
             }
         }
 
@@ -323,12 +334,58 @@
             }
 
             let listProductTemp = [];
-            // listProductWillShow được lọc cũng sắp xếp tăng dần tồn kho
-            for (let i = 0; i < length - 1; i++) {
-                listProductTemp.push(listProductWillShow[length - 1 - i]);
+            let lengthTemp = 0;
+            let indexAdd = 0;
+            // listProductWillShow được lọc sắp xếp tăng dần quantity
+            for (let i = 0; i < length; i++) {
+                lengthTemp = listProductTemp.length;
+                indexAdd = -1;
+                for (let j = lengthTemp - 1; j >= 0; j--) {
+                    if (listProductWillShow[i].quantity >= listProductTemp[j].quantity) {
+                        indexAdd = j;
+                        break;
+                    }
+                }
+                if (indexAdd == -1) {
+                    listProductTemp.splice(0, 0, listProductWillShow[i]);
+                }
+                else {
+                    listProductTemp.splice(indexAdd + 1, 0, listProductWillShow[i]);
+                }
             }
-            listProductWillShow = listProductTemp;
 
+            listProductWillShow = listProductTemp;
+            ShowSearchingResult(listProductWillShow);
+        }
+
+        function ArrangeCombo() {
+            length = listProductWillShow.length;
+            if (length == 0) {
+                return;
+            }
+
+            let listProductTemp = [];
+            let lengthTemp = 0;
+            let indexAdd = 0;
+            // listProductWillShow được lọc sắp xếp tăng dần combo id
+            for (let i = 0; i < length; i++) {
+                lengthTemp = listProductTemp.length;
+                indexAdd = -1;
+                for (let j = lengthTemp - 1; j >= 0; j--) {
+                    if (listProductWillShow[i].comboId >= listProductTemp[j].comboId) {
+                        indexAdd = j;
+                        break;
+                    }
+                }
+                if (indexAdd == -1) {
+                    listProductTemp.splice(0, 0, listProductWillShow[i]);
+                }
+                else {
+                    listProductTemp.splice(indexAdd + 1, 0, listProductWillShow[i]);
+                }
+            }
+
+            listProductWillShow = listProductTemp;
             ShowSearchingResult(listProductWillShow);
         }
 

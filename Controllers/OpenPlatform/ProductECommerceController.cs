@@ -191,16 +191,22 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 // Nếu model chưa được mapping productId, productQuantity là: System.Int32.MinValue;
                 if (ls.Count > 0 && ls[ls.Count - 1].modelId == Common.ConvertStringToInt64(values[i + 1]))
                 {
-                    ls[ls.Count - 1].lsProductId.Add(Common.ConvertStringToInt32(values[i + 2]));
-                    ls[ls.Count - 1].lsProductQuantity.Add(Common.ConvertStringToInt32(values[i + 3]));
+                    if (!string.IsNullOrEmpty(values[i + 2]) && !string.IsNullOrEmpty(values[i + 3]))
+                    {
+                        ls[ls.Count - 1].lsProductId.Add(Common.ConvertStringToInt32(values[i + 2]));
+                        ls[ls.Count - 1].lsProductQuantity.Add(Common.ConvertStringToInt32(values[i + 3]));
+                    }
                 }
                 else
                 {
                     CommonForMapping commonForMapping = new CommonForMapping();
                     commonForMapping.itemId = Common.ConvertStringToInt64(values[i]);
                     commonForMapping.modelId = Common.ConvertStringToInt64(values[i + 1]);
-                    commonForMapping.lsProductId.Add(Common.ConvertStringToInt32(values[i + 2]));
-                    commonForMapping.lsProductQuantity.Add(Common.ConvertStringToInt32(values[i + 3]));
+                    if (!string.IsNullOrEmpty(values[i + 2]) && !string.IsNullOrEmpty(values[i + 3]))
+                    {
+                        commonForMapping.lsProductId.Add(Common.ConvertStringToInt32(values[i + 2]));
+                        commonForMapping.lsProductQuantity.Add(Common.ConvertStringToInt32(values[i + 3]));
+                    }
 
                     ls.Add(commonForMapping);
                 }
@@ -452,7 +458,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             int i = 0;
             foreach(var s in commonItem.imageSrcList)
             {
-                Common.DownloadImageAndReduce(s, Path.Combine(path, i.ToString() + ".jfif"));
+                Common.DownloadImageAddWaterMarkAndReduce(s, Path.Combine(path, i.ToString() + ".jfif"));
                 i++;
             }
 
@@ -549,7 +555,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     path = Common.CreateAbsoluteModelMediaFolderPath(itemId);
                 }
 
-                DownloadImageAndReduce(commonModel.imageSrc, Path.Combine(path,
+                DownloadImageAddWaterMarkAndReduce(commonModel.imageSrc, Path.Combine(path,
                     newModelId.ToString() + ".jfif"));
             }
 

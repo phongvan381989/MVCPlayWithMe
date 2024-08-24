@@ -330,8 +330,9 @@ async function ModelUpdateMapping(element) {
     searchParams.append("listProIdMapping", listProIdMapping);
     searchParams.append("listQuantityMapping", listQuantityMapping);
     ShowCircleLoader();
-    await RequestHttpPostPromise(searchParams, url);
+    let responseDB = await RequestHttpPostPromise(searchParams, url);
     RemoveCircleLoader();
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật liên kết thành công", "Có lỗi xảy ra.");
 }
 
 async function ModelUpdateName(element) {
@@ -1078,7 +1079,7 @@ async function SearchProduct() {
 }
 
 // 2 trường hợp dựa vào url:
-// 1: save mapping tới sản phẩm của web
+// 1: save mapping tới sản phẩm trên web voibenho
 // 2: save mapping tới sản phẩm trên sàn shopee, tiki, lazada
 function SaveMappingToModel() {
     // Lấy danh sách sản phẩm đã chọn trên modal

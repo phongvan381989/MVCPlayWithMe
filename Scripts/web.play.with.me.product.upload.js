@@ -465,8 +465,9 @@ async function UpdateBookCoverPrice() {
 async function UpdateComboId() {
     let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value);
     if (comboId == null) {
-        CreateMustClickOkModal("Không lấy được thông tin combo cập nhật.", null);
-        return;
+        //CreateMustClickOkModal("Không lấy được thông tin combo cập nhật.", null);
+        //return;
+        comboId = -1;
     }
 
     const searchParams = new URLSearchParams();

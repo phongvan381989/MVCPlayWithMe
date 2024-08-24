@@ -98,34 +98,34 @@ namespace MVCPlayWithMe.Controllers
             return sb.ToString();
         }
 
-        /// <summary>
-        /// Tìm kiếm sản phẩm trên sàn
-        /// </summary>
-        /// <param name="keyword"></param>
-        /// <returns></returns>
-        [HttpGet]
-        public string SearchItemCount(string keyword)
-        {
-            // Đếm số sản phẩm trong kết quả tìm kiếm
-            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
-            searchParameter.name = keyword;
-            int count = 0;
-            count = itemModelsqler.SearchItemCount(searchParameter);
-            return count.ToString();
-        }
+        ///// <summary>
+        ///// Tìm kiếm sản phẩm trên sàn
+        ///// </summary>
+        ///// <param name="keyword"></param>
+        ///// <returns></returns>
+        //[HttpGet]
+        //public string SearchItemCount(string keyword)
+        //{
+        //    // Đếm số sản phẩm trong kết quả tìm kiếm
+        //    ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+        //    searchParameter.name = keyword;
+        //    int count = 0;
+        //    count = itemModelsqler.SearchItemCount(searchParameter);
+        //    return count.ToString();
+        //}
 
-        [HttpGet]
-        public string ChangePage(string namePara, int start, int offset)
-        {
-            List<Item> lsSearchResult;
-            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
-            searchParameter.name = namePara;
-            searchParameter.start = start;
-            searchParameter.offset = offset;
-            lsSearchResult = itemModelsqler.SearchItemPage(searchParameter);
+        //[HttpGet]
+        //public string ChangePage(string namePara, int start, int offset)
+        //{
+        //    List<Item> lsSearchResult;
+        //    ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+        //    searchParameter.name = namePara;
+        //    searchParameter.start = start;
+        //    searchParameter.offset = offset;
+        //    lsSearchResult = itemModelsqler.SearchItemPage(searchParameter);
 
-            return JsonConvert.SerializeObject(lsSearchResult);
-        }
+        //    return JsonConvert.SerializeObject(lsSearchResult);
+        //}
 
         [HttpGet]
         public string SearchPage(string keyword, int page)

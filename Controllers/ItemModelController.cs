@@ -327,19 +327,19 @@ namespace MVCPlayWithMe.Controllers
             return count.ToString();
         }
 
-        [HttpGet]
-        public string ChangePage(int publisherId, string namePara, int start, int offset)
-        {
-            List<Item> lsSearchResult;
-            ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
-            searchParameter.publisherId = publisherId;
-            searchParameter.name = namePara;
-            searchParameter.start = start;
-            searchParameter.offset = offset;
-            lsSearchResult = sqler.SearchItemPage(searchParameter);
+        //[HttpGet]
+        //public string ChangePage(int publisherId, string namePara, int start, int offset)
+        //{
+        //    List<Item> lsSearchResult;
+        //    ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+        //    searchParameter.publisherId = publisherId;
+        //    searchParameter.name = namePara;
+        //    searchParameter.start = start;
+        //    searchParameter.offset = offset;
+        //    lsSearchResult = sqler.SearchItemPage(searchParameter);
 
-            return JsonConvert.SerializeObject(lsSearchResult);
-        }
+        //    return JsonConvert.SerializeObject(lsSearchResult);
+        //}
 
         // Tương tự hàm ChangePage nhưng trả về toàn bộ kết quả tới người dùng
         [HttpGet]
@@ -356,7 +356,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = namePara;
             searchParameter.start = 0;
             searchParameter.offset = 1000000;
-            lsSearchResult = sqler.SearchItemPage(searchParameter);
+            lsSearchResult = sqler.SearchItemPageIncludeMapping(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
