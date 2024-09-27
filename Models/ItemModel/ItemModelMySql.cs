@@ -407,8 +407,8 @@ namespace MVCPlayWithMe.Models.ItemModel
 
             paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@inModelId", model.id);
-            paras[1] = new MySqlParameter("@inProductId", 0);
-            paras[2] = new MySqlParameter("@inQuantity", 0);
+            paras[1] = new MySqlParameter("@inProductId", (object)0);
+            paras[2] = new MySqlParameter("@inQuantity", (object)0);
             MyMySql.AddOutParameters(paras);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -455,52 +455,52 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        /// <summary>
-        /// TỪ dữ liệu select db, ta trả về đối tượng Product
-        /// </summary>
-        /// <param name="rdr">Trả về ngay từ câu select</param>
-        /// <returns></returns>
-        public static Product ConvertOneRowFromDataMySqlToProduct(MySqlDataReader rdr)
-        {
-            Product product = new Product();
-            product.id = MyMySql.GetInt32(rdr, "ProductId");
-            product.code = MyMySql.GetString(rdr, "ProductCode");
-            product.barcode = MyMySql.GetString(rdr, "ProductBarcode");
-            product.name = MyMySql.GetString(rdr, "ProductName");
-            product.comboId = MyMySql.GetInt32(rdr, "ComboId");
-            product.comboName = MyMySql.GetString(rdr, "ComboName");
-            product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
-            product.categoryName = MyMySql.GetString(rdr, "CategoryName");
-            product.bookCoverPrice = MyMySql.GetInt32(rdr, "ProductBookCoverPrice");
-            product.author = MyMySql.GetString(rdr, "ProductAuthor");
-            product.translator = MyMySql.GetString(rdr, "ProductTranslator");
-            product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-            product.publisherName = MyMySql.GetString(rdr, "PublisherName");
-            product.publishingCompany = MyMySql.GetString(rdr, "ProductPublishingCompany");
-            product.publishingTime = MyMySql.GetInt32(rdr, "ProductPublishingTime");
-            product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
-            product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
-            product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
-            product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
-            product.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
-            product.hardCover = MyMySql.GetInt32(rdr, "ProductHardCover");
-            product.minAge = MyMySql.GetInt32(rdr, "ProductMinAge");
-            product.maxAge = MyMySql.GetInt32(rdr, "ProductMaxAge");
-            product.parentId = MyMySql.GetInt32(rdr, "ParentId");
-            product.republish = MyMySql.GetInt32(rdr, "ProductRepublish");
-            product.detail = MyMySql.GetString(rdr, "ProductDetail");
-            product.status = MyMySql.GetInt32(rdr, "ProductStatus");
-            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+        ///// <summary>
+        ///// TỪ dữ liệu select db, ta trả về đối tượng Product
+        ///// </summary>
+        ///// <param name="rdr">Trả về ngay từ câu select</param>
+        ///// <returns></returns>
+        //public static Product ConvertOneRowFromDataMySqlToProduct(MySqlDataReader rdr)
+        //{
+        //    Product product = new Product();
+        //    product.id = MyMySql.GetInt32(rdr, "ProductId");
+        //    product.code = MyMySql.GetString(rdr, "ProductCode");
+        //    product.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+        //    product.name = MyMySql.GetString(rdr, "ProductName");
+        //    product.comboId = MyMySql.GetInt32(rdr, "ComboId");
+        //    product.comboName = MyMySql.GetString(rdr, "ComboName");
+        //    product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
+        //    product.categoryName = MyMySql.GetString(rdr, "CategoryName");
+        //    product.bookCoverPrice = MyMySql.GetInt32(rdr, "ProductBookCoverPrice");
+        //    product.author = MyMySql.GetString(rdr, "ProductAuthor");
+        //    product.translator = MyMySql.GetString(rdr, "ProductTranslator");
+        //    product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+        //    product.publisherName = MyMySql.GetString(rdr, "PublisherName");
+        //    product.publishingCompany = MyMySql.GetString(rdr, "ProductPublishingCompany");
+        //    product.publishingTime = MyMySql.GetInt32(rdr, "ProductPublishingTime");
+        //    product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
+        //    product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
+        //    product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
+        //    product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
+        //    product.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+        //    product.hardCover = MyMySql.GetInt32(rdr, "ProductHardCover");
+        //    product.minAge = MyMySql.GetInt32(rdr, "ProductMinAge");
+        //    product.maxAge = MyMySql.GetInt32(rdr, "ProductMaxAge");
+        //    product.parentId = MyMySql.GetInt32(rdr, "ParentId");
+        //    product.republish = MyMySql.GetInt32(rdr, "ProductRepublish");
+        //    product.detail = MyMySql.GetString(rdr, "ProductDetail");
+        //    product.status = MyMySql.GetInt32(rdr, "ProductStatus");
+        //    product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
 
-            product.SetSrcImageVideo();
+        //    product.SetSrcImageVideo();
 
-            return product;
-        }
+        //    return product;
+        //}
 
         private void ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr, List<Model> models)
         {
             int modelId = MyMySql.GetInt32(rdr, "ModelId");
-            if (modelId != -1)// item đã có model
+            if (modelId != -1)// item có model
             {
                 // check models đã có model này chưa? Chỉ cần check phần tử cuối cùng của models
                 if (models.Count() == 0 || models[models.Count() - 1].id != modelId)
@@ -515,6 +515,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     model.price = MyMySql.GetInt32(rdr, "ModelPrice");
                     model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
                     model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
+
                     model.SetSrcImage();
 
                     models.Add(model);
@@ -524,7 +525,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                 pro.id = MyMySql.GetInt32(rdr, "ProductId");
                 pro.name = MyMySql.GetString(rdr, "ProductName");
                 pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
-                pro.SetSrcImageVideo();
+                pro.SetFirstSrcImage();
 
                 int quan = MyMySql.GetInt32(rdr, "MappingQuantity");
                 if (pro.id != -1)
@@ -826,10 +827,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                 if (rdr != null)
                     rdr.Close();
 
-                //foreach (var model in models)
-                //{
-                //    model.SetPriceFromMappingPriceAndQuantity();
-                //}
+                foreach (var model in models)
+                {
+                    model.SetQuantityFromMapping();
+                }
                 item.models = models;
             }
             catch (Exception ex)
@@ -844,7 +845,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         }
 
         // Tương tự hàm GetItemFromId nhưng với conn mở đóng bên ngoài
-        public Item GetItemFromIdWithReadyConn(int id, MySqlConnection conn)
+        public Item GetItemFromIdConnectOut(int id, MySqlConnection conn)
         {
             Item item = null;
             List<Model> models = new List<Model>();
@@ -866,10 +867,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                 if (rdr != null)
                     rdr.Close();
 
-                //foreach (var model in models)
-                //{
-                //    model.SetPriceFromMappingPriceAndQuantity();
-                //}
+                foreach (var model in models)
+                {
+                    model.SetQuantityFromMapping();
+                }
                 item.models = models;
             }
             catch (Exception ex)
@@ -908,10 +909,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                 if (rdr != null)
                     rdr.Close();
 
-                //foreach (var model in models)
-                //{
-                //    model.SetPriceFromMappingPriceAndQuantity();
-                //}
+                foreach (var model in models)
+                {
+                    model.SetQuantityFromMapping();
+                }
                 item.models = models;
             }
             catch (Exception ex)
@@ -927,7 +928,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         // Kết nối mở, đóng bên ngoài
         // Lấy được thông tin chi tiết theo model id,
         // những model thuộc item có id khác tham số sẽ không được lấy
-        public Item GetItemFromModelIdWithReadyConn(int id, MySqlConnection conn)
+        public Item GetItemFromModelIdConnectOut(int id, MySqlConnection conn)
         {
             Item item = null;
             List<Model> models = new List<Model>();
@@ -951,10 +952,10 @@ namespace MVCPlayWithMe.Models.ItemModel
 
                 if (item != null)
                 {
-                    //foreach (var model in models)
-                    //{
-                    //    model.SetPriceFromMappingPriceAndQuantity();
-                    //}
+                    foreach (var model in models)
+                    {
+                        model.SetQuantityFromMapping();
+                    }
                     item.models = models;
                 }
             }

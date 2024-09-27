@@ -307,7 +307,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         Product product = new Product();
                         product.id = MyMySql.GetInt32(rdr, "ProductId");
                         product.name = MyMySql.GetString(rdr, "ProductName");
-                        product.SetSrcImageVideo();
+                        product.SetFirstSrcImage();
                         map.product = product;
 
                         // Tìm model object
@@ -387,7 +387,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             Product product = new Product();
                             product.id = MyMySql.GetInt32(rdr, "ProductId");
                             product.name = MyMySql.GetString(rdr, "ProductName");
-                            product.SetSrcImageVideo();
+                            product.SetFirstSrcImage();
                             map.product = product;
 
                             modelIdTemp = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
@@ -641,7 +641,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 pro.name = MyMySql.GetString(rdr, "ProductName");
                                 pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
                                 pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
-                                pro.SetSrcImageVideo();
+                                pro.SetFirstSrcImage();
                                 commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
                             }
                         }

@@ -23,33 +23,49 @@
             width: 100%;
         }
 
+        #item_media_arrow_wrapper{
+            position:relative;
+        }
+
         #item-medium-media {
-            /*display: flex;*/
+            display: flex;
             /*position:relative;*/
             justify-content: center;
             align-items: center;
-            display: block;
+            /*display: block;*/
             /*width: 100%;*/
-            margin-left: auto;
+            /*margin-left: auto;
             margin-right: auto;
             margin-top: auto;
-            margin-bottom: auto;
-            padding: 5px;
+            margin-bottom: auto;*/
+            /*padding: 5px;*/
             /*height: 800px;*/
             /*border: 1px solid rgb(255, 0, 0);*/
+        }
+
+        #medium_image, #medium_video {
+            display: none;
+            position: relative;
+            /*border: 1px solid red;*/
+            object-fit: contain;
+            width: 100%;
+            height: 100%;
+        }
+
+        #class_medium_video{
+            overflow:hidden;
         }
         /*#item-small-media {
             display: flex;
             width: 100%;
             height: 120px;
         }*/
-
         #item-small-media-container {
-            display: flex;
-            /*width: 100%;*/
-            padding: 5px;
-            height: 120px;
+            overflow: auto;
+            white-space: nowrap;
+            width: 100%;
             /*border: 1px solid rgb(255, 0, 0);*/
+            position: relative;
         }
 
         #item-variation-container, #item-order {
@@ -63,9 +79,10 @@
             height: 1000px;
         }*/
         .small-media {
-            display: flex;
+            display: inline-block;
             margin: 4px 5px 4px 5px;
             border: 1px solid rgb(228, 228, 222);
+            box-sizing: border-box;
             width: 100px;
             height: 100px;
             /**/
@@ -74,13 +91,35 @@
             /*padding: 1px;*/
         }
 
-            .small-media:hover {
-                /*border: 1px solid rgb(255, 0, 0);*/
-                cursor: pointer;
-            }
-
-        .right-left-arrow:hover {
+        .small-media:hover {
+            /*border: 1px solid rgb(255, 0, 0);*/
             cursor: pointer;
+        }
+
+        #left_arrow {
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            height: 100%;
+            width: 40px;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+        }
+        #right_arrow {
+            position: absolute;
+            right: 0px;
+            top: 0px;
+            height: 100%;
+            width: 40px;
+            display: flex;
+            align-items: center;
+            z-index: 1;
+        }
+
+        #left_arrow:hover, #right_arrow:hover {
+            cursor: pointer;
+            background-color: rgba(0,0,0,.05);
         }
 
         h1 {
@@ -181,14 +220,14 @@
             bottom: 0;
         }
 
-            #check-container::before {
-                border: 0.9375rem solid transparent;
-                border-bottom: 0.9375rem solid rgb(255, 0, 0);
-                content: "";
-                position: absolute;
-                right: -0.9375rem;
-                bottom: 0;
-            }
+        #check-container::before {
+            border: 0.9375rem solid transparent;
+            border-bottom: 0.9375rem solid rgb(255, 0, 0);
+            content: "";
+            position: absolute;
+            right: -0.9375rem;
+            bottom: 0;
+        }
 
         .icon-tick-bold {
             color: #fff;
@@ -447,15 +486,31 @@
         <div id="result-find-id">
             @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
             <div id="item-media-wrapper">
-                <div id="item-medium-media">
-                    <img id="medium-image" style="display:none; object-fit:contain; object-position:center; width:100%; height:100%;" alt="No Image" />
-                    <video id="medium-video" style="display:none; object-fit:contain; object-position:center; width:100%; height:100%;" controls autoplay
-                           muted="muted"></video>
-                </div>
-                <div id="item-small-media">
-                    <div id="item-small-media-container">
-
+                <div id="item_media_arrow_wrapper">
+                    <div id="item-medium-media" title="Giữ kéo chuột để xem ảnh khác">
+                        <img id="medium_image" alt="No Image"
+                             onmouseup="MouseUpMediumMedia(event)"
+                             onmousedown="MouseDownMediumMedia(event)"
+                             onmouseenter="MouseEnterMediumMedia(event)"
+                             onmousemove="MouseMoveMediumMedia(event)"
+                             onmouseout="MouseOutMediumMedia(event)"
+                             ontouchmove="TouchMoveMediumMedia(event)"
+                             ontouchstart="TouchStartMediumMedia(event)"
+                             ontouchend="TouchEndMediumMedia(event)">
+                        <video id="medium_video" class="class_medium_video" controls autoplay muted="muted"
+                               onmouseup="MouseUpMediumMedia(event)"
+                               onmousedown="MouseDownMediumMedia(event)"
+                               onmouseenter="MouseEnterMediumMedia(event)"
+                               onmousemove="MouseMoveMediumMedia(event)"
+                               onmouseout="MouseOutMediumMedia(event)"
+                               ontouchmove="TouchMoveMediumMedia(event)"
+                               ontouchstart="TouchStartMediumMedia(event)"
+                               ontouchend="TouchEndMediumMedia(event)"></video>
                     </div>
+                    <div id="left_arrow" title="Ảnh trước"></div>
+                    <div id="right_arrow" title="Ảnh sau"></div>
+                </div>
+                <div id="item-small-media-container">
                 </div>
             </div>
             <div id="item-something-wrapper">
@@ -558,9 +613,9 @@
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-        let maxSmallMediaCanShow; // Số lượng iten có thể hiển thị
+        //let maxSmallMediaCanShow; // Số lượng iten có thể hiển thị
         let countOfSmallMedia; // Số lượng media gồm video + image
-        let selectedIndex; // selected index media đang chọn hiện tại
+        let selectedIndex; // selected index media đang chọn hiện tại from listItemData
         let listItemData;// Mảng item, phần tử đầu tiên là video nếu có, sau là ảnh
         let itemObject; // object item đại diện đối tượng item server trả về
         let varition; // Models trong item
@@ -653,21 +708,17 @@
                 return;
             }
 
-            // Show small media
-            let itemSmallMedia = document.getElementById("item-small-media");
-            itemSmallMedia.style.position = "relative";
-
             // Tính chiều cao item-medium-media
-            if (scrWidth >= 500) {
-                document.getElementById("item-medium-media").style.height = "500px";
+            if (scrWidth >= 800) {
+                document.getElementById("item-medium-media").style.height = "600px";
             }
             else {
                 document.getElementById("item-medium-media").style.height = scrWidth + "px";
             }
 
-            // Mỗi video, image item sẽ chiếm 100(width) + 5(margin lef) + 5(margin lef) + 2(border) = 112 px
-            // Tính số item có thể hiển thị
-            maxSmallMediaCanShow = Math.floor(scrWidth / 112);
+            //// Mỗi video, image item sẽ chiếm 100(width) + 5(margin lef) + 5(margin lef) + 2(border) = 112 px
+            //// Tính số item có thể hiển thị
+            //maxSmallMediaCanShow = Math.floor(scrWidth / 112);
             if (isEmptyOrSpaces(itemObject.videoSrc)) {
                 countOfSmallMedia = 0;
             }
@@ -685,12 +736,12 @@
                 listItemData.push(new objMediaSrc(itemObject.imageSrc[i], false));
             }
 
-            ShowSmallItem(0);
+            ShowSmallItem();
 
-            ShowRightLeftArrow(itemSmallMedia);
+            ShowRightLeftArrow();
 
             // Chọn item đầu tiên
-            ChangeSelectedItem(document.getElementById("item-small-media-container").children[0]);
+            ShowMediumMediaFromSelectedSmallItem(document.getElementById("item-small-media-container").children[0]);
 
             ShowItemSomthing();
 
@@ -706,6 +757,9 @@
                 const video = document.createElement("video");
                 video.src = ItemData.src;
                 video.controls = false;
+                video.style.objectFit = "contain";
+                video.style.width = "100%";
+                video.style.height = "100%";
                 container.style.position = "relative";
 
                 // Thêm video icon
@@ -724,131 +778,123 @@
             else {
                 const img = document.createElement("img");
                 img.src = Get320VersionOfImageSrc(ItemData.src);
+                img.style.verticalAlign="baseline"
                 container.appendChild(img);
             }
             container.addEventListener("mouseenter", function (event) {
-                ChangeSelectedItem(event.currentTarget);
+                ShowMediumMediaFromSelectedSmallItem(event.currentTarget);
+            });
+            container.addEventListener("mousedown", function (event) {
+                ShowMediumMediaFromSelectedSmallItem(event.currentTarget);
             });
 
             return container;
         }
 
         function ShowSmallItem(
-            start // index của item đầu tiên
         ) {
             let itemSmallMediaContainer = document.getElementById("item-small-media-container");
             // Xóa item cũ nếu có
             itemSmallMediaContainer.innerHTML = "";
 
-            for (let i = start; i < listItemData.length && i < start + maxSmallMediaCanShow; i++) {
+            for (let i = 0; i < listItemData.length; i++) {
                 itemSmallMediaContainer.appendChild(CreateContainerSmallItem(listItemData[i], i));
             }
         }
 
-        function ShowRightLeftArrow(itemSmallMedia) {
-            if (countOfSmallMedia > maxSmallMediaCanShow) {
-                // Add mũi tên di chuyển sang trái
-                let leftArrow = document.createElement("div");
-                leftArrow.className = "right-left-arrow";
-                leftArrow.style.position = "absolute"
-                leftArrow.style.top = "10px"
-                leftArrow.style.width = "40px";
-                leftArrow.style.height = "100px";
-                leftArrow.style.zIndex = 1;
-                leftArrow.innerHTML = '<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"> <polygon points="10,50 30,30 30,70" style="fill:lime;" /> </svg>';
-                leftArrow.addEventListener("click", function () {
+        function ShowRightLeftArrow() {
+            // Ẩn mũi tên trái phải khi đang chọn variation
+            // Add mũi tên di chuyển sang trái
+            let leftArrow = document.getElementById("left_arrow");
+            leftArrow.innerHTML = '<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"> <polygon points="10,50 30,30 30,70" style="fill:lime;" /> </svg>';
+            leftArrow.addEventListener("click", function () {
+                if (selectedIndex == 0) {
+                    selectedIndex = listItemData.length - 1;
+                }
+                else {
+                    selectedIndex--;
+                }
+                ShowMediumItemFromIndex(selectedIndex);
+                ScrollToSelectedSmallItem();
+            });
 
-                    let itemContainer = document.getElementById("item-small-media-container");
-                    let i = parseInt(itemContainer.children[0].getAttribute("data-index"));
-                    if (i == 0)
-                        return;
-                    i = i - 1;
-                    // Xóa item cuối cùng
-                    itemContainer.lastElementChild.remove();
-                    // Thêm item tử đầu tiên
-                    let firstItem = CreateContainerSmallItem(listItemData[i], i);
-                    if (i == selectedIndex) {
-                        firstItem.style.borderColor = "rgb(255, 0, 0)";
-                    }
-                    itemContainer.insertBefore(firstItem, itemContainer.children[0]);
-                });
-                itemSmallMedia.appendChild(leftArrow);
+            // Add mũi tên di chuyển sang phải
+            let rightArrow = document.getElementById("right_arrow");
+            rightArrow.innerHTML = '<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"> <polygon points="10,30 30,50 10,70" style="fill:lime;" /> </svg>';
+            rightArrow.addEventListener("click", function () {
+                if (selectedIndex == listItemData.length - 1) {
+                    selectedIndex = 0;
+                }
+                else {
+                    selectedIndex++;
+                }
 
-                // Add mũi tên di chuyển sang phải
-                let rightArrow = document.createElement("div");
-                rightArrow.className = "right-left-arrow";
-                rightArrow.style.position = "absolute";
-                rightArrow.style.top = "10px"
-                rightArrow.style.right = "0px";
-                rightArrow.style.width = "40px";
-                rightArrow.style.height = "100px";
-                rightArrow.style.zIndex = 1;
-                rightArrow.innerHTML = '<svg  xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"> <polygon points="10,30 30,50 10,70" style="fill:lime;" /> </svg>';
-                rightArrow.addEventListener("click", function () {
-
-                    let itemContainer = document.getElementById("item-small-media-container");
-                    let i = parseInt(itemContainer.lastElementChild.getAttribute("data-index"));
-                    if (i == countOfSmallMedia - 1) {
-                        return;
-                    }
-
-                    i = i + 1;
-
-                    // Xóa item đầu tiên
-                    itemContainer.firstElementChild.remove();
-                    // Thêm item cuối cùng
-                    let lastItem = CreateContainerSmallItem(listItemData[i], i);
-                    if (i == selectedIndex) {
-                        lastItem.style.borderColor = "rgb(255, 0, 0)";
-                    }
-                    itemContainer.insertBefore(lastItem, null);
-                });
-                itemSmallMedia.appendChild(rightArrow);
-            }
+                ShowMediumItemFromIndex(selectedIndex);
+                ScrollToSelectedSmallItem();
+            });
         }
 
-        // Show medium item từ small item đã chọn, đã đặt chuột
-        function ShowMediumItemFromSelectedSmallItem(i) {
+        // Show medium item từ index
+        function ShowMediumItemFromIndex(i) {
             // Show medium media
-            let mediumImage = document.getElementById("medium-image");
+            let mediumImage = document.getElementById("medium_image");
+            let mediumVideo = document.getElementById("medium_video");
 
-            let mediumVideo = document.getElementById("medium-video");
             if (listItemData[i].isVideo) {
 
                 if (isEmptyOrSpaces(mediumVideo.src)) {
                     mediumVideo.src = listItemData[i].src;
                 }
 
-                if (mediumVideo.style.display != "block") {
-                    mediumVideo.play();
-                    mediumVideo.style.display = "block";
-                    mediumImage.style.display = "none";
-                }
+                mediumVideo.play();
+                mediumVideo.style.display = "block";
+                mediumVideo.style.left = "0px";
+
+                mediumImage.style.display = "none";
+
             }
             else {
                 mediumImage.src = listItemData[i].src;
                 if (mediumVideo.src != null) {
                     mediumVideo.pause();
                 }
-                if (mediumImage.style.display != "block") {
-                    mediumVideo.style.display = "none";
-                    mediumImage.style.display = "block";
-                }
+                mediumImage.style.display = "block";
+                mediumImage.style.left = "0px";
+
+                mediumVideo.style.display = "none";
             }
+
+            ChangeBorderColorOfSelectdSmallItem();
+            document.getElementById("item-medium-media").isCanSwipe = true;
+            ShowHideRightLeftArrow()
         }
 
-        // Show medium item tư variation đã chọn, đã đặt chuột
+        // Show medium item từ variation đã chọn, đã đặt chuột
         // Hiển thị ảnh đại diện của variation
         function ShowMediumItemFromSelectedVariation(src) {
-            let mediumImage = document.getElementById("medium-image");
+            let mediumImage = document.getElementById("medium_image");
 
-            let mediumVideo = document.getElementById("medium-video");
+            let mediumVideo = document.getElementById("medium_video");
             mediumImage.src = src;
 
             if (mediumVideo.style.display != "none") {
                 mediumVideo.style.display = "none";
                 mediumVideo.pause();
                 mediumImage.style.display = "block";
+            }
+            document.getElementById("item-medium-media").isCanSwipe = false;
+            ShowHideRightLeftArrow();
+            mediumImage.style.cursor = "initial";
+        }
+
+        function ShowHideRightLeftArrow() {
+            if (document.getElementById("item-medium-media").isCanSwipe) {
+                document.getElementById("left_arrow").style.display = "flex";
+                document.getElementById("right_arrow").style.display = "flex";
+            }
+            else {
+                document.getElementById("left_arrow").style.display = "none";
+                document.getElementById("right_arrow").style.display = "none";
             }
         }
 
@@ -873,43 +919,110 @@
             }
         }
 
-        // Thay đổi medium media theo variation đã chọn, nếu chưa chọn variation thì check theo small item đã chọn
-        function ShowMediumMediaFromSelectedObj() {
+        // Thay đổi medium media theo variation đã chọn, nếu chưa chọn variation thì check
+        // theo small item đã chọn
+        function ShowMediumMediaFromSelectedVariationOrSmallItem() {
             // Variation đã chọn và có từ 2 biến thể/ model trở lên
             if (selectedIdModel != null && itemObject.models.length > 1) {
                 ShowMediumItemFromSelectedVariation(GetModelObjectFromModelId(selectedIdModel).imageSrc);
             }
             else {
                 // Hiển thị small item/media đã chọn
-                ShowMediumItemFromSelectedSmallItem(selectedIndex);
+                ShowMediumItemFromIndex(selectedIndex);
             }
         }
 
         // Thay đổi medium media khi di chuyển bên trên small item
-        function ChangeSelectedItem(newSelectedItem) {
-            if (selectedIndex != null) {
-                if (selectedIndex == parseInt(newSelectedItem.getAttribute("data-index")))// là 1 element
-                    return;
-            }
-            let oldSelectedItem = selectedIndex;
+        function ShowMediumMediaFromSelectedSmallItem(newSelectedItem) {
+            if (selectedIndex == parseInt(newSelectedItem.getAttribute("data-index")))// là 1 element
+                return;
+
             selectedIndex = parseInt(newSelectedItem.getAttribute("data-index"));
 
+            // Hiển thị item ở kích thước to hơn
+            ShowMediumItemFromIndex(selectedIndex);
+        }
+
+        // Thay đổi màu border
+        function ChangeBorderColorOfSelectdSmallItem() {
             // Set border color về màu không được chọn
-            if (oldSelectedItem != null) {
+            if (selectedIndex != null) {
                 let itemSmallMediaContainer = document.getElementById("item-small-media-container");
                 for (let i = 0; i < itemSmallMediaContainer.children.length; i++) {
-                    if (parseInt(itemSmallMediaContainer.children[i].getAttribute("data-index")) == oldSelectedItem) {
+                    if (parseInt(itemSmallMediaContainer.children[i].getAttribute("data-index")) == selectedIndex) {
+                        itemSmallMediaContainer.children[i].style.borderColor = "rgb(255, 0, 0)";
+                        //if (DEBUG) {
+                        //    console.log("selectedIndex: " + selectedIndex);
+                        //    console.log("offsetLeft: " + itemSmallMediaContainer.children[i].offsetLeft);
+                        //    console.log("scrollLeft: " + itemSmallMediaContainer.scrollLeft);
+                        //    console.log("offsetParent.id: " + itemSmallMediaContainer.children[i].offsetParent.id);
+                        //}
+                    }
+                    else {
                         itemSmallMediaContainer.children[i].style.borderColor = "rgb(228, 228, 222)";
-                        break;
                     }
                 }
             }
+        }
 
-            // Set border color về màu không được chọn
-            newSelectedItem.style.borderColor = "rgb(255, 0, 0)";
+        // Thay đổi medium media bằng vuốt, phím mũi tên, chuột hiển thị nổi bật small item tương ứng
+        function ScrollToSelectedSmallItem() {
+            let itemSmallMediaContainer = document.getElementById("item-small-media-container");
 
-            // Hiển thị item ở kích thước to hơn
-            ShowMediumItemFromSelectedSmallItem(selectedIndex);
+            for (let i = 0; i < itemSmallMediaContainer.children.length; i++) {
+                if (parseInt(itemSmallMediaContainer.children[i].getAttribute("data-index")) == selectedIndex) {
+                    let offsetLeft = itemSmallMediaContainer.children[i].offsetLeft;
+                    //let offsetWidth = itemSmallMediaContainer.children[i].offsetWidth;
+                    //let scrollWidth = itemSmallMediaContainer.scrollWidth;
+                    //if (DEBUG) {
+                    //    console.log(
+                    //        "offsetLeft: " + itemSmallMediaContainer.children[i].offsetLeft +
+                    //        "  offsetWidth: " + itemSmallMediaContainer.children[i].offsetWidth
+                    //        + "   scrollWidth:" + itemSmallMediaContainer.scrollWidth +
+                    //        "  scrollLeft : " + itemSmallMediaContainer.scrollLeft);
+                    //}
+                    // Mỗi video, image small item sẽ chiếm 100(width) + 5(margin lef) + 5(margin lef) = 110 px
+                    // Không nhìn thấy toàn bộ small item
+                    if (offsetLeft + 110 > itemSmallMediaContainer.scrollLeft + itemSmallMediaContainer.clientWidth) {
+                        itemSmallMediaContainer.scrollLeft =
+                            offsetLeft + 110 - itemSmallMediaContainer.clientWidth;
+                    }
+                    else if (offsetLeft < itemSmallMediaContainer.scrollLeft) {
+                        itemSmallMediaContainer.scrollLeft = offsetLeft;
+                    }
+                }
+            }
+        }
+
+
+        // Lấy số lượng max của 1 variation/model.
+        // Nếu chưa chọn variation / model số lượng max = tổng số lượng các variation / model
+        // trong item
+        function GetMaxQuantityInput() {
+            let maxQuantity = 0;
+            if (selectedIdModel == null) { // tổng số lượng các variation / model trong item
+                for (let i = 0; i < itemObject.models.length; i++) {
+                    maxQuantity = maxQuantity + itemObject.models[i].quantity;
+                }
+            }
+            else {
+                maxQuantity = GetModelObjectFromModelId(selectedIdModel).quantity;
+            }
+            return maxQuantity;
+        }
+
+        // Thay đổi medium media khi di chuyển chuột trên variation button
+        function VariationMouseEnter(newSelectVariation) {
+            newSelectVariation.style.borderColor = "rgba(255, 0, 0)";
+            ShowMediumItemFromSelectedVariation(newSelectVariation.getElementsByClassName("variation-image")[0].src);
+        }
+
+        // Thay đổi medium media khi di chuyển chuột ra khỏi variation button
+        function VariationMouseLeave(newSelectVariation) {
+            ShowMediumMediaFromSelectedVariationOrSmallItem();
+            if (parseInt(newSelectVariation.getAttribute("data-model-id")) != selectedIdModel) {
+                newSelectVariation.style.borderColor = "rgba(0, 0, 0, .09)";
+            }
         }
 
         function VariationClick(newSelectVariation) {
@@ -948,36 +1061,6 @@
             // Luôn hiển thị border màu đỏ với variation đã chọn
             newSelectVariation.style.borderColor = "rgb(255, 0, 0)";
             ShowPriceAndReadyMaxQuantity();
-        }
-
-        // Lấy số lượng max của 1 variation/model.
-        // Nếu chưa chọn variation / model số lượng max = tổng số lượng các variation / model
-        // trong item
-        function GetMaxQuantityInput() {
-            let maxQuantity = 0;
-            if (selectedIdModel == null) { // tổng số lượng các variation / model trong item
-                for (let i = 0; i < itemObject.models.length; i++) {
-                    maxQuantity = maxQuantity + itemObject.models[i].quantity;
-                }
-            }
-            else {
-                maxQuantity = GetModelObjectFromModelId(selectedIdModel).quantity;
-            }
-            return maxQuantity;
-        }
-
-        // Thay đổi medium media khi di chuyển chuột trên variation button
-        function VariationMouseEnter(newSelectVariation) {
-            newSelectVariation.style.borderColor = "rgba(255, 0, 0)";
-            ShowMediumItemFromSelectedVariation(newSelectVariation.getElementsByClassName("variation-image")[0].src);
-        }
-
-        // Thay đổi medium media khi di chuyển chuột ra khỏi variation button
-        function VariationMouseLeave(newSelectVariation) {
-            ShowMediumMediaFromSelectedObj();
-            if (parseInt(newSelectVariation.getAttribute("data-model-id")) != selectedIdModel) {
-                newSelectVariation.style.borderColor = "rgba(0, 0, 0, .09)";
-            }
         }
 
         function GetModelObjectFromModelId(modelId) {
@@ -1280,6 +1363,188 @@
                     CloseModal();
                 }
             }
+        }
+    </script>
+
+    <script>
+        let isHoldDownStateMouse = false;
+        let clientXDown;
+        let clientXOld;
+
+        let clientXTouchStart;
+        let clientYTouchStart;
+        let clientXTouchMoveOld;
+        let clientYTouchMoveOld;
+        let statusNextPreviousNone; // 0: Next, 1: Previous, 2: None
+
+        function ShowImageFromSwipeEventCore() {
+            if (statusNextPreviousNone == 0) {// Next
+                if (selectedIndex == listItemData.length - 1) {
+                    selectedIndex = 0;
+                }
+                else {
+                    selectedIndex++;
+                }
+            }
+            else if (statusNextPreviousNone == 1) { // Previous
+                if (selectedIndex == 0) {
+                    selectedIndex = listItemData.length - 1;
+                }
+                else {
+                    selectedIndex--;
+                }
+            }
+            ShowMediumItemFromIndex(selectedIndex);
+            ScrollToSelectedSmallItem();
+        }
+
+        function MouseUpMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            event.target.style.cursor = "grab";
+
+            if (isHoldDownStateMouse) {
+                ShowImageFromSwipeEventCore();
+            }
+
+            isHoldDownStateMouse = false;
+            statusNextPreviousNone = 2;
+        }
+
+        function MouseDownMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            event.preventDefault()
+            isHoldDownStateMouse = true;
+            clientXOld = event.clientX;
+            clientXDown = event.clientX;
+            event.target.style.cursor = "grabbing";
+            statusNextPreviousNone = 2;
+        }
+
+        function MouseEnterMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            isHoldDownStateMouse = false;
+            statusNextPreviousNone = 2;
+
+            event.target.style.cursor = "grab";
+        }
+
+        function MouseMoveMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            if (!isHoldDownStateMouse) {
+                return;
+            }
+
+            let currentX = event.clientX;
+            let diffX = currentX - clientXOld;
+            clientXOld = currentX;
+
+            if (DEBUG) {
+                console.log("currentX: " + currentX);
+                console.log("clientXOld: " + clientXOld);
+            }
+
+            if (diffX > 0) { // Previous
+                statusNextPreviousNone = 1;
+            }
+            else if (diffX < 0) { // Next
+                statusNextPreviousNone = 0;
+            }
+            //else { // None
+            //    statusNextPreviousNone = 2;
+            //}
+            if (isHoldDownStateMouse) {
+                event.target.style.left = currentX - clientXDown + "px";
+            }
+        }
+
+        function MouseOutMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            if (isHoldDownStateMouse) {
+                ShowImageFromSwipeEventCore();
+            }
+
+            isHoldDownStateMouse = false;
+            statusNextPreviousNone = 2;
+        }
+
+        function CheckTouchVerticalMoving(currentX, currentY) {
+            if (Math.abs(currentX - clientXTouchStart) > Math.abs(currentY - clientYTouchStart)) {
+                return false;
+            }
+            return true;
+        }
+
+        function TouchMoveMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            let currentX = Math.floor(event.touches[0].clientX);
+            let currentY = Math.floor(event.touches[0].clientY);
+            clientYTouchMoveOld = currentY;
+            if (CheckTouchVerticalMoving(currentX, currentY)) {
+                clientXTouchMoveOld = currentX;
+                return;
+            }
+
+            event.preventDefault();
+            if (clientXTouchMoveOld === null) {
+                clientXTouchMoveOld = currentX;
+                statusNextPreviousNone = 2;
+                return;
+            }
+
+            let diffX = currentX - clientXTouchMoveOld;
+            clientXTouchMoveOld = currentX;
+            if (diffX > 0) { // Previous
+                statusNextPreviousNone = 1;
+            }
+            else if (diffX < 0) { // Next
+                statusNextPreviousNone = 0;
+            }
+            //else { // None
+            //    statusNextPreviousNone = 2;
+            //}
+
+            event.target.style.left = clientXTouchMoveOld - clientXTouchStart + "px";
+        }
+
+        function TouchEndMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            if (CheckTouchVerticalMoving(clientXTouchMoveOld, clientYTouchMoveOld)) {
+                return;
+            }
+            event.preventDefault();
+            ShowImageFromSwipeEventCore();
+
+        }
+
+        function TouchStartMediumMedia(event) {
+            if (!event.target.parentElement.isCanSwipe) {
+                return;
+            }
+
+            clientXTouchStart = Math.floor(event.touches[0].clientX);
+            clientYTouchStart = Math.floor(event.touches[0].clientY);
+            statusNextPreviousNone = 2;
         }
     </script>
 </body>

@@ -18,8 +18,10 @@ namespace MVCPlayWithMe.Models
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbPublisher_Select_All", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlCommand cmd = new MySqlCommand("st_tbPublisher_Select_All", conn)
+                {
+                    CommandType = CommandType.StoredProcedure
+                };
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 if (rdr != null && rdr.HasRows)

@@ -74,7 +74,7 @@ namespace MVCPlayWithMe.Models
             product.status = MyMySql.GetInt32(rdr, "Status");
             product.comboId = MyMySql.GetInt32(rdr, "ComboId");
             product.comboName = MyMySql.GetString(rdr, "ComboName");
-            product.SetSrcImageVideo();
+            product.SetFirstSrcImage();
 
             return product;
         }
@@ -787,7 +787,7 @@ namespace MVCPlayWithMe.Models
                     product.barcode = MyMySql.GetString(rdr, "Barcode");
                     product.name = MyMySql.GetString(rdr, "Name");
                     product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                    product.SetSrcImageVideo();
+                    product.SetFirstSrcImage();
                     ls.Add(product);
                 }
 
@@ -879,9 +879,9 @@ namespace MVCPlayWithMe.Models
             MySqlParameter[] paras = null;
             int lengthPara = 5;
             paras = new MySqlParameter[lengthPara];
-            paras[0] = new MySqlParameter("@inId", 0);
-            paras[1] = new MySqlParameter("@inPrice", 0);
-            paras[2] = new MySqlParameter("@inDiscount", 0);
+            paras[0] = new MySqlParameter("@inId", (object)0);
+            paras[1] = new MySqlParameter("@inPrice", (object)0);
+            paras[2] = new MySqlParameter("@inDiscount", (object)0);
             MyMySql.AddOutParameters(paras);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -1429,7 +1429,7 @@ namespace MVCPlayWithMe.Models
                     pro.id = MyMySql.GetInt32(rdr, "Id");
                     pro.name  = MyMySql.GetString(rdr, "Name");
                     pro.quantity = MyMySql.GetInt32(rdr, "Quantity");
-                    pro.SetSrcImageVideo();
+                    pro.SetFirstSrcImage();
 
                     ls.Add(pro);
                 }

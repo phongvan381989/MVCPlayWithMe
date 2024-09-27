@@ -24,6 +24,9 @@ namespace MVCPlayWithMe
             BundleConfig.RegisterBundles(BundleTable.Bundles);
 
             Common.ProductMediaFolderPath = ConfigurationManager.AppSettings["ProductMediaFolderPath"];
+            Common.absoluteProductMediaFolderPath =
+                System.Web.HttpContext.Current.Server.MapPath(Common.ProductMediaFolderPath);
+
             Common.ItemMediaFolderPath = ConfigurationManager.AppSettings["ItemMediaFolderPath"];
             Common.absoluteItemMediaFolderPath =
                 System.Web.HttpContext.Current.Server.MapPath(Common.ItemMediaFolderPath);

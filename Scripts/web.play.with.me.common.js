@@ -693,7 +693,7 @@ async function Logout() {
 
     // Uidkey được xóa từ phía server
     // Quay về trang chủ
-    window.location.href = "/Home/Index";
+    window.location.href = "/Home/Search";
 
 }
 
@@ -753,7 +753,7 @@ function GetValueFromUrlName(name) {
 
 // Về trang chính
 function GoHomePage() {
-    //if (!window.location.href.toUpperCase().includes("/Home/Index".toUpperCase())) {
+    //if (!window.location.href.toUpperCase().includes("/Home/Search".toUpperCase())) {
         window.location.href = "/";
     //}
 }
@@ -767,7 +767,7 @@ async function AuthenFail() {
     await CreateMustClickOkModal("Xác thực người dùng thất bại.", null);
 
     // Quay về trang chủ
-    window.location.href = "/Home/Index";
+    window.location.href = "/Home/Search";
 }
 
 // Set min width khi hiển thị trên màn hình nhỏ

@@ -361,6 +361,12 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
 
+            // khách vãng lai ta thêm order id vào cookie
+            if (cus == null)
+            {
+                Cookie.SetOrderListCookie(HttpContext, orderId);
+            }
+
             if (cus != null)
             {
                 // Xóa sản phẩm trong đơn hàng khỏi cart

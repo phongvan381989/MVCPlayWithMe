@@ -40,6 +40,7 @@ namespace MVCPlayWithMe.General
 
         public static readonly string customerInforKey = "cusinfor";
         public static readonly string itemOnRowSearchPage = "itemOnRow";
+        public static readonly string orderIdList = "orderList"; // danh sách mã đơn hàng đối với khách vãng lai
         #endregion
 
         public enum EECommerceType
@@ -70,8 +71,11 @@ namespace MVCPlayWithMe.General
         /// Đường dẫn thư mục chứa file ảnh
         /// </summary>
         public static string ProductMediaFolderPath;
+        public static string absoluteProductMediaFolderPath;
+
         public static string ItemMediaFolderPath;
         public static string absoluteItemMediaFolderPath;
+
         public static string MediaFolderPath;
         public static string ThongTinBaoMatPath;
         public static string TemporaryImageShopeeMediaFolderPath;
@@ -108,7 +112,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteProductMediaFolderPath(string productId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + @"/";
             //MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
@@ -120,7 +124,7 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteProductMediaFolderPath(string productId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + @"/";
             Directory.CreateDirectory(path);
             return path;
         }
@@ -177,7 +181,7 @@ namespace MVCPlayWithMe.General
         {
             List<string> src = new List<string>();
 
-            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + @"/";
             if (!Directory.Exists(path))
             {
                 return src;
@@ -198,29 +202,49 @@ namespace MVCPlayWithMe.General
             return src;
         }
 
+        //// Lấy ảnh đầu tiên của imageSrc cho nhanh
+        //public static string GetFirstProductImageSrc(string productId)
+        //{
+        //    string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+        //    //MyLogger.GetInstance().Info(path);
+        //    if (!Directory.Exists(path))
+        //    {
+        //        return string.Empty;
+        //    }
+
+        //    string src = string.Empty;
+        //    string[] files = Directory.GetFiles(path, "0.*");
+
+        //    string relPath = ProductMediaFolderPath + productId + @"/";
+
+        //    foreach (var file in files)
+        //    {
+        //        if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+        //        {
+        //            src = relPath + Path.GetFileName(file);
+        //            break;
+        //        }
+        //    }
+        //    return src;
+        //}
+
         // Lấy ảnh đầu tiên của imageSrc cho nhanh
         public static string GetFirstProductImageSrc(string productId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
-            //MyLogger.GetInstance().Info(path);
-            if (!Directory.Exists(path))
-            {
-                return string.Empty;
-            }
-
             string src = string.Empty;
-            string[] files = Directory.GetFiles(path, "0.*");
-
-            string relPath = ProductMediaFolderPath + productId + @"/";
-
-            foreach (var file in files)
+            string path = Common.absoluteProductMediaFolderPath + productId + @"/0.jpg";
+            if (!File.Exists(path))
             {
-                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                path = Common.absoluteProductMediaFolderPath + productId + @"/0.png";
+                if (!File.Exists(path))
                 {
-                    src = relPath + Path.GetFileName(file);
-                    break;
+                    path = Common.absoluteProductMediaFolderPath + productId + @"/0.jfif";
+                    if (!File.Exists(path))
+                        return src;
                 }
             }
+            src = ProductMediaFolderPath + productId + @"/" + Path.GetFileName(path);
+
             return src;
         }
 
@@ -308,7 +332,7 @@ namespace MVCPlayWithMe.General
         {
             List<string> src = new List<string>();
 
-            string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + @"/";
             if (!Directory.Exists(path))
             {
                 return src;
@@ -813,7 +837,7 @@ namespace MVCPlayWithMe.General
         public static void SetResultException(Exception ex, MySqlResultState result)
         {
             MyLogger.GetInstance().Warn(ex.ToString());
-            result.State = EMySqlResultState.ERROR;
+            result.State = EMySqlResultState.EXCEPTION;
             result.Message = ex.ToString();
         }
 
@@ -847,7 +871,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteItemMediaFolderPath(int itemId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -858,7 +882,7 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteItemMediaFolderPath(int itemId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
             Directory.CreateDirectory(path);
             return path;
         }
@@ -869,8 +893,8 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteModelMediaFolderPath(int itemId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/Model/";
-            MyLogger.GetInstance().Debug(path);
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/Model/";
+            //MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
                 path = null;
@@ -880,7 +904,7 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteModelMediaFolderPath(int itemId)
         {
-            string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/Model/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/Model/";
             Directory.CreateDirectory(path);
             return path;
         }
@@ -897,7 +921,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+                string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
 
                 files = Directory.GetFiles(path);
             }
@@ -957,7 +981,7 @@ namespace MVCPlayWithMe.General
 
         //    try
         //    {
-        //        string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+        //        string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
 
         //        files = Directory.GetFiles(path, "0.*"); // trả về file ảnh và video nếu có
         //    }
@@ -1012,7 +1036,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                string path = System.Web.HttpContext.Current.Server.MapPath(ItemMediaFolderPath) + itemId.ToString() + @"/";
+                string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
 
                 files = Directory.GetFiles(path);
             }
@@ -1389,7 +1413,7 @@ namespace MVCPlayWithMe.General
             }
             catch(Exception ex)
             {
-                MyLogger.GetInstance().Debug(ex.Message);
+                MyLogger.GetInstance().Warn(ex.Message);
             }
         }
         #endregion

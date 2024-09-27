@@ -32,6 +32,9 @@ function ShowAccoutAction() {
 
 // Cập nhật số sản phẩm trong giỏ hàng ( menu top), ẩn hiện icon giỏ hàng nếu cần thiết
 async function UpdateCartCount() {
+    if (DEBUG) {
+        console.log("UpdateCartCount CALL ");
+    }
     let length = 0;
     if (CheckAnonymousCustomer()) {
         // Lấy giỏ hàng từ cookie
@@ -60,9 +63,9 @@ async function UpdateCartCount() {
 
 // Với khách mọi page đều phải thực hiện sau khi load
 async function CommonAction() {
-    //if (DEBUG) {
-    //    console.log("CommonAction CALL");
-    //}
+    if (DEBUG) {
+        console.log("CommonAction CALL");
+    }
     if (document.getElementById("biggestContainer_top") == null) {
         return;
     }
@@ -83,17 +86,27 @@ async function CommonAction() {
             document.getElementById("left_container").style.display = "none";
         }
     }
-    if (CheckIsCustomer()) {
+    if (true/*CheckIsCustomer()*/) { // Temporary comment
+
+        //window.history.pushState({}, "");
+
+        //window.addEventListener("popstate", (e) => {
+        //    if (DEBUG) {
+        //        console.log("popstate UpdateCartCount CALL ");
+        //    }
+        //    UpdateCartCount();
+        //});
+
         await ShowAccoutAction();
         await UpdateCartCount();
     }
     else {
-        // Ẩn thông tin account
-        document.getElementsByClassName("top-account-container")[0].style.display = "none";
-        document.getElementsByClassName("top-account-container")[0].style.display = "none";
+        // Xóa thông tin account
+        document.getElementsByClassName("top-account-container")[0].remove();
+        document.getElementsByClassName("top-account-container")[0].remove()
 
-        // Ẩn thông tin giỏ hàng
-        document.getElementsByClassName("cart-container")[0].style.display = "none";
+        // Xóa thông tin giỏ hàng
+        document.getElementsByClassName("cart-container")[0].remove();
     }
 }
 

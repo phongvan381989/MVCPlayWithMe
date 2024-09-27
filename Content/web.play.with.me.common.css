@@ -16,6 +16,9 @@
     min-height: 100%;
     /*margin-top: 10px;*/
 }
+#result-find-id{
+    width:100%;
+}
 
 #biggestContainer_body_wraper_item {
     display: flex;

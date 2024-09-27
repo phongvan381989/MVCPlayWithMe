@@ -29,7 +29,7 @@ namespace MVCPlayWithMe.Controllers
             if (AuthentCustomer() == null)
                 return View();
             // Quay về trang chủ
-            return View("~/Views/Home/Index.cshtml");
+            return View("~/Views/Home/Search.cshtml");
         }
 
         [HttpPost]
@@ -44,7 +44,7 @@ namespace MVCPlayWithMe.Controllers
             if (AuthentCustomer() == null)
                 return View();
             // Quay về trang chủ
-            return View("~/Views/Home/Index.cshtml");
+            return View("~/Views/Home/Search.cshtml");
         }
 
         [HttpPost]
@@ -271,10 +271,12 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public ActionResult Order()
+        // Đơn hàng của khách đăng nhập hoặc vãng lai
+        // Nếu orderCode null, lấy tất cả đơn hàng
+        public ActionResult Order(int? id)
         {
-            if (AuthentCustomer() == null)
-                return View("~/Views/Customer/Login.cshtml");
+            //if (AuthentCustomer() == null)
+            //    return View("~/Views/Customer/Login.cshtml");
 
             return View();
         }
@@ -323,7 +325,7 @@ namespace MVCPlayWithMe.Controllers
         //    return JsonConvert.SerializeObject(result);
         //}
 
-        // Lấy tất cả đơn
+        // Lấy tất cả đơn của khách đăng nhập hoặc vãng lai
         [HttpPost]
         public string GetAllOrder()
         {
@@ -332,13 +334,43 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             if (cus == null)
             {
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-                return JsonConvert.SerializeObject(result);
+                // lấy order từ cookie
+                CookieResultState cookie = Cookie.GetOrderListCookie(HttpContext);
+                List<int> lsId = new List<int>();
+
+                string[] ids = cookie.cookieValue.Split('#');
+
+                foreach (var id in ids)
+                {
+                    lsId.Add(Common.ConvertStringToInt32(id));
+                }
+                result = ordersqler.GetAllOrderFromListId(lsId);
             }
             else
             {
                 result = ordersqler.GetAllOrder(cus.id);
             }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        // Lấy 1 đơn
+        [HttpPost]
+        public string GetOrderFromId(int id)
+        {
+            MySqlResultState result = new MySqlResultState();
+            result = ordersqler.GetOrderFromId(id);
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        // Tìm kiếm đơn theo tên hoặc 4 số cuối SDT người nhận đối với khách vãng lai
+        [HttpPost]
+        public string SearchOrderForAnonymous(string sdtNameForSearch)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            result = ordersqler.SearchOrderForAnonymous(sdtNameForSearch);
 
             return JsonConvert.SerializeObject(result);
         }

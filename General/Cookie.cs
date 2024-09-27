@@ -32,7 +32,7 @@ namespace MVCPlayWithMe.General
             Guid guidVal = Guid.NewGuid();
             cookieResut.cookieValue = guidVal.ToString("N");
             uId.Value = cookieResut.cookieValue;
-            uId.Expires = SetExpires(1);
+            uId.Expires = SetExpires(100);
             //uId.HttpOnly = true;
 
             httpContext.Response.Cookies.Add(uId);
@@ -49,12 +49,38 @@ namespace MVCPlayWithMe.General
         {
             HttpCookie visitorType = new HttpCookie(Common.visitorType);
             visitorType.Value = "admin";
-            visitorType.Expires = SetExpires(1);
+            visitorType.Expires = SetExpires(100);
             //uId.HttpOnly = true;
 
             httpContext.Response.Cookies.Add(visitorType);
+        }
 
-            return;
+        /// <summary>
+        /// Với khách vãng lai, khi mua thành công thêm id mã đơn hàng
+        /// ex: 13#43#....#466
+        /// </summary>
+        /// <param name="httpContext"></param>
+        public static void SetOrderListCookie(HttpContextBase httpContext, int id)
+        {
+            string value = "";
+            if (httpContext.Request.Cookies[Common.orderIdList] != null)
+            {
+                value = httpContext.Request.Cookies[Common.orderIdList].Value;
+                if(string.IsNullOrEmpty(value))
+                {
+                    value = id.ToString();
+                }
+                else
+                {
+                    value = value + "#" + id.ToString();
+                }
+            }
+            HttpCookie visitorType = new HttpCookie(Common.orderIdList);
+            visitorType.Value = value;
+            visitorType.Expires = SetExpires(100);
+            //uId.HttpOnly = true;
+
+            httpContext.Response.Cookies.Add(visitorType);
         }
 
         public static CookieResultState GetUserIdCookie(HttpContextBase httpContext)
@@ -164,6 +190,16 @@ namespace MVCPlayWithMe.General
             if (httpContext.Request.Cookies[Common.itemOnRowSearchPage] != null)
             {
                 cookie.cookieValue = httpContext.Request.Cookies[Common.itemOnRowSearchPage].Value;
+            }
+            return cookie;
+        }
+
+        public static CookieResultState GetOrderListCookie(HttpContextBase httpContext)
+        {
+            CookieResultState cookie = new CookieResultState();
+            if (httpContext.Request.Cookies[Common.orderIdList] != null)
+            {
+                cookie.cookieValue = httpContext.Request.Cookies[Common.orderIdList].Value;
             }
             return cookie;
         }
