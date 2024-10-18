@@ -225,5 +225,12 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        public MySqlResultState ChangePasswordAdministrator(int id, string oldPassWord,
+            string newPassWord, string renewPassWord)
+        {
+            return ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
+                "st_tbAdministrator_Get_Salt_Hash_From_Id",
+                "st_tbAdministrator_ChangePassword");
+        }
     }
 }

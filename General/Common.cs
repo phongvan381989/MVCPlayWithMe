@@ -29,6 +29,10 @@ namespace MVCPlayWithMe.General
         public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
+
+        // Lần đầu trình duyệt truy cập chưa có thông tin itemOnRow nên cần giá trị mặc định
+        // Giá trị cần lớn nhất có thể
+        public static readonly int itemOnRowDefault = 6;
         // Cookie const
         #region Cookie
         public static readonly string userIdKey = "uid";
@@ -41,6 +45,8 @@ namespace MVCPlayWithMe.General
         public static readonly string customerInforKey = "cusinfor";
         public static readonly string itemOnRowSearchPage = "itemOnRow";
         public static readonly string orderIdList = "orderList"; // danh sách mã đơn hàng đối với khách vãng lai
+        public static readonly int standardShipFeeInHaNoi = 15000; // Phí ship tiêu chuẩn trong Hà Nội
+        public static readonly int standardShipFeeOutHaNoi = 30000; // Phí ship tiêu chuẩn ngoài Hà Nội
         #endregion
 
         public enum EECommerceType

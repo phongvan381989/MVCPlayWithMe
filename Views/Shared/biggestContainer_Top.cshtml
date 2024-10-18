@@ -5,8 +5,10 @@
                 <img class="icon24" src="~/Media/mainPageIcon.png">
                 <span>Trang chủ</span>
             </div>
-            <div class="top-account-container">
-                <div class="account-container">
+            <div class="top-account-container" 
+                 onmouseenter="MouseEnterDropdownContentOfTopAccount()"
+                 onmouseleave="MouseLeaveDropdownContentOfTopAccount()">
+                <div class="account-container" onclick="ClickShowDropdownContentOfTopAccount()">
                     <img class="icon24" src="~/Media/accountIcon.png">
                     <span>Tài khoản</span>
                 </div>

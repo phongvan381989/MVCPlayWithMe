@@ -57,7 +57,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công", "Có lỗi xảy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
         }
 
         async function DeleteCategory() {
@@ -74,7 +74,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
         }
     </script>
 </body>

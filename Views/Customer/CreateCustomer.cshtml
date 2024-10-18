@@ -6,141 +6,83 @@
 <html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <style>
-        .register-container {
-            width: 100%;
-            max-width: 500px;
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid rgba(0,0,0,0.4);
-            border-radius: 2px;
-        }
-
-            .register-container input {
-                width: 100%;
-            }
-
-            .register-container button {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-                outline: none;
-                padding: 10px;
-                border: 0;
-                background: none;
-                border-radius: 2px;
-                min-width: 140px;
-                font-size: 14px;
-                cursor: pointer;
-                color: #fff;
-                background-color: #ee4d2d;
-                margin: 0px 20px 0px 20px;
-            }
-
-        .kcbuc0986 {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.input.css">
 </head>
 <body>
-
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <div class="register-container">
             <form>
                 <label for="userName">Tài khoản:</label><br>
-                <input type="text" id="userName" value=""><br><br>
+                <div class="H56xjDa767">
+                    <input type="text" id="userName" value="">
+                </div>
 
                 <label for="passWord">Mật khẩu:</label><br>
-                <input type="password" id="passWord" value=""><br><br>
+                <div class="H56xjDa767">
+                    <input type="password" id="passWord" value="">
+                    @Html.Partial("~/Views/Shared/OpenCloseEye.cshtml")
+                </div>
 
                 <label for="repassWord">Nhập lại mật khẩu:</label><br>
-                <input type="password" id="repassWord" value=""><br><br>
+                <div class="H56xjDa767">
+                    <input type="password" id="repassWord" value="">
+                    @Html.Partial("~/Views/Shared/OpenCloseEye.cshtml")
+                </div>
             </form>
             <div class="kcbuc0986">
-                <button type="button" onclick="CreateCustomer_Add()">Tạo Tài Khoản</button>
-                <button type="button" onclick="GoToLoginPage()">Đăng Nhập</button>
+                <a class="faf08xvj" href="/Customer/Login"> Đăng Nhập</a>
+                <button class="anh8s9nfja" type="button" onclick="CreateCustomer_Add()">Tạo Tài Khoản</button>
             </div>
         </div>
-        <script src="~/Scripts/web.play.with.me.common.js"></script>
-        <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-        <script src="~/Scripts/web.play.with.me.action.common.js"></script>
-        <script>
-            async function CheckValidUserName(userName) {
-                const searchParams = new URLSearchParams();
-                searchParams.append("userName", userName);
-
-                let query = "/Customer/CreateCustomer_CheckValidUserName";
-
-                return await RequestHttpPostPromise(searchParams, query);
-            }
-
-            async function Add(userName, passWord) {
-                const searchParams = new URLSearchParams();
-                searchParams.append("userName", userName);
-                searchParams.append("passWord", passWord);
-
-                let query = "/Customer/CreateCustomer_Add";
-
-                return await RequestHttpPostPromise(searchParams, query);
-            }
-
-            async function CreateCustomer_Add() {
-
-                let userName = document.getElementById("userName").value;
-                let passWord = document.getElementById("passWord").value;
-                let repassWord = document.getElementById("repassWord").value;
-
-                if (isEmptyOrSpaces(userName)
-                    || isEmptyOrSpaces(passWord)
-                    || isEmptyOrSpaces(repassWord)) {
-                    await CreateMustClickOkModal("Vui lòng không để trống thông tin tài khoản, mật khẩu.", null);
-                    return;
-                }
-                // Kiểm tra password và repassword hợp lệ
-                {
-                    const obj = JSON.parse(CheckPassWordValid(passWord, repassWord));
-                    if (obj.isValid === false) {
-                        await CreateMustClickOkModal(obj.message, null);
-                        return;
-                    }
-                }
-                // Kiểm tra username đã tồn tại
-                let responseDB = await CheckValidUserName(userName);
-                let result = JSON.parse(responseDB.responseText);
-
-                if (result == null) {
-                    await CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.", null);
-                    return;
-                }
-                if (result.State != 0 && result.Message == "Ok") {
-                    await CreateMustClickOkModal("Tài khoản đã tồn tại. Vui lòng nhâp tài khoản khác.", null);
-                    return;
-                }
-
-                responseDB = await Add(userName, passWord);
-                result = JSON.parse(responseDB.responseText);
-
-                if (result == null) {
-                    await CreateMustClickOkModal("Có lỗi, vui lòng thử lại sau.", null);
-                    return;
-                }
-
-                if (result.State != 0) {
-                    await CreateMustClickOkModal("Tạo tài khoản thất bại. Vui lòng thử lại sau.", null);
-                    return;
-                }
-                await CreateMustClickOkModal("Tạo tài khoản thành công",
-                    function () { window.location.replace("/Customer/Login"); });
-            }
-
-            function GoToLoginPage() {
-                window.location.href = "/Customer/Login";
-            }
-        </script>
     </div>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+    <script>
+        async function CreateCustomer_Add() {
+
+            let userName = document.getElementById("userName").value;
+            let passWord = document.getElementById("passWord").value;
+            let repassWord = document.getElementById("repassWord").value;
+
+            if (isEmptyOrSpaces(userName)
+                || isEmptyOrSpaces(passWord)
+                || isEmptyOrSpaces(repassWord)) {
+                await CreateMustClickOkModal("Vui lòng không để trống thông tin tài khoản, mật khẩu.", null);
+                return;
+            }
+            // Kiểm tra password và repassword hợp lệ
+            {
+                const obj = JSON.parse(CheckPassWordValid(passWord, repassWord));
+                if (obj.isValid === false) {
+                    await CreateMustClickOkModal(obj.message, null);
+                    return;
+                }
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("userName", userName);
+            searchParams.append("passWord", passWord);
+
+            let url = "/Customer/CreateCustomer_Add";
+
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Tạo tài khoản thành công.", "Tạo tài khoản thất bại.");
+                if (isOk) {
+                    window.location.replace("/Customer/Login");
+                }
+            }
+            catch (error) {
+                CreateMustClickOkModal("Tạo tài khoản thất bại.", null);
+                return;
+            }
+        }
+    </script>
 </body>
 </html>

@@ -103,5 +103,26 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(result);
         }
+
+        [HttpPost]
+        public string ChangePassword(string oldPassWord,
+            string newPassWord, string renewPassWord)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Administrator administrator = AuthentAdministrator();
+            if (administrator != null)
+            {
+                result = sqler.ChangePasswordAdministrator(administrator.id, 
+                    oldPassWord, newPassWord, renewPassWord);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
     }
 }

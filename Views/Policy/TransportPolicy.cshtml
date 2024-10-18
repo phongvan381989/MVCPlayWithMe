@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+</head>
+<body>
+    <div id="biggestContainer">
+        <div style=" width: 100%; background-color: white; ">
+            <h3 style="margin-bottom:2px;">Chính sách vận chuyển</h3>
+
+            <p><span style="font-size:14px"><strong>1. Đối tác vận chuyển: </strong>Hàng hóa bán ra tại website @ViewData["webAddress"] được vận chuyển bởi bên thứ 3 uy tín: Giao hàng tiết kiệm, Viettelpost,...</span></p>
+
+            <p><strong><span style="font-size:14px">2. Phí vận chuyển:</span></strong></p>
+
+            <p style="margin-left:80px"><span style="font-size:14px">+ Hà Nội: @ViewData["inHaNoiFee"]đ/đơn.</span></p>
+
+            <p style="margin-left:80px"><span style="font-size:14px">+ Các tỉnh/thành phố khác: @ViewData["outHaNoiFee"]đ/đơn.</span></p>
+
+            <p><span style="font-size:14px"><strong>3. Thời gian&nbsp; xử lý đơn hàng và giao hàng: </strong></span></p>
+
+            <p><span style="font-size:14px">-&nbsp;Tùy thuộc vào khu vực nhận hàng của&nbsp;khách hàng mà đơn hàng có thể giao trong vòng từ 2 đến 7 ngày.&nbsp;</span></p>
+
+            <p><span style="font-size:14px">- Hàng được giao vào ngày thứ 2 đến thứ 7 hàng tuần. Chủ nhật một số đối tác vận chuyển không hoạt động.</span></p>
+
+            <p><span style="font-size:14px">- Bộ phận kho hàng của @ViewData["webAddress"] làm việc từ thứ 2 đến thứ 7, nghỉ chủ nhật nên các đơn hàng đặt vào chiều thứ 7 hoặc chủ nhật thì thứ 2 mới được gửi cho các công ty vận chuyển.</span></p>
+
+            <p><span style="font-size:14px">- Khách hàng được phép xem hàng trước khi nhận.</span></p>
+
+            <p><span style="font-size:14px">- Nếu có vấn đề cần hỗ trợ, khách hàng vui lòng liên hệ theo số hotline/Zalo:&nbsp;</span>@ViewData["hotline"].</p>
+
+            <p><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><strong><span style="color:red">Lưu ý: </span></strong><span style="color:red">Trường hợp phát sinh chậm trễ trong việc giao hàng, @ViewData["webAddress"] sẽ liên hệ với khách hàng qua số điện thoại để thông báo về sự chậm trễ đó. Trong những trường hợp này, khách hàng có thể hủy đơn hàng.</span></span></span></p>
+
+            <p><strong>4. Phân định trách nhiệm của thương nhân, tổ chức cung ứng dịch vụ logistics về cung cấp chứng từ hàng hóa trong quá trình giao nhận.</strong></p>
+
+            <p>
+                Tất cả các đơn hàng đều được đóng gói sẵn sàng trước khi vận chuyển, được niêm ghi hình trong quá trình đóng gói.<br>
+                Đơn vị vận chuyển sẽ chỉ chịu trách nhiệm vận chuyển hàng hóa theo nguyên tắc “nguyên đai, nguyên kiện.<br>
+                Trên bao bì tất cả các đơn hàng đều có thông tin:<br>
+                &nbsp;+ Thông tin Người nhận, bao gồm: Tên người nhận, số điện thoại và địa chỉ người nhận.<br>
+                &nbsp;+ Mã vận đơn của đơn hàng.<br>
+                &nbsp;+ Để đảm bảo an toàn cho hàng hóa, @ViewData["webAddress"] sẽ gửi kèm hóa đơn tài chính hoặc phiếu xuất kho hợp lệ của sản phẩm trong bưu kiện (nếu có).<br>
+                &nbsp;+ Hóa đơn tài chính hoặc phiếu xuất kho là căn cứ hỗ trợ quá trình xử lý khiếu nại như: xác định giá trị thị trường của hàng hóa, đảm bảo hàng hóa lưu thông hợp lệ v.v..
+            </p>
+        </div>
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+</body>
+</html>

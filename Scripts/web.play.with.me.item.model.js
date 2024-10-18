@@ -332,7 +332,7 @@ async function ModelUpdateMapping(element) {
     ShowCircleLoader();
     let responseDB = await RequestHttpPostPromise(searchParams, url);
     RemoveCircleLoader();
-    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật liên kết thành công", "Có lỗi xảy ra.");
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật liên kết thành công.", "Có lỗi xảy ra.");
 }
 
 async function ModelUpdateName(element) {
@@ -881,7 +881,7 @@ async function DeleteModel(modelId) {
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
 
-    let rs = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
+    let rs = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
     return rs;
 }
 
@@ -900,7 +900,7 @@ async function DeleteItemModel(id) {
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
 
-    let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
+    let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
     if (isOk) {
         window.location.href = "/Administrator/Index";
     }

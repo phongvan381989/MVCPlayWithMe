@@ -6,88 +6,54 @@
 <html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <style>
-        .login-container {
-            width: 100%;
-            max-width: 500px;
-            background-color: #fefefe;
-            margin: auto;
-            padding: 20px;
-            border: 1px solid rgba(0,0,0,0.4);
-            border-radius: 2px;
-        }
-
-            .login-container input {
-                width: 100%;
-            }
-
-            .login-container button {
-                align-items: center;
-                display: flex;
-                justify-content: center;
-                outline: none;
-                padding: 10px;
-                border: 0;
-                background: none;
-                border-radius: 2px;
-                min-width: 140px;
-                font-size: 14px;
-                cursor: pointer;
-                color: #fff;
-                background-color: #ee4d2d;
-                margin: 0px 20px 0px 20px;
-            }
-
-        .fxvdf098 {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.input.css">
 </head>
 <body>
-
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
-        <div class="login-container">
+        <div class="register-container">
             <form>
-                <label for="userName">Số điện thoại:</label><br>
-                <input type="text" id="userName" value=""><br><br>
+                <label for="userName">Tài khoản:</label><br>
+                <div class="H56xjDa767">
+                    <input type="text" id="userName" value="">
+                </div>
 
                 <label for="passWord">Mật khẩu:</label><br>
-                <input type="password" id="passWord" value=""><br><br>
-            </form>
-            <div class="fxvdf098">
-                <button type="button" onclick="Login_Login()">Đăng Nhập</button>
+                <div class="H56xjDa767">
+                    <input type="password" id="passWord" value="">
+                    @Html.Partial("~/Views/Shared/OpenCloseEye.cshtml")
+                </div>
 
-                <button type="button" onclick="GoToCreateCustormerPage()">Tạo Tài Khoản</button>
+            </form>
+            <div class="kcbuc0986">
+                <a class="faf08xvj" href="/Customer/CreateCustomer">Tạo Tài Khoản</a>
+                <button class="anh8s9nfja" type="button" onclick="Login_Login()">Đăng Nhập</button>
             </div>
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js"></script>
-    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    @*<script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>*@
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         async function Login_Login() {
             let userName = document.getElementById("userName").value;
             if (isEmptyOrSpaces(userName)) {
                 await CreateMustClickOkModal("Nhập tài khoản.", null);
+                userName.focus();
                 return;
             }
 
             let passWord = document.getElementById("passWord").value;
             if (isEmptyOrSpaces(passWord)) {
                 await CreateMustClickOkModal("Nhập mật khẩu.", null);
+                passWord.focus();
                 return;
             }
             const searchParams = new URLSearchParams();
             searchParams.append("userName", userName);
             searchParams.append("passWord", passWord);
-
-            let cookie = GetCookie(customerInforKey);
-            searchParams.append("customerInforCookie", cookie);
 
             let query = "/Customer/Login_Login";
 

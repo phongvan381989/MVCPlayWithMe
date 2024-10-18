@@ -134,10 +134,10 @@ function CheckPassWordValid(passWord, repassWord) {
     if (isEmptyOrSpaces(passWord)) {
         return '{"isValid":false, "message":"Mật khẩu không để ký tự trắng."}';
     }
-    let length = passWord.length;
-    if (length < 8) {
-        return '{"isValid":false, "message":"Mật khẩu ít hơn 8 ký tự."}';
-    }
+    //let length = passWord.length;
+    //if (length < 8) {
+    //    return '{"isValid":false, "message":"Mật khẩu ít hơn 8 ký tự."}';
+    //}
 
     //if (!passWord.match(/[a-zA-Z]/)) {
     //    return '{"isValid":false, "message":"Mật khẩu cần chứa ít nhất 1 ký tự trong a-zA-Z."}';
@@ -235,7 +235,7 @@ function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError)
     }
     else {
         if (obj == null) {
-            CreateMustClickOkModal(messageError + ". Server trả về null", null);
+            CreateMustClickOkModal(messageError + ". Server trả về null.", null);
         }
         else {
             CreateMustClickOkModal(messageError + " " + obj.Message, null);
@@ -758,6 +758,21 @@ function GoHomePage() {
     //}
 }
 
+function MouseEnterDropdownContentOfTopAccount() {
+    let drop = document.getElementsByClassName("dropdown-content")[0];
+    drop.style.display = "block";
+}
+
+function MouseLeaveDropdownContentOfTopAccount() {
+    let drop = document.getElementsByClassName("dropdown-content")[0];
+    drop.style.display = "none";
+}
+
+function ClickShowDropdownContentOfTopAccount() {
+    let drop = document.getElementsByClassName("dropdown-content")[0];
+    drop.style.display = "block";
+}
+
 function GoMyCart() {
     window.location.href = "/Home/Cart";
 }
@@ -981,4 +996,18 @@ function ShowDoesntFindId() {
     ele.style.display = "flex";
     ele.style.alignItems = "center";
     ele.style.justifyContent = "center";
+}
+
+function ShowCloseEye(ele) {
+    ele.nextElementSibling.style.display = "block";
+    ele.previousElementSibling.type = "password";
+
+    ele.style.display = "none";
+}
+
+function ShowOpenEye(ele) {
+    ele.previousElementSibling.style.display = "block";
+    ele.previousElementSibling.previousElementSibling.type = "text";
+
+    ele.style.display = "none";
 }

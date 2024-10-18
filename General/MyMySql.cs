@@ -233,6 +233,21 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        public static byte[] GetByteArray(MySqlDataReader rdr, string columnName)
+        {
+            if (Convert.IsDBNull(rdr[columnName]))
+                return null;
+
+            try
+            {
+                return (byte[])rdr[columnName];
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public static long GetInt64(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))

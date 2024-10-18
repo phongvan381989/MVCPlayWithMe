@@ -1,5 +1,5 @@
 ﻿//Số item hiển thị trên 1 hàng
-let itemOnRow;
+let itemOnRow = 0;
 // Hardcode số row trên 1 page
 let rowOnPage = 6;
 

@@ -1,0 +1,29 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+</head>
+<body>
+    <div id="biggestContainer">
+        <div style=" width: 100%; background-color: white; ">
+            <h3 style="margin-bottom:2px;">Chính sách thanh toán</h3>
+            <br />
+            <p>Có 2 hình thức thanh toán,&nbsp;khách hàng có thể lựa chọn hình thức thuận tiện và phù hợp với mình nhất:</p>
+
+            <p><strong>- Cách 1: </strong>Thanh toán khi nhận hàng (COD).&nbsp;Với hình thức này khách hàng xem hàng tại nhà, thanh toán tiền mặt cho nhân viên giao nhận hàng.</p>
+
+            <p><strong>- Cách 2: </strong>Chuyển khoản trước, là quý khách chuyển khoản trước cho chúng tôi trước khi đơn hàng được gửi đi.</p>
+
+            <p><strong>Hướng dẫn chuyển khoản:</strong></p>
+
+            <p>Khi quý khách đặt mua và chọn phương thức thanh toán là <strong>Chuyển khoản ngân hàng</strong>, Quý khách nhấn nút <strong>ĐẶT MUA</strong> và hóa đơn bán hàng xuất hiện, trên màn hình hóa đơn sẽ có mã <strong>QR CODE</strong>, quý khách quét mã này để thực hiện việc chuyển khoản. Sau khi chuyển khoản xong, quý khách vui lòng thông báo cho chúng tôi qua hotline/Zalo: @ViewData["hotline"].</p>
+
+        </div>
+
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+</body>
+</html>

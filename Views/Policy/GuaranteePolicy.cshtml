@@ -1,0 +1,47 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+</head>
+<body>
+    <div id="biggestContainer">
+        <div style=" width: 100%; background-color: white; ">
+            <h3 style="margin-bottom:2px;">Chính sách bảo hành</h3>
+            <br />
+            <p>
+                <span style="font-size:14px">
+                    1. Trường hợp được bảo hành:<br>
+                    &nbsp;&nbsp; &nbsp;Sản phẩm vừa được giao không đúng như hình ảnh, mô tả cung cấp hoặc trên website
+                </span>
+            </p>
+
+            <p>
+                <span style="font-size:14px">
+                    2. Trường hợp không được bảo hành:<br>
+                    &nbsp;&nbsp; &nbsp;- Sản phẩm bị trầy xước do quá trình sử dụng lâu ngày<br>
+                    &nbsp;&nbsp; &nbsp;- Sản phẩm bị bể móp, biến dạng do bị va đập<br>
+                    &nbsp;&nbsp; &nbsp;- Sản phẩm bị bong tem mác của nhà sản suất
+                </span>
+            </p>
+
+            <p><span style="font-size:14px">3. Quy trình, cách thức bảo hành và đầu mối liên hệ</span></p>
+
+            <p><span style="font-size:14px">&nbsp;&nbsp; &nbsp;Chúng tôi khuyến khích quý khách gửi trực tiếp đến cửa hàng tại địa chỉ: @ViewData["postAddress"] để được hỗ trợ bảo hành trong thời gian nhanh nhất.</span></p>
+
+            <p><span style="font-size:14px">&nbsp;&nbsp; &nbsp;Trường hợp quý khách gửi hàng về @ViewData["webAddress"], thời gian bảo hành dự kiến trong vòng 3-5 ngày kể từ ngày @ViewData["webAddress"] nhận được hàng. Thời gian bảo hành cụ thể tùy thuộc vào lỗi sản phẩm trong từng trường hợp (không tính thời gian vận chuyển đi và về).</span></p>
+
+            <p>
+                <span style="font-size:14px">
+                    &nbsp;&nbsp; &nbsp;Để được giải đáp thắc mắc hoặc hướng dẫn chi tiết về quy trình bảo hành sản phẩm của @ViewData["webAddress"], khách hàng vui lòng liên hệ tới số điện thoại @ViewData["hotline"] hoặc email: @ViewData["emailAddress"]&nbsp;<br>
+                    &nbsp;&nbsp; &nbsp;&nbsp;
+                </span>
+            </p>
+        </div>
+
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+</body>
+</html>

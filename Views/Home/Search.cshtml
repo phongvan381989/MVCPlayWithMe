@@ -75,7 +75,6 @@
     <script src="~/Scripts/web.play.with.me.paging.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-
         let inputSearch = document.getElementById("search-input-text-id");
         inputSearch.addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
@@ -153,6 +152,11 @@
                 listItem == null || listItem.length == 0) {
                 EmptySomethingV1();
                 return;
+            }
+            // Lần đầu trình duyệt truy cập chưa có thông tin itemOnRow
+            // nên server trả về với mặc định itemOnRow = 6
+            if (itemOnRow < 6) {
+                listItem.splice(itemOnPage, listItem.length - itemOnPage);
             }
 
             document.getElementById("empty-result").style.display = "none";

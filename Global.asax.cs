@@ -39,7 +39,7 @@ namespace MVCPlayWithMe
                 ConfigurationManager.AppSettings["TemporaryImageTikiMediaFolderPath"];
 
             MyMySql.connStr = ConfigurationManager.AppSettings["AdminConectMysql"];
-            MyMySql.customerConnStr = ConfigurationManager.AppSettings["CustomerConectMysql"];
+            MyMySql.customerConnStr = ConfigurationManager.AppSettings["CustomerVBNConectMysql"];
 
             TikiMySql tikiMySql = new TikiMySql();
             CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();

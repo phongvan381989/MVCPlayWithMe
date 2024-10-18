@@ -607,6 +607,7 @@
         </div>
 
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -735,6 +736,8 @@
             for (let i = 0; i < itemObject.imageSrc.length; i++) {
                 listItemData.push(new objMediaSrc(itemObject.imageSrc[i], false));
             }
+
+            document.title = itemObject.name;
 
             ShowSmallItem();
 

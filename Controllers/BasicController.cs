@@ -12,6 +12,11 @@ namespace MVCPlayWithMe.Controllers
 {
     public class BasicController : Controller
     {
+        public BasicController()
+        {
+            ViewData["title"] = "Play with books";
+        }
+
         public Administrator AuthentAdministrator()
         {
             CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
@@ -171,6 +176,19 @@ namespace MVCPlayWithMe.Controllers
             ItemModelMySql sqler = new ItemModelMySql();
             List<BasicIdName> ls = sqler.GetListItemName();
             ViewData["lsItemName"] = ls;
+        }
+
+        public void ViewDataGetCommonInforOfVoiBeNho()
+        {
+            ViewData["webAddress"] = "voibenho.com";
+            ViewData["httpsWebAddress"] = "https://voibenho.com/";
+            ViewData["hotline"] = "083 577 4489";
+            ViewData["postAddress"] = "Số 24, Ngõ Việt Hà 2, TDP Phú Minh, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Thành Phố Hà Nội";
+            ViewData["emailAddress"] = "playwithmebook@gmail.com";
+            ViewData["ceoName"] = "HOÀNG THỊ HUỆ";
+            ViewData["businessId"] = "01D-8014432";
+            ViewData["inHaNoiFee"] = Common.ConvertIntToVNDFormat(Common.standardShipFeeInHaNoi);
+            ViewData["outHaNoiFee"] = Common.ConvertIntToVNDFormat(Common.standardShipFeeOutHaNoi);
         }
 
         // Nhận và lưu image/video khi upload cho sản phẩm

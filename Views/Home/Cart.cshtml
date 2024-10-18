@@ -482,6 +482,7 @@
                 </div>
             </div>
         </div>
+        @*@Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")*@
     </div>
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
@@ -833,6 +834,9 @@
             ShowSumMoney();
             ShowCheckboxAll();
 
+            // Cập nhật sản phẩm trong giỏ hàng góc trên trái
+            document.getElementsByClassName("cart-count")[0].innerHTML = listCartCookieObject.length;
+
             // Giỏ hàng trống
             if (listCartCookieObject.length == 0) {
                 document.getElementsByClassName("cart-empty")[0].style.display = "block";
@@ -853,7 +857,7 @@
                 }
             }
             if (!isSelected) {
-                await CreateMustClickOkModal("Bạn vẫn chưa chọn sản phẩm nào để mua.", null)
+                await CreateMustClickOkModal("Bạn chưa chọn sản phẩm nào để mua.", null)
                 return;
             }
             // Tạo string dạng cookie của những sản phẩm chọn mua

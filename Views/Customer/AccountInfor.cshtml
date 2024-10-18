@@ -7,6 +7,7 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.input.css">
     <style>
         table {
             max-width: 600px;
@@ -189,80 +190,80 @@
             display: none;
         }
 
-            .sample-address-container input {
-                margin-top: 15px;
-                width: 20px;
-                height: 20px;
-            }
+        .sample-address-container input {
+            margin-top: 15px;
+            width: 20px;
+            height: 20px;
+        }
 
-            .sample-address-container .address {
-                padding: 10px;
+        .sample-address-container .address {
+            padding: 10px;
+            margin-bottom: 15px;
+            margin-top: 15px;
+            border-bottom: 1px solid rgba(0,0,0,.14);
+            width: 100%;
+        }
+
+        .sample-address-container .address div {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .sample-address-container .address span {
+            margin-right: 10px;
+        }
+
+        .sample-address-container .default-address {
+            color: #ee4d2d;
+            border-color: #ee4d2d;
+            margin: 0 4px 4px 0;
+            border-radius: 1px;
+            padding: 2px 4px;
+            border: 0.5px solid;
+        }
+
+        .sample-address-container .htlhtxbv {
+            display: flex;
+        }
+
+            .sample-address-container .htlhtxbv button {
+                margin-top: 15px;
                 margin-bottom: 15px;
-                margin-top: 15px;
-                border-bottom: 1px solid rgba(0,0,0,.14);
-                width: 100%;
-            }
-
-                .sample-address-container .address div {
-                    margin-top: 5px;
-                    margin-bottom: 5px;
-                }
-
-                .sample-address-container .address span {
-                    margin-right: 10px;
-                }
-
-            .sample-address-container .default-address {
-                color: #ee4d2d;
-                border-color: #ee4d2d;
-                margin: 0 4px 4px 0;
-                border-radius: 1px;
-                padding: 2px 4px;
-                border: 0.5px solid;
-            }
-
-            .sample-address-container .htlhtxbv {
-                display: flex;
-            }
-
-                .sample-address-container .htlhtxbv button {
-                    margin-top: 15px;
-                    margin-bottom: 15px;
-                    border: 0;
-                    background: none;
-                    outline: none;
-                    padding: 4px 10px;
-                    color: #08f;
-                    white-space: nowrap;
-                }
-
-            .sample-address-container .mgW0lg {
-                font-size: 0.875rem;
-                line-height: 1.25rem;
-                padding: 4px 12px;
-                height: 28px;
-                min-width: 0px;
-                color: rgba(0, 0, 0, 0.87);
-                border: 1px solid rgba(0, 0, 0, 0.26);
-                box-shadow: rgba(0, 0, 0, 0.03) 0px 1px 1px;
-                white-space: nowrap;
-                background-color: rgb(255, 255, 255);
-                align-items: center;
-                display: flex;
-                justify-content: center;
-                outline: none;
+                border: 0;
                 background: none;
-                border-radius: 2px;
+                outline: none;
+                padding: 4px 10px;
+                color: #08f;
+                white-space: nowrap;
             }
 
-                .sample-address-container .mgW0lg:disabled {
-                    opacity: 0.7;
-                    cursor: not-allowed;
-                }
+        .sample-address-container .mgW0lg {
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            padding: 4px 12px;
+            height: 28px;
+            min-width: 0px;
+            color: rgba(0, 0, 0, 0.87);
+            border: 1px solid rgba(0, 0, 0, 0.26);
+            box-shadow: rgba(0, 0, 0, 0.03) 0px 1px 1px;
+            white-space: nowrap;
+            background-color: rgb(255, 255, 255);
+            align-items: center;
+            display: flex;
+            justify-content: center;
+            outline: none;
+            background: none;
+            border-radius: 2px;
+        }
 
-                .sample-address-container .mgW0lg:hover {
-                    background-color: rgba(0, 0, 0, 0.02);
-                }
+            .sample-address-container .mgW0lg:disabled {
+                opacity: 0.7;
+                cursor: not-allowed;
+            }
+
+            .sample-address-container .mgW0lg:hover {
+                background-color: rgba(0, 0, 0, 0.02);
+            }
     </style>
 </head>
 <body>
@@ -281,7 +282,7 @@
                         </td>
                         <td class="Tmj5Z6">
                             <div>
-                                <div class="uxYEXm">hueht1212</div>
+                                <div class="uxYEXm"></div>
                             </div>
                         </td>
                     </tr>
@@ -291,7 +292,7 @@
                         </td>
                         <td class="Tmj5Z6">
                             <div class="W50dp5">
-                                <input type="text" placeholder="" class="CMyrTJ full-name" value="Hue Hoang" />
+                                <input type="text" placeholder="" class="CMyrTJ full-name" value="" />
                             </div>
                         </td>
                     </tr>
@@ -301,7 +302,7 @@
                         </td>
                         <td class="Tmj5Z6">
                             <div class="W50dp5">
-                                <input type="text" placeholder="" class="CMyrTJ mail" value="phongvan381989@gmail.com" />
+                                <input type="text" placeholder="" class="CMyrTJ mail" value="" />
                             </div>
                         </td>
                     </tr>
@@ -311,7 +312,7 @@
                         </td>
                         <td class="Tmj5Z6">
                             <div class="W50dp5">
-                                <input type="text" placeholder="" class="CMyrTJ phone" value="0383519872" />
+                                <input type="text" placeholder="" class="CMyrTJ phone" value="" />
                             </div>
                         </td>
                     </tr>
@@ -322,15 +323,15 @@
                         <td class="Tmj5Z6">
                             <div class="s4eg4A">
                                 <div class="radio-sex-div">
-                                    <input type="radio" id="men-sex" name="sex" class="radio-sex">
+                                    <input type="radio" id="men-sex" value="1" name="sex" class="radio-sex">
                                     <label for="men-sex">Nam</label>
                                 </div>
                                 <div class="radio-sex-div">
-                                    <input type="radio" id="women-sex" name="sex" class="radio-sex">
+                                    <input type="radio" id="women-sex" value="2" name="sex" class="radio-sex">
                                     <label for="women-sex">Nữ</label>
                                 </div>
                                 <div class="radio-sex-div">
-                                    <input type="radio" id="other-sex" name="sex" class="radio-sex">
+                                    <input type="radio" id="other-sex" value="3" name="sex" class="radio-sex">
                                     <label for="other-sex">Khác</label>
                                 </div>
                             </div>
@@ -352,6 +353,7 @@
                         </td>
                         <td class="Tmj5Z6">
                             <button type="button" class="profile-save" onclick="SaveProfile()">Lưu</button>
+                            <button type="button" class="profile-save" onclick="ShowChangePasswordModal()">Thay Đổi Mật Khẩu</button>
                         </td>
                     </tr>
                 </table>
@@ -385,7 +387,7 @@
                     <div class="klhkjcvf">
                         <div class="htlhtxbv">
                             <button type="button" onclick="UpdateCustomerAddress(this)">Cập Nhật</button>
-                            <button type="button" onclick="DeleteCustomerInfor(this)">Xóa</button>
+                            <button type="button" onclick="DeleteCustomerAddress(this)">Xóa</button>
                         </div>
                         <button type="button" class="mgW0lg" disabled onclick="SetDefault(this)">Thiết lập mặc định</button>
                     </div>
@@ -396,6 +398,9 @@
             </div>
         </div>
         @Html.Partial("~/Views/Shared/Home/CustomerInfor.cshtml")
+        @Html.Partial("~/Views/Shared/ChangePasswordModal.cshtml")
+
+        @*@Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")*@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -438,10 +443,10 @@
 
                 container.getElementsByClassName("radio-sex")[1].checked = true;
             }
-            else {
+            else if (customerObj.sex == 3){
                 container.getElementsByClassName("radio-sex")[2].checked = true;
             }
-            // customerObj.birthday: 1930-01-01T00:00:00
+            // customerObj.birthday: 2020-01-01T00:00:00
             container.getElementsByClassName("birthday-time")[0].value = customerObj.birthday.split('T')[0];
         }
 
@@ -490,7 +495,7 @@
             ShowCustomerInforModal(false, false, listCustomerAddressObj[currentIndexAddressUpdateObject]);
         }
 
-        async function DeleteCustomerInfor(ele) {
+        async function DeleteCustomerAddress(ele) {
             let index = parseInt(ele.parentElement.parentElement.parentElement.getAttribute("data-index"));
             let obj = listCustomerAddressObj[index];
 
@@ -635,8 +640,105 @@
             return GetEasyPromise();
         }
 
-        function SaveProfile() {
+        async function SaveProfile() {
+            let container = document.getElementsByClassName("account-profile-container")[0];
 
+            const searchParams = new URLSearchParams();
+            searchParams.append("email", container.getElementsByClassName("mail")[0].value);
+            searchParams.append("sdt", container.getElementsByClassName("phone")[0].value);
+            searchParams.append("fullName", container.getElementsByClassName("full-name")[0].value);
+
+            let date = new Date(container.getElementsByClassName("birthday-time")[0].value);
+            searchParams.append("day", date.getDate());
+            searchParams.append("month", date.getMonth() + 1);
+            searchParams.append("year", date.getFullYear());
+
+            let sexEle = document.querySelector('input[name="sex"]:checked');
+            let sex = 4;
+            if (sexEle != null) {
+                sex = sexEle.value;
+            }
+            searchParams.append("sex", sex);
+
+            let url = "/Customer/UpdateInfor";
+
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi.", null);
+                return;
+            }
+        }
+
+        function ShowChangePasswordModal() {
+            let ele = document.getElementById("modal-change-password");
+            ele.style.display = "block";
+            document.getElementById("old_password").value = "";
+            document.getElementById("new_passWord").value = "";
+            document.getElementById("re_new_passWord").value = "";
+
+            let collection = document.getElementsByClassName("open_eye");
+            for (let i = 0; i < collection.length; i++) {
+                ShowCloseEye(collection[i]);
+            }
+        }
+
+        function ReturnFromChangePasswordModal() {
+            let ele = document.getElementById("modal-change-password");
+            ele.style.display = "none";
+        }
+
+        async function FinishChangePassword() {
+            if (document.getElementById("old_password").value.length == 0) {
+                await CreateMustClickOkModal("Chưa nhập mật khẩu cũ.", null);
+                document.getElementById("old_password").focus();
+                return;
+            }
+
+            if (document.getElementById("new_passWord").value.length == 0) {
+                await CreateMustClickOkModal("Chưa nhập mật khẩu mới.", null);
+                document.getElementById("new_passWord").focus();
+                return;
+            }
+
+            if (document.getElementById("re_new_passWord").value.length == 0) {
+                await CreateMustClickOkModal("Chưa nhập lại mật khẩu mới.", null);
+                document.getElementById("re_new_passWord").focus();
+                return;
+            }
+
+            if (document.getElementById("new_passWord").value !== document.getElementById("re_new_passWord").value) {
+                await CreateMustClickOkModal("Nhập lại mật khẩu chưa chính xác.", null);
+                document.getElementById("re_new_passWord").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("oldPassWord", document.getElementById("old_password").value);
+            searchParams.append("newPassWord", document.getElementById("new_passWord").value);
+            searchParams.append("renewPassWord", document.getElementById("re_new_passWord").value);
+
+            let url = "/Customer/ChangePassword";
+
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+                if (isOk) {
+                    ReturnFromChangePasswordModal();
+                }
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi.", null);
+                return;
+            }
         }
     </script>
 </body>

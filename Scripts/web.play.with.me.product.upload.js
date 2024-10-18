@@ -356,7 +356,7 @@ async function DeleteProduct(){
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
 
-    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công", "Có lỗi xảy ra.");
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
 };
 
 
@@ -388,7 +388,7 @@ async function UpdateName() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật tên lỗi.", null);
@@ -410,7 +410,7 @@ async function UpdateCode() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật mã lỗi.", null);
@@ -432,7 +432,7 @@ async function UpdateISBN() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật tên lỗi.", null);
@@ -454,7 +454,7 @@ async function UpdateBookCoverPrice() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật giá bìa lỗi.", null);
@@ -481,7 +481,7 @@ async function UpdateComboId() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật combo lỗi.", null);
@@ -520,7 +520,7 @@ async function UpdateCategoryId() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật thể loại lỗi.", null);
@@ -546,7 +546,7 @@ async function UpdatePublisherId() {
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
         RemoveCircleLoader();
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật nhà phát hành lỗi.", null);

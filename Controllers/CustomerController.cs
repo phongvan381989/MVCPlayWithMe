@@ -27,7 +27,10 @@ namespace MVCPlayWithMe.Controllers
         public ActionResult CreateCustomer()
         {
             if (AuthentCustomer() == null)
+            {
+                ViewData["title"] = "Tạo tài khoản khách hàng";
                 return View();
+            }
             // Quay về trang chủ
             return View("~/Views/Home/Search.cshtml");
         }
@@ -42,7 +45,10 @@ namespace MVCPlayWithMe.Controllers
         public ActionResult Login()
         {
             if (AuthentCustomer() == null)
+            {
+                ViewData["title"] = "Đăng nhập tài khoản khách hàng";
                 return View();
+            }
             // Quay về trang chủ
             return View("~/Views/Home/Search.cshtml");
         }
@@ -69,7 +75,7 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="customerInforCookie"></param>
         /// <returns></returns>
         [HttpPost]
-        public string Login_Login(string userName, string passWord, string customerInforCookie)
+        public string Login_Login(string userName, string passWord/*, string customerInforCookie*/)
         {
             MySqlResultState result = sqler.LoginCustomer(userName, passWord);
 
@@ -191,9 +197,51 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        public ActionResult Update()
+        [HttpPost]
+        public string UpdateInfor(string email, string sdt, string fullName,
+            int day, int month, int year,
+            int sex)
         {
-            return View();
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = AuthentCustomer();
+            if (cus != null)
+            {
+                cus.email = email;
+                cus.sdt = sdt;
+                cus.fullName = fullName;
+                cus.birthday = new DateTime(year, month, day);
+                cus.sex = sex;
+
+                result = sqler.UpdateInfor(cus);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string ChangePassword(string oldPassWord,
+            string newPassWord, string renewPassWord)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = AuthentCustomer();
+            if (cus != null)
+            {
+                result = sqler.ChangePasswordCustomer(cus.id, oldPassWord, newPassWord, renewPassWord);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
@@ -225,13 +273,13 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsAddress);
         }
 
-        [HttpPost]
-        public string CreateCustomer_CheckValidUserName(string userName)
-        {
-            MySqlResultState result;
-            result = sqler.CheckValidUserName(userName);
-            return JsonConvert.SerializeObject(result);
-        }
+        //[HttpPost]
+        //public string CreateCustomer_CheckValidUserName(string userName)
+        //{
+        //    MySqlResultState result;
+        //    result = sqler.CheckValidUserName(userName);
+        //    return JsonConvert.SerializeObject(result);
+        //}
 
         [HttpPost]
         public string GetCartCount()
@@ -268,6 +316,7 @@ namespace MVCPlayWithMe.Controllers
             if (AuthentCustomer() == null)
                 return View("~/Views/Customer/Login.cshtml");
 
+            ViewData["title"] = "Thông tin tài khoản khách hàng";
             return View();
         }
 
@@ -278,6 +327,7 @@ namespace MVCPlayWithMe.Controllers
             //if (AuthentCustomer() == null)
             //    return View("~/Views/Customer/Login.cshtml");
 
+            ViewData["title"] = "Danh sách đơn hàng";
             return View();
         }
 

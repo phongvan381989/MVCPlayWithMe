@@ -335,10 +335,10 @@
 
             let responseDB = await RequestHttpPostPromise(searchParams, url);
             if (responseDB.responseText != "null") {
-                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công", "Cập nhật thất bại");
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
             }
             else {
-                CreateMustClickOkModal("Cập nhật thất bại", null);
+                CreateMustClickOkModal("Cập nhật thất bại.", null);
             }
         }
 
@@ -363,7 +363,7 @@
                 let lisImportFromExcel = JSON.parse(responseDB.responseText);
             }
             else {
-                CreateMustClickOkModal("Đọc file excel thất bại", null);
+                CreateMustClickOkModal("Đọc file excel thất bại.", null);
             }
         }
     </script>

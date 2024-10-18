@@ -26,62 +26,99 @@ namespace MVCPlayWithMe.Models
 
                 cmd.Parameters.AddWithValue("@inUserName", userName);
 
-                MySqlParameter paraoutSalt = new MySqlParameter();
-                paraoutSalt.ParameterName = "@outSalt";
-                paraoutSalt.MySqlDbType = MySqlDbType.String;
-                paraoutSalt.Direction = ParameterDirection.Output;
-                cmd.Parameters.Add(paraoutSalt);
-
-                MySqlParameter paraoutHash = new MySqlParameter();
-                paraoutHash.ParameterName = "@outHash";
-                paraoutHash.MySqlDbType = MySqlDbType.String;
-                paraoutHash.Direction = ParameterDirection.Output;
-                cmd.Parameters.Add(paraoutHash);
-
-                MySqlParameter paraoutResult = new MySqlParameter();
-                paraoutResult.ParameterName = @"outResult";
-                paraoutResult.Value = -1;
-                paraoutResult.Direction = ParameterDirection.Output;
-                cmd.Parameters.Add(paraoutResult);
-
-                MySqlParameter paraoutMessage = new MySqlParameter();
-                paraoutMessage.ParameterName = @"outMessage";
-                paraoutMessage.Value = "";
-                paraoutMessage.Direction = ParameterDirection.Output;
-                cmd.Parameters.Add(paraoutMessage);
-
-                int lengthPara = cmd.Parameters.Count;
-                cmd.ExecuteNonQuery();
-                if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                byte[] salt = null;
+                byte[] hash = null;
+                while (rdr.Read())
                 {
-                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
-                    return result;
+                    salt = MyMySql.GetByteArray(rdr, "Salt");
+                    hash = MyMySql.GetByteArray(rdr, "Hash");
                 }
-
-                string str = Convert.ToString(paraoutSalt.Value);
-                byte[] salt = Convert.FromBase64String(str);
-                str = Convert.ToString(paraoutHash.Value);
-                byte[] hash = Convert.FromBase64String(str);
+                rdr.Close();
 
                 // Generate hash from login password with hash in db
                 if (!Common.ByteArrayCompare(Common.GenerateSaltedHash(password, salt), hash))
                 {
                     result.State = EMySqlResultState.INVALID;
                     result.Message = "Mật khẩu không đúng.";
-                    return result;
                 }
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
 
+            conn.Close();
             return result;
         }
 
+        public MySqlResultState ChangePassword(int id, string oldPassWord,
+            string newPassWord, string renewPassWord,
+            string storeGetSaltHash, string storeChagePassword)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            MySqlResultState result = new MySqlResultState();
+            result.Message = "Thay đổi mật khẩu thành công.";
+            try
+            {
+                conn.Open();
+
+                // Kiểm tra mật khẩu cũ chính xác không
+                MySqlCommand cmd = new MySqlCommand(storeGetSaltHash, conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@InId", id);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                byte[] salt = null;
+                byte[] hash = null;
+                while (rdr.Read())
+                {
+                    salt = MyMySql.GetByteArray(rdr, "Salt");
+                    hash = MyMySql.GetByteArray(rdr, "Hash");
+                }
+                rdr.Close();
+
+                // Generate hash from login password with hash in db
+                if (!Common.ByteArrayCompare(Common.GenerateSaltedHash(oldPassWord, salt), hash))
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Mật khẩu cũ không đúng.";
+                }
+
+                if(result.State == EMySqlResultState.OK)
+                {
+                    // Thay đổi mật khẩu cũ
+                    MySqlCommand cmdChange = new MySqlCommand(storeChagePassword, conn);
+                    cmdChange.CommandType = CommandType.StoredProcedure;
+                    cmdChange.Parameters.AddWithValue("@InId", id);
+
+                     salt = Common.CreateSalt();
+                     hash = Common.GenerateSaltedHash(newPassWord, salt);
+
+                    MySqlParameter paSalt = new MySqlParameter();
+                    paSalt.ParameterName = @"inSalt";
+                    paSalt.Size = Common.SHA512Size;
+                    paSalt.MySqlDbType = MySqlDbType.Binary;
+                    paSalt.Value = salt;
+                    cmdChange.Parameters.Add(paSalt);
+
+                    MySqlParameter paHash = new MySqlParameter();
+                    paHash.ParameterName = @"inHash";
+                    paHash.Size = Common.SHA512Size;
+                    paHash.MySqlDbType = MySqlDbType.Binary;
+                    paHash.Value = hash;
+                    cmdChange.Parameters.Add(paHash);
+
+                    cmdChange.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
     }
 }

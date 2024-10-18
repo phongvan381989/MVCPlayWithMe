@@ -15,7 +15,7 @@ namespace MVCPlayWithMe.Models.Order
             "Chưa thanh toán",
             "Chuẩn bị hàng",
             "Chờ giao ĐVVC",
-            "Lấy hàng thất bại",
+            "Lấy hàng thất bại.",
             "Chờ giao khách",
             "Nhận hàng",
             "Đơn hủy",

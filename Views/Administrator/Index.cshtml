@@ -6,6 +6,8 @@
 <html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.input.css">
     <style>
         .fmx09gx8 {
             background-color: white;
@@ -15,15 +17,18 @@
             display: flex;
             flex-wrap: wrap;
         }
+
         .gmxk9381 {
             margin: 10px 5px 10px 5px;
-            width:100%;
+            width: 100%;
         }
-        button {
+
+        .fg90mxkn {
             padding: 10px;
             margin: 10px 10px 10px 10px;
             border-radius: 5px;
         }
+
         a:link, a:visited {
             background-color: #f44336;
             color: white;
@@ -75,13 +80,15 @@
         <div class="fmx09gx8">
             <div class="gmxk9381"> Người quản trị</div>
             <a href="/Administrator/New" title="Thêm mới người quản trị"> Tạo người quản trị</a>
-            <button type="button" title="Đăng xuất tài khoản người quản trị" onclick="AdminLogout()">Đăng xuất</button>
+            <button class="fg90mxkn" type="button" title="Thay đổi mật khẩu người quản trị" onclick="ShowChangePasswordModal()">Thay Đổi Mật Khẩu</button>
+            <button class="fg90mxkn" type="button" title="Đăng xuất tài khoản người quản trị" onclick="AdminLogout()">Đăng Xuất</button>
         </div>
 
         <div class="fmx09gx8">
             <div class="gmxk9381"> Dành cho lập trình viên</div>
             <a href="/Dev/Index" title="Dành cho lập trình viên"> Dev</a>
         </div>
+        @Html.Partial("~/Views/Shared/ChangePasswordModal.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -99,6 +106,72 @@
             xhttp.open("POST", query);
             xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
             xhttp.send(searchParams.toString());
+        }
+
+        function ShowChangePasswordModal() {
+            let ele = document.getElementById("modal-change-password");
+            ele.style.display = "block";
+            document.getElementById("old_password").value = "";
+            document.getElementById("new_passWord").value = "";
+            document.getElementById("re_new_passWord").value = "";
+
+            let collection = document.getElementsByClassName("open_eye");
+            for (let i = 0; i < collection.length; i++) {
+                ShowCloseEye(collection[i]);
+            }
+        }
+
+        function ReturnFromChangePasswordModal() {
+            let ele = document.getElementById("modal-change-password");
+            ele.style.display = "none";
+        }
+
+        async function FinishChangePassword() {
+            if (document.getElementById("old_password").value.length == 0) {
+                await CreateMustClickOkModal("Chưa nhập mật khẩu cũ.", null);
+                document.getElementById("old_password").focus();
+                return;
+            }
+
+            if (document.getElementById("new_passWord").value.length == 0) {
+                await CreateMustClickOkModal("Chưa nhập mật khẩu mới.", null);
+                document.getElementById("new_passWord").focus();
+                return;
+            }
+
+            if (document.getElementById("re_new_passWord").value.length == 0) {
+                await CreateMustClickOkModal("Chưa nhập lại mật khẩu mới.", null);
+                document.getElementById("re_new_passWord").focus();
+                return;
+            }
+
+            if (document.getElementById("new_passWord").value !== document.getElementById("re_new_passWord").value) {
+                await CreateMustClickOkModal("Nhập lại mật khẩu chưa chính xác.", null);
+                document.getElementById("re_new_passWord").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("oldPassWord", document.getElementById("old_password").value);
+            searchParams.append("newPassWord", document.getElementById("new_passWord").value);
+            searchParams.append("renewPassWord", document.getElementById("re_new_passWord").value);
+
+            let url = "/Administrator/ChangePassword";
+
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                let isOk = CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+                if (isOk) {
+                    ReturnFromChangePasswordModal();
+                }
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi.", null);
+                return;
+            }
         }
     </script>
 </body>

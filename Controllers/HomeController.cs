@@ -49,9 +49,9 @@ namespace MVCPlayWithMe.Controllers
                 intPage = page.Value;
 
             int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
-            if (itemOnRow == -1)
+            if (itemOnRow == System.Int32.MinValue)
             {
-                itemOnRow = 6;
+                itemOnRow = Common.itemOnRowDefault;
             }
             searchParameter.offset = itemOnRow * Common.rowOnPage;
             searchParameter.start = (intPage - 1) * searchParameter.offset;
@@ -59,6 +59,12 @@ namespace MVCPlayWithMe.Controllers
             ViewData["dataListItem"] = JsonConvert.SerializeObject(lsSearchResult);
 
             conn.Close();
+            return View();
+        }
+
+        [HttpGet]
+        public ActionResult Error()
+        {
             return View();
         }
 
@@ -83,10 +89,10 @@ namespace MVCPlayWithMe.Controllers
                 intPage = page.Value;
 
             int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
-            if (itemOnRow == -1)
-            {
-                itemOnRow = 6;
-            }
+            //if (itemOnRow == System.Int32.MinValue)
+            //{
+            //    itemOnRow = Common.itemOnRowDefault;
+            //}
             searchParameter.offset = itemOnRow * Common.rowOnPage;
             searchParameter.start = (intPage - 1) * searchParameter.offset;
             lsSearchResult = itemModelsqler.SearchItemPageConnectOut(searchParameter, conn);
@@ -135,10 +141,10 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = keyword;
 
             int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
-            if (itemOnRow == -1)
-            {
-                itemOnRow = 6;
-            }
+            //if (itemOnRow == System.Int32.MinValue)
+            //{
+            //    itemOnRow = Common.itemOnRowDefault;
+            //}
             searchParameter.offset = itemOnRow * Common.rowOnPage;
             searchParameter.start = (page - 1) * searchParameter.offset;
             lsSearchResult = itemModelsqler.SearchItemPage(searchParameter);
@@ -149,6 +155,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public ActionResult Item(int id)
         {
+            // Cập nhật title bên javascript
             return View();
         }
 
@@ -216,6 +223,7 @@ namespace MVCPlayWithMe.Controllers
 
         public ActionResult Cart()
         {
+            ViewData["title"] = "Giỏ hàng";
             return View();
         }
 
@@ -244,6 +252,7 @@ namespace MVCPlayWithMe.Controllers
         // cart: encode base64
         public ActionResult Checkout(string cart)
         {
+            ViewData["title"] = "Thông tin đơn hàng trước khi mua";
             return View();
         }
 
