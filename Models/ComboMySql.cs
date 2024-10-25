@@ -35,8 +35,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -103,8 +103,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 combo = null;
             }
 

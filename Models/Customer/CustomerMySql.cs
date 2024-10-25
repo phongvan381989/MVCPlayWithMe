@@ -27,7 +27,6 @@ namespace MVCPlayWithMe.Models.Customer
                 return null;
             }
 
-            Customer customer = new Customer();
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
 
@@ -44,6 +43,7 @@ namespace MVCPlayWithMe.Models.Customer
             if (result.State != EMySqlResultState.OK)
                 return null;
 
+            Customer customer = new Customer();
             customer.id = (int)paras[1].Value;
             return customer;
         }
@@ -213,8 +213,8 @@ namespace MVCPlayWithMe.Models.Customer
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 customer = null;
             }
 
@@ -242,8 +242,8 @@ namespace MVCPlayWithMe.Models.Customer
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 customer = null;
             }
 
@@ -307,8 +307,8 @@ namespace MVCPlayWithMe.Models.Customer
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
         }
@@ -347,8 +347,8 @@ namespace MVCPlayWithMe.Models.Customer
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
             return result;
@@ -387,8 +387,8 @@ namespace MVCPlayWithMe.Models.Customer
         //    }
         //    catch (Exception ex)
         //    {
-        //        errMessage = ex.ToString();
-        //        MyLogger.GetInstance().Warn(errMessage);
+        //        
+        //        MyLogger.GetInstance().Warn(ex.ToString());
         //    }
         //    conn.Close();
         //}
@@ -460,11 +460,7 @@ namespace MVCPlayWithMe.Models.Customer
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
-                result.myAnything = -1;
+                Common.SetResultException(ex, result);
             }
             conn.Close();
 
@@ -564,8 +560,8 @@ namespace MVCPlayWithMe.Models.Customer
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 lsAddress.Clear();
             }
 

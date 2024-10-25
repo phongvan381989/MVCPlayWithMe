@@ -109,8 +109,7 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                MyLogger.GetInstance().Warn(ex.ToString());
                 product = null;
             }
 
@@ -145,8 +144,7 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                MyLogger.GetInstance().Warn(ex.ToString());
                 product = null;
             }
 
@@ -181,8 +179,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 product = null;
             }
 
@@ -217,8 +215,8 @@ namespace MVCPlayWithMe.Models
         //    }
         //    catch (Exception ex)
         //    {
-        //        errMessage = ex.ToString();
-        //        MyLogger.GetInstance().Warn(errMessage);
+        //        
+        //        MyLogger.GetInstance().Warn(ex.ToString());
         //        product = null;
         //    }
 
@@ -486,8 +484,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -532,8 +530,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
 
@@ -565,8 +563,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -602,8 +600,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -639,8 +637,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -676,8 +674,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -713,8 +711,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -758,15 +756,15 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
             return ls;
         }
 
-        public List<Product> GetProductIdCodeBarcodeNameBookCoverPrice(string publisher)
+        public List<Product> GetProductIdCodeBarcodeNameBookCoverPrice(int publisherId)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<Product> ls = new List<Product>();
@@ -776,7 +774,7 @@ namespace MVCPlayWithMe.Models
 
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Id_Code_Barcode_Name_BookCoverPrice_All", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inPublisher", publisher);
+                cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
@@ -787,6 +785,8 @@ namespace MVCPlayWithMe.Models
                     product.barcode = MyMySql.GetString(rdr, "Barcode");
                     product.name = MyMySql.GetString(rdr, "Name");
                     product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                    product.comboId = MyMySql.GetInt32(rdr, "ComboId");
+                    product.comboName = MyMySql.GetString(rdr, "ComboName");
                     product.SetFirstSrcImage();
                     ls.Add(product);
                 }
@@ -796,8 +796,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -864,8 +864,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -946,8 +946,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -981,8 +981,8 @@ namespace MVCPlayWithMe.Models
         //    }
         //    catch (Exception ex)
         //    {
-        //        errMessage = ex.ToString();
-        //        MyLogger.GetInstance().Warn(errMessage);
+        //        
+        //        MyLogger.GetInstance().Warn(ex.ToString());
         //    }
 
         //    conn.Close();
@@ -1018,8 +1018,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -1189,12 +1189,11 @@ namespace MVCPlayWithMe.Models
                 commonItem.name = MyMySql.GetString(rdr, "ShopeeItemName");
                 commonItem.imageSrc = MyMySql.GetString(rdr, "ShopeeItemImage");
 
-                // Tạm thời đóng lấy trạng thái từ db, sẽ lấy từ Shopee
-                //int status = MyMySql.GetInt32(rdr, "ShopeeItemStatus");
-                //if (status != 1)
-                //    commonItem.bActive = true;
-                //else
-                //    commonItem.bActive = false;
+                int status = MyMySql.GetInt32(rdr, "ShopeeItemStatus");
+                if (status == 0)
+                    commonItem.bActive = true;
+                else
+                    commonItem.bActive = false;
             }
             else
             {
@@ -1208,7 +1207,7 @@ namespace MVCPlayWithMe.Models
             }
             else
             {
-                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                // Đọc sang model mới vì kết quả sql đã được order by theo itemid, modelid
                 if (commonItem.models[commonItem.models.Count() - 1].dbModelId != dbModelId)
                 {
                     commonModel = new CommonModel();
@@ -1221,9 +1220,9 @@ namespace MVCPlayWithMe.Models
                 commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
                 commonModel.name = MyMySql.GetString(rdr, "ShopeeModelName");
                 commonModel.imageSrc = MyMySql.GetString(rdr, "ShopeeModelImage");
-                // Tạm thời đóng lấy trạng thái từ db, sẽ lấy từ Shopee
+                // Tạm thời đóng lấy trạng thái từ db vì Shopee không có trường dữ liệu này
                 //int status = MyMySql.GetInt32(rdr, "ShopeeModelStatus");
-                //if (status != 1)
+                //if (status == 0)
                 //    commonModel.bActive = true;
                 //else
                 //    commonModel.bActive = false;

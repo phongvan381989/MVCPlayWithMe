@@ -231,6 +231,11 @@
                 </tr>
             </table>
         </div>
+
+        <audio id="myAudioBigQuantity">
+            <source src="~/Media/SoundCheckAmount.m4a" type="audio/m4a">
+            <source src="~/Media/SoundCheckAmount.wav" type="audio/wav">
+        </audio>
     </div>
     <div id="order-detail-modal" class="order-modal">
         <div class="order-content-modal">
@@ -268,7 +273,6 @@
         let modal = document.getElementById("order-detail-modal");
 
         SetMinWidth(document.getElementsByClassName("order-content-modal")[0], 600);
-        SetMinWidth(document.getElementsByClassName("order-content-modal")[1], 600);
 
         InitializeModal();
         InitializeEnterPress();
@@ -390,7 +394,7 @@
         function EmptyAndFocusOrderCodeElement() {
             let code = document.getElementsByName("order-code")[0];
             code.value = "";
-            code.focus();
+            //code.focus();
         }
 
         async function OrderDetail() {
@@ -435,42 +439,59 @@
             }
         }
 
+        // Check đơn hàng bị hủy return true, ngược lại false
+        // Trạng thái đơn hàng tiki có thể
+        //{
+        //    "queueing",
+        //        "canceled",
+        //        "complete",
+        //        "successful_delivery",
+        //        "processing",
+        //        "waiting_payment",
+        //        "handover_to_partner",
+        //        "closed",
+        //        "packaging",
+        //        "picking",
+        //        "shipping",
+        //        "paid",
+        //        "delivered",
+        //        "holded",
+        //        "ready_to_ship",
+        //        "payment_review",
+        //        "returned",
+        //        "finished_packing"
+        //}
+
+        // Trạng thái đơn hàng Shopee, play with me có thể
+        //{
+        //    UNPAID,
+        //    READY_TO_SHIP,
+        //    PROCESSED, // Đây là trạng thái sau khi in đơn
+        //    SHIPPED,
+        //    COMPLETED,
+        //    IN_CANCEL,
+        //    CANCELLED,
+        //    INVOICE_PENDING,
+        //    ALL
+        //}
+        function CheckOrderStatusIsCancel(order) {
+            if (order.ecommerceName == eTiki) {
+                if (order.status == "canceled") {
+                    return true;
+                }
+
+            }
+            else if (order.ecommerceName == eShopee || order.ecommerceName == ePlayWithMe) {
+                if (order.status == "IN_CANCEL" || order.status == "CANCELLED") {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // Lọc theo trạng thái đơn hàng
         function FilterOrderByStatus(list, orderStatus) {
-            // Trạng thái đơn hàng tiki có thể
-            //{
-            //    "queueing",
-            //        "canceled",
-            //        "complete",
-            //        "successful_delivery",
-            //        "processing",
-            //        "waiting_payment",
-            //        "handover_to_partner",
-            //        "closed",
-            //        "packaging",
-            //        "picking",
-            //        "shipping",
-            //        "paid",
-            //        "delivered",
-            //        "holded",
-            //        "ready_to_ship",
-            //        "payment_review",
-            //        "returned",
-            //        "finished_packing"
-            //}
-
-            // Trạng thái đơn hàng Shopee, play with me có thể
-            //{
-            //    UNPAID,
-            //    READY_TO_SHIP,
-            //    PROCESSED, // Đây là trạng thái sau khi in đơn
-            //    SHIPPED,
-            //    COMPLETED,
-            //    IN_CANCEL,
-            //    CANCELLED,
-            //    INVOICE_PENDING,
-            //    ALL
-            //}
             let listTemp = [];
             let order;
             let length = list.length;
@@ -499,16 +520,8 @@
             else if (orderStatus == 2) {
                 for (let i = 0; i < length; i++) {
                     order = list[i];
-                    if (order.ecommerceName == eTiki) {
-                        if (order.status == "canceled") {
-                            listTemp.push(order);
-                        }
-
-                    }
-                    else if (order.ecommerceName == eShopee || order.ecommerceName == ePlayWithMe) {
-                        if (order.status == "IN_CANCEL" || order.status == "CANCELLED") {
-                            listTemp.push(order);
-                        }
+                    if (CheckOrderStatusIsCancel(order)) {
+                        listTemp.push(order);
                     }
                 }
             }
@@ -607,6 +620,13 @@
             EmptyAndFocusOrderCodeElement();
         }
 
+        function SpanRed(num) {
+            if (num < 2) {
+                return num;
+            }
+            return "<span style='color:red'>" + num + "</span>";
+        }
+
         function ClickItemCheckBox(ele) {
             ResetBackgroundColorOfRowMappingAll();
             let itemMappingContainer = ele.parentElement.parentElement;
@@ -628,7 +648,7 @@
                     }
 
                     lsRow[i].getElementsByClassName("need-quatity")[0].innerHTML =
-                        num + "/" + num;
+                        num + "/" + SpanRed(num);
                 }
                 else {
                     // Cập nhật vào object
@@ -637,7 +657,7 @@
                     }
 
                     lsRow[i].getElementsByClassName("need-quatity")[0].innerHTML =
-                        "0/" + num;
+                        "0/" + SpanRed(num);
                 }
             }
         }
@@ -653,7 +673,7 @@
                 currentOrder.listMapping[dataItemIndex][dataRowMappingIndex].quantity;
             if (ele.checked) {
                 ele.parentElement.getElementsByClassName("need-quatity")[0].innerHTML =
-                    num + "/" + num;
+                    num + "/" + SpanRed(num);
                 // Cập nhật vào object
                 currentOrder.listMapping[dataItemIndex][dataRowMappingIndex].checked = num;
 
@@ -674,7 +694,7 @@
                 currentOrder.listMapping[dataItemIndex][dataRowMappingIndex].checked = 0;
 
                 ele.parentElement.getElementsByClassName("need-quatity")[0].innerHTML =
-                    "0/" + num;
+                    "0/" + SpanRed(num);
                 itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = false;
             }
         }
@@ -684,6 +704,8 @@
             orderContainer.innerHTML = "";
             document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
             document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
+
+            let isBigQuantity = false;
 
             for (let i = 0; i < order.listItemId.length; i++) {
                 let container = document.createElement("div");
@@ -734,7 +756,10 @@
 
                     // Tên
                     let nameEle = document.createElement("div");
+                    nameEle.title = "Click để đi tới xem sản phẩm trên sàn."
+                    nameEle.cursor = "pointer";
                     nameEle.className = "nvzlfksjgs095";
+
                     let nameStr = "";
                     if (isEmptyOrSpaces(order.listModelName[i])) {
                         nameStr = order.listItemName[i];
@@ -742,7 +767,22 @@
                     else {
                         nameStr = order.listItemName[i] + "--" + order.listModelName[i];
                     }
-                    nameEle.innerHTML = nameStr;
+
+                    let a = document.createElement('a');
+                    a.target = "_blank";
+                    a.className = "faf08xvj";
+                    let linkText = document.createTextNode(nameStr);
+                    a.appendChild(linkText);
+                    // Item là Tiki
+                    if (order.ecommerceName == eTiki) {
+                        a.href = GetTikiItemUrl(order.listItemId[i]);
+                    }
+                    // Item là shopee
+                    else if (order.ecommerceName == eShopee) {
+                        a.href = GetShopeeItemUrl(order.listItemId[i]);
+                    }
+                    nameEle.appendChild(a);
+
                     itemContainer.appendChild(nameEle);
 
                     // Số lượng
@@ -835,7 +875,11 @@
                         // Số lượng mapping
                         let quantityEle = document.createElement("div");
                         quantityEle.className = "xvxv768gfh need-quatity";
-                        quantityEle.innerHTML = "0/" + order.listQuantity[i] * order.listMapping[i][j].quantity;
+                        let num = order.listQuantity[i] * order.listMapping[i][j].quantity;
+                        quantityEle.innerHTML = "0/" + SpanRed(num);
+                        if (num > 1) {
+                            isBigQuantity = true;
+                        }
                         oneRowMappingContainer.appendChild(quantityEle)
 
                         // Số lượng sản phẩm trong kho
@@ -865,8 +909,7 @@
 
             EmptyAndFocusProductCodeElement();
 
-            // Đơn đã đóng, disable nút đủ sản phẩm
-            // Đơn chưa gửi hàng, disable nút hoàn hàng btn-return-order
+            // Đơn đã đóng disable nút đủ sản phẩm
             if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
                 document.getElementsByClassName("btn-enough-product")[0].disabled = true;
                 document.getElementsByClassName("btn-return-order")[0].disabled = false;
@@ -876,7 +919,16 @@
                 document.getElementsByClassName("btn-return-order")[0].disabled = true;
             }
 
+            // Đơn đã hủy
+            if (CheckOrderStatusIsCancel(order)) {
+                document.getElementsByClassName("btn-enough-product")[0].disabled = true;
+            }
+
             ShowModal();
+            if (isBigQuantity) {
+                var x = document.getElementById("myAudioBigQuantity");
+                x.play();
+            }
         }
 
         function CloseModal() {
@@ -980,7 +1032,7 @@
             let checkedNum = currentOrder.listMapping[lsIndex[0]][lsIndex[1]].checked;
             let needNum = currentOrder.listQuantity[lsIndex[0]] * currentOrder.listMapping[lsIndex[0]][lsIndex[1]].quantity;
             // Hiển thị số lượng xuất kho / số lượng cần
-            oneRow.getElementsByClassName("need-quatity")[0].innerHTML = checkedNum + "/" + needNum;
+            oneRow.getElementsByClassName("need-quatity")[0].innerHTML = checkedNum + "/" + SpanRed(needNum);
             if (lsIndex[0] == 0 && lsIndex[1] == 0) {// Row đầu tiên bị che
                 oneRow.scrollIntoView(false);
             }
@@ -993,7 +1045,6 @@
 
             // sản phẩm đã nhặt đủ tích vào checkbox
             if (checkedNum == needNum) {
-
                 oneRow.getElementsByClassName("checked-enough")[0].checked = true;
             }
 
@@ -1061,7 +1112,7 @@
                 }
             }
         }
-
+        // Tồn kho không đủ nhưng vẫn thực hiện thành công. Làm cho tồn kho ở CSDL sau đó về số âm
         async function EnoughProduct() {
             if (currentOrder == null)
                 return;

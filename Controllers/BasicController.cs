@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.Controllers
 
         public Administrator AuthentAdministrator()
         {
-            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
+            CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);
             if (string.IsNullOrEmpty(cookieResult.cookieValue))
             {
                 MyLogger.GetInstance().Warn("cookieValue is null or empty");
@@ -30,9 +30,7 @@ namespace MVCPlayWithMe.Controllers
             Administrator administrator = sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
             if (administrator == null)
             {
-                // Lỗi ví dụ timeout,... không lấy được admin id từ cookie, nên ta không xóa cookie nữa
-                //Cookie.DeleteUserIdCookie(HttpContext);
-                //Cookie.DeleteVisitorTypeCookie(HttpContext);
+                // Lỗi ví dụ timeout,... không lấy được admin id từ cookie, nên ta không xóa cookie từ phía server nữa
                 MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
             }
             return administrator;
@@ -223,10 +221,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 catch (Exception ex)
                 {
-                    MyLogger.GetInstance().Error(ex.ToString());
-
-                    rs.State = EMySqlResultState.ERROR;
-                    rs.Message = ex.ToString();
+                    Common.SetResultException(ex, rs);
                 }
 
                 // Xóa bỏ ảnh/video không cần lưu nữa với những file có tên lớn hơn tên cuối cùng được lưu

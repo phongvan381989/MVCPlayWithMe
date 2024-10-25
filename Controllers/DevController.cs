@@ -1,7 +1,9 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -37,7 +39,72 @@ namespace MVCPlayWithMe.Controllers
             return string.Empty;
         }
 
+        [HttpPost]
+        public string SaveImageSourceOfItemAndModel()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
 
+            MySqlResultState result = new MySqlResultState();
+            ShopeeMySql shopeeSqler = new ShopeeMySql();
+            List<CommonItem> lsCommonItem = shopeeSqler.GetForSaveImageSource();
+
+            try
+            {
+                foreach (var item in lsCommonItem)
+                {
+                    ShopeeGetItemBaseInfoItem pro =
+                        ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(item.itemId);
+                    if (pro != null)
+                    {
+                        item.imageSrc = pro.image.image_url_list[0];
+
+                        // Lấy imageSrc cho model nếu có
+                        if (pro.has_model)
+                        {
+                            ShopeeGetModelListResponse obj =
+                                ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
+                            if (obj != null)
+                            {
+                                ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
+                                int count = tierVar.option_list.Count;
+                                for (int i = 0; i < count; i++)
+                                {
+                                    ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
+                                    ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
+                                    // Lấy ảnh đại diện
+                                    if (option.image != null)
+                                    {
+                                        foreach (var m in item.models)
+                                        {
+                                            if (m.modelId == model.model_id)
+                                            {
+                                                m.imageSrc = option.image.image_url;
+                                                break;
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+                        }
+                        else
+                        {
+                            item.models[0].imageSrc = item.imageSrc;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            shopeeSqler.UpdateSourceTotbShopeeItem_Model(lsCommonItem);
+            return JsonConvert.SerializeObject(result);
+        }
 
         ///// <summary>
         //// Hàm chỉ gọi 1 lần trong đời do thư mục ảnh chưa được add logo, thêm phiên bản thu nhỏ 320

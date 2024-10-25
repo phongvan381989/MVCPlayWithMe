@@ -16,10 +16,10 @@
             flex-wrap: wrap;
         }
         .xvsfx02xv {
-            background-color: white;
+            background-color: #ffb500;
             padding: 10px;
             margin: 10px 0px 10px 0px;
-            border-radius: 2px;
+            border-radius: 5px;
         }
 
         .gmxk9381 {
@@ -47,21 +47,30 @@
                 Chép Ảnh Từ Shopee Tới Sản Phẩm Trong Kho
             </button>
 
-            <button type="button" onclick="AddWaterMark()"
+            <button type="button" onclick="AddWaterMark()" disabled
                     title="Thêm waterMark logo voi bé nhỏ vào giữa ảnh cho tất cả anh trong thư mục.
                     Cân nhắc khi dùng hàm này">
                 Thêm Water mark logo voi bé nhỏ tất cả ảnh
             </button>
 
-            <button type="button" onclick="DeleteDuplicateDataOftbShopeeModel()"
+            <button type="button" onclick="DeleteDuplicateDataOftbShopeeModel()" disabled
                     title="Xóa dữ liệu trùng lặp ở bảng tbShopeeModel.
-                    Nhiều dữ liệu của sản phẩm có TMDTShopeeModelId = -1 đang bị trùng lặp">
+                    Nhiều dữ liệu của sản phẩm có TMDTShopeeModelId = -1 đang bị trùng lặp
+                    Cân Nhắc khi dùng hàm này">
                 Xóa dữ liệu trùng lặp ở bảng tbShopeeModel
             </button>
         </div>
 
+        <div class="fmx09gx8">
+            <div class="gmxk9381"> SHOPEE</div>
+            <button type="button" onclick="SaveImageSourceOfItemAndModel()" disabled
+                    title="Lấy url ảnh đại diện của item, model shopee cập nhật vào db đối với item, model chưa có image url.">
+                Lấy URL ảnh Item, model lưu vào db
+            </button>
+        </div>
+
         <div class="xvsfx02xv">
-            <div class="gmxk9381"> Ủy quyền Shopee</div>
+            <div class="gmxk9381"> Ủy quyền SHOPEE</div>
             <div class="flpzni5136">
                 <input type="text" id="live_partner_key" class="config-max-width margin-vertical"
                        title="Live Partner Key của shop, lấy từ open shopee platform. Chỉ thay đổi khi làm mới Live Partner Key" />
@@ -103,6 +112,16 @@
     <script>
         function CopyShopeeProductImageToProduct() {
 
+        }
+
+        async function SaveImageSourceOfItemAndModel() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/SaveImageSourceOfItemAndModel";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Lấy ảnh thành công", "Lấy ảnh có lỗi");
         }
 
         async function AddWaterMark() {

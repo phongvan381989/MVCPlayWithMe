@@ -45,14 +45,21 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="httpContext"></param>
         /// <returns></returns>
-        public static void SetVisitorTypeCookie(HttpContextBase httpContext)
+        public static CookieResultState SetAndGetVisitorTypeCookie(HttpContextBase httpContext)
         {
-            HttpCookie visitorType = new HttpCookie(Common.visitorType);
-            visitorType.Value = "admin";
-            visitorType.Expires = SetExpires(100);
+
+            CookieResultState cookieResut = new CookieResultState();
+
+            HttpCookie uId = new HttpCookie(Common.visitorType);
+            Guid guidVal = Guid.NewGuid();
+            cookieResut.cookieValue = guidVal.ToString("N");
+            uId.Value = cookieResut.cookieValue;
+            uId.Expires = SetExpires(100);
             //uId.HttpOnly = true;
 
-            httpContext.Response.Cookies.Add(visitorType);
+            httpContext.Response.Cookies.Add(uId);
+
+            return cookieResut;
         }
 
         /// <summary>
@@ -75,12 +82,12 @@ namespace MVCPlayWithMe.General
                     value = value + "#" + id.ToString();
                 }
             }
-            HttpCookie visitorType = new HttpCookie(Common.orderIdList);
-            visitorType.Value = value;
-            visitorType.Expires = SetExpires(100);
+            HttpCookie orderIdList = new HttpCookie(Common.orderIdList);
+            orderIdList.Value = value;
+            orderIdList.Expires = SetExpires(100);
             //uId.HttpOnly = true;
 
-            httpContext.Response.Cookies.Add(visitorType);
+            httpContext.Response.Cookies.Add(orderIdList);
         }
 
         public static CookieResultState GetUserIdCookie(HttpContextBase httpContext)
@@ -89,6 +96,16 @@ namespace MVCPlayWithMe.General
             if (httpContext.Request.Cookies[Common.userIdKey] != null)
             {
                 cookie.cookieValue = httpContext.Request.Cookies[Common.userIdKey].Value;
+            }
+            return cookie;
+        }
+
+        public static CookieResultState GetVisitorTypeCookie(HttpContextBase httpContext)
+        {
+            CookieResultState cookie = new CookieResultState();
+            if (httpContext.Request.Cookies[Common.visitorType] != null)
+            {
+                cookie.cookieValue = httpContext.Request.Cookies[Common.visitorType].Value;
             }
             return cookie;
         }

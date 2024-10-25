@@ -102,6 +102,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             eType = Common.eShopee;
             models = new List<CommonModel>();
+            bActive = true; // Temporary
         }
 
         public CommonItem(string inEtype)

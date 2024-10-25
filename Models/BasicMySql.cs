@@ -10,8 +10,6 @@ namespace MVCPlayWithMe.Models
 {
     public class BasicMySql
     {
-        public string errMessage;
-
         public MySqlResultState Login(string userName, string password, string storePro)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);

@@ -51,8 +51,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
 
@@ -96,8 +96,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
 
@@ -127,8 +127,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             return lsModel;
@@ -207,33 +207,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                     if (lsTMDTShopeeModelNeedDeleteOnDb.Count > 0)
                     {
-                        // Xóa trên tbshopeemapping
+                        // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
                         {
-                            MySqlCommand cmdTem = new MySqlCommand("DELETE FROM webplaywithme.tbshopeemapping WHERE ShopeeModelId=@inShopeeModelId;", conn);
-                            cmdTem.CommandType = CommandType.Text;
-                            cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
-                            foreach (var id in lsTMDTShopeeModelNeedDeleteOnDb)
-                            {
-                                cmdTem.Parameters[0].Value = id;
-                                cmdTem.ExecuteNonQuery();
-                            }
-                        }
-                        // Xóa trên tbpwmmappingother
-                        {
-                            MySqlCommand cmdTem = new MySqlCommand("DELETE FROM webplaywithme.tbpwmmappingother WHERE ShopeeModelId=@inShopeeModelId;", conn);
-                            cmdTem.CommandType = CommandType.Text;
-                            cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
-                            foreach (var id in lsTMDTShopeeModelNeedDeleteOnDb)
-                            {
-                                cmdTem.Parameters[0].Value = id;
-                                cmdTem.ExecuteNonQuery();
-                            }
-                        }
-
-                        // Xóa trên tbshopeemodel
-                        {
-                            MySqlCommand cmdTem = new MySqlCommand("DELETE FROM webplaywithme.tbshopeemodel WHERE Id=@inShopeeModelId;", conn);
-                            cmdTem.CommandType = CommandType.Text;
+                            MySqlCommand cmdTem = new MySqlCommand("st_tbShopeeModel_Delete_From_Id", conn);
+                            cmdTem.CommandType = CommandType.StoredProcedure;
                             cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
                             foreach (var id in lsTMDTShopeeModelNeedDeleteOnDb)
                             {
@@ -350,8 +327,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -416,8 +393,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -461,8 +438,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 lsCommonItem = null;
             }
 
@@ -591,8 +568,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
             return result;
@@ -652,8 +629,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -682,8 +659,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         //    }
         //    catch (Exception ex)
         //    {
-        //        errMessage = ex.ToString();
-        //        MyLogger.GetInstance().Warn(errMessage);
+        //        
+        //        MyLogger.GetInstance().Warn(ex.ToString());
         //    }
 
         //    conn.Close();
@@ -833,6 +810,95 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             if (rdr != null)
                 rdr.Close();
+            conn.Close();
+        }
+
+        public List<CommonItem> GetForSaveImageSource()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_For_Save_Image_Source", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                long itemId = long.MaxValue;
+                long itemIdTem = long.MinValue;
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                CommonItem commonItem = null;
+                while (rdr.Read())
+                {
+                    itemIdTem = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
+                    if (itemId != itemIdTem)
+                    {
+                        itemId = itemIdTem;
+                        commonItem = new CommonItem(Common.eShopee);
+                        lsCommonItem.Add(commonItem);
+
+                        commonItem.itemId = itemId;
+                        commonItem.dbItemId = MyMySql.GetInt32(rdr, "ShopeeItemId");
+                    }
+                    CommonModel commonModel = new CommonModel();
+                    commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                    commonModel.dbModelId = MyMySql.GetInt32(rdr, "ShopeeModelId");
+                    commonItem.models.Add(commonModel);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+            return lsCommonItem;
+        }
+
+        public void UpdateSourceTotbShopeeItem_Model(List<CommonItem> lsCommonItem)
+        {
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Cập nhật source của item
+                MySqlCommand cmdItem = new MySqlCommand("UPDATE tbshopeeitem SET Image = @inUrl WHERE Id = @inId", conn);
+                cmdItem.CommandType = CommandType.Text;
+                cmdItem.Parameters.AddWithValue("@inUrl", "");
+                cmdItem.Parameters.AddWithValue("@inId", 1);
+
+                // Cập nhật source của model
+                MySqlCommand cmdModel = new MySqlCommand("UPDATE tbshopeemodel SET Image = @inUrl WHERE Id = @inId", conn);
+                cmdModel.CommandType = CommandType.Text;
+                cmdModel.Parameters.AddWithValue("@inUrl", "");
+                cmdModel.Parameters.AddWithValue("@inId", 1);
+
+                foreach (var item in lsCommonItem)
+                {
+                    cmdItem.Parameters[0].Value = item.imageSrc;
+                    cmdItem.Parameters[1].Value = item.dbItemId;
+                    cmdItem.ExecuteNonQuery();
+
+                    foreach(var model in item.models)
+                    {
+                        cmdModel.Parameters[0].Value = model.imageSrc;
+                        cmdModel.Parameters[1].Value = model.dbModelId;
+                        cmdModel.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
             conn.Close();
         }
     }

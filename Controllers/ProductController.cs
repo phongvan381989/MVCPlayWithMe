@@ -449,14 +449,14 @@ namespace MVCPlayWithMe.Controllers
         //}
 
         [HttpPost]
-        public string GetProductIdCodeBarcodeNameBooCoverkPrice(string publisher)
+        public string GetProductIdCodeBarcodeNameBooCoverkPrice(int publisherId)
         {
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(new List<Product>());
             }
 
-            List<Product> ls = sqler.GetProductIdCodeBarcodeNameBookCoverPrice(publisher);
+            List<Product> ls = sqler.GetProductIdCodeBarcodeNameBookCoverPrice(publisherId);
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -811,6 +811,9 @@ namespace MVCPlayWithMe.Controllers
 
         // Lấy trạng thái sản phẩm, image đại diện, số lượng trên sàn Shopee.
         // Cập nhật số lượng với sản phẩm NORMAL
+        // NOTE:
+        // Hàm này không dùng nữa do mất thời gian.
+        // Image và status được lưu trong db. Sau này có chức nặng cập nhật Image và status
         public void ShopeeGetStatusImageSrcQuantitySellable(List<CommonItem> shopeeList)
         {
             foreach (var item in shopeeList)
@@ -876,7 +879,7 @@ namespace MVCPlayWithMe.Controllers
         {
             // Danh sách sản phẩm Shopee
             List<CommonItem> listCommonItem = sqler.ShopeeGetListNeedUpdateQuantityConnectOut(conn);
-            ShopeeGetStatusImageSrcQuantitySellable(listCommonItem);
+            //ShopeeGetStatusImageSrcQuantitySellable(listCommonItem);
             foreach(var commonItem in listCommonItem)
             {
                 ShopeeUpdateQuantityOfOneItem(commonItem, conn);
@@ -1063,7 +1066,7 @@ namespace MVCPlayWithMe.Controllers
         {
             // Danh sách sản phẩm Shopee
             List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfProduct(id, conn);
-            ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
+            //ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
             return shopeeList;
         }
 
@@ -1138,7 +1141,15 @@ namespace MVCPlayWithMe.Controllers
             foreach (var model in commonItem.models)
             {
                 modelId = model.modelId;
-                quantity = sqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
+                //quantity = sqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
+                quantity = 1000;
+                foreach (var m in model.mapping)
+                {
+                    if( quantity > m.product.quantity / m.quantity)
+                    {
+                        quantity = m.product.quantity / m.quantity;
+                    }
+                }
                 
                 if(modelId == -1)
                 {

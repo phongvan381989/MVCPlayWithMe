@@ -18,8 +18,6 @@ namespace MVCPlayWithMe.General
 
         public static string customerConnStr;
 
-        private static string errMessage;
-
         /// <summary>
         /// 
         /// </summary>
@@ -53,10 +51,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
 
             conn.Close();
@@ -85,10 +80,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
 
             conn.Close();
@@ -111,10 +103,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
             conn.Close();
             return result;
@@ -138,8 +127,8 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -168,10 +157,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
 
             conn.Close();

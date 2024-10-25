@@ -554,9 +554,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 {
                     path = Common.CreateAbsoluteModelMediaFolderPath(itemId);
                 }
-
-                DownloadImageAddWaterMarkAndReduce(commonModel.imageSrc, Path.Combine(path,
-                    newModelId.ToString() + ".jfif"));
+                if (!string.IsNullOrEmpty(commonModel.imageSrc))
+                {
+                    DownloadImageAddWaterMarkAndReduce(commonModel.imageSrc, Path.Combine(path,
+                        newModelId.ToString() + ".jfif"));
+                }
             }
 
             // Insert dữ liệu cho tbMapping từ mapping của model shopee

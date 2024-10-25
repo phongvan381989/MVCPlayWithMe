@@ -39,8 +39,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch(Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             return id;
         }
@@ -87,8 +87,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
         }
@@ -128,8 +128,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -178,8 +178,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -216,8 +216,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 lsCommonItem = null;
             }
 
@@ -311,8 +311,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
             return result;
@@ -359,8 +359,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -414,8 +414,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -430,7 +429,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlResultState resultState = new MySqlResultState();
             try
             {
-                // Lưu vào bảng tbOutput
+                // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
                 {
                     MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -511,6 +510,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
                     cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                    cmd.Parameters.AddWithValue("@inTime", commonOrder.created_at);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
 
                     cmd.ExecuteNonQuery();

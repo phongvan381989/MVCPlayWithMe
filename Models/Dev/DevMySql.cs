@@ -45,41 +45,18 @@ namespace MVCPlayWithMe.Models.Dev
             //    {
             //        lsNeedDelete.Add(lsIdItemId[i].Item1);
             //    }
+            // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
+            //{
+            //    MySqlCommand cmdTem = new MySqlCommand("st_tbShopeeModel_Delete_From_Id", conn);
+            //    cmdTem.CommandType = CommandType.StoredProcedure;
+            //    cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
+            //    foreach (var id in lsNeedDelete)
+            //    {
+            //        cmdTem.Parameters[0].Value = id;
+            //        cmdTem.ExecuteNonQuery();
+            //    }
+            //}
 
-            //    // Xóa trên tbshopeemapping
-            //    {
-            //        MySqlCommand cmdTem = new MySqlCommand("DELETE FROM webplaywithme.tbshopeemapping WHERE ShopeeModelId=@inShopeeModelId;", conn);
-            //        cmdTem.CommandType = CommandType.Text;
-            //        cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
-            //        foreach (var id in lsNeedDelete)
-            //        {
-            //            cmdTem.Parameters[0].Value = id;
-            //            cmdTem.ExecuteNonQuery();
-            //        }
-            //    }
-            //    // Xóa trên tbpwmmappingother
-            //    {
-            //        MySqlCommand cmdTem = new MySqlCommand("DELETE FROM webplaywithme.tbpwmmappingother WHERE ShopeeModelId=@inShopeeModelId;", conn);
-            //        cmdTem.CommandType = CommandType.Text;
-            //        cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
-            //        foreach (var id in lsNeedDelete)
-            //        {
-            //            cmdTem.Parameters[0].Value = id;
-            //            cmdTem.ExecuteNonQuery();
-            //        }
-            //    }
-
-            //    // Xóa trên tbshopeemodel
-            //    {
-            //        MySqlCommand cmdTem = new MySqlCommand("DELETE FROM webplaywithme.tbshopeemodel WHERE Id=@inShopeeModelId;", conn);
-            //        cmdTem.CommandType = CommandType.Text;
-            //        cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
-            //        foreach (var id in lsNeedDelete)
-            //        {
-            //            cmdTem.Parameters[0].Value = id;
-            //            cmdTem.ExecuteNonQuery();
-            //        }
-            //    }
             //}
             //catch (Exception ex)
             //{

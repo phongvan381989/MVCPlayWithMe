@@ -262,9 +262,9 @@ function CheckIsEmptyOrSpacesAndShowResult(str, strResult) {
 // str: giá trị text đầu vào
 function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
 {
-    //if (DEBUG) {
-    //    console.log("GetDataFromDatalist CALL value: " + str);
-    //}
+    if (DEBUG) {
+        console.log("GetDataFromDatalist CALL value: " + str);
+    }
     let option = document.getElementById(datalistId).options;
     if (option == null)
         return null;
@@ -272,9 +272,9 @@ function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
     let length = option.length;
     for (let i = 0; i < length; i++) {
         if (option.item(i).value === str) {
-            //if (DEBUG) {
-            //    console.log(option.item(i).getAttribute(dataIdAttributeName));
-            //}
+            if (DEBUG) {
+                console.log(option.item(i).getAttribute(dataIdAttributeName));
+            }
             return option.item(i).getAttribute(dataIdAttributeName);
         }
     }
@@ -796,11 +796,13 @@ function SetMinWidth(ele, minValue) {
 // ele là <datalist>
 // list là danh sách dữ liệu có cấu trúc: id, name
 function SetDataListOfIdName(ele, list) {
-    if (ele != null) {
-        ele.innerHTML = "";
-    }
+
     if (ele == null || list == null) {
         return;
+    }
+
+    if (ele != null) {
+        ele.innerHTML = "";
     }
 
     let length = list.length;

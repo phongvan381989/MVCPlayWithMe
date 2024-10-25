@@ -933,14 +933,14 @@ function InitializeModal() {
         CloseModal(modal);
     }
 
-    // When the user clicks anywhere outside of the modal, close it
-    window.onclick = function (event) {
-        if (event.target == modal) {
-            //modal.style.display = "none";
-            //EmptyModal();
-            CloseModal(modal);
-        }
-    }
+    //// When the user clicks anywhere outside of the modal, close it
+    //window.onclick = function (event) {
+    //    if (event.target == modal) {
+    //        //modal.style.display = "none";
+    //        //EmptyModal();
+    //        CloseModal(modal);
+    //    }
+    //}
 }
 
 function EmptyModal() {
@@ -1020,7 +1020,9 @@ async function SearchProduct() {
     searchParams.append("combo", combo);
 
     let url = "/ItemModel/SearchProduct";
+    ShowCircleLoader();
     let resObj = await RequestHttpGetPromise(searchParams, url);
+    RemoveCircleLoader();
     let listProduct = JSON.parse(resObj.responseText);
 
     // Làm trống bảng

@@ -35,8 +35,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -87,8 +87,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
 
@@ -127,8 +127,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
 
@@ -163,8 +163,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
 
@@ -220,8 +220,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
 
@@ -265,8 +265,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
 
@@ -333,8 +333,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
 
@@ -429,10 +429,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = errMessage;
+                Common.SetResultException(ex, result);
             }
             conn.Close();
 
@@ -689,8 +686,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -717,8 +714,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             return count;
@@ -835,8 +832,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
                 item = null;
             }
 
@@ -875,8 +872,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             return item;
@@ -917,8 +914,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
@@ -961,8 +958,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             return item;

@@ -146,7 +146,7 @@
                 }
                 ShopeeBornModelForVoiBeNho(JSON.stringify(this.itemObj),
                     this.modelObj.modelId,
-                    this.modelObj.pWMMappingModelId);
+                    this.modelObj.pWMMappingModelId, this);
             }
             btn.appendChild(btnContent);
             //btn.className = "margin-vertical";
@@ -372,7 +372,7 @@
             window.scrollTo(0, 0);
         }
 
-        async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId) {
+        async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId, btnElement) {
             ShowCircleLoader();
             const searchParams = new URLSearchParams();
             searchParams.append("strCommonItem", strCommonItem);
@@ -388,6 +388,19 @@
                 }
                 else {
                     alert("Sinh model sản phẩm thành công.");
+                    // Nếu chưa có dòng "Đã sinh trên voibenho" thì thêm, ngược lại xóa bỏ dòng cũ thêm
+                    // "Đã sinh trên voibenho" mới. Dòng mới không click được để đến trang
+                    // thông tin sản phẩm trên voibenho
+                    let parrent = btnElement.parentElement;
+                    // Xóa dòng cũ
+                    if (parrent.children.length == 2) {
+                        parrent.children[0].remove();
+                    }
+                    // Thêm dòng mới
+                    const p = document.createElement("p");
+                    p.innerHTML = "Đã sinh trên voibenho";
+                    p.title = "Load lại trang để xem sản phẩm tương ứng trên voibenho";
+                    parrent.insertBefore(p, parrent.children[0]);
                 }
             }
             catch (err) {

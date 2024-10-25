@@ -17,9 +17,8 @@ namespace MVCPlayWithMe.Models
         /// <returns></returns>
         public Administrator GetAdministratorFromCookie(string userCookieIdentify)
         {
-            Administrator administrator = new Administrator();
-
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            int id = -1;
             try
             {
                 conn.Open();
@@ -31,11 +30,7 @@ namespace MVCPlayWithMe.Models
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    administrator.id = MyMySql.GetInt32(rdr, "AdministratorId");
-                    //if(MyMySql.GetDateTime(rdr, "Logout")!= DateTime.MinValue)
-                    //{
-                    //    administrator.isLogout = true;
-                    //}
+                    id = MyMySql.GetInt32(rdr, "AdministratorId");
                 }
 
                 rdr.Close();
@@ -43,11 +38,15 @@ namespace MVCPlayWithMe.Models
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
-                administrator = null;
+                id = -1;
             }
 
             conn.Close();
+            if (id == -1)
+                return null;
 
+            Administrator administrator = new Administrator();
+            administrator.id = id;
             return administrator;
         }
 
@@ -198,8 +197,8 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                errMessage = ex.ToString();
-                MyLogger.GetInstance().Warn(errMessage);
+                
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();

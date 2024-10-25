@@ -35,8 +35,10 @@ namespace MVCPlayWithMe.General
         public static readonly int itemOnRowDefault = 6;
         // Cookie const
         #region Cookie
+        // Giá trị là UserCookieIdentify, phục vụ check khách hàng đăng nhập
         public static readonly string userIdKey = "uid";
-        // Chỉ có cookie này khi đăng nhập như người quản trị
+        // Chỉ có cookie này khi đăng nhập như người quản trị.
+        // Giá trị là AdministratorCookieIdentify, phục vụ check admin đăng nhập
         public static readonly string visitorType = "visitorType";
         // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         // id: mã model, q: số lượng thêm vào giỏ hàng, real: 1-thực sự chọn mua, 0-có thể mua sau này
@@ -132,6 +134,8 @@ namespace MVCPlayWithMe.General
         {
             string path = absoluteProductMediaFolderPath + productId + @"/";
             Directory.CreateDirectory(path);
+            // Tạo thư mục 320
+            Directory.CreateDirectory(absoluteProductMediaFolderPath + productId + @"_320");
             return path;
         }
 
@@ -417,7 +421,7 @@ namespace MVCPlayWithMe.General
 
             // Lấy được foler ông
             string dir = Path.GetDirectoryName(path) + "_320";
-            if(isCreateFolder)
+            if(isCreateFolder && !Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
             }
@@ -546,10 +550,13 @@ namespace MVCPlayWithMe.General
             // Vì path có "/" cuối cùng, ta xử lý cắt bỏ
             path = path + @"_320";
             path = Path.GetDirectoryName(path) + @"_320";
-            string[] files320 = Directory.GetFiles(path, modelId.ToString() + ".*");
-            foreach (var f in files320)
+            if (Directory.Exists(path))
             {
-                System.IO.File.Delete(f);
+                string[] files320 = Directory.GetFiles(path, modelId.ToString() + ".*");
+                foreach (var f in files320)
+                {
+                    System.IO.File.Delete(f);
+                }
             }
         }
 
@@ -733,6 +740,11 @@ namespace MVCPlayWithMe.General
         /// <param name="fileName">Tên gồm đường dẫn</param>
         public static int DownloadImageAndSaveWithName(string url, string fileName)
         {
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(fileName))
+            {
+                return 0;
+            }
+
             // Check xem ảnh đã tồn tại hay chưa?
             if (File.Exists(fileName))
                 return 0;
@@ -763,6 +775,11 @@ namespace MVCPlayWithMe.General
         /// <param name="fileName">Tên gồm đường dẫn</param>
         public static void DownloadVideoAndSaveWithName(string url, string fileName)
         {
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
             // Check xem video đã tồn tại hay chưa?
             if (File.Exists(fileName))
                 return;
@@ -790,6 +807,11 @@ namespace MVCPlayWithMe.General
         /// <param name="fileName"></param>
         public static void DownloadImageAddWaterMarkAndReduce(string url, string fileName)
         {
+            if(string.IsNullOrEmpty(url) || string.IsNullOrEmpty(fileName))
+            {
+                return;
+            }
+
             int rs = DownloadImageAndSaveWithName(url, fileName);
             if(rs == 1)
             {
@@ -890,6 +912,8 @@ namespace MVCPlayWithMe.General
         {
             string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
             Directory.CreateDirectory(path);
+            // Tạo thư mục 320
+            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + @"_320");
             return path;
         }
 
@@ -912,6 +936,8 @@ namespace MVCPlayWithMe.General
         {
             string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/Model/";
             Directory.CreateDirectory(path);
+            // Tạo thư mục 320
+            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + @"/Model_320");
             return path;
         }
 
