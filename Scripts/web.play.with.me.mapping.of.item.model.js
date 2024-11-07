@@ -200,6 +200,10 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
 }
 
 function ShowListCommonItem(list, table, disableUpdateButton) {
+    if (DEBUG) {
+        console.log("ShowListCommonItem CALL");
+        console.log("list.length: " + list.length);
+    }
     // Show
     DeleteRowsExcludeHead(table);
 
@@ -252,14 +256,7 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
             img.width = thumbnailWidth;
             img.className = "go-to-detail-item";
             img.title = "Xem sản phẩm trên sàn thương mại";
-            // Item là Tiki
-            if (item.eType == eTiki) {
-                img.itemUrl = GetTikiItemUrl(item.itemId);
-            }
-            // Item là shopee
-            else if (item.eType == eShopee) {
-                img.itemUrl = GetShopeeItemUrl(item.itemId);
-            }
+            img.itemUrl = GetTMDTItemUrlFromCommonItem(item);
             img.onclick = function () {
                 // Lấy id
                 let id = Number(this.parentElement.parentElement.children[0].innerHTML);
@@ -270,9 +267,9 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
             // Tên sàn
             cell4.innerHTML = item.eType;
 
-            // Số lượng model trên sàn
-            cell5.innerHTML = model.quantity_sellable;
-            cell5.id = item.eType + "_" + item.itemId + "_" + model.modelId + "_quantity";
+            //// Số lượng model trên sàn
+            //cell5.innerHTML = model.quantity_sellable;
+            //cell5.id = item.eType + "_" + item.itemId + "_" + model.modelId + "_quantity";
 
             // Tên
             if (model.modelId == -1) {

@@ -93,7 +93,7 @@ async function CommonAction() {
             document.getElementById("left_container").style.display = "none";
         }
     }
-    if (true/*CheckIsCustomer()*/) { // Temporary comment
+    if (CheckIsCustomer()) {
 
         //window.history.pushState({}, "");
 

@@ -9,13 +9,16 @@
         <input type="text" class="config-max-width margin-vertical" id="product-name-id">
 
         <button type="button" onclick="UpdateName()" class="diplay-none-when-create"
-                style="float: right; display:none">Cập nhật</button>
+                style="float: right; display:none">
+            Cập nhật
+        </button>
 
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 
     <label for="quantity">Tồn kho:</label><br>
-    <input class="config-max-width margin-vertical" type="number" id="quantity" disabled>
+    <input class="config-max-width margin-vertical disable-true-when-create" type="number" id="quantity" disabled>
+    <button type="button" onclick="UpdateQuantity()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     <label for="code">Mã sản phẩm(bắt đầu bằng 89):</label><br>

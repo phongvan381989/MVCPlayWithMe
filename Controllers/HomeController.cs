@@ -357,11 +357,11 @@ namespace MVCPlayWithMe.Controllers
             int orderId;
             if (cus != null)
             {
-                orderId = ordersqler.AddOrder(cus.id, noteToShop, cusInfor);
+                orderId = ordersqler.AddOrder(cus.id, noteToShop, 0, cusInfor);
             }
             else
             {
-                orderId = ordersqler.AddOrder(-1, noteToShop, cusInfor);
+                orderId = ordersqler.AddOrder(-1, noteToShop, 0, cusInfor);
             }
             if(orderId == -1)
             {

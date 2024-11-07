@@ -318,56 +318,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn
-        // Hàm này dùng cho sàn: web PWM, Tiki, Shopee,...
-        public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
-        {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            string status = string.Empty;
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", "");
-                cmd.Parameters.AddWithValue("@inECommmerce", 0);
-                MySqlDataReader rdr;
-                foreach (var order in ls)
-                {
-                    status = string.Empty;
-                    cmd.Parameters[0].Value = order.code;
-                    if(order.ecommerceName == Common.eTiki)
-                        cmd.Parameters[1].Value = (int)EECommerceType.TIKI;
-                    else if (order.ecommerceName == Common.eShopee)
-                        cmd.Parameters[1].Value = (int)EECommerceType.SHOPEE;
-                    else if (order.ecommerceName == Common.ePlayWithMe)
-                        cmd.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
-
-                    rdr = cmd.ExecuteReader();
-                    while (rdr.Read())
-                    {
-                        if (MyMySql.GetInt32(rdr, "Status") == 0)
-                            status = Common.packedOrder;
-                        else
-                            status = Common.returnedOrder;
-                    }
-                    order.orderStatusInWarehoue = status;
-                    if (rdr != null)
-                        rdr.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-
-            conn.Close();
-        }
-
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void TikiUpdateMappingToCommonOrder(CommonOrder commonOrder)
+        public void TikiGetMappingOfCommonOrder(CommonOrder commonOrder)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -422,7 +374,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Cập nhật số bảng output và products khi đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
-        public MySqlResultState UpdateOutputAndProductTable(MySqlConnection conn,
+        public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut(MySqlConnection conn,
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
         {
@@ -516,7 +468,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.ExecuteNonQuery();
                 }
 
-                resultState = UpdateOutputAndProductTable(conn, commonOrder, status, eCommerceType);
+                resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, commonOrder, status, eCommerceType);
             }
             catch (Exception ex)
             {
@@ -615,6 +567,70 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
 
             return resultState;
+        }
+
+        public List<CommonItem> GetForSaveImageSource()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_For_Save_Image_Source", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                CommonItem commonItem = null;
+                while (rdr.Read())
+                {
+                    commonItem = new CommonItem(Common.eTiki);
+                    lsCommonItem.Add(commonItem);
+
+                    commonItem.itemId = MyMySql.GetInt32(rdr, "TikiId");
+                    commonItem.dbItemId = MyMySql.GetInt32(rdr, "Id");
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+            return lsCommonItem;
+        }
+
+        public void UpdateSourceTotbTikiItem(List<CommonItem> lsCommonItem)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                // Cập nhật source của item
+                MySqlCommand cmdItem = new MySqlCommand("UPDATE tbTikiItem SET Image = @inUrl WHERE Id = @inId", conn);
+                cmdItem.CommandType = CommandType.Text;
+                cmdItem.Parameters.AddWithValue("@inUrl", "");
+                cmdItem.Parameters.AddWithValue("@inId", 1);
+
+                foreach (var item in lsCommonItem)
+                {
+                    cmdItem.Parameters[0].Value = item.imageSrc;
+                    cmdItem.Parameters[1].Value = item.dbItemId;
+                    cmdItem.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
         }
     }
 }

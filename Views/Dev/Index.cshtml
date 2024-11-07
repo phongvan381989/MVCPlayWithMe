@@ -63,9 +63,17 @@
 
         <div class="fmx09gx8">
             <div class="gmxk9381"> SHOPEE</div>
-            <button type="button" onclick="SaveImageSourceOfItemAndModel()" disabled
+            <button type="button" onclick="ShopeeSaveImageSourceOfItemAndModel()" disabled
                     title="Lấy url ảnh đại diện của item, model shopee cập nhật vào db đối với item, model chưa có image url.">
                 Lấy URL ảnh Item, model lưu vào db
+            </button>
+        </div>
+
+        <div class="fmx09gx8">
+            <div class="gmxk9381"> TIKI</div>
+            <button type="button" onclick="TikiSaveImageSourceOfItemAndModel()" disabled
+                    title="Lấy url ảnh đại diện của item tiki cập nhật vào db đối với item chưa có image url.">
+                Lấy URL ảnh Item lưu vào db
             </button>
         </div>
 
@@ -114,9 +122,19 @@
 
         }
 
-        async function SaveImageSourceOfItemAndModel() {
+        async function ShopeeSaveImageSourceOfItemAndModel() {
             const searchParams = new URLSearchParams();
-            let query = "/Dev/SaveImageSourceOfItemAndModel";
+            let query = "/Dev/ShopeeSaveImageSourceOfItemAndModel";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Lấy ảnh thành công", "Lấy ảnh có lỗi");
+        }
+
+        async function TikiSaveImageSourceOfItemAndModel() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/TikiSaveImageSourceOfItemAndModel";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

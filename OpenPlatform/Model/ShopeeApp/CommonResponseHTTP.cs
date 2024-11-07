@@ -1,4 +1,5 @@
-﻿using System;
+﻿using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -6,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp
 {
-    public class CommonResponseHTTP 
+    public class CommonResponseHTTP
     {
         /// <summary>
         /// Indicate error type if hit error. Empty if no error happened.
+        /// Add error of voibenho if need
         /// </summary>
         public string error { get; set; }
 

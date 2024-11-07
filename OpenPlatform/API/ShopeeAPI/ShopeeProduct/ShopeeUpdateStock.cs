@@ -32,11 +32,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             string path = "/api/v2/product/update_stock";
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             MyLogger.GetInstance().Info(body);
-
-            IRestResponse response = CommonShopeeAPI.ShopeePostMethod(path, body);
-            if (response == null)
-                return null;
             ShopeeUpdateStockResponseHTTP objResponse = null;
+            IRestResponse response = CommonShopeeAPI.ShopeePostMethod(path, body);
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                //objResponse = new ShopeeUpdateStockResponseHTTP();
+                //objResponse.error = "response.StatusCode: " + response.StatusCode.ToString();
+                //objResponse.message = response.StatusDescription;
+                //return objResponse;
+
+                return null;
+            }
+
             //if (response.StatusCode == HttpStatusCode.OK)
             //{
             try
@@ -51,7 +58,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
-                objResponse = null;
+                //objResponse = new ShopeeUpdateStockResponseHTTP();
+                //objResponse.error = "Exception";
+                //objResponse.message = ex.Message;
+                //return objResponse;
+                return null;
             }
             //}
 

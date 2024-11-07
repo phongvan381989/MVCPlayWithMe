@@ -619,6 +619,7 @@
     <Content Include="Views\Policy\ObligationPolicy.cshtml" />
     <Content Include="Views\Policy\TransportPolicy.cshtml" />
     <Content Include="Views\Policy\IntroducePolicy.cshtml" />
+    <Content Include="Views\Product\OrderManually.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

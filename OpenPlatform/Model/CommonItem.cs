@@ -102,13 +102,14 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             eType = Common.eShopee;
             models = new List<CommonModel>();
-            bActive = true; // Temporary
+            bActive = true;
         }
 
         public CommonItem(string inEtype)
         {
             eType = inEtype;
             models = new List<CommonModel>();
+            bActive = true;
         }
 
         public static ShopeeGetModelList_Model GetModelFromModelListResponse(ShopeeGetModelListResponse obj, int tierIndex)

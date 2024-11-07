@@ -52,6 +52,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         public List<long> listItemId { get; set; }
         public List<long> listModelId { get; set; }
 
+        // Tiki có thông tin super id
+        public List<int> listItemSuperId { get; set; }
+
         /// <summary>
         /// Danh sách item name và model name tương ứng
         /// Không có model ta lấy tên theo item name
@@ -103,6 +106,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             status = order.status;
             listItemId = new List<long>();
             listModelId = new List<long>();
+            listItemSuperId = new List<int>();
             listThumbnail = new List<string>();
             listQuantity = new List<int>();
 
@@ -113,6 +117,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             foreach (TikiOrderItemV2 e in order.items)
             {
                 listItemId.Add(e.product.id);
+                listItemSuperId.Add(e.product.super_id);
                 listModelId.Add(-1);
                 listQuantity.Add(e.qty);
                 listThumbnail.Add(e.product.thumbnail);

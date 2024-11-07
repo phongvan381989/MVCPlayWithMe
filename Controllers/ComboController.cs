@@ -152,15 +152,15 @@ namespace MVCPlayWithMe.Controllers
         {
             // Danh sách sản phẩm Shopee
             List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfCombo(id, conn);
-            productController.ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
+            //productController.ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
             return shopeeList;
         }
 
-        private List<CommonItem> TikiGetListMappingOfProduct(int id, MySqlConnection conn, ProductController productController)
+        private List<CommonItem> TikiGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
         {
             // Danh sách sản phẩm Tiki
             List<CommonItem> tikiList = sqler.TikiGetListMappingOfCombo(id, conn);
-            productController.TikiGetStatusImageSrcQuantitySellable(tikiList);
+            //productController.TikiGetStatusImageSrcQuantitySellable(tikiList);
             return tikiList;
         }
 
@@ -179,7 +179,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 conn.Open();
                 List<CommonItem> shopeeList = ShopeeGetListMappingOfCombo(id, conn, productController);
-                List<CommonItem> tikiList = TikiGetListMappingOfProduct(id, conn, productController);
+                List<CommonItem> tikiList = TikiGetListMappingOfCombo(id, conn, productController);
 
                 ls.AddRange(tikiList);
                 ls.AddRange(shopeeList);

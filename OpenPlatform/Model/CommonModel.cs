@@ -69,9 +69,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 qty = 0;
             foreach (var m in mapping)
             {
-                if (qty < m.product.quantity / m.quantity)
+                if (qty > m.product.quantity / m.quantity)
                     qty = m.product.quantity / m.quantity;
             }
+            if (qty < 0)
+                qty = 0;
+
             return qty;
         }
     }

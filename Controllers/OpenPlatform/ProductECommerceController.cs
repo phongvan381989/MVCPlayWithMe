@@ -26,13 +26,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public ShopeeMySql shopeeSqler;
         public TikiMySql tikiSqler;
         public ItemModelMySql itemModelSqler;
+        public OrderMySql ordersqler;
 
         public ProductECommerceController ()
         {
             shopeeSqler = new ShopeeMySql();
             tikiSqler = new TikiMySql();
             itemModelSqler = new ItemModelMySql();
-
+            ordersqler = new OrderMySql();
         }
         #region Xử lý item
         // GET: ProductECommerce
@@ -269,6 +270,80 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             return JsonConvert.SerializeObject(resultState);
         }
+
+        [HttpPost]
+        public string CopyImageFromTMDTToWarehouseProduct(string ecommerceName,
+            string itemId, string modelId, string productId)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+
+            string path = Common.GetAbsoluteProductMediaFolderPath(productId);
+            if (path == null)
+            {
+                path = Common.CreateAbsoluteProductMediaFolderPath(productId);
+            }
+            else// Nếu đã tồn tại ảnh trong thư mục thì return
+            {
+                string[] files = Directory.GetFiles(path);
+
+                foreach (var f in files)
+                {
+                    if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
+                    {
+                        resultState.State = EMySqlResultState.EXIST;
+                        resultState.Message = "Sản phẩm đã có ảnh";
+                        return JsonConvert.SerializeObject(resultState);
+                    }
+                }
+            }
+
+            ShopeeGetItemBaseInfoItem pro =
+                        ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(
+                            Common.ConvertStringToInt64(itemId));
+            if (pro != null)
+            {
+                string url = "";
+
+                // Lấy imageSrc cho model nếu có
+                if (pro.has_model)
+                {
+                    ShopeeGetModelListResponse obj =
+                        ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
+                    if (obj != null)
+                    {
+                        ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
+                        int count = tierVar.option_list.Count;
+                        for (int i = 0; i < count; i++)
+                        {
+                            ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
+                            ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
+                            // Lấy ảnh đại diện
+                            if (option.image != null)
+                            {
+                                if (Common.ConvertStringToInt64(modelId) == model.model_id)
+                                {
+                                    url = option.image.image_url;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    url = pro.image.image_url_list[0];
+                }
+
+                // Tải ảnh
+                Common.DownloadImageAddWaterMarkAndReduce(url, Path.Combine(path, "0.jfif"));
+            }
+            else
+            {
+                resultState.State = EMySqlResultState.INVALID;
+                resultState.Message = "Không lấy được thông tin từ Shopee. Vui lòng thử lại sau";
+            }
+            return JsonConvert.SerializeObject(resultState);
+        }
         #endregion
 
         #region Xử lý đơn hàng
@@ -327,12 +402,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Lấy đơn hàng của web Play With Me
-            OrderMySql orderMySql = new OrderMySql();
-            lsCommonOrder.AddRange(orderMySql.GetListCommonOrder(fromTo));
+            lsCommonOrder.AddRange(ordersqler.GetListCommonOrder(fromTo));
 
             // Cập nhật trạng thái đơn hàng: đã đóng / đã hoàn
-            TikiMySql tikiMySql = new TikiMySql();
-            tikiMySql.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+            ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -345,21 +418,27 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string ReloadOneOrder(string commonOrder)
         {
             CommonOrder order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+
+            // Nếu sản phẩm trên shopee, tiki chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+            // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
+
+            // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+            // nhưng trạng thái đang tắt (Status != 0) ta cần cập nhật lại
+            ordersqler.UpdateStatusNormalOfTMDTItem(order);
+
             order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
 
             if (order.ecommerceName == eTiki)
             {
-                TikiMySql tikiMySql = new TikiMySql();
-                tikiMySql.TikiUpdateMappingToCommonOrder(order);
+                tikiSqler.TikiGetMappingOfCommonOrder(order);
             }
             else if (order.ecommerceName == eShopee)
             {
-                shopeeSqler.ShopeeUpdateMappingToCommonOrder(order);
+                shopeeSqler.ShopeeGetMappingOfCommonOrder(order);
             }
             else if (order.ecommerceName == ePlayWithMe)
             {
-                OrderMySql orderMySql = new OrderMySql();
-                orderMySql.UpdateMappingToCommonOrder(order);
+                ordersqler.UpdateMappingToCommonOrder(order);
             }
 
             return JsonConvert.SerializeObject(order);
@@ -394,8 +473,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.PLAY_WITH_ME;
             }
-            TikiMySql tikiMySql = new TikiMySql();
-            resultState = tikiMySql.EnoughProductInOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
+            resultState = tikiSqler.EnoughProductInOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
 
             return JsonConvert.SerializeObject(resultState);
         }
@@ -430,8 +508,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.PLAY_WITH_ME;
             }
-            TikiMySql tikiMySql = new TikiMySql();
-            resultState = tikiMySql.ReturnedOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
+            resultState = tikiSqler.ReturnedOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
 
             return JsonConvert.SerializeObject(resultState);
         }

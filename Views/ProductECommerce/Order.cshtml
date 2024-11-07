@@ -756,7 +756,7 @@
 
                     // Tên
                     let nameEle = document.createElement("div");
-                    nameEle.title = "Click để đi tới xem sản phẩm trên sàn."
+                    nameEle.title = "Click để đi trang xem sản phẩm trên sàn."
                     nameEle.cursor = "pointer";
                     nameEle.className = "nvzlfksjgs095";
 
@@ -775,7 +775,12 @@
                     a.appendChild(linkText);
                     // Item là Tiki
                     if (order.ecommerceName == eTiki) {
-                        a.href = GetTikiItemUrl(order.listItemId[i]);
+                        if (order.listItemSuperId[i] != 0) {// Có sản phẩm super Id
+                            a.href = GetTikiItemUrl(order.listItemSuperId[i]);
+                        }
+                        else {
+                            a.href = GetTikiItemUrl(order.listItemId[i]);
+                        }
                     }
                     // Item là shopee
                     else if (order.ecommerceName == eShopee) {
@@ -828,6 +833,7 @@
                         }
                         oneRowMappingContainer.appendChild(checkbox);
 
+                        let issrcNoImageThumbnail = false;
                         // Image
                         let img = document.createElement("img");
                         img.className = "nvzlfksjgs095 img-cursor";
@@ -835,6 +841,7 @@
                             img.setAttribute("src", Get320VersionOfImageSrc(order.listMapping[i][j].product.imageSrc[0]));
                         } else {
                             img.setAttribute("src", srcNoImageThumbnail);
+                            issrcNoImageThumbnail = true;
                         }
                         img.height = thumbnailHeight / 2;
                         img.width = thumbnailWidth / 2;
@@ -845,20 +852,45 @@
                         }
                         oneRowMappingContainer.appendChild(img);
 
-                        // Mã sản phẩm gồm code 89 + barcode
-                        let codeBarcodeEle = document.createElement("div");
-                        codeBarcodeEle.className = "nvzlfksjgs095";
-                        let code = order.listMapping[i][j].product.code;
-                        if (!isEmptyOrSpaces(order.listMapping[i][j].product.barcode)) {
-                            if (!isEmptyOrSpaces(code)) {
-                                code = code + "-" + order.listMapping[i][j].product.barcode;
+                        // Nếu sản phẩm trong kho chưa có ảnh, và là sản phẩm duy nhất trong mapping
+                        // Ta hiển thị nút cho phép sao chép ảnh của sản phẩm trên sàn
+                        if (issrcNoImageThumbnail
+                            && order.listMapping[i].length == 1
+                            && order.ecommerceName == eShopee) {
+                            let btn = document.createElement("BUTTON");
+                            let btnContent = document.createTextNode("Chép ảnh");
+                            btn.appendChild(btnContent);
+                            btn.style.marginRight = "10px";
+                            btn.style.marginLeft = "10px";
+
+                            btn.ecommerceName = order.ecommerceName;
+                            btn.itemId = order.listItemId[i];
+                            btn.modelId = order.listModelId[i];
+                            btn.proId = order.listMapping[i][j].product.id;
+                            btn.title = "Sản phẩm trong kho đang không có ảnh nào. Sao chép ảnh sản phẩm trên sàn cho sản phẩm trong kho"
+                            btn.onclick = function (event) {
+                                CopyImageFromTMDTToWarehouseProduct(event.target.ecommerceName,
+                                    event.target.itemId,
+                                    event.target.modelId,
+                                    event.target.proId);
                             }
-                            else {
-                                code = order.listMapping[i][j].product.barcode;
-                            }
+                            oneRowMappingContainer.appendChild(btn);
                         }
-                        codeBarcodeEle.innerHTML = code;
-                        oneRowMappingContainer.appendChild(codeBarcodeEle);
+
+                        //// Mã sản phẩm gồm code 89 + barcode
+                        //let codeBarcodeEle = document.createElement("div");
+                        //codeBarcodeEle.className = "nvzlfksjgs095";
+                        //let code = order.listMapping[i][j].product.code;
+                        //if (!isEmptyOrSpaces(order.listMapping[i][j].product.barcode)) {
+                        //    if (!isEmptyOrSpaces(code)) {
+                        //        code = code + "-" + order.listMapping[i][j].product.barcode;
+                        //    }
+                        //    else {
+                        //        code = order.listMapping[i][j].product.barcode;
+                        //    }
+                        //}
+                        //codeBarcodeEle.innerHTML = code;
+                        //oneRowMappingContainer.appendChild(codeBarcodeEle);
 
                         // Tên
                         let nameEle = document.createElement("div");
@@ -1207,6 +1239,23 @@
 
             // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
             UpdateOrderStatusToView(packedOrderStatusInWarehouse);
+        }
+
+        async function CopyImageFromTMDTToWarehouseProduct(ecommerceName, itemId, modelId, productId) {
+
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("ecommerceName", ecommerceName);
+            searchParams.append("productId", productId);
+            searchParams.append("itemId", itemId);
+            searchParams.append("modelId", modelId);
+
+            let query = "/ProductECommerce/CopyImageFromTMDTToWarehouseProduct";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Chép ảnh thành công.", "Chép ảnh thất bại.")
         }
     </script>
 </body>

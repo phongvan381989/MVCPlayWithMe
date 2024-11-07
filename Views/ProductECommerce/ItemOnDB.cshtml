@@ -207,14 +207,7 @@
                     }
                     cell3.className = "go-to-detail-item";
                     cell3.title = "Xem sản phẩm trên sàn thương mại";
-                    // Item là Tiki
-                    if (item.eType == eTiki) {
-                        cell3.itemUrl = GetTikiItemUrl(item.itemId);
-                    }
-                    // Item là shopee
-                    else if (item.eType == eShopee) {
-                        cell3.itemUrl = GetShopeeItemUrl(item.itemId);
-                    }
+                    cell3.itemUrl = GetTMDTItemUrlFromCommonItem(item);
                     cell3.onclick = function () {
                         // Lấy id
                         let id = Number(this.parentElement.parentElement.children[0].innerHTML);

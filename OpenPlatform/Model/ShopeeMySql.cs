@@ -473,6 +473,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Trường hợp item chỉ có 1 modelId, modelId khác -1 hàm dưới chưa xóa dữ liệu tương ứng trong bảng tbShopeeItem
         // Kết quả là có 1 item không có model nào trong DB
+        // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
         public MySqlResultState ShopeeDeleteModelOnDB(long modelId)
         {
             MySqlResultState resultState = new MySqlResultState();
@@ -576,7 +577,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void ShopeeUpdateMappingToCommonOrder(CommonOrder commonOrder)
+        public void ShopeeGetMappingOfCommonOrder(CommonOrder commonOrder)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;

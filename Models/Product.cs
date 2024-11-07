@@ -63,7 +63,8 @@ namespace MVCPlayWithMe.Models
                 int parentIdIn,
                 int republishIn,
                 string detailIn,
-                int statusIn)
+                int statusIn,
+                int pageNumberIn)
                 :base(
                 comboIdIn,
                 categoryIdIn,
@@ -82,7 +83,8 @@ namespace MVCPlayWithMe.Models
                 minAgeIn,
                 maxAgeIn,
                 republishIn,
-                statusIn
+                statusIn,
+                pageNumberIn
                     )
         {
             id = idIn;

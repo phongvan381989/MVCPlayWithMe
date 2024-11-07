@@ -23,6 +23,20 @@
             margin: 10px 10px 10px 10px;
             border-radius: 5px;
         }
+
+        .fcnal986j {
+            margin-right: 40px;
+            border: 1px solid #e9ecef;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 3px 4px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .lk09Jbvrd {
+            display: inline;
+            margin-right: 20px;
+        }
     </style>
 </head>
 <body>
@@ -40,17 +54,33 @@
 
         </div>
         <div class="config-max-width padding-container">
-            <table id="myTableTMDT" style="display:none;">
-                @Html.Partial("~/Views/Shared/Product/TableOfMapping.cshtml")
-            </table>
-            <table id="myTableWarehouese" style="display:none;">
-                <tr>
-                    <th style="display:none">Mã</th>
-                    <th style="width:150px">Ảnh</th>
-                    <th>Tên</th>
-                    <th>Tồn Kho</th>
-                </tr>
-            </table>
+            <div id="myTableTMDTDiv" style="display:none;">
+                <div class="fcnal986j">
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFxjg" name="status-radio" value="On" checked
+                               onclick="ShowResultWithFilter()" />
+                        <label for="nvnlFxjg">Tất cả</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFfesg" name="status-radio" value="Off" 
+                               onclick="ShowResultWithFilter()"/>
+                        <label for="nvnlFfesg">Có lỗi</label>
+                    </div>
+                </div>
+                <table id="myTableTMDT">
+                    @Html.Partial("~/Views/Shared/Product/TableOfMapping.cshtml")
+                </table>
+            </div>
+            <div id="myTableWarehoueseDiv" style="display:none;">
+                <table id="myTableWarehouese">
+                    <tr>
+                        <th style="display:none">Mã</th>
+                        <th style="width:150px">Ảnh</th>
+                        <th>Tên</th>
+                        <th>Tồn Kho</th>
+                    </tr>
+                </table>
+            </div>
         </div>
 
         <div class="mapping_sample" style="display:none;">
@@ -75,6 +105,9 @@
         let listPro = [];
 
         async function GetListProductInWarehoueChangedQuantity() {
+            // Ẩn div chứa table kia
+            document.getElementById("myTableTMDTDiv").style.display = "none";
+
             listPro = [];
             const searchParams = new URLSearchParams();
             let query = "/Product/GetListProductInWarehoueChangedQuantity";
@@ -87,13 +120,14 @@
             }
             else {
                 listPro = [];
+                document.getElementById("myTableWarehoueseDiv").style.display = "none";
+                CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
+                return;
             }
             ShowListProductInWarehoueChangedQuatity(listPro);
         }
 
         function ShowListProductInWarehoueChangedQuatity(list) {
-            // Ẩn table kia
-            document.getElementById("myTableTMDT").style.display = "none";
 
             let table = document.getElementById("myTableWarehouese");
             DeleteRowsExcludeHead(table);
@@ -101,12 +135,12 @@
             let length = list.length;
             if (length == 0) {
                 alert("Không có sản phẩm thay đổi số lượng.")
-                table.style.display = "none";
+                document.getElementById("myTableWarehoueseDiv").style.display = "none";
                 return;
             }
 
             // Show
-            table.style.display = "initial";
+            document.getElementById("myTableWarehoueseDiv").style.display = "initial";
 
             for (let i = 0; i < length; i++) {
                 let item = list[i];
@@ -150,13 +184,12 @@
         }
 
         async function GetListNeedUpdateQuantityAndUpdate() {
-            // Ẩn table kia
-            document.getElementById("myTableWarehouese").style.display = "none";
-
-            let table = document.getElementById("myTableTMDT");
+            // Ẩn div chứa table, table kia
+            document.getElementById("myTableWarehoueseDiv").style.display = "none";
 
             const searchParams = new URLSearchParams();
             let query = "/Product/GetListNeedUpdateQuantityAndUpdate";
+
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
@@ -166,28 +199,93 @@
             }
             else {
                 listCommonItem = [];
-                table.style.display = "none";
+                document.getElementById("myTableTMDTDiv").style.display = "none";
                 CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
                 return;
             }
 
             if (listCommonItem.length == 0) {
-                table.style.display = "none";
+                document.getElementById("myTableTMDTDiv").style.display = "none";
                 alert("Không có sản phẩm trên sàn cần cập nhật số lượng.")
                 return;
             }
 
             // Show table
-            table.style.display = "initial";
-            ShowListCommonItem(listCommonItem, table, true);
+            document.getElementById("myTableTMDTDiv").style.display = "initial";
+            //ShowListCommonItem(listCommonItem, table, true);
 
-            let updateOk = ShowWhyUpdateFail(listCommonItem);
+            //let updateOk = ShowWhyUpdateFail(listCommonItem);
+            let updateOk = ShowResultWithFilter();
             if (updateOk) {
                 alert("Cập nhật thành công.")
             }
             else {
                 CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
             }
+        }
+
+        function ShowResultWithFilter() {
+            if (DEBUG) {
+                console.log("ShowResultWithFilter CALL");
+            }
+            let table = document.getElementById("myTableTMDT");
+            let obj = document.querySelector('input[name="status-radio"]:checked');
+            if (obj.value == "On") {// Hiển thị tất cả item đã cập nhật số lượng trên sàn
+                // Show table
+                ShowListCommonItem(listCommonItem, table, true);
+
+                let updateOk = ShowWhyUpdateFail(listCommonItem);
+                return updateOk;
+            }
+            else { // Hiển thị tất cả item đã cập nhật LỖI số lượng trên sàn
+                let listCommonItemTem = [];
+                for (let i = 0; i < listCommonItem.length; i++) {
+                    let item = listCommonItem[i];
+                    if (item.result == null) // item không ở trạng thái NORMAL
+                    {
+                        continue;
+                    }
+
+                    if (item.eType == eTiki) {
+                        let responseHTTP = item.result.myJson;
+                        let errors = responseHTTP.errors;
+                        if (errors != null) {
+                            if (DEBUG) {
+                                console.log("listCommonItemTem.push(item)");
+                                console.log(JSON.stringify(item));
+                            }
+                            listCommonItemTem.push(item);
+                        }
+
+                    }
+                    else if (item.eType == eShopee) {
+                        let responseHTTP = item.result.myJson;
+                        let failure_list = responseHTTP.response.failure_list;
+                        let leng_failure_list = failure_list.length;
+
+                        let modelLength = item.models.length;
+                        for (let j = 0; j < modelLength; j++) {
+                            let model = item.models[j];
+                            for (let k = 0; k < leng_failure_list; k++) {
+                                if (model.modelId == failure_list[k].model_id ||
+                                    failure_list[k].model_id == 0)// item shopee không có model
+                                {
+                                    console.log("listCommonItemTem.push(item)");
+                                    console.log(JSON.stringify(item));
+                                    listCommonItemTem.push(item);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Show table
+                ShowListCommonItem(listCommonItemTem, table, true);
+
+                ShowWhyUpdateFail(listCommonItemTem);
+            }
+
+            return false;
         }
     </script>
 </body>

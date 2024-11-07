@@ -65,34 +65,35 @@ namespace MVCPlayWithMe.Models
                         combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"), MyMySql.GetString(rdr, "TBComboName"));
                     }
 
-                    proIdTem = MyMySql.GetInt32(rdr, "TBProductId");
+                    proIdTem = MyMySql.GetInt32(rdr, "Id");
                     if(proIdTem != -1)
                     {
                         Product product = new Product();
                         product.id = proIdTem;
 
-                        product.name = MyMySql.GetString(rdr, "TBProductName");
-                        //product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
-                        //product.categoryName = MyMySql.GetString(rdr, "CategoryName");
-                        //product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                        //product.author = MyMySql.GetString(rdr, "Author");
-                        //product.translator = MyMySql.GetString(rdr, "Translator");
-                        //product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-                        //product.publisherName = MyMySql.GetString(rdr, "PublisherName");
-                        //product.publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
-                        //product.publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
-                        //product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
-                        //product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
-                        //product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
-                        //product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
-                        //product.positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
-                        //product.hardCover = MyMySql.GetInt32(rdr, "HardCover");
-                        //product.minAge = MyMySql.GetInt32(rdr, "MinAge");
-                        //product.maxAge = MyMySql.GetInt32(rdr, "MaxAge");
-                        //product.parentId = MyMySql.GetInt32(rdr, "ParentId");
-                        //product.republish = MyMySql.GetInt32(rdr, "Republish");
+                        product.name = MyMySql.GetString(rdr, "Name");
+                        product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
+                        product.categoryName = MyMySql.GetString(rdr, "CategoryName");
+                        product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                        product.author = MyMySql.GetString(rdr, "Author");
+                        product.translator = MyMySql.GetString(rdr, "Translator");
+                        product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+                        product.publisherName = MyMySql.GetString(rdr, "PublisherName");
+                        product.publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
+                        product.publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
+                        product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
+                        product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
+                        product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
+                        product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
+                        product.positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
+                        product.hardCover = MyMySql.GetInt32(rdr, "HardCover");
+                        product.minAge = MyMySql.GetInt32(rdr, "MinAge");
+                        product.maxAge = MyMySql.GetInt32(rdr, "MaxAge");
+                        product.parentId = MyMySql.GetInt32(rdr, "ParentId");
+                        product.republish = MyMySql.GetInt32(rdr, "Republish");
 
-                        //product.status = MyMySql.GetInt32(rdr, "Status");
+                        product.status = MyMySql.GetInt32(rdr, "Status");
+                        product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
 
                         product.SetFirstSrcImage();
                         combo.products.Add(product);

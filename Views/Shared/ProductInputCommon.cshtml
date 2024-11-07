@@ -9,7 +9,7 @@
         <div style="float: right; display:flex;">
             <button type="button" title="Đi đến trang thông tin combo của sản phẩm"
                     onclick="ComboOfProductPage()" class="diplay-none-when-create"
-                     style="display:none; margin-right:20px;">
+                    style="display:none; margin-right:20px;">
                 Combo Của Sản Phẩm
             </button>
 
@@ -32,10 +32,12 @@
 
             <datalist id="list-category"></datalist>
         </div>
-        
+
         <div style="float: right; display:flex;">
             <button type="submit" formaction="/Category/Create" formtarget="_self"
-                    style="float: right;">Thêm Mới Thể Loại</button>
+                    style="float: right;">
+                Thêm Mới Thể Loại
+            </button>
 
             <button type="button" onclick="UpdateCategoryId()" class="diplay-none-when-create"
                     style="display:none; margin-left:20px;">
@@ -108,6 +110,12 @@
         <label for="publishing-time">Năm xuất bản:</label>
         <input type="number" list="list-publishing-time" class="config-max-width margin-vertical" id="publishing-time">
         <datalist id="list-publishing-time"></datalist>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
+
+    <div>
+        <label for="page-number">Số trang:</label>
+        <input type="number" class="config-max-width margin-vertical" id="page-number">
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 

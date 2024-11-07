@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MySql.Data.MySqlClient;
 using System;
@@ -274,7 +275,7 @@ namespace MVCPlayWithMe.Models
             MySqlResultState result = new MySqlResultState();
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[23];
+            paras = new MySqlParameter[24];
             paras[0] = new MySqlParameter("@inproCode", pro.code);
             paras[1] = new MySqlParameter("@inbarcode", pro.barcode);
             paras[2] = new MySqlParameter("@inproductName", pro.name);
@@ -298,6 +299,7 @@ namespace MVCPlayWithMe.Models
             paras[20] = new MySqlParameter("@inrepublish", pro.republish);
             paras[21] = new MySqlParameter("@indetail", pro.detail);
             paras[22] = new MySqlParameter("@inproStatus", pro.status);
+            paras[23] = new MySqlParameter("@inpageNumber", pro.pageNumber);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -364,7 +366,7 @@ namespace MVCPlayWithMe.Models
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[20];
+            paras = new MySqlParameter[21];
             paras[0] = new MySqlParameter("@inComboId", pro.comboId);
             paras[1] = new MySqlParameter("@inCategoryId", pro.categoryId);
             paras[2] = new MySqlParameter("@inBookCoverPrice", pro.bookCoverPrice);
@@ -383,6 +385,7 @@ namespace MVCPlayWithMe.Models
             paras[15] = new MySqlParameter("@inMaxAge", pro.maxAge);
             paras[16] = new MySqlParameter("@inRepublish", pro.republish);
             paras[17] = new MySqlParameter("@inProStatus", pro.status);
+            paras[18] = new MySqlParameter("@inpageNumber", pro.pageNumber);
 
             MyMySql.AddOutParameters(paras);
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Common_Info_With_Combo", paras);
@@ -395,7 +398,7 @@ namespace MVCPlayWithMe.Models
         )
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlParameter[] paras = new MySqlParameter[24];
+            MySqlParameter[] paras = new MySqlParameter[25];
             paras[0] = new MySqlParameter("@inproductId", pro.id);
             paras[1] = new MySqlParameter("@inproCode", pro.code);
             paras[2] = new MySqlParameter("@inbarcode", pro.barcode);
@@ -420,6 +423,7 @@ namespace MVCPlayWithMe.Models
             paras[21] = new MySqlParameter("@inrepublish", pro.republish);
             paras[22] = new MySqlParameter("@indetail", pro.detail);
             paras[23] = new MySqlParameter("@inproStatus", pro.status);
+            paras[24] = new MySqlParameter("@inpageNumber", pro.pageNumber);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -918,6 +922,69 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        public MySqlResultState UpdateOutputAndProductTableFromFromListImport(int orderId,
+            List<Import> ls, ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            MySqlResultState resultState = new MySqlResultState();
+            try
+            {
+                conn.Open();
+                // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
+                MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", orderId); // TH với đơn Shopee, tiki,... là mã đơn hàng, TH này là id của đơn hàng
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                cmd.Parameters.AddWithValue("@inProductId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+                foreach(var im in ls)
+                {
+                    cmd.Parameters[2].Value = im.productId;
+                    if (status == ECommerceOrderStatus.RETURNED)
+                        cmd.Parameters[3].Value = im.quantity * -1;
+                    else
+                        cmd.Parameters[3].Value = im.quantity;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+            conn.Close();
+            return resultState;
+        }
+
+        public MySqlResultState CreateOrderManually(List<Import> ls, int sumPay)
+        {
+            MySqlResultState result = null;
+
+            // Ta thêm dữ liệu vào tbOrder
+            OrderMySql ordersqler = new OrderMySql();
+            int orderId = ordersqler.AddOrder(-1, "", 1, null);
+
+            // Ta thêm dữ liệu vào tbOutput
+            result = UpdateOutputAndProductTableFromFromListImport(orderId, ls, ECommerceOrderStatus.PACKED,
+                EECommerceType.PLAY_WITH_ME);
+
+            if (result.State != EMySqlResultState.OK)
+                return result;
+
+            // Ta thêm dữ liệu vào tbPayOrder
+            OrderPay orderPay = new OrderPay();
+            orderPay.type = EPayType.SUM;
+            orderPay.value = sumPay;
+
+            List<OrderPay> lsOrderPay = new List<OrderPay>();
+            lsOrderPay.Add(orderPay);
+
+            OrderMySql orderMySql = new OrderMySql();
+            orderMySql.AddPayOrder(orderId, lsOrderPay);
+
+            return result;
+        }
+
         // Tìm kiếm không phân trang
         public List<Product> SearchProduct(ProductSearchParameter searchParameter)
         {
@@ -1049,6 +1116,32 @@ namespace MVCPlayWithMe.Models
             MyMySql.AddOutParameters(paras);
 
             MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Code", paras);
+            return result;
+        }
+
+        // Cập nhật thẳng số lượng vào bảng tbProducts nên cần cập nhật ở bảng tbneedupdatequantity,
+        // không cập nhật qua bảng tbImport
+        public MySqlResultState UpdateQuantity(int id, int quantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inQuantity", quantity);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
             return result;
         }
 
@@ -1220,12 +1313,11 @@ namespace MVCPlayWithMe.Models
                 commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
                 commonModel.name = MyMySql.GetString(rdr, "ShopeeModelName");
                 commonModel.imageSrc = MyMySql.GetString(rdr, "ShopeeModelImage");
-                // Tạm thời đóng lấy trạng thái từ db vì Shopee không có trường dữ liệu này
-                //int status = MyMySql.GetInt32(rdr, "ShopeeModelStatus");
-                //if (status == 0)
-                //    commonModel.bActive = true;
-                //else
-                //    commonModel.bActive = false;
+                int status = MyMySql.GetInt32(rdr, "ShopeeModelStatus");
+                if (status == 0)
+                    commonModel.bActive = true;
+                else
+                    commonModel.bActive = false;
             }
             else
             {
@@ -1325,12 +1417,11 @@ namespace MVCPlayWithMe.Models
                 commonItem.imageSrc = MyMySql.GetString(rdr, "TikiItemImage");
                 commonItem.tikiSuperId = MyMySql.GetInt32(rdr, "TMDTTikiItemSuperId");
 
-                // Tạm thời đóng lấy trạng thái từ db, sẽ lấy từ Tiki
-                //int status = MyMySql.GetInt32(rdr, "TikiItemStatus");
-                //if (status != 1)
-                //    commonItem.bActive = true;
-                //else
-                //    commonItem.bActive = false;
+                int status = MyMySql.GetInt32(rdr, "TikiItemStatus");
+                if (status != 1)
+                    commonItem.bActive = true;
+                else
+                    commonItem.bActive = false;
             }
             else
             {

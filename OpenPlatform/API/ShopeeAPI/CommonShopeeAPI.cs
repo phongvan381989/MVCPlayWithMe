@@ -305,10 +305,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             request.AddParameter("application/json", body, ParameterType.RequestBody);
             IRestResponse response = client.Execute(request);
             MyLogger.InfoRestLog(client, request, response);
-            if (response.StatusCode != HttpStatusCode.OK)
-            {
-                return null;
-            }
             return response;
         }
 

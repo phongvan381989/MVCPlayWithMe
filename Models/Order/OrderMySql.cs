@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Models.Order
 {
@@ -81,6 +82,7 @@ namespace MVCPlayWithMe.Models.Order
             conn.Close();
             return ls;
         }
+
         /// <summary>
         /// status: Lấy theo shopee status:0: UNPAID, 1:  READY_TO_SHIP,
         /// 2: PROCESSED, // Đây là trạng thái sau khi in đơn 3:  SHIPPED, 4:  COMPLETED,
@@ -89,12 +91,12 @@ namespace MVCPlayWithMe.Models.Order
         /// <param name="customerId"></param>
         /// <param name="ls"></param>
         /// <param name="cusInfor"></param>
-        public int AddOrder(int customerId, string note,
+        public int AddOrder(int customerId, string note, int isNotWeb,
             Address cusInfor)
         {
             int id = -1;
-            if (cusInfor == null)
-                return id;
+            //if (cusInfor == null)
+            //    return id;
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -104,14 +106,26 @@ namespace MVCPlayWithMe.Models.Order
                 MySqlCommand cmd = new MySqlCommand("st_tbOrder_Insert", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                cmd.Parameters.AddWithValue("@inName", cusInfor.name);
-                cmd.Parameters.AddWithValue("@inPhone", cusInfor.phone);
-                cmd.Parameters.AddWithValue("@inProvince", cusInfor.province);
-                cmd.Parameters.AddWithValue("@inDistrict", cusInfor.district);
-                cmd.Parameters.AddWithValue("@inSubDistrict", cusInfor.subdistrict);
-                cmd.Parameters.AddWithValue("@inDetail", cusInfor.detail);
+                if (cusInfor != null)
+                {
+                    cmd.Parameters.AddWithValue("@inName", cusInfor.name);
+                    cmd.Parameters.AddWithValue("@inPhone", cusInfor.phone);
+                    cmd.Parameters.AddWithValue("@inProvince", cusInfor.province);
+                    cmd.Parameters.AddWithValue("@inDistrict", cusInfor.district);
+                    cmd.Parameters.AddWithValue("@inSubDistrict", cusInfor.subdistrict);
+                    cmd.Parameters.AddWithValue("@inDetail", cusInfor.detail);
+                }
+                else
+                {
+                    cmd.Parameters.AddWithValue("@inName", null);
+                    cmd.Parameters.AddWithValue("@inPhone", null);
+                    cmd.Parameters.AddWithValue("@inProvince", null);
+                    cmd.Parameters.AddWithValue("@inDistrict", null);
+                    cmd.Parameters.AddWithValue("@inSubDistrict", null);
+                    cmd.Parameters.AddWithValue("@inDetail", null);
+                }
                 cmd.Parameters.AddWithValue("@inNote", note);
-                cmd.Parameters.AddWithValue("@inIsNotWeb", 0);
+                cmd.Parameters.AddWithValue("@inIsNotWeb", isNotWeb);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
@@ -282,7 +296,6 @@ namespace MVCPlayWithMe.Models.Order
             return MyMySql.ExcuteNonQuery("st_tbCart_Update_Quantity", paras);
         }
 
-
         /// <summary>
         /// Lấy số lượng sản phẩm trong giỏ hàng
         /// </summary>
@@ -317,7 +330,6 @@ namespace MVCPlayWithMe.Models.Order
             conn.Close();
             return result;
         }
-
 
         /// <summary>
         /// Đếm số lượng đơn hàng
@@ -1047,6 +1059,97 @@ namespace MVCPlayWithMe.Models.Order
             }
             catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+        }
+
+        // Từ đơn hàng, cập nhật trạng thái sản phẩm trên sàn vì có sản phẩm trên sàn được bật bán
+        // trở lại
+        public void UpdateStatusNormalOfTMDTItem(CommonOrder order)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            string status = string.Empty;
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmdShopee = new MySqlCommand("UPDATE tbShopeeItem SET Status=0 WHERE Status<>0 AND TMDTShopeeItemId=@inTMDTShopeeItemId", conn);
+                cmdShopee.CommandType = CommandType.Text;
+                cmdShopee.Parameters.AddWithValue("@inTMDTShopeeItemId", Int64.MaxValue);
+
+                MySqlCommand cmdTiki = new MySqlCommand("UPDATE tbTikiItem SET Status=0 WHERE Status<>0 AND TikiId=@inTikiId", conn);
+                cmdTiki.CommandType = CommandType.Text;
+                cmdTiki.Parameters.AddWithValue("@inTikiId", Int32.MaxValue);
+
+                if(order.ecommerceName == Common.eTiki)
+                {
+                    foreach (var id in order.listItemId)
+                    {
+                        cmdTiki.Parameters[0].Value = id;
+                        cmdTiki.ExecuteNonQuery();
+                    }
+                }
+                else if (order.ecommerceName == Common.eShopee)
+                {
+                    foreach (var id in order.listItemId)
+                    {
+                        cmdShopee.Parameters[0].Value = id;
+                        cmdShopee.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+        }
+
+        // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn
+        // Hàm này dùng cho sàn: web PWM, Tiki, Shopee,...
+        public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
+        {
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            string status = string.Empty;
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", "");
+                cmd.Parameters.AddWithValue("@inECommmerce", 0);
+                MySqlDataReader rdr;
+                foreach (var order in ls)
+                {
+                    status = string.Empty;
+                    cmd.Parameters[0].Value = order.code;
+                    if (order.ecommerceName == Common.eTiki)
+                        cmd.Parameters[1].Value = (int)EECommerceType.TIKI;
+                    else if (order.ecommerceName == Common.eShopee)
+                        cmd.Parameters[1].Value = (int)EECommerceType.SHOPEE;
+                    else if (order.ecommerceName == Common.ePlayWithMe)
+                        cmd.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
+
+                    rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        if (MyMySql.GetInt32(rdr, "Status") == 0)
+                            status = Common.packedOrder;
+                        else
+                            status = Common.returnedOrder;
+                    }
+                    order.orderStatusInWarehoue = status;
+                    if (rdr != null)
+                        rdr.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 

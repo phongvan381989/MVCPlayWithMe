@@ -28,8 +28,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             MyLogger.GetInstance().Info(body);
 
             IRestResponse response = CommonShopeeAPI.ShopeePostMethod(path, body);
-            if (response == null)
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
                 return null;
+            }
+
             ShopeeUpdatePrice_Response_HTTP objResponse = null;
             if (response.StatusCode == HttpStatusCode.OK)
             {

@@ -327,7 +327,7 @@
 
         .psinpachgwl90 {
             padding: 5px;
-            display: none;
+            display: flex;
         }
 
         .btn-add-to-cart {
@@ -577,8 +577,8 @@
                         Mua ngay
                     </button>
                 </div>
-                <div class="psinpachgwl90" title="Mua sản phẩm trên Shopee">
-                    <a href="/" class="fcak09va86" target="_blank">
+                <div class="psinpachgwl90">
+                    <a href="/" class="fcak09va86" target="_blank" title="Mua sản phẩm trên Shopee">
                         <div>
                             <svg viewBox="0 0 192 65" class="shopee-svg-icon-sfxb">
                                 <g>
@@ -587,6 +587,17 @@
                                 </g>
                             </svg>
                         </div>
+                    </a>
+                    <a href="https://tiki.vn/cua-hang/play-with-me" class="" target="_blank"
+                       style="width:70px; height:30px; margin-left:10px;"
+                       title="Mua sản phẩm trên Tiki">
+                        <img src="/Media/tikiLogo.png" />
+                    </a>
+
+                    <a href="https://www.lazada.vn/shop/play-with-me" class="" target="_blank"
+                       style="width:100px; height:30px; margin-left:10px;"
+                       title="Mua sản phẩm trên Lazada">
+                        <img src="/Media/lazadaLogo.png" />
                     </a>
                 </div>
             </div>
@@ -1178,8 +1189,12 @@
 
             // Show nút Shopee để di chuyển qua sàn Shopee
             if (itemObject.shopeeItemId != 0) {
-                document.getElementsByClassName("psinpachgwl90")[0].style.display = "flex";
+                // Đường dẫn đến sản phẩm trên Shopee
                 document.getElementsByClassName("fcak09va86")[0].href = GetShopeeItemUrl(itemObject.shopeeItemId);
+            }
+            else {
+                // Đường dẫn đến cửa hàng trên Shopee
+                document.getElementsByClassName("fcak09va86")[0].href = "https://shopee.vn/voibenhobooks";
             }
         }
 

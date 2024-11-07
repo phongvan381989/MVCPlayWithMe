@@ -39,6 +39,9 @@
     let publishingTime = GetValueInputById("publishing-time", -1);
     searchParams.append("publishingTime", publishingTime);
 
+    let pageNumber = GetValueInputById("page-number", 0);
+    searchParams.append("pageNumber", pageNumber);
+
     let productLong = GetValueInputById("product-long", 0);
     searchParams.append("productLong", productLong);
 
@@ -234,6 +237,10 @@ function SetProductCommonInfoWithCombo(product) {
     if (product.publishingTime != -1) {
         document.getElementById("publishing-time").value = product.publishingTime;
     }
+    if (product.pageNumber != -1) {
+        document.getElementById("page-number").value = product.pageNumber;
+    }
+
     if (product.productLong != -1) {
         document.getElementById("product-long").value = product.productLong;
     }
@@ -361,12 +368,22 @@ async function DeleteProduct(){
 
 
 // HIển thị nút cập nhật cho riêng tên, isbn, mã sản phẩm,...
+// Cho phép cập nhật tồn kho
 function ShowUpdateButtonForOne() {
-    const collection = document.getElementsByClassName("diplay-none-when-create");
+    let collection = document.getElementsByClassName("diplay-none-when-create");
 
     for (let i = 0; i < collection.length; i++)
     {
         collection[i].style.display = "block";
+    }
+
+    collection = document.getElementsByClassName("disable-true-when-create");
+
+    for (let i = 0; i < collection.length; i++) {
+        if (DEBUG) {
+            console.log("collection[i].disabled: " + collection[i].disabled);
+        }
+        collection[i].disabled = false;
     }
 }
 
@@ -392,6 +409,28 @@ async function UpdateName() {
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật tên lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateQuantity() {
+    let productQuantity = document.getElementById("quantity").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("quantity", productQuantity);
+
+    let url = "/Product/UpdateQuantity";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpPostPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật mã lỗi.", null);
         return;
     }
 }

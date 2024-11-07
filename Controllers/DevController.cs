@@ -2,8 +2,10 @@
 using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -40,7 +42,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string SaveImageSourceOfItemAndModel()
+        public string ShopeeSaveImageSourceOfItemAndModel()
         {
             if (AuthentAdministrator() == null)
             {
@@ -103,6 +105,45 @@ namespace MVCPlayWithMe.Controllers
             }
 
             shopeeSqler.UpdateSourceTotbShopeeItem_Model(lsCommonItem);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string TikiSaveImageSourceOfItemAndModel()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            TikiMySql tikiSqler = new TikiMySql();
+            List<CommonItem> lsCommonItem = tikiSqler.GetForSaveImageSource();
+
+            try
+            {
+                foreach (var item in lsCommonItem)
+                {
+                    TikiProduct pro = GetListProductTiki.GetProductFromOneShop((int)item.itemId);
+                    if (pro == null)
+                        continue;
+
+                    item.imageSrc = pro.thumbnail;
+                    if (string.IsNullOrEmpty(item.imageSrc))
+                    {
+                        if(pro.images != null && pro.images.Count() > 0)
+                        {
+                            item.imageSrc = pro.images[0].url;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            tikiSqler.UpdateSourceTotbTikiItem(lsCommonItem);
             return JsonConvert.SerializeObject(result);
         }
 

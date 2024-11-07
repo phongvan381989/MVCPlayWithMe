@@ -56,6 +56,8 @@ namespace MVCPlayWithMe.Models
         /// </summary>
         public int status { get; set; }
 
+        public int pageNumber { get; set; }
+
         public ProductCommonInfoWithCombo()
         {
 
@@ -79,7 +81,8 @@ namespace MVCPlayWithMe.Models
                 int minAgeIn,
                 int maxAgeIn,
                 int republishIn,
-                int statusIn
+                int statusIn,
+                int pageNumberIn
             )
         {
             comboId = comboIdIn;
@@ -100,6 +103,7 @@ namespace MVCPlayWithMe.Models
             maxAge = maxAgeIn;
             republish = republishIn;
             status = statusIn;
+            pageNumber = pageNumberIn;
         }
     }
 }

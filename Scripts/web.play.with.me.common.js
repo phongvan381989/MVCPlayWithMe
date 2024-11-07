@@ -983,8 +983,26 @@ function GetShopeeItemUrl(itemid) {
 
 // https://tiki.vn/p76217978.html
 // id: 76217978
-function GetTikiItemUrl(id) {
-    return "https://tiki.vn/p" + id + ".html";
+function GetTikiItemUrl(itemid) {
+    return "https://tiki.vn/p" + itemid + ".html";
+}
+
+function GetTMDTItemUrlFromCommonItem(commonItem) {
+    let itemUrl = "";
+    // Item là Tiki
+    if (commonItem.eType == eTiki) {
+        if (commonItem.tikiSuperId != 0) {// Có sản phẩm super Id
+            itemUrl = GetTikiItemUrl(commonItem.tikiSuperId);
+        }
+        else {
+            itemUrl = GetTikiItemUrl(commonItem.itemId);
+        }
+    }
+    // Item là shopee
+    else if (commonItem.eType == eShopee) {
+        itemUrl = GetShopeeItemUrl(commonItem.itemId);
+    }
+    return itemUrl;
 }
 
 function GetProductUrl(id) {

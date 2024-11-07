@@ -31,7 +31,10 @@
     <div id="biggestContainer">
         <div class="config-max-width padding-container" id="result-find-id">
             <div class="one-item-container">
-                <img class="item-image-ACvv">
+                <a id="anzka89zbhfj" target="_blank" href=""
+                   title="Click để đi trang xem sản phẩm trên sàn.">
+                    <img class="item-image-ACvv">
+                </a>
                 <div class="fcpaxm09zf">
                     <div class="item-status-azc"></div>
                     <div class="item-name-vsfc"></div>
@@ -94,6 +97,8 @@
                 ShowDoesntFindId();
                 return;
             }
+
+            document.getElementById("anzka89zbhfj").href = GetTMDTItemUrlFromCommonItem(commonItem);
 
             // Hiển thị sản phẩm của sàn
             if (commonItem.imageSrc) {
