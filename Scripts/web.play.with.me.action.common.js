@@ -93,7 +93,7 @@ async function CommonAction() {
             document.getElementById("left_container").style.display = "none";
         }
     }
-    if (CheckIsCustomer()) {
+    //if (CheckIsCustomer()) {
 
         //window.history.pushState({}, "");
 
@@ -106,14 +106,14 @@ async function CommonAction() {
 
         await ShowAccoutAction();
         await UpdateCartCount();
-    }
-    else {
-        // Xóa thông tin account
-        document.getElementsByClassName("top-account-container")[0].remove();
+    //}
+    //else {
+    //     Xóa thông tin account
+    //    document.getElementsByClassName("top-account-container")[0].remove();
 
-        // Xóa thông tin giỏ hàng
-        document.getElementsByClassName("cart-container")[0].remove();
-    }
+    //     Xóa thông tin giỏ hàng
+    //    document.getElementsByClassName("cart-container")[0].remove();
+    //}
 }
 
 CommonAction();
