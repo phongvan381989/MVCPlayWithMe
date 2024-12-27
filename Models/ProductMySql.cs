@@ -1145,6 +1145,39 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        // Cập nhật thẳng số lượng vào bảng tbProducts nên cần cập nhật ở bảng tbneedupdatequantity,
+        // không cập nhật qua bảng tbImport
+        public MySqlResultState UpdateQuantityFromList(List<int> lsId, List<int> lsQuantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+
+                for (int i = 0; i < lsId.Count; i++)
+                {
+                    cmd.Parameters["@inId"].Value = lsId[i];
+                    cmd.Parameters["@inQuantity"].Value = lsQuantity[i];
+                    cmd.ExecuteNonQuery();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
         // Cập nhật chỉ code, có check tên đã tồn tại trong store
         // isbn chính là Barcode trong db
         public MySqlResultState UpdateISBN(int id, string isbn)

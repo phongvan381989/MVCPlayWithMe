@@ -34,7 +34,6 @@ namespace MVCPlayWithMe.Models
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 ls.Clear();
             }

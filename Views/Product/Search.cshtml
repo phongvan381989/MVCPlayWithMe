@@ -63,10 +63,18 @@
                 <br />
             </div>
 
-            <button type="button" title="Kết quả trả về được sắp xếp tồn kho tăng dần"
-                    onclick="Search()">
-                Tìm kiếm
-            </button>
+            <div style="position:relative;">
+                <button type="button" title="Kết quả trả về được sắp xếp tồn kho tăng dần."
+                        onclick="Search()">
+                    Tìm kiếm
+                </button>
+
+                <button type="button" title="Cập nhật số lượng theo danh sách hiển thị bên dưới."
+                        style="position: absolute; right:10px;"
+                        onclick="UpdateQuantityFromListBelow()">
+                    Cập nhật tồn kho
+                </button>
+            </div>
             <br />
 
             <div>
@@ -207,6 +215,48 @@
             FilterProductAll();
         }
 
+        async function UpdateQuantityFromListBelow() {
+
+            let text = "Bạn chắc chắn cập nhật cho tất cả sản phẩm trong danh sách bên dưới?";
+            if (confirm(text) == false)
+                return;
+
+            let listId = [];
+            let listQuantity = [];
+            let rows = document.getElementsByClassName("axvsg892757");
+            for (let i = 0; i < rows.length; i++) {
+                if (!isEmptyOrSpaces(rows[i].cells[5].getElementsByTagName("input")[0].value)) {
+                    listId.push(parseInt(rows[i].cells[0].innerHTML));
+                    listQuantity.push(rows[i].cells[5].getElementsByTagName("input")[0].value);
+                }
+            }
+            if (listId.length == 0) {
+                alert("Danh sách trống.");
+                return;
+            }
+
+            if (DEBUG) {
+                console.log("listId: " + JSON.stringify(listId));
+                console.log("listQuantity: " + JSON.stringify(listQuantity));
+            }
+
+            let url = "/Product/UpdateQuantityFromListBelow";
+            const searchParams = new URLSearchParams();
+            searchParams.append("listId", listId);
+            searchParams.append("listQuantity", listQuantity);
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi ở đâu đó.", null);
+                return;
+            }
+        }
+
         function SetSearchParameter(searchParams) {
             publisher = GetValueInputById("publisher-id", "");
             codeOrBarcode = GetValueInputById("code-or-isbn", "");
@@ -235,6 +285,7 @@
             for (let i = 0; i < length; i++) {
                 let product = list[i];
                 let row = table.insertRow(-1);
+                row.className = "axvsg892757";
 
                 // Insert new cells (<td> elements)
                 let cell1 = row.insertCell(0);
@@ -307,8 +358,11 @@
                 cell5.innerHTML = product.bookCoverPrice;
 
                 // Tồn kho
-                let pQuantity = document.createElement("p");
-                pQuantity.innerHTML = product.quantity;
+                // Cho phép chỉnh sửa tồn kho sau đó cập nhật toàn bộ.
+                let pQuantity = document.createElement("input");
+                pQuantity.type = "number";
+                pQuantity.value = product.quantity;
+                pQuantity.title = "Để trống sẽ không được cập nhật.";
                 if (product.quantity == 0) {
                     pQuantity.className = "ffxafj8kafn8";
                 }
@@ -328,7 +382,7 @@
         }
 
         function ArrangeQuantity() {
-            length = listProductWillShow.length;
+            let length = listProductWillShow.length;
             if (length == 0) {
                 return;
             }
@@ -359,7 +413,7 @@
         }
 
         function ArrangeCombo() {
-            length = listProductWillShow.length;
+            let length = listProductWillShow.length;
             if (length == 0) {
                 return;
             }

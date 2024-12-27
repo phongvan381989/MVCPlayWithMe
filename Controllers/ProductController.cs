@@ -755,6 +755,38 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(sqler.UpdatePublisherId(id, publisherId));
         }
 
+        // str có dạng: 12,45,24
+        private void GetListIntFromString(List<int> lsint, string str)
+        {
+            try
+            {
+                string[] arr = str.Split(new char[] { ',' });
+                for (int i = 0; i < arr.Length; i++)
+                {
+                    lsint.Add(int.Parse(arr[i]));
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn("str: " + str + ". " + ex.ToString());
+                lsint.Clear();
+            }
+        }
+
+        public string UpdateQuantityFromListBelow(string listId, string listQuantity)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            List<int> lsId = new List<int>();
+            List<int> lsQuantity = new List<int>();
+            GetListIntFromString(lsId, listId);
+            GetListIntFromString(lsQuantity, listQuantity);
+
+            return JsonConvert.SerializeObject(sqler.UpdateQuantityFromList(lsId, lsQuantity));
+        }
+
         [HttpPost]
         public string GetListAuthor()
         {
