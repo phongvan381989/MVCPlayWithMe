@@ -281,14 +281,21 @@
             modal.style.display = "none";
             let inputProductCode = document.getElementsByName("product-code-isbn")[0];
             let inputOrderCode = document.getElementsByName("order-code")[0];
+
             inputProductCode.addEventListener("keypress", function (event) {
-                if (event.key === "Enter" && modal.style.display == "block") {
+                if (event.key === "Enter" && /*modal.style.display == "block"*/ document.activeElement === inputProductCode) {
+                    if (DEBUG) {
+                        console.log("inputProductCode CALL");
+                    }
                     event.preventDefault();
                     document.getElementsByClassName("btn-add-product")[0].click();
                 }
             });
             inputOrderCode.addEventListener("keypress", function (event) {
-                if (event.key === "Enter" && modal.style.display == "none") {
+                if (event.key === "Enter" && /*modal.style.display == "none"*/document.activeElement === inputOrderCode) {
+                    if (DEBUG) {
+                        console.log("inputOrderCode CALL");
+                    }
                     event.preventDefault();
                     document.getElementsByClassName("btn-order-detail")[0].click();
                 }
@@ -379,6 +386,10 @@
 
         function SearchOrderCodeInList() {
             let orderCodeValue = document.getElementsByName("order-code")[0].value;
+            if (isEmptyOrSpaces(orderCodeValue)) {
+                return null;
+            }
+
             let length = listOrderTemp.length;
             let orderTemp = null;
             for (let i = 0; i < length; i++) {
@@ -394,7 +405,7 @@
         function EmptyAndFocusOrderCodeElement() {
             let code = document.getElementsByName("order-code")[0];
             code.value = "";
-            //code.focus();
+            code.focus();
         }
 
         async function OrderDetail() {

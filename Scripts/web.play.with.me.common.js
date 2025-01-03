@@ -612,16 +612,16 @@ function SetListPublishingTime() {
 //        <div class='alert-popup-message'>
 //        </div>
 //        <div>
-//            <button class='btn-modal-must-click-ok' type='button' onclick='CloseModalMustClickOk()'>OK</button>
+//            <div class='div-modal-must-click-ok' onclick='CloseModalMustClickOk()'>OK</div>
 //        </div>
 //    </div>
 //</div>
 async function CreateMustClickOkModal(text, okFunction) {
     let container = document.createElement("div");
     container.className = "container-my-modal-must-click-ok";
-    container.innerHTML = "<div class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><button class='btn-modal-must-click-ok' type='button'>OK</button></div></div></div>";
+    container.innerHTML = "<div tabindex='0' class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><div class='div-modal-must-click-ok'>OK</div></div></div></div>";
     container.getElementsByClassName("alert-popup-message")[0].innerHTML = text;
-    container.getElementsByClassName("btn-modal-must-click-ok")[0].addEventListener("click", function () {
+    container.getElementsByClassName("div-modal-must-click-ok")[0].addEventListener("click", function () {
         document.getElementsByClassName("container-my-modal-must-click-ok")[0].remove();
         if (okFunction != null) {
             okFunction();
@@ -629,7 +629,7 @@ async function CreateMustClickOkModal(text, okFunction) {
         promoteMustClickOkModal("");
     });
     document.getElementsByTagName("body")[0].appendChild(container);
-    document.getElementsByClassName("btn-modal-must-click-ok")[0].focus();
+    document.getElementsByClassName("my-modal-must-click-ok")[0].focus();
     promoteMustClickOkModal = null;
     let promise = new Promise((resolve) => { promoteMustClickOkModal = resolve });
     await promise.then((result) => {});

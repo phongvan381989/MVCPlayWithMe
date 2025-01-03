@@ -35,7 +35,7 @@ namespace MVCPlayWithMe.Models
                 rdr.Close();
 
                 // Generate hash from login password with hash in db
-                if (!Common.ByteArrayCompare(Common.GenerateSaltedHash(password, salt), hash))
+                if (salt == null || !Common.ByteArrayCompare(Common.GenerateSaltedHash(password, salt), hash))
                 {
                     result.State = EMySqlResultState.INVALID;
                     result.Message = "Mật khẩu không đúng.";
