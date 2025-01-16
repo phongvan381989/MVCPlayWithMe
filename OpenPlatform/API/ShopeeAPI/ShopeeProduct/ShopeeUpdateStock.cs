@@ -40,7 +40,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                 //objResponse.error = "response.StatusCode: " + response.StatusCode.ToString();
                 //objResponse.message = response.StatusDescription;
                 //return objResponse;
-
+                MyLogger.GetInstance().Info("/api/v2/product/update_stock response.StatusCode: " + response.StatusCode
+                     + ", response.Content" + response.Content);
                 return null;
             }
 

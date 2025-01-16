@@ -70,7 +70,7 @@ function ShowWhyUpdateFail(listCommonItemTemp) {
                 eleWhyUpdateFail.innerHTML = "Xong";
             }
         }
-        else if (item.eType == eShopee) {
+        else if (item.eType == eShopee && item.result.myJson != null) {
             let responseHTTP = item.result.myJson;
             let failure_list = responseHTTP.response.failure_list;
             let leng_failure_list = failure_list.length;
