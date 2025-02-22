@@ -215,8 +215,10 @@
         </div>
 
         <div class="cvAncz980">
-            <input type="text" class="vndejhx90" name="order-code" />
-            <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetail()">Chi Tiết Đơn Hàng</button>
+            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn"/>
+            <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetail()"
+                    title="Tìm trong danh sách dữ liệu đã tải về sau khi lấy danh sách đơn hàng,
+                    ngược lại gửi thông tin mã đơn hàng về server">Chi Tiết Đơn Hàng</button>
         </div>
 
         <div>
@@ -235,6 +237,26 @@
         <audio id="myAudioBigQuantity">
             <source src="~/Media/SoundCheckAmount.m4a" type="audio/m4a">
             <source src="~/Media/SoundCheckAmount.wav" type="audio/wav">
+        </audio>
+        <audio id="mySPKhongCoTrongDonHang">
+            <source src="~/Media/SPKhongCoTrongDonHang.m4a" type="audio/m4a">
+            <source src="~/Media/SPKhongCoTrongDonHang.wav" type="audio/wav">
+        </audio>
+        <audio id="myCoSPTrongDonHangChuaMapping">
+            <source src="~/Media/CoSPTrongDonHangChuaMapping.m4a" type="audio/m4a">
+            <source src="~/Media/CoSPTrongDonHangChuaMapping.wav" type="audio/wav">
+        </audio>
+        <audio id="myDonDuSP">
+            <source src="~/Media/DonDuSP.m4a" type="audio/m4a">
+            <source src="~/Media/DonDuSP.wav" type="audio/wav">
+        </audio>
+        <audio id="myMaSP-ISBNKhongDung">
+            <source src="~/Media/MaSP-ISBNKhongDung.m4a" type="audio/m4a">
+            <source src="~/Media/MaSP-ISBNKhongDung.wav" type="audio/wav">
+        </audio>
+        <audio id="mySPDaDuSoLuong">
+            <source src="~/Media/SPDaDuSoLuong.m4a" type="audio/m4a">
+            <source src="~/Media/SPDaDuSoLuong.wav" type="audio/wav">
         </audio>
     </div>
     <div id="order-detail-modal" class="order-modal">
@@ -265,7 +287,7 @@
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
-        let listOrder; // Lưu danh sách common order trả về
+        let listOrder = []; // Lưu danh sách common order trả về
         let listOrderTemp = []; // Lưu danh sách common order sau khi lọc, và được hiển thị
         let currentOrder; // Đơn hàng đang view chi tiết trên modal
 
@@ -274,7 +296,7 @@
 
         SetMinWidth(document.getElementsByClassName("order-content-modal")[0], 600);
 
-        InitializeModal();
+        InitializeModalInOrderPage();
         InitializeEnterPress();
 
         function InitializeEnterPress() {
@@ -284,18 +306,18 @@
 
             inputProductCode.addEventListener("keypress", function (event) {
                 if (event.key === "Enter" && /*modal.style.display == "block"*/ document.activeElement === inputProductCode) {
-                    if (DEBUG) {
-                        console.log("inputProductCode CALL");
-                    }
+                    //if (DEBUG) {
+                    //    console.log("inputProductCode CALL");
+                    //}
                     event.preventDefault();
                     document.getElementsByClassName("btn-add-product")[0].click();
                 }
             });
             inputOrderCode.addEventListener("keypress", function (event) {
                 if (event.key === "Enter" && /*modal.style.display == "none"*/document.activeElement === inputOrderCode) {
-                    if (DEBUG) {
-                        console.log("inputOrderCode CALL");
-                    }
+                    //if (DEBUG) {
+                    //    console.log("inputOrderCode CALL");
+                    //}
                     event.preventDefault();
                     document.getElementsByClassName("btn-order-detail")[0].click();
                 }
@@ -384,12 +406,7 @@
             alert("Các đơn đều đã được đóng hàng.");
         }
 
-        function SearchOrderCodeInList() {
-            let orderCodeValue = document.getElementsByName("order-code")[0].value;
-            if (isEmptyOrSpaces(orderCodeValue)) {
-                return null;
-            }
-
+        function SearchOrderCodeInList(orderCodeValue) {
             let length = listOrderTemp.length;
             let orderTemp = null;
             for (let i = 0; i < length; i++) {
@@ -405,19 +422,63 @@
         function EmptyAndFocusOrderCodeElement() {
             let code = document.getElementsByName("order-code")[0];
             code.value = "";
-            code.focus();
+            code.focus({
+                preventScroll: true
+            });
         }
 
         async function OrderDetail() {
+            let orderCodeValue = document.getElementsByName("order-code")[0].value;
+            if (isEmptyOrSpaces(orderCodeValue)) {
+                return null;
+            }
+            let orderTemp;
+            if (listOrder.length != 0) {
+                orderTemp = SearchOrderCodeInList(orderCodeValue);
+                if (orderTemp == null) {
+                    await CreateMustClickOkModal("Không tìm thấy đơn hàng.",
+                        function () { EmptyAndFocusOrderCodeElement(); });
+                    return;
+                }
+            }
+            else {
+                // Phải chọn 1 sàn thương mại điện tử
+                let ecomerce = GetECommerceType();
+                if (ecomerce != eTiki && ecomerce != eShopee && ecomerce != eLazada) {
+                    CreateMustClickOkModal("Chọn cụ thể 1 sàn thương mại điện tử.", null)
+                    return;
+                }
 
-            let orderTemp = SearchOrderCodeInList();
-            if (orderTemp == null) {
-                await CreateMustClickOkModal("Không tìm thấy đơn hàng.",
-                    function () { EmptyAndFocusOrderCodeElement(); });
-                return;
+                const searchParams = new URLSearchParams();
+                searchParams.append("ecommerce", ecomerce);
+                searchParams.append("sn", orderCodeValue);
+
+                let query = "/ProductECommerce/GetOrderFromOrderSN";
+
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                RemoveCircleLoader();
+                if (responseDB.responseText == "null") {
+                    await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                    return;
+                }
+
+                // Hiển thị danh sách đơn hàng. Danh sách sẽ chỉ gồm 1 đơn hàng
+                listOrder = JSON.parse(responseDB.responseText);
+
+                // Cho filter về tất cả
+                document.getElementById("all-order").checked = true;
+                FilterOrder();
+                if (listOrder.length == 0) {
+                    currentOrder = null;
+                    CreateMustClickOkModal("Kiểm tra thông tin đơn hàng hoặc thử lại sau.");
+                    return;
+                }
+                orderTemp = listOrder[0];
             }
             currentOrder = orderTemp;
             RefreshOrder();
+
         }
 
         // Sắp xếp danh sách đơn hàng theo thời gian gần đây ở đầu danh sách
@@ -560,6 +621,20 @@
             return listTemp;
         }
 
+        // Set màu sắc của cột đóng / hoàn / giữ chỗ / hủy giữ chỗ
+        // Đóng: màu mặc định, giữ chỗ: Xanh lá cây, hủy giữ chỗ: xanh nước biển, hoàn: đỏ
+        function SetColorOfPackedReturned(cell) {
+            let orderStatusInWarehoue = cell.innerHTML;
+            if (orderStatusInWarehoue === returnedOrderStatusInWarehouse) {
+                cell.style.color = "red";
+            }
+            else if (orderStatusInWarehoue === unbookedOrderStatusInWarehouse) {
+                cell.style.color = "blue";
+            }
+            else if (orderStatusInWarehoue === bookedOrderStatusInWarehouse) {
+                cell.style.color = "green";
+            }
+        }
         // Lọc order theo trạng thái, sàn
         function FilterOrder() {
             let length = listOrder.length;
@@ -612,14 +687,8 @@
                 let testTime = new Date(order.millisecondsTime)
                 cell4.innerHTML = testTime.toLocaleString();
 
-                // Đã đóng
-                if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse)
-                    cell5.style.color = "initial";
-
-                //// Đã Hoàn
-                if (order.orderStatusInWarehoue == returnedOrderStatusInWarehouse)
-                    cell5.style.color = "red";
                 cell5.innerHTML = order.orderStatusInWarehoue;
+                SetColorOfPackedReturned(cell5);
 
                 row.onclick = function () {
                     let id = parseInt(row.getAttribute("data-index-id"));
@@ -643,8 +712,10 @@
             let itemMappingContainer = ele.parentElement.parentElement;
             let dataItemIndex = parseInt(itemMappingContainer.getAttribute("data-item-index"));
             let lsRow = itemMappingContainer.getElementsByClassName("one-row-mapping-container");
-            if (lsRow == null)
+            if (lsRow == null) {
+                EmptyAndFocusProductCodeElement();
                 return;
+            }
 
             for (let i = 0; i < lsRow.length; i++) {
                 lsRow[i].getElementsByClassName("checked-enough")[0].checked = ele.checked;
@@ -671,6 +742,8 @@
                         "0/" + SpanRed(num);
                 }
             }
+
+            EmptyAndFocusProductCodeElement();
         }
 
         function ClickRowMappingCheckBox(ele) {
@@ -708,15 +781,18 @@
                     "0/" + SpanRed(num);
                 itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = false;
             }
+
+            EmptyAndFocusProductCodeElement();
         }
 
-        function ShowOneOrderOnModal(order) {
+        async function ShowOneOrderOnModal(order) {
             let orderContainer = document.getElementsByClassName("order-detail")[0];
             orderContainer.innerHTML = "";
             document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
             document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
 
             let isBigQuantity = false;
+            let isDontMapping = false;
 
             for (let i = 0; i < order.listItemId.length; i++) {
                 let container = document.createElement("div");
@@ -824,6 +900,9 @@
                     let mappingContainer = document.createElement("div");
                     mappingContainer.className = "mapping-container";
                     container.appendChild(mappingContainer);
+                    if (order.listMapping[i].length == 0) {
+                        isDontMapping = true;
+                    }
 
                     for (let j = 0; j < order.listMapping[i].length; j++) {
 
@@ -967,20 +1046,29 @@
                 document.getElementsByClassName("btn-enough-product")[0].disabled = true;
             }
 
-            ShowModal();
+            ShowModalInOrderPage();
             if (isBigQuantity) {
-                var x = document.getElementById("myAudioBigQuantity");
+                let x = document.getElementById("myAudioBigQuantity");
                 x.play();
+            }
+
+            if (isDontMapping) {
+                if (isBigQuantity) {
+                    await new Promise(res => setTimeout(res, 2000));
+
+                    let x = document.getElementById("myCoSPTrongDonHangChuaMapping");
+                    x.play();
+                }
             }
         }
 
-        function CloseModal() {
+        function CloseModalInOrderPage() {
             modal.style.display = "none";
 
             EmptyAndFocusOrderCodeElement();
         }
 
-        function ShowModal() {
+        function ShowModalInOrderPage() {
             modal.style.display = "block";
 
             EmptyAndFocusProductCodeElement();
@@ -988,6 +1076,11 @@
 
         // Khi cập nhật mapping, sản phẩm trong kho ta load lại
         async function RefreshOrder() {
+            if (currentOrder === null) {
+                CreateMustClickOkModal("Chưa chọn đơn hàng nào.", null);
+                return;
+            }
+
             const searchParams = new URLSearchParams();
             searchParams.append("commonOrder", JSON.stringify(currentOrder));
 
@@ -1008,14 +1101,14 @@
             ShowOneOrderOnModal(currentOrder);
         }
 
-        function InitializeModal() {
+        function InitializeModalInOrderPage() {
 
             // Get the <span> element that closes the modal
             let span = document.getElementsByClassName("order-close")[0];
 
             // When the user clicks on <span> (x), close the modal
             span.onclick = function () {
-                CloseModal(modal);
+                CloseModalInOrderPage(modal);
             }
 
             document.getElementsByClassName("sdfx09re789")[0].onclick = function () {
@@ -1027,20 +1120,29 @@
         // indexI = -1: Sản phẩm không có trong đơn hàng
         // indexJ = -1: Sản phẩm đã đủ số lượng
         function SearchProductCodeInOrder(code) {
+            if (DEBUG) {
+                console.log("SearchProductCodeInOrder CALL code: " + code);
+            }
+
             let indexI = -1;
             let indexJ = -1;
             for (let i = 0; i < currentOrder.listItemId.length; i++) {
                 for (let j = 0; j < currentOrder.listMapping[i].length; j++) {
-                    if (currentOrder.listMapping[i][j].product.code == code
-                        || currentOrder.listMapping[i][j].product.barcode == code) {
+                    if (currentOrder.listMapping[i][j].product.code === code
+                        || currentOrder.listMapping[i][j].product.barcode === code) {
                         indexI = i;
-                        // Thêm thuộc tính checked để đếm số lần đã sản phẩm đã được xuất kho
+                        if (DEBUG) {
+                            console.log("currentOrder.listMapping[i][j].product.code: " + currentOrder.listMapping[i][j].product.code);
+                            console.log("currentOrder.listMapping[i][j].product.barcode: " + currentOrder.listMapping[i][j].product.barcode);
+                        }
+                        // Thêm thuộc tính checked để đếm số lần sản phẩm đã được xuất kho
                         if (!currentOrder.listMapping[i][j].hasOwnProperty("checked")) {
                             currentOrder.listMapping[i][j].checked = 1;
                             indexJ = j;
                             break;
                         }
-                        else if (currentOrder.listMapping[i][j].checked < currentOrder.listQuantity[i] * currentOrder.listMapping[i][j].quantity) {
+                        else if (currentOrder.listMapping[i][j].checked <
+                            currentOrder.listQuantity[i] * currentOrder.listMapping[i][j].quantity) {
                             currentOrder.listMapping[i][j].checked++;
                             indexJ = j;
                             break;
@@ -1056,6 +1158,9 @@
             let ls = [];
             ls.push(indexI);
             ls.push(indexJ);
+            if (DEBUG) {
+                console.log("ls: " + JSON.stringify(ls));
+            }
             return ls;
         }
 
@@ -1102,63 +1207,91 @@
             }
             itemMappingContainer.getElementsByClassName("item-checked-enough")[0].checked = isFull;
 
-            EmptyAndFocusProductCodeElement();
+            // Nếu đơn đã đủ sản phẩm
+            // Tự động click "Đủ Sản Phẩm"
+            let isEnoughProduct = true;
+            let collection = document.getElementsByClassName("item-checked-enough")
+            if (DEBUG) {
+
+                console.log("collection: " + collection.length);
+            }
+            for (let i = 0; i < collection.length; i++) {
+                if (collection[i].checked === false) {
+                    isEnoughProduct = false;
+                    break;
+                }
+            }
+            if (isEnoughProduct) {
+                EnoughProduct();
+            }
+            else {
+                EmptyAndFocusProductCodeElement();
+            }
         }
 
         function EmptyAndFocusProductCodeElement() {
             let code = document.getElementsByName("product-code-isbn")[0];
             code.value = "";
-            code.focus();
+            code.focus({
+                preventScroll: true
+            });
         }
 
+        // Nếu sản phẩm trong kho đã được thêm đủ cho đơn, tự động click "Đủ Sản Phẩm"
+        // Nếu click checkbox bằng tay thì không tự động click "Đủ Sản Phẩm"
         async function AddProduct() {
             let code = document.getElementsByName("product-code-isbn")[0];
             if (!CheckValidProductCode(code.value) &&
                 !CheckValidProductISBN(code.value)) {
+                let x = document.getElementById("myMaSP-ISBNKhongDung");
+                x.play();
                 await CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
             let lsIndex = SearchProductCodeInOrder(code.value);
 
-            if (lsIndex[1] == -1) {
-                await CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusProductCodeElement(); });
-                return;
-            }
-
             if (lsIndex[0] == -1) {
+                let x = document.getElementById("mySPKhongCoTrongDonHang");
+                x.play();
                 await CreateMustClickOkModal("Sản phẩm không có trong đơn hàng.", function () { EmptyAndFocusProductCodeElement(); });
                 return;
             }
 
+            if (lsIndex[1] == -1) {
+                let x = document.getElementById("mySPDaDuSoLuong");
+                x.play();
+                await CreateMustClickOkModal("Sản phẩm đã đủ.", function () { EmptyAndFocusProductCodeElement(); });
+                return;
+            }
+
+            // Tự động click "Đủ Sản Phẩm"
             UpdateViewOfAddProduct(lsIndex);
         }
 
-        function UpdateOrderStatusToView(status) {
+        function UpdateOrderStatusToView() {
             let orderTable = document.getElementsByClassName("order-table")[0];
             let rows = orderTable.rows;
-            if (rows == null)
+            if (rows == null) {
                 return;
+            }
 
             let length = rows.length;
             for (let i = 1; i < length; i++) {
                 if (rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
                     rows[i].cells[1].innerHTML == currentOrder.code) {// Mã đơn hàng
-                    // Đã đóng
-                    if (currentOrder.orderStatusInWarehoue == packedOrderStatusInWarehouse)
-                        rows[i].cells[5].style.color = "initial";
-                    // Đã Hoàn
-                    else if (currentOrder.orderStatusInWarehoue == returnedOrderStatusInWarehouse)
-                        rows[i].cells[5].style.color = "red";
-
                     rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehoue;
+                    SetColorOfPackedReturned(rows[i].cells[5]);
+                    break;
                 }
             }
         }
         // Tồn kho không đủ nhưng vẫn thực hiện thành công. Làm cho tồn kho ở CSDL sau đó về số âm
         async function EnoughProduct() {
-            if (currentOrder == null)
+            if (currentOrder === null) {
+                CreateMustClickOkModal("Chưa chọn đơn hàng nào.", null);
                 return;
+            }
 
             // kiểm tra đơn hàng đã đủ sản phẩm
             let length = currentOrder.listMapping.length;
@@ -1207,9 +1340,13 @@
                 return;
             }
 
-            alert("Cập nhật thành công.");
+            //alert("Cập nhật thành công.");
+            let x = document.getElementById("myDonDuSP");
+            x.play();
+            await new Promise(res => setTimeout(res, 2000));
+
             // Ẩn modal
-            CloseModal();
+            CloseModalInOrderPage();
 
             currentOrder.orderStatusInWarehoue = packedOrderStatusInWarehouse;
 
@@ -1223,8 +1360,10 @@
                 return;
             }
 
-            if (currentOrder == null)
+            if (currentOrder === null) {
+                CreateMustClickOkModal("Chưa chọn đơn hàng nào.", null);
                 return;
+            }
 
             const searchParams = new URLSearchParams();
             searchParams.append("eType", currentOrder.ecommerceName);
@@ -1244,29 +1383,12 @@
 
             alert("Cập nhật thành công.");
             // Ẩn modal
-            CloseModal();
+            CloseModalInOrderPage();
 
             currentOrder.orderStatusInWarehoue = returnedOrderStatusInWarehouse;
 
             // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
-            UpdateOrderStatusToView(packedOrderStatusInWarehouse);
-        }
-
-        async function CopyImageFromTMDTToWarehouseProduct(ecommerceName, itemId, modelId, productId) {
-
-
-            const searchParams = new URLSearchParams();
-            searchParams.append("ecommerceName", ecommerceName);
-            searchParams.append("productId", productId);
-            searchParams.append("itemId", itemId);
-            searchParams.append("modelId", modelId);
-
-            let query = "/ProductECommerce/CopyImageFromTMDTToWarehouseProduct";
-
-            ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            RemoveCircleLoader();
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Chép ảnh thành công.", "Chép ảnh thất bại.")
+            UpdateOrderStatusToView();
         }
     </script>
 </body>

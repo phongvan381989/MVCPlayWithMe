@@ -372,7 +372,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
-        // Cập nhật số bảng output và products khi đóng đơn / hoàn đơn
+        // Cần cập nhật số bảng output và products khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
         public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut(MySqlConnection conn,
             CommonOrder commonOrder, ECommerceOrderStatus status,
@@ -395,42 +395,27 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     {
                         for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
                         {
-                            productId = commonOrder.listMapping[i][j].product.id;
                             quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            if(quantity == 0)
+                            {
+                                continue;
+                            }
+
+                            productId = commonOrder.listMapping[i][j].product.id;
                             cmd.Parameters[2].Value = productId;
-                            if(status == ECommerceOrderStatus.RETURNED)
-                            cmd.Parameters[3].Value = quantity * -1;
-                                else
-                            cmd.Parameters[3].Value = quantity;
+                            if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                            {
+                                cmd.Parameters[3].Value = quantity * -1;
+                            }
+                            else
+                            {
+                                cmd.Parameters[3].Value = quantity;
+                            }
 
                             cmd.ExecuteNonQuery();
                         }
                     }
                 }
-
-                //// Cập nhật số lượng sản phẩm trong kho
-                //{
-                //    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn);
-                //    cmd.CommandType = CommandType.StoredProcedure;
-                //    cmd.Parameters.AddWithValue("@inProductId", 0);
-                //    cmd.Parameters.AddWithValue("@inAdd", 0);
-                //    int productId = 0;
-                //    int quantity = 0;
-                //    for (int i = 0; i < commonOrder.listMapping.Count; i++)
-                //    {
-                //        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
-                //        {
-                //            productId = commonOrder.listMapping[i][j].product.id;
-                //            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
-                //            cmd.Parameters[0].Value = productId;
-                //            if (isReturnedOrder)
-                //                cmd.Parameters[1].Value = quantity;// Tăng số lượng tồn kho
-                //            else
-                //                cmd.Parameters[1].Value = quantity * -1;// Giảm số lượng tồn kho
-                //            cmd.ExecuteNonQuery();
-                //        }
-                //    }
-                //}
             }
             catch (Exception ex)
             {
@@ -441,11 +426,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         /// <summary>
-        /// Cập nhật số lượng sản phẩm trong kho khi đóng đơn/ hoàn đơn
+        /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         /// </summary>
         /// <param name="commonOrder"></param>
-        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
-        public MySqlResultState UpdateQuantityOfProductInOrder(CommonOrder commonOrder,
+        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
+        public MySqlResultState UpdateQuantityOfProductInWarehouseFromOrder(CommonOrder commonOrder,
             ECommerceOrderStatus status,
             EECommerceType eCommerceType)
         {
@@ -454,21 +439,55 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 conn.Open();
-
-                // Lưu vào bảng tbECommerceOrder
+                ECommerceOrderStatus oldStatus = ECommerceOrderStatus.NON_EXIST;
+                do
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
-                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
-                    cmd.Parameters.AddWithValue("@inTime", commonOrder.created_at);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    // Lấy trạng thái cuối cùng của đơn trong bảng tbECommerceOrder
+                    {
+                        MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                        MySqlDataReader rdr;
+                        rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            oldStatus = (ECommerceOrderStatus)MyMySql.GetInt32(rdr, "Status");
+                        }
+                        rdr.Close();
+                    }
 
-                    cmd.ExecuteNonQuery();
+                    if(status == oldStatus)
+                    {
+                        break;
+                    }
+
+                    if ((status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED) ||
+                        (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.RETURNED))
+                    {
+                        break;
+                    }
+
+                    // Lưu vào bảng tbECommerceOrder
+                    {
+                        MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                        cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+                        cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                        cmd.ExecuteNonQuery();
+                    }
+                    if (((status == ECommerceOrderStatus.BOOKED || status == ECommerceOrderStatus.PACKED)
+                        && oldStatus != ECommerceOrderStatus.BOOKED && oldStatus != ECommerceOrderStatus.PACKED) || // Cần xuất kho và chưa chưa xuất kho
+                        ((status == ECommerceOrderStatus.UNBOOKED || status == ECommerceOrderStatus.RETURNED)
+                        && oldStatus != ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.RETURNED)) // Cần nhập kho và chưa nhập kho
+                    {
+                        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, commonOrder, status, eCommerceType);
+                    }
                 }
-
-                resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, commonOrder, status, eCommerceType);
+                while (false);
             }
             catch (Exception ex)
             {
@@ -480,25 +499,41 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
 
-        /// <summary>
-        /// Trừ số lượng sản phẩm trong kho khi đóng đơn
-        /// </summary>
-        /// <param name="commonOrder"></param>
-        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
-        public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder,
-            ECommerceOrderStatus status,
-            EECommerceType eCommerceType)
-        {
-            return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
-        }
+        ///// <summary>
+        ///// Trừ số lượng sản phẩm trong kho khi đóng đơn
+        ///// </summary>
+        ///// <param name="commonOrder"></param>
+        ///// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
+        //public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder,
+        //    ECommerceOrderStatus status,
+        //    EECommerceType eCommerceType)
+        //{
+        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
+        //}
 
-        /// Cộng số lượng sản phẩm trong kho khi hoàn đơn
-        public MySqlResultState ReturnedOrder (CommonOrder commonOrder,
-            ECommerceOrderStatus status,
-            EECommerceType eCommerceType)
-        {
-            return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
-        }
+        ///// Cộng số lượng sản phẩm trong kho khi hoàn đơn
+        //public MySqlResultState ReturnedOrder (CommonOrder commonOrder,
+        //    ECommerceOrderStatus status,
+        //    EECommerceType eCommerceType)
+        //{
+        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
+        //}
+
+        //// Trừ số lượng sản phẩm trong kho khi giữ chỗ
+        //public MySqlResultState BookedOrder(CommonOrder commonOrder,
+        //    ECommerceOrderStatus status,
+        //    EECommerceType eCommerceType)
+        //{
+        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
+        //}
+
+        //// Cộng số lượng sản phẩm trong kho khi hủy giữ chỗ
+        //public MySqlResultState UnBookedOrder(CommonOrder commonOrder,
+        //    ECommerceOrderStatus status,
+        //    EECommerceType eCommerceType)
+        //{
+        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
+        //}
 
         public TikiConfigApp GetTikiConfigApp()
         {

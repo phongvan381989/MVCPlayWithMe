@@ -61,8 +61,11 @@ namespace MVCPlayWithMe.General
 
         public enum ECommerceOrderStatus
         {
-            PACKED,
-            RETURNED
+            PACKED, // Đơn thực tế được đóng
+            RETURNED,// Đơn thực tế hoàn về kho
+            BOOKED, // Đã trừ số lượng trong kho theo đơn phát sinh trên sàn, nhưng chưa PACKED
+            UNBOOKED,// Đã cộng số lượng trong kho khi đơn trên sàn hủy và trạng thái là BOOKED
+            NON_EXIST// Chưa tồn tại trong db
         }
 
         public static string eShopee = "SHOPEE";
@@ -72,8 +75,11 @@ namespace MVCPlayWithMe.General
 
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
-        public static string returnedOrder = "Đã Hoàn";
-        public static string packedOrder = "Đã Đóng";
+        public static string[] OrderStatusArray = { "Đã Đóng", "Đã Hoàn", "Giữ Chỗ", "Hủy Giữ Chỗ", "Chưa Tồn Tại" };
+        //public static string returnedOrder = "Đã Hoàn";
+        //public static string packedOrder = "Đã Đóng";
+        //public static string bookedOrder = "Giữ Chỗ";
+        //public static string unbookedOrder = "Hủy Giữ Chỗ";
 
         /// <summary>
         /// Đường dẫn thư mục chứa file ảnh
@@ -655,6 +661,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn(str);
                 MyLogger.GetInstance().Warn(ex.ToString());
                 rs = System.Int32.MinValue;
             }
@@ -833,6 +840,7 @@ namespace MVCPlayWithMe.General
             }
             catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn(str);
                 MyLogger.GetInstance().Warn(ex.ToString());
                 rs = System.Int64.MinValue;
             }

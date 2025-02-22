@@ -17,7 +17,8 @@ var eLazada = "LAZADA";
 var ePlayWithMe = "PLAYWITHME";
 var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
-var promoteMustClickOkModal; /* resolve-function reference */
+var bookedOrderStatusInWarehouse = "Giữ Chỗ";
+var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
 
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
@@ -571,11 +572,13 @@ function ConvertIntToPixel(value) {
 // /Media/Item/578/2.jpg =>/Media/Item/578_320/2.jpg
 function Get320VersionOfImageSrc(src) {
     // Nếu đã là phiên bản 320 bỏ qua
-    if (src.includes("_320"))
+    if (src.includes("_320")) {
         return src;
+    }
     // Nếu là NoImageThumbnail.png bỏ qua
-    if (src.includes("NoImageThumbnail"))
+    if (src.includes("NoImageThumbnail")) {
         return src;
+    }
 
     let filename = src.replace(/^.*[\\/]/, '');
 
@@ -617,22 +620,21 @@ function SetListPublishingTime() {
 //    </div>
 //</div>
 async function CreateMustClickOkModal(text, okFunction) {
-    let container = document.createElement("div");
-    container.className = "container-my-modal-must-click-ok";
-    container.innerHTML = "<div tabindex='0' class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><div class='div-modal-must-click-ok'>OK</div></div></div></div>";
-    container.getElementsByClassName("alert-popup-message")[0].innerHTML = text;
-    container.getElementsByClassName("div-modal-must-click-ok")[0].addEventListener("click", function () {
-        document.getElementsByClassName("container-my-modal-must-click-ok")[0].remove();
-        if (okFunction != null) {
-            okFunction();
-        }
-        promoteMustClickOkModal("");
+    return new Promise((resolve, reject) => {
+        let container = document.createElement("div");
+        container.className = "container-my-modal-must-click-ok";
+        container.innerHTML = "<div tabindex='0' class='my-modal-must-click-ok'><div class='modal-content-selected'><div class='alert-popup-message'></div><div><div class='div-modal-must-click-ok'>OK</div></div></div></div>";
+        container.getElementsByClassName("alert-popup-message")[0].innerHTML = text;
+        container.getElementsByClassName("div-modal-must-click-ok")[0].addEventListener("click", function () {
+            document.getElementsByClassName("container-my-modal-must-click-ok")[0].remove();
+            if (okFunction != null) {
+                okFunction();
+            }
+            resolve("");
+        });
+        document.getElementsByTagName("body")[0].appendChild(container);
+        document.getElementsByClassName("my-modal-must-click-ok")[0].focus();
     });
-    document.getElementsByTagName("body")[0].appendChild(container);
-    document.getElementsByClassName("my-modal-must-click-ok")[0].focus();
-    promoteMustClickOkModal = null;
-    let promise = new Promise((resolve) => { promoteMustClickOkModal = resolve });
-    await promise.then((result) => {});
 }
 
 // Lấy được obj từ danh sách obj thỏa obj.id = id
@@ -1030,4 +1032,19 @@ function ShowOpenEye(ele) {
     ele.previousElementSibling.previousElementSibling.type = "text";
 
     ele.style.display = "none";
+}
+
+async function CopyImageFromTMDTToWarehouseProduct(ecommerceName, itemId, modelId, productId) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("ecommerceName", ecommerceName);
+    searchParams.append("productId", productId);
+    searchParams.append("itemId", itemId);
+    searchParams.append("modelId", modelId);
+
+    let query = "/ProductECommerce/CopyImageFromTMDTToWarehouseProduct";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Chép ảnh thành công.", "Chép ảnh thất bại.")
 }

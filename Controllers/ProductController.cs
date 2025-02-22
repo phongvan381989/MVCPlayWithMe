@@ -1112,15 +1112,8 @@ namespace MVCPlayWithMe.Controllers
 
             sqler.UpdateStatusOfNeedUpdateQuantityConnectOut(listProductIdUpdateSuccess, conn);
         }
-
-        [HttpPost]
-        public string GetListNeedUpdateQuantityAndUpdate()
+        public List<CommonItem> GetListNeedUpdateQuantityAndUpdate_Core()
         {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(new List<CommonItem>());
-            }
-
             // CommonItem chưa có ảnh đại diện cho item, model ta lấy và lưu vào db
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<CommonItem> ls = new List<CommonItem>();
@@ -1144,7 +1137,19 @@ namespace MVCPlayWithMe.Controllers
             }
             conn.Close();
             // Lấy danh sách sản phẩm
-            return JsonConvert.SerializeObject(ls);
+            return ls;
+        }
+
+        [HttpPost]
+        public string GetListNeedUpdateQuantityAndUpdate()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<CommonItem>());
+            }
+
+            // Lấy danh sách sản phẩm
+            return JsonConvert.SerializeObject(GetListNeedUpdateQuantityAndUpdate_Core());
         }
 
         [HttpPost]

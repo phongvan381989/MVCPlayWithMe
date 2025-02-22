@@ -1012,7 +1012,7 @@ namespace MVCPlayWithMe.Models.Order
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void UpdateMappingToCommonOrder(CommonOrder commonOrder)
+        public void PlayWithMeGetMappingOfCommonOrder(CommonOrder commonOrder)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
@@ -1137,10 +1137,7 @@ namespace MVCPlayWithMe.Models.Order
                     rdr = cmd.ExecuteReader();
                     while (rdr.Read())
                     {
-                        if (MyMySql.GetInt32(rdr, "Status") == 0)
-                            status = Common.packedOrder;
-                        else
-                            status = Common.returnedOrder;
+                        status = Common.OrderStatusArray[MyMySql.GetInt32(rdr, "Status")];
                     }
                     order.orderStatusInWarehoue = status;
                     if (rdr != null)

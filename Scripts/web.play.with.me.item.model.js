@@ -113,15 +113,21 @@ function CreateModelTableMapping(container) {
     return tab;
 }
 
-// Constructor function for obj gồm: id, img, name
-function objRowTableMapping(id, imageSrc, name, quantity) {
+// Constructor function for obj gồm: id, img, name, thêm itemId, modelId
+//itemId, modelId phục vụ chép ảnh ở sàn SHOPEE, có giá trị 0 khi không phải SHOPEE
+function objRowTableMapping(id, imageSrc, name, quantity, itemId, modelId) {
     this.id = id;
     this.imageSrc = imageSrc;
     this.name = name;
     this.quantity = quantity;
+    this.itemId = itemId;
+    this.modelId = modelId;
 }
 
 function InsertObjToTable(table, obj) {
+    //if (DEBUG) {
+    //    console.log("InsertObjToTable call: " + JSON.stringify(obj));
+    //}
     let row = table.insertRow(-1);
 
     // Insert new cells (<td> elements)
@@ -146,7 +152,31 @@ function InsertObjToTable(table, obj) {
         let url = "/Product/UpdateDelete?id=" + obj.id.toString();
         window.open(url);
     }
+
     cell2.append(img);
+
+    // Nếu sản phẩm trong kho chưa có ảnh
+    // Ta hiển thị nút cho phép sao chép ảnh của sản phẩm trên sàn
+    if (obj.imageSrc.includes("NoImageThumbnail") && obj.itemId != 0 && obj.modelId != 0) {
+        let btn = document.createElement("BUTTON");
+        let btnContent = document.createTextNode("Chép ảnh");
+        btn.appendChild(btnContent);
+        btn.style.marginRight = "10px";
+        btn.style.marginLeft = "10px";
+
+        btn.ecommerceName = obj.name;
+        btn.itemId = obj.itemId;
+        btn.modelId = obj.modelId;
+        btn.proId = obj.id;
+        btn.title = "Sản phẩm trong kho đang không có ảnh nào. Sao chép ảnh sản phẩm trên sàn cho sản phẩm trong kho?"
+        btn.onclick = function (event) {
+            CopyImageFromTMDTToWarehouseProduct(event.target.ecommerceName,
+                event.target.itemId,
+                event.target.modelId,
+                event.target.proId);
+        }
+        cell2.append(btn);
+    }
 
     // Tên
     cell3.innerHTML = obj.name;
@@ -966,7 +996,7 @@ function AddRowToTableMapping(pro, quantity) {
     } else {
         src = srcNoImageThumbnail;
     }
-    let obj = new objRowTableMapping(pro.id, src, pro.name, quantity);
+    let obj = new objRowTableMapping(pro.id, src, pro.name, quantity, 0, 0);
 
     CheckObjExistAndInsert(table, obj);
 }
@@ -1098,7 +1128,9 @@ function SaveMappingToModel() {
             Number(rows[i].cells[0].innerHTML),
             rows[i].cells[1].children[0].src,
             rows[i].cells[2].innerHTML,
-            rows[i].cells[3].children[0].value
+            rows[i].cells[3].children[0].value,
+            0,
+            0
         );
         listObj.push(obj);
     }
@@ -1295,7 +1327,9 @@ async function ShowItemFromItemObject() {
                 Number(modelObj.mapping[j].product.id),
                 src,
                 modelObj.mapping[j].product.name,
-                Number(modelObj.mapping[j].quantity)
+                Number(modelObj.mapping[j].quantity),
+                0,
+                0
             );
             
             listObj.push(obj);

@@ -404,8 +404,36 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Lấy đơn hàng của web Play With Me
             lsCommonOrder.AddRange(ordersqler.GetListCommonOrder(fromTo));
 
-            // Cập nhật trạng thái đơn hàng: đã đóng / đã hoàn
+            // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
             ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+
+            return JsonConvert.SerializeObject(lsCommonOrder);
+        }
+
+        // Từ tên sàn, mã đơn lấy được thông tin CommonOrder
+        [HttpPost]
+        public string GetOrderFromOrderSN(string ecommerce, string sn)
+        {
+            List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(lsCommonOrder);
+            }
+            CommonOrder commonOrder = null;
+
+            if (ecommerce == Common.eShopee)
+            {
+                ShopeeOrderDetail shopeeOrderDetail = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
+
+                if (shopeeOrderDetail != null)
+                {
+                    commonOrder = new CommonOrder(shopeeOrderDetail);
+                    lsCommonOrder.Add(commonOrder);
+
+                    // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
+                    ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+                }
+            }
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -438,7 +466,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             else if (order.ecommerceName == ePlayWithMe)
             {
-                ordersqler.UpdateMappingToCommonOrder(order);
+                ordersqler.PlayWithMeGetMappingOfCommonOrder(order);
             }
 
             return JsonConvert.SerializeObject(order);
@@ -473,7 +501,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.PLAY_WITH_ME;
             }
-            resultState = tikiSqler.EnoughProductInOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
+            resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
 
             return JsonConvert.SerializeObject(resultState);
         }
@@ -508,7 +536,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.PLAY_WITH_ME;
             }
-            resultState = tikiSqler.ReturnedOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
+            resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
 
             return JsonConvert.SerializeObject(resultState);
         }

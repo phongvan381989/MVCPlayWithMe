@@ -267,7 +267,8 @@ namespace MVCPlayWithMe.Models
         //    MyMySql.AddOutParameters(paras);
         //}
 
-        // Thêm mới sản phẩm và trả về id sản phẩm thêm mới như outResult
+        // Thêm mới sản phẩm
+        // Thêm đồng thời vào bảng tbneedupdatequantity
         public MySqlResultState AddNewPro(
             Product pro
         )
@@ -940,6 +941,11 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inQuantity", 0);
                 foreach(var im in ls)
                 {
+                    if (im.quantity == 0)
+                    {
+                        continue;
+                    }
+
                     cmd.Parameters[2].Value = im.productId;
                     if (status == ECommerceOrderStatus.RETURNED)
                         cmd.Parameters[3].Value = im.quantity * -1;

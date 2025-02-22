@@ -405,14 +405,21 @@
             let rows = document.getElementById("myTable").rows;
             let length = rows.length;
             for (let i = 1; i < length; i++) {
-                let obj = new objImport(
-                    Number(rows[i].cells[0].innerHTML),
-                    Number(rows[i].cells[5].innerHTML),
-                    Number(rows[i].cells[6].childNodes[0].value),
-                    Number(rows[i].cells[3].innerHTML),
-                    Number(rows[i].cells[4].innerHTML)
-                );
-                listSaveInfo.push(obj);
+                if (rows[i].cells[6].childNodes[0].value != 0) {
+                    let obj = new objImport(
+                        Number(rows[i].cells[0].innerHTML),
+                        Number(rows[i].cells[5].innerHTML),
+                        rows[i].cells[6].childNodes[0].value,
+                        Number(rows[i].cells[3].innerHTML),
+                        Number(rows[i].cells[4].innerHTML)
+                    );
+                    listSaveInfo.push(obj);
+                }
+            }
+
+            if (listSaveInfo.length == 0) {
+                CreateMustClickOkModal("Danh sách trống, hoặc số lượng bằng 0.", null);
+                return;
             }
 
             const searchParams = new URLSearchParams();

@@ -244,6 +244,7 @@
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\DevController.cs" />
+    <Compile Include="Controllers\PushMechanismController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
     <Compile Include="Controllers\OpenPlatform\ProductECommerceController.cs" />
@@ -320,6 +321,8 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeConfig\ShopeeToken.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetTrackingNumberResponse.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetTrackingNumberResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\BaseNotification.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\OrderStatusPush.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailImageInfocs.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailInvoiceData.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetOrderDetailItem.cs" />
@@ -624,6 +627,7 @@
   <ItemGroup>
     <Folder Include="App_Data\" />
     <Folder Include="Media\" />
+    <Folder Include="Views\GetMechanism\" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config">
