@@ -21,7 +21,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification
         /// </summary>
         public int code { get; set; }
 
-
         /// <summary>
         /// Timestamp that indicates the message was sent.
         /// </summary>

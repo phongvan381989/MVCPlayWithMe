@@ -62,7 +62,9 @@
 
             <div class="config-max-width sfxvsg90svx">
                 <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
-                        title="Thêm sản phẩm vào danh sách nhập kho bên dưới" id="add-head-list">
+                        title="Lọc theo code_isbn hoặc tên hoặc tên combo và thêm sản phẩm vào danh sách nhập kho bên dưới.
+                        Nếu các tiêu chí lọc trống, thêm tất cả sản phẩm của nhà phát hành."
+                        id="add-head-list">
                     Thêm vào danh sách
                 </button>
                 <div style="display:none;" title="Nhập Từ File Excel. File excel có định dạng:
@@ -130,8 +132,12 @@
             let listTemp = [];
             let isExist = false;
             for (let i = 0; i < list.length; i++) {
+                if (list[i].comboId === -1) {// Sản phẩm không thuộc combo nào sẽ có comboId = -1; comboName = ""
+                    continue;
+                }
+
                 isExist = false;
-                for (let j= 0; j < listTemp.length; j++) {
+                for (let j = 0; j < listTemp.length; j++) {
                     if (listTemp[j].id === list[i].comboId) {
                         isExist = true;
                         break;
@@ -242,7 +248,11 @@
             let code = document.getElementById("code-or-isbn").value;
             let nameId = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
             let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value)
-
+            if (DEBUG) {
+                console.log("code: " + code);
+                console.log("nameId: " + nameId);
+                console.log("comboId: " + comboId);
+            }
             if (!isEmptyOrSpaces(code)) {
                 if (code.length != 13) {
                     CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
@@ -284,6 +294,12 @@
                         listInsertTemp.push(listBasicInfo[i]);
                     }
                 }
+            }
+            else {
+                listInsertTemp = listBasicInfo;
+            }
+            if (DEBUG) {
+                console.log("listInsertTemp.length: " + listInsertTemp.length);
             }
 
             if (listInsertTemp.length > 0) {

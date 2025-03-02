@@ -1012,14 +1012,11 @@ namespace MVCPlayWithMe.Models.Order
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void PlayWithMeGetMappingOfCommonOrder(CommonOrder commonOrder)
+        public void PlayWithMeGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbMapping_Get_From_ModelId", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inModelId", int.MinValue);
@@ -1061,8 +1058,6 @@ namespace MVCPlayWithMe.Models.Order
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-
-            conn.Close();
         }
 
         // Từ đơn hàng, cập nhật trạng thái sản phẩm trên sàn vì có sản phẩm trên sàn được bật bán

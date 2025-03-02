@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
@@ -144,6 +145,22 @@ namespace MVCPlayWithMe.Controllers
             }
 
             tikiSqler.UpdateSourceTotbTikiItem(lsCommonItem);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string TikiTestPullEvent()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            TikiPullEventService tikiPullEventService = new TikiPullEventService();
+            tikiPullEventService.DoWork();
+
             return JsonConvert.SerializeObject(result);
         }
 

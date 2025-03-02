@@ -319,14 +319,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void TikiGetMappingOfCommonOrder(CommonOrder commonOrder)
+        public void TikiGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_TikiId", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
@@ -368,8 +365,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-
-            conn.Close();
         }
 
         // Cần cập nhật số bảng output và products khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
@@ -425,49 +420,74 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
+        public TbEcommerceOrder GetLastestStatusOfECommerceOrder(string code,
+            EECommerceType eCommerceType,
+            MySqlConnection conn)
+        {
+            TbEcommerceOrder lastest = new TbEcommerceOrder();
+            lastest.status = (int)ECommerceOrderStatus.DONT_EXIST; // Giá trị mặc định
+            try
+            {
+                // Lấy trạng thái cuối cùng của đơn trong bảng tbECommerceOrder
+                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", code);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                MySqlDataReader rdr;
+                rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    lastest.status = MyMySql.GetInt32(rdr, "Status");
+                    lastest.updateTime= MyMySql.GetInt64(rdr, "UpdateTime");
+                    lastest.msgId = MyMySql.GetString(rdr, "MsgId");
+                }
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return lastest;
+        }
+
+        // Từ trạng thái mới, cũ của đơn hàng kiểm tra xem cần tiếp tục cập nhật vào db
+        // true: là tiếp tục ngược lại là false
+        public Boolean IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(
+            ECommerceOrderStatus status, ECommerceOrderStatus? oldStatus)
+        {
+            if (status == oldStatus)
+            {
+                return false;
+            }
+
+            if ((status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED) ||
+                (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.RETURNED))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
         /// <summary>
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
+        /// Insert thông tin trạng thái đơn hàng vào bảng tbECommerceOrder
+        /// Cập nhật số lượng ở tbProducts
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
-        public MySqlResultState UpdateQuantityOfProductInWarehouseFromOrder(CommonOrder commonOrder,
+        public MySqlResultState UpdateQuantityOfProductInWarehouseFromOrderConnectOut(CommonOrder commonOrder,
             ECommerceOrderStatus status,
-            EECommerceType eCommerceType)
+            ECommerceOrderStatus oldStatus, // Trạng thái mới nhất của đơn trong DB.
+            EECommerceType eCommerceType,
+            MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-                ECommerceOrderStatus oldStatus = ECommerceOrderStatus.NON_EXIST;
                 do
                 {
-                    // Lấy trạng thái cuối cùng của đơn trong bảng tbECommerceOrder
-                    {
-                        MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                        MySqlDataReader rdr;
-                        rdr = cmd.ExecuteReader();
-                        while (rdr.Read())
-                        {
-                            oldStatus = (ECommerceOrderStatus)MyMySql.GetInt32(rdr, "Status");
-                        }
-                        rdr.Close();
-                    }
-
-                    if(status == oldStatus)
-                    {
-                        break;
-                    }
-
-                    if ((status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED) ||
-                        (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.RETURNED))
-                    {
-                        break;
-                    }
-
                     // Lưu vào bảng tbECommerceOrder
                     {
                         MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
@@ -479,12 +499,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                         cmd.ExecuteNonQuery();
                     }
+                    // Kiểm tra xem cần thay đổi tồn kho không?
                     if (((status == ECommerceOrderStatus.BOOKED || status == ECommerceOrderStatus.PACKED)
                         && oldStatus != ECommerceOrderStatus.BOOKED && oldStatus != ECommerceOrderStatus.PACKED) || // Cần xuất kho và chưa chưa xuất kho
                         ((status == ECommerceOrderStatus.UNBOOKED || status == ECommerceOrderStatus.RETURNED)
-                        && oldStatus != ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.RETURNED)) // Cần nhập kho và chưa nhập kho
+                        && oldStatus != ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.RETURNED) || // Cần nhập kho và chưa nhập kho
+                        (status == ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.PACKED)) // Đơn hủy nhưng Đã Đóng (có thể đang trên đường vận chuyển) nên cần Hoàn Hàng để sản phẩm thực tế về kho
                     {
                         resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, commonOrder, status, eCommerceType);
+                        resultState.myAnything = 1; // Có thay đổi tồn kho.
+                    }
+                    else
+                    {
+                        resultState.myAnything = 0; // Không có thay đổi tồn kho.
                     }
                 }
                 while (false);
@@ -494,7 +521,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 Common.SetResultException(ex, resultState);
             }
 
-            conn.Close();
             return resultState;
         }
 
@@ -661,11 +687,50 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             conn.Close();
+        }
+
+        // Lấy ack_id của pull event cuối cùng
+        public string GetAckIdOfLastestPullConnectOut(MySqlConnection conn)
+        {
+            string ack_id = string.Empty;
+            MySqlCommand cmd = new MySqlCommand("SELECT `Ack_Id` FROM webplaywithme.tbtikiqueue WHERE `Id` = 1; ", conn);
+            cmd.CommandType = CommandType.Text;
+            MySqlDataReader rdr;
+            try
+            {
+                rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    ack_id = MyMySql.GetString(rdr, "Ack_Id");
+                }
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return ack_id;
+        }
+
+        // Cập nhật ack_id mới nhất của pull event
+        public void UpdateAckIdOfLastestPullConnectOut(string ack_id, MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiqueue SET `Ack_Id` = @inAck_Id  WHERE `Id` = 1 ", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inAck_Id", ack_id);
+            try
+            {
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
     }
 }

@@ -55,6 +55,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
                             //Format: column|direction Columns: created_at, updated_at
                             //Directions: asc, desc
         }
+
         static public string[] ArrayStringQueryParameters =
            {
             "page",
@@ -166,6 +167,47 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
             if (!isOK)
                 return null;
             return lsOrder;
+        }
+
+        static public MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder TikiGetOrderFromCode(string code)
+        {
+            if (CommonTikiAPI.tikiConfigApp == null)
+            {
+                // Thử lấy
+                TikiMySql tikiMySql = new TikiMySql();
+                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+                if (CommonTikiAPI.tikiConfigApp == null)
+                    return null;
+            }
+
+            MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder order = null;
+            //GET /integration/v2/orders/510916693
+            //GET https://api.tiki.vn/integration/v2/orders/510916693
+
+            string http = TikiConstValues.cstrOrdersHTTPAddress + "/" + code;
+
+            IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+            try
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+
+                    string json = response.Content;
+                    JsonSerializerSettings settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    };
+                    order = JsonConvert.DeserializeObject<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>(json, settings);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                order = null;
+            }
+
+            return order;
         }
 
         /// <summary>

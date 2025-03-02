@@ -11,6 +11,7 @@ using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -110,9 +111,22 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Lấy toàn bộ sản phẩm Shopee mất thời gian, giai đoạn test chỉ lấy 1 page ~ 50 sản phẩm
             lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
             //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
 
-            shopeeSqler.ShopeeGetListCommonItemFromListShopeeItem(lsShopeeItem, lsCommonItem);
+            conn.Open();
 
+            try
+            {
+                shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsShopeeItem, lsCommonItem, conn);
+
+                // Cập nhật trạng thái item vào DB
+                shopeeSqler.ShopeeUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
             return lsCommonItem;
         }
 
@@ -133,8 +147,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return null;
 
             CommonItem item = new CommonItem(pro);
-            shopeeSqler.ShopeeInsertIfDontExist(item);
-            shopeeSqler.ShopeeGetItemFromId(id, item);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+
+            conn.Open();
+            try
+            {
+                // Không tồn tại trong DB ta insert
+                shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
+
+                shopeeSqler.ShopeeGetItemFromIdConnectOut(id, item, conn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
             return item;
         }
 
@@ -428,12 +455,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 if (shopeeOrderDetail != null)
                 {
                     commonOrder = new CommonOrder(shopeeOrderDetail);
-                    lsCommonOrder.Add(commonOrder);
-
-                    // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
-                    ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
                 }
             }
+            else if (ecommerce == Common.eTiki)
+            {
+                TikiOrder tikiOrder = TikiGetListOrders.TikiGetOrderFromCode(sn);
+                if (tikiOrder != null)
+                {
+                    commonOrder = new CommonOrder(tikiOrder);
+                }
+            }
+
+            lsCommonOrder.Add(commonOrder);
+
+            // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
+            ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -446,29 +482,37 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string ReloadOneOrder(string commonOrder)
         {
             CommonOrder order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
-
-            // Nếu sản phẩm trên shopee, tiki chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
-            // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
-
-            // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
-            // nhưng trạng thái đang tắt (Status != 0) ta cần cập nhật lại
-            ordersqler.UpdateStatusNormalOfTMDTItem(order);
-
-            order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
-
-            if (order.ecommerceName == eTiki)
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+            try
             {
-                tikiSqler.TikiGetMappingOfCommonOrder(order);
-            }
-            else if (order.ecommerceName == eShopee)
-            {
-                shopeeSqler.ShopeeGetMappingOfCommonOrder(order);
-            }
-            else if (order.ecommerceName == ePlayWithMe)
-            {
-                ordersqler.PlayWithMeGetMappingOfCommonOrder(order);
-            }
 
+                // Nếu sản phẩm trên shopee, tiki chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+                // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
+
+                // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+                // nhưng trạng thái đang tắt (Status != 0) ta cần cập nhật lại
+                ordersqler.UpdateStatusNormalOfTMDTItem(order);
+
+                order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
+
+                if (order.ecommerceName == eTiki)
+                {
+                    tikiSqler.TikiGetMappingOfCommonOrderConnectOut(order, conn);
+                }
+                else if (order.ecommerceName == eShopee)
+                {
+                    shopeeSqler.ShopeeGetMappingOfCommonOrderConnectOut(order, conn);
+                }
+                else if (order.ecommerceName == ePlayWithMe)
+                {
+                    ordersqler.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
             return JsonConvert.SerializeObject(order);
         }
 
@@ -501,8 +545,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.PLAY_WITH_ME;
             }
-            resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrder(order,  ECommerceOrderStatus.PACKED, eECommerceType);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
 
+            TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                order.code, eECommerceType, conn);
+            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+
+            ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
+            if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            {
+                resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                order, status, oldStatus, eECommerceType, conn);
+            }
+            
+            conn.Close();
             return JsonConvert.SerializeObject(resultState);
         }
 
@@ -536,8 +593,20 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 eECommerceType = EECommerceType.PLAY_WITH_ME;
             }
-            resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrder(order, ECommerceOrderStatus.RETURNED, eECommerceType);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
 
+            TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                order.code, eECommerceType, conn);
+            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+
+            ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
+            if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            {
+                resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                order, status, oldStatus, eECommerceType, conn);
+            }
+            conn.Close();
             return JsonConvert.SerializeObject(resultState);
         }
 

@@ -65,7 +65,7 @@ namespace MVCPlayWithMe.General
             RETURNED,// Đơn thực tế hoàn về kho
             BOOKED, // Đã trừ số lượng trong kho theo đơn phát sinh trên sàn, nhưng chưa PACKED
             UNBOOKED,// Đã cộng số lượng trong kho khi đơn trên sàn hủy và trạng thái là BOOKED
-            NON_EXIST// Chưa tồn tại trong db
+            DONT_EXIST// Chưa tồn tại trong DB
         }
 
         public static string eShopee = "SHOPEE";
@@ -91,7 +91,6 @@ namespace MVCPlayWithMe.General
         public static string absoluteItemMediaFolderPath;
 
         public static string MediaFolderPath;
-        public static string ThongTinBaoMatPath;
         public static string TemporaryImageShopeeMediaFolderPath;
         public static string TemporaryImageTikiMediaFolderPath;
         public static string ConvertIntToVNDFormat(int money)

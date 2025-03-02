@@ -75,6 +75,11 @@
                     title="Lấy url ảnh đại diện của item tiki cập nhật vào db đối với item chưa có image url.">
                 Lấy URL ảnh Item lưu vào db
             </button>
+
+            <button type="button" onclick="TikiTestPullEvent()"
+                    title="Test chức năng lấy event đơn hàng từ queue đã đang ký.">
+                Test lấy event đơn hàng
+            </button>
         </div>
 
         <div class="xvsfx02xv">
@@ -135,6 +140,17 @@
         async function TikiSaveImageSourceOfItemAndModel() {
             const searchParams = new URLSearchParams();
             let query = "/Dev/TikiSaveImageSourceOfItemAndModel";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Lấy ảnh thành công", "Lấy ảnh có lỗi");
+        }
+
+        // TikiTestPullEvent
+        async function TikiTestPullEvent() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/TikiTestPullEvent";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

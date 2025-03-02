@@ -89,6 +89,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
                 response = client.Execute(request);
                 MyLogger.InfoRestLog(client, request, response);
             }
+
             return response;
         }
 
@@ -97,6 +98,17 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             RestClient client = new RestClient(http);
             client.Timeout = -1;
             RestRequest request = new RestRequest(Method.GET);
+            IRestResponse response = ExcuteRequest(client, request);
+            return response;
+        }
+
+        static public IRestResponse PostExcuteRequest(string http, string body)
+        {
+            RestClient client = new RestClient(http);
+            client.Timeout = -1;
+            RestRequest request = new RestRequest(Method.POST);
+            request.AddJsonBody(body);
+
             IRestResponse response = ExcuteRequest(client, request);
             return response;
         }
