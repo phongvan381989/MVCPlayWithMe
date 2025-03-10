@@ -439,7 +439,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     lastest.status = MyMySql.GetInt32(rdr, "Status");
                     lastest.updateTime= MyMySql.GetInt64(rdr, "UpdateTime");
-                    lastest.msgId = MyMySql.GetString(rdr, "MsgId");
                 }
                 rdr.Close();
             }
@@ -477,8 +476,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
-        public MySqlResultState UpdateQuantityOfProductInWarehouseFromOrderConnectOut(CommonOrder commonOrder,
+        public MySqlResultState UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+            CommonOrder commonOrder,
             ECommerceOrderStatus status,
+            long update_time, // Thời gian event được sàn ghi nhận
             ECommerceOrderStatus oldStatus, // Trạng thái mới nhất của đơn trong DB.
             EECommerceType eCommerceType,
             MySqlConnection conn)

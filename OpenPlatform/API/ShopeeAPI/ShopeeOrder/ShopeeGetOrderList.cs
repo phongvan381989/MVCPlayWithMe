@@ -40,7 +40,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 catch (Exception ex)
                 {
                     MyLogger.GetInstance().Warn(ex.Message);
-                    return null;
+                    objResponse = null;
                 }
             }
             return objResponse;
@@ -86,7 +86,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
 
             string strCursor = "";
             List<ShopeeGetOrderListBaseInfo> rs = new List<ShopeeGetOrderListBaseInfo>();
-            Boolean isOK = true;
             while (true)
             {
                 ls.RemoveAt(ls.Count() - 1);
@@ -95,24 +94,27 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 ShopeeGetOrderListResponseHTTP orderListTemp = ShopeeOrderGetOrderListBase(ls);
                 if (orderListTemp == null)
                 {
-                    isOK = false;
                     break;
                 }
 
                 if (orderListTemp.response == null ||
-                    orderListTemp.response.order_list == null ||
-                    orderListTemp.response.order_list.Count() == 0)
+                    orderListTemp.response.order_list == null)
                 {
-                    isOK = false;
                     break;
                 }
+
+                if (orderListTemp.response.order_list.Count() == 0)
+                {
+                    break;
+                }
+
                 rs.AddRange(orderListTemp.response.order_list);
                 if (!orderListTemp.response.more)
+                {
                     break;
+                }
                 strCursor = orderListTemp.response.next_cursor;
             }
-            if (!isOK)
-                return null;
             return rs;
         }
 
@@ -129,7 +131,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
             long ltime_to = Common.GetTimestamp(time_to);
             long ltime_toTemp;
             List<ShopeeGetOrderListBaseInfo> rs = new List<ShopeeGetOrderListBaseInfo>();
-            Boolean isOK = true;
             // Ta lấy trong khoảng thời gian là 14 ngày. Khoảng max là 15 ngày
             long rangeTime = 14 * 24 * 60 * 60;
             while (ltime_from < ltime_to)
@@ -138,17 +139,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 if (ltime_toTemp > ltime_to)
                     ltime_toTemp = ltime_to;
                 List<ShopeeGetOrderListBaseInfo> rsTemp = ShopeeOrderGetOrderListBaseAllWithSmallTimeRange(ltime_from, ltime_toTemp, status);
-                if (rsTemp == null)
-                {
-                    isOK = false;
-                    break;
-                }
                 ltime_from = ltime_from + rangeTime;
                 rs.AddRange(rsTemp);
             }
-            if (!isOK)
-                return null;
-
             return rs;
         }
 

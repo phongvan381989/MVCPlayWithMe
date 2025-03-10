@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
+using static MVCPlayWithMe.OpenPlatform.Model.CommonOpenPlatform;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
 
 namespace MVCPlayWithMe.Controllers.OpenPlatform
@@ -96,6 +97,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 int iid = Common.ConvertStringToInt32(id);
                 if (iid != Int32.MinValue)
                 {
+                    MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
                     commonItem = TikiGetProductFromId(iid);
                 }
             }
@@ -387,19 +389,20 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         /// 
         /// </summary>
         /// <param name="fromTo"> 0: 1 ngày, 1: 7 ngày, 2: 30 ngày</param>
+        /// <param name="orderStatus"> 0: tất cả, 1: Cần gửi hàng, 2: Hủy</param>
         /// <returns></returns>
         [HttpPost]
-        public string GetListOrder(int fromTo)
+        public string GetListOrder(int fromTo, int orderStatus)
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(lsCommonOrder);
             }
-
+            CommonOrderStatus eOrderStatus = (CommonOrderStatus)orderStatus;
             // Lấy đơn hàng tiki
             List<TikiOrder> lsOrderTikiFullInfo;
-            lsOrderTikiFullInfo = TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo);
+            lsOrderTikiFullInfo = TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo, eOrderStatus);
             if(lsOrderTikiFullInfo != null)
             {
                 foreach(var order in lsOrderTikiFullInfo)
@@ -419,13 +422,39 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 time_from = time_to.AddDays(-7);
             else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
                 time_from = time_to.AddDays(-30);
-            lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, new ShopeeOrderStatus());
-            if (lsOrderShopeeFullInfo != null)
+
+            ShopeeOrderStatus shopeeOrderStatus = new ShopeeOrderStatus(); // Lấy tất cả trạng thái
+
+            if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
             {
-                foreach (var order in lsOrderShopeeFullInfo)
-                {
-                    lsCommonOrder.Add(new CommonOrder(order));
-                }
+                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.PROCESSED;
+            }
+            else if (eOrderStatus == CommonOrderStatus.CANCELLED)
+            {
+                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED;
+            }
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+
+            lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, shopeeOrderStatus, conn);
+
+            if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+            {
+                // Ta lấy thêm đơn có trạng thái READY_TO_SHIP
+                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.READY_TO_SHIP;
+                List<ShopeeOrderDetail> lsOrderShopeeTemp = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, shopeeOrderStatus, conn);
+                lsOrderShopeeFullInfo.AddRange(lsOrderShopeeTemp);
+
+                // Ta lấy thêm đơn có trạng thái UNPAID
+                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.UNPAID;
+                lsOrderShopeeTemp = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, shopeeOrderStatus, conn);
+                lsOrderShopeeFullInfo.AddRange(lsOrderShopeeTemp);
+            }
+
+            foreach (var order in lsOrderShopeeFullInfo)
+            {
+                lsCommonOrder.Add(new CommonOrder(order));
             }
 
             // Lấy đơn hàng của web Play With Me
@@ -433,13 +462,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
             ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
-
+            conn.Close();
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
 
-        // Từ tên sàn, mã đơn lấy được thông tin CommonOrder
+        // Từ tên sàn, mã đơn hoặc mã vận đơn (với sàn SHOPEE) lấy được thông tin CommonOrder
         [HttpPost]
-        public string GetOrderFromOrderSN(string ecommerce, string sn)
+        public string GetOrderFromOrderSN_TrackingNumber(string ecommerce, string sn_trackingNumber)
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
             if (AuthentAdministrator() == null)
@@ -450,7 +479,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             if (ecommerce == Common.eShopee)
             {
-                ShopeeOrderDetail shopeeOrderDetail = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
+                // Lấy mã đơn hàng từ mã đơn hàng hoặc mã vận đơn
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                string sn = shopeeSqler.GetSNFromSN_TrackingNumberConnectOut(sn_trackingNumber, conn);
+               conn.Close();
+
+                ShopeeOrderDetail shopeeOrderDetail =
+                    ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
 
                 if (shopeeOrderDetail != null)
                 {
@@ -459,7 +495,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             else if (ecommerce == Common.eTiki)
             {
-                TikiOrder tikiOrder = TikiGetListOrders.TikiGetOrderFromCode(sn);
+                TikiOrder tikiOrder = TikiGetListOrders.TikiGetOrderFromCode(sn_trackingNumber);
                 if (tikiOrder != null)
                 {
                     commonOrder = new CommonOrder(tikiOrder);
@@ -556,7 +592,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
             {
                 resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                order, status, oldStatus, eECommerceType, conn);
+                order, status, 0, oldStatus, eECommerceType, conn);
             }
             
             conn.Close();
@@ -604,7 +640,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
             {
                 resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                order, status, oldStatus, eECommerceType, conn);
+                order, status, 0, oldStatus, eECommerceType, conn);
             }
             conn.Close();
             return JsonConvert.SerializeObject(resultState);

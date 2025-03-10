@@ -192,5 +192,18 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         /// Shopee charges the reverse shipping fee for the returned order.The value of this field will be non-negative.
         /// </summary>
         public float reverse_shipping_fee { get; set; }
+
+        // Đơn ở trạng thái: UNPAID, READY_TO_SHIP => chưa được sàn sinh mã đơn.
+        // Nhà bán chưa xác nhận đơn, khách hủy (trạng thái sẽ là CANCELLED) => chưa được sinh mã đơn
+        // Ngược lại đã được sinh mã đơn.
+        public Boolean WasBornTrackingNumber()
+        {
+            if(order_status != "UNPAID" && order_status != "READY_TO_SHIP" && order_status != "CANCELLED")
+            {
+                return true;
+            }
+
+            return false;
+        }
     }
 }

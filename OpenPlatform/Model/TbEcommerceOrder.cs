@@ -50,10 +50,5 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Timestamp xảy ra thay đổi trạng thái đơn hàng sàn TMDT ghi nhận.
         /// </summary>
         public long updateTime { get; set; }
-
-        /// <summary>
-        /// Id duy nhất định danh tin nhắn.
-        /// </summary>
-        public string msgId { get; set; }
     }
 }

@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeConfig;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MySql.Data.MySqlClient;
 using System;
@@ -941,6 +942,94 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             conn.Close();
+        }
+
+        public void UpdateTrackingNumberToListConnectOut(
+            List<ShopeeOrderDetail> rs,
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand(
+                "SELECT `ShipCode` FROM webplaywithme.tbecommerceorder WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = 2 LIMIT 1", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", "");
+            MySqlDataReader rdr = null;
+
+            // Đơn ở trạng thái: UNPAID, READY_TO_SHIP => chưa được sàn sinh mã vận chuyển.
+            // Nhà bán chưa xác nhận đơn, khách hủy (trạng thái sẽ là CANCELLED) => chưa được sinh mã vận chuyển
+            // Ngược lại đã được sinh mã đơn.
+            // Ở trạng thái PROCESSED: Nhà bán đã xác nhận nhưng có thể chưa được đóng nên chưa có mã vận chuyển trong db
+            // Nhiều khi đưa shipper đơn nhưng vẫn chưa cập nhật đã đóng => trạng thái SHIPPED, COMPLETE mà vẫn chưa có mã vận chuyển
+            foreach (var e in rs)
+            {
+                if (e.order_status != "UNPAID" && e.order_status != "READY_TO_SHIP")
+                {
+                    cmd.Parameters[0].Value = e.order_sn;
+                    rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        e.shipCode = MyMySql.GetString(rdr, "ShipCode");
+                    }
+
+                    rdr.Close();
+                }
+            }
+        }
+
+        // Cập nhật mã vận chuyển theo mã đơn nếu mã đơn tồn tại trong db
+        public void UpdateUpdateTrackingNumberToDBConnectOut(
+            string orderSN,
+            string shipCode,
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand(
+                "UPDATE webplaywithme.tbecommerceorder SET `ShipCode` = @inShipCode WHERE `Code` = @inCode AND (`ShipCode` IS NULL OR `ShipCode` = '') AND `ECommmerce` = 2", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", orderSN);
+            cmd.Parameters.AddWithValue("@inShipCode", shipCode);
+            cmd.ExecuteNonQuery();
+        }
+
+        public string GetSNFromSN_TrackingNumberConnectOut(
+            string sn_trackingNumber,
+            MySqlConnection conn)
+        {
+            string sn = string.Empty;
+            MySqlCommand cmd = new MySqlCommand(
+                "SELECT `Code` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = 2 LIMIT 1", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
+            cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
+            MySqlDataReader rdr = null;
+
+            rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                sn = MyMySql.GetString(rdr, "Code");
+            }
+            rdr.Close();
+
+            return sn;
+        }
+
+        public string GetTrackingNumberFromSNConnectOut(
+            string sn,
+            MySqlConnection conn)
+        {
+            string trackingNumber = string.Empty;
+            MySqlCommand cmd = new MySqlCommand(
+                "SELECT `ShipCode` FROM webplaywithme.tbecommerceorder WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = 2 LIMIT 1", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", sn);
+            MySqlDataReader rdr = null;
+
+            rdr = cmd.ExecuteReader();
+            while (rdr.Read())
+            {
+                trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+            }
+            rdr.Close();
+
+            return trackingNumber;
         }
     }
 }

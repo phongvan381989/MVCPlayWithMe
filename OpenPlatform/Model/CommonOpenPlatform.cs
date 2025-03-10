@@ -39,5 +39,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             return (int)ShopeeProductStatus.BANNED;
         }
+
+        public enum CommonOrderStatus
+        {
+            ALL, // Tất cả trạng thái đơn hàng
+            READY_TO_SHIP_PROCESSED, // Đơn hàng nhà bán cần gửi cho bên vận chuyển
+            CANCELLED // Đơn đã h
+        }
     }
 }

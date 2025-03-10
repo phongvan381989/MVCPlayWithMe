@@ -19,7 +19,8 @@ namespace MVCPlayWithMe
 {
     public class MvcApplication : System.Web.HttpApplication
     {
-        static private Timer _timer;
+        private static Thread _backgroundThread; // Thread chạy nền
+        private static bool _isRunning;          // Cờ kiểm soát vòng lặp của thread
 
         protected void Application_Start()
         {
@@ -53,23 +54,48 @@ namespace MVCPlayWithMe
             ShopeeMySql shopeeMySql = new ShopeeMySql();
             CommonShopeeAPI.shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
 
-            _timer = new System.Threading.Timer(DoWork, null, TimeSpan.Zero, TimeSpan.FromMinutes(20));
+            // Khởi tạo cờ kiểm soát
+            _isRunning = true;
+
+            // Tạo thread sống lâu dài
+            _backgroundThread = new Thread(() =>
+            {
+                // Vòng lặp chính của thread
+                while (_isRunning)
+                {
+                    try
+                    {
+                        // Công việc chạy nền
+                        //MyLogger.GetInstance().Info($"Background thread running at {DateTime.Now}");
+                        TikiPullEventService tikiPullEventService = new TikiPullEventService();
+                        tikiPullEventService.DoWork();
+                        Thread.Sleep(20 * 60 * 1000); // Tạm dừng 20 phút trước lần lặp tiếp theo
+                    }
+                    catch (Exception ex)
+                    {
+                        MyLogger.GetInstance().Info($"Error in background thread: {ex.Message}");
+                    }
+                }
+            });
+
+            // Đặt thread thành background thread (không chặn ứng dụng dừng)
+            _backgroundThread.IsBackground = true;
+            _backgroundThread.Start();
         }
 
         protected void Application_End()
         {
             // Hàm được gọi khi ứng dụng dừng
             MyLogger.GetInstance().Info("Application is stopping...");
-            // Dừng và hủy Timer
-            _timer?.Change(Timeout.Infinite, 0);
-            _timer?.Dispose();
+
+            // Đặt cờ kiểm soát để dừng vòng lặp
+            _isRunning = false;
+
+            // Chờ thread hoàn tất công việc
+            _backgroundThread?.Join();
+
+            MyLogger.GetInstance().Info("Background thread stopped.");
         }
 
-        private void DoWork(object state)
-        {
-            MyLogger.GetInstance().Info($"Function of Timer executed at {DateTime.Now}");
-            TikiPullEventService tikiPullEventService = new TikiPullEventService();
-            tikiPullEventService.DoWork();
-        }
     }
 }

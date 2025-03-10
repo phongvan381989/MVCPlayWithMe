@@ -52,7 +52,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     tikiSqler.TikiGetMappingOfCommonOrderConnectOut(commonOrder, conn);
 
                     MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                        commonOrder, status, oldStatus,
+                        commonOrder, status, tikiEvent.created_at, oldStatus,
                         EECommerceType.TIKI, conn);
 
                     if (resultState != null && resultState.myAnything == 1)

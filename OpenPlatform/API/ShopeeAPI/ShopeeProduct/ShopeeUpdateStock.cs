@@ -94,18 +94,19 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             return rs;
         }
 
-        /// <summary>
-        /// Từ đơn hàng mới trong khoảng thời gian, ta lấy được số lượng hàng cần xuất
-        /// <param name="time_from"></param>
-        /// <param name="time_to"></param>
-        /// <returns></returns>
-        static public Dictionary<string, int> ShopeeGetProductQuantityPairToTake(DateTime time_from, DateTime time_to)
-        {
-            List<ShopeeOrderDetail> lsOrderShopeeFullInfo;
-            lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, new ShopeeOrderStatus(ShopeeOrderStatus.EnumShopeeOrderStatus.READY_TO_SHIP));
-            Dictionary<string, int> dic = ShopeeGetOrderDetail.ShopeeGetDictionaryOfProductQuantityFromListDetailOrder(lsOrderShopeeFullInfo);
+        ///// <summary>
+        ///// Từ đơn hàng mới trong khoảng thời gian, ta lấy được số lượng hàng cần xuất
+        ///// <param name="time_from"></param>
+        ///// <param name="time_to"></param>
+        ///// <returns></returns>
+        //static public Dictionary<string, int> ShopeeGetProductQuantityPairToTake(DateTime time_from, DateTime time_to)
+        //{
+        //    List<ShopeeOrderDetail> lsOrderShopeeFullInfo;
+        //    lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to,
+        //        new ShopeeOrderStatus(ShopeeOrderStatus.EnumShopeeOrderStatus.READY_TO_SHIP));
+        //    Dictionary<string, int> dic = ShopeeGetOrderDetail.ShopeeGetDictionaryOfProductQuantityFromListDetailOrder(lsOrderShopeeFullInfo);
 
-            return dic;
-        }
+        //    return dic;
+        //}
     }
 }

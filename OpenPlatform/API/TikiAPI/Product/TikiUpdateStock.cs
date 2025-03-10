@@ -11,6 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
+using static MVCPlayWithMe.OpenPlatform.Model.CommonOpenPlatform;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
@@ -172,11 +173,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="time_from"></param>
         /// <param name="time_to"></param>
         /// <returns></returns>
-        static public Dictionary<string, int> TikiGetProductQuantityPairToTake(DateTime time_from, DateTime time_to)
+        static public Dictionary<string, int> TikiGetProductQuantityPairToTake(DateTime time_from, DateTime time_to, CommonOrderStatus orderStatus)
         {
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrderTikiFullInfo;
             lsOrderTikiFullInfo = MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order.TikiGetListOrders.GetListOrderAShop(
-                MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate.EnumOrderItemFilterByDate.last7days);
+                MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate.EnumOrderItemFilterByDate.last7days,
+                orderStatus);
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsTem = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();
             foreach(var e in lsOrderTikiFullInfo)
             {

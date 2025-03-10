@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification;
@@ -48,31 +49,42 @@ namespace MVCPlayWithMe.Controllers
             {
                 return;
             }
-
+            ShopeeMySql shopeeMySql = new ShopeeMySql();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             conn.Open();
             TikiMySql tikiSqler = new TikiMySql();
 
-            TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+            TbEcommerceOrder tbEcommerceOrderLastest = tikiSqler.GetLastestStatusOfECommerceOrder(
                 orderStatusPush.ordersn,
                 EECommerceType.SHOPEE, conn);
 
-            // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
-            // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
-            if (orderStatusPush.update_time < tbEcommerceOrder.updateTime)
-            {
-                return;
-            }
-
-            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
 
             ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
              if (orderStatusPush.status == "CANCELLED")
             {
                 status = ECommerceOrderStatus.UNBOOKED;
+                // Khách hủy và đã có mã vận đơn nhưng chưa được lưu db do chưa xác nhận đã đóng,
+                // ta sẽ lưu vào db
+
+                string trackingNumber = shopeeMySql.GetTrackingNumberFromSNConnectOut(
+                    orderStatusPush.ordersn, conn);
+
+                if (string.IsNullOrEmpty(trackingNumber))
+                {
+                    trackingNumber = ShopeeGetTrackingNumber.ShopeeGetShipCode(orderStatusPush.ordersn, string.Empty);
+                    shopeeMySql.UpdateUpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
+                }
             }
 
             if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            {
+                return;
+            }
+
+            // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
+            // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
+            if (orderStatusPush.update_time < tbEcommerceOrderLastest.updateTime)
             {
                 return;
             }
@@ -86,11 +98,10 @@ namespace MVCPlayWithMe.Controllers
                 if (shopeeOrderDetail != null)
                 {
                     CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
-                    ShopeeMySql shopeeMySql = new ShopeeMySql();
                     shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOut(commonOrder, conn);
 
                     MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                        commonOrder, status, oldStatus,
+                        commonOrder, status, orderStatusPush.update_time, oldStatus,
                         EECommerceType.SHOPEE, conn);
 
                     if (resultState != null && resultState.myAnything == 1)
@@ -136,6 +147,7 @@ namespace MVCPlayWithMe.Controllers
                 int code = Common.ConvertStringToInt32(obj["code"].ToString());
                 if (code == System.Int32.MinValue)
                 {
+                    MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
                     return;
                 }
                 // order_status_push: Lấy thay đổi trạng thái đơn hàng

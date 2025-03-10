@@ -10,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
 using MVCPlayWithMe.OpenPlatform.Model;
+using static MVCPlayWithMe.OpenPlatform.Model.CommonOpenPlatform;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 {
@@ -81,7 +82,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
         /// </summary>
         /// <param name="configApp">shop</param>
         /// <returns>Danh sách đơn hàng. Trả null không lấy thành công</returns>
-        static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(EnumOrderItemFilterByDate interval)
+        static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(
+            EnumOrderItemFilterByDate interval, CommonOrderStatus orderStatus)
         {
             if (CommonTikiAPI.tikiConfigApp == null)
             {
@@ -124,6 +126,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
                         listValuePair.Add(new DevNameValuePair(ArrayStringQueryParameters[(Int32)EnumQueryParameters.filter_date_by], TikiOrderItemFilterByDate.ArrayStringOrderItemFilterByDate[(Int32)TikiOrderItemFilterByDate.EnumOrderItemFilterByDate.last7days]));
                     else if(interval == EnumOrderItemFilterByDate.last30days)
                         listValuePair.Add(new DevNameValuePair(ArrayStringQueryParameters[(Int32)EnumQueryParameters.filter_date_by], TikiOrderItemFilterByDate.ArrayStringOrderItemFilterByDate[(Int32)TikiOrderItemFilterByDate.EnumOrderItemFilterByDate.last30days]));
+
+                    // Add trạng thái đơn hàng
+                    if (orderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+                    {
+                        listValuePair.Add(new DevNameValuePair("status", "queueing,picking"));
+                    }
+                    else if (orderStatus == CommonOrderStatus.CANCELLED)
+                    {
+                        listValuePair.Add(new DevNameValuePair("status", "canceled"));
+                    }
                 }
                 else // Các page sau chỉ cập nhật currentpage
                 {

@@ -164,26 +164,26 @@
         </div>
 
         <div class="cvAncz980">
-            <button type="button" class="vndejhx90" onclick="GetListOrder()">Danh Sách Đơn Hàng</button>
-            <button type="button" class="vndejhx90" onclick="CheckPackedOrderEnough()">Kiểm Tra Đủ Đơn</button>
-        </div>
-
-        <div class="cvAncz980">
             <div class="vbcgh45367">
-                <input type="radio" id="all-order" name="order-type" class="kmaZvc29 all-order"
-                       onchange="FilterOrder()" checked>
+                <input type="radio" id="all-order" name="order-type" class="kmaZvc29 all-order">
                 <label for="all-order">Tất Cả</label>
             </div>
             <div class="vbcgh45367">
                 <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order"
-                       onchange="FilterOrder()">
-                <label for="dont-pack-order">Gửi Hàng</label>
+                       checked>
+                <label for="dont-pack-order">Cần Gửi Hàng</label>
             </div>
             <div class="vbcgh45367">
-                <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order"
-                       onchange="FilterOrder()">
+                <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order">
                 <label for="canceled-order">Hủy</label>
             </div>
+        </div>
+
+        <div class="cvAncz980">
+            <button type="button" class="vndejhx90" onclick="GetListOrder()" 
+                    title="Lấy danh sách đơn hàng theo thời gian, trạng thái như trên">Danh Sách Đơn Hàng</button>
+            <button type="button" class="vndejhx90" title="Khả dụng khi chọn Cần Gửi Hàng"
+                    onclick="CheckPackedOrderEnough()">Kiểm Tra Đủ Đơn</button>
         </div>
 
         <div class="cvAncz980">
@@ -215,10 +215,16 @@
         </div>
 
         <div class="cvAncz980">
-            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn"/>
-            <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetail()"
-                    title="Tìm trong danh sách dữ liệu đã tải về sau khi lấy danh sách đơn hàng,
-                    ngược lại gửi thông tin mã đơn hàng về server">Chi Tiết Đơn Hàng</button>
+            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn" />
+            <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetailFromDownloadedList()"
+                    title="Tìm trong danh sách dữ liệu đã tải về">
+                Chi Tiết Đơn Hàng Từ Danh Sách Đã Tải
+            </button>
+
+            <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetailFromServer()"
+                    title="Lấy dữ liệu từ server">
+                Chi Tiết Đơn Hàng Từ Server
+            </button>
         </div>
 
         <div>
@@ -268,6 +274,9 @@
                     <div>
                         <p class="xxvAFXF90 cccaaa4545 nvns63099"> Mã Đơn Hàng: </p>
                         <p class="zcx6768SF cccaaa4545 nvns63099"></p>
+
+                        <p class="xxvsfszfasf cccaaa4545 nvns63099"> Mã Vận Đơn: </p>
+                        <p class="gsbmlxm88 cccaaa4545 nvns63099"></p>
                     </div>
                     <input type="text" class="nvns63099" name="product-code-isbn" />
                     <button type="button" class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
@@ -288,7 +297,7 @@
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listOrder = []; // Lưu danh sách common order trả về
-        let listOrderTemp = []; // Lưu danh sách common order sau khi lọc, và được hiển thị
+        let listOrderTemp = []; // Lưu danh sách common order được hiển thị
         let currentOrder; // Đơn hàng đang view chi tiết trên modal
 
         // Get the modal
@@ -336,7 +345,7 @@
             return fromto;
         }
 
-        // 0: tất cả, 1: Chưa gửi hàng, 2: Hủy
+        // 0: tất cả, 1: Cần gửi hàng, 2: Hủy
         function GetOrderStatus() {
             let orderStatus = 0;
             if (document.getElementsByClassName("dont-pack-order")[0].checked == true) {
@@ -370,6 +379,7 @@
         async function GetListOrder() {
             const searchParams = new URLSearchParams();
             searchParams.append("fromTo", GetFromTo());
+            searchParams.append("orderStatus", GetOrderStatus());
 
             let query = "/ProductECommerce/GetListOrder";
 
@@ -389,11 +399,15 @@
 
         // Kiểm tra đơn đang hiển thị "Đã Đóng" hết chưa
         async function CheckPackedOrderEnough() {
-            let list = FilterOrderByStatus(listOrderTemp, 1)
-            let length = list.length;
+            if (GetOrderStatus() != 1) { // Khác Cần gửi hàng
+                CreateMustClickOkModal("Chọn Cần Gửi Hàng trước.", null);
+                return;
+            }
+
+            let length = listOrderTemp.length;
             let isEnough = true;
             for (let i = 0; i < length; i++) {
-                if (isEmptyOrSpaces(list[i].orderStatusInWarehoue)) {
+                if (isEmptyOrSpaces(listOrderTemp[i].orderStatusInWarehoue)) {
                     isEnough = false;
                     break;
                 }
@@ -427,58 +441,71 @@
             });
         }
 
-        async function OrderDetail() {
+        async function OrderDetailFromDownloadedList() {
             let orderCodeValue = document.getElementsByName("order-code")[0].value;
             if (isEmptyOrSpaces(orderCodeValue)) {
-                return null;
+                await CreateMustClickOkModal("Chưa nhập mã đơn hàng hoặc mã vận đơn.", null);
+                EmptyAndFocusOrderCodeElement();
+                return;
             }
             let orderTemp;
-            if (listOrder.length != 0) {
-                orderTemp = SearchOrderCodeInList(orderCodeValue);
-                if (orderTemp == null) {
-                    await CreateMustClickOkModal("Không tìm thấy đơn hàng.",
-                        function () { EmptyAndFocusOrderCodeElement(); });
-                    return;
-                }
+
+            orderTemp = SearchOrderCodeInList(orderCodeValue);
+            if (orderTemp == null) {
+                await CreateMustClickOkModal("Không tìm thấy đơn hàng.",
+                    function () { EmptyAndFocusOrderCodeElement(); });
+                return;
             }
-            else {
-                // Phải chọn 1 sàn thương mại điện tử
-                let ecomerce = GetECommerceType();
-                if (ecomerce != eTiki && ecomerce != eShopee && ecomerce != eLazada) {
-                    CreateMustClickOkModal("Chọn cụ thể 1 sàn thương mại điện tử.", null)
-                    return;
-                }
 
-                const searchParams = new URLSearchParams();
-                searchParams.append("ecommerce", ecomerce);
-                searchParams.append("sn", orderCodeValue);
-
-                let query = "/ProductECommerce/GetOrderFromOrderSN";
-
-                ShowCircleLoader();
-                let responseDB = await RequestHttpPostPromise(searchParams, query);
-                RemoveCircleLoader();
-                if (responseDB.responseText == "null") {
-                    await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
-                    return;
-                }
-
-                // Hiển thị danh sách đơn hàng. Danh sách sẽ chỉ gồm 1 đơn hàng
-                listOrder = JSON.parse(responseDB.responseText);
-
-                // Cho filter về tất cả
-                document.getElementById("all-order").checked = true;
-                FilterOrder();
-                if (listOrder.length == 0) {
-                    currentOrder = null;
-                    CreateMustClickOkModal("Kiểm tra thông tin đơn hàng hoặc thử lại sau.");
-                    return;
-                }
-                orderTemp = listOrder[0];
-            }
             currentOrder = orderTemp;
             RefreshOrder();
 
+        }
+
+        async function OrderDetailFromServer() {
+            let orderCodeValue = document.getElementsByName("order-code")[0].value;
+            if (isEmptyOrSpaces(orderCodeValue)) {
+                await CreateMustClickOkModal("Chưa nhập mã đơn hàng hoặc mã vận đơn.", null);
+                EmptyAndFocusOrderCodeElement();
+                return;
+            }
+
+            // Phải chọn 1 sàn thương mại điện tử
+            let ecomerce = GetECommerceType();
+            if (ecomerce != eTiki && ecomerce != eShopee && ecomerce != eLazada) {
+                CreateMustClickOkModal("Chọn cụ thể 1 sàn thương mại điện tử.", null)
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("ecommerce", ecomerce);
+            searchParams.append("sn_trackingNumber", orderCodeValue);
+
+            let query = "/ProductECommerce/GetOrderFromOrderSN_TrackingNumber";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText == "null") {
+                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                return;
+            }
+
+            // Hiển thị danh sách đơn hàng. Danh sách sẽ chỉ gồm 1 đơn hàng
+             let listOrderFromSN = JSON.parse(responseDB.responseText);
+
+            // Không filter
+            document.getElementById("all-order").checked = true;
+            if (listOrderFromSN.length == 0) {
+                currentOrder = null;
+                CreateMustClickOkModal("Kiểm tra thông tin đơn hàng hoặc thử lại sau.");
+                return;
+            }
+
+            DisplayListOrder(listOrderFromSN);
+
+            currentOrder = listOrderFromSN[0];
+            RefreshOrder();
         }
 
         // Sắp xếp danh sách đơn hàng theo thời gian gần đây ở đầu danh sách
@@ -638,27 +665,18 @@
                 cell.style.color = "initial";
             }
         }
-        // Lọc order theo trạng thái, sàn
-        function FilterOrder() {
-            let length = listOrder.length;
-            if (length == 0)
-                return;
-
-            listOrderTemp = listOrder;
-
-            listOrderTemp = FilterOrderByStatus(listOrderTemp, GetOrderStatus());
-            listOrderTemp = FilterOrderECommerceName(listOrderTemp, GetECommerceType())
-
+        // Hiển thị danh sách đơn hàng
+        function DisplayListOrder(inlistOrderTemp) {
             // Hiển thị danh sách đơn hàng
             let orderTable = document.getElementsByClassName("order-table")[0];
             DeleteRowsExcludeHead(orderTable);
 
-            let lengthTemp = listOrderTemp.length;
+            let lengthTemp = inlistOrderTemp.length;
             // Sắp xếp theo thời gian tạo đơn giảm dần
             for (let i = 0; i < lengthTemp; i++) {
-                listOrderTemp[i].millisecondsTime = Date.parse(listOrderTemp[i].created_at);
+                inlistOrderTemp[i].millisecondsTime = Date.parse(inlistOrderTemp[i].created_at);
             }
-            listOrderTemp = SortByTime(listOrderTemp);
+            listOrderTemp = SortByTime(inlistOrderTemp);
             let order;
             for (let i = 0; i < lengthTemp; i++) {
                 order = listOrderTemp[i];
@@ -699,6 +717,16 @@
                     RefreshOrder();
                 }
             }
+        }
+
+        // Lọc order theo trạng thái, sàn
+        function FilterOrder() {
+            if (listOrder.length == 0) {
+                DisplayListOrder(listOrder);
+                return;
+            }
+
+            DisplayListOrder(FilterOrderECommerceName(listOrder, GetECommerceType()));
 
             EmptyAndFocusOrderCodeElement();
         }
@@ -793,6 +821,8 @@
             orderContainer.innerHTML = "";
             document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
             document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
+
+            document.getElementsByClassName("gsbmlxm88")[0].innerHTML = order.shipCode;
 
             let isBigQuantity = false;
             let isDontMapping = false;

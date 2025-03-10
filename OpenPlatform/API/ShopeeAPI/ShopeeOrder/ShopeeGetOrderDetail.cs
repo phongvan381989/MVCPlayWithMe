@@ -10,6 +10,8 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using MySql.Data.MySqlClient;
+using MVCPlayWithMe.OpenPlatform.Model;
 
 namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
 {
@@ -20,13 +22,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// </summary>
         /// <param name="time_from"></param>
         /// <param name="time_to"></param>
-        /// <param name="status"></param>
+        /// <param name="status">Theo từng trại thái hoặc tất cả trạng thái</param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailAll(DateTime time_from, DateTime time_to, ShopeeOrderStatus status)
+        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailAll(
+            DateTime time_from,
+            DateTime time_to,
+            ShopeeOrderStatus status,
+            MySqlConnection conn)
         {
+            List<ShopeeOrderDetail> rs = new List<ShopeeOrderDetail>();
             List<ShopeeGetOrderListBaseInfo> lsBaseInfo = ShopeeGetOrderList.ShopeeOrderGetOrderListBaseAll(time_from, time_to, status);
-            if (lsBaseInfo == null || lsBaseInfo.Count() == 0)
-                return null;
+            if (lsBaseInfo.Count() == 0)
+                return rs;
 
             // Tạo list mã order
             List<string> lsOrderCode = new List<string>();
@@ -35,18 +42,40 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 lsOrderCode.Add(e.order_sn);
             }
 
-            List<ShopeeOrderDetail> rs = ShopeeOrderGetOrderDetailFromListOrderSNAll(lsOrderCode);
-            // Cập nhật mã vận đơn
-            if(rs != null)
-            {
-                foreach(var e in rs)
-                {
-                    e.shipCode = ShopeeGetTrackingNumber.ShopeeGetShipCode(e.order_sn, string.Empty);
-                }
-            }
+            rs = ShopeeOrderGetOrderDetailFromListOrderSNAll(lsOrderCode);
+            UpdateTrackingNumber(rs, conn);
             return rs;
         }
 
+        // Lấy mã vận đơn / ship code / tracking number
+        public static void UpdateTrackingNumber(List<ShopeeOrderDetail> rs, MySqlConnection conn)
+        {
+            // Ta lấy từ tbecommerceorder nếu tồn tại, ngược lại lấy từ API shopee
+            ShopeeMySql shopeeMySql = new ShopeeMySql();
+            shopeeMySql.UpdateTrackingNumberToListConnectOut(rs, conn);
+
+            // Đơn ở trạng thái: UNPAID, READY_TO_SHIP => chưa được sàn sinh mã vận chuyển.
+            // Nhà bán chưa xác nhận đơn, khách hủy (trạng thái sẽ là CANCELLED) => chưa được sinh mã vận chuyển
+            // Ngược lại đã được sinh mã đơn.
+            // Ở trạng thái PROCESSED: Nhà bán đã xác nhận nhưng có thể chưa được đóng nên chưa
+            // có mã vận chuyển trong db. Ta lưu vào db khi lấy được mã vận chuyển
+
+            // Nhiều khi đưa shipper đơn nhưng vẫn chưa cập nhật đã đóng => 
+            // trạng thái SHIPPED, COMPLETE mà vẫn chưa có mã vận chuyển
+            foreach (var e in rs)
+            {
+                // Mã vận chuyển đã được sinh nhưng chưa được lưu ở db
+                if (string.IsNullOrEmpty(e.shipCode) && 
+                    e.order_status != "UNPAID" &&
+                    e.order_status != "READY_TO_SHIP" &&
+                    e.order_status != "CANCELLED") // Mã vận chuyển được lấy ở xử lý event
+                {
+                    e.shipCode = ShopeeGetTrackingNumber.ShopeeGetShipCode(e.order_sn, string.Empty);
+                    shopeeMySql.UpdateUpdateTrackingNumberToDBConnectOut(e.order_sn, e.shipCode, conn);
+                }
+            }
+
+        }
         /// <summary>
         /// Lấy thông tin chi tiết đơn hàng
         /// </summary>
@@ -91,7 +120,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// </summary>
         /// <param name="order_sn_list">order_sn_list số phần tử phải nhỏ hơn hoặc bằng 50</param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailFromListOrderSN(List<string> order_sn_list)
+        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailFromListOrderSN(
+            List<string> order_sn_list)
         {
             if (order_sn_list == null)
                 return null;
@@ -155,35 +185,20 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// </summary>
         /// <param name="order_sn_list"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailFromListOrderSNAll(List<string> order_sn_list)
+        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailFromListOrderSNAll(
+            List<string> order_sn_list)
         {
+            List<ShopeeOrderDetail> rs = new List<ShopeeOrderDetail>();
             if (order_sn_list == null || order_sn_list.Count() == 0)
-                return null;
-
-            //// Check order_sn_list có 2 giá trị giống nhau thì loại bỏ
-            //List<string> new_order_sn_list = new List<string>();
-            //Boolean isExist = false;
-            //foreach (string s in order_sn_list)
-            //{
-            //    isExist = false;
-            //    foreach (string news in new_order_sn_list)
-            //    {
-            //        if (string.Equals(s, news))
-            //        {
-            //            isExist = true;
-            //            break;
-            //        }
-            //    }
-            //    if (!isExist)
-            //        new_order_sn_list.Add(s);
-            //}
+            {
+                return rs;
+            }
 
             int range = 50; // Giới hạn
-            List<ShopeeOrderDetail> rs = new List<ShopeeOrderDetail>();
+
             int indexMax = order_sn_list.Count() - 1;
             int index = 0;
             List<string> order_sn_listTemp = null;
-            Boolean isOK = true;
             while (index <= indexMax)
             {
                 if (indexMax - index >= range)
@@ -193,15 +208,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 List<ShopeeOrderDetail> rsTemp = ShopeeOrderGetOrderDetailFromListOrderSN(order_sn_listTemp);
                 if (rsTemp == null)
                 {
-                    isOK = false;
                     break;
                 }
                 rs.AddRange(rsTemp);
                 index = index + range;
             }
 
-            if (!isOK)
-                return null;
             return rs;
         }
 

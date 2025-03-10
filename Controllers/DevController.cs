@@ -158,8 +158,8 @@ namespace MVCPlayWithMe.Controllers
 
             MySqlResultState result = new MySqlResultState();
 
-            TikiPullEventService tikiPullEventService = new TikiPullEventService();
-            tikiPullEventService.DoWork();
+            //TikiPullEventService tikiPullEventService = new TikiPullEventService();
+            //tikiPullEventService.DoWork();
 
             return JsonConvert.SerializeObject(result);
         }
