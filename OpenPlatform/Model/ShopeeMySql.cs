@@ -989,13 +989,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             cmd.ExecuteNonQuery();
         }
 
-        public string GetSNFromSN_TrackingNumberConnectOut(
+        // Lấy mã đơn, mã đơn hàng từ mã đơn hoặc mã đơn hàng
+        public void GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
             string sn_trackingNumber,
+            ref string sn,
+            ref string trackingNumber,
             MySqlConnection conn)
         {
-            string sn = string.Empty;
+            sn = string.Empty;
+            trackingNumber = string.Empty;
             MySqlCommand cmd = new MySqlCommand(
-                "SELECT `Code` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = 2 LIMIT 1", conn);
+                "SELECT `Code`, `ShipCode` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = 2 ORDER BY `ShipCode` DESC LIMIT 1", conn);
             cmd.CommandType = CommandType.Text;
             cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
             cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
@@ -1005,10 +1009,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             while (rdr.Read())
             {
                 sn = MyMySql.GetString(rdr, "Code");
+                trackingNumber = MyMySql.GetString(rdr, "ShipCode");
             }
             rdr.Close();
-
-            return sn;
         }
 
         public string GetTrackingNumberFromSNConnectOut(

@@ -58,9 +58,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string item_status { get; set; }
 
-        /// <summary>
-        /// product is active (1) or inactive
-        /// </summary>
         public Boolean bActive { get; set; }
 
         ///// <summary>

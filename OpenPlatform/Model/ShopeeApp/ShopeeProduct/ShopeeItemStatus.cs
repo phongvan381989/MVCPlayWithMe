@@ -8,12 +8,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct
 {
     public class ShopeeItemStatus
     {
+        // NORMAL/BANNED/UNLIST/REVIEWING/SELLER_DELETE/SHOPEE_DELETE
         public enum EnumShopeeItemStatus
         {
             NORMAL,
             BANNED,
-            DELETED,
-            UNLIST
+            UNLIST,
+            REVIEWING,
+            SELLER_DELETE,
+            SHOPEE_DELETE
         }
 
         public ShopeeItemStatus()
@@ -33,10 +36,14 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct
                 str = "NORMAL";
             else if (index == EnumShopeeItemStatus.BANNED)
                 str = "BANNED";
-            else if (index == EnumShopeeItemStatus.DELETED)
-                str = "DELETED";
             else if (index == EnumShopeeItemStatus.UNLIST)
                 str = "UNLIST";
+            else if (index == EnumShopeeItemStatus.REVIEWING)
+                str = "DELETED";
+            else if (index == EnumShopeeItemStatus.SELLER_DELETE)
+                str = "DELETED";
+            else if (index == EnumShopeeItemStatus.SHOPEE_DELETE)
+                str = "DELETED";
 
             return str;
         }

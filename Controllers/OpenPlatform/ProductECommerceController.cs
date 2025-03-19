@@ -15,6 +15,7 @@ using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
@@ -77,6 +78,26 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(lsCommonItem);
         }
 
+        // Lấy sản phẩm NORMAL, update trong 1 tháng gần đây và chưa được lưu db
+        [HttpPost]
+        public string GetNewItemOneMonth(string eType)
+        {
+            List<CommonItem> lsCommonItem = null;
+            if (AuthentAdministrator() == null)
+                return JsonConvert.SerializeObject(lsCommonItem);
+
+            if (eType == Common.eShopee)
+            {
+                lsCommonItem = ShopeeGetNewItemOneMonth();
+            }
+            else if (eType == Common.eTiki)
+            {
+                lsCommonItem = TikiGetNewItemOneMonth();
+            }
+
+            return JsonConvert.SerializeObject(lsCommonItem);
+        }
+
         [HttpPost]
         public string GetItemFromId(string eType, string id)
         {
@@ -108,10 +129,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         List<CommonItem> ShopeeGetProductAll()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
-            List<ShopeeGetItemBaseInfoItem> lsShopeeItem = new List<ShopeeGetItemBaseInfoItem>();
+            List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem = new List<ShopeeGetItemBaseInfoItem>();
 
-            // Lấy toàn bộ sản phẩm Shopee mất thời gian, giai đoạn test chỉ lấy 1 page ~ 50 sản phẩm
-            lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
+            // Lấy toàn bộ sản phẩm Shopee mất thời gian
+            lsShopeeBaseInfoItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
+
+            // Test chỉ lấy 1 page ~ 50 sản phẩm
             //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
 
@@ -119,10 +142,68 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             try
             {
-                shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsShopeeItem, lsCommonItem, conn);
+                shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsShopeeBaseInfoItem, lsCommonItem, conn);
 
                 // Cập nhật trạng thái item vào DB
                 shopeeSqler.ShopeeUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
+            return lsCommonItem;
+        }
+
+        List<CommonItem> ShopeeGetNewItemOneMonth()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+
+            // Lấy danh sách item trong khoảng 1 tháng, trạng thái NORMAL
+            long update_time_to = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            List<ShopeeItem> ls = ShopeeGetItemList.ShopeeProductGetNormal_ItemList(
+                update_time_to - 31 * 24 * 3600,
+                update_time_to);
+
+            List<ShopeeItem> lsNonExistOnDb = new List<ShopeeItem>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+
+            conn.Open();
+
+            try
+            {
+                // Lấy danh sách item chưa được lưu trong db
+                MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM webplaywithme.tbshopeeitem WHERE `TMDTShopeeItemId` = @inTMDTShopeeItemId LIMIT 1;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", 0L);
+
+                MySqlDataReader rdr = null;
+                Boolean isExist = false;
+
+                foreach (var shopeeItem in ls)
+                {
+                    isExist = false;
+                    cmd.Parameters[0].Value = shopeeItem.item_id;
+                    rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        isExist = true;
+                    }
+                    rdr.Close();
+
+                    if (!isExist)
+                    {
+                        lsNonExistOnDb.Add(shopeeItem);
+                    }
+                }
+
+                List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem = 
+                    ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItem(lsNonExistOnDb);
+                foreach (var pro in lsShopeeBaseInfoItem)
+                {
+                    CommonItem item = new CommonItem(pro);
+                    lsCommonItem.Add(item);
+                }
             }
             catch (Exception ex)
             {
@@ -138,7 +219,64 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
             lsTikiItem = GetListProductTiki.GetListLatestProductsFromOneShop();
 
-            tikiSqler.TikiGetListCommonItemFromListTikiProduct(lsTikiItem, lsCommonItem);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+
+            tikiSqler.TikiGetListCommonItemFromListTikiProductConnectOut(lsTikiItem, lsCommonItem, conn);
+            // Cập nhật trạng thái item vào DB
+            tikiSqler.TikiUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
+
+            conn.Close();
+            return lsCommonItem;
+        }
+
+        List<CommonItem> TikiGetNewItemOneMonth()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+            DateTime dtNow = DateTime.Now;
+            List<TikiProduct> lsTikiItem = GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(-31), dtNow);
+            List<TikiProduct> lsNonExistOnDb = new List<TikiProduct>();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+            try
+            {
+                // Lấy danh sách item chưa được lưu trong db
+                MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM webplaywithme.tbtikiitem WHERE `TikiId` = @inTikiId LIMIT 1;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inTikiId", 0);
+
+                MySqlDataReader rdr = null;
+                Boolean isExist = false;
+
+                foreach (var tikiItem in lsTikiItem)
+                {
+                    isExist = false;
+                    cmd.Parameters[0].Value = tikiItem.product_id;
+                    rdr = cmd.ExecuteReader();
+                    while (rdr.Read())
+                    {
+                        isExist = true;
+                    }
+                    rdr.Close();
+
+                    if (!isExist)
+                    {
+                        lsNonExistOnDb.Add(tikiItem);
+                    }
+                }
+
+                foreach (var pro in lsNonExistOnDb)
+                {
+                    CommonItem item = new CommonItem(pro);
+                    lsCommonItem.Add(item);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
             return lsCommonItem;
         }
 
@@ -482,7 +620,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 // Lấy mã đơn hàng từ mã đơn hàng hoặc mã vận đơn
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
-                string sn = shopeeSqler.GetSNFromSN_TrackingNumberConnectOut(sn_trackingNumber, conn);
+                string sn = string.Empty, trackingNumber = string.Empty;
+                shopeeSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+                    sn_trackingNumber, ref sn, ref trackingNumber, conn);
                conn.Close();
 
                 ShopeeOrderDetail shopeeOrderDetail =
@@ -490,6 +630,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
                 if (shopeeOrderDetail != null)
                 {
+                    shopeeOrderDetail.shipCode = trackingNumber;
                     commonOrder = new CommonOrder(shopeeOrderDetail);
                 }
             }

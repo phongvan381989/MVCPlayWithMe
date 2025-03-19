@@ -144,12 +144,13 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 JObject obj = JObject.Parse(requestBody);
-                int code = Common.ConvertStringToInt32(obj["code"].ToString());
-                if (code == System.Int32.MinValue)
+                int code = obj["code"] != null ? (int)obj["code"] : -1;
+                if (code == -1)
                 {
-                    MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
+                    MyLogger.GetInstance().Info("Cant get code from requestBody");
                     return;
                 }
+
                 // order_status_push: Lấy thay đổi trạng thái đơn hàng
                 if (code == 3)
                 {
@@ -183,8 +184,8 @@ namespace MVCPlayWithMe.Controllers
                 // Đẩy công việc vào Task.Run
                 Task.Run(() =>
                 {
-                // Xử lý công việc dài hạn trong nền
-                ThreadShopeeNotifications(requestBody);
+                    // Xử lý công việc dài hạn trong nền
+                    ThreadShopeeNotifications(requestBody);
                 });
             }
             catch (Exception ex)

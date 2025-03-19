@@ -1064,19 +1064,23 @@
 
             EmptyAndFocusProductCodeElement();
 
-            // Đơn đã đóng disable nút đủ sản phẩm
-            if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
+            // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
+            if (CheckOrderStatusIsCancel(order) ||
+                order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
                 document.getElementsByClassName("btn-enough-product")[0].disabled = true;
-                document.getElementsByClassName("btn-return-order")[0].disabled = false;
             }
             else {
                 document.getElementsByClassName("btn-enough-product")[0].disabled = false;
-                document.getElementsByClassName("btn-return-order")[0].disabled = true;
             }
 
-            // Đơn đã hủy
-            if (CheckOrderStatusIsCancel(order)) {
-                document.getElementsByClassName("btn-enough-product")[0].disabled = true;
+            // Đơn đã đóng ta cho phép có thể hoàn hàng
+            // Đơn đã hủy và có mã đơn hàng có thể hoàn hàng
+            if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse ||
+                (CheckOrderStatusIsCancel(order) && !isEmptyOrSpaces(order.shipCode))) {
+                document.getElementsByClassName("btn-return-order")[0].disabled = false;
+            }
+            else {
+                document.getElementsByClassName("btn-return-order")[0].disabled = true;
             }
 
             ShowModalInOrderPage();

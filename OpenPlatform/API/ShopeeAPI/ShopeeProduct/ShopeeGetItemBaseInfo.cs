@@ -25,7 +25,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
 
             IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
             if (response == null)
+            {
                 return null;
+            }
+
             ShopeeGetItemBaseInfoResponseHTTP objResponse = null;
             if (response.StatusCode == HttpStatusCode.OK)
             {
@@ -48,20 +51,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             return objResponse;
         }
 
-        /// <summary>
-        /// Lấy base info của tất cả item
-        /// </summary>
-        /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeGetItemBaseInfoItem> ShopeeProductGetItemBaseInfoAll()
+        public static List<ShopeeGetItemBaseInfoItem> ShopeeProductGetListItemBaseInforFromListShopeeItem(
+            List<ShopeeItem> shopeeItems)
         {
             // Lấy danh sách id của item
             List<ShopeeGetItemBaseInfoItem> rs = new List<ShopeeGetItemBaseInfoItem>();
-            List<ShopeeItem> shopeeItems = ShopeeGetItemList.ShopeeProductGetItemListAll();
+
             if (shopeeItems == null || shopeeItems.Count() == 0)
+            {
                 return rs;
+            }
 
             StringBuilder strListItemId = new StringBuilder();
-            Boolean isOk = true;
             int countItemID = shopeeItems.Count();
             int indexItemID = 0;
             int maxSize = 50;
@@ -75,7 +76,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             ls.Add(new DevNameValuePair("need_complaint_policy", "false"));
 
             // item_id_list Required item_id  limit [0,50]
-            //ls.Add(new DevNameValuePair("item_id_list", strListItemId.ToString())); // Add cuối cùng để cập nhật
+            // Add cuối cùng để cập nhật
+            ls.Add(new DevNameValuePair("item_id_list", strListItemId.ToString()));
             while (indexItemID < countItemID)
             {
                 strListItemId.Clear();
@@ -94,18 +96,29 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
 
                 ShopeeGetItemBaseInfoResponseHTTP objResponse = ShopeeProductGetItemBaseInfo(ls);
 
-                if (objResponse == null || objResponse.response == null || objResponse.response.item_list == null)
+                if (objResponse == null ||
+                    objResponse.response == null ||
+                    objResponse.response.item_list == null)
                 {
-                    isOk = false;
                     break;
                 }
 
                 rs.AddRange(objResponse.response.item_list);
             }
-            if (!isOk)
-                return null;
 
             return rs;
+        }
+
+        /// <summary>
+        /// Lấy base info của tất cả item
+        /// </summary>
+        /// <returns>null nếu không lấy thành công</returns>
+        public static List<ShopeeGetItemBaseInfoItem> ShopeeProductGetItemBaseInfoAll()
+        {
+            // Lấy danh sách id của item
+            List<ShopeeItem> shopeeItems = ShopeeGetItemList.ShopeeProductGetItemListAll();
+
+            return ShopeeProductGetListItemBaseInforFromListShopeeItem(shopeeItems);
         }
 
         /// <summary>

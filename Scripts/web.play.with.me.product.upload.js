@@ -501,6 +501,32 @@ async function UpdateBookCoverPrice() {
     }
 }
 
+async function UpdatePositionInWarehouse() {
+    let positionInWarehouse = document.getElementById("position-in-warehouse").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("positionInWarehouse", positionInWarehouse);
+
+    let url = "/Product/UpdatePositionInWarehouse";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật vị trí lưu kho lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateStatusOfProduct_ProductPage() {
+    await UpdateStatusOfProduct(GetValueFromUrlName("id"), document.getElementById("product-status").value)
+}
+
 async function UpdateComboId() {
     let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value);
     if (comboId == null) {

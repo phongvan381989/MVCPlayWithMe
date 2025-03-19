@@ -723,6 +723,28 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpGet]
+        public string UpdatePositionInWarehouse(int id, string positionInWarehouse)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(sqler.UpdatePositionInWarehouse(id, positionInWarehouse));
+        }
+
+        [HttpGet]
+        public string UpdateStatusOfProduct(int id, int statusOfProduct)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(sqler.UpdateStatusOfProduct(id, statusOfProduct));
+        }
+
+        [HttpGet]
         public string UpdateComboId(int id, int comboId)
         {
             if (AuthentAdministrator() == null)

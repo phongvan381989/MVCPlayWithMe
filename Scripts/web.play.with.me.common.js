@@ -1048,3 +1048,27 @@ async function CopyImageFromTMDTToWarehouseProduct(ecommerceName, itemId, modelI
     RemoveCircleLoader();
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Chép ảnh thành công.", "Chép ảnh thất bại.")
 }
+
+async function UpdateStatusOfProduct(id, productStatus) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id);
+    searchParams.append("statusOfProduct", productStatus);
+
+    let url = "/Product/UpdateStatusOfProduct";
+    let isOK = true;
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        await CreateMustClickOkModal("Cập nhật trạng thái sản phẩm lỗi.", null);
+        isOK = false;
+    }
+
+    return new Promise((resolve) => {
+        resolve(isOK);
+    });
+}

@@ -108,7 +108,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.NORMAL));
             lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.UNLIST));
             lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.BANNED));
-            lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.DELETED));
+            lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.REVIEWING));
+            lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.SHOPEE_DELETE));
+            lsShopeeItemStatus.Add(new ShopeeItemStatus(ShopeeItemStatus.EnumShopeeItemStatus.SELLER_DELETE));
 
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
             ls.Add(new DevNameValuePair("page_size", page_size.ToString()));
@@ -119,7 +121,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             }
             ls.Add(new DevNameValuePair("offset", offset.ToString())); // Add cuối cùng để cập nhật
 
-            Boolean isOk = true;
             while (true)
             {
                 ls.RemoveAt(ls.Count() - 1);
@@ -128,7 +129,45 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                 ShopeeGetItemListResponseHTTP objResponse = ShopeeProductGetItemList(ls);
                 if (objResponse == null)
                 {
-                    isOk = false;
+                    break;
+                }
+                if (objResponse.response.item != null)
+                {
+                    rs.AddRange(objResponse.response.item);
+                    offset = offset + objResponse.response.item.Count();
+                }
+                if (!objResponse.response.has_next_page)
+                {
+                    break;
+                }
+            }
+            return rs;
+        }
+
+        // Lấy danh sách sản phẩm NORMAL, trong khoảng thời gian nhất định
+        public static List<ShopeeItem> ShopeeProductGetNormal_ItemList(
+            long update_time_from, long update_time_to)
+        {
+            List<ShopeeItem> rs = new List<ShopeeItem>();
+            int offset = 0;
+            int page_size = 50;
+
+            List<DevNameValuePair> ls = new List<DevNameValuePair>();
+            ls.Add(new DevNameValuePair("page_size", page_size.ToString()));
+            ls.Add(new DevNameValuePair("update_time_from", update_time_from.ToString()));
+            ls.Add(new DevNameValuePair("update_time_to", update_time_to.ToString()));
+            ls.Add(new DevNameValuePair("item_status", "NORMAL"));
+
+            ls.Add(new DevNameValuePair("offset", offset.ToString())); // Add cuối cùng để cập nhật
+
+            while (true)
+            {
+                ls.RemoveAt(ls.Count() - 1);
+                ls.Add(new DevNameValuePair("offset", offset.ToString())); // Add cuối cùng để cập nhật
+
+                ShopeeGetItemListResponseHTTP objResponse = ShopeeProductGetItemList(ls);
+                if (objResponse == null)
+                {
                     break;
                 }
                 if (objResponse.response.item != null)
@@ -139,8 +178,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                 if (!objResponse.response.has_next_page)
                     break;
             }
-            if (!isOk)
-                return new List<ShopeeItem>();
             return rs;
         }
     }

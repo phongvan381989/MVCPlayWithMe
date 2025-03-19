@@ -1221,7 +1221,57 @@ namespace MVCPlayWithMe.Models
             conn.Close();
             return result;
         }
-        
+
+        public MySqlResultState UpdatePositionInWarehouse(int id, string positionInWarehouse)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_PositionInWarehouse", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inpositionInWarehouse", positionInWarehouse);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        // Trạng thái sản phẩm. 0: Đang kinh doanh bình thường,
+        // 1:  Nhà phát hành tạm thời hết hàng , 2: Ngừng kinh doanh
+        public MySqlResultState UpdateStatusOfProduct(int id, int statusOfProduct)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Status", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inStatus", statusOfProduct);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
         public MySqlResultState UpdateComboId(int id, int comboId)
         {
             MySqlResultState result = new MySqlResultState();
@@ -1397,7 +1447,7 @@ namespace MVCPlayWithMe.Models
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
-                listCI.Clear();
+                //listCI.Clear();
             }
             return listCI;
         }
@@ -1509,7 +1559,7 @@ namespace MVCPlayWithMe.Models
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
-                listCI.Clear();
+                //listCI.Clear();
             }
             return listCI;
         }

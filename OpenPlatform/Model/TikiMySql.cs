@@ -135,15 +135,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
-        public void TikiGetListCommonItemFromListTikiProduct(
+        public void TikiGetListCommonItemFromListTikiProductConnectOut(
             List<TikiProduct> lsTikiItem,
-            List<CommonItem> lsCommonItem)
+            List<CommonItem> lsCommonItem,
+            MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
@@ -171,8 +169,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         }
                     }
 
-                    if (rdr != null)
-                        rdr.Close();
+                    rdr.Close();
                     lsCommonItem.Add(item);
                 }
             }
@@ -181,8 +178,35 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
+        }
 
-            conn.Close();
+        public void TikiUpdateStatusOfItemToDbConnectOut(
+            List<CommonItem> lsCommonItem,
+            MySqlConnection conn)
+        {
+            if (lsCommonItem == null || lsCommonItem.Count == 0)
+            {
+                return;
+            }
+
+            try
+            {
+                // Cập nhật source của item
+                MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inStatus", 0);
+                cmd.Parameters.AddWithValue("@inTikiId", 0);
+                foreach (var commonItem in lsCommonItem)
+                {
+                    cmd.Parameters[0].Value = commonItem.bActive?0:1;
+                    cmd.Parameters[1].Value = (int)commonItem.itemId;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
 
         public List<CommonItem> TikiGetItemOnDB()
@@ -369,6 +393,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Cần cập nhật số bảng output và products khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
+
+        // Rủi ro: Nếu đơn có sản phẩm chưa được mapping thì sẽ không được cập nhật số lượng chính xác
+        // Xử lý: Sau khi mapping phải trừ thủ công bằng tay
         public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut(MySqlConnection conn,
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
@@ -501,11 +528,18 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         cmd.ExecuteNonQuery();
                     }
                     // Kiểm tra xem cần thay đổi tồn kho không?
-                    if (((status == ECommerceOrderStatus.BOOKED || status == ECommerceOrderStatus.PACKED)
-                        && oldStatus != ECommerceOrderStatus.BOOKED && oldStatus != ECommerceOrderStatus.PACKED) || // Cần xuất kho và chưa chưa xuất kho
-                        ((status == ECommerceOrderStatus.UNBOOKED || status == ECommerceOrderStatus.RETURNED)
-                        && oldStatus != ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.RETURNED) || // Cần nhập kho và chưa nhập kho
-                        (status == ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.PACKED)) // Đơn hủy nhưng Đã Đóng (có thể đang trên đường vận chuyển) nên cần Hoàn Hàng để sản phẩm thực tế về kho
+                    if ( // Cần xuất kho và chưa chưa xuất kho
+                        (status == ECommerceOrderStatus.BOOKED && oldStatus != ECommerceOrderStatus.PACKED) ||
+                        
+                        (status == ECommerceOrderStatus.PACKED && oldStatus != ECommerceOrderStatus.BOOKED) ||
+
+                        // Cần nhập kho và chưa nhập kho
+                        //// Đơn hủy nhưng Đã Đóng (có thể đang trên đường vận chuyển) nên cần Hoàn Hàng để sản phẩm thực tế về kho
+                        (status == ECommerceOrderStatus.UNBOOKED && oldStatus != ECommerceOrderStatus.RETURNED 
+                        && oldStatus != ECommerceOrderStatus.PACKED) ||
+
+                        // Đơn hủy, nhưng đợi nhận hàng hoàn mới thay đổi tồn kho.
+                        (status == ECommerceOrderStatus.RETURNED))
                     {
                         resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, commonOrder, status, eCommerceType);
                         resultState.myAnything = 1; // Có thay đổi tồn kho.

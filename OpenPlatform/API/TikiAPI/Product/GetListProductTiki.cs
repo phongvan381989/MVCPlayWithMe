@@ -30,15 +30,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             "page",
             "limit"
         };
-        /// <summary>
-        /// Lấy được danh sách tất cả sản phẩm của 1 shop
-        /// </summary>
-        /// <param name="configApp"></param>
-        /// <returns>Danh sách sản phẩm. List rỗng nếu không lấy thành công</returns>
-        public static List<TikiProduct> GetListLatestProductsFromOneShop()
+
+        // maxPage == 0: lấy tất cả dữ liệu, ngược lại lấy đến khi currentPage == currentPage hoặc tất cả
+        public static List<TikiProduct> GetListProductsCore(
+            List<DevNameValuePair> listValuePair,
+            int maxPage)
         {
             List<TikiProduct> lsProduct = new List<TikiProduct>();
-
             if (CommonTikiAPI.tikiConfigApp == null)
             {
                 // Thử lấy
@@ -48,27 +46,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                     return lsProduct;
             }
 
-            // GET https://api.tiki.vn/integration/v2/products?page=2&limit=20
-            List<DevNameValuePair> listValuePair = new List<DevNameValuePair>();
             Int32 currentPage = 1;
             while (true)
             {
-                if (currentPage == 1)// lấy page đầu
-                {
-                    // Phần tử đầu tiên của listValuePair phải là "page"
-                    // Add page = 1
-                    listValuePair.Add(new DevNameValuePair("page", currentPage.ToString()));
-
-                    // Add limit=20
-                    listValuePair.Add(new DevNameValuePair("limit", TikiConstValues.cstrPerPage));
-
-                    // Add "includes=seller,categories,inventory,attributes,images"
-                    listValuePair.Add(new DevNameValuePair("include", "inventory,images"));
-                }
-                else // Các page sau chỉ cập nhật currentpage
-                {
-                    listValuePair[0].value = currentPage.ToString();
-                }
+                listValuePair[0].value = currentPage.ToString();
                 string http = TikiConstValues.cstrProductsHTTPAddress + DevNameValuePair.GetQueryString(listValuePair);
                 IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
@@ -92,17 +73,72 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                         break;
                     else
                         currentPage++;
+                    if (maxPage != 0 && currentPage > maxPage)
+                    {
+                        break;
+                    }
                 }
                 catch (Exception ex)
                 {
                     MyLogger.GetInstance().Warn(ex.Message);
-                    lsProduct.Clear();
                     break;
                 }
-                //break;//Temporary Test
             }
 
             return lsProduct;
+        }
+        /// <summary>
+        /// Lấy được danh sách tất cả sản phẩm của 1 shop
+        /// </summary>
+        /// <param name="configApp"></param>
+        /// <returns>Danh sách sản phẩm. List rỗng nếu không lấy thành công</returns>
+        public static List<TikiProduct> GetListLatestProductsFromOneShop()
+        {
+            List<DevNameValuePair> listValuePair = new List<DevNameValuePair>();
+
+            // Phần tử đầu tiên của listValuePair phải là "page"
+            // Add page = 1
+            listValuePair.Add(new DevNameValuePair("page", ""));
+
+            // Add limit=20
+            listValuePair.Add(new DevNameValuePair("limit", TikiConstValues.cstrPerPage));
+
+            // Add "includes=seller,categories,inventory,attributes,images"
+            listValuePair.Add(new DevNameValuePair("include", "inventory,images"));
+
+            return GetListProductsCore(listValuePair, 0);
+        }
+
+        // Lấy danh sách sản phẩm NORMAL, trong khoảng thời gian nhất định
+        // Với TIKI lấy 50 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian => ta lấy 3 page
+        public static List<TikiProduct> TikiProductGetNormal_ItemList(
+            DateTime update_time_from, DateTime update_time_to)
+        {
+            List<TikiProduct> lsProduct = new List<TikiProduct>();
+
+            List<DevNameValuePair> listValuePair = new List<DevNameValuePair>();
+            // Phần tử đầu tiên của listValuePair phải là "page"
+            // Add page = 1
+            listValuePair.Add(new DevNameValuePair("page", ""));
+
+            // Add limit=20
+            listValuePair.Add(new DevNameValuePair("limit", TikiConstValues.cstrPerPage));
+
+            // Add "includes=seller,categories,inventory,attributes,images"
+            listValuePair.Add(new DevNameValuePair("include", "inventory,images"));
+
+            // current active of products that you want to filter ( 1 = active , 0 = inactive )
+            listValuePair.Add(new DevNameValuePair("active", "1"));
+
+            //// created_from_date. 2021-09-22 14:21:03
+            //listValuePair.Add(new DevNameValuePair("created_from_date",
+            //     "\"" + Common.GetTimeNowyyyyMMddHHmmss(update_time_from) + "\""));
+
+            //// created_to_date
+            //listValuePair.Add(new DevNameValuePair("created_to_date",
+            //    "\"" + Common.GetTimeNowyyyyMMddHHmmss(update_time_to) + "\""));
+
+            return GetListProductsCore(listValuePair, 3);
         }
 
         /// <summary>

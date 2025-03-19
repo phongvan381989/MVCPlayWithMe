@@ -193,9 +193,19 @@
                 </div>
             </div>
 
-            <div title="Lấy tất cả sản phẩm trên sàn (mất thời gian), sau đó lọc theo các tiêu chí người dùng chọn bên trên.
+            <div style="display: flex;">
+                <button type="button" class="pwm-btn-common" onclick="Filter()"
+                        title="Lấy tất cả sản phẩm trên sàn (mất thời gian), sau đó lọc theo các tiêu chí người dùng chọn bên trên.
                  Sẽ cập nhật trạng thái của sản phẩm trong quá trình lấy.">
-                <button type="button" class="pwm-btn-common" onclick="Filter()"><span class="pwm-btn-text-common">Lọc sản phẩm</span></button>
+                    <span class="pwm-btn-text-common">Lọc sản phẩm</span>
+                </button>
+                <button type="button" class="pwm-btn-common" onclick="GetNewItemOneMonth()"
+                        title="Có những sản phẩm mới chưa được lưu cơ sở dữ liêu.
+                        Với SHOPEE kiểm tra khoảng thời gian 1 tháng gần nhất những sản phẩm mới đăng, có thay đổi,....
+                        Với TIKI lấy 50 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian
+                        Click vào sản phẩm nếu có để lưu db và cập nhật mapping">
+                    <span class="pwm-btn-text-common">Lấy sản phẩm mới đăng 1 tháng gần đây</span>
+                </button>
             </div>
         </div>
 
@@ -548,6 +558,17 @@
             }
         }
 
+        function FilterCoreAndShow() {
+            // Lọc
+            listItemAfterFilter = listItem;
+            FilterGroup();
+
+            ShowPaging();
+
+            // Hiển thị trang đầu tiên
+            ShowPageListItemFilter(1);
+        }
+
         // Từ tham số lọc
         async function Filter() {
             // Lấy tất cả sản phẩm của sàn, mất thời gian
@@ -560,14 +581,28 @@
                 RemoveCircleLoader();
             }
 
-            // Lọc
-            listItemAfterFilter = listItem;
-            FilterGroup();
+            FilterCoreAndShow();
+        }
 
-            ShowPaging();
+        async function GetNewItemOneMonth() {
 
-            // Hiển thị trang đầu tiên
-            ShowPageListItemFilter(1);
+            ShowCircleLoader();
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetEEcommerceType());
+
+            let query = "/ProductECommerce/GetNewItemOneMonth";
+
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            if (responseDB.responseText != "null") {
+                listItem = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listItem = [];
+            }
+            RemoveCircleLoader();
+
+            FilterCoreAndShow();
         }
 
         function GoProductEcomercePageItem() {

@@ -1337,9 +1337,14 @@ namespace MVCPlayWithMe.General
             return dateTime;
         }
 
-        public static string GetTimeNowddMMYYYY()
+        public static string GetTimeNowddMMyyyy()
         {
             return DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
+        }
+
+        public static string GetTimeNowyyyyMMddHHmmss(DateTime dt)
+        {
+            return dt.ToString("yyyy-MM-ddTHH:mm:ss");
         }
 
         public static DateTime ConvertStringToDateTime(string str)

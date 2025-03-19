@@ -93,6 +93,7 @@ namespace MVCPlayWithMe.Models
                         product.republish = MyMySql.GetInt32(rdr, "Republish");
 
                         product.status = MyMySql.GetInt32(rdr, "Status");
+                        product.quantity = MyMySql.GetInt32(rdr, "Quantity");
                         product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
 
                         product.SetFirstSrcImage();
