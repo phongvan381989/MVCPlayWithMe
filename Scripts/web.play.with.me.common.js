@@ -2,6 +2,7 @@
 var thumbnailWidth = 150;
 var thumbnailHeight = 150;
 var avatarVideoHeight = 120;
+var noImageThumbnailName = "NoImageThumbnail.png";
 var srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
 var itemModelQuota = 5;
 var standardShipFeeInHaNoi = 15000; // Phí ship tiêu chuẩn trong Hà Nội
@@ -15,6 +16,7 @@ var eShopee = "SHOPEE";
 var eTiki = "TIKI";
 var eLazada = "LAZADA";
 var ePlayWithMe = "PLAYWITHME";
+var eAll = "ALL";
 var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
@@ -267,8 +269,9 @@ function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
         console.log("GetDataFromDatalist CALL value: " + str);
     }
     let option = document.getElementById(datalistId).options;
-    if (option == null)
+    if (option === null) {
         return null;
+    }
 
     let length = option.length;
     for (let i = 0; i < length; i++) {
@@ -477,9 +480,9 @@ async function ReloadAndScrollToTop() {
 }
 
 function TopFunction() {
-    if (DEBUG) {
-        console.log("TopFunction CALL");
-    }
+    //if (DEBUG) {
+    //    console.log("TopFunction CALL");
+    //}
     document.body.scrollTop = 0;
     document.documentElement.scrollTop = 0;
 }
@@ -1034,12 +1037,12 @@ function ShowOpenEye(ele) {
     ele.style.display = "none";
 }
 
-async function CopyImageFromTMDTToWarehouseProduct(ecommerceName, itemId, modelId, productId) {
+async function CopyImageFromTMDTToWarehouseProduct(eType, imageUrl, productId) {
     const searchParams = new URLSearchParams();
-    searchParams.append("ecommerceName", ecommerceName);
+    searchParams.append("eType", eType);
+    searchParams.append("imageUrl", imageUrl);
     searchParams.append("productId", productId);
-    searchParams.append("itemId", itemId);
-    searchParams.append("modelId", modelId);
+
 
     let query = "/ProductECommerce/CopyImageFromTMDTToWarehouseProduct";
 
@@ -1071,4 +1074,23 @@ async function UpdateStatusOfProduct(id, productStatus) {
     return new Promise((resolve) => {
         resolve(isOK);
     });
+}
+
+function GetECommerceType() {
+    let ecommerce = eAll; // Tương ứng tất cả
+
+    if (document.getElementById("tiki-e-ecommonerce-type").checked == true) {
+        ecommerce = eTiki;
+    }
+    else if (document.getElementById("shopee-e-ecommonerce-type").checked == true) {
+        ecommerce = eShopee;
+    }
+    else if (document.getElementById("lazada-e-ecommonerce-type").checked == true) {
+        ecommerce = eLazada;
+    }
+    else if (document.getElementById("play-with-me-e-ecommonerce-type").checked == true) {
+        ecommerce = ePlayWithMe;
+    }
+
+    return ecommerce;
 }

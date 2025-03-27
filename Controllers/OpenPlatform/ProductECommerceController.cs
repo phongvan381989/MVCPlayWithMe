@@ -439,8 +439,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string CopyImageFromTMDTToWarehouseProduct(string ecommerceName,
-            string itemId, string modelId, string productId)
+        public string CopyImageFromTMDTToWarehouseProduct(string eType,
+            string imageUrl, string productId)
         {
             MySqlResultState resultState = new MySqlResultState();
 
@@ -464,51 +464,66 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
             }
 
-            ShopeeGetItemBaseInfoItem pro =
-                        ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(
-                            Common.ConvertStringToInt64(itemId));
-            if (pro != null)
-            {
-                string url = "";
+            //ShopeeGetItemBaseInfoItem pro =
+            //            ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(
+            //                Common.ConvertStringToInt64(itemId));
+            //if (pro != null)
+            //{
+            //    string url = "";
 
-                // Lấy imageSrc cho model nếu có
-                if (pro.has_model)
-                {
-                    ShopeeGetModelListResponse obj =
-                        ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
-                    if (obj != null)
-                    {
-                        ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
-                        int count = tierVar.option_list.Count;
-                        for (int i = 0; i < count; i++)
-                        {
-                            ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
-                            ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
-                            // Lấy ảnh đại diện
-                            if (option.image != null)
-                            {
-                                if (Common.ConvertStringToInt64(modelId) == model.model_id)
-                                {
-                                    url = option.image.image_url;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    url = pro.image.image_url_list[0];
-                }
+            //    // Lấy imageSrc cho model nếu có
+            //    if (pro.has_model)
+            //    {
+            //        ShopeeGetModelListResponse obj =
+            //            ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
+            //        if (obj != null)
+            //        {
+            //            ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
+            //            int count = tierVar.option_list.Count;
+            //            for (int i = 0; i < count; i++)
+            //            {
+            //                ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
+            //                ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
+            //                // Lấy ảnh đại diện
+            //                if (option.image != null)
+            //                {
+            //                    if (Common.ConvertStringToInt64(modelId) == model.model_id)
+            //                    {
+            //                        url = option.image.image_url;
+            //                        break;
+            //                    }
+            //                }
+            //            }
+            //        }
+            //    }
+            //    else
+            //    {
+            //        url = pro.image.image_url_list[0];
+            //    }
 
-                // Tải ảnh
-                Common.DownloadImageAddWaterMarkAndReduce(url, Path.Combine(path, "0.jfif"));
-            }
-            else
+            //    // Tải ảnh
+            //    Common.DownloadImageAddWaterMarkAndReduce(url, Path.Combine(path, "0.jfif"));
+            //}
+            //else
+            //{
+            //    resultState.State = EMySqlResultState.INVALID;
+            //    resultState.Message = "Không lấy được thông tin. Vui lòng thử lại sau";
+            //}
+
+            if (eType == eShopee)
             {
-                resultState.State = EMySqlResultState.INVALID;
-                resultState.Message = "Không lấy được thông tin từ Shopee. Vui lòng thử lại sau";
+                Common.DownloadImageAddWaterMarkAndReduce(imageUrl, Path.Combine(path, "0.jfif"));
             }
+            else if (eType == eTiki)
+            {
+                // Lấy phần mở rộng
+                string fileExtension = Path.GetExtension(imageUrl);
+                if (!string.IsNullOrEmpty(fileExtension))
+                {
+                    Common.DownloadImageAddWaterMarkAndReduce(imageUrl, Path.Combine(path, "0" + fileExtension));
+                }
+            }
+
             return JsonConvert.SerializeObject(resultState);
         }
         #endregion
@@ -625,13 +640,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     sn_trackingNumber, ref sn, ref trackingNumber, conn);
                conn.Close();
 
-                ShopeeOrderDetail shopeeOrderDetail =
-                    ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
-
-                if (shopeeOrderDetail != null)
+                if (!string.IsNullOrEmpty(sn))
                 {
-                    shopeeOrderDetail.shipCode = trackingNumber;
-                    commonOrder = new CommonOrder(shopeeOrderDetail);
+                    ShopeeOrderDetail shopeeOrderDetail =
+                        ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
+
+                    if (shopeeOrderDetail != null)
+                    {
+                        shopeeOrderDetail.shipCode = trackingNumber;
+                        commonOrder = new CommonOrder(shopeeOrderDetail);
+                    }
                 }
             }
             else if (ecommerce == Common.eTiki)
@@ -643,7 +661,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
             }
 
-            lsCommonOrder.Add(commonOrder);
+            if (commonOrder != null)
+            {
+                lsCommonOrder.Add(commonOrder);
+            }
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
             ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
@@ -730,7 +751,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
 
             ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
-            if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            // Chuẩn bị đóng thì hủy đơn
+            if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
+            {
+                resultState = new MySqlResultState();
+                resultState.State = EMySqlResultState.INVALID;
+                resultState.Message = "Đơn hàng đã bị hủy.";
+            }
+            else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
             {
                 resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
                 order, status, 0, oldStatus, eECommerceType, conn);

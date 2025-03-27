@@ -5,6 +5,7 @@ using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
@@ -235,7 +236,26 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             else
                 bActive = false;
             has_model = false;
-            imageSrc = pro.thumbnail;
+            //imageSrc = pro.thumbnail;
+            if (pro.images.Count > 0 && !string.IsNullOrWhiteSpace(pro.thumbnail))
+            {
+                // Tìm ảnh giống tên với thumbnail
+                // Tìm tên file từ thumbnail
+                string thumbnailFileName = Path.GetFileName(pro.thumbnail);
+
+                // Lặp qua danh sách Images để tìm URL khớp
+                string imageFileName = null;
+                foreach (var image in pro.images)
+                {
+                    imageFileName = Path.GetFileName(image.url);
+                    if (imageFileName == thumbnailFileName)
+                    {
+                        imageSrc = image.url;
+                        break;
+                    }
+                }
+
+            }
 
             CommonModel commonModel = new CommonModel();
             commonModel.modelId = -1;
@@ -246,7 +266,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             // Lấy tên file ảnh
             // Từ url lấy được đường dẫn đầy đủ của ảnh
-            commonModel.imageSrc = pro.thumbnail;
+            commonModel.imageSrc = imageSrc;
 
             models.Add(commonModel);
         }

@@ -643,6 +643,21 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
+        // isSignle: true lấy sản phẩm trong kho chưa được bán như 1 sản phẩm riêng lẻ trên sàn (mapping chỉ có 1 mình sản phẩm), web.
+        // Ngược lại lấy sản phẩm trong kho chưa được bán trên sàn cả 1 sản phẩm riêng lẻ, combo.
+        [HttpGet]
+        public string SearchDontSellOnECommerce(Boolean isSingle, string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            List<Product>  lsSearchResult = sqler.SearchDontSellOnECommerce(isSingle, eType);
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
         [HttpGet]
         public string ChangePage(string publisher, string codeOrBarcode,
             string name, string combo,

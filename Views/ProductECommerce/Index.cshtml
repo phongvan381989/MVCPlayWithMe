@@ -7,18 +7,11 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <style>
-        .cvAncz980 {
-            display: flex;
-        }
 
-        .e-ecommonerce-type {
+        .display-flex-margin-right20-align-items-center {
             margin-right: 20px;
             display: flex;
             align-items: center;
-        }
-
-        .kmaZvc29 {
-            margin-left: 20px;
         }
 
         .item-image-ACvv {
@@ -37,14 +30,14 @@
             padding-left: 10px;
         }
 
-            .item-name-vsfc:link {
-                text-decoration: none;
-                color: black;
-            }
+        .item-name-vsfc:link {
+            text-decoration: none;
+            color: black;
+        }
 
-            .item-name-vsfc:visited {
-                color: black;
-            }
+        .item-name-vsfc:visited {
+            color: black;
+        }
 
         .paging-container {
             display: flex;
@@ -101,28 +94,8 @@
 <body>
     <div id="biggestContainer">
         <div class="e-product-filter">
-            <div>
-                <div class="cvAncz980">
-                    <div class="e-ecommonerce-type">
-                        <input type="radio" id="tiki-e-ecommonerce-type" name="name-e-ecommonerce-type"
-                               onchange="ECommerceTypeChange()"
-                               class="kmaZvc29">
-                        <label for="tiki-e-ecommonerce-type">Tiki</label>
-                    </div>
-                    <div class="e-ecommonerce-type">
-                        <input type="radio" id="shopee-e-ecommonerce-type" name="name-e-ecommonerce-type"
-                               onchange="ECommerceTypeChange()"
-                               class="kmaZvc29" checked>
-                        <label for="shopee-e-ecommonerce-type">Shopee</label>
-                    </div>
-                    <div class="e-ecommonerce-type">
-                        <input type="radio" id="lazada-e-ecommonerce-type" name="name-e-ecommonerce-type"
-                               onchange="ECommerceTypeChange()"
-                               class="kmaZvc29">
-                        <label for="lazada-e-ecommonerce-type">Lazada</label>
-                    </div>
-                </div>
-            </div>
+
+            @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
             <div class="KLMx09fs" title="Từ Id sản phẩm trên sàn Shopee, Tiki, Lazada đi đến trang liên kết sản phẩm trong kho">
                 <label for="TMDT-product-id" class="fzmg093rvz8">id sản phẩm trên sàn</label>
@@ -165,7 +138,7 @@
                     </div>
                 </div>
 
-                <div class="fcnal986j avszg947scb" title="Sản phẩm trên sàn SHOPEE được dùng để sinh sản phẩm trên web voibenho.
+                <div id="avszg947scb" class="fcnal986j" title="Sản phẩm trên sàn SHOPEE được dùng để sinh sản phẩm trên web voibenho.
                      Hiển thị sản phẩm nào trên sàn SHOPEE đã/ chưa sinh sản phẩm trên voibenho">
                     <div class="lk09Jbvrd">
                         <input type="radio" id="vxbaadh567" name="shopee-born-voibenho" value="On" />
@@ -226,19 +199,15 @@
         let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
         let listItemAfterFilter = []; // Danh sách common item sau khi lọc
         let sizePage = 50; // số lượng common Item trên mỗi page hiển thị.
-        function GetEEcommerceType() {
-            let type = eShopee;
-            let radio = document.getElementsByClassName("kmaZvc29");
-            if (radio[0].checked) {
-                type = eTiki;
-            }
-            else if (radio[1].checked) {
-                type = eShopee;
-            }
-            else if (radio[2].checked) {
-                type = eLazada;
-            }
-            return type;
+
+        InitializeSomething();
+        function InitializeSomething() {
+            // Xóa lựa chọn tất cả
+            document.getElementById("container-all-e-ecommonerce-type").remove();
+            // Xóa lựa chọn play with me
+            document.getElementById("container-play-with-me-e-ecommonerce-type").remove();
+            // Chọn Shopee
+            document.getElementById("shopee-e-ecommonerce-type").checked = true;
         }
 
         function RefreshRadioFilter() {
@@ -274,11 +243,11 @@
             RefreshRadioFilter();
 
             // Hiển / không hiện radio filter Sản phẩm SHOPEE sinh sản phẩm voibenho tùy theo sàn TMDT
-            if (document.getElementsByClassName("kmaZvc29")[1].checked) {
-                document.getElementsByClassName("avszg947scb")[0].style.display = "block";
+            if (document.getElementById("shopee-e-ecommonerce-type").checked) {
+                document.getElementById("avszg947scb").style.display = "block";
             }
             else {
-                document.getElementsByClassName("avszg947scb")[0].style.display = "none";
+                document.getElementById("avszg947scb").style.display = "none";
             }
         }
 
@@ -364,7 +333,7 @@
                 let linkText = document.createTextNode(item.name);
                 itemName.appendChild(linkText);
                 itemName.title = item.name;
-                itemName.href = "/ProductECommerce/Item?eType=" + GetEEcommerceType() + "&id=" + item.itemId;
+                itemName.href = "/ProductECommerce/Item?eType=" + GetECommerceType() + "&id=" + item.itemId;
                 itemName.setAttribute("target", "_blank");
 
                 itemDiv.appendChild(itemName);
@@ -553,7 +522,7 @@
 
             FilterName();
 
-            if (GetEEcommerceType() == eShopee) {
+            if (GetECommerceType() == eShopee) {
                 FilterShopeeBornVoibenho();
             }
         }
@@ -574,7 +543,7 @@
             // Lấy tất cả sản phẩm của sàn, mất thời gian
             if (listItem.length == 0) {
                 ShowCircleLoader();
-                let responseDB = await GetProductAll(GetEEcommerceType());
+                let responseDB = await GetProductAll(GetECommerceType());
                 if (responseDB.responseText != "null") {
                     listItem = JSON.parse(responseDB.responseText);
                 }
@@ -589,7 +558,7 @@
             ShowCircleLoader();
 
             const searchParams = new URLSearchParams();
-            searchParams.append("eType", GetEEcommerceType());
+            searchParams.append("eType", GetECommerceType());
 
             let query = "/ProductECommerce/GetNewItemOneMonth";
 
@@ -607,7 +576,7 @@
 
         function GoProductEcomercePageItem() {
             const searchParams = new URLSearchParams();
-            searchParams.append("eType", GetEEcommerceType());
+            searchParams.append("eType", GetECommerceType());
             searchParams.append("id", document.getElementById("TMDT-product-id").value);
 
             let url = "/ProductECommerce/Item?" + searchParams.toString();

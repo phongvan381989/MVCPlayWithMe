@@ -8,16 +8,10 @@
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
     <style>
-        .cvAncz980 {
-            display: flex;
-        }
         .pro-status {
             margin-right: 20px;
             display: flex;
             align-items: center;
-        }
-        .kmaZvc29 {
-            margin-left: 20px;
         }
 
         .fmx09gx8 {
@@ -50,28 +44,53 @@
                 <div>
                     <label for="publisher-id">Nhà phát hành:</label>
                     <input list="list-Publisher" class="config-max-width margin-vertical"
-                           id="publisher-id">
+                           id="publisher-id" onchange="ChangePublisher()">
                     <datalist id="list-Publisher"></datalist>
                 </div>
                 <br>
-                <div>
-                    <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
-                    <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
-                </div>
-                <br>
+                <div id="anzgnsg88720n">
+                    <div>
+                        <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
+                        <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+                    </div>
+                    <br>
 
-                @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
-                <br>
-                @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
-                <br />
+                    @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
+                    <br>
+                    @Html.Partial("~/Views/Shared/ComboSelect.cshtml")
+                </div>
+
+                <div style="margin:10px;">
+                    <div>
+                        <input type="checkbox" id="checkbox-on-off-dont-sell" onclick="OnOffSearchDontSellOnECommerce()">
+                        <label for="checkbox-on-off-dont-sell">Tìm sản phẩm chưa đăng bán</label>
+                    </div>
+                    <div style="margin-bottom:10px;"id="xmskgjskjp0258">
+                        @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
+                        <div>
+                            <button type="button" style="margin-left: 30px; margin-right:10px;"
+                                    title="Sản phẩm trong kho chưa đăng bán trên sàn thương mại điện tử.
+                        Kết quả trả về được sắp xếp tồn kho tăng dần. Chọn nhà phát hành để lọc sau khi lấy được tất cả"
+                                    onclick="SearchDontSellOnECommerce(false)">
+                                Chưa đăng bán
+                            </button>
+
+                            <button type="button" title="Sản phẩm trong kho chưa đăng bán trên sàn thương mại điện tử.
+                        Kết quả trả về được sắp xếp tồn kho tăng dần. Chọn nhà phát hành để lọc sau khi lấy được tất cả"
+                                    onclick="SearchDontSellOnECommerce(true)">
+                                Chưa đăng bán riêng lẻ.
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div style="position:relative;">
-                <button type="button" title="Kết quả trả về được sắp xếp tồn kho tăng dần."
-                        onclick="Search()">
+                <button type="button" title="Kết quả lọc theo nhà phát hành, mã, ISBN, tên và tên combo.
+                        Kết quả trả về được sắp xếp tồn kho tăng dần."
+                        onclick="SearchProduct()" id="nfkalzu9825">
                     Tìm kiếm
                 </button>
-
                 <button type="button" title="Cập nhật số lượng theo danh sách hiển thị bên dưới."
                         style="position: absolute; right:10px;"
                         onclick="UpdateQuantityFromListBelow()">
@@ -88,19 +107,19 @@
                     <div class="fmx09gx8" title="Lọc kết quả tìm kiếm và hiển thị">
                         <div class="pro-status">
                             <input type="radio" id="status-all" name="status-avxgbhf"
-                                   class="kmaZvc29" checked
+                                   class="margin-left20" checked
                                    onchange="FilterProductAll()">
                             <label for="status-all">Tất Cả</label>
                         </div>
                         <div class="pro-status">
                             <input type="radio" id="status-normal" name="status-avxgbhf"
-                                   class="kmaZvc29"
+                                   class="margin-left20"
                                    onchange="FilterProductNormal()">
                             <label for="status-normal">Đang Bán</label>
                         </div>
                         <div class="pro-status">
                             <input type="radio" id="status-banned" name="status-avxgbhf"
-                                   class="kmaZvc29"
+                                   class="margin-left20"
                                    onchange="FilterProductDisable()">
                             <label for="status-banned">Dừng Bán</label>
                         </div>
@@ -108,7 +127,7 @@
                         <div class="pro-status"
                              title="Sản phẩm có tồn kho bằng 0. Bao gồm cả sản phẩm dừng kinh doanh">
                             <input type="radio" id="quantity-zero" name="status-avxgbhf"
-                                   class="kmaZvc29"
+                                   class="margin-left20"
                                    onchange="FilterProductQuantityZero()">
                             <label for="quantity-zero">Hết Hàng</label>
                         </div>
@@ -116,21 +135,21 @@
                         <div class="pro-status"
                              title="Sản phẩm có tồn kho bằng 0. Không bao gồm sản phẩm dừng kinh doanh">
                             <input type="radio" id="quantity-zero-disable" name="status-avxgbhf"
-                                   class="kmaZvc29"
+                                   class="margin-left20"
                                    onchange="FilterProductNormalQuantityZero()">
                             <label for="quantity-zero-disable">Đang Bán Và Hết Hàng</label>
                         </div>
 
                         <div class="pro-status">
                             <input type="radio" id="pro-no-price" name="status-avxgbhf"
-                                   class="kmaZvc29"
+                                   class="margin-left20"
                                    title="Sản phẩm có giá bằng 0, thậm chí nhỏ hơn 0"
                                    onchange="FilterProductNoPrice()">
                             <label for="pro-no-price">Chưa Set Giá</label>
                         </div>
 
                         <div class="pro-status">
-                            <input type="radio" id="fzadgfgrj9567af" name="status-avxgbhf" class="kmaZvc29"
+                            <input type="radio" id="fzadgfgrj9567af" name="status-avxgbhf" class="margin-left20"
                                    title="Giá bán có giá lớn hơn hoặc bằng giá trị bên cạnh"
                                    onchange="FilterProductPriceBigger()">
                             <label for="fzadgfgrj9567af">Giá Lớn Hơn</label>
@@ -140,7 +159,7 @@
                         </div>
 
                         <div class="pro-status">
-                            <input type="radio" id="ghjsf834gh5sg" name="status-avxgbhf" class="kmaZvc29"
+                            <input type="radio" id="ghjsf834gh5sg" name="status-avxgbhf" class="margin-left20"
                                    title="Giá bán nhỏ hơn hoặc bằng giá trị bên cạnh"
                                    onchange="FilterProductPriceSmaller()">
                             <label for="ghjsf834gh5sg">Giá Nhỏ Hơn</label>
@@ -166,7 +185,6 @@
                     </table>
                 </div>
             </div>
-
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
@@ -180,30 +198,100 @@
         let combo;
         let proStatus;
         let listProduct = [];// Kết quả trả về
+        // Lưu giá trị của listProduct khi listProduct cần thay đổi sau khi lấy tất cả sản phẩm chưa đăng
+        // bán trên sàn, cần lọc theo nhà phát hành
+        let listProductTemp = []
         let listProductWillShow = []; //  Kết quả sau khi lọc hiển thị ra màn hình
 
+        InitializeSomething();
         GetListPublisher();
         GetListProductName();
         GetListCombo();
 
-        // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
-        async function Search() {
-            listProduct = [];// danh sách server trả về sắp xếp tồn kho tăng dần
-            listProductWillShow = [];// danh sách sau khi lọc và được hiển thị
+        OnOffSearchDontSellOnECommerce();
 
-            let url = "/Product/SearchProduct";
-            const searchParams = new URLSearchParams();
-            SetSearchParameter(searchParams);
+        function InitializeSomething() {
+            // Xóa lựa chọn tất cả
+            document.getElementById("container-all-e-ecommonerce-type").remove();
+            // Chọn SHOPEE
+            document.getElementById("shopee-e-ecommonerce-type").checked =  true;
+        }
+
+        function RefreshResultView() {
+            document.getElementById("empty-result").style.display = "none";
+            document.getElementById("search-result").style.display = "none";
+
+            document.getElementById("count-result").innerHTML = "";
+            let table = document.getElementById("myTable");
+            // Làm trống bảng
+            DeleteRowsExcludeHead(table);
+
+            // Làm mới input
+            document.getElementById("publisher-id").value = "";
+            document.getElementById("code-or-isbn").value = "";
+            document.getElementById("product-name-id").value = "";
+            document.getElementById("combo-id").value = "";
+        }
+
+        function OnOffSearchDontSellOnECommerce() {
+            if (DEBUG) {
+                console.log("OnOffSearchDontSellOnECommerce CALL");
+            }
+            let checkBox = document.getElementById("checkbox-on-off-dont-sell");
+            if (checkBox.checked == true) {
+                document.getElementById("xmskgjskjp0258").style.display = "block";
+                document.getElementById("anzgnsg88720n").style.display = "none";
+                document.getElementById("nfkalzu9825").disabled = true;
+            } else {
+                document.getElementById("xmskgjskjp0258").style.display = "none";
+                document.getElementById("anzgnsg88720n").style.display = "block";
+                document.getElementById("nfkalzu9825").disabled = false;
+            }
+            RefreshResultView();
+            ResfreshListData();
+        }
+
+        // Hiển thị kết quả đã tìm kiếm sản phẩm chưa bán theo nhà phát hành
+        function ChangePublisher() {
+            if (DEBUG) {
+                console.log("ChangePublisher CALL");
+            }
+            let checkBox = document.getElementById("checkbox-on-off-dont-sell");
+            if (checkBox.checked == true) {
+                let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
+                if (publisherId != null) {
+                    listProduct = [];
+                    let length = listProductTemp.length;
+
+                    if (DEBUG) {
+                        console.log("listProductTemp.length: " + length);
+                        console.log(JSON.stringify(listProductTemp));
+                    }
+
+                    // Lấy tất cả sản phẩm chưa được đăng bán thuộc 1 nhà phát hành
+                    for (let i = 0; i < length; i++) {
+                        if (listProductTemp[i].publisherId == publisherId) {
+                            listProduct.push(listProductTemp[i]);
+                        }
+                    }
+
+                    document.getElementById("status-all").checked = true;
+                    FilterProductAll();
+                }
+            }
+        }
+
+        async function SearchProductCore(url, searchParams) {
             ShowCircleLoader();
             let responseDB = await RequestHttpGetPromise(searchParams, url);
             RemoveCircleLoader();
             if (responseDB.responseText != "null") {
-                // Kết quả trả về đã được sắp xếp tăng dần tồn kho
+                // Kết quả trả về có thể được sắp xếp tăng dần tồn kho, hoặc theo combo, tồn kho
                 listProduct = JSON.parse(responseDB.responseText);
+                listProductTemp = listProduct;
             }
             else {
-                listProduct = [];
-                listProductWillShow = [];
+                ResfreshListData();
             }
 
             // Lấy số lượng sản phẩm trong kết quả trả về
@@ -218,6 +306,22 @@
             document.getElementById("search-result").style.display = "block";
             document.getElementById("status-all").checked = true;
             FilterProductAll();
+        }
+
+        function ResfreshListData() {
+            listProduct = [];// danh sách server trả về sắp xếp tồn kho tăng dần
+            listProductTemp = [];
+            listProductWillShow = [];// danh sách sau khi lọc và được hiển thị
+        }
+
+        // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
+        function SearchProduct() {
+            ResfreshListData();
+
+            let url = "/Product/SearchProduct";
+            const searchParams = new URLSearchParams();
+            SetSearchParameter(searchParams);
+            SearchProductCore(url, searchParams);
         }
 
         async function UpdateQuantityFromListBelow() {
@@ -240,10 +344,10 @@
                 return;
             }
 
-            if (DEBUG) {
-                console.log("listId: " + JSON.stringify(listId));
-                console.log("listQuantity: " + JSON.stringify(listQuantity));
-            }
+            //if (DEBUG) {
+            //    console.log("listId: " + JSON.stringify(listId));
+            //    console.log("listQuantity: " + JSON.stringify(listQuantity));
+            //}
 
             let url = "/Product/UpdateQuantityFromListBelow";
             const searchParams = new URLSearchParams();
@@ -370,7 +474,8 @@
 
                 pComboName.onclick = function () {
                     // Lấy combo id
-                    let id = Number(this.parentElement.parentElement.children[6].innerHTML);
+                    let childrenOfRow = this.parentElement.parentElement.children;
+                    let id = Number(childrenOfRow[childrenOfRow.length - 1].innerHTML);
                     if (isNaN(id) || id == -1) {
                         CreateMustClickOkModal("Sản phẩm không thuộc combo nào hoặc không lấy được thông tin combo.")
                         return;
@@ -412,6 +517,12 @@
 
                 // Thêm sự kiện click để thay đổi trạng thái
                 button.addEventListener('click', async function () {
+                    if (!this.product.status != 2) { // Đang bật, muốn tắt phải hỏi lại cho chắc
+                        let text = "Bạn chắc chắn muốn NGƯNG BÁN sản phẩm này?";
+                        if (confirm(text) == false)
+                            return;
+                    }
+
                     let newProductStatus = 0;
                     if (this.product.status == 2) { // đang tắt cần bật
                         newProductStatus = 0;
@@ -420,9 +531,6 @@
                         newProductStatus = 2;
                     }
                     let isOK = await UpdateStatusOfProduct(this.product.id, newProductStatus);
-                    if (DEBUG) {
-                        console.log("Test độ xoắn max");
-                    }
                     if (isOK) {
                         this.product.status = newProductStatus;
                         this.textContent = this.textContent === "Bật" ? "Tắt" : "Bật";
@@ -633,6 +741,21 @@
                 }
             }
             ShowSearchingResult(listProductWillShow);
+        }
+
+        function ECommerceTypeChange() {
+            RefreshResultView();
+        }
+
+        async function SearchDontSellOnECommerce(isSingle) {
+            // Làm mới input publisher
+            document.getElementById("publisher-id").value = "";
+
+            let url = "/Product/SearchDontSellOnECommerce";
+            const searchParams = new URLSearchParams();
+            searchParams.append("isSingle", isSingle);
+            searchParams.append("eType", GetECommerceType());
+            SearchProductCore(url, searchParams);
         }
     </script>
 </body>

@@ -36,7 +36,7 @@ namespace MVCPlayWithMe.Controllers
                 return;
             }
 
-            // Check status: UNPAID, READY_TO_SHIP, CANCELLED đề phòng miss thông báo.
+            // Check status: UNPAID, READY_TO_SHIP, CANCELLED, TO_RETURN đề phòng miss thông báo.
             // UNPAID, READY_TO_SHIP: thông báo này đến trước sự kiện đóng đơn
             // Những trạng thái khác không xử lý. Ví dụ trạng thái SHIPPED. Khi có 100 đơn hàng, shipper lấy hàng quét liên tục 
             // sẽ có 100 thông báo gửi về server cùng lúc, nếu ta không return ở đây có thể gây treo server.
@@ -45,6 +45,7 @@ namespace MVCPlayWithMe.Controllers
                 orderStatusPush.status != "READY_TO_SHIP" &&
                 //orderStatusPush.status != "PROCESSED" &&
                 //orderStatusPush.status != "IN_CANCEL" &&
+                orderStatusPush.status != "TO_RETURN" &&
                 orderStatusPush.status != "CANCELLED")
             {
                 return;
@@ -61,19 +62,22 @@ namespace MVCPlayWithMe.Controllers
             ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
 
             ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
-             if (orderStatusPush.status == "CANCELLED")
+             if (orderStatusPush.status == "CANCELLED" || orderStatusPush.status == "TO_RETURN")
             {
                 status = ECommerceOrderStatus.UNBOOKED;
-                // Khách hủy và đã có mã vận đơn nhưng chưa được lưu db do chưa xác nhận đã đóng,
-                // ta sẽ lưu vào db
+                if (orderStatusPush.status == "CANCELLED")
+                    {
+                    // Khách hủy và đã có mã vận đơn nhưng chưa được lưu db do chưa xác nhận đã đóng,
+                    // ta sẽ lưu vào db
 
-                string trackingNumber = shopeeMySql.GetTrackingNumberFromSNConnectOut(
+                    string trackingNumber = shopeeMySql.GetTrackingNumberFromSNConnectOut(
                     orderStatusPush.ordersn, conn);
 
-                if (string.IsNullOrEmpty(trackingNumber))
-                {
-                    trackingNumber = ShopeeGetTrackingNumber.ShopeeGetShipCode(orderStatusPush.ordersn, string.Empty);
-                    shopeeMySql.UpdateUpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
+                    if (string.IsNullOrEmpty(trackingNumber))
+                    {
+                        trackingNumber = ShopeeGetTrackingNumber.ShopeeGetShipCode(orderStatusPush.ordersn, string.Empty);
+                        shopeeMySql.UpdateUpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
+                    }
                 }
             }
 

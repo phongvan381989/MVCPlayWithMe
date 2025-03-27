@@ -72,6 +72,7 @@ namespace MVCPlayWithMe.General
         public static string eTiki = "TIKI";
         public static string eLazada = "LAZADA";
         public static string ePlayWithMe = "PLAYWITHME";
+        public static string eAll = "ALL";
 
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
@@ -755,13 +756,13 @@ namespace MVCPlayWithMe.General
             if (File.Exists(fileName))
                 return 0;
 
-            RestClient client = new RestClient(url);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.GET);
             //IRestResponse response = client.Execute(request);
 
             try
             {
+                RestClient client = new RestClient(url);
+                client.Timeout = -1;
+                RestRequest request = new RestRequest(Method.GET);
                 var fileBytes = client.DownloadData(request);
                 File.WriteAllBytes(fileName, fileBytes);
             }

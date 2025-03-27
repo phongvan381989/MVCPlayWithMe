@@ -8,46 +8,13 @@
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
     <style>
-        .cvAncz980 {
-            display: flex;
-        }
 
-        .e-ecommonerce-type {
-            margin-right: 20px;
-            display: flex;
-            align-items: center;
-        }
-
-        .kmaZvc29 {
-            margin-left: 20px;
-        }
     </style>
 </head>
 <body>
     <div id="biggestContainer">
         <div class="e-product-filter">
-            <div>
-                <div class="cvAncz980">
-                    <div class="e-ecommonerce-type">
-                        <input type="radio" id="tiki-e-ecommonerce-type" name="name-e-ecommonerce-type"
-                               onchange="ECommerceTypeChange()"
-                               class="kmaZvc29">
-                        <label for="tiki-e-ecommonerce-type">Tiki</label>
-                    </div>
-                    <div class="e-ecommonerce-type">
-                        <input type="radio" id="shopee-e-ecommonerce-type" name="name-e-ecommonerce-type"
-                               onchange="ECommerceTypeChange()"
-                               class="kmaZvc29" checked>
-                        <label for="shopee-e-ecommonerce-type">Shopee</label>
-                    </div>
-                    <div class="e-ecommonerce-type">
-                        <input type="radio" id="lazada-e-ecommonerce-type" name="name-e-ecommonerce-type"
-                               onchange="ECommerceTypeChange()"
-                               class="kmaZvc29">
-                        <label for="lazada-e-ecommonerce-type">Lazada</label>
-                    </div>
-                </div>
-            </div>
+            @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
             <div title="Lấy itemid, modelid sản phẩm Shopee, Tiki, Lazada đã được lưu trên db.">
                 <button type="button" class="pwm-btn-common" onclick="GetItemOnDB()"><span class="pwm-btn-text-common">Lấy Sản Phẩm</span></button>
@@ -74,19 +41,15 @@
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
-        function GetEEcommerceType() {
-            let type = eShopee;
-            let radio = document.getElementsByClassName("kmaZvc29");
-            if (radio[0].checked) {
-                type = eTiki;
-            }
-            else if (radio[1].checked) {
-                type = eShopee;
-            }
-            else if (radio[2].checked) {
-                type = eLazada;
-            }
-            return type;
+
+        InitializeSomething();
+        function InitializeSomething() {
+            // Xóa lựa chọn tất cả
+            document.getElementById("container-all-e-ecommonerce-type").remove();
+            // Xóa lựa chọn play with me
+            document.getElementById("container-play-with-me-e-ecommonerce-type").remove();
+            // Chọn Shopee
+            document.getElementById("shopee-e-ecommonerce-type").checked = true;
         }
 
         function ECommerceTypeChange() {
@@ -96,13 +59,14 @@
         }
 
         async function GetItemOnDB() {
-            if (GetEEcommerceType() == eLazada)
+            if (GetECommerceType() == eLazada) {
                 return;
+            }
 
             // Lấy tất cả sản phẩm của sàn, mất thời gian
             if (listItem.length == 0) {
                 const searchParams = new URLSearchParams();
-                searchParams.append("eType", GetEEcommerceType());
+                searchParams.append("eType", GetECommerceType());
 
                 let query = "/ProductECommerce/GetItemOnDB";
 
@@ -165,7 +129,7 @@
                         // Lấy id
                         let id = Number(this.innerHTML);
                         const searchParams = new URLSearchParams();
-                        searchParams.append("eType", GetEEcommerceType());
+                        searchParams.append("eType", GetECommerceType());
                         searchParams.append("itemId", id);
                         let query = "/ProductECommerce/DeleteItemOnDB";
                         ShowCircleLoader();
@@ -187,7 +151,7 @@
                             // Lấy id
                             let id = Number(this.innerHTML);
                             const searchParams = new URLSearchParams();
-                            searchParams.append("eType", GetEEcommerceType());
+                            searchParams.append("eType", GetECommerceType());
                             searchParams.append("modelId", id);
                             let query = "/ProductECommerce/DeleteShopeeModelOnDB";
                             ShowCircleLoader();

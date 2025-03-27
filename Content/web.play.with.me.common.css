@@ -523,3 +523,21 @@ sup {
 .faf08xvj:link, .faf08xvj:visited, .faf08xvj:hover, .faf08xvj:active {
     text-decoration: none;
 }
+.display-flex-margin10 {
+    display: flex;
+    margin: 10px;
+}
+.display-flex-margin-right20-align-items-center {
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.margin-left20 {
+    margin-left: 20px;
+}
+
+.margin-top-bottom10 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}

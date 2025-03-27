@@ -75,6 +75,7 @@ namespace MVCPlayWithMe.Models
             product.status = MyMySql.GetInt32(rdr, "Status");
             product.comboId = MyMySql.GetInt32(rdr, "ComboId");
             product.comboName = MyMySql.GetString(rdr, "ComboName");
+            product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
             product.SetFirstSrcImage();
 
             return product;
@@ -1020,6 +1021,54 @@ namespace MVCPlayWithMe.Models
             catch (Exception ex)
             {
                 
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+            return ls;
+        }
+
+        public List<Product> SearchDontSellOnECommerce (Boolean isSingle, string eType)
+        {
+            string store = string.Empty;
+            if (eType == Common.eTiki)
+            {
+                store = "st_tbProducts_Search_Dont_Sell_On_Tiki";
+            }
+            else if (eType == Common.eShopee)
+            {
+                store = "st_tbProducts_Search_Dont_Sell_On_Shopee";
+            }
+            else if (eType == Common.ePlayWithMe)
+            {
+                store = "st_tbProducts_Search_Dont_Sell_On_PlayWithMe";
+            }
+
+            if (isSingle)
+            {
+                store = store + "_Signle";
+            }
+
+            List<Product> ls = new List<Product>();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(store, conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    ls.Add(ConvertQuicklyOneRowFromDataMySql(rdr));
+                }
+
+                if (rdr != null)
+                    rdr.Close();
+            }
+            catch (Exception ex)
+            {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 

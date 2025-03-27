@@ -98,10 +98,10 @@ async function CommonAction() {
         //window.history.pushState({}, "");
 
         //window.addEventListener("popstate", (e) => {
-        //    if (DEBUG) {
-        //        console.log("popstate UpdateCartCount CALL ");
-        //    }
-        //    UpdateCartCount();
+        //if (DEBUG) {
+        //    console.log("popstate UpdateCartCount CALL ");
+        //}
+        //UpdateCartCount();
         //});
 
         await ShowAccoutAction();

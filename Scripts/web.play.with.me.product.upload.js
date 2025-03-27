@@ -380,9 +380,9 @@ function ShowUpdateButtonForOne() {
     collection = document.getElementsByClassName("disable-true-when-create");
 
     for (let i = 0; i < collection.length; i++) {
-        if (DEBUG) {
-            console.log("collection[i].disabled: " + collection[i].disabled);
-        }
+        //if (DEBUG) {
+        //    console.log("collection[i].disabled: " + collection[i].disabled);
+        //}
         collection[i].disabled = false;
     }
 }
@@ -557,9 +557,9 @@ async function UpdateComboId() {
 function ComboOfProductPage() {
     let comboId = document.getElementById("combo-id").comboIdValue;
     if (comboId == null || comboId == -1) {
-        if (DEBUG) {
-            console.log("comboIdValue: " + comboId);
-        }
+        //if (DEBUG) {
+        //    console.log("comboIdValue: " + comboId);
+        //}
         CreateMustClickOkModal("Sản phẩm không thuộc combo nào hoặc không lấy được thông tin combo.", null);
         return;
     }

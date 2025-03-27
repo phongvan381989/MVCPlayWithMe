@@ -9,21 +9,6 @@
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
     @*<link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">*@
     <style>
-        .cvAncz980 {
-            display: flex;
-            margin: 10px;
-        }
-
-        .vbcgh45367 {
-            margin-right: 20px;
-            display: flex;
-            align-items: center;
-        }
-
-        .kmaZvc29 {
-            margin-left: 20px;
-        }
-
         .vndejhx90 {
             margin: 5px;
         }
@@ -148,73 +133,51 @@
 </head>
 <body>
     <div id="biggestContainer">
-        <div class="cvAncz980">
-            <div class="vbcgh45367">
-                <input type="radio" id="one-day" name="from-to-day" class="kmaZvc29 one-day">
+        <div class="display-flex-margin10">
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="one-day" name="from-to-day" class="margin-left20 one-day">
                 <label for="one-day">1 Ngày</label>
             </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="seven-day" name="from-to-day" class="kmaZvc29 seven-day" checked>
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="seven-day" name="from-to-day" class="margin-left20 seven-day" checked>
                 <label for="seven-day">7 Ngày</label>
             </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="thirty-day" name="from-to-day" class="kmaZvc29 thirty-day">
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="thirty-day" name="from-to-day" class="margin-left20 thirty-day">
                 <label for="thirty-day">30 Ngày</label>
             </div>
         </div>
 
-        <div class="cvAncz980">
-            <div class="vbcgh45367">
-                <input type="radio" id="all-order" name="order-type" class="kmaZvc29 all-order">
+        <div class="display-flex-margin10">
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="all-order" name="order-type" class="margin-left20 all-order">
                 <label for="all-order">Tất Cả</label>
             </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="dont-pack-order" name="order-type" class="kmaZvc29 dont-pack-order"
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="dont-pack-order" name="order-type" class="margin-left20 dont-pack-order"
                        checked>
                 <label for="dont-pack-order">Cần Gửi Hàng</label>
             </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="canceled-order" name="order-type" class="kmaZvc29 canceled-order">
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="canceled-order" name="order-type" class="margin-left20 canceled-order">
                 <label for="canceled-order">Hủy</label>
             </div>
         </div>
 
-        <div class="cvAncz980">
-            <button type="button" class="vndejhx90" onclick="GetListOrder()" 
-                    title="Lấy danh sách đơn hàng theo thời gian, trạng thái như trên">Danh Sách Đơn Hàng</button>
+        <div class="display-flex-margin10">
+            <button type="button" class="vndejhx90" onclick="GetListOrder()"
+                    title="Lấy danh sách đơn hàng theo thời gian, trạng thái như trên">
+                Danh Sách Đơn Hàng
+            </button>
             <button type="button" class="vndejhx90" title="Khả dụng khi chọn Cần Gửi Hàng"
-                    onclick="CheckPackedOrderEnough()">Kiểm Tra Đủ Đơn</button>
+                    onclick="CheckPackedOrderEnough()">
+                Kiểm Tra Đủ Đơn
+            </button>
         </div>
 
-        <div class="cvAncz980">
-            <div class="vbcgh45367">
-                <input type="radio" id="all-eCommerce" name="eCommerce-type" class="kmaZvc29 all-eCommerce"
-                       onchange="FilterOrder()" checked>
-                <label for="all-eCommerce">Tất Cả</label>
-            </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="play-with-me-eCommerce" name="eCommerce-type" class="kmaZvc29 play-with-me-eCommerce"
-                       onchange="FilterOrder()">
-                <label for="play-with-me-eCommerce">Play With Me</label>
-            </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="tiki-eCommerce" name="eCommerce-type" class="kmaZvc29 tiki-eCommerce"
-                       onchange="FilterOrder()">
-                <label for="tiki-eCommerce">TIKI</label>
-            </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="shopee-eCommerce" name="eCommerce-type" class="kmaZvc29 shopee-eCommerce"
-                       onchange="FilterOrder()">
-                <label for="shopee-eCommerce">SHOPEE</label>
-            </div>
-            <div class="vbcgh45367">
-                <input type="radio" id="lazada-eCommerce" name="eCommerce-type" class="kmaZvc29 lazada-eCommerce"
-                       onchange="FilterOrder()">
-                <label for="lazada-eCommerce">LAZADA</label>
-            </div>
-        </div>
+        @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
-        <div class="cvAncz980">
+        <div class="display-flex-margin10">
             <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn" />
             <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetailFromDownloadedList()"
                     title="Tìm trong danh sách dữ liệu đã tải về">
@@ -307,6 +270,7 @@
 
         InitializeModalInOrderPage();
         InitializeEnterPress();
+        InitializeSomething();
 
         function InitializeEnterPress() {
             modal.style.display = "none";
@@ -333,6 +297,11 @@
             });
         }
 
+        function InitializeSomething() {
+            // Chọn phần tử tất cả
+            document.getElementById("all-e-ecommonerce-type").checked = true;
+        }
+
         // 0: 1 ngày, 1: 7 ngày, 2: 30 ngày
         function GetFromTo() {
             let fromto = 1;
@@ -357,24 +326,6 @@
             return orderStatus;
         }
 
-        function GetECommerceType() {
-            let ecommerce = ""; // Tương ứng tất cả
-            if (document.getElementsByClassName("tiki-eCommerce")[0].checked == true) {
-                ecommerce = eTiki;
-            }
-            else if (document.getElementsByClassName("shopee-eCommerce")[0].checked == true) {
-                ecommerce = eShopee;
-            }
-            else if (document.getElementsByClassName("lazada-eCommerce")[0].checked == true) {
-                ecommerce = eLazada;
-            }
-            else if (document.getElementsByClassName("play-with-me-eCommerce")[0].checked == true) {
-                ecommerce = ePlayWithMe;
-            }
-
-            return ecommerce;
-        }
-
         // Lấy tất cả đơn hàng trong 1 khoảng thời gian
         async function GetListOrder() {
             const searchParams = new URLSearchParams();
@@ -394,7 +345,7 @@
             // Hiển thị danh sách đơn hàng
             listOrder = JSON.parse(responseDB.responseText);
 
-            FilterOrder();
+            ECommerceTypeChange();
         }
 
         // Kiểm tra đơn đang hiển thị "Đã Đóng" hết chưa
@@ -634,7 +585,7 @@
             let order;
             let length = list.length;
             // Lấy tất cả
-            if (ecommerce == "") {
+            if (ecommerce == eAll) {
                 listTemp = list;
             }
             else {
@@ -720,7 +671,7 @@
         }
 
         // Lọc order theo trạng thái, sàn
-        function FilterOrder() {
+        function ECommerceTypeChange() {
             if (listOrder.length == 0) {
                 DisplayListOrder(listOrder);
                 return;
@@ -833,6 +784,7 @@
                 container.setAttribute("data-item-index", i);
                 orderContainer.appendChild(container);
 
+                let eImageSrc = "";
                 // Hiển thị sản phẩm trên sàn
                 {
                     let itemContainer = document.createElement("div");
@@ -856,6 +808,7 @@
                     img.className = "nvzlfksjgs095 img-cursor";
                     if (order.listThumbnail.length > 0) {
                         img.setAttribute("src", order.listThumbnail[i]);
+                        eImageSrc = order.listThumbnail[i];
                     } else {
                         img.setAttribute("src", srcNoImageThumbnail);
                     }
@@ -960,8 +913,10 @@
                         // Image
                         let img = document.createElement("img");
                         img.className = "nvzlfksjgs095 img-cursor";
+                        let imageSrc = "";
                         if (order.listMapping[i][j].product.imageSrc.length > 0) {
                             img.setAttribute("src", Get320VersionOfImageSrc(order.listMapping[i][j].product.imageSrc[0]));
+                            imageSrc = order.listMapping[i][j].product.imageSrc[0];
                         } else {
                             img.setAttribute("src", srcNoImageThumbnail);
                             issrcNoImageThumbnail = true;
@@ -979,22 +934,24 @@
                         // Ta hiển thị nút cho phép sao chép ảnh của sản phẩm trên sàn
                         if (issrcNoImageThumbnail
                             && order.listMapping[i].length == 1
-                            && order.ecommerceName == eShopee) {
+                            && eImageSrc != ""
+                            && order.ecommerceName != eTiki) { // Vì ảnh tiki là thumbnail, đã nén giảm chất lượng
                             let btn = document.createElement("BUTTON");
                             let btnContent = document.createTextNode("Chép ảnh");
                             btn.appendChild(btnContent);
                             btn.style.marginRight = "10px";
                             btn.style.marginLeft = "10px";
 
-                            btn.ecommerceName = order.ecommerceName;
-                            btn.itemId = order.listItemId[i];
-                            btn.modelId = order.listModelId[i];
+                            //btn.itemId = order.listItemId[i];
+                            //btn.modelId = order.listModelId[i];
                             btn.proId = order.listMapping[i][j].product.id;
+                            btn.ecommerceName = order.ecommerceName;
+                            btn.eImageSrc = eImageSrc;
                             btn.title = "Sản phẩm trong kho đang không có ảnh nào. Sao chép ảnh sản phẩm trên sàn cho sản phẩm trong kho"
                             btn.onclick = function (event) {
-                                CopyImageFromTMDTToWarehouseProduct(event.target.ecommerceName,
-                                    event.target.itemId,
-                                    event.target.modelId,
+                                CopyImageFromTMDTToWarehouseProduct(
+                                    event.target.ecommerceName,
+                                    event.target.eImageSrc,
                                     event.target.proId);
                             }
                             oneRowMappingContainer.appendChild(btn);
@@ -1157,9 +1114,9 @@
         // indexI = -1: Sản phẩm không có trong đơn hàng
         // indexJ = -1: Sản phẩm đã đủ số lượng
         function SearchProductCodeInOrder(code) {
-            if (DEBUG) {
-                console.log("SearchProductCodeInOrder CALL code: " + code);
-            }
+            //if (DEBUG) {
+            //    console.log("SearchProductCodeInOrder CALL code: " + code);
+            //}
 
             let indexI = -1;
             let indexJ = -1;
@@ -1168,10 +1125,10 @@
                     if (currentOrder.listMapping[i][j].product.code === code
                         || currentOrder.listMapping[i][j].product.barcode === code) {
                         indexI = i;
-                        if (DEBUG) {
-                            console.log("currentOrder.listMapping[i][j].product.code: " + currentOrder.listMapping[i][j].product.code);
-                            console.log("currentOrder.listMapping[i][j].product.barcode: " + currentOrder.listMapping[i][j].product.barcode);
-                        }
+                        //if (DEBUG) {
+                        //    console.log("currentOrder.listMapping[i][j].product.code: " + currentOrder.listMapping[i][j].product.code);
+                        //    console.log("currentOrder.listMapping[i][j].product.barcode: " + currentOrder.listMapping[i][j].product.barcode);
+                        //}
                         // Thêm thuộc tính checked để đếm số lần sản phẩm đã được xuất kho
                         if (!currentOrder.listMapping[i][j].hasOwnProperty("checked")) {
                             currentOrder.listMapping[i][j].checked = 1;
@@ -1195,9 +1152,9 @@
             let ls = [];
             ls.push(indexI);
             ls.push(indexJ);
-            if (DEBUG) {
-                console.log("ls: " + JSON.stringify(ls));
-            }
+            //if (DEBUG) {
+            //    console.log("ls: " + JSON.stringify(ls));
+            //}
             return ls;
         }
 
@@ -1248,10 +1205,9 @@
             // Tự động click "Đủ Sản Phẩm"
             let isEnoughProduct = true;
             let collection = document.getElementsByClassName("item-checked-enough")
-            if (DEBUG) {
-
-                console.log("collection: " + collection.length);
-            }
+            //if (DEBUG) {
+            //    console.log("collection: " + collection.length);
+            //}
             for (let i = 0; i < collection.length; i++) {
                 if (collection[i].checked === false) {
                     isEnoughProduct = false;
@@ -1373,7 +1329,7 @@
             let resObj = JSON.parse(responseDB.responseText);
 
             if (resObj.State != 0) {
-                await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+                await CreateMustClickOkModal(resObj.Message, null);
                 return;
             }
 

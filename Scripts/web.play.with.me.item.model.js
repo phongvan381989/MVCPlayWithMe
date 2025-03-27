@@ -113,15 +113,15 @@ function CreateModelTableMapping(container) {
     return tab;
 }
 
-// Constructor function for obj gồm: id, img, name, thêm itemId, modelId
-//itemId, modelId phục vụ chép ảnh ở sàn SHOPEE, có giá trị 0 khi không phải SHOPEE
-function objRowTableMapping(id, imageSrc, name, quantity, itemId, modelId) {
+// Constructor function for obj gồm: id, img, name, quantity của sản phẩm trong kho,
+// eType: tên sàn, eImageSrc: đường dẫn ảnh đại diện trên sàn phục vụ chép ảnh từ sàn nếu cần thiết.
+function objRowTableMapping(id, imageSrc, name, quantity, eType, eImageSrc) {
     this.id = id;
     this.imageSrc = imageSrc;
     this.name = name;
     this.quantity = quantity;
-    this.itemId = itemId;
-    this.modelId = modelId;
+    this.eType = eType;
+    this.eImageSrc = eImageSrc;
 }
 
 function InsertObjToTable(table, obj) {
@@ -157,23 +157,21 @@ function InsertObjToTable(table, obj) {
 
     // Nếu sản phẩm trong kho chưa có ảnh
     // Ta hiển thị nút cho phép sao chép ảnh của sản phẩm trên sàn
-    if (obj.imageSrc.includes("NoImageThumbnail") && obj.itemId != 0 && obj.modelId != 0) {
+
+    if (obj.imageSrc.includes(noImageThumbnailName) && obj.eType != "" && obj.eImageSrc != "") {
         let btn = document.createElement("BUTTON");
         let btnContent = document.createTextNode("Chép ảnh");
         btn.appendChild(btnContent);
         btn.style.marginRight = "10px";
         btn.style.marginLeft = "10px";
 
-        btn.ecommerceName = obj.name;
-        btn.itemId = obj.itemId;
-        btn.modelId = obj.modelId;
-        btn.proId = obj.id;
+        btn.obj = obj;
         btn.title = "Sản phẩm trong kho đang không có ảnh nào. Sao chép ảnh sản phẩm trên sàn cho sản phẩm trong kho?"
         btn.onclick = function (event) {
-            CopyImageFromTMDTToWarehouseProduct(event.target.ecommerceName,
-                event.target.itemId,
-                event.target.modelId,
-                event.target.proId);
+            CopyImageFromTMDTToWarehouseProduct(
+                event.target.obj.eType,
+                event.target.obj.eImageSrc,
+                event.target.obj.id);
         }
         cell2.append(btn);
     }
@@ -996,7 +994,7 @@ function AddRowToTableMapping(pro, quantity) {
     } else {
         src = srcNoImageThumbnail;
     }
-    let obj = new objRowTableMapping(pro.id, src, pro.name, quantity, 0, 0);
+    let obj = new objRowTableMapping(pro.id, src, pro.name, quantity, "", "");
 
     CheckObjExistAndInsert(table, obj);
 }
@@ -1129,8 +1127,8 @@ function SaveMappingToModel() {
             rows[i].cells[1].children[0].src,
             rows[i].cells[2].innerHTML,
             rows[i].cells[3].children[0].value,
-            0,
-            0
+            "",
+            ""
         );
         listObj.push(obj);
     }
@@ -1328,8 +1326,8 @@ async function ShowItemFromItemObject() {
                 src,
                 modelObj.mapping[j].product.name,
                 Number(modelObj.mapping[j].quantity),
-                0,
-                0
+                "",
+                ""
             );
             
             listObj.push(obj);

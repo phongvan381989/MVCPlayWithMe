@@ -200,10 +200,10 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
 }
 
 function ShowListCommonItem(list, table, disableUpdateButton) {
-    if (DEBUG) {
-        console.log("ShowListCommonItem CALL");
-        console.log("list.length: " + list.length);
-    }
+    //if (DEBUG) {
+    //    console.log("ShowListCommonItem CALL");
+    //    console.log("list.length: " + list.length);
+    //}
     // Show
     DeleteRowsExcludeHead(table);
 

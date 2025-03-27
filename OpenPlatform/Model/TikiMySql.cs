@@ -391,21 +391,27 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        // Cần cập nhật số bảng output và products khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
+        // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
-
-        // Rủi ro: Nếu đơn có sản phẩm chưa được mapping thì sẽ không được cập nhật số lượng chính xác
-        // Xử lý: Sau khi mapping phải trừ thủ công bằng tay
+        // storeName: st_tbOutput_Insert hoặc st_tbOutput_Insert_If_DontExist_When_Packing
         public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut(MySqlConnection conn,
+            string storeName,
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
         {
+            Boolean isNeedExecuteReader = true;
+            MySqlDataReader rdr = null;
+            if (storeName == "st_tbOutput_Insert")
+            {
+                isNeedExecuteReader = false;
+            }
+
             MySqlResultState resultState = new MySqlResultState();
             try
             {
                 // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn);
+                    MySqlCommand cmd = new MySqlCommand(storeName, conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
@@ -433,8 +439,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             {
                                 cmd.Parameters[3].Value = quantity;
                             }
-
-                            cmd.ExecuteNonQuery();
+                            if (!isNeedExecuteReader)
+                            {
+                                cmd.ExecuteNonQuery();
+                            }
+                            else
+                            {
+                                rdr = cmd.ExecuteReader();
+                                while (rdr.Read())
+                                {
+                                        quantity = MyMySql.GetInt32(rdr, "Result");
+                                }
+                                if (rdr != null)
+                                    rdr.Close();
+                            }
                         }
                     }
                 }
@@ -488,13 +506,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             if ((status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED) ||
-                (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.RETURNED))
+                (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.RETURNED)||
+                // Chuẩn bị đóng thì hủy đơn
+                (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED))
             {
                 return false;
             }
 
             return true;
         }
+
+        
 
         /// <summary>
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
@@ -524,14 +546,80 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
                         cmd.Parameters.AddWithValue("@inStatus", (int)status);
                         cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                        cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
 
                         cmd.ExecuteNonQuery();
                     }
+                    // Rủi ro: Nếu đơn có sản phẩm chưa được mapping thì sẽ không được cập nhật số lượng chính xác khi giữ chỗ
+                    // Xử lý: Khi đóng đơn, (lúc này bắt buộc đã mapping) ta cần kiểm tra lại 1 lượt xem có sản phẩm, 
+                    // số lượng chưa tồn tại trong tbOutput
+                    // Trường hợp: thay đổi mapping khi đóng đơn so với khi giữ chỗ thì quá khù khoằm, tự sửa thủ công
+
+                    // Trường hợp: Bước 1: giữ chỗ, Bước 2: thay đổi mapping (sửa mapping đã có / tạo mapping chưa có), Bước 3 hủy giữ chỗ (chưa đóng đơn)
+                    // Sẽ làm sai khác xuất / nhập kho. Khù khoằm không giải quyết, tự sửa thủ công..
+
+                    // => TẤT CẢ RỦI RO TRÊN ĐƯỢC GIẢI QUYẾT khi mapping ngay khi đăng sản phẩm (giải pháp hiện tại check thủ công),
+                    ///và khi thay đổi mapping phải kiểm tra xem có đơn nào đang trong tiến trình xử lý không
+                    if (status == ECommerceOrderStatus.BOOKED)
+                    {
+                        Boolean isNeedInsert = false;
+                        for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                        {
+                            if (commonOrder.listMapping[i].Count == 0)
+                            {
+                                isNeedInsert = true;
+                                break;
+                            }
+                        }
+                        if (isNeedInsert)
+                        {
+                            // Có item chưa được mapping,
+                            MySqlCommand cmd = new MySqlCommand("INSERT INTO tbEcommerceOrder_DontMapping(`Code`, `ECommmerce`) VALUES(@inCode, @inECommmerce);", conn);
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                            cmd.ExecuteNonQuery();
+                        }
+
+                    }
+
+                    if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.BOOKED)
+                    {
+                        // Kiểm tra có item chưa được mapping khi giữ chỗ
+                        MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM tbEcommerceOrder_DontMapping WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce;", conn);
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                        Boolean isExist = false;
+                        MySqlDataReader rdr = null;
+                        rdr = cmd.ExecuteReader();
+                        while (rdr.Read())
+                        {
+                            isExist = true;
+                            break;
+                        }
+                        rdr.Close();
+
+                        if (isExist)
+                        {
+                            resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, "st_tbOutput_Insert_If_DontExist_When_Packing", commonOrder, status, eCommerceType);
+                            resultState.myAnything = 1; // Có thay đổi tồn kho.
+
+                            // Xóa dữ liệu vì item trong đơn đã mapping
+                            MySqlCommand cmdDelete = new MySqlCommand("DELETE FROM tbEcommerceOrder_DontMapping WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce;", conn);
+                            cmdDelete.CommandType = CommandType.Text;
+                            cmdDelete.Parameters.AddWithValue("@inCode", commonOrder.code);
+                            cmdDelete.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                            cmdDelete.ExecuteNonQuery();
+                        }
+                    }
                     // Kiểm tra xem cần thay đổi tồn kho không?
-                    if ( // Cần xuất kho và chưa chưa xuất kho
+                    else if ( // Cần xuất kho và chưa chưa xuất kho
                         (status == ECommerceOrderStatus.BOOKED && oldStatus != ECommerceOrderStatus.PACKED) ||
                         
-                        (status == ECommerceOrderStatus.PACKED && oldStatus != ECommerceOrderStatus.BOOKED) ||
+                        (status == ECommerceOrderStatus.PACKED && oldStatus != ECommerceOrderStatus.BOOKED &&
+                        oldStatus != ECommerceOrderStatus.UNBOOKED) ||
 
                         // Cần nhập kho và chưa nhập kho
                         //// Đơn hủy nhưng Đã Đóng (có thể đang trên đường vận chuyển) nên cần Hoàn Hàng để sản phẩm thực tế về kho
@@ -541,7 +629,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         // Đơn hủy, nhưng đợi nhận hàng hoàn mới thay đổi tồn kho.
                         (status == ECommerceOrderStatus.RETURNED))
                     {
-                        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, commonOrder, status, eCommerceType);
+                        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, "st_tbOutput_Insert", commonOrder, status, eCommerceType);
                         resultState.myAnything = 1; // Có thay đổi tồn kho.
                     }
                     else

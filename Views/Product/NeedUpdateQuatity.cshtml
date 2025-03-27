@@ -225,9 +225,9 @@
         }
 
         function ShowResultWithFilter() {
-            if (DEBUG) {
-                console.log("ShowResultWithFilter CALL");
-            }
+            //if (DEBUG) {
+            //    console.log("ShowResultWithFilter CALL");
+            //}
             let table = document.getElementById("myTableTMDT");
             let obj = document.querySelector('input[name="status-radio"]:checked');
             if (obj.value == "On") {// Hiển thị tất cả item đã cập nhật số lượng trên sàn
@@ -250,10 +250,10 @@
                         let responseHTTP = item.result.myJson;
                         let errors = responseHTTP.errors;
                         if (errors != null) {
-                            if (DEBUG) {
-                                console.log("listCommonItemTem.push(item)");
-                                console.log(JSON.stringify(item));
-                            }
+                            //if (DEBUG) {
+                            //    console.log("listCommonItemTem.push(item)");
+                            //    console.log(JSON.stringify(item));
+                            //}
                             listCommonItemTem.push(item);
                         }
 

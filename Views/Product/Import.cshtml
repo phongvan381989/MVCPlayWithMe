@@ -248,11 +248,11 @@
             let code = document.getElementById("code-or-isbn").value;
             let nameId = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
             let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value)
-            if (DEBUG) {
-                console.log("code: " + code);
-                console.log("nameId: " + nameId);
-                console.log("comboId: " + comboId);
-            }
+            //if (DEBUG) {
+            //    console.log("code: " + code);
+            //    console.log("nameId: " + nameId);
+            //    console.log("comboId: " + comboId);
+            //}
             if (!isEmptyOrSpaces(code)) {
                 if (code.length != 13) {
                     CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
@@ -298,9 +298,9 @@
             else {
                 listInsertTemp = listBasicInfo;
             }
-            if (DEBUG) {
-                console.log("listInsertTemp.length: " + listInsertTemp.length);
-            }
+            //if (DEBUG) {
+            //    console.log("listInsertTemp.length: " + listInsertTemp.length);
+            //}
 
             if (listInsertTemp.length > 0) {
                 // Find a <table> element with id="myTable":

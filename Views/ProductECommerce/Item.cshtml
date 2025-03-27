@@ -288,10 +288,9 @@
 
                 // Hiển thị mapping
                 let table = CreateModelTableMapping(model);
-
                 let listObj = [];
                 for (let j = 0; j < modelObj.mapping.length; j++) {
-                    let src;
+                    let src = "";
                     if (modelObj.mapping[j].product.imageSrc.length > 0) {
                         src = Get320VersionOfImageSrc(modelObj.mapping[j].product.imageSrc[0]);
                     }
@@ -299,13 +298,18 @@
                         src = srcNoImageThumbnail;
                     }
 
+                    let eImageSrc = "";
+                    if (modelObj.imageSrc) {
+                        eImageSrc = modelObj.imageSrc;
+                    }
+
                     let obj = new objRowTableMapping(
                         Number(modelObj.mapping[j].product.id),
                         src,
                         modelObj.mapping[j].product.name,
                         Number(modelObj.mapping[j].quantity),
-                        itemObj.itemId,
-                        modelObj.modelId
+                        itemObj.eType,
+                        eImageSrc
                     );
 
                     listObj.push(obj);
@@ -411,7 +415,6 @@
                 }
             }
             catch (err) {
-
                 await CreateMustClickOkModal("Sinh model sản phẩm lỗi.", null);
                 RemoveCircleLoader();
                 return;
