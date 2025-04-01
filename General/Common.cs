@@ -1348,6 +1348,12 @@ namespace MVCPlayWithMe.General
             return dt.ToString("yyyy-MM-ddTHH:mm:ss");
         }
 
+        // "2022-01-13 02:59:59" => 2022-01-13%2002%3A59%3A59
+        public static string EncodeDatetimeTiki(string str)
+        {
+            return str.Replace(" ", "%20").Replace(":", "%3A");
+        }
+
         public static DateTime ConvertStringToDateTime(string str)
         {
             // Trả giá trị mặc định là ngày sinh Sâu béo

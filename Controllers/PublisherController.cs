@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string CreatePublisher(string name, string detail)
+        public string CreatePublisher(string name, int discount, string detail)
         {
             if (AuthentAdministrator() == null)
             {
@@ -33,7 +33,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
 
-            result = sqler.CreateNewPublisher(name, detail);
+            result = sqler.CreateNewPublisher(name, discount, detail);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -52,7 +52,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string UpdatePublisher(int id, string name, string detail)
+        public string UpdatePublisher(int id, string name, int discount, string detail)
         {
             if (AuthentAdministrator() == null)
             {
@@ -61,7 +61,7 @@ namespace MVCPlayWithMe.Controllers
 
             MySqlResultState result = null;
 
-            result = sqler.UpdatePublisher(id, name, detail);
+            result = sqler.UpdatePublisher(id, name, discount, detail);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -107,6 +107,7 @@ namespace MVCPlayWithMe.Controllers
             if (publisher != null)
             {
                 ViewData["publisherName"] = publisher.name;
+                ViewData["publisherDiscount"] = publisher.discount;
                 ViewData["publisherDetail"] = publisher.detail;
             } 
             return View();

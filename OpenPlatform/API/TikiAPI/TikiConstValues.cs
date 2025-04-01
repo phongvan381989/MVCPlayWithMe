@@ -21,5 +21,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrHomeAdress = "https://tiki.vn/cua-hang/play-with-me";
 
         public const string cstrPullEvent = "https://api.tiki.vn/integration/v1/queues/fe4d3d23-9a2a-4e7e-8fc3-9016e18c78f5/events/pull";
+
+        public const string cstrCreateDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals";
+        public const string cstrSearchDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals";
     }
 }

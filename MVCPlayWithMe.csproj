@@ -307,6 +307,7 @@
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\DevController.cs" />
+    <Compile Include="Controllers\OpenPlatform\TikiDealDiscountController.cs" />
     <Compile Include="Controllers\PushMechanismController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ItemModelController.cs" />
@@ -370,6 +371,12 @@
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdatePrice.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdateStock.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\CommonTikiAPI.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\DealCreatingResponse.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\DealCreatedResponseDetail.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\DealMessageEnVn.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\DealResponseStatus.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\DealSearchResponse.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\Event\TikiPullEventService.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\Order\TikiGetListOrders.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\Product\GetListProductTiki.cs" />
@@ -459,6 +466,8 @@
     <Compile Include="OpenPlatform\Model\ShopeeMySql.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiAuthorization.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiConfigApp.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\CreatingRequestBody.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\CreatingRequestBodyObject.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Event\TikiEvent.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Event\EventQueue.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Event\Event_Payload.cs" />
@@ -528,6 +537,7 @@
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityResponse.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityWarehouseQuantities.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateStatus.cs" />
+    <Compile Include="OpenPlatform\Model\TikiDealDiscountMySql.cs" />
     <Compile Include="OpenPlatform\Model\TikiMySql.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -573,7 +583,6 @@
     <Content Include="Content\web.play.with.me.modal.input.css" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Properties\PublishProfiles\CustomProfile1.pubxml" />
-    <Content Include="ILLink\ILLink.Descriptors.LibraryBuild.xml" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -697,6 +706,7 @@
     <Content Include="Views\Policy\IntroducePolicy.cshtml" />
     <Content Include="Views\Product\OrderManually.cshtml" />
     <Content Include="Views\Shared\ECommerceType.cshtml" />
+    <Content Include="Views\TikiDealDiscount\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

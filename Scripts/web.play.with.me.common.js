@@ -438,6 +438,15 @@ function GetValueInputById(id, defaultValue) {
     return value;
 }
 
+// Nếu input type number trống, ta lấy theo giá trị mặc định
+function GetValueInputTypeNumberById(id, defaultValue) {
+    let inputElement = document.getElementById(id);
+    let value = inputElement.value.trim(); // Lấy giá trị và loại bỏ khoảng trắng
+    let number = value ? parseInt(value) : defaultValue; // Nếu trống thì lấy 10
+
+    return number;
+}
+
 function Sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }

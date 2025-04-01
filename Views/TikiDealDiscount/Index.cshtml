@@ -1,0 +1,186 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="dispay-flex-padding1020-flex-warap-wrap" title="Từ sku sản phẩm trên sàn tiki, lấy được chương trình giảm giá từ 0.5 năm trước đến 2 năm sau.
+             Lưu vào db nếu chưa tồn tại hoặc cập nhật trạng thái nếu đã tồn tại">
+            <label for="sku-tiki-item" style="margin-right:10px;">sku</label>
+            <input type="text" id="sku-tiki-item" style="margin-right:10px;">
+            <button type="button" onclick="GetDealDiscountOfSku()" style="margin-right:10px;">Lấy Chương Trình Giảm Giá</button>
+            <button type="button" title="Lưu dữ liệu chương trình giảm giá của tất cả sku đang bật bán vào db.
+                    Hàm mất thời gian, dùng 1 lần để lưu dữ liệu" 
+                    onclick="SaveDealDiscountOfAllSku()" style="margin-right:10px;">Lưu Chương Trình Giảm Giá Vào DB</button>
+        </div>
+        <div>
+            <button type="button" title="Lấy danh sách sản phẩm đang bật bán chưa tham gia chương trình giảm giá nào đang chạy.
+                    Dữ liệu lấy từ DB nên nếu tạo chương trình giảm giá trực tiếp trên nhà bán Tiki thì sẽ không lấy được dữ liệu."
+                    onclick="GetItemNoDealDiscountRunning()" style="margin-right:10px;">
+                Sản Phẩm Chưa Giảm Giá
+            </button>
+        </div>
+        <div id="id-container-get-deal-discount-of-sku" style="display:none;">
+            <table id="myTableGetDealDiscountOfSku">
+                <tr>
+                    <th style="display:none" title="id chương trình giảm giá trên Tiki">id</th>
+                    <th title="Thời điểm bắt đầu chương trình giảm giá">Bắt Đầu</th>
+                    <th title="Thời điểm kết thúc chương trình giảm giá">Kết Thúc</th>
+                    <th> Giá Bìa</th>
+                    <th> Chiết Khấu</th>
+                    <th> Giá Bán</th>
+                    <th title="Số lượng khuyến mại"> Giới Hạn</th>
+                    <th title="Giới hạn đặt hàng mỗi đơn"> Giới Hạn 1 Đơn</th>
+                    <th title="INACTIVE = 0 | ACTIVE = 1 | RUNNING = 2 | EXPIRED = 3 | HOT_SALE = 4 | CLOSED = 5 | PAUSED = 6 ">
+                        Trạng Thái
+                    </th>
+                </tr>
+            </table>
+        </div>
+
+        <div id="id-container-get-item-no-discount-running" style="display:none;">
+            <table id="myTableGetItemNoDealDiscountRunning">
+                <tr>
+                    <th style="display:none" title="id chương trình giảm giá trên Tiki">id</th>
+                    <th title="Thời điểm bắt đầu chương trình giảm giá">Bắt Đầu</th>
+                    <th title="Thời điểm kết thúc chương trình giảm giá">Kết Thúc</th>
+                    <th> Giá Bìa</th>
+                    <th> Chiết Khấu</th>
+                    <th> Giá Bán</th>
+                    <th title="Số lượng khuyến mại"> Giới Hạn</th>
+                    <th title="Giới hạn đặt hàng mỗi đơn"> Giới Hạn 1 Đơn</th>
+                    <th title="INACTIVE = 0 | ACTIVE = 1 | RUNNING = 2 | EXPIRED = 3 | HOT_SALE = 4 | CLOSED = 5 | PAUSED = 6 ">
+                        Trạng Thái
+                    </th>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.paging.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+    <script>
+        // INACTIVE = 0 | ACTIVE = 1 | RUNNING = 2 | EXPIRED = 3 | HOT_SALE = 4 | CLOSED = 5 | PAUSED = 6
+        function GetStatusOfDeal(intStatus) {
+            const statusMap = {
+                0: "INACTIVE",
+                1: "ACTIVE",
+                2: "RUNNING",
+                3: "EXPIRED",
+                4: "HOT_SALE",
+                5: "CLOSED",
+                6: "PAUSED"
+            };
+
+            return statusMap[intStatus] || "UNKNOWN"; // Trả về "UNKNOWN" nếu không tìm thấy
+        }
+
+        function DisplayListOrder(inListDeal) {
+            document.getElementById("id-container-get-item-no-discount-running").display = "none";
+            document.getElementById("id-container-get-deal-discount-of-sku").display = "block";
+            // Hiển thị danh sách đơn hàng
+            let orderTable = document.getElementById("myTableGetDealDiscountOfSku");
+            DeleteRowsExcludeHead(orderTable);
+
+            let lengthTemp = inListDeal.length;
+
+            let deal;
+            for (let i = 0; i < lengthTemp; i++) {
+                deal = inListDeal[i];
+                let row = orderTable.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell0 = row.insertCell(0);
+                let cell1 = row.insertCell(1);
+                let cell2 = row.insertCell(2);
+                let cell3 = row.insertCell(3);
+                let cell4 = row.insertCell(4);
+                let cell5 = row.insertCell(5);
+                let cell6 = row.insertCell(6);
+                let cell7 = row.insertCell(7);
+                let cell8 = row.insertCell(8);
+
+                // id
+                cell0.innerHTML = deal.id;
+                cell0.style.display = "none";
+
+                // Bắt Đầu
+                cell1.innerHTML = deal.special_from_date;
+
+                // Kết thúc
+                cell2.innerHTML = deal.special_to_date;
+
+                // Giá Bìa
+                cell3.innerHTML = deal.price;
+
+                // Chiết Khấu
+                cell4.innerHTML = deal.discount_percent;
+
+                // Giá bán
+                cell5.innerHTML = deal.special_price;
+
+                // Giới Hạn
+                cell6.innerHTML = deal.qty_max;
+
+                // Giới Hạn 1 đơn
+                cell7.innerHTML = deal.qty_limit;
+
+                // Trạng Thái
+                cell8.innerHTML = GetStatusOfDeal(deal.is_active);
+            }
+        }
+
+        async function GetDealDiscountOfSku() {
+            let sku = document.getElementById("sku-tiki-item").value;
+            if (isEmptyOrSpaces(sku)) {
+                await CreateMustClickOkModal("Chưa nhập sku.", null);
+                document.getElementById("sku-tiki-item").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("sku", sku);
+
+            let query = "/TikiDealDiscount/GetDealDiscountOfSku";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText == "null") {
+                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                return;
+            }
+
+            // Hiển thị danh sách đơn hàng. Danh sách sẽ chỉ gồm 1 đơn hàng
+            let listDeal = JSON.parse(responseDB.responseText);
+            DisplayListOrder(listDeal);
+        }
+
+        async function SaveDealDiscountOfAllSku() {
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("sku", sku);
+
+            let query = "/TikiDealDiscount/SaveDealDiscountOfAllSku";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText == "null") {
+                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                return;
+            }
+
+            // Hiển thị danh sách đơn hàng. Danh sách sẽ chỉ gồm 1 đơn hàng
+            let listDeal = JSON.parse(responseDB.responseText);
+            DisplayListOrder(listDeal);
+        }
+    </script>
+</body>
+</html>

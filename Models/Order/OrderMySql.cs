@@ -1062,36 +1062,32 @@ namespace MVCPlayWithMe.Models.Order
 
         // Từ đơn hàng, cập nhật trạng thái sản phẩm trên sàn vì có sản phẩm trên sàn được bật bán
         // trở lại
-        public void UpdateStatusNormalOfTMDTItem(CommonOrder order)
+        public void UpdateStatusNormalOfTMDTItemConnectOut(CommonOrder order, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
             try
             {
-                conn.Open();
-
-                MySqlCommand cmdShopee = new MySqlCommand("UPDATE tbShopeeItem SET Status=0 WHERE Status<>0 AND TMDTShopeeItemId=@inTMDTShopeeItemId", conn);
-                cmdShopee.CommandType = CommandType.Text;
-                cmdShopee.Parameters.AddWithValue("@inTMDTShopeeItemId", Int64.MaxValue);
-
-                MySqlCommand cmdTiki = new MySqlCommand("UPDATE tbTikiItem SET Status=0 WHERE Status<>0 AND TikiId=@inTikiId", conn);
-                cmdTiki.CommandType = CommandType.Text;
-                cmdTiki.Parameters.AddWithValue("@inTikiId", Int32.MaxValue);
-
-                if(order.ecommerceName == Common.eTiki)
+                if (order.ecommerceName == Common.eShopee)
                 {
+                    MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeItem SET Status=0 WHERE Status<>0 AND TMDTShopeeItemId=@inTMDTShopeeItemId", conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", 0L);
                     foreach (var id in order.listItemId)
                     {
-                        cmdTiki.Parameters[0].Value = id;
-                        cmdTiki.ExecuteNonQuery();
+                        cmd.Parameters[0].Value = id;
+                        cmd.ExecuteNonQuery();
                     }
                 }
-                else if (order.ecommerceName == Common.eShopee)
+                else if (order.ecommerceName == Common.eTiki)
                 {
+                    MySqlCommand cmd = new MySqlCommand("UPDATE tbTikiItem SET Status=0 WHERE Status<>0 AND TikiId=@inTikiId", conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inTikiId", 0);
+
                     foreach (var id in order.listItemId)
                     {
-                        cmdShopee.Parameters[0].Value = id;
-                        cmdShopee.ExecuteNonQuery();
+                        cmd.Parameters[0].Value = (int)id;
+                        cmd.ExecuteNonQuery();
                     }
                 }
             }
@@ -1099,8 +1095,6 @@ namespace MVCPlayWithMe.Models.Order
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-
-            conn.Close();
         }
 
         // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn

@@ -16,9 +16,13 @@
             <div>
                 <label for="publisher-id">Nhà phát hành:</label>
                 <input class="config-max-width margin-vertical"
-                       id="publisher-id">
-
+                       id="publisher-id"/>
             </div>
+
+            <label for="publisher-discount" title="Chiết khấu so với giá bìa khi nhập sách. 
+                   Dùng để tham khảo khi tính giá bán thực tế. Giá trị mặc định là 20">Chiết khấu:</label>
+            <input id="publisher-discount" type="number" max="100" min="0" value="20"/>
+
             <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
             <textarea id="publisher-detail" class="config-max-width margin-vertical" rows="10"></textarea>
         </div>
@@ -109,10 +113,11 @@
                 document.getElementById("publisher-id").focus();
                 return;
             }
-            let publisherDetail = document.getElementById("publisher-detail").value;
+
             const searchParams = new URLSearchParams();
             searchParams.append("name", publisherName);
-            searchParams.append("detail", publisherDetail);
+            searchParams.append("discount", GetValueInputTypeNumberById("publisher-discount", 20));
+            searchParams.append("detail", document.getElementById("publisher-detail").value);
             let query = "/Publisher/CreatePublisher";
 
             ShowCircleLoader();

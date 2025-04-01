@@ -15,18 +15,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TikiMySql : BasicMySql
     {
-        private int TikiInsert(int supperId, int tikiId, string name,
-            int status, MySqlConnection conn)
+        //private int TikiInsert(int supperId, int tikiId, string name,
+        //    int status, string sku, string superSku, MySqlConnection conn)
+        private int TikiInsert(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
             try
             {
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Insert", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inSuperId", supperId);
-                cmd.Parameters.AddWithValue("@inTikiId", tikiId);
-                cmd.Parameters.AddWithValue("@inName", name);
-                cmd.Parameters.AddWithValue("@inStatus", status);
+                cmd.Parameters.AddWithValue("@inSuperId", item.tikiSuperId);
+                cmd.Parameters.AddWithValue("@inTikiId", Common.ConvertLongToInt(item.itemId));
+                cmd.Parameters.AddWithValue("@inName", item.name);
+                cmd.Parameters.AddWithValue("@inStatus", item.bActive ? 0 : 1);
+                cmd.Parameters.AddWithValue("@inSku", item.sku);
+                cmd.Parameters.AddWithValue("@inSuperSku", item.superSku);
 
                 MySqlDataReader rdr = null;
                 rdr = cmd.ExecuteReader();
@@ -39,7 +42,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch(Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
             return id;
@@ -81,8 +83,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 if (!exist)
                 {
                     status = item.bActive ? 0 : 1;
-                    itemIdInserted = TikiInsert(item.tikiSuperId, Common.ConvertLongToInt(item.itemId),
-                        item.name, status, conn);
+                    itemIdInserted = TikiInsert(item, conn);
                 }
             }
             catch (Exception ex)
@@ -207,6 +208,39 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
+        }
+
+        // Hàm này được gọi 1 lần duy nhất để lấy sku, super sku vì mới thêm 2 trường này trong bảng tbTikiItem
+        // Sau khi gọi ta comment lại.
+        public void TikiUpdateSku_SuperSkuOfItemToDbConnectOut(
+        List<CommonItem> lsCommonItem,
+        MySqlConnection conn)
+        {
+            //if (lsCommonItem == null || lsCommonItem.Count == 0)
+            //{
+            //    return;
+            //}
+
+            //try
+            //{
+            //    // Cập nhật source của item
+            //    MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiitem SET `Sku` = @inSku, `SuperSku` = @inSuperSku WHERE `TikiId` = @inTikiId", conn);
+            //    cmd.CommandType = CommandType.Text;
+            //    cmd.Parameters.AddWithValue("@inSku", "");
+            //    cmd.Parameters.AddWithValue("@inSuperSku", "");
+            //    cmd.Parameters.AddWithValue("@inTikiId", 0);
+            //    foreach (var commonItem in lsCommonItem)
+            //    {
+            //        cmd.Parameters[0].Value = commonItem.sku;
+            //        cmd.Parameters[1].Value = commonItem.superSku;
+            //        cmd.Parameters[2].Value = (int)commonItem.itemId;
+            //        cmd.ExecuteNonQuery();
+            //    }
+            //}
+            //catch (Exception ex)
+            //{
+            //    MyLogger.GetInstance().Warn(ex.ToString());
+            //}
         }
 
         public List<CommonItem> TikiGetItemOnDB()

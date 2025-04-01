@@ -67,12 +67,6 @@
             background: #E3ECFF;
         }
 
-        .KLMx09fs {
-            display: flex;
-            padding: 10px 20px;
-            flex-wrap: wrap;
-        }
-
         .fcnal986j {
             margin-right: 40px;
             border: 1px solid #e9ecef;
@@ -97,13 +91,13 @@
 
             @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
-            <div class="KLMx09fs" title="Từ Id sản phẩm trên sàn Shopee, Tiki, Lazada đi đến trang liên kết sản phẩm trong kho">
-                <label for="TMDT-product-id" class="fzmg093rvz8">id sản phẩm trên sàn</label>
-                <input type="number" id="TMDT-product-id" class="fzmg093rvz8">
-                <button type="button" onclick="GoProductEcomercePageItem()" class="fzmg093rvz8">Đi Tới Trang Liên Kết</button>
+            <div class="dispay-flex-padding1020-flex-warap-wrap" title="Từ Id sản phẩm trên sàn Shopee, Tiki, Lazada đi đến trang liên kết sản phẩm trong kho">
+                <label for="TMDT-product-id" style="margin-right:10px;">id sản phẩm trên sàn</label>
+                <input type="number" id="TMDT-product-id" style="margin-right:10px;">
+                <button type="button" onclick="GoProductEcomercePageItem()" style="margin-right:10px;">Đi Tới Trang Liên Kết</button>
             </div>
 
-            <div class="KLMx09fs">
+            <div class="dispay-flex-padding1020-flex-warap-wrap">
                 <div class="fcnal986j" title="Trạng thái sản phẩm trên sàn thương mại điện tử.
                      Đang bật bán bình thường hoặc đăng tắt (shop dừng bán, shop đã xóa, sàn đã xóa, bị sàn khóa,...)">
                     <div class="lk09Jbvrd">
@@ -169,13 +163,13 @@
             <div style="display: flex;">
                 <button type="button" class="pwm-btn-common" onclick="Filter()"
                         title="Lấy tất cả sản phẩm trên sàn (mất thời gian), sau đó lọc theo các tiêu chí người dùng chọn bên trên.
-                 Sẽ cập nhật trạng thái của sản phẩm trong quá trình lấy.">
+                 Sẽ cập nhật trạng thái của sản phẩm trong quá trình lấy. ">
                     <span class="pwm-btn-text-common">Lọc sản phẩm</span>
                 </button>
                 <button type="button" class="pwm-btn-common" onclick="GetNewItemOneMonth()"
-                        title="Có những sản phẩm mới chưa được lưu cơ sở dữ liêu.
+                        title="Lấy những sản phẩm mới chưa được lưu cơ sở dữ liệu.
                         Với SHOPEE kiểm tra khoảng thời gian 1 tháng gần nhất những sản phẩm mới đăng, có thay đổi,....
-                        Với TIKI lấy 50 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian
+                        Với TIKI lấy 200 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian
                         Click vào sản phẩm nếu có để lưu db và cập nhật mapping">
                     <span class="pwm-btn-text-common">Lấy sản phẩm mới đăng 1 tháng gần đây</span>
                 </button>
@@ -199,6 +193,7 @@
         let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
         let listItemAfterFilter = []; // Danh sách common item sau khi lọc
         let sizePage = 50; // số lượng common Item trên mỗi page hiển thị.
+        let currentFunction = -1; // Chức năng hiện tại vừa thực hiện 0: Lọc Sản Phẩm, 1: Lấy Sản Phẩm Mới Đăng 1 Tháng Gần Đây
 
         InitializeSomething();
         function InitializeSomething() {
@@ -541,7 +536,8 @@
         // Từ tham số lọc
         async function Filter() {
             // Lấy tất cả sản phẩm của sàn, mất thời gian
-            if (listItem.length == 0) {
+            if (listItem.length == 0 || currentFunction != 0) {
+                listItem = [];
                 ShowCircleLoader();
                 let responseDB = await GetProductAll(GetECommerceType());
                 if (responseDB.responseText != "null") {
@@ -551,6 +547,7 @@
             }
 
             FilterCoreAndShow();
+            currentFunction = 0;
         }
 
         async function GetNewItemOneMonth() {
@@ -572,6 +569,7 @@
             RemoveCircleLoader();
 
             FilterCoreAndShow();
+            currentFunction = 1;
         }
 
         function GoProductEcomercePageItem() {

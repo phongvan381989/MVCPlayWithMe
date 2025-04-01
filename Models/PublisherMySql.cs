@@ -28,7 +28,9 @@ namespace MVCPlayWithMe.Models
                 {
                     while (rdr.Read())
                     {
-                        ls.Add(new Publisher(MyMySql.GetInt32(rdr, "Id"), MyMySql.GetString(rdr, "Name"), MyMySql.GetString(rdr, "Detail")));
+                        ls.Add(new Publisher(MyMySql.GetInt32(rdr, "Id"),
+                            MyMySql.GetString(rdr, "Name"), MyMySql.GetInt32(rdr, "Discount"),
+                            MyMySql.GetString(rdr, "Detail")));
                     }
                 }
                 if (rdr != null)
@@ -45,7 +47,7 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public MySqlResultState CreateNewPublisher(string name, string detail)
+        public MySqlResultState CreateNewPublisher(string name, int discount, string detail)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
@@ -62,11 +64,12 @@ namespace MVCPlayWithMe.Models
             //    return result;
             //}
 
-            int parasLength = 4;
+            int parasLength = 5;
             paras = new MySqlParameter[parasLength];
 
             paras[0] = new MySqlParameter("@publisherName", name);
-            paras[1] = new MySqlParameter("@detail", detail);
+            paras[1] = new MySqlParameter("@discount", discount);
+            paras[2] = new MySqlParameter("@detail", detail);
             MyMySql.AddOutParameters(paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbPublisher_Insert", paras);
@@ -107,17 +110,18 @@ namespace MVCPlayWithMe.Models
         //    return result;
         //}
 
-        public MySqlResultState UpdatePublisher(int id, string name, string detail)
+        public MySqlResultState UpdatePublisher(int id, string name, int discount, string detail)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            int parasLength = 5;
+            int parasLength = 6;
             // Check publisherName exist
             paras = new MySqlParameter[parasLength];
             paras[0] = new MySqlParameter("@inId", id);
             paras[1] = new MySqlParameter("@inPublisherName", name);
-            paras[2] = new MySqlParameter("@inDetail", detail);
+            paras[2] = new MySqlParameter("@inDiscount", discount);
+            paras[3] = new MySqlParameter("@inDetail", detail);
             MyMySql.AddOutParameters(paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbPublisher_Update", paras);
@@ -158,6 +162,7 @@ namespace MVCPlayWithMe.Models
                 {
                     publisher = new Publisher(MyMySql.GetInt32(rdr, "Id"),
                         MyMySql.GetString(rdr, "Name"),
+                        MyMySql.GetInt32(rdr, "Discount"),
                         MyMySql.GetString(rdr, "Detail")
                         );
                 }

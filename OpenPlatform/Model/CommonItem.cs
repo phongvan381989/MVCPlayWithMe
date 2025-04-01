@@ -47,6 +47,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string sku { get; set; }
 
+        // tiki có thuộc tính này
+        public string superSku { get; set; }
         /// <summary>
         /// Name of product
         /// </summary>
@@ -229,6 +231,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             itemId = pro.product_id;
             tikiSuperId = pro.super_id;
             sku = pro.sku;
+            superSku = pro.super_sku;
             name = pro.name;
 
             if (pro.active == 1)
@@ -237,24 +240,30 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 bActive = false;
             has_model = false;
             //imageSrc = pro.thumbnail;
-            if (pro.images.Count > 0 && !string.IsNullOrWhiteSpace(pro.thumbnail))
+            if (pro.images.Count > 0)
             {
-                // Tìm ảnh giống tên với thumbnail
-                // Tìm tên file từ thumbnail
-                string thumbnailFileName = Path.GetFileName(pro.thumbnail);
-
-                // Lặp qua danh sách Images để tìm URL khớp
-                string imageFileName = null;
-                foreach (var image in pro.images)
+                if (!string.IsNullOrWhiteSpace(pro.thumbnail))
                 {
-                    imageFileName = Path.GetFileName(image.url);
-                    if (imageFileName == thumbnailFileName)
+                    // Tìm ảnh giống tên với thumbnail
+                    // Tìm tên file từ thumbnail
+                    string thumbnailFileName = Path.GetFileName(pro.thumbnail);
+
+                    // Lặp qua danh sách Images để tìm URL khớp
+                    string imageFileName = null;
+                    foreach (var image in pro.images)
                     {
-                        imageSrc = image.url;
-                        break;
+                        imageFileName = Path.GetFileName(image.url);
+                        if (imageFileName == thumbnailFileName)
+                        {
+                            imageSrc = image.url;
+                            break;
+                        }
                     }
                 }
-
+                else
+                {
+                    imageSrc = pro.images[0].url;
+                }
             }
 
             CommonModel commonModel = new CommonModel();

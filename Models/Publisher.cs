@@ -7,11 +7,16 @@ namespace MVCPlayWithMe.Models
 {
     public class Publisher : BasicIdName
     {
+        // Chiết khấu so với giá bìa khi nhập sách.
+        // Dùng để tham khảo khi tính giá bán thực tế.Giá trị mặc định là 20
+        public int discount { get; set; }
 
         public string detail { get; set; }
 
-        public Publisher(int idInput, string nameInput, string detalInput) : base(idInput, nameInput)
+        public Publisher(int idInput, string nameInput,
+            int discountInput, string detalInput) : base(idInput, nameInput)
         {
+            discount = discountInput;
             detail = detalInput;
         }
     }

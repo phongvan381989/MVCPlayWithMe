@@ -110,7 +110,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         }
 
         // Lấy danh sách sản phẩm NORMAL, trong khoảng thời gian nhất định
-        // Với TIKI lấy 50 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian => ta lấy 3 page
+        // Với TIKI lấy 200 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian => ta lấy 10 page
         public static List<TikiProduct> TikiProductGetNormal_ItemList(
             DateTime update_time_from, DateTime update_time_to)
         {
@@ -138,7 +138,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             //listValuePair.Add(new DevNameValuePair("created_to_date",
             //    "\"" + Common.GetTimeNowyyyyMMddHHmmss(update_time_to) + "\""));
 
-            return GetListProductsCore(listValuePair, 3);
+            return GetListProductsCore(listValuePair, 10);
         }
 
         /// <summary>

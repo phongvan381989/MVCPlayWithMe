@@ -118,8 +118,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 int iid = Common.ConvertStringToInt32(id);
                 if (iid != Int32.MinValue)
                 {
-                    MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
                     commonItem = TikiGetProductFromId(iid);
+                }
+                else
+                {
+                    MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
                 }
             }
 
@@ -689,8 +692,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
 
                 // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
-                // nhưng trạng thái đang tắt (Status != 0) ta cần cập nhật lại
-                ordersqler.UpdateStatusNormalOfTMDTItem(order);
+                // nhưng trạng thái cũ là tắt (Status != 0) và giờ được bật (nên mới có đơn).
+                // Ta cần cập nhật lại.
+                ordersqler.UpdateStatusNormalOfTMDTItemConnectOut(order, conn);
 
                 order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
 

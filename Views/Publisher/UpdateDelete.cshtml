@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
 </head>
 <body>
-
     <div id="biggestContainer">
         <div id="result-find-id">
             <div>
@@ -18,8 +17,12 @@
                     <label for="publisher-id">Nhà phát hành:</label>
                     <input class="config-max-width margin-vertical"
                            id="publisher-id" value="@ViewData["publisherName"]">
-
                 </div>
+
+                <label for="publisher-discount" title="Chiết khấu so với giá bìa khi nhập sách.
+                   Dùng để tham khảo khi tính giá bán thực tế. Giá trị mặc định là 20">Chiết khấu:</label>
+                <input id="publisher-discount" type="number" max="100" min="0" value="@ViewData["publisherDiscount"]" />
+
                 <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
                 <textarea id="publisher-detail" rows="10"
                           class="config-max-width margin-vertical" value="@ViewData["publisherDetail"]">@ViewData["publisherDetail"]</textarea>
@@ -58,6 +61,7 @@
             const searchParams = new URLSearchParams();
             searchParams.append("id", GetValueFromUrlName("id"));
             searchParams.append("name", publisherName);
+            searchParams.append("discount", GetValueInputTypeNumberById("publisher-discount", 20));
             searchParams.append("detail", publisherDetail);
             let query = "/Publisher/UpdatePublisher";
 

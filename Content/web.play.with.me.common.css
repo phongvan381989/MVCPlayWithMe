@@ -541,3 +541,9 @@ sup {
     margin-top: 10px;
     margin-bottom: 10px;
 }
+
+.dispay-flex-padding1020-flex-warap-wrap {
+    display: flex;
+    padding: 10px 20px;
+    flex-wrap: wrap;
+}
