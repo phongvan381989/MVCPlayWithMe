@@ -26,8 +26,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <returns>empty nếu thành công. Ngược lại trả về string mô tả lỗi</returns>
         static public string RefreshDataAuthorization()
         {
-            var client = new RestClient("https://api.tiki.vn/sc/oauth2/token");
-            RestRequest request = new RestRequest(Method.POST);
+            RestRequest request = new RestRequest("https://api.tiki.vn/sc/oauth2/token", Method.POST);
             request.AddHeader("Authorization", "Basic " + tikiConfigApp.Tiki_GetAppCredentialBase64Format());
             request.AddHeader("Content-Type", "application/x-www-form-urlencoded");
             request.AddParameter("grant_type", "client_credentials");
@@ -36,7 +35,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             IRestResponse response = null;
             try
             {
-                response = client.Execute(request);
+                response = Common.client.Execute(request);
             }
             catch (Exception ex)
             {
@@ -66,11 +65,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <param name="request"></param>
         /// <param name="configApp"></param>
         /// <returns></returns>
-        static public IRestResponse ExcuteRequest(RestClient client, RestRequest request)
+        static public IRestResponse ExcuteRequest(RestRequest request)
         {
             request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty: tikiConfigApp.tikiAu.access_token));
-            IRestResponse response = client.Execute(request);
-            MyLogger.InfoRestLog(client, request, response);
+            IRestResponse response = Common.client.Execute(request);
+            MyLogger.InfoRestLog(Common.client, request, response);
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
                 MyLogger.GetInstance().Info("Expried token:" + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty : tikiConfigApp.tikiAu.access_token));
@@ -86,8 +85,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
                 // Thực hiện request lại
                 request.AddOrUpdateHeader("Authorization", "Bearer " + tikiConfigApp.tikiAu.access_token);
-                response = client.Execute(request);
-                MyLogger.InfoRestLog(client, request, response);
+                response = Common.client.Execute(request);
+                MyLogger.InfoRestLog(Common.client, request, response);
             }
 
             return response;
@@ -95,36 +94,30 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
         static public IRestResponse GetExcuteRequest(string http)
         {
-            RestClient client = new RestClient(http);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.GET);
-            IRestResponse response = ExcuteRequest(client, request);
+            RestRequest request = new RestRequest(http, Method.GET);
+            IRestResponse response = ExcuteRequest(request);
             return response;
         }
 
         static public IRestResponse PostExcuteRequest(string http, string body)
         {
-            RestClient client = new RestClient(http);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.POST);
+            RestRequest request = new RestRequest(http, Method.POST);
             request.AddJsonBody(body);
 
-            IRestResponse response = ExcuteRequest(client, request);
+            IRestResponse response = ExcuteRequest(request);
             return response;
         }
 
         static public IRestResponse PutExcuteRequest(string http, TikiUpdate st)
         {
-            RestClient client = new RestClient(http);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.PUT);
+            RestRequest request = new RestRequest(http, Method.PUT);
 
             request.AddHeader("Content-Type", "application/json");
 
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-            IRestResponse response = ExcuteRequest(client, request);
+            IRestResponse response = ExcuteRequest(request);
             return response;
         }
     }

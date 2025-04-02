@@ -30,6 +30,8 @@ namespace MVCPlayWithMe.General
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
 
+        public static readonly RestClient client = new RestClient();
+
         // Lần đầu trình duyệt truy cập chưa có thông tin itemOnRow nên cần giá trị mặc định
         // Giá trị cần lớn nhất có thể
         public static readonly int itemOnRowDefault = 6;
@@ -719,9 +721,7 @@ namespace MVCPlayWithMe.General
             if (!File.Exists(Path.Combine(pathFolder, fileName)))
             {
                 // Nếu ảnh chưa có ta download ảnh
-                RestClient client = new RestClient(url);
-                client.Timeout = -1;
-                RestRequest request = new RestRequest(Method.GET);
+                RestRequest request = new RestRequest(url, Method.GET);
 
                 try
                 {
@@ -760,9 +760,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                RestClient client = new RestClient(url);
-                client.Timeout = -1;
-                RestRequest request = new RestRequest(Method.GET);
+                RestRequest request = new RestRequest(url, Method.GET);
                 var fileBytes = client.DownloadData(request);
                 File.WriteAllBytes(fileName, fileBytes);
             }
@@ -791,9 +789,7 @@ namespace MVCPlayWithMe.General
             if (File.Exists(fileName))
                 return;
 
-            RestClient client = new RestClient(url);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.GET);
+            RestRequest request = new RestRequest(url, Method.GET);
             //IRestResponse response = client.Execute(request);
 
             try

@@ -85,9 +85,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
             string url = String.Format(cShopeeHost + path + "?partner_id={0}&timestamp={1}&sign={2}", partner_id, timest, sign);
 
-            var client = new RestClient(url);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.POST);
+            var request = new RestRequest(url, Method.POST);
             request.AddHeader("Content-Type", "application/json");
             var body = @"{
             " + "\n" +
@@ -100,8 +98,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             @"}";
 
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
-            MyLogger.InfoRestLog(client, request, response);
+            IRestResponse response = Common.client.Execute(request);
+            MyLogger.InfoRestLog(Common.client, request, response);
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 return null;
@@ -159,9 +157,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             string sign = BitConverter.ToString(tmp_sign).Replace("-", "").ToLower();
             string url = String.Format(cShopeeHost + path + "?partner_id={0}&timestamp={1}&sign={2}", partner_id, timest, sign);
 
-            var client = new RestClient(url);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.POST);
+            var request = new RestRequest(url, Method.POST);
             request.AddHeader("Content-Type", "application/json");
             var body = @"{
             " + "\n" +
@@ -175,8 +171,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             //MyLogger.GetInstance().Info(body);
 
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
-            MyLogger.InfoRestLog(client, request, response);
+            IRestResponse response = Common.client.Execute(request);
+            MyLogger.InfoRestLog(Common.client, request, response);
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 return null;
@@ -246,14 +242,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         public static IRestResponse ShopeeGetMethod(string path, List<DevNameValuePair> ls)
         {
             string url = GenerateURLShopeeAPI(path, ls);
-            RestClient client = new RestClient(url);
-            client.Timeout = -1;
-            RestRequest request = new RestRequest(Method.GET);
+
+            RestRequest request = new RestRequest(url,Method.GET);
             IRestResponse response = null;
             try
             {
-                response = client.Execute(request);
-                MyLogger.InfoRestLog(client, request, response);
+                response = Common.client.Execute(request);
+                MyLogger.InfoRestLog(Common.client, request, response);
             }
             catch (Exception ex)
             {
@@ -272,14 +267,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 }
 
                 url = GenerateURLShopeeAPI(path, ls);
-                client = new RestClient(url);
-                client.Timeout = -1;
-                request = new RestRequest(Method.GET);
+
+                request = new RestRequest(url, Method.GET);
 
                 try
                 {
-                    response = client.Execute(request);
-                    MyLogger.InfoRestLog(client, request, response);
+                    response = Common.client.Execute(request);
+                    MyLogger.InfoRestLog(Common.client, request, response);
                 }
                 catch (Exception ex)
                 {
@@ -297,14 +291,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         public static IRestResponse ShopeePostMethod(string path, string body)
         {
             string url = GenerateURLShopeeAPI(path, null);
-            var client = new RestClient(url);
-            client.Timeout = -1;
-            var request = new RestRequest(Method.POST);
+
+            var request = new RestRequest(url, Method.POST);
             request.AddHeader("Content-Type", "application/json");
 
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = client.Execute(request);
-            MyLogger.InfoRestLog(client, request, response);
+            IRestResponse response = Common.client.Execute(request);
+            MyLogger.InfoRestLog(Common.client, request, response);
             return response;
         }
 

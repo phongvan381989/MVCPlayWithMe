@@ -2,11 +2,13 @@
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Deal;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using System.Web.Mvc;
 
@@ -51,33 +53,54 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string SaveDealDiscountOfAllSku()
         {
             MySqlResultState result = new MySqlResultState();
-            // Lấy danh sách sku đang bật bán và lấy chương trình giảm giá lần lượt
-            List<string> skuList = new List<string>();
 
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            try
             {
-                conn.Open();
-
-                string query = "SELECT Sku FROM tbtikiitem WHERE Status = 0";
-
-                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    conn.Open();
+
+                    // Lấy danh sách sku đang bật bán và lấy chương trình giảm giá lần lượt
+                    List<string> skuList = sqler.GetListSkuOfActiveItemConnectOut(conn);
+
+                    List<DealCreatedResponseDetail> listDeal = new List<DealCreatedResponseDetail>();
+                    foreach (var sku in skuList)
                     {
-                        while (reader.Read())
-                        {
-                            skuList.Add(reader.GetString("Sku"));
-                        }
+                        listDeal.Clear();
+                        DealAction.SearchDeal(sku, listDeal);
+
+                        // Inssert nếu chưa tồn tại
+                        sqler.InsertTikiDealDiscountConnectOut(listDeal, conn);
+                        Thread.Sleep(300);
                     }
                 }
-
-                foreach(var sku in skuList)
-                {
-
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
 
             return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string GetItemsNoDealDiscountRunning()
+        {
+            List<SimpleTikiProduct> simpleTikiProducts = null;
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    simpleTikiProducts = sqler.GetItemsNoDealDiscountRunning(conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(simpleTikiProducts);
         }
     }
 }

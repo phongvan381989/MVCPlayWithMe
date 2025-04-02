@@ -28,9 +28,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int idIndex = rdr.GetOrdinal("AdministratorId");
                 while (rdr.Read())
                 {
-                    id = MyMySql.GetInt32(rdr, "AdministratorId");
+                    id = rdr.GetInt32(idIndex);
                 }
 
                 rdr.Close();
@@ -181,19 +182,20 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inUserName", userName);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int idIndex = rdr.GetOrdinal("Id");
+                int emailIndex = rdr.GetOrdinal("Email");
+                int sdtIndex = rdr.GetOrdinal("SDT");
+                int privilegeIndex = rdr.GetOrdinal("Privilege");
+
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        administrator.id = MyMySql.GetInt32(rdr,"Id");
-                        administrator.email = MyMySql.GetString(rdr, "Email");
-                        administrator.sdt = MyMySql.GetString(rdr, "SDT");
-                        administrator.userName = MyMySql.GetString(rdr, "SDT");
-                        administrator.privilege = MyMySql.GetInt32(rdr, "Privilege");
-                    }
+                    administrator.id = rdr.GetInt32(idIndex); ;
+                    administrator.email = rdr.IsDBNull(emailIndex) ? string.Empty: rdr.GetString(emailIndex);
+                    administrator.sdt = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
+                    administrator.userName = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
+                    administrator.privilege = rdr.IsDBNull(privilegeIndex) ? -1 : rdr.GetInt32(privilegeIndex);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {

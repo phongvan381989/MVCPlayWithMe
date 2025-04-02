@@ -45,6 +45,8 @@ namespace MVCPlayWithMe
             Common.TemporaryImageTikiMediaFolderPath = 
                 ConfigurationManager.AppSettings["TemporaryImageTikiMediaFolderPath"];
 
+            Common.client.Timeout = 120000; //120 giây
+
             MyMySql.connStr = ConfigurationManager.AppSettings["AdminConectMysql"];
             MyMySql.customerConnStr = ConfigurationManager.AppSettings["CustomerVBNConectMysql"];
 

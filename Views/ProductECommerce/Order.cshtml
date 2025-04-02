@@ -189,6 +189,36 @@
                 Chi Tiết Đơn Hàng Từ Server
             </button>
         </div>
+        <div class="display-flex-margin10" title="Lọc trạng thái: đã đóng, đã hoàn, giữ chỗ, hủy giữ chỗ.">
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="order-status-all" name="order-status-packed-returned-booked-unbooked"
+                       class="margin-left20 all-order" checked onchange="ChangeOrderStatusInWarehouse()">
+                <label for="order-status-all">Tất Cả</label>
+            </div>
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="order-status-packed" name="order-status-packed-returned-booked-unbooked" 
+                       class="margin-left20 dont-pack-order" onchange="ChangeOrderStatusInWarehouse()">
+                <label for="order-status-packed">Đã Đóng</label>
+            </div>
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="order-status-returned" name="order-status-packed-returned-booked-unbooked" 
+                       class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
+                <label for="order-status-returned">Đã Hoàn</label>
+            </div>
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="order-status-booked" name="order-status-packed-returned-booked-unbooked"
+                       class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
+                <label for="order-status-booked">Giữ Chỗ</label>
+            </div>
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="order-status-unbooked" name="order-status-packed-returned-booked-unbooked"
+                       class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
+                <label for="order-status-unbooked">Hủy Giữ Chỗ</label>
+            </div>
+            <div  class="display-flex-margin-right20-align-items-center">
+                <label id="count-order-on-view" style="padding-left:20px;"> 0 đơn hàng</label>
+            </div>
+        </div>
 
         <div>
             <table class="order-table">
@@ -618,6 +648,8 @@
         }
         // Hiển thị danh sách đơn hàng
         function DisplayListOrder(inlistOrderTemp) {
+            // Hiển thị số lượng đơn hàng trên màn hình
+            document.getElementById("count-order-on-view").innerHTML = inlistOrderTemp.length + " đơn hàng."
             // Hiển thị danh sách đơn hàng
             let orderTable = document.getElementsByClassName("order-table")[0];
             DeleteRowsExcludeHead(orderTable);
@@ -673,11 +705,53 @@
         // Lọc order theo trạng thái, sàn
         function ECommerceTypeChange() {
             if (listOrder.length == 0) {
-                DisplayListOrder(listOrder);
                 return;
             }
 
             DisplayListOrder(FilterOrderECommerceName(listOrder, GetECommerceType()));
+
+            EmptyAndFocusOrderCodeElement();
+        }
+
+        function GetOrderStatusInWarehouse() {
+            let statusInWarehouse = eAll; // Tương ứng tất cả
+
+            if (document.getElementById("order-status-packed").checked == true) {
+                statusInWarehouse = packedOrderStatusInWarehouse;
+            }
+            else if (document.getElementById("order-status-returned").checked == true) {
+                statusInWarehouse = returnedOrderStatusInWarehouse;
+            }
+            else if (document.getElementById("order-status-booked").checked == true) {
+                statusInWarehouse = bookedOrderStatusInWarehouse;
+            }
+            else if (document.getElementById("order-status-unbooked").checked == true) {
+                statusInWarehouse = unbookedOrderStatusInWarehouse;
+            }
+
+            return statusInWarehouse;
+        }
+
+        // Lọc order theo trạng thái đã đóng, đã hoàn, giữ chỗ, hủy giữ chỗ
+        function ChangeOrderStatusInWarehouse() {
+            if (listOrder.length == 0) {
+                return;
+            }
+
+            let statusInWarehouse = GetOrderStatusInWarehouse();
+            let listTemp = [];
+            if (statusInWarehouse == eAll) {
+                listTemp = listOrder;
+            }
+            else {
+                for (let i = 0; i < listOrder.length; i++) {
+                    if (listOrder[i].orderStatusInWarehoue === statusInWarehouse) {
+                        listTemp.push(listOrder[i]);
+                    }
+                }
+            }
+
+            DisplayListOrder(listTemp);
 
             EmptyAndFocusOrderCodeElement();
         }

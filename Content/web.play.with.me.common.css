@@ -542,8 +542,12 @@ sup {
     margin-bottom: 10px;
 }
 
-.dispay-flex-padding1020-flex-warap-wrap {
+.display-flex-padding1020-flex-warap-wrap {
     display: flex;
     padding: 10px 20px;
     flex-wrap: wrap;
+}
+.display-flex-align-items-center {
+    display: flex;
+    align-items: center;
 }

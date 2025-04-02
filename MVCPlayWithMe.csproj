@@ -468,6 +468,7 @@
     <Compile Include="OpenPlatform\Model\TikiApp\Config\TikiConfigApp.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Deal\CreatingRequestBody.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Deal\CreatingRequestBodyObject.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Deal\SimpleTikiProduct.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Event\TikiEvent.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Event\EventQueue.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Event\Event_Payload.cs" />
