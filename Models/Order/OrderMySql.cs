@@ -63,17 +63,21 @@ namespace MVCPlayWithMe.Models.Order
                 cmd.Parameters.AddRange(paras);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
+
+                int modelIdIndex = rdr.GetOrdinal("ModelId");
+                int quantityIndex = rdr.GetOrdinal("Quantity");
+                int realIndex = rdr.GetOrdinal("Real");
+
                 while (rdr.Read())
                 {
                     Cart cart = new Cart();
-                    cart.id = MyMySql.GetInt32(rdr, "ModelId");
-                    cart.q = MyMySql.GetInt32(rdr, "Quantity");
-                    cart.real = MyMySql.GetInt32(rdr, "Real");
+                    cart.id = rdr.GetInt32(modelIdIndex);
+                    cart.q = rdr.GetInt32(quantityIndex);
+                    cart.real = rdr.GetInt32(realIndex);
                     ls.Add(cart);
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -133,8 +137,7 @@ namespace MVCPlayWithMe.Models.Order
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -319,8 +322,7 @@ namespace MVCPlayWithMe.Models.Order
                     result.myAnything = MyMySql.GetInt32(rdr, "Count");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
 
             }
             catch (Exception ex)
@@ -356,8 +358,7 @@ namespace MVCPlayWithMe.Models.Order
                     result.myAnything = MyMySql.GetInt32(rdr, "CountRecord");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -542,16 +543,35 @@ namespace MVCPlayWithMe.Models.Order
                     cmd.Parameters.AddWithValue("@inCustomerId", customerId);
 
                     MySqlDataReader rdr = cmd.ExecuteReader();
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int customerIdIndex = rdr.GetOrdinal("CustomerId");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    int phoneIndex = rdr.GetOrdinal("Phone");
+                    int provinceIndex = rdr.GetOrdinal("Province");
+                    int districtIndex = rdr.GetOrdinal("District");
+                    int subdistrictIndex = rdr.GetOrdinal("SubDistrict");
+                    int detailIndex = rdr.GetOrdinal("Detail");
+                    int noteIndex = rdr.GetOrdinal("Note");
+                    int timeIndex = rdr.GetOrdinal("Time");
+
                     while (rdr.Read())
                     {
                         Order order = new Order();
-                        ReadOrder(order, rdr);
+                        order.id = rdr.GetInt32(idIndex);
+                        order.customerId = rdr.GetInt32(customerIdIndex);
+                        order.address.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
+                        order.address.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
+                        order.address.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
+                        order.address.district = rdr.IsDBNull(districtIndex) ? string.Empty : rdr.GetString(districtIndex);
+                        order.address.subdistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
+                        order.address.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
+                        order.note = rdr.IsDBNull(noteIndex) ? string.Empty : rdr.GetString(noteIndex);
+                        order.time = rdr.IsDBNull(timeIndex) ? DateTime.MinValue : rdr.GetDateTime(timeIndex);
 
                         ls.Add(order);
                     }
 
-                    if (rdr != null)
-                        rdr.Close();
+                    rdr.Close();
                 }
 
                 int index = 0;
@@ -568,9 +588,10 @@ namespace MVCPlayWithMe.Models.Order
 
                         index = 0;
                         MySqlDataReader rdr = cmd.ExecuteReader();
+                        int orderIdIndex = rdr.GetOrdinal("OrderId");
                         while (rdr.Read())
                         {
-                            orderIdTemp = MyMySql.GetInt32(rdr, "OrderId");
+                            orderIdTemp = rdr.GetInt32(orderIdIndex);
                             if (orderIdTemp > ls[index].id)
                             {
                                 indexTemp = GetIndex(ls, index, count, orderIdTemp);
@@ -582,8 +603,7 @@ namespace MVCPlayWithMe.Models.Order
                             ls[index].lsOrderTrack.Add(track);
                         }
 
-                        if (rdr != null)
-                            rdr.Close();
+                        rdr.Close();
                     }
 
                     // Lấy thông tin từ bảng tbPayOrder
@@ -594,9 +614,10 @@ namespace MVCPlayWithMe.Models.Order
 
                         index = 0;
                         MySqlDataReader rdr = cmd.ExecuteReader();
+                        int orderIdIndex = rdr.GetOrdinal("OrderId");
                         while (rdr.Read())
                         {
-                            orderIdTemp = MyMySql.GetInt32(rdr, "OrderId");
+                            orderIdTemp = rdr.GetInt32(orderIdIndex);
                             if (orderIdTemp > ls[index].id)
                             {
                                 indexTemp = GetIndex(ls, index, count, orderIdTemp);
@@ -608,8 +629,7 @@ namespace MVCPlayWithMe.Models.Order
                             ls[index].lsOrderPay.Add(pay);
                         }
 
-                        if (rdr != null)
-                            rdr.Close();
+                        rdr.Close();
                     }
 
                     // Lấy thông tin từ bảng tbDetailOrder
@@ -620,9 +640,10 @@ namespace MVCPlayWithMe.Models.Order
 
                         index = 0;
                         MySqlDataReader rdr = cmd.ExecuteReader();
+                        int orderIdIndex = rdr.GetOrdinal("OrderId");
                         while (rdr.Read())
                         {
-                            orderIdTemp = MyMySql.GetInt32(rdr, "OrderId");
+                            orderIdTemp = rdr.GetInt32(orderIdIndex);
                             if (orderIdTemp > ls[index].id)
                             {
                                 indexTemp = GetIndex(ls, index, count, orderIdTemp);
@@ -635,8 +656,7 @@ namespace MVCPlayWithMe.Models.Order
                             ls[index].lsOrderDetail.Add(detail);
                         }
 
-                        if (rdr != null)
-                            rdr.Close();
+                        rdr.Close();
                     }
                 }
             }
@@ -647,7 +667,7 @@ namespace MVCPlayWithMe.Models.Order
             }
 
             conn.Close();
-            result.myJson = ls;//JsonConvert.SerializeObject(ls);
+            result.myJson = ls;
             return result;
         }
 
@@ -895,10 +915,31 @@ namespace MVCPlayWithMe.Models.Order
                 cmd.Parameters.AddWithValue("@inNameOrLastSDT", sdtNameForSearch);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
+
+                int idIndex = rdr.GetOrdinal("Id");
+                int customerIdIndex = rdr.GetOrdinal("CustomerId");
+                int nameIndex = rdr.GetOrdinal("Name");
+                int phoneIndex = rdr.GetOrdinal("Phone");
+                int provinceIndex = rdr.GetOrdinal("Province");
+                int districtIndex = rdr.GetOrdinal("District");
+                int subdistrictIndex = rdr.GetOrdinal("SubDistrict");
+                int detailIndex = rdr.GetOrdinal("Detail");
+                int noteIndex = rdr.GetOrdinal("Note");
+                int timeIndex = rdr.GetOrdinal("Time");
+
                 while (rdr.Read())
                 {
                     Order order = new Order();
-                    ReadOrder(order, rdr);
+                    order.id = rdr.GetInt32(idIndex);
+                    order.customerId = rdr.GetInt32(customerIdIndex);
+                    order.address.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
+                    order.address.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
+                    order.address.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
+                    order.address.district = rdr.IsDBNull(districtIndex) ? string.Empty : rdr.GetString(districtIndex);
+                    order.address.subdistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
+                    order.address.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
+                    order.note = rdr.IsDBNull(noteIndex) ? string.Empty : rdr.GetString(noteIndex);
+                    order.time = rdr.IsDBNull(timeIndex) ? DateTime.MinValue : rdr.GetDateTime(timeIndex);
 
                     ls.Add(order);
                 }
@@ -961,9 +1002,19 @@ namespace MVCPlayWithMe.Models.Order
                 string modelName = "";
                 string imgSrc = "";
 
+                int orderIdIndex = rdr.GetOrdinal("OrderId");
+                int orderCodeIndex = rdr.GetOrdinal("OrderCode");
+                int orderTimeIndex = rdr.GetOrdinal("OrderTime");
+                int statusIndex = rdr.GetOrdinal("StatusInTrackOrder");
+                int modelIdIndex = rdr.GetOrdinal("ModelId");
+                int itemIdIndex = rdr.GetOrdinal("ItemId");
+                int modelQuantityIndex = rdr.GetOrdinal("ModelQuantity");
+                int itemNameIndex = rdr.GetOrdinal("ItemName");
+                int modelNameIndex = rdr.GetOrdinal("ModelName");
+
                 while (rdr.Read())
                 {
-                    id = (long)MyMySql.GetInt32(rdr, "OrderId");
+                    id = (long)rdr.GetInt32(orderIdIndex);
                     if (ls.Count == 0 || ls[ls.Count - 1].id != id)
                     {
                         ls.Add(new CommonOrder());
@@ -973,20 +1024,20 @@ namespace MVCPlayWithMe.Models.Order
                     if (commonOrder.id != id )
                     {
                         commonOrder.id = id;
-                        commonOrder.code = MyMySql.GetString(rdr, "OrderCode");
-                        commonOrder.created_at = MyMySql.GetDateTime(rdr, "OrderTime");
-                        commonOrder.status = OrderTrack.GetString(MyMySql.GetInt32(rdr, "StatusInTrackOrder"));
+                        commonOrder.code = rdr.IsDBNull(orderCodeIndex) ? string.Empty : rdr.GetString(orderCodeIndex);
+                        commonOrder.created_at = rdr.IsDBNull(orderTimeIndex) ? DateTime.MinValue : rdr.GetDateTime(orderTimeIndex);
+                        commonOrder.status = OrderTrack.GetString(rdr.IsDBNull(statusIndex) ? -1 : rdr.GetInt32(statusIndex));
                     }
 
-                    modelId = (long)MyMySql.GetInt32(rdr, "ModelId");
+                    modelId = rdr.IsDBNull(modelIdIndex) ? -1L : (long)rdr.GetInt32(modelIdIndex);
 
                     if (commonOrder.listModelId.Count == 0 ||
                         commonOrder.listModelId[commonOrder.listModelId.Count - 1] != modelId)
                     {
-                        itemId = (long)MyMySql.GetInt32(rdr, "ItemId");
-                        modelQuantity = MyMySql.GetInt32(rdr, "ModelQuantity");
-                        itemName = MyMySql.GetString(rdr, "ItemName");
-                        modelName = MyMySql.GetString(rdr, "ModelName");
+                        itemId = (long)rdr.GetInt32(itemIdIndex);
+                        modelQuantity = rdr.IsDBNull(modelQuantityIndex) ? -1 : rdr.GetInt32(modelQuantityIndex);
+                        itemName = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex);
+                        modelName = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
                         imgSrc = Common.GetModelImageSrc(Common.ConvertLongToInt(itemId), Common.ConvertLongToInt(modelId));
 
                         commonOrder.listItemId.Add(itemId);
@@ -998,8 +1049,7 @@ namespace MVCPlayWithMe.Models.Order
                     }
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -1049,8 +1099,7 @@ namespace MVCPlayWithMe.Models.Order
                                 commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
                             }
                         }
-                        if (rdr != null)
-                            rdr.Close();
+                        rdr.Close();
                     }
                 }
             }
@@ -1129,13 +1178,11 @@ namespace MVCPlayWithMe.Models.Order
                         status = Common.OrderStatusArray[MyMySql.GetInt32(rdr, "Status")];
                     }
                     order.orderStatusInWarehoue = status;
-                    if (rdr != null)
-                        rdr.Close();
+                    rdr.Close();
                 }
             }
             catch (Exception ex)
             {
-
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 

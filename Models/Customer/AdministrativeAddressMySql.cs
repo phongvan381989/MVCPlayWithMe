@@ -62,8 +62,7 @@ namespace MVCPlayWithMe.Models
                 {
                     Convert(ls, rdr);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
 
             }
             catch (Exception ex)

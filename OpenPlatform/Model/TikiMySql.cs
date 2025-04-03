@@ -37,8 +37,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch(Exception ex)
             {
@@ -76,8 +75,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     exist = true;
                     break;
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
                 int status = 0;
                 // Lưu item vào db lần đầu
                 if (!exist)
@@ -124,12 +122,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -414,8 +410,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
                             }
                         }
-                        if (rdr != null)
-                            rdr.Close();
+                        rdr.Close();
                     }
                 }
             }
@@ -484,8 +479,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 {
                                         quantity = MyMySql.GetInt32(rdr, "Result");
                                 }
-                                if (rdr != null)
-                                    rdr.Close();
+                                rdr.Close();
                             }
                         }
                     }
@@ -741,8 +735,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     config.tikiAu.token_type = MyMySql.GetString(rdr, "TokenType");
                     config.tikiAu.scope = MyMySql.GetString(rdr, "Scope");
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {

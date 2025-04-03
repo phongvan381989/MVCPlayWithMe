@@ -23,15 +23,16 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(new Combo(MyMySql.GetInt32(rdr, "Id"), MyMySql.GetString(rdr, "Name")));
-                    }
+                    ls.Add(new Combo(rdr.GetInt32(idIndex),
+                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -100,12 +101,10 @@ namespace MVCPlayWithMe.Models
                         combo.products.Add(product);
                     }
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 combo = null;
             }

@@ -24,21 +24,22 @@ namespace MVCPlayWithMe.Models
                 };
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+                int discountIndex = rdr.GetOrdinal("Discount");
+                int detailIndex = rdr.GetOrdinal("Detail");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(new Publisher(MyMySql.GetInt32(rdr, "Id"),
-                            MyMySql.GetString(rdr, "Name"), MyMySql.GetInt32(rdr, "Discount"),
-                            MyMySql.GetString(rdr, "Detail")));
-                    }
+                    ls.Add(new Publisher(rdr.GetInt32(idIndex),
+                        rdr.GetString(nameIndex),
+                        rdr.GetInt32(discountIndex),
+                       rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 ls.Clear();
             }
@@ -166,12 +167,10 @@ namespace MVCPlayWithMe.Models
                         MyMySql.GetString(rdr, "Detail")
                         );
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 publisher = null;
             }

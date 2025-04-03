@@ -23,15 +23,15 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(new ProductIdName(MyMySql.GetInt32(rdr, "Id"), MyMySql.GetString(rdr, "Name")));
-                    }
+                    ls.Add(new ProductIdName(rdr.GetInt32(idIndex),
+                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -82,8 +82,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -122,8 +121,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -158,8 +156,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     id = MyMySql.GetInt32(rdr, "Id");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -200,23 +197,13 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+
+                while (rdr.Read())
                 {
-                    if (rdr.HasRows)
-                    {
-                        while (rdr.Read())
-                        {
-                            id = MyMySql.GetInt32(rdr, "Id");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        id = -1;
-                    }
+                    id = MyMySql.GetInt32(rdr, "Id");
+                    break;
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -245,23 +232,14 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+
+                while (rdr.Read())
                 {
-                    if (rdr.HasRows)
-                    {
-                        while (rdr.Read())
-                        {
-                            id = MyMySql.GetInt32(rdr, "Id");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        id = -1;
-                    }
+                    id = MyMySql.GetInt32(rdr, "Id");
+                    break;
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -328,8 +306,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -570,14 +547,24 @@ namespace MVCPlayWithMe.Models.ItemModel
                 int itemId = 0;
                 Item itemTemp = null;
                 MySqlDataReader rdr = cmd.ExecuteReader();
+
+                int itemIdIndex = rdr.GetOrdinal("ItemId");
+                int itemNameIndex = rdr.GetOrdinal("ItemName");
+
+                int modelIdIndex = rdr.GetOrdinal("ModelId");
+                int modelNameIndex = rdr.GetOrdinal("ModelName");
+                int modelPriceIndex = rdr.GetOrdinal("ModelPrice");
+                int modelBookCoverPriceIndex = rdr.GetOrdinal("ModelBookCoverPrice");
+                int modelSoldQuantityIndex = rdr.GetOrdinal("ModelSoldQuantity");
+                int modelDiscountIndex = rdr.GetOrdinal("ModelDiscount");
                 while (rdr.Read())
                 {
-                    itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    itemId = rdr.GetInt32(itemIdIndex);
                     if(ls.Count == 0 || ls[ls.Count - 1].id != itemId) // Thêm mới item
                     {
                         Item item = new Item();
-                        item.id = MyMySql.GetInt32(rdr, "ItemId");
-                        item.name = MyMySql.GetString(rdr, "ItemName");
+                        item.id = itemId;
+                        item.name = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex); ;
                         item.SetFirstSrcImage();
                         ls.Add(item);
                     }
@@ -585,20 +572,19 @@ namespace MVCPlayWithMe.Models.ItemModel
                     // Thêm model
                     {
                         Model model = new Model();
-                        model.id = MyMySql.GetInt32(rdr, "ModelId");
+                        model.id = rdr.GetInt32(modelIdIndex);
                         model.itemId = itemTemp.id;
-                        model.name = MyMySql.GetString(rdr, "ModelName");
+                        model.name = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
 
-                        model.price = MyMySql.GetInt32(rdr, "ModelPrice");
-                        model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
-                        model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
-                        model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                        model.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
+                        model.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ? 0 : rdr.GetInt32(modelBookCoverPriceIndex);
+                        model.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
+                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetInt32(modelDiscountIndex);
                         itemTemp.models.Add(model);
                     }
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -610,7 +596,8 @@ namespace MVCPlayWithMe.Models.ItemModel
             return ls;
         }
 
-        public List<Item> SearchItemPageConnectOut(ItemModelSearchParameter searchParameter, MySqlConnection conn)
+        public List<Item> SearchItemPageConnectOut(ItemModelSearchParameter searchParameter,
+            MySqlConnection conn)
         {
             List<Item> ls = new List<Item>();
             try
@@ -624,14 +611,23 @@ namespace MVCPlayWithMe.Models.ItemModel
                 int itemId = 0;
                 Item itemTemp = null;
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int itemIdIndex = rdr.GetOrdinal("ItemId");
+                int itemNameIndex = rdr.GetOrdinal("ItemName");
+
+                int modelIdIndex = rdr.GetOrdinal("ModelId");
+                int modelNameIndex = rdr.GetOrdinal("ModelName");
+                int modelPriceIndex = rdr.GetOrdinal("ModelPrice");
+                int modelBookCoverPriceIndex = rdr.GetOrdinal("ModelBookCoverPrice");
+                int modelSoldQuantityIndex = rdr.GetOrdinal("ModelSoldQuantity");
+                int modelDiscountIndex = rdr.GetOrdinal("ModelDiscount");
                 while (rdr.Read())
                 {
-                    itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    itemId = rdr.GetInt32(itemIdIndex);
                     if (ls.Count == 0 || ls[ls.Count - 1].id != itemId) // Thêm mới item
                     {
                         Item item = new Item();
-                        item.id = MyMySql.GetInt32(rdr, "ItemId");
-                        item.name = MyMySql.GetString(rdr, "ItemName");
+                        item.id = itemId;
+                        item.name = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex); ;
                         item.SetFirstSrcImage();
                         ls.Add(item);
                     }
@@ -639,14 +635,14 @@ namespace MVCPlayWithMe.Models.ItemModel
                     // Thêm model
                     {
                         Model model = new Model();
-                        model.id = MyMySql.GetInt32(rdr, "ModelId");
+                        model.id = rdr.GetInt32(modelIdIndex);
                         model.itemId = itemTemp.id;
-                        model.name = MyMySql.GetString(rdr, "ModelName");
+                        model.name = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
 
-                        model.price = MyMySql.GetInt32(rdr, "ModelPrice");
-                        model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
-                        model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
-                        model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                        model.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
+                        model.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ? 0 : rdr.GetInt32(modelBookCoverPriceIndex);
+                        model.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
+                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetInt32(modelDiscountIndex);
                         itemTemp.models.Add(model);
                     }
                 }
@@ -681,8 +677,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     count = MyMySql.GetInt32(rdr, "CountRecord");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -714,7 +709,6 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -747,32 +741,41 @@ namespace MVCPlayWithMe.Models.ItemModel
                 Item itemTemp = null;
                 Model modelTemp = null;
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int itemIdIndex = rdr.GetOrdinal("ItemId");
+                int itemNameIndex = rdr.GetOrdinal("ItemName");
+                int modelIdIndex = rdr.GetOrdinal("ModelId");
+                int modelNameIndex = rdr.GetOrdinal("ModelName");
+                int modelPriceIndex = rdr.GetOrdinal("ModelPrice");
+                int modelBookCoverPriceIndex = rdr.GetOrdinal("ModelBookCoverPrice");
+                int modelSoldQuantityIndex = rdr.GetOrdinal("ModelSoldQuantity");
+                int modelDiscountIndex = rdr.GetOrdinal("ModelDiscount");
+                int mappingIdIndex = rdr.GetOrdinal("MappingId");
                 while (rdr.Read())
                 {
-                    itemId = MyMySql.GetInt32(rdr, "ItemId");
+                    itemId = rdr.GetInt32(itemIdIndex);
                     if (ls.Count == 0 || ls[ls.Count - 1].id != itemId) // Thêm mới item
                     {
                         itemTemp = new Item();
-                        itemTemp.id = MyMySql.GetInt32(rdr, "ItemId");
-                        itemTemp.name = MyMySql.GetString(rdr, "ItemName");
+                        itemTemp.id = itemId;
+                        itemTemp.name = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex);
                         itemTemp.SetFirstSrcImage();
                         ls.Add(itemTemp);
                     }
                     itemTemp = ls[ls.Count - 1];
                     // Thêm model
                     {
-                        modelId = MyMySql.GetInt32(rdr, "ModelId");
+                        modelId = rdr.IsDBNull(modelIdIndex) ? -1 : rdr.GetInt32(modelIdIndex);
                         if (itemTemp.models.Count == 0 || itemTemp.models[itemTemp.models.Count - 1].id != modelId) // Thêm mới item
                         {
                             modelTemp = new Model();
                             modelTemp.id = modelId;
                             modelTemp.itemId = itemTemp.id;
-                            modelTemp.name = MyMySql.GetString(rdr, "ModelName");
+                            modelTemp.name = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
 
-                            modelTemp.price = MyMySql.GetInt32(rdr, "ModelPrice");
-                            modelTemp.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
-                            modelTemp.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
-                            modelTemp.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                            modelTemp.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
+                            modelTemp.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ?0 : rdr.GetInt32(modelBookCoverPriceIndex);
+                            modelTemp.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
+                            modelTemp.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetInt32(modelDiscountIndex); ;
                             itemTemp.models.Add(modelTemp);
                         }
                         modelTemp = itemTemp.models[itemTemp.models.Count - 1];
@@ -780,13 +783,12 @@ namespace MVCPlayWithMe.Models.ItemModel
                     // Thêm mapping
                     {
                         Mapping mapping = new Mapping();
-                        mapping.id = MyMySql.GetInt32(rdr, "MappingId");
+                        mapping.id = rdr.IsDBNull(mappingIdIndex) ? -1 : rdr.GetInt32(mappingIdIndex);
                         modelTemp.mapping.Add(mapping);
                     }
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -821,8 +823,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     }
                     ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
 
                 foreach (var model in models)
                 {
@@ -861,8 +862,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     }
                     ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
 
                 foreach (var model in models)
                 {
@@ -903,8 +903,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     }
                     ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
 
                 foreach (var model in models)
                 {
@@ -944,8 +943,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     }
                     ConvertOneRowFromDataMySqlToModel(rdr, models);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
 
                 if (item != null)
                 {
@@ -1071,7 +1069,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.Parameters.AddWithValue("@inId", modelId);
                 cmd.Parameters.AddWithValue("@inName", name);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -1096,7 +1093,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.Parameters.AddWithValue("@inId", itemId);
                 cmd.Parameters.AddWithValue("@inName", name);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -1122,7 +1118,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.Parameters.AddWithValue("@inDiscount", discount);
                 cmd.Parameters.AddWithValue("@inListItemId", listItemId);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -1148,7 +1143,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.Parameters.AddWithValue("@inDiscount", discount);
                 cmd.Parameters.AddWithValue("@inListModelId", listModelId);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -1173,7 +1167,6 @@ namespace MVCPlayWithMe.Models.ItemModel
                 cmd.Parameters.AddWithValue("@inId", itemId);
                 cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {

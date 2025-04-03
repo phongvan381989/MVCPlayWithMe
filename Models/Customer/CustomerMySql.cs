@@ -66,26 +66,6 @@ namespace MVCPlayWithMe.Models.Customer
             {
                 conn.Open();
 
-                //// Check userName hợp lệ
-                //MySqlCommand cmdCheck = new MySqlCommand("st_tbCustomer_CheckValidUserName", conn);
-                //cmdCheck.CommandType = CommandType.StoredProcedure;
-                //cmdCheck.Parameters.AddWithValue("@inValue", userName);
-                //Boolean isValid = true;
-                //MySqlDataReader rdr = cmdCheck.ExecuteReader();
-                //while(rdr.Read())
-                //{
-                //    isValid = false;
-                //}
-                //rdr.Close();
-
-                //if (!isValid)
-                //{
-                //    result.State = EMySqlResultState.EXIST;
-                //    result.Message = "Tên tài khoản đã tồn tại";
-                //}
-
-                //if (result.State == EMySqlResultState.OK)
-                //{
                 MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Insert", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inEmail", "");
@@ -157,34 +137,31 @@ namespace MVCPlayWithMe.Models.Customer
 
         private void GetCustomerFromDataReader(MySqlDataReader rdr, Customer customer)
         {
-            if (rdr != null && rdr.HasRows)
+            while (rdr.Read())
             {
-                while (rdr.Read())
+                if (customer.id == -1)
                 {
-                    if (customer.id == -1)
-                    {
-                        customer.id = MyMySql.GetInt32(rdr, "Id");
-                        customer.email = MyMySql.GetString(rdr, "Email");
-                        customer.sdt = MyMySql.GetString(rdr, "SDT");
-                        customer.userName = MyMySql.GetString(rdr, "UserName");
-                        customer.fullName = MyMySql.GetString(rdr, "FullName");
-                        customer.birthday = MyMySql.GetDateTime(rdr, "Birthday");
-                        customer.sex = MyMySql.GetInt32(rdr, "Sex");
-                    }
-                    // Thêm address
-                    if (!Convert.IsDBNull(rdr["AddressId"]))
-                    {
-                        Address add = new Address();
-                        add.id = MyMySql.GetInt32(rdr, "AddressId");
-                        add.name = MyMySql.GetString(rdr, "Name");
-                        add.phone = MyMySql.GetString(rdr, "Phone");
-                        add.province = MyMySql.GetString(rdr, "Province");
-                        add.district = MyMySql.GetString(rdr, "District");
-                        add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
-                        add.detail = MyMySql.GetString(rdr, "Detail");
-                        add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
-                        customer.lsAddress.Add(add);
-                    }
+                    customer.id = MyMySql.GetInt32(rdr, "Id");
+                    customer.email = MyMySql.GetString(rdr, "Email");
+                    customer.sdt = MyMySql.GetString(rdr, "SDT");
+                    customer.userName = MyMySql.GetString(rdr, "UserName");
+                    customer.fullName = MyMySql.GetString(rdr, "FullName");
+                    customer.birthday = MyMySql.GetDateTime(rdr, "Birthday");
+                    customer.sex = MyMySql.GetInt32(rdr, "Sex");
+                }
+                // Thêm address
+                if (!Convert.IsDBNull(rdr["AddressId"]))
+                {
+                    Address add = new Address();
+                    add.id = MyMySql.GetInt32(rdr, "AddressId");
+                    add.name = MyMySql.GetString(rdr, "Name");
+                    add.phone = MyMySql.GetString(rdr, "Phone");
+                    add.province = MyMySql.GetString(rdr, "Province");
+                    add.district = MyMySql.GetString(rdr, "District");
+                    add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                    add.detail = MyMySql.GetString(rdr, "Detail");
+                    add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
+                    customer.lsAddress.Add(add);
                 }
             }
         }
@@ -208,8 +185,7 @@ namespace MVCPlayWithMe.Models.Customer
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 GetCustomerFromDataReader(rdr, customer);
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -237,8 +213,7 @@ namespace MVCPlayWithMe.Models.Customer
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 GetCustomerFromDataReader(rdr, customer);
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -455,8 +430,7 @@ namespace MVCPlayWithMe.Models.Customer
                     result.myAnything = MyMySql.GetInt32(rdr, "LastId");
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -521,6 +495,7 @@ namespace MVCPlayWithMe.Models.Customer
 
             return MyMySql.ExcuteNonQuery("st_tbAddress_Delete_Default", paras);
         }
+
         /// <summary>
         /// Từ customerId lấy danh sách địa chỉ nhận hàng
         /// </summary>
@@ -539,28 +514,25 @@ namespace MVCPlayWithMe.Models.Customer
                 cmd.Parameters.AddWithValue("@inCustomerId", customerId);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        Address add = new Address();
-                        add.id = MyMySql.GetInt32(rdr, "Id");
-                        add.name = MyMySql.GetString(rdr, "Name");
-                        add.phone = MyMySql.GetString(rdr, "Phone");
-                        add.province = MyMySql.GetString(rdr, "Province");
-                        add.district = MyMySql.GetString(rdr, "District");
-                        add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
-                        add.detail = MyMySql.GetString(rdr, "Detail");
-                        add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
-                        lsAddress.Add(add);
-                    }
+                    Address add = new Address();
+                    add.id = MyMySql.GetInt32(rdr, "Id");
+                    add.name = MyMySql.GetString(rdr, "Name");
+                    add.phone = MyMySql.GetString(rdr, "Phone");
+                    add.province = MyMySql.GetString(rdr, "Province");
+                    add.district = MyMySql.GetString(rdr, "District");
+                    add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                    add.detail = MyMySql.GetString(rdr, "Detail");
+                    add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
+                    lsAddress.Add(add);
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 lsAddress.Clear();
             }

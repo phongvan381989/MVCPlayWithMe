@@ -16,11 +16,10 @@ namespace MVCPlayWithMe.Models
     {
         /// <summary>
         /// TỪ dữ liệu select db, ta trả về đối tượng Product
-        /// Dùng trong trường hợp câu select chỉ trả về 1 row
         /// </summary>
         /// <param name="rdr">Trả về ngay từ câu select</param>
         /// <returns></returns>
-        private Product ConvertOneRowFromDataMySql(MySqlDataReader rdr)
+        private Product ConvertRowFromDataMySql(MySqlDataReader rdr)
         {
             Product product = new Product();
             product.id = MyMySql.GetInt32(rdr, "Id");
@@ -59,26 +58,39 @@ namespace MVCPlayWithMe.Models
 
         /// <summary>
         /// TỪ dữ liệu select db, ta trả về đối tượng Product với 1 vài thuộc tính cần thiết
-        /// Dùng trong trường hợp câu select chỉ trả về 1 row
         /// </summary>
         /// <param name="rdr">Trả về ngay từ câu select</param>
         /// <returns></returns>
-        private Product ConvertQuicklyOneRowFromDataMySql(MySqlDataReader rdr)
+        private void ConvertQuicklyRowFromDataMySql(MySqlDataReader rdr, List<Product> ls)
         {
-            Product product = new Product();
-            product.id = MyMySql.GetInt32(rdr, "Id");
-            product.code = MyMySql.GetString(rdr, "Code");
-            product.barcode = MyMySql.GetString(rdr, "Barcode");
-            product.name = MyMySql.GetString(rdr, "Name");
-            product.quantity = MyMySql.GetInt32(rdr, "Quantity");
-            product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-            product.status = MyMySql.GetInt32(rdr, "Status");
-            product.comboId = MyMySql.GetInt32(rdr, "ComboId");
-            product.comboName = MyMySql.GetString(rdr, "ComboName");
-            product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-            product.SetFirstSrcImage();
+            int idIndex = rdr.GetOrdinal("Id");
+            int codeIndex = rdr.GetOrdinal("Code");
+            int barcodeIndex = rdr.GetOrdinal("Barcode");
+            int nameIndex = rdr.GetOrdinal("Name");
+            int quantityIndex = rdr.GetOrdinal("Quantity");
+            int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
+            int statusIndex = rdr.GetOrdinal("Status");
+            int comboIdIndex = rdr.GetOrdinal("ComboId");
+            int comboNameIndex = rdr.GetOrdinal("ComboName");
+            int publisherIdIndex = rdr.GetOrdinal("PublisherId");
 
-            return product;
+            while (rdr.Read())
+            {
+                Product product = new Product();
+                product.id = rdr.GetInt32(idIndex);
+                product.code = rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex);
+                product.barcode = rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex);
+                product.name = rdr.GetString(nameIndex);
+                product.quantity = rdr.GetInt32(quantityIndex);
+                product.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
+                product.status = rdr.GetInt32(statusIndex);
+                product.comboId = rdr.GetInt32(comboIdIndex);
+                product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
+                product.publisherId = rdr.GetInt32(publisherIdIndex);
+                product.SetFirstSrcImage();
+
+                ls.Add(product);
+            }
         }
 
         /// <summary>
@@ -104,10 +116,9 @@ namespace MVCPlayWithMe.Models
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    product = ConvertOneRowFromDataMySql(rdr);
+                    product = ConvertRowFromDataMySql(rdr);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -139,10 +150,9 @@ namespace MVCPlayWithMe.Models
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    product = ConvertOneRowFromDataMySql(rdr);
+                    product = ConvertRowFromDataMySql(rdr);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -174,14 +184,12 @@ namespace MVCPlayWithMe.Models
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    product = ConvertOneRowFromDataMySql(rdr);
+                    product = ConvertRowFromDataMySql(rdr);
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 product = null;
             }
@@ -312,25 +320,22 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddRange(paras);
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
+                    result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                    if(result.myAnything == -2)
                     {
-                        result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                        if(result.myAnything == -2)
-                        {
-                            result.State = EMySqlResultState.EXIST;
-                            result.Message = "Code is exist";
-                        }
-                        else if (result.myAnything == -3)
-                        {
-                            result.State = EMySqlResultState.EXIST;
-                            result.Message = "Barcode is exist";
-                        }
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Code is exist";
+                    }
+                    else if (result.myAnything == -3)
+                    {
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Barcode is exist";
                     }
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -436,25 +441,23 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddRange(paras);
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
+                    result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                    if (result.myAnything == -2)
                     {
-                        result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                        if (result.myAnything == -2)
-                        {
-                            result.State = EMySqlResultState.EXIST;
-                            result.Message = "Code is exist";
-                        }
-                        else if (result.myAnything == -3)
-                        {
-                            result.State = EMySqlResultState.EXIST;
-                            result.Message = "Barcode is exist";
-                        }
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Code is exist";
+                    }
+                    else if (result.myAnything == -3)
+                    {
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Barcode is exist";
                     }
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -478,19 +481,18 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(new ProductIdName(MyMySql.GetInt32(rdr, "Id"), MyMySql.GetString(rdr, "Name")));
-                    }
+                    ls.Add(new ProductIdName(rdr.GetInt32(idIndex),
+                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -516,29 +518,18 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@productName", productName);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+
+                while (rdr.Read())
                 {
-                    if (rdr.HasRows)
-                    {
-                        while (rdr.Read())
-                        {
-                            id = MyMySql.GetInt32(rdr, "Id");
-                            break;
-                        }
-                    }
-                    else
-                    {
-                        id = -1;
-                    }
+                    id = MyMySql.GetInt32(rdr, "Id");
+                    break;
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
-                id = -1;
             }
 
             conn.Close();
@@ -557,19 +548,16 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int barcodeIndex = rdr.GetOrdinal("Barcode");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(MyMySql.GetString(rdr, "Barcode"));
-                    }
+                    ls.Add(rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -594,19 +582,15 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int comboNameIndex = rdr.GetOrdinal("ComboName");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(MyMySql.GetString(rdr, "ComboName"));
-                    }
+                    ls.Add(rdr.GetString(comboNameIndex));
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -631,19 +615,16 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int authorIndex = rdr.GetOrdinal("Author");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(MyMySql.GetString(rdr, "Author"));
-                    }
+                    ls.Add(rdr.IsDBNull(authorIndex) ? string.Empty : rdr.GetString(authorIndex));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -668,19 +649,16 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int translatorIndex = rdr.GetOrdinal("Translator");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(MyMySql.GetString(rdr, "Translator"));
-                    }
+                    ls.Add(rdr.IsDBNull(translatorIndex) ? string.Empty : rdr.GetString(translatorIndex));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -705,19 +683,16 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int publishingCompanyIndex = rdr.GetOrdinal("PublishingCompany");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(MyMySql.GetString(rdr, "PublishingCompany"));
-                    }
+                    ls.Add(rdr.GetString(publishingCompanyIndex));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -750,19 +725,16 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inType", inType);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                if (rdr != null && rdr.HasRows)
+                int difValueIndex = rdr.GetOrdinal("difValue");
+                while (rdr.Read())
                 {
-                    while (rdr.Read())
-                    {
-                        ls.Add(MyMySql.GetInt32(rdr, "difValue"));
-                    }
+                    ls.Add(rdr.IsDBNull(difValueIndex) ? 0 : rdr.GetInt32(difValueIndex));
                 }
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -783,26 +755,31 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int idIndex = rdr.GetOrdinal("Id");
+                int codeIndex = rdr.GetOrdinal("Code");
+                int barcodeIndex = rdr.GetOrdinal("Barcode");
+                int nameIndex = rdr.GetOrdinal("Name");
+                int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
+                int comboIdIndex = rdr.GetOrdinal("ComboId");
+                int comboNameIndex = rdr.GetOrdinal("ComboName");
                 while (rdr.Read())
                 {
                     Product product = new Product();
-                    product.id = MyMySql.GetInt32(rdr, "Id");
-                    product.code = MyMySql.GetString(rdr, "Code");
-                    product.barcode = MyMySql.GetString(rdr, "Barcode");
-                    product.name = MyMySql.GetString(rdr, "Name");
-                    product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                    product.comboId = MyMySql.GetInt32(rdr, "ComboId");
-                    product.comboName = MyMySql.GetString(rdr, "ComboName");
+                    product.id = rdr.GetInt32(idIndex);
+                    product.code = rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex);
+                    product.barcode = rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex);
+                    product.name = rdr.GetString(nameIndex);
+                    product.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
+                    product.comboId = rdr.GetInt32(comboIdIndex);
+                    product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
                     product.SetFirstSrcImage();
                     ls.Add(product);
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -850,27 +827,33 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inPublisher", publisher);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int idIndex = rdr.GetOrdinal("Id");
+                int productIdIndex = rdr.GetOrdinal("ProductId");
+                int productNameIndex = rdr.GetOrdinal("Name");
+                int priceIndex = rdr.GetOrdinal("Price");
+                int quantityIndex = rdr.GetOrdinal("Quantity");
+                int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
+                int dateImportIndex = rdr.GetOrdinal("Date");
+                int discountIndex = rdr.GetOrdinal("Discount");
                 while (rdr.Read())
                 {
                     Import imp = new Import();
-                    imp.id = MyMySql.GetInt32(rdr, "Id");
-                    imp.productId = MyMySql.GetInt32(rdr, "ProductId");
-                    imp.productName = MyMySql.GetString(rdr, "Name");
-                    imp.price = MyMySql.GetInt32(rdr, "Price");
-                    imp.quantity = MyMySql.GetInt32(rdr, "Quantity");
-                    imp.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                    imp.dateImport = MyMySql.GetString(rdr, "Date");
-                    imp.discount = MyMySql.GetInt32(rdr, "Discount");
+                    imp.id = rdr.GetInt32(idIndex);
+                    imp.productId = rdr.GetInt32(productIdIndex);
+                    imp.productName = rdr.GetString(productNameIndex);
+                    imp.price = rdr.GetInt32(priceIndex);
+                    imp.quantity = rdr.GetInt32(quantityIndex);
+                    imp.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
+                    imp.dateImport = rdr.GetString(dateImportIndex);
+                    imp.discount = rdr.GetInt32(discountIndex);
 
                     ls.Add(imp);
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -1010,17 +993,13 @@ namespace MVCPlayWithMe.Models
                 //cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    ls.Add(ConvertQuicklyOneRowFromDataMySql(rdr));
-                }
+                ConvertQuicklyRowFromDataMySql(rdr, ls);
 
-                if (rdr != null)
-                    rdr.Close();
+
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -1059,13 +1038,9 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    ls.Add(ConvertQuicklyOneRowFromDataMySql(rdr));
-                }
+                ConvertQuicklyRowFromDataMySql(rdr, ls);
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -1130,17 +1105,12 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
 
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    ls.Add(ConvertQuicklyOneRowFromDataMySql(rdr));
-                }
+                ConvertQuicklyRowFromDataMySql(rdr, ls);
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -1496,7 +1466,6 @@ namespace MVCPlayWithMe.Models
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
-                //listCI.Clear();
             }
             return listCI;
         }
@@ -1608,7 +1577,6 @@ namespace MVCPlayWithMe.Models
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
-                //listCI.Clear();
             }
             return listCI;
         }
@@ -1651,12 +1619,16 @@ namespace MVCPlayWithMe.Models
                 MySqlCommand cmd = new MySqlCommand("st_tbNeedUpdateQuantity_Get_List", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+                int quantityIndex = rdr.GetOrdinal("Quantity");
+
                 while (rdr.Read())
                 {
                     Product pro = new Product();
-                    pro.id = MyMySql.GetInt32(rdr, "Id");
-                    pro.name  = MyMySql.GetString(rdr, "Name");
-                    pro.quantity = MyMySql.GetInt32(rdr, "Quantity");
+                    pro.id = rdr.GetInt32(idIndex);
+                    pro.name = rdr.GetString(nameIndex);
+                    pro.quantity = rdr.GetInt32(quantityIndex);
                     pro.SetFirstSrcImage();
 
                     ls.Add(pro);
@@ -1734,9 +1706,10 @@ namespace MVCPlayWithMe.Models
                 MySqlCommand cmd = new MySqlCommand("SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `Status`=1;", conn);
                 cmd.CommandType = CommandType.Text;
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int productIdIndex = rdr.GetOrdinal("ProductId");
                 while (rdr.Read())
                 {
-                    listProductId.Add( MyMySql.GetInt32(rdr, "ProductId"));
+                    listProductId.Add(rdr.GetInt32(productIdIndex));
                 }
                 rdr.Close();
             }
@@ -1816,12 +1789,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inItemId", itemId);
                 cmd.Parameters.AddWithValue("@inModelId", modelId);
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int quantityIndex = rdr.GetOrdinal("Quantity");
                 while (rdr.Read())
                 {
-
-                    quantity = MyMySql.GetInt32(rdr, "Quantity");
-                    if (quantity == -1)
-                        quantity = 0;
+                    quantity = rdr.GetInt32(quantityIndex);
                 }
 
                 rdr.Close();
@@ -1849,11 +1820,10 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int quantityIndex = rdr.GetOrdinal("Quantity");
                 while (rdr.Read())
                 {
-                    quantity = MyMySql.GetInt32(rdr, "Quantity");
-                    if (quantity == -1)
-                        quantity = 0;
+                    quantity = rdr.GetInt32(quantityIndex);
                 }
 
                 rdr.Close();
@@ -1880,12 +1850,10 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inItemId", itemId);
                 cmd.Parameters.AddWithValue("@inModelId", modelId);
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int quantityIndex = rdr.GetOrdinal("Quantity");
                 while (rdr.Read())
                 {
-
-                    quantity = MyMySql.GetInt32(rdr, "Quantity");
-                    if (quantity == -1)
-                        quantity = 0;
+                    quantity = rdr.GetInt32(quantityIndex);
                 }
 
                 rdr.Close();
@@ -1910,11 +1878,10 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
                 MySqlDataReader rdr = cmd.ExecuteReader();
+                int quantityIndex = rdr.GetOrdinal("Quantity");
                 while (rdr.Read())
                 {
-                    quantity = MyMySql.GetInt32(rdr, "Quantity");
-                    if (quantity == -1)
-                        quantity = 0;
+                    quantity = rdr.GetInt32(quantityIndex);
                 }
 
                 rdr.Close();

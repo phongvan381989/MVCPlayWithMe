@@ -47,12 +47,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
@@ -92,12 +90,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     id = MyMySql.GetInt32(rdr, "LastId");
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
@@ -123,12 +119,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     lsModel.Add(Tuple.Create(MyMySql.GetInt32(rdr, "ShopeeModelId"), 
                         MyMySql.GetInt64(rdr, "TMDTShopeeModelId")));
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -160,8 +154,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     itemIdInserted = MyMySql.GetInt32(rdr,"Id");
                     exist = true;
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
                 int status = 0;
                 // Lưu item, model vào db lần đầu
                 if (!exist)
@@ -323,12 +316,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                 }
 
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
@@ -384,8 +375,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         }
                     }
 
-                    if (rdr != null)
-                        rdr.Close();
+                    rdr.Close();
 
                     lsCommonItem.Add(item);
                 }
@@ -643,8 +633,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
                             }
                         }
-                        if (rdr != null)
-                            rdr.Close();
+                        rdr.Close();
                     }
                 }
             }
@@ -677,8 +666,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
                     shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -752,8 +740,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     MyLogger.GetInstance().Warn(ex.ToString());
                 }
-                if (rdr != null)
-                    rdr.Close();
+                rdr.Close();
                 conn.Close();
 
             }
@@ -797,8 +784,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 MyLogger.GetInstance().Warn(ex.ToString());
                 itemId = -1;
             }
-            if (rdr != null)
-                rdr.Close();
+            rdr.Close();
             conn.Close();
         }
 
