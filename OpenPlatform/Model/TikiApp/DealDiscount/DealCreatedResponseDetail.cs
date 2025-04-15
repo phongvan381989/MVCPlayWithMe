@@ -60,7 +60,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount
         //public string updated_by { get; set; }
         public int sort_order { get; set; }
         //public string tags { get; set; }
-        public int discount_percent { get; set; }
+        public float discount_percent { get; set; }
         public int is_hot_deal { get; set; }
         public int price { get; set; }
         public int? campaign_id { get; set; }
@@ -85,5 +85,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount
         //public string seller_product_code { get; set; }
         //public string queue { get; set; }
         public int id { get; set; }
+        public string deal_type { get; set; }
     }
 }

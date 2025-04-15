@@ -173,6 +173,10 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
+
+        // Test với:
+        // POST https://voibenho.com/PushMechanism/ShopeeNotifications
+        // {"msg_id":"275d49be9b484e63a5cba42115815b4a","data":{"completed_scenario":"","items":[],"ordersn":"2503119YA2XB8B","status":"PROCESSED","update_time":1741645463},"shop_id":137637267,"code":3,"timestamp":1741645463}
         [HttpPost]
         public string ShopeeNotifications()
         {

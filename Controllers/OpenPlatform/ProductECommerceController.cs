@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
@@ -103,14 +104,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             CommonItem commonItem = null;
             if (AuthentAdministrator() == null)
+            {
                 return JsonConvert.SerializeObject(commonItem);
+            }
 
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
             if (eType == Common.eShopee)
             {
                 long lid = Common.ConvertStringToInt64(id);
                 if (lid != Int64.MinValue)
                 {
-                    commonItem = ShopeeGetItemFromId(lid);
+                    commonItem = ShopeeGetItemFromIdConnectOut(lid, conn);
                 }
             }
             else if (eType == Common.eTiki)
@@ -118,14 +123,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 int iid = Common.ConvertStringToInt32(id);
                 if (iid != Int32.MinValue)
                 {
-                    commonItem = TikiGetProductFromId(iid);
+                    commonItem = TikiGetProductFromIdConnectOut(iid, conn);
                 }
                 else
                 {
                     MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
                 }
             }
-
+            conn.Close();
             return JsonConvert.SerializeObject(commonItem);
         }
 
@@ -216,7 +221,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return lsCommonItem;
         }
 
-        List<CommonItem> TikiGetProductAll()
+        public List<CommonItem> TikiGetProductAll()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
@@ -283,16 +288,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return lsCommonItem;
         }
 
-        private CommonItem ShopeeGetItemFromId(long id)
+        private CommonItem ShopeeGetItemFromIdConnectOut(long id, MySqlConnection conn)
         {
             ShopeeGetItemBaseInfoItem pro = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(id);
             if (pro == null)
                 return null;
 
             CommonItem item = new CommonItem(pro);
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-
-            conn.Open();
             try
             {
                 // Không tồn tại trong DB ta insert
@@ -304,7 +306,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
             return item;
         }
 
@@ -323,7 +324,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return result;
         }
 
-        private CommonItem TikiGetProductFromId(int id)
+        private CommonItem TikiGetProductFromIdConnectOut(int id, MySqlConnection conn)
         {
             TikiProduct pro = null;
             pro = GetListProductTiki.GetProductFromOneShop(id);
@@ -331,8 +332,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return null;
 
             CommonItem item = new CommonItem(pro);
-            tikiSqler.TikiInsertIfDontExist(item);
-            tikiSqler.TikiGetItemFromId(id, item);
+            tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
+            tikiSqler.TikiGetItemFromIdConnectOut(id, item, conn);
             return item;
         }
 
@@ -814,6 +815,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
                 order, status, 0, oldStatus, eECommerceType, conn);
+
+                if (resultState != null && resultState.myAnything == 1)
+                {
+                    // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                    ProductController productController = new ProductController();
+                    productController.GetListNeedUpdateQuantityAndUpdate_Core();
+                }
             }
             conn.Close();
             return JsonConvert.SerializeObject(resultState);
@@ -862,13 +870,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string ShopeeBornModelForVoiBeNho(string strCommonItem, long shopeeModelId, int pWMMappingModelId)
         {
-            MySqlResultState resultState = null;
             if (AuthentAdministrator() == null)
             {
-                resultState = new MySqlResultState();
-                resultState.State = EMySqlResultState.AUTHEN_FAIL;
-                resultState.Message = "Xác thực thất bại";
-                return JsonConvert.SerializeObject(resultState);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             CommonItem commonItem = JsonConvert.DeserializeObject<CommonItem>(strCommonItem);
@@ -913,10 +917,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Nếu model đã có trên voibenho, xóa dữ liệu ở tbMapping, tbpwmmappingother, tbModel
             // Từ giá bìa, giá bán tính toán chiết khấu làm tròn , giá bán theo chiết khấu
-            int discount = 100 - commonModel.price * 100/ commonModel.market_price;
-            int price = (100 - discount) * commonModel.market_price / 100;
+            float discount = 100 - commonModel.price * 100/ commonModel.market_price;
+            int price = (int)((100 - discount) * commonModel.market_price / 100);
             //price = price / 1000 * 1000; // Lấy đơn vị tròn 1000 vnđ
-            resultState = itemModelSqler.BornModelFromShopeeModel(itemId, pWMMappingModelId,
+            MySqlResultState resultState = itemModelSqler.BornModelFromShopeeModel(itemId, pWMMappingModelId,
                 commonModel.name, 5, discount, price, commonModel.market_price, commonItem.itemId, commonModel.modelId);
 
             if(resultState.State != EMySqlResultState.OK)
@@ -961,5 +965,65 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(resultState);
         }
         #endregion
+
+        [HttpPost]
+        public string UpdateBookCoverPriceToEEcommerce(string strCommonItem)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    if (AuthentAdministratorConnectOut(conn) == null)
+                    {
+                        return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+                    }
+
+                    CommonItem commonItem = JsonConvert.DeserializeObject<CommonItem>(strCommonItem);
+
+                    if (commonItem.eType != Common.eTiki)
+                    {
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Hiện tại chức năng chỉ có với sàn TIKI.";
+                    }
+
+                    //// Lấy danh sách nhà phát hành, từ đó lấy được discount chung
+                    //PublisherMySql publisherSqler = new PublisherMySql();
+                    //List<Publisher> listPublisher = publisherSqler.GetListPublisherConnectOut(conn);
+
+                    //// Lấy danh sách thuế phí
+                    //TikiDealDiscountMySql tikiDealDiscountMySql = new TikiDealDiscountMySql();
+                    //TaxAndFee taxAndFee = tikiDealDiscountMySql.GetTaxAndFee(Common.eTiki, conn);
+
+                    //int salePrice = TikiDealDiscountController.CaculateSalePriceCoreFromCommonItem(
+                    //    commonItem, listPublisher, taxAndFee);
+                    int bookCoverPrice = commonItem.models[0].GetBookCoverPrice();
+
+                    // Méo hiểu sao, update giá bìa luôn, response trả về ok nhưng check trên nhà bán thấy không được
+                    // Nhưng khi cập nhật cao hơn giá bìa thì thành công
+                    // Giải pháp: Cập nhật lần 1 cao hơn giá bìa, sau đó cập nhật về giá bìa
+                    //TikiUpdateStock.TikiProductUpdatePrice((int)commonItem.itemId,
+                    //    bookCoverPrice + 10000,
+                    //    result);
+
+                    //if (result.State == EMySqlResultState.OK)
+                    //{
+                    //    TikiUpdateStock.TikiProductUpdatePrice((int)commonItem.itemId,
+                    //    bookCoverPrice + 10000,
+                    //    result);
+                    //}
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error(ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
     }
 }

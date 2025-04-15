@@ -12,6 +12,7 @@ namespace MVCPlayWithMe.Models
         public int categoryId { get; set; }
         public string categoryName { get; set; }
         public int bookCoverPrice { get; set; }
+        public float discount { get; set; }
         public string author { get; set; }
         public string translator { get; set; }
         public int publisherId { get; set; }
@@ -67,6 +68,7 @@ namespace MVCPlayWithMe.Models
                 int comboIdIn,
                 int categoryIdIn,
                 int bookCoverPriceIn,
+                float discountIn,
                 string authorIn,
                 string translatorIn,
                 int publisherIdIn,
@@ -87,6 +89,7 @@ namespace MVCPlayWithMe.Models
         {
             comboId = comboIdIn;
             bookCoverPrice = bookCoverPriceIn;
+            discount = discountIn;
             author = authorIn;
             translator = translatorIn;
             publisherId = publisherIdIn;

@@ -102,7 +102,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         static public IRestResponse PostExcuteRequest(string http, string body)
         {
             RestRequest request = new RestRequest(http, Method.POST);
-            request.AddJsonBody(body);
+            request.AddHeader("Content-Type", "application/json");
+            request.AddParameter("application/json", body, ParameterType.RequestBody);
 
             IRestResponse response = ExcuteRequest(request);
             return response;

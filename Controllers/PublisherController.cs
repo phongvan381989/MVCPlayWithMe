@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -19,7 +20,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string CreatePublisher(string name, int discount, string detail)
+        public string CreatePublisher(string name, float discount, string detail)
         {
             if (AuthentAdministrator() == null)
             {
@@ -52,7 +53,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string UpdatePublisher(int id, string name, int discount, string detail)
+        public string UpdatePublisher(int id, string name, float discount, string detail)
         {
             if (AuthentAdministrator() == null)
             {
@@ -120,8 +121,11 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new List<Publisher>());
             }
-
-            return JsonConvert.SerializeObject(sqler.GetListPublisher());
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+            List<Publisher> ls = sqler.GetListPublisherConnectOut(conn);
+            conn.Close();
+            return JsonConvert.SerializeObject(ls);
         }
     }
 }

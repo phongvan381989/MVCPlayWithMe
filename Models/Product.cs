@@ -41,12 +41,14 @@ namespace MVCPlayWithMe.Models
 
         public Product(
                 int idIn,
+                int quantityIn,
                 string codeIn,
                 string barcodeIn,
                 string nameIn,
                 int comboIdIn,
                 int categoryIdIn,
                 int bookCoverPriceIn,
+                float discountIn,
                 string authorIn,
                 string translatorIn,
                 int publisherIdIn,
@@ -69,6 +71,7 @@ namespace MVCPlayWithMe.Models
                 comboIdIn,
                 categoryIdIn,
                 bookCoverPriceIn,
+                discountIn,
                 authorIn,
                 translatorIn,
                 publisherIdIn,
@@ -88,6 +91,7 @@ namespace MVCPlayWithMe.Models
                     )
         {
             id = idIn;
+            quantity = quantityIn;
             code = codeIn;
             barcode = barcodeIn;
             name = nameIn;

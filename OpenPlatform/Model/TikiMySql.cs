@@ -51,14 +51,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Nếu đã lưu item trong db nhưng không còn tồn tại trên sàn TMDT ta xóa trong db
         // Ta chỉ check chọn xem item, check item đã bị xóa trên db 
         // không thực hiện ở đây
-        public void TikiInsertIfDontExist(CommonItem item)
+        public void TikiInsertIfDontExistConnectOut(CommonItem item, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-
             try
             {
-                conn.Open();
-
                 // Kiểm tra itemId đã tồn tại trong bảng tbtikiitem
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
@@ -86,20 +82,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
         }
 
         // Lấy được thông tin chi tiết
-        public void TikiGetItemFromId(int id, CommonItem item)
+        public void TikiGetItemFromIdConnectOut(int id, CommonItem item, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", id);
@@ -115,8 +106,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         Product product = new Product();
                         product.id = MyMySql.GetInt32(rdr, "ProductId");
                         product.name = MyMySql.GetString(rdr, "ProductName");
+                        product.bookCoverPrice = MyMySql.GetInt32(rdr, "ProductBookCoverPrice");
+                        product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+                        product.discount = rdr.IsDBNull(rdr.GetOrdinal("ProductDiscount")) ? 0 : rdr.GetFloat("ProductDiscount");
                         product.SetFirstSrcImage();
                         map.product = product;
+                        if(rdr.IsDBNull(rdr.GetOrdinal("ProductDiscount")))
+                        {
+                            product.SetFirstSrcImage();
+                        }
 
                         item.models[0].mapping.Add(map);
                     }
@@ -128,8 +126,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-
-            conn.Close();
         }
 
         public void TikiGetListCommonItemFromListTikiProductConnectOut(
@@ -143,23 +139,39 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
 
+                int tikiIndex = 0, 
+                    tikiMappingQuantityIndex = 0,
+                    productIdIndex = 0,
+                    productNameIndex = 0,
+                    productBookCoverPriceIndex = 0;
+                Boolean isSetIndex = false;
                 foreach (var pro in lsTikiItem)
                 {
                     cmd.Parameters[0].Value = pro.product_id;
                     MySqlDataReader rdr = cmd.ExecuteReader();
+                    if (!isSetIndex)
+                    {
+                        tikiIndex = rdr.GetOrdinal("TikiMappingId");
+                        tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
+                        productIdIndex = rdr.GetOrdinal("ProductId");
+                        productNameIndex = rdr.GetOrdinal("ProductName");
+                        productBookCoverPriceIndex = rdr.GetOrdinal("ProductBookCoverPrice");
+                        isSetIndex = true;
+                    }
 
                     CommonItem item = new CommonItem(pro);
 
                     while (rdr.Read())
                     {
-                        if (MyMySql.GetInt32(rdr, "TikiMappingId") != -1)
+                        if ((rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex)) != -1)
                         {
                             Mapping map = new Mapping();
-                            map.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
+                            map.quantity = rdr.GetInt32(tikiMappingQuantityIndex);
 
                             Product product = new Product();
-                            product.id = MyMySql.GetInt32(rdr, "ProductId");
-                            product.name = MyMySql.GetString(rdr, "ProductName");
+                            product.id = rdr.GetInt32(productIdIndex);
+                            product.name = rdr.GetString(productNameIndex);
+                            product.bookCoverPrice = rdr.GetInt32(productBookCoverPriceIndex);
                             product.SetFirstSrcImage();
                             map.product = product;
                             item.models[0].mapping.Add(map);
@@ -584,10 +596,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Trường hợp: thay đổi mapping khi đóng đơn so với khi giữ chỗ thì quá khù khoằm, tự sửa thủ công
 
                     // Trường hợp: Bước 1: giữ chỗ, Bước 2: thay đổi mapping (sửa mapping đã có / tạo mapping chưa có), Bước 3 hủy giữ chỗ (chưa đóng đơn)
-                    // Sẽ làm sai khác xuất / nhập kho. Khù khoằm không giải quyết, tự sửa thủ công..
+                    // Sẽ làm sai khác xuất / nhập kho. Khù khoằm không giải quyết, tự sửa thủ công.
 
                     // => TẤT CẢ RỦI RO TRÊN ĐƯỢC GIẢI QUYẾT khi mapping ngay khi đăng sản phẩm (giải pháp hiện tại check thủ công),
-                    ///và khi thay đổi mapping phải kiểm tra xem có đơn nào đang trong tiến trình xử lý không
+                    // và khi thay đổi mapping phải kiểm tra xem có đơn nào đang trong tiến trình xử lý không
                     if (status == ECommerceOrderStatus.BOOKED)
                     {
                         Boolean isNeedInsert = false;

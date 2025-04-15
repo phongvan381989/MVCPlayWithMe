@@ -11,6 +11,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount
         // Thông tin trạng thái nếu có
         public DealResponseStatus dealResponseStatus { get; set; }
 
-        public List<DealCreatedResponseDetail> ls { get; set; }
+        // Danh sách deal đã tạo thành công tương ứng
+        public List<DealCreatedResponseDetail> dealList { get; set; }
     }
 }

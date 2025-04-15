@@ -78,6 +78,17 @@ namespace MVCPlayWithMe.General
 
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
+        #region Tiki Deal Discount
+        // THời gian bắt đầu mặc định là thời điểm hiện tại + 10 phút
+        // Khoảng thời gian mặc định là 180 ngày
+        // qty_max, qty_limit không giới hạn mặc định là 10000
+        public static int qtyMaxTikiDealDiscount = 10000;
+        public static int qtyLimitTikiDealDiscount = 10000;
+        public static int intervalTikiDealDiscount = 180; // 180 ngày
+        public static int minutesAddNowTikiDealDiscount = 10; // 10 phút
+        public static int maxOfCreatingRequestBodyObject = 100;// Khi tạo deal, số sku tối đa
+        #endregion
+
         public static string[] OrderStatusArray = { "Đã Đóng", "Đã Hoàn", "Giữ Chỗ", "Hủy Giữ Chỗ", "Chưa Tồn Tại" };
         //public static string returnedOrder = "Đã Hoàn";
         //public static string packedOrder = "Đã Đóng";

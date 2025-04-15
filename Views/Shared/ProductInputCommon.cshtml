@@ -52,6 +52,13 @@
     <button type="button" onclick="UpdateBookCoverPrice()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
+    <label for="discount-when-import">% Chiết Khấu Khi Nhập Hàng:</label><br>
+    <input class="config-max-width margin-vertical" type="number" id="discount-when-import" value="0"
+           min="0" max="100" step="0.1"
+           oninput="ValidatePositiveIntegerNumber(this)">
+    <button type="button" onclick="UpdateDiscountWhenImport()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
+    @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
     <label for="hard-cover">Bìa:</label><br>
     <select class="config-max-width margin-vertical" id="hard-cover">
         <option value="0">Bìa mềm</option>

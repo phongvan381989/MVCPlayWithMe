@@ -36,7 +36,7 @@ namespace MVCPlayWithMe.Models
         /// hỗ trợ phí vận chuyển, giảm % hoặc tiền khi tổng giá trị đơn hàng lớn hơn ngưỡng,
         /// giảm % hoặc tiền cho khách thân quen, đơn sau,....
         /// </summary>
-        public int discount { get; set; }
+        public float discount { get; set; }
 
         public PriceQuantity()
         {

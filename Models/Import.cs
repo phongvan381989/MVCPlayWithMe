@@ -13,7 +13,7 @@ namespace MVCPlayWithMe.Models
         public int price { get; set; }
         public int quantity { get; set; }
         public int bookCoverPrice { get; set; }
-        public int discount { get; set; }
+        public float discount { get; set; }
         public string dateImport { get; set; } // định dạng yyyy-MM-dd tên date vi phạm kiểu Date
 
         public Import()

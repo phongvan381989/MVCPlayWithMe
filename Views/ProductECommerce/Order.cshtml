@@ -105,10 +105,10 @@
             cursor: pointer;
         }
 
-            .sdfx09re789:hover,
-            .sdfx09re789:focus {
-                opacity: 0.5;
-            }
+        .sdfx09re789:hover,
+        .sdfx09re789:focus {
+            opacity: 0.5;
+        }
 
         /* The Close Button */
         .order-close {
@@ -119,12 +119,12 @@
             display: inline;
         }
 
-            .order-close:hover,
-            .order-close:focus {
-                color: #000;
-                text-decoration: none;
-                cursor: pointer;
-            }
+        .order-close:hover,
+        .order-close:focus {
+            color: #000;
+            text-decoration: none;
+            cursor: pointer;
+        }
 
         .img-cursor {
             cursor: pointer;
@@ -273,14 +273,16 @@
                     </div>
                     <input type="text" class="nvns63099" name="product-code-isbn" />
                     <button type="button" class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
-                    <button type="button" class="nvns63099 btn-return-order" onclick="ReturnedOrder()">Hoàn Hàng</button>
+                    <button type="button" title="Trong kho có sự thay đổi số lượng, tự động cập nhật tồn kho lên sàn."
+                            class="nvns63099 btn-return-order" onclick="ReturnedOrder()">Hoàn Hàng</button>
                 </div>
             </div>
 
             <div class="order-detail">
             </div>
             <div class="xcvxvdgdfw">
-                <button type="button" class="nvns63099 btn-enough-product" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
+                <button type="button" title="Trong kho không có sự thay đổi số lượng, vì số lượng đã thay đổi khi có đơn và giữ chỗ
+                        Không tự động cập nhật tồn kho lên sàn." class="nvns63099 btn-enough-product" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
             </div>
         </div>
     </div>
@@ -612,13 +614,14 @@
         // Lọc theo sàn
         function FilterOrderECommerceName(list, ecommerce) {
             let listTemp = [];
-            let order;
-            let length = list.length;
+
             // Lấy tất cả
             if (ecommerce == eAll) {
                 listTemp = list;
             }
             else {
+                let order;
+                let length = list.length;
                 for (let i = 0; i < length; i++) {
                     order = list[i];
                     if (order.ecommerceName == ecommerce) {
@@ -702,13 +705,14 @@
             }
         }
 
-        // Lọc order theo trạng thái, sàn
+        // Lọc order theo sàn
         function ECommerceTypeChange() {
             if (listOrder.length == 0) {
                 return;
             }
-
-            DisplayListOrder(FilterOrderECommerceName(listOrder, GetECommerceType()));
+            let listTemp = FilterOrderECommerceName(listOrder, GetECommerceType());
+            let listTempSecond = FilterOrderStatusInWarehouse(listTemp, GetOrderStatusInWarehouse());
+            DisplayListOrder(listTempSecond);
 
             EmptyAndFocusOrderCodeElement();
         }
@@ -732,28 +736,26 @@
             return statusInWarehouse;
         }
 
-        // Lọc order theo trạng thái đã đóng, đã hoàn, giữ chỗ, hủy giữ chỗ
-        function ChangeOrderStatusInWarehouse() {
-            if (listOrder.length == 0) {
-                return;
-            }
-
-            let statusInWarehouse = GetOrderStatusInWarehouse();
+        // Lọc theo sàn
+        function FilterOrderStatusInWarehouse(list, statusInWarehouse) {
             let listTemp = [];
+            // Lấy tất cả
             if (statusInWarehouse == eAll) {
-                listTemp = listOrder;
+                listTemp = list;
             }
             else {
-                for (let i = 0; i < listOrder.length; i++) {
-                    if (listOrder[i].orderStatusInWarehoue === statusInWarehouse) {
-                        listTemp.push(listOrder[i]);
+                for (let i = 0; i < list.length; i++) {
+                    if (list[i].orderStatusInWarehoue === statusInWarehouse) {
+                        listTemp.push(list[i]);
                     }
                 }
             }
+            return listTemp;
+        }
 
-            DisplayListOrder(listTemp);
-
-            EmptyAndFocusOrderCodeElement();
+        // Lọc order theo trạng thái đã đóng, đã hoàn, giữ chỗ, hủy giữ chỗ
+        function ChangeOrderStatusInWarehouse() {
+            ECommerceTypeChange();
         }
 
         function SpanRed(num) {
@@ -1104,10 +1106,11 @@
                 document.getElementsByClassName("btn-enough-product")[0].disabled = false;
             }
 
-            // Đơn đã đóng ta cho phép có thể hoàn hàng
-            // Đơn đã hủy và có mã đơn hàng có thể hoàn hàng
+            // Đơn đã đóng và đang ở trạng thái Đã Đóng
+            // Đơn đã đóng và khách hủy nên đang ở trạng thái Hủy Giữ Chỗ
+            // ta cho phép có thể hoàn hàng
             if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse ||
-                (CheckOrderStatusIsCancel(order) && !isEmptyOrSpaces(order.shipCode))) {
+                order.orderStatusInWarehoue == unbookedOrderStatusInWarehouse && !isEmptyOrSpaces(order.shipCode)) {
                 document.getElementsByClassName("btn-return-order")[0].disabled = false;
             }
             else {

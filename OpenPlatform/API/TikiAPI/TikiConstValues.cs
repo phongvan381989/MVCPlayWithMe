@@ -24,5 +24,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
         public const string cstrCreateDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals";
         public const string cstrSearchDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals";
+        public const string cstrOffDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals/off-many";
     }
 }

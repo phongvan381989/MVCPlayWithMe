@@ -1343,3 +1343,13 @@ async function ShowItemFromItemObject() {
         }
     }
 }
+
+async function GetItemFromId(eType, id) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", eType);
+    searchParams.append("id", id);
+
+    let query = "/ProductECommerce/GetItemFromId";
+
+    return RequestHttpPostPromise(searchParams, query);
+}

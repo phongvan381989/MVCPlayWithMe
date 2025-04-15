@@ -52,6 +52,46 @@ namespace MVCPlayWithMe.Models
         }
 
         /// <summary>
+        ///  Chỉ lấy Id của administrator
+        /// </summary>
+        /// <param name="userCookieIdentify"></param>
+        /// <returns></returns>
+        public Administrator GetAdministratorFromCookieConnectOut(string userCookieIdentify,
+            MySqlConnection conn)
+        {
+            int id = -1;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                int idIndex = rdr.GetOrdinal("AdministratorId");
+                while (rdr.Read())
+                {
+                    id = rdr.GetInt32(idIndex);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                id = -1;
+            }
+
+            if (id == -1)
+            {
+                return null;
+            }
+
+            Administrator administrator = new Administrator();
+            administrator.id = id;
+            return administrator;
+        }
+
+        /// <summary>
         /// Insert.new user to db.
         /// </summary>
         /// <param name="userName">Email / SDT/ UserName.</param>

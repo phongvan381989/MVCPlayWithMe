@@ -439,10 +439,10 @@ function GetValueInputById(id, defaultValue) {
 }
 
 // Nếu input type number trống, ta lấy theo giá trị mặc định
-function GetValueInputTypeNumberById(id, defaultValue) {
+function GetFloatValueFromInputTypeNumberById(id, defaultValue) {
     let inputElement = document.getElementById(id);
     let value = inputElement.value.trim(); // Lấy giá trị và loại bỏ khoảng trắng
-    let number = value ? parseInt(value) : defaultValue; // Nếu trống thì lấy 10
+    let number = value ? parseFloat(value) : defaultValue; // Nếu trống thì lấy 10
 
     return number;
 }
@@ -939,19 +939,25 @@ async function GetListTranslator() {
     }
 }
 
+async function GetListPubliserCore() {
+    const searchParams = new URLSearchParams();
+    let query = "/Publisher/GetListPublisher";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    let list = [];
+    if (responseDB.responseText != "null") {
+        list = JSON.parse(responseDB.responseText);
+    }
+    return list;
+}
 async function GetListPublisher() {
     if (document.getElementById("publisher-id") == null) {
         return;
     }
     document.getElementById("publisher-id").disabled = true;
-    const searchParams = new URLSearchParams();
 
-    let query = "/Publisher/GetListPublisher";
-
-    let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
-    if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
+    let list = await GetListPubliserCore();
+    if (list.length > 0) {
         let ele = document.getElementById("list-Publisher");
         SetDataListOfIdName(ele, list);
         document.getElementById("publisher-id").disabled = false;
@@ -975,6 +981,20 @@ async function GetListPublishingCompany() {
         SetDataListOfString(ele, list);
     }
     document.getElementById("publishing-company-id").disabled = false;
+}
+
+async function GetTaxAndFeeCore(eEcommerceName) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("eEcommerceName", eEcommerceName);
+    let query = "/TikiDealDiscount/GetTaxAndFeeCore";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+
+    let taxAndFee = null;
+    if (responseDB.responseText != "null") {
+        taxAndFee = JSON.parse(responseDB.responseText);
+    }
+    return taxAndFee;
 }
 
 async function GetListItem() {
@@ -1058,7 +1078,7 @@ async function CopyImageFromTMDTToWarehouseProduct(eType, imageUrl, productId) {
     ShowCircleLoader();
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
-    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Chép ảnh thành công.", "Chép ảnh thất bại.")
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Chép ảnh thành công.", "Chép ảnh thất bại.");
 }
 
 async function UpdateStatusOfProduct(id, productStatus) {
@@ -1102,4 +1122,37 @@ function GetECommerceType() {
     }
 
     return ecommerce;
+}
+
+
+// --------- Xử lý tiền ----------------
+// Add event khi nhập số tiền
+function AddEventFormatInputVND(inputId) {
+    const input = document.getElementById(inputId);
+
+    // Format khi người dùng nhập
+    input.addEventListener('input', function () {
+        // Bỏ dấu phẩy cũ, lấy số "sạch"
+        let rawValue = input.value.replace(/,/g, '');
+
+        // Nếu là số, format lại
+        if (!isNaN(rawValue) && rawValue !== '') {
+            input.value = Number(rawValue).toLocaleString('en-US');
+        }
+    });
+}
+
+function SetFormattedMoneyInput(inputId, rawValue) {
+    const input = document.getElementById(inputId);
+    if (input) {
+        const formatted = Number(rawValue || "").toLocaleString('en-US');
+        input.value = formatted;
+    }
+}
+
+// Khi cần lấy giá trị tiền để xử lý (submit, tính toán, v.v...)
+function GetVNDValue(inputId) {
+    const input = document.getElementById(inputId);
+    let value = input.value.replace(/,/g, '');
+    return parseInt(value, 10) || 0;
 }

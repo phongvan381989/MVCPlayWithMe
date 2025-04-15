@@ -51,6 +51,7 @@ namespace MVCPlayWithMe.Models
             product.detail = MyMySql.GetString(rdr, "Detail");
             product.status = MyMySql.GetInt32(rdr, "Status");
             product.quantity = MyMySql.GetInt32(rdr, "Quantity");
+            product.discount = rdr.GetFloat("Discount");
             product.SetSrcImageVideo();
 
             return product;
@@ -285,7 +286,7 @@ namespace MVCPlayWithMe.Models
             MySqlResultState result = new MySqlResultState();
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[24];
+            paras = new MySqlParameter[26];
             paras[0] = new MySqlParameter("@inproCode", pro.code);
             paras[1] = new MySqlParameter("@inbarcode", pro.barcode);
             paras[2] = new MySqlParameter("@inproductName", pro.name);
@@ -310,6 +311,8 @@ namespace MVCPlayWithMe.Models
             paras[21] = new MySqlParameter("@indetail", pro.detail);
             paras[22] = new MySqlParameter("@inproStatus", pro.status);
             paras[23] = new MySqlParameter("@inpageNumber", pro.pageNumber);
+            paras[24] = new MySqlParameter("@inQuantity", pro.quantity);
+            paras[25] = new MySqlParameter("@inDiscount", pro.discount);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -373,7 +376,7 @@ namespace MVCPlayWithMe.Models
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[21];
+            paras = new MySqlParameter[22];
             paras[0] = new MySqlParameter("@inComboId", pro.comboId);
             paras[1] = new MySqlParameter("@inCategoryId", pro.categoryId);
             paras[2] = new MySqlParameter("@inBookCoverPrice", pro.bookCoverPrice);
@@ -393,6 +396,7 @@ namespace MVCPlayWithMe.Models
             paras[16] = new MySqlParameter("@inRepublish", pro.republish);
             paras[17] = new MySqlParameter("@inProStatus", pro.status);
             paras[18] = new MySqlParameter("@inpageNumber", pro.pageNumber);
+            paras[19] = new MySqlParameter("@inDiscount", pro.discount);
 
             MyMySql.AddOutParameters(paras);
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Common_Info_With_Combo", paras);
@@ -405,7 +409,7 @@ namespace MVCPlayWithMe.Models
         )
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlParameter[] paras = new MySqlParameter[25];
+            MySqlParameter[] paras = new MySqlParameter[27];
             paras[0] = new MySqlParameter("@inproductId", pro.id);
             paras[1] = new MySqlParameter("@inproCode", pro.code);
             paras[2] = new MySqlParameter("@inbarcode", pro.barcode);
@@ -431,6 +435,8 @@ namespace MVCPlayWithMe.Models
             paras[22] = new MySqlParameter("@indetail", pro.detail);
             paras[23] = new MySqlParameter("@inproStatus", pro.status);
             paras[24] = new MySqlParameter("@inpageNumber", pro.pageNumber);
+            paras[25] = new MySqlParameter("@inQuantity", pro.quantity);
+            paras[26] = new MySqlParameter("@inDiscount", pro.discount);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -845,7 +851,7 @@ namespace MVCPlayWithMe.Models
                     imp.quantity = rdr.GetInt32(quantityIndex);
                     imp.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
                     imp.dateImport = rdr.GetString(dateImportIndex);
-                    imp.discount = rdr.GetInt32(discountIndex);
+                    imp.discount = rdr.GetFloat(discountIndex);
 
                     ls.Add(imp);
                 }
@@ -1230,6 +1236,30 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inId", id);
                 cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateDiscountWhenImport(int id, float discount)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `Discount` = @inDiscount WHERE `Id` = @inId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inDiscount", discount);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception ex)
@@ -1775,68 +1805,68 @@ namespace MVCPlayWithMe.Models
             }
         }
 
-        // Lấy được số lượng thực tế trong kho của sản phẩm sàn Shopee
-        public int ShopeeGetQuantityOfOneItemModel(long itemId, long modelId)
-        {
-            int quantity = 0;
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+        //// Lấy được số lượng thực tế trong kho của sản phẩm sàn Shopee
+        //public int ShopeeGetQuantityOfOneItemModel(long itemId, long modelId)
+        //{
+        //    int quantity = 0;
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inItemId", itemId);
-                cmd.Parameters.AddWithValue("@inModelId", modelId);
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int quantityIndex = rdr.GetOrdinal("Quantity");
-                while (rdr.Read())
-                {
-                    quantity = rdr.GetInt32(quantityIndex);
-                }
+        //        MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_Quantity", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inItemId", itemId);
+        //        cmd.Parameters.AddWithValue("@inModelId", modelId);
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        int quantityIndex = rdr.GetOrdinal("Quantity");
+        //        while (rdr.Read())
+        //        {
+        //            quantity = rdr.GetInt32(quantityIndex);
+        //        }
 
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                quantity = 0;
-            }
+        //        rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //        quantity = 0;
+        //    }
 
-            conn.Close();
-            return quantity;
-        }
+        //    conn.Close();
+        //    return quantity;
+        //}
 
-        // Lấy được số lượng thực tế trong kho của sản phẩm sàn Tiki
-        public int TikiGetQuantityOfOneItemModel(int itemId)
-        {
-            int quantity = 0;
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+        //// Lấy được số lượng thực tế trong kho của sản phẩm sàn Tiki
+        //public int TikiGetQuantityOfOneItemModel(int itemId)
+        //{
+        //    int quantity = 0;
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    try
+        //    {
+        //        conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int quantityIndex = rdr.GetOrdinal("Quantity");
-                while (rdr.Read())
-                {
-                    quantity = rdr.GetInt32(quantityIndex);
-                }
+        //        MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Quantity", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        int quantityIndex = rdr.GetOrdinal("Quantity");
+        //        while (rdr.Read())
+        //        {
+        //            quantity = rdr.GetInt32(quantityIndex);
+        //        }
 
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                quantity = 0;
-            }
+        //        rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //        quantity = 0;
+        //    }
 
-            conn.Close();
-            return quantity;
-        }
+        //    conn.Close();
+        //    return quantity;
+        //}
 
         // Kết nối đóng mở bên ngoài
         // Lấy được số lượng thực tế trong kho của sản phẩm sàn Shopee

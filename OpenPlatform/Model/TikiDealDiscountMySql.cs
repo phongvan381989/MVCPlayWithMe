@@ -20,7 +20,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 foreach (var deal in listDeal)
                 {
-                    MySqlCommand cmd = new MySqlCommand("sp_tbTikiDealDiscount_Insert", conn);
+                    // Nếu tồn tại thì cập nhật trạng thái Active ngược lại thêm mới
+                    MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
 
                     // Thêm tham số cho Stored Procedure
@@ -71,12 +72,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return skuList;
         }
 
-        public List<SimpleTikiProduct> GetItemsNoDealDiscountRunning(MySqlConnection conn)
+        public List<SimpleTikiProduct> GetItemsWithDealDiscount(string store, 
+            MySqlConnection conn)
         {
             List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
+            List<SimpleTikiProduct> simpleTikiProductsTemp = new List<SimpleTikiProduct>();
             try
             {
-                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Get_Item_No_Deal_Running", conn))
+                // Cập nhật lại trạng thái
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Update_IsActive", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.ExecuteNonQuery();
+                }
+
+                using (MySqlCommand cmd = new MySqlCommand(store, conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
@@ -103,12 +113,100 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         }
                     }
                 }
+
+                // Loại bỏ Item đã mapping nhưng tồn kho mapping bằng 0
+                TikiMySql tikiSqler = new TikiMySql();
+                foreach (var simpleTiki in simpleTikiProducts)
+                {
+                    CommonItem item = new CommonItem();
+                    item.models.Add(new CommonModel());
+                    tikiSqler.TikiGetItemFromIdConnectOut(simpleTiki.id, item, conn);
+                    if (item.models[0].mapping.Count > 0 && item.models[0].GetQuatityFromListMapping() > 0) // Đã mapping
+                    {
+                        simpleTikiProductsTemp.Add(simpleTiki);
+                    }
+                }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            return simpleTikiProducts;
+            return simpleTikiProductsTemp;
+        }
+
+        public List<SimpleTikiProduct> GetItemsNoDealDiscountRunning(MySqlConnection conn)
+        {
+            return GetItemsWithDealDiscount("st_tbTikiDealDiscount_Get_Item_No_Deal_Running", conn);
+        }
+
+        public List<SimpleTikiProduct> GetItemsHasDealDiscountRunning(MySqlConnection conn)
+        {
+            return GetItemsWithDealDiscount("st_tbTikiDealDiscount_Get_Item_Deal_Running", conn);
+        }
+
+        public TaxAndFee GetTaxAndFee(string eEcommerceName, MySqlConnection conn)
+        {
+            TaxAndFee taxAndFee = null;
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbtaxesandfees WHERE Name = @inName;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inName", eEcommerceName);
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        // Lấy index của cột một lần duy nhất (tối ưu hơn reader["column"])
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int taxIndex = rdr.GetOrdinal("Tax");
+                        int feeIndex = rdr.GetOrdinal("Fee");
+                        int minProfitIndex = rdr.GetOrdinal("MinProfit");
+                        int packingCostIndex = rdr.GetOrdinal("PackingCost");
+                        int expectedPercentProfitIndex = rdr.GetOrdinal("ExpectedPercentProfit");
+                        int minPercentProfitIndex = rdr.GetOrdinal("MinPercentProfit");
+
+                        while (rdr.Read())
+                        {
+                            taxAndFee = new TaxAndFee();
+                            taxAndFee.name = rdr.GetString(nameIndex);
+                            taxAndFee.tax = rdr.GetFloat(taxIndex);
+                            taxAndFee.fee = rdr.GetFloat(feeIndex);
+                            taxAndFee.minProfit = rdr.GetInt32(minProfitIndex);
+                            taxAndFee.packingCost = rdr.GetInt32(packingCostIndex);
+                            taxAndFee.expectedPercentProfit = rdr.GetFloat(expectedPercentProfitIndex);
+                            taxAndFee.minPercentProfit = rdr.GetFloat(minPercentProfitIndex);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return taxAndFee;
+        }
+
+        public MySqlResultState UpdateIsActiveOff(List<int> lsDealId, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbtikidealdiscount SET IsActive = 5 WHERE DealDiscount_Id = @inDealDiscount_Id;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inDealDiscount_Id", 0);
+                    foreach( var id in lsDealId)
+                    {
+                        cmd.Parameters[0].Value = id;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                Common.SetResultException(ex, result);
+            }
+            return result;
         }
     }
 }

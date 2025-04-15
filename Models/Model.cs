@@ -36,7 +36,7 @@ namespace MVCPlayWithMe.Models
         }
 
         public Model(int inId, int inItemId, string inName,
-            int inQuota, int inDiscount)
+            int inQuota, float inDiscount)
         {
             id = inId;
             itemId = inItemId;

@@ -10,14 +10,11 @@ namespace MVCPlayWithMe.Models
 {
     public class PublisherMySql : BasicMySql
     {
-        public List<Publisher> GetListPublisher()
+        public List<Publisher> GetListPublisherConnectOut(MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<Publisher> ls = new List<Publisher>();
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbPublisher_Select_All", conn)
                 {
                     CommandType = CommandType.StoredProcedure
@@ -33,7 +30,7 @@ namespace MVCPlayWithMe.Models
                     ls.Add(new Publisher(rdr.GetInt32(idIndex),
                         rdr.GetString(nameIndex),
                         rdr.GetInt32(discountIndex),
-                       rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
+                        rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
                 }
 
                 rdr.Close();
@@ -43,12 +40,10 @@ namespace MVCPlayWithMe.Models
                 MyLogger.GetInstance().Warn(ex.ToString());
                 ls.Clear();
             }
-
-            conn.Close();
             return ls;
         }
 
-        public MySqlResultState CreateNewPublisher(string name, int discount, string detail)
+        public MySqlResultState CreateNewPublisher(string name, float discount, string detail)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
@@ -111,7 +106,7 @@ namespace MVCPlayWithMe.Models
         //    return result;
         //}
 
-        public MySqlResultState UpdatePublisher(int id, string name, int discount, string detail)
+        public MySqlResultState UpdatePublisher(int id, string name, float discount, string detail)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
@@ -163,7 +158,7 @@ namespace MVCPlayWithMe.Models
                 {
                     publisher = new Publisher(MyMySql.GetInt32(rdr, "Id"),
                         MyMySql.GetString(rdr, "Name"),
-                        MyMySql.GetInt32(rdr, "Discount"),
+                        rdr.GetFloat("Discount"),
                         MyMySql.GetString(rdr, "Detail")
                         );
                 }

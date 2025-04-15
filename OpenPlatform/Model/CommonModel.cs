@@ -77,5 +77,55 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             return qty;
         }
+
+        // Từ list mapping tính được giá bìa
+        public int GetBookCoverPrice()
+        {
+            int p = 0;
+            foreach (var map in mapping)
+            {
+                p = p + map.quantity * map.product.bookCoverPrice;
+            }
+            return p;
+        }
+
+        // Tính chiết khấu khi nhập hàng.
+        // Tính theo chiết khấu sản phẩm nếu có (lớn hơn chiết khấu của nhà phát hành), ngược lại tính
+        // theo chiết khấu chung của nhà phát hành.
+        // Vì có thể có nhiều giá trị chiết khấu ta tính chiết khấu trung bình theo công thức:
+        // lấy tổng giá thực nhập chia cho tổng giá bìa
+        // Giá trị trả về theo %, lấy sau dấu ',' một chữ số: VD: 40%, 50.5%
+        public float GetDiscount(List<Publisher> listPublisher)
+        {
+            int bookPriceSum = 0;
+            float dIPercent = 0;
+
+            for (int i = 0; i < mapping.Count; i++)
+            {
+                dIPercent = 0;
+                for (int j = 0; j < listPublisher.Count; j++)
+                {
+                    // Lấy discount của nhà phát hành
+                    if (mapping[i].product.publisherId == listPublisher[j].id)
+                    {
+                        dIPercent = listPublisher[j].discount;
+                        break;
+                    }
+                }
+
+                // So sánh với discount của sản phẩm, chọn giá trị lớn nhất
+                if (mapping[i].product.discount > dIPercent)
+                {
+                    dIPercent = mapping[i].product.discount;
+                }
+                bookPriceSum = (int)(bookPriceSum + mapping[i].product.bookCoverPrice *
+                    mapping[i].quantity * dIPercent / 100);
+            }
+
+            // Lấy chiết khấu với 1 chữ số sau dấu phảy
+           dIPercent = (1000 * bookPriceSum / GetBookCoverPrice()) / (float)10;
+
+            return dIPercent;
+        }
     }
 }

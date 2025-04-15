@@ -186,7 +186,7 @@ namespace MVCPlayWithMe.Controllers
             var exist = Request.Headers["exist"];
             var quota = Common.ConvertStringToInt32(Request.Headers["quota"]);
             var itemId = Common.ConvertStringToInt32(Request.Headers["itemId"]);
-            var discount = Common.ConvertStringToInt32(Request.Headers["discount"]); 
+            var discount = Request.Headers["discount"] == null ? 0: float.Parse(Request.Headers["discount"]); 
             var imageExtension = Request.Headers["imageExtension"];// phần mở rộng của ảnh không gồm '.'
             var listProIdMapping = Request.Headers["listProIdMapping"];// Mảng id sản phẩm mapping
             var listQuantityMapping = Request.Headers["listQuantityMapping"];// Mảng quantity sản phẩm mapping
@@ -382,7 +382,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Cập nhật chiết khấu
         [HttpPost]
-        public string UpdateDiscount(int modelId, int discount)
+        public string UpdateDiscount(int modelId, float discount)
         {
             if (AuthentAdministrator() == null)
             {
@@ -431,7 +431,7 @@ namespace MVCPlayWithMe.Controllers
         // Cập nhật chiết khấu cho danh sách item/model
         // listItemId có dạng: 1,2,3
         [HttpPost]
-        public string UpdateDiscountForListItem(int discount, string listItemId)
+        public string UpdateDiscountForListItem(float discount, string listItemId)
         {
             if (AuthentAdministrator() == null)
             {
@@ -443,7 +443,7 @@ namespace MVCPlayWithMe.Controllers
         // Cập nhật chiết khấu cho danh sách item/model
         // listItemId có dạng: 1,2,3
         [HttpPost]
-        public string UpdateDiscountForListModelId(int discount, string listModelId)
+        public string UpdateDiscountForListModelId(float discount, string listModelId)
         {
             if (AuthentAdministrator() == null)
             {

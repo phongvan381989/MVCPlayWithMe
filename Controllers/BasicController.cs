@@ -7,6 +7,7 @@ using System;
 using Newtonsoft.Json;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
+using MySql.Data.MySqlClient;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -34,7 +35,27 @@ namespace MVCPlayWithMe.Controllers
                 MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
             }
             return administrator;
+        }
 
+        public Administrator AuthentAdministratorConnectOut(MySqlConnection conn)
+        {
+            CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);
+            if (string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                MyLogger.GetInstance().Warn("cookieValue is null or empty");
+                return null;
+            }
+            /// Check cookie đã được lưu trong db
+            AdministratorMySql sqler = new AdministratorMySql();
+            Administrator administrator = sqler.GetAdministratorFromCookieConnectOut(
+                cookieResult.cookieValue,
+                conn);
+            if (administrator == null)
+            {
+                // Lỗi ví dụ timeout,... không lấy được admin id từ cookie, nên ta không xóa cookie từ phía server nữa
+                MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
+            }
+            return administrator;
         }
 
         public MySqlResultState AuthentFailReturnState()
@@ -74,7 +95,10 @@ namespace MVCPlayWithMe.Controllers
         public void ViewDataGetListPublisher()
         {
             PublisherMySql sqlPubliser = new PublisherMySql();
-            List<Publisher> ls = sqlPubliser.GetListPublisher();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+            List<Publisher> ls = sqlPubliser.GetListPublisherConnectOut(conn);
+            conn.Close();
             ViewData["lsPublisher"] = ls;
         }
 

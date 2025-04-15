@@ -21,8 +21,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         {
             string http = TikiConstValues.cstrProductUpdate;
             IRestResponse response = CommonTikiAPI.PutExcuteRequest(http, st);
-            //if (response.StatusCode != System.Net.HttpStatusCode.OK)
-            //{
             try
             {
                 JsonSerializerSettings settings = new JsonSerializerSettings
@@ -36,24 +34,22 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
-                //return null;
             }
-            //}
             return null;
         }
-        public static TikiUpdateQuantityResponse TikiProductUpdateQuantity(TikiUpdateQuantity st)
+        public static void TikiProductUpdateQuantity(int itemId,
+            int quantity,
+            MySqlResultState result
+            )
         {
-            return TikiProductUpdate(st);
-        }
-
-        public static TikiUpdateQuantityResponse TikiProductUpdatePrice(TikiUpdatePrice st)
-        {
-            return TikiProductUpdate(st);
-        }
-
-        public static TikiUpdateQuantityResponse TikiProductUpdateStatus(TikiUpdateStatus st)
-        {
-            return TikiProductUpdate(st);
+            TikiUpdateQuantity st = new TikiUpdateQuantity(itemId, TikiConstValues.intIdKho28Ngo3TTDL);
+            st.UpdateQuantity(quantity);
+            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = TikiProductUpdate(st);
+            result.myJson = tikiUpdateQuantityResponse;
+            if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
+            {
+                result.State = EMySqlResultState.ERROR;
+            }
         }
 
         public static int GetQuantityFromTikiProduct(TikiProduct product)
@@ -124,22 +120,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="proId"></param>
         /// <param name="price"></param>
         /// <returns></returns>
-        public static TikiUpdateQuantityResponse TikiProductUpdatePrice(int proId, int price)
+        public static void TikiProductUpdatePrice(int proId, int price, MySqlResultState result)
         {
-
             TikiUpdatePrice st = new TikiUpdatePrice(proId);
-            // Cập nhật tồn kho cho tham số
-
             st.UpdatePrice(price);
-            try
+            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = TikiProductUpdate(st);
+            result.myJson = tikiUpdateQuantityResponse;
+            if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {
-                return TikiProductUpdatePrice(st);
+                result.State = EMySqlResultState.ERROR;
             }
-            catch(Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.Message);
-            }
-            return null;
         }
 
         /// <summary>
@@ -150,20 +140,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <returns></returns>
         public static TikiUpdateQuantityResponse TikiProductUpdateStatus(int proId, int status)
         {
-
             TikiUpdateStatus st = new TikiUpdateStatus(proId);
-            // Cập nhật tồn kho cho tham số
-
             st.UpdateStatus(status);
-            try
-            {
-                return TikiProductUpdateStatus(st);
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.Message);
-            }
-            return null;
+            return TikiProductUpdate(st);
         }
 
 

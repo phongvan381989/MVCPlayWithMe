@@ -149,12 +149,14 @@ namespace MVCPlayWithMe.Controllers
         //}
 
         public string AddNewPro(
+                int quantity,
                 string code,
                 string barcode,
                 string name,
                 int comboId,
                 int categoryId,
                 int bookCoverPrice,
+                float discount,
                 string author,
                 string translator,
                 int publisherId,
@@ -181,12 +183,14 @@ namespace MVCPlayWithMe.Controllers
             }
 
             Product pro = new Product(-1,
+                 quantity,
                  code,
                  barcode,
                  name,
                  comboId,
                  categoryId,
                  bookCoverPrice,
+                 discount,
                  author,
                  translator,
                  publisherId,
@@ -213,12 +217,14 @@ namespace MVCPlayWithMe.Controllers
 
         public string UpdateProduct(
                 int productId,
+                int quantity,
                 string code,
                 string barcode,
                 string name,
                 int comboId,
                 int categoryId,
                 int bookCoverPrice,
+                float discount,
                 string author,
                 string translator,
                 int publisherId,
@@ -246,12 +252,14 @@ namespace MVCPlayWithMe.Controllers
 
             Product pro = new Product(
                 productId,
+                quantity,
                 code,
                 barcode,
                  name,
                  comboId,
                  categoryId,
                  bookCoverPrice,
+                 discount,
                  author,
                  translator,
                  publisherId,
@@ -308,6 +316,7 @@ namespace MVCPlayWithMe.Controllers
                 int comboId,
                 int categoryId,
                 int bookCoverPrice,
+                float discount,
                 string author,
                 string translator,
                 int publisherId,
@@ -335,6 +344,7 @@ namespace MVCPlayWithMe.Controllers
                  comboId,
                  categoryId,
                  bookCoverPrice,
+                 discount,
                  author,
                  translator,
                  publisherId,
@@ -735,6 +745,17 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(sqler.UpdateBookCoverPrice(id, bookCoverPrice));
+        }
+
+        [HttpGet]
+        public string UpdateDiscountWhenImport(int id, float discount)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(sqler.UpdateDiscountWhenImport(id, discount));
         }
 
         [HttpGet]
@@ -1276,7 +1297,9 @@ namespace MVCPlayWithMe.Controllers
                     MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(st);
                 result.myJson = rs;
                 if (rs == null)
+                {
                     return;
+                }
 
                 foreach (var f in rs.response.failure_list)
                 {
@@ -1300,6 +1323,10 @@ namespace MVCPlayWithMe.Controllers
                         ShopeeMySql sqlShopee = new ShopeeMySql();
                         sqlShopee.ShopeeDeleteItemOnDB(st.item_id);
                     }
+                    else
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                    }
                 }
             }
             catch(Exception ex)
@@ -1310,10 +1337,12 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Cập nhật số lượng sản phẩm của 1 model từ itemId, modelId
-        private MySqlResultState ShopeeUpdateQuantityOfOneItemModel(long itemId, long modelId)
+        private MySqlResultState ShopeeUpdateQuantityOfOneItemModel(long itemId,
+            long modelId,
+            MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = sqler.ShopeeGetQuantityOfOneItemModel(itemId, modelId);
+            int quantity = sqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
 
             MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st =
                     new MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
@@ -1370,17 +1399,12 @@ namespace MVCPlayWithMe.Controllers
             commonItem.result = result;
         }
 
-        private MySqlResultState TikiUpdateQuantityOfOneItemModel(int itemId)
+        private MySqlResultState TikiUpdateQuantityOfOneItemModel(int itemId, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = sqler.TikiGetQuantityOfOneItemModel(itemId);
+            int quantity = sqler.TikiGetQuantityOfOneItemModelConnectOut(itemId, conn);
 
-            TikiUpdateQuantity st = new TikiUpdateQuantity(itemId, TikiConstValues.intIdKho28Ngo3TTDL);
-
-            st.UpdateQuantity(quantity);
-            TikiUpdateQuantityResponse rs = TikiUpdateStock.TikiProductUpdateQuantity(st);
-
-            result.myJson = rs;
+            TikiUpdateStock.TikiProductUpdateQuantity(itemId, quantity, result);
 
             return result;
         }
@@ -1400,13 +1424,7 @@ namespace MVCPlayWithMe.Controllers
 
             int quantity = commonItem.models[0].GetQuatityFromListMapping();
 
-
-            TikiUpdateQuantity st = new TikiUpdateQuantity((int)commonItem.itemId, TikiConstValues.intIdKho28Ngo3TTDL);
-
-            st.UpdateQuantity(quantity);
-            TikiUpdateQuantityResponse rs = TikiUpdateStock.TikiProductUpdateQuantity(st);
-
-            result.myJson = rs;
+            TikiUpdateStock.TikiProductUpdateQuantity((int)commonItem.itemId, quantity, result);
 
             commonItem.result = result;
         }
@@ -1415,19 +1433,32 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string UpdateQuantityOfOneItemModel(string eType, long itemId, long modelId)
         {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
-
             MySqlResultState result = null;
-            if (eType == Common.eTiki)
+
+            try
             {
-                result = TikiUpdateQuantityOfOneItemModel((int)itemId);
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    if (AuthentAdministratorConnectOut(conn) == null)
+                    {
+                        return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+                    }
+
+                    if (eType == Common.eTiki)
+                    {
+                        result = TikiUpdateQuantityOfOneItemModel((int)itemId, conn);
+                    }
+                    else if (eType == Common.eShopee)
+                    {
+                        result = ShopeeUpdateQuantityOfOneItemModel(itemId, modelId, conn);
+                    }
+                }
             }
-            else if(eType == Common.eShopee)
+            catch (Exception ex)
             {
-                result = ShopeeUpdateQuantityOfOneItemModel(itemId, modelId);
+                MyLogger.GetInstance().Error(ex.ToString());
             }
 
             return JsonConvert.SerializeObject(result);

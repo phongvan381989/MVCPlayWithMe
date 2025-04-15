@@ -485,7 +485,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                     model.name = MyMySql.GetString(rdr, "ModelName");
 
                     model.quota = MyMySql.GetInt32(rdr, "ModelQuota");
-                    model.discount = MyMySql.GetInt32(rdr, "ModelDiscount");
+                    model.discount = rdr.IsDBNull(rdr.GetOrdinal("ModelDiscount")) ? 0 : rdr.GetFloat("ModelDiscount");
                     model.price = MyMySql.GetInt32(rdr, "ModelPrice");
                     model.soldQuantity = MyMySql.GetInt32(rdr, "ModelSoldQuantity");
                     model.bookCoverPrice = MyMySql.GetInt32(rdr, "ModelBookCoverPrice");
@@ -579,7 +579,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                         model.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
                         model.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ? 0 : rdr.GetInt32(modelBookCoverPriceIndex);
                         model.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
-                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetInt32(modelDiscountIndex);
+                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetFloat(modelDiscountIndex);
                         itemTemp.models.Add(model);
                     }
                 }
@@ -642,7 +642,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                         model.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
                         model.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ? 0 : rdr.GetInt32(modelBookCoverPriceIndex);
                         model.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
-                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetInt32(modelDiscountIndex);
+                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetFloat(modelDiscountIndex);
                         itemTemp.models.Add(model);
                     }
                 }
@@ -775,7 +775,7 @@ namespace MVCPlayWithMe.Models.ItemModel
                             modelTemp.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
                             modelTemp.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ?0 : rdr.GetInt32(modelBookCoverPriceIndex);
                             modelTemp.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
-                            modelTemp.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetInt32(modelDiscountIndex); ;
+                            modelTemp.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetFloat(modelDiscountIndex); ;
                             itemTemp.models.Add(modelTemp);
                         }
                         modelTemp = itemTemp.models[itemTemp.models.Count - 1];
@@ -985,7 +985,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             cart.UpdateQ();
         }
 
-        public MySqlResultState UpdateDiscount(int modelId, int discount)
+        public MySqlResultState UpdateDiscount(int modelId, float discount)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -1104,7 +1104,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         }
 
         // listItemId có dạng: 1,2,3
-        public MySqlResultState UpdateDiscountForListItem(int discount, string listItemId)
+        public MySqlResultState UpdateDiscountForListItem(float discount, string listItemId)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -1129,7 +1129,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         }
 
         // listModelId có dạng: 1,2,3
-        public MySqlResultState UpdateDiscountForListModleId(int discount, string listModelId)
+        public MySqlResultState UpdateDiscountForListModleId(float discount, string listModelId)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -1190,7 +1190,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         /// <returns></returns>
         public MySqlResultState BornModelFromShopeeModel( int itemId, int modelId,
             string modelName,
-            int quota, int discount, int price, int bookCoverPrice,
+            int quota, float discount, int price, int bookCoverPrice,
             long shopeeItemId,
             long shopeeModelId)
         {

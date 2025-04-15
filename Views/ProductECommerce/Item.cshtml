@@ -73,16 +73,6 @@
             return type;
         }
 
-        async function GetItemFromId(eType, id) {
-            const searchParams = new URLSearchParams();
-            searchParams.append("eType", eType);
-            searchParams.append("id", id);
-
-            let query = "/ProductECommerce/GetItemFromId";
-
-            return RequestHttpPostPromise(searchParams, query);
-        }
-
         async function ViewItemFromId() {
             ShowCircleLoader();
 
@@ -203,6 +193,23 @@
             container.appendChild(div);
         }
 
+        // Thêm nút Cập nhật giá bìa 
+        function AddUpdateBookCoverPriceButton(itemObj, container) {
+            let btn = document.createElement("BUTTON");
+            btn.title = "Cập nhật giá bìa";
+            let btnContent = document.createTextNode("Cập nhật giá bìa");
+            btn.itemObj = itemObj;
+
+            btn.onclick = async function () {
+                await UpdateBookCoverPriceToEEcommerce(JSON.stringify(this.itemObj));
+            }
+            btn.appendChild(btnContent);
+            const div = document.createElement("div");
+
+            div.appendChild(btn);
+            container.appendChild(div);
+        }
+
         async function ModelUpdateMapping_ProductEEcomerce(element) {
             let listModelOnly = [];
             listModelOnly.push(element.parentElement.parentElement);
@@ -264,8 +271,14 @@
                 div.style.alignItems = "center";
                 modelContainer.appendChild(div);
             }
-            // Thêm nút sinh model trên web voibenho
-            AddBornModelForVoiBeNhoButton(itemObj, modelObj, modelContainer);
+            // Thêm nút sinh model trên web voibenho khi là sản phẩm Shopee
+            if (GetEEcommerceTypeFromUrl() == eShopee) {
+                AddBornModelForVoiBeNhoButton(itemObj, modelObj, modelContainer);
+            }
+            // Thêm nút cập nhật giá bìa
+            //if (GetEEcommerceTypeFromUrl() == eTiki) {
+            //    AddUpdateBookCoverPriceButton(itemObj, modelContainer);
+            //}
 
             // Thêm nút mapping
             AddMappingButtonForModel(modelContainer);
@@ -421,6 +434,16 @@
             }
 
             RemoveCircleLoader();
+        }
+
+        async function UpdateBookCoverPriceToEEcommerce(strCommonItem) {
+            const searchParams = new URLSearchParams();
+            searchParams.append("strCommonItem", strCommonItem);
+            let url = "/ProductECommerce/UpdateBookCoverPriceToEEcommerce";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, url);
+            RemoveCircleLoader();
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
         }
     </script>
 </body>

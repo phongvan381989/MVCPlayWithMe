@@ -21,6 +21,8 @@
     let bookCoverPrice = GetValueInputById("book-cover-price", 0);
     searchParams.append("bookCoverPrice", bookCoverPrice);
 
+    searchParams.append("discount", GetValueInputById("discount-when-import", 0));
+
     searchParams.append("author", document.getElementById("author-id").value);
 
     searchParams.append("translator", document.getElementById("translator-id").value);
@@ -96,9 +98,7 @@ function AddUpdateParameters(searchParams) {
         }
     }
 
-    if (AddUpdateWithCommonParameters(searchParams) === false) {
-        return false;
-    }
+    searchParams.append("quantity", GetValueInputById("quantity", 0));
 
     searchParams.append("code", code);
 
@@ -116,6 +116,11 @@ function AddUpdateParameters(searchParams) {
     searchParams.append("parentId", -1);
 
     searchParams.append("detail", document.getElementById("detail").value);
+
+    if (AddUpdateWithCommonParameters(searchParams) === false) {
+        return false;
+    }
+
     return true;
 }
 
@@ -226,10 +231,11 @@ function SetProductInfomationToDefault() {
     document.getElementById("detail").value = "";
 }
 
-// Set thông tin chung của những sản phẩm thuộc combo trừ combo
+// Set thông tin chung của những sản phẩm thuộc combo
 function SetProductCommonInfoWithCombo(product) {
     document.getElementById("category-id").value = product.categoryName;
     document.getElementById("book-cover-price").value = product.bookCoverPrice;
+    document.getElementById("discount-when-import").value = product.discount;
     document.getElementById("author-id").value = product.author;
     document.getElementById("translator-id").value = product.translator;
     document.getElementById("publisher-id").value = product.publisherName;
@@ -497,6 +503,26 @@ async function UpdateBookCoverPrice() {
     }
     catch (error) {
         CreateMustClickOkModal("Cập nhật giá bìa lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateDiscountWhenImport() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("discount", GetValueInputById("discount-when-import", 0));
+
+    let url = "/Product/UpdateDiscountWhenImport";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật chiết khấu lỗi.", null);
         return;
     }
 }

@@ -1,5 +1,4 @@
-﻿using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Deal;
-using RestSharp;
+﻿using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +7,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.DealDiscount;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
 {
@@ -15,18 +15,25 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
     public class DealAction
     {
         // Tạo chương trình giảm giá
-        // Trả về null tức có mảng dữ liệu chi tiết về chương trình giảm giá tức thành công
-        // Khác null là thông báo lỗi server tiki trả về
-        static DealResponseStatus CreateDeal(CreatingRequestBody body)
+        // Nếu deal được tạo đè nên deal đang chạy, deal đang chạy sẽ bị CLOSE
+        static public DealCreatingResponse CreateDeal(CreatingRequestBody body)
         {
-            DealResponseStatus dealResponseStatus = null;
+            DealCreatingResponse dealCreatingResponse = null;
             string http = TikiConstValues.cstrCreateDeal;
             IRestResponse response = CommonTikiAPI.PostExcuteRequest(http, body.GetJson());
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            if (response.StatusCode == System.Net.HttpStatusCode.Created ||
+                response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
                 string json = response.Content;
+                dealCreatingResponse = new DealCreatingResponse();
                 try
                 {
+                    JsonSerializerSettings settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    };
+
                     JToken token = JToken.Parse(json);
 
                     if (token.Type == JTokenType.Array)
@@ -37,7 +44,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
                         //{
                         //    //return (int)jsonArray[0]["id"];
                         //}
-                        
+
+                        dealCreatingResponse.dealList =
+                            JsonConvert.DeserializeObject<List<DealCreatedResponseDetail>>(json, settings);
+
                     }
                     else if (token.Type == JTokenType.Object)
                     {
@@ -46,31 +56,78 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
                         //JObject obj = (JObject)token;
                         // 
                         //return obj["id"] != null ? (int)obj["id"] : -1;
-                        JsonSerializerSettings settings = new JsonSerializerSettings
-                        {
-                            NullValueHandling = NullValueHandling.Ignore,
-                            MissingMemberHandling = MissingMemberHandling.Ignore
-                        };
-                        dealResponseStatus = JsonConvert.DeserializeObject<DealResponseStatus>(json, settings);
+                        dealCreatingResponse.dealResponseStatus = JsonConvert.DeserializeObject<DealResponseStatus>(json, settings);
                     }
-                    //JsonSerializerSettings settings = new JsonSerializerSettings
-                    //{
-                    //    NullValueHandling = NullValueHandling.Ignore,
-                    //    MissingMemberHandling = MissingMemberHandling.Ignore
-                    //};
-                    //eventResponse = JsonConvert.DeserializeObject<Event_Response>(json, settings);
                 }
                 catch (Exception ex)
                 {
                     MyLogger.GetInstance().Warn(ex.Message);
                 }
             }
-            else
+
+            return dealCreatingResponse;
+        }
+
+        // Kết thúc chương trình giảm giá
+        static public List<DealOffResponseObject> OffDeal(List<int> listDealId)
+        {
+            List<DealOffResponseObject> lsDealOff = null;
+            string http = TikiConstValues.cstrOffDeal;
+            IRestResponse response = CommonTikiAPI.PostExcuteRequest(http, JsonConvert.SerializeObject(listDealId));
+            //if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                dealResponseStatus = new DealResponseStatus();
+                string json = response.Content;
+                try
+                {
+                    JsonSerializerSettings settings = new JsonSerializerSettings
+                    {
+                        NullValueHandling = NullValueHandling.Ignore,
+                        MissingMemberHandling = MissingMemberHandling.Ignore
+                    };
+
+                    JToken token = JToken.Parse(json);
+
+                    if (token.Type == JTokenType.Array)
+                    {
+                        // Off deal giảm giá thành công
+                        //[{
+                        //    "code": 400,
+                        //    "id": 534570745,
+                        //    "message": {
+                        //        "en": "Deal 534570745 is STATUS_CLOSED, can not stop it",
+                        //        "vi": "Giảm giá 534570745 đang có trạng thái STATUS_CLOSED, không thể dừng"
+                        //    },
+                        //    "status": "error",
+                        //    "success": false
+                        //    }
+                        //]
+
+                        //[
+                        //  {
+                        //    "id": 0,
+                        //    "success": true,
+                        //    "message": {},
+                        //    "code": {}
+                        //  }
+                        //]
+                        lsDealOff =
+                            JsonConvert.DeserializeObject<List<DealOffResponseObject>>(json, settings);
+
+                    }
+                    else if (token.Type == JTokenType.Object)
+                    {
+                        // Off deal thất bại
+
+                        //{ "statusCode":401,"message":"Error: Request failed with status code 401","error":"Unauthorized"}
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.Message);
+                }
             }
 
-            return dealResponseStatus;
+            return lsDealOff;
         }
 
         // Từ sku lấy được các deal đã tạo cho sku

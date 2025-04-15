@@ -63,7 +63,8 @@ namespace MVCPlayWithMe.Models
                 {
                     if (combo == null)
                     {
-                        combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"), MyMySql.GetString(rdr, "TBComboName"));
+                        combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"),
+                            MyMySql.GetString(rdr, "TBComboName"));
                     }
 
                     proIdTem = MyMySql.GetInt32(rdr, "Id");
@@ -96,6 +97,7 @@ namespace MVCPlayWithMe.Models
                         product.status = MyMySql.GetInt32(rdr, "Status");
                         product.quantity = MyMySql.GetInt32(rdr, "Quantity");
                         product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
+                        product.discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat("Discount");
 
                         product.SetFirstSrcImage();
                         combo.products.Add(product);
