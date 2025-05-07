@@ -1156,3 +1156,32 @@ function GetVNDValue(inputId) {
     let value = input.value.replace(/,/g, '');
     return parseInt(value, 10) || 0;
 }
+
+// Sắp xếp cột của bảng tăng hoặc giảm dần khi click vào <th>. Cột chứa giá trị số nguyên hoặc string nhưng
+// lấy được số nguyên đầu tiên VD: 1234 con vịt => 1234
+function SortTable(tableId, thEle) {
+    const table = document.getElementById(tableId);
+    const rows = Array.from(table.rows).slice(1); // Exclude the first row (header)
+
+    // Determine if sorting is ascending or descending
+    let isAscending = table.getAttribute("data-sort-order") !== "asc";
+    table.setAttribute("data-sort-order", isAscending ? "asc" : "desc");
+    let columnIndex = thEle.cellIndex;
+    // Sort rows
+    rows.sort((a, b) => {
+        let valA = ExtractNumber(a.cells[columnIndex].innerText.trim());
+        let valB = ExtractNumber(b.cells[columnIndex].innerText.trim());
+
+        if (valA < valB) return isAscending ? -1 : 1;
+        if (valA > valB) return isAscending ? 1 : -1;
+        return 0;
+    });
+
+    // Reorder rows, keeping the header row unchanged
+    rows.forEach(row => table.appendChild(row));
+}
+
+function ExtractNumber(text) {
+    const match = text.match(/\d+/); // Extract the first number in the string
+    return match ? parseInt(match[0], 10) : 0; // Convert to integer, default to 0 if no number found
+}

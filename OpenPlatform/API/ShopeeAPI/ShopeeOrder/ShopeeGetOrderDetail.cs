@@ -71,7 +71,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                     e.order_status != "CANCELLED") // Mã vận chuyển được lấy ở xử lý event
                 {
                     e.shipCode = ShopeeGetTrackingNumber.ShopeeGetShipCode(e.order_sn, string.Empty);
-                    shopeeMySql.UpdateUpdateTrackingNumberToDBConnectOut(e.order_sn, e.shipCode, conn);
+                    shopeeMySql.UpdateTrackingNumberToDBConnectOut(e.order_sn, e.shipCode, conn);
                 }
             }
 

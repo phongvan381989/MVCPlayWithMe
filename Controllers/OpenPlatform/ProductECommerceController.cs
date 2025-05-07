@@ -5,6 +5,7 @@ using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
@@ -66,7 +67,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             List<CommonItem> lsCommonItem = null;
             if (AuthentAdministrator() == null)
+            {
                 return JsonConvert.SerializeObject(lsCommonItem);
+            }
 
             if (eType == Common.eShopee)
             {
@@ -85,7 +88,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             List<CommonItem> lsCommonItem = null;
             if (AuthentAdministrator() == null)
+            {
                 return JsonConvert.SerializeObject(lsCommonItem);
+            }
 
             if (eType == Common.eShopee)
             {
@@ -145,12 +150,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Test chỉ lấy 1 page ~ 50 sản phẩm
             //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-
             conn.Open();
 
             try
             {
                 shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsShopeeBaseInfoItem, lsCommonItem, conn);
+                // Không tồn tại trong DB ta insert
+                foreach (var item in lsCommonItem)
+                {
+                    shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
+                }
 
                 // Cập nhật trạng thái item vào DB
                 shopeeSqler.ShopeeUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
@@ -210,6 +219,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 foreach (var pro in lsShopeeBaseInfoItem)
                 {
                     CommonItem item = new CommonItem(pro);
+                    // Không tồn tại trong DB ta insert
+                    shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
                     lsCommonItem.Add(item);
                 }
             }
@@ -231,6 +242,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             conn.Open();
 
             tikiSqler.TikiGetListCommonItemFromListTikiProductConnectOut(lsTikiItem, lsCommonItem, conn);
+
+            // Không tồn tại trong DB ta insert
+            foreach (var item in lsCommonItem)
+            {
+                tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
+            }
             // Cập nhật trạng thái item vào DB
             tikiSqler.TikiUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
 
@@ -277,6 +294,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 foreach (var pro in lsNonExistOnDb)
                 {
                     CommonItem item = new CommonItem(pro);
+                    // Không tồn tại trong DB ta insert
+                    tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
                     lsCommonItem.Add(item);
                 }
             }
@@ -332,6 +351,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return null;
 
             CommonItem item = new CommonItem(pro);
+            // Không tồn tại trong DB ta insert
             tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
             tikiSqler.TikiGetItemFromIdConnectOut(id, item, conn);
             return item;
@@ -350,10 +370,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             MySqlResultState result;
             if (AuthentAdministrator() == null)
             {
-                result = new MySqlResultState();
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-                result.Message = "Xác thực thất bại";
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
             List<CommonForMapping> ls = new List<CommonForMapping>();
             string[] values = str.Split(',');
@@ -399,7 +416,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string GetItemOnDB(string eType)
         {
-            List<CommonItem> ls = null;
+            List<CommonItem> ls = new List<CommonItem>();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(ls);
+            }
+
             if (eType == Common.eShopee)
             {
                 ls = shopeeSqler.ShopeeGetItemOnDB();
@@ -415,6 +437,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string DeleteItemOnDB(string eType, string itemId)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             MySqlResultState resultState = null;
             if (eType == Common.eShopee)
             {
@@ -433,6 +460,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string DeleteShopeeModelOnDB(string eType, string modelId)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             MySqlResultState resultState = null;
             if (eType == Common.eShopee)
             {
@@ -446,6 +478,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string CopyImageFromTMDTToWarehouseProduct(string eType,
             string imageUrl, string productId)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             MySqlResultState resultState = new MySqlResultState();
 
             string path = Common.GetAbsoluteProductMediaFolderPath(productId);
@@ -684,6 +721,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public string ReloadOneOrder(string commonOrder)
         {
             CommonOrder order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(order);
+            }
+
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             conn.Open();
             try
@@ -722,109 +764,120 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string EnoughProductInOrder(string eType, string commonOrder)
         {
-            MySqlResultState resultState = null;
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
             CommonOrder order = null;
             try
             {
                 order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
-            }
-            catch(Exception ex)
-            {
-                resultState = new MySqlResultState();
-                Common.SetResultException(ex, resultState);
-                return JsonConvert.SerializeObject(resultState);
-            }
 
-            EECommerceType eECommerceType = EECommerceType.TIKI;
-            if (eType == Common.eShopee)
-            {
-                eECommerceType = EECommerceType.SHOPEE;
-            }
-            else if (eType == Common.eTiki)
-            {
-                eECommerceType = EECommerceType.TIKI;
-            }
-            else if (eType == Common.ePlayWithMe)
-            {
-                eECommerceType = EECommerceType.PLAY_WITH_ME;
-            }
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    EECommerceType eECommerceType = EECommerceType.TIKI;
+                    if (eType == Common.eShopee)
+                    {
+                        eECommerceType = EECommerceType.SHOPEE;
+                    }
+                    else if (eType == Common.eTiki)
+                    {
+                        eECommerceType = EECommerceType.TIKI;
+                        // Lấy event để trạng thái đơn hàng trên db là mới nhất
+                        TikiPullEventService tikiPullEventService = new TikiPullEventService();
+                        tikiPullEventService.DoWork(conn);
+                    }
+                    else if (eType == Common.ePlayWithMe)
+                    {
+                        eECommerceType = EECommerceType.PLAY_WITH_ME;
+                    }
 
-            TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
-                order.code, eECommerceType, conn);
-            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+                    TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                        order.code, eECommerceType, conn);
+                    ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
 
-            ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
-            // Chuẩn bị đóng thì hủy đơn
-            if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
-            {
-                resultState = new MySqlResultState();
-                resultState.State = EMySqlResultState.INVALID;
-                resultState.Message = "Đơn hàng đã bị hủy.";
+                    ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
+                    // Chuẩn bị đóng nhưng khách đã hủy đơn
+                    if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
+                    {
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Đơn hàng đã bị hủy.";
+                    }
+                    else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                    {
+                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                        order, status, 0, oldStatus, eECommerceType, conn);
+                    }
+                }
             }
-            else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            catch (Exception ex)
             {
-                resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                order, status, 0, oldStatus, eECommerceType, conn);
+                Common.SetResultException(ex, result);
+                return JsonConvert.SerializeObject(result);
             }
-            
-            conn.Close();
-            return JsonConvert.SerializeObject(resultState);
+            return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
         public string ReturnedOrder(string eType, string commonOrder)
         {
-            MySqlResultState resultState = null;
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
 
             CommonOrder order = null;
             try
             {
                 order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+
+                EECommerceType eECommerceType = EECommerceType.TIKI;
+                if (eType == Common.eShopee)
+                {
+                    eECommerceType = EECommerceType.SHOPEE;
+                }
+                else if (eType == Common.eTiki)
+                {
+                    eECommerceType = EECommerceType.TIKI;
+                }
+                else if (eType == Common.ePlayWithMe)
+                {
+                    eECommerceType = EECommerceType.PLAY_WITH_ME;
+                }
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                        order.code, eECommerceType, conn);
+                    ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+
+                    ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
+                    if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                    {
+                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                        order, status, 0, oldStatus, eECommerceType, conn);
+
+                        if (result != null && result.myAnything == 1)
+                        {
+                            // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                            ProductController productController = new ProductController();
+                            productController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
-                resultState = new MySqlResultState();
-                Common.SetResultException(ex, resultState);
-                return JsonConvert.SerializeObject(resultState);
+                Common.SetResultException(ex, result);
+                return JsonConvert.SerializeObject(result);
             }
-
-            EECommerceType eECommerceType = EECommerceType.TIKI;
-            if (eType == Common.eShopee)
-            {
-                eECommerceType = EECommerceType.SHOPEE;
-            }
-            else if (eType == Common.eTiki)
-            {
-                eECommerceType = EECommerceType.TIKI;
-            }
-            else if (eType == Common.ePlayWithMe)
-            {
-                eECommerceType = EECommerceType.PLAY_WITH_ME;
-            }
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-
-            TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
-                order.code, eECommerceType, conn);
-            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
-
-            ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
-            if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
-            {
-                resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                order, status, 0, oldStatus, eECommerceType, conn);
-
-                if (resultState != null && resultState.myAnything == 1)
-                {
-                    // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                    ProductController productController = new ProductController();
-                    productController.GetListNeedUpdateQuantityAndUpdate_Core();
-                }
-            }
-            conn.Close();
-            return JsonConvert.SerializeObject(resultState);
+            return JsonConvert.SerializeObject(result);
         }
 
         /// <summary>
@@ -969,6 +1022,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string UpdateBookCoverPriceToEEcommerce(string strCommonItem)
         {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
             MySqlResultState result = new MySqlResultState();
 
             try

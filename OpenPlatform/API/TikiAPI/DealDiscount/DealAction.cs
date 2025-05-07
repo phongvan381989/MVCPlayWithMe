@@ -8,6 +8,10 @@ using Newtonsoft.Json.Linq;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.DealDiscount;
+using MySql.Data.MySqlClient;
+using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Deal;
+using MVCPlayWithMe.Controllers.OpenPlatform;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
 {
@@ -131,11 +135,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         }
 
         // Từ sku lấy được các deal đã tạo cho sku
-        // ls khởi tạo ngoài hàm
-        // Trả về khác null là thông báo lỗi server tiki trả về
-        static public DealResponseStatus SearchDeal(string sku, List<DealCreatedResponseDetail> ls)
+        static public List<DealCreatedResponseDetail> SearchDeal(string sku)
         {
-            DealResponseStatus dealResponseStatus = null;
+            List<DealCreatedResponseDetail> ls = new List<DealCreatedResponseDetail>();
+
             List<DevNameValuePair> listValuePair = new List<DevNameValuePair>();
 
             // Phần tử đầu tiên của listValuePair phải là "page"
@@ -187,7 +190,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
                     JObject obj = JObject.Parse(json);
                     if(obj["message"] != null)
                     {
-                        dealResponseStatus = JsonConvert.DeserializeObject<DealResponseStatus>(json, settings);
+                        //dealResponseStatus = JsonConvert.DeserializeObject<DealResponseStatus>(json, settings);
                     }
                     else
                     {
@@ -202,7 +205,33 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
                 MyLogger.GetInstance().Warn(ex.Message);
             }
 
-            return dealResponseStatus;
+            return ls;
+        }
+
+        // Hàm được chạy tự động trong khoảng 3h->4h sáng.
+        // Check DB xem sku nào đang bật bán, không tham gia chương trình giảm giá nào, tồn kho khác 0.
+        // Tạo chương trình giảm giá.
+        static public void CheckAndCreateDeal_Background()
+        {
+            MyLogger.GetInstance().Info("CheckAndCreateDeal_Background CALL");
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    TikiDealDiscountMySql tikiDealDiscountMySql = new TikiDealDiscountMySql();
+                    List<SimpleTikiProduct> simpleTikiProducts = 
+                        tikiDealDiscountMySql.GetItemsNoDealDiscountRunning(conn);
+
+                    TikiDealDiscountController tikiDealDiscountController
+                         = new TikiDealDiscountController();
+                    tikiDealDiscountController.CreateDealForAllCore(simpleTikiProducts, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+            }
         }
     }
 }

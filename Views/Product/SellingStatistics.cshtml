@@ -1,0 +1,160 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container">
+            <div style="margin-bottom:10px;">
+                @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
+                <div>
+                    <label for="publisher-id">Nhà phát hành:</label>
+                    <input list="list-Publisher" class="config-max-width margin-vertical"
+                           title="Nếu nhà phát hành không đúng, sẽ hiển thị dữ liệu của tất cả nhà phát hành"
+                           id="publisher-id" onchange="ChangePublisher()">
+                    <datalist id="list-Publisher"></datalist>
+                </div>
+                <div>
+                    <label for="selling-statistics-interval">Khoảng thời gian (ngày):</label>
+                    <input type="number" min="30" value="30" id="selling-statistics-interval"
+                           title="Giá trị nhỏ nhất là 30 ngày">
+                    <button type="button" style="margin-left: 30px; margin-right:10px;"
+                            title="Thống kê lượt bán những sản phẩm đang kinh doanh trong khoảng thời gian đã chọn"
+                            onclick="SellingStatistics()">
+                        Thống Kê
+                    </button>
+                </div>
+            </div>
+            <br />
+
+            <div id="container-statistics" style="display:none;">
+                <div id="count-result"></div>
+                <table id="myTableStatistics">
+                    <tr>
+                        <th style="display:none"></th>
+                        <th>Tên</th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)">Số Lượng</th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                            title="Sản phẩm trung bình bán được / tháng (30 ngày)">Sản phẩm/tháng</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+    <script>
+        // mảng đối tượng product
+        let listBasicInfo = [];
+        let intervalDay = 30;
+        GetListPublisher();
+
+        // Chọn Tất cả
+        document.getElementById("all-e-ecommonerce-type").checked = true;
+
+        function ECommerceTypeChange() {
+            listBasicInfo = [];
+            DeleteRowsExcludeHead(document.getElementById("myTableStatistics"));
+            document.getElementById("container-statistics").style.display = "none";
+            document.getElementById("count-result").innerHTML = "";
+            document.getElementById("publisher-id").value = "";
+        }
+
+        async function SellingStatistics() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetECommerceType());
+            intervalDay = GetValueInputById("selling-statistics-interval", 30);
+            if (intervalDay < 30) {
+                document.getElementById("selling-statistics-interval").value = 30;
+                intervalDay = 30;
+            }
+
+            searchParams.append("intervalDay", intervalDay);
+
+            let query = "/Product/GetSellingStatistics";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+            if (responseDB.responseText != "null") {
+                listBasicInfo = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listBasicInfo = [];
+            }
+
+            ChangePublisher();
+        }
+
+        function ShowListBasicInfo(list, table) {
+            // Show
+            DeleteRowsExcludeHead(table);
+            document.getElementById("count-result").innerHTML = "Tổng " + list.length + " sản phẩm";
+            document.getElementById("container-statistics").style.display = "block";
+
+            let length = list.length;
+            if (length == 0) {
+                return;
+            }
+
+
+            for (let i = 0; i < length; i++) {
+                let obj = list[i];
+
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+
+                // Id
+                cell1.innerHTML = obj.id;
+                cell1.style.display = "none";
+
+                // Tên
+                let p = document.createElement("p");
+                p.innerHTML = obj.name;
+                p.style.cursor = "pointer";
+                p.onclick = function () {
+                    let url = "/Product/UpdateDelete?id=" + obj.id.toString();
+                    window.open(url);
+                }
+                cell2.append(p);
+
+
+                // Số lượng
+                cell3.innerHTML = obj.soldQuantity;
+
+                // Sản phẩm/tháng
+                cell4.innerHTML = Math.round(obj.soldQuantity / intervalDay * 30) + " sản phẩm/tháng";
+            }
+        }
+
+        function ChangePublisher() {
+            let listBasicInfoTemp = [];
+            let publisherId =
+                GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
+            if (publisherId === null) {
+                listBasicInfoTemp = listBasicInfo;
+            }
+            else {
+                for (let i = 0; i < listBasicInfo.length; i++) {
+                    if (listBasicInfo[i].publisherId == publisherId) {
+                        listBasicInfoTemp.push(listBasicInfo[i]);
+                    }
+                }
+            }
+
+            ShowListBasicInfo(listBasicInfoTemp, document.getElementById("myTableStatistics"));
+        }
+    </script>
+</body>
+</html>
+

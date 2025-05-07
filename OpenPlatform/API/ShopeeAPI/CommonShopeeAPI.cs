@@ -242,43 +242,35 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         public static IRestResponse ShopeeGetMethod(string path, List<DevNameValuePair> ls)
         {
             string url = GenerateURLShopeeAPI(path, ls);
-
-            RestRequest request = new RestRequest(url,Method.GET);
             IRestResponse response = null;
             try
             {
+                RestRequest request = new RestRequest(url, Method.GET);
+
                 response = Common.client.Execute(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token và thử lại
+                {
+                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    {
+                        response = null;
+                    }
+                    else
+                    {
+                        url = GenerateURLShopeeAPI(path, ls);
+
+                        request = new RestRequest(url, Method.GET);
+
+                        response = Common.client.Execute(request);
+                        MyLogger.InfoRestLog(Common.client, request, response);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
-                return null;
-            }
-            if (response == null)
-                return null;
-
-
-            if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token
-            {
-                if(ShopeeGetRefreshTokenShopLevel() == null)
-                {
-                    return null;
-                }
-
-                url = GenerateURLShopeeAPI(path, ls);
-
-                request = new RestRequest(url, Method.GET);
-
-                try
-                {
-                    response = Common.client.Execute(request);
-                    MyLogger.InfoRestLog(Common.client, request, response);
-                }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.Message);
-                }
+                response = null;
             }
             return response;
         }
@@ -294,10 +286,38 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
             var request = new RestRequest(url, Method.POST);
             request.AddHeader("Content-Type", "application/json");
-
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = Common.client.Execute(request);
-            MyLogger.InfoRestLog(Common.client, request, response);
+
+            IRestResponse response = null;
+            try
+            {
+                response = Common.client.Execute(request);
+                MyLogger.InfoRestLog(Common.client, request, response);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token và thử lại
+                {
+                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    {
+                        response = null;
+                    }
+                    else
+                    {
+                        url = GenerateURLShopeeAPI(path, null);
+
+                        request = new RestRequest(url, Method.POST);
+                        request.AddHeader("Content-Type", "application/json");
+                        request.AddParameter("application/json", body, ParameterType.RequestBody);
+
+                        response = Common.client.Execute(request);
+                        MyLogger.InfoRestLog(Common.client, request, response);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                response = null;
+            }
             return response;
         }
 

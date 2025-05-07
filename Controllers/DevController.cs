@@ -7,12 +7,14 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -51,61 +53,33 @@ namespace MVCPlayWithMe.Controllers
             }
 
             MySqlResultState result = new MySqlResultState();
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+
             ShopeeMySql shopeeSqler = new ShopeeMySql();
-            List<CommonItem> lsCommonItem = shopeeSqler.GetForSaveImageSource();
 
             try
             {
-                foreach (var item in lsCommonItem)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    ShopeeGetItemBaseInfoItem pro =
-                        ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(item.itemId);
-                    if (pro != null)
+                    conn.Open();
+                    List<long> lsItem = shopeeSqler.GetForSaveImageSourceConnectOut(conn);
+                    foreach (var itemId in lsItem)
                     {
-                        item.imageSrc = pro.image.image_url_list[0];
-
-                        // Lấy imageSrc cho model nếu có
-                        if (pro.has_model)
+                        ShopeeGetItemBaseInfoItem pro =
+                            ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(itemId);
+                        if (pro != null)
                         {
-                            ShopeeGetModelListResponse obj =
-                                ShopeeGetModelList.ShopeeProductGetModelList(pro.item_id);
-                            if (obj != null)
-                            {
-                                ShopeeGetModelList_TierVariation tierVar = obj.tier_variation[0];
-                                int count = tierVar.option_list.Count;
-                                for (int i = 0; i < count; i++)
-                                {
-                                    ShopeeGetModelList_Model model = CommonItem.GetModelFromModelListResponse(obj, i);
-                                    ShopeeGetModelList_TierVariation_Option option = tierVar.option_list[i];
-                                    // Lấy ảnh đại diện
-                                    if (option.image != null)
-                                    {
-                                        foreach (var m in item.models)
-                                        {
-                                            if (m.modelId == model.model_id)
-                                            {
-                                                m.imageSrc = option.image.image_url;
-                                                break;
-                                            }
-                                        }
-                                    }
-
-                                }
-                            }
-                        }
-                        else
-                        {
-                            item.models[0].imageSrc = item.imageSrc;
+                            lsCommonItem.Add(new CommonItem(pro));
                         }
                     }
+
+                    shopeeSqler.UpdateImageSourceTotbShopeeItem_ModelConnectOut(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
             {
                 Common.SetResultException(ex, result);
             }
-
-            shopeeSqler.UpdateSourceTotbShopeeItem_Model(lsCommonItem);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -118,33 +92,32 @@ namespace MVCPlayWithMe.Controllers
             }
 
             MySqlResultState result = new MySqlResultState();
-            TikiMySql tikiSqler = new TikiMySql();
-            List<CommonItem> lsCommonItem = tikiSqler.GetForSaveImageSource();
-
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
             try
             {
-                foreach (var item in lsCommonItem)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    TikiProduct pro = GetListProductTiki.GetProductFromOneShop((int)item.itemId);
-                    if (pro == null)
-                        continue;
+                    conn.Open();
+                    TikiMySql tikiSqler = new TikiMySql();
+                    List<int> lsItemId = tikiSqler.GetForSaveImageSourceConnectOut(conn);
 
-                    item.imageSrc = pro.thumbnail;
-                    if (string.IsNullOrEmpty(item.imageSrc))
+                    foreach (var itemId in lsItemId)
                     {
-                        if(pro.images != null && pro.images.Count() > 0)
+                        TikiProduct pro = GetListProductTiki.GetProductFromOneShop(itemId);
+                        if (pro == null)
                         {
-                            item.imageSrc = pro.images[0].url;
+                            continue;
                         }
+
+                        lsCommonItem.Add(new CommonItem(pro));
                     }
+                    tikiSqler.UpdateImageSourceTotbTikiItemConnectOut(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
             {
                 Common.SetResultException(ex, result);
             }
-
-            tikiSqler.UpdateSourceTotbTikiItem(lsCommonItem);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -160,6 +133,42 @@ namespace MVCPlayWithMe.Controllers
 
             //TikiPullEventService tikiPullEventService = new TikiPullEventService();
             //tikiPullEventService.DoWork();
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string TikiTestSomething()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+            CommonOrder commonOrder = new CommonOrder();
+            commonOrder.code = "ABCDEDFTest";
+            commonOrder.listItemId.Add(1000);
+            commonOrder.listItemId.Add(2000);
+
+            commonOrder.listModelId.Add(1);
+            commonOrder.listModelId.Add(2);
+
+            commonOrder.listQuantity.Add(1);
+            commonOrder.listQuantity.Add(1);
+
+            TikiMySql tikiSqler = new TikiMySql();
+            tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+
+            tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+
+            tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+
+            tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+            conn.Close();
 
             return JsonConvert.SerializeObject(result);
         }

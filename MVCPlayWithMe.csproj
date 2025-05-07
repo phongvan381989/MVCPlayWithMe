@@ -358,6 +358,7 @@
     <Compile Include="Models\Product.cs" />
     <Compile Include="Models\ProductMySql.cs" />
     <Compile Include="Models\ProductSearchParameter.cs" />
+    <Compile Include="Models\ProductSellingStatistics.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
@@ -710,6 +711,8 @@
     <Content Include="Views\Product\OrderManually.cshtml" />
     <Content Include="Views\Shared\ECommerceType.cshtml" />
     <Content Include="Views\TikiDealDiscount\Index.cshtml" />
+    <Content Include="Views\Product\SellingStatistics.cshtml" />
+    <Content Include="Views\Product\HintQuantityFromPublisher.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

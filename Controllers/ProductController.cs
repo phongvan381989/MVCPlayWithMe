@@ -99,6 +99,27 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        public ActionResult SellingStatistics()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
+
+        public ActionResult HintQuantityFromPublisher()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
         public ActionResult ChangeImport()
         {
             if (AuthentAdministrator() == null)
@@ -1527,6 +1548,59 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(ls);
+        }
+
+        [HttpPost]
+        public string GetSellingStatistics(string eType, int intervalDay)
+        {
+            List<ProductSellingStatistics> statisticsList = null;
+
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<ProductSellingStatistics>());
+            }
+
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                statisticsList  = sqler.GetProductSellingStatistics(
+                    Common.GetIntECommerceTypeFromString(eType),
+                    intervalDay, -1, conn);
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                statisticsList = new List<ProductSellingStatistics>();
+            }
+            return JsonConvert.SerializeObject(statisticsList);
+        }
+
+        [HttpPost]
+        public string GetHintQuantityFromPublisher(int publisherId, int intervalDay)
+        {
+            List<ProductSellingStatistics> statisticsList = null;
+
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<ProductSellingStatistics>());
+            }
+
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                statisticsList = sqler.GetProductSellingStatistics(
+                    -1, intervalDay, publisherId, conn);
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                statisticsList = new List<ProductSellingStatistics>();
+            }
+            return JsonConvert.SerializeObject(statisticsList);
         }
     }
 }

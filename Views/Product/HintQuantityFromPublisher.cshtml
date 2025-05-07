@@ -1,0 +1,158 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container">
+            <div style="margin-bottom:10px;">
+                <div>
+                    <label for="publisher-id">Nhà phát hành:</label>
+                    <input list="list-Publisher" class="config-max-width margin-vertical"
+                           title="Nếu nhà phát hành không đúng, sẽ hiển thị dữ liệu của tất cả nhà phát hành"
+                           id="publisher-id" onchange="ChangePublisher()">
+                    <datalist id="list-Publisher"></datalist>
+
+                    <select id="interval-day" name="interval-day" title="Khoảng thời gian lấy dữ liệu số lượng đã bán"
+                            onchange="ChangeIntervalDay()">
+                        <option value="90">90 ngày</option>
+                        <option value="180">180 ngày</option>
+                        <option value="360">360 ngày</option>
+                    </select>
+                </div>
+            </div>
+            <br />
+
+            <div id="container-statistics" style="display:none;">
+                <div id="count-result"></div>
+                <table id="myTableStatistics">
+                    <tr>
+                        <th style="display:none"></th>
+                        <th>Tên</th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                            title="Số lượng này được lấy theo số lượng lần nhập kho gần đây nhất">
+                            Số Lượng Sẽ Đặt
+                        </th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                            title="Sản phẩm trung bình bán được / tháng (30 ngày). Lấy lượt bán trong 90 ngày chia 3">
+                            Lượng Bán Sản Phẩm/Tháng
+                        </th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                            title="Số lượng đã bán tron khoảng thời gian đã chọn">
+                            Lượng Bán Trong Khoảng Thời Gian
+                        </th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)">Tồn kho</th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                            title="Chỉ mục combo, click vào để sắp xếp theo combo">Chỉ Số Combo</th>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+    <script>
+        // mảng đối tượng product
+        let listBasicInfo = [];
+        GetListPublisher();
+
+        async function ChangePublisher() {
+            let publisherId =
+                GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
+            if (publisherId === null) {
+                listBasicInfoTemp = listBasicInfo;
+            }
+            else {
+                const searchParams = new URLSearchParams();
+                searchParams.append("publisherId", publisherId);
+                searchParams.append("intervalDay", document.getElementById("interval-day").value);
+                let query = "/Product/GetHintQuantityFromPublisher";
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                RemoveCircleLoader();
+                if (responseDB.responseText != "null") {
+                    listBasicInfo = JSON.parse(responseDB.responseText);
+                }
+                else {
+                    listBasicInfo = [];
+                }
+            }
+
+            ShowListBasicInfo(listBasicInfo, document.getElementById("myTableStatistics"));
+        }
+
+        function ChangeIntervalDay() {
+            DeleteRowsExcludeHead(document.getElementById("myTableStatistics"));
+            document.getElementById("count-result").innerHTML = "";
+            document.getElementById("container-statistics").style.display = "none";
+            document.getElementById("publisher-id").value = "";
+        }
+
+        function ShowListBasicInfo(list, table) {
+            // Show
+            DeleteRowsExcludeHead(table);
+            document.getElementById("count-result").innerHTML = "Tổng " + list.length + " sản phẩm";
+            document.getElementById("container-statistics").style.display = "block";
+
+            let length = list.length;
+            if (length == 0) {
+                return;
+            }
+
+
+            for (let i = 0; i < length; i++) {
+                let obj = list[i];
+
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+                let cell5 = row.insertCell(4);
+                let cell6 = row.insertCell(5);
+                let cell7 = row.insertCell(6);
+
+                // Id
+                cell1.innerHTML = obj.id;
+                cell1.style.display = "none";
+
+                // Tên
+                let p = document.createElement("p");
+                p.innerHTML = obj.name;
+                p.style.cursor = "pointer";
+                p.onclick = function () {
+                    let url = "/Product/UpdateDelete?id=" + obj.id.toString();
+                    window.open(url);
+                }
+                cell2.append(p);
+
+
+                // Số lượng sẽ đặt lấy bằng số lượng lấy mới nhất từ nhà phát hành
+                cell3.innerHTML = obj.newImportedQuantity;
+
+                // Sản phẩm/tháng
+                cell4.innerHTML = Math.round(obj.soldQuantity / 3) + " sản phẩm/tháng";
+                cell4.title = "Trong 3 tháng gần nhất đã bán được " + obj.soldQuantity + "sản phẩm"
+
+                // Lượng bán trong khoảng thời gian đã chọn
+                cell5.innerHTML = obj.soldQuantity;
+
+                // Tồn kho
+                cell6.innerHTML = obj.quantityInWarehouse;
+
+                // Combo id
+                cell7.innerHTML = obj.comboId;
+            }
+        }
+    </script>
+</body>
+</html>
+

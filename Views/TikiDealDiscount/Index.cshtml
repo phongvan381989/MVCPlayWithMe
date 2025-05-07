@@ -22,18 +22,22 @@
 </head>
 <body>
     <div id="biggestContainer">
-        <div class="display-flex-padding1020-flex-warap-wrap" title="Từ sku sản phẩm trên sàn tiki, lấy được chương trình giảm giá từ 0.5 năm trước đến 2 năm sau.
-             Lưu vào db nếu chưa tồn tại hoặc cập nhật trạng thái nếu đã tồn tại">
+        <div class="display-flex-padding1020-flex-warap-wrap">
             <label for="sku-tiki-item" style="margin-right:10px;">sku</label>
             <input type="text" id="sku-tiki-item" style="margin-right:10px;">
-            <button type="button" onclick="GetDealDiscountOfSku()" style="margin-right:10px;">Lấy Chương Trình Giảm Giá</button>
+            <button type="button" onclick="GetDealDiscountOfSku()" style="margin-right:10px;"
+                     title="Từ sku sản phẩm trên sàn tiki, lấy được chương trình giảm giá từ 0.5 năm trước đến 2 năm sau.
+             Lưu vào db nếu chưa tồn tại hoặc cập nhật trạng thái nếu đã tồn tại">Lấy Chương Trình Giảm Giá</button>
+
+            <button type="button" onclick="ShowModalFromSku()" style="margin-right:10px;"
+                     title="Từ sku sản phẩm trên sàn tiki, tạo chương trình giảm giá">Tạo Chương Trình Giảm Giá</button>
             <button type="button" title="Lưu dữ liệu chương trình giảm giá của tất cả sku đang bật bán vào db.
                     Hàm mất thời gian, dùng 1 lần để lưu dữ liệu. CÂN NHẮC"
                     onclick="SaveDealDiscountOfAllSku()" style="margin-right:10px;display:none;">
                 Lưu Chương Trình Giảm Giá Vào DB
             </button>
 
-            <button type="button" title="Cập nhật deal có trạng thái là đang chạy trên db từ Tiki. Phải làm vậy vì có nhiều deal 
+            <button type="button" title="Cập nhật deal có trạng thái là đang chạy trên db từ Tiki. Phải làm vậy vì có nhiều deal
                     bị tiki tắt. Ví dụ: Tiki tắt khi deal bắt đầu mà tồn kho sản phẩm bằng 0, sản phẩm bị tắt bán,..."
                     onclick="UpdateDealStatusOfRunningDealOnDB()" style="margin-right:10px;display:initial;">
                 Cập Nhật Trạng Thái Của Deal Đang Chạy Từ Tiki
@@ -47,14 +51,17 @@
             </button>
         </div>
         <div class="display-flex-padding1020-flex-warap-wrap">
-            <button type="button" title="Lấy danh sách sản phẩm đang bật bán, tồn kho khác không và chưa tham gia chương trình
-                    giảm giá nào đang chạy.
-                    Dữ liệu lấy từ DB nên nếu tạo chương trình giảm giá trực tiếp trên nhà bán Tiki và chưa cập nhật thì sẽ không lấy được dữ liệu."
+            <button type="button" title="Lấy danh sách sản phẩm đang bật bán, chưa mapping, mapping và
+                    có tồn kho khác không và chưa tham gia chương trình
+                    giảm giá nào đang chạy, sắp chạy.
+                    Dữ liệu lấy từ DB nên nếu tạo chương trình giảm giá trực tiếp trên nhà bán Tiki
+                    và chưa cập nhật thì sẽ không lấy được dữ liệu."
                     onclick="GetItemsNoDealDiscountRunning()" style="margin-right:10px;">
                 Sản Phẩm Chưa Giảm Giá
             </button>
 
-            <button type="button" id="btnCreateDealForAllInTheTable" title="Tạo chương trình giảm giá cho tất cả sản phẩm chưa có chương trình giảm giá trong danh sách bên dưới.
+            <button type="button" id="btnCreateDealForAllInTheTable"
+                    title="Tạo chương trình giảm giá cho tất cả sản phẩm chưa có chương trình giảm giá trong danh sách bên dưới.
                     Yêu cầu sản phẩm đã mapping.
                     Chức năng này mất thời gian. Cân nhắc khi sử dụng."
                     onclick="CreateDealForAllInTheTable()" style="margin-right:10px; display:none;">
@@ -132,8 +139,8 @@
                             <input type="number" id="saleDiscount" name="saleDiscount" disabled><div>%</div><br><br>
                         </div>
 
-                        <button type="button" id="btnCreateOneDeal" onclick="CreateOneDeal(this)">Tạo chương trình giảm giá</button>
-
+                        <button type="button" id="btnCreateOneDeal" onclick="CreateOneDeal(this)"
+                                title="Kiểm tra chương trình giảm giá hiện tại đang chạy thì phải tắt thủ công trước">Tạo chương trình giảm giá</button>
                     </div>
                 </div>
             </div>
@@ -153,6 +160,7 @@
         let taxAndFeeTiki = null;
         let listPublisher = [];
         let listItemNoDealDiscountRunning = [];
+        let listDealOfSku = [];
 
         async function InitializeSomethingAtBegin() {
             // When the user clicks on <span> (x), close the modal
@@ -177,7 +185,7 @@
             modal.style.display = "none";
         }
 
-        async function ShowModalTikiDiscountPage(p) {
+        async function ShowModalTikiDiscountPage(itemId, sku) {
             if (listPublisher.length == 0) {
                 CreateMustClickOkModal("Không lấy được thông tin chiết khấu từ nhà phát hành. Thử lại sau", null);
                 return;
@@ -191,7 +199,7 @@
             modal.style.display = "block";
             // Từ tikiId lấy được thông tin
             ShowCircleLoader();
-            let responseDB = await GetItemFromId(eTiki, p.tikiItem.id);
+            let responseDB = await GetItemFromId(eTiki, itemId);
             RemoveCircleLoader();
             let commonItem = null;
             if (responseDB.responseText != "null") {
@@ -265,7 +273,7 @@
             document.getElementById("profitPercent").value = taxAndFeeTiki.expectedPercentProfit;
             CaculateSalePrice();
 
-            document.getElementById("btnCreateOneDeal").sku = p.innerHTML;
+            document.getElementById("btnCreateOneDeal").sku = sku;
 
             // Hiện nút tạo chương trình giảm giá tránh click lại
             document.getElementById("btnCreateOneDeal").disabled = false;
@@ -401,12 +409,39 @@
             RemoveCircleLoader();
             if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được chương trình giảm giá. Thử lại sau.", null);
+                listDealOfSku = [];
                 return;
             }
 
             // Hiển thị
-            let listDeal = JSON.parse(responseDB.responseText);
-            DisplayListDeal(listDeal);
+            listDealOfSku = JSON.parse(responseDB.responseText);
+            DisplayListDeal(listDealOfSku);
+        }
+
+        async function ShowModalFromSku() {
+            let sku = document.getElementById("sku-tiki-item").value;
+            if (isEmptyOrSpaces(sku)) {
+                await CreateMustClickOkModal("Chưa nhập sku.", null);
+                document.getElementById("sku-tiki-item").focus();
+                return;
+            }
+
+            if (listDealOfSku.length > 0) {
+                ShowModalTikiDiscountPage(listDealOfSku[0].product_id, listDealOfSku[0].sku);
+            }
+            else {
+                // Lấy itemid từ sku
+                const searchParams = new URLSearchParams();
+                searchParams.append("sku", sku);
+                let query = "/TikiDealDiscount/GetTikiIdBySku";
+
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                RemoveCircleLoader();
+
+                let id = parseInt(responseDB.responseText);
+                ShowModalTikiDiscountPage(id, sku);
+            }
         }
 
         function DisplayItemsNoDealDiscountRunning(inListTikiItem) {
@@ -438,6 +473,7 @@
                 let imgDiv = document.createElement("img");
                 imgDiv.height = thumbnailHeight;
                 imgDiv.width = thumbnailWidth;
+                imgDiv.style.cursor = "pointer";
                 if (tikiItem.imageSrc) {
                     imgDiv.src = tikiItem.imageSrc;
                 }
@@ -453,14 +489,17 @@
 
                 // Tên
                 cell2.innerHTML = tikiItem.name;
+                if (tikiItem.models[0].mapping.length == 0) {
+                    cell2.style.color = "red";
+                    cell2.title = "SKU này chưa mapping.";
+                }
 
                 // Sku
                 let p = document.createElement("p");
                 p.innerHTML = tikiItem.sku;
                 p.style.cursor = "pointer";
                 p.onclick = function () {
-
-                    ShowModalTikiDiscountPage(this);
+                    ShowModalTikiDiscountPage(this.tikiItem.id, this.tikiItem.sku);
                 }
                 p.tikiItem = tikiItem;
                 cell3.append(p);

@@ -79,7 +79,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             List<SimpleTikiProduct> simpleTikiProductsTemp = new List<SimpleTikiProduct>();
             try
             {
-                // Cập nhật lại trạng thái
+                // Cập nhật lại trạng thái theo thời gian bắt đầu, kết thúc deal
                 using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Update_IsActive", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -114,15 +114,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                 }
 
-                // Loại bỏ Item đã mapping nhưng tồn kho mapping bằng 0
+                // Tồn kho bằng 0 không set được chương trình giảm giá.
+                // Loại bỏ Item đã mapping nhưng tồn kho bằng 0.
+                // Chưa mapping vẫn lấy để hiển thị nhưng sẽ không tạo deal giảm giá được.
                 TikiMySql tikiSqler = new TikiMySql();
                 foreach (var simpleTiki in simpleTikiProducts)
                 {
                     CommonItem item = new CommonItem();
                     item.models.Add(new CommonModel());
                     tikiSqler.TikiGetItemFromIdConnectOut(simpleTiki.id, item, conn);
-                    if (item.models[0].mapping.Count > 0 && item.models[0].GetQuatityFromListMapping() > 0) // Đã mapping
+                    if (item.models[0].mapping.Count == 0 ||
+                        (item.models[0].mapping.Count > 0 && item.models[0].GetQuatityFromListMapping() > 0))
                     {
+                        simpleTiki.models = item.models;
                         simpleTikiProductsTemp.Add(simpleTiki);
                     }
                 }
@@ -207,6 +211,35 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 Common.SetResultException(ex, result);
             }
             return result;
+        }
+
+        public int GetTikiIdBySku(string sku, MySqlConnection conn)
+        {
+            int tikiId = 0; // Giá trị mặc định nếu không tìm thấy
+            try
+            {
+                // Thêm LIMIT 1 vào câu truy vấn
+                string query = "SELECT TikiId FROM tbtikiitem WHERE Sku = @p_Sku LIMIT 1";
+
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.Parameters.AddWithValue("@p_Sku", sku);
+
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        if (rdr.Read())
+                        {
+                            tikiId = rdr.GetInt32("TikiId");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+            }
+
+            return tikiId;
         }
     }
 }

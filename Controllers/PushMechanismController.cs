@@ -42,11 +42,11 @@ namespace MVCPlayWithMe.Controllers
             // sẽ có 100 thông báo gửi về server cùng lúc, nếu ta không return ở đây có thể gây treo server.
             // Trạng thái PROCESSED khi ta xác nhận 100 đơn cùng lúc cũng có thể gây treo server nên ta cũng không xử lý.
             if (orderStatusPush.status != "UNPAID" &&
-                orderStatusPush.status != "READY_TO_SHIP" &&
+                //orderStatusPush.status != "READY_TO_SHIP" &&
                 //orderStatusPush.status != "PROCESSED" &&
                 //orderStatusPush.status != "IN_CANCEL" &&
-                orderStatusPush.status != "TO_RETURN" &&
-                orderStatusPush.status != "CANCELLED")
+                //orderStatusPush.status != "TO_RETURN" && // Khách nhận, và trả hàng
+                orderStatusPush.status != "CANCELLED") // Hủy đơn
             {
                 return;
             }
@@ -62,13 +62,13 @@ namespace MVCPlayWithMe.Controllers
             ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
 
             ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
-             if (orderStatusPush.status == "CANCELLED" || orderStatusPush.status == "TO_RETURN")
+             if (orderStatusPush.status == "CANCELLED"/* || orderStatusPush.status == "TO_RETURN"*/)
             {
                 status = ECommerceOrderStatus.UNBOOKED;
-                if (orderStatusPush.status == "CANCELLED")
-                    {
+                //if (orderStatusPush.status == "CANCELLED")
+                //{
                     // Khách hủy và đã có mã vận đơn nhưng chưa được lưu db do chưa xác nhận đã đóng,
-                    // ta sẽ lưu vào db
+                    // ta sẽ lưu vào db ở đây
 
                     string trackingNumber = shopeeMySql.GetTrackingNumberFromSNConnectOut(
                     orderStatusPush.ordersn, conn);
@@ -76,9 +76,9 @@ namespace MVCPlayWithMe.Controllers
                     if (string.IsNullOrEmpty(trackingNumber))
                     {
                         trackingNumber = ShopeeGetTrackingNumber.ShopeeGetShipCode(orderStatusPush.ordersn, string.Empty);
-                        shopeeMySql.UpdateUpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
+                        shopeeMySql.UpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
                     }
-                }
+                //}
             }
 
             if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
@@ -101,8 +101,19 @@ namespace MVCPlayWithMe.Controllers
 
                 if (shopeeOrderDetail != null)
                 {
+
                     CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
                     shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOut(commonOrder, conn);
+
+                    // Nếu đơn hàng vừa sinh ra, ta lưu id của item, model trong đơn.
+                    if (orderStatusPush.status == "UNPAID")
+                    {
+                        tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+                    }
+                    else
+                    {
+                        tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+                    }
 
                     MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
                         commonOrder, status, orderStatusPush.update_time, oldStatus,

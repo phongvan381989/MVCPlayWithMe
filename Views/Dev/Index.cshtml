@@ -77,8 +77,13 @@
             </button>
 
             <button type="button" onclick="TikiTestPullEvent()"
-                    title="Test chức năng lấy event đơn hàng từ queue đã đang ký.">
+                    title="Test chức năng lấy event đơn hàng từ queue đã đang ký." disabled>
                 Test lấy event đơn hàng
+            </button>
+
+            <button type="button" onclick="TikiTestSomething()"
+                    title="Test chức năng nào đó.">
+                Test chức năng nào đó
             </button>
         </div>
 
@@ -155,7 +160,16 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
 
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Lấy ảnh thành công", "Lấy ảnh có lỗi");
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+        async function TikiTestSomething() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/TikiTestSomething";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
         }
 
         async function AddWaterMark() {

@@ -16,12 +16,17 @@ using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
 {
-    public class TikiPullEventService// : IHostedService, IDisposable
+    public class TikiPullEventService
     {
-
         // Xử lý event của đơn hàng
         private void HandleOrderEvent(TikiEvent tikiEvent, TikiMySql tikiSqler, MySqlConnection conn)
         {
+            if (tikiEvent.type != "ORDER_CREATED_SUCCESSFULLY" &&
+                tikiEvent.payload.status != "canceled")
+            {
+                return;
+            }
+
             TbEcommerceOrder tbEcommerceOrder =
              tikiSqler.GetLastestStatusOfECommerceOrder(
                 tikiEvent.payload.order_code,
@@ -30,7 +35,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
 
             ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
 
-             if (tikiEvent.payload.status == "canceled")
+            if (tikiEvent.payload.status == "canceled")
             {
                 status = ECommerceOrderStatus.UNBOOKED;
             }
@@ -50,6 +55,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                 {
                     CommonOrder commonOrder = new CommonOrder(tikiOrder);
                     tikiSqler.TikiGetMappingOfCommonOrderConnectOut(commonOrder, conn);
+
+                    // Nếu đơn hàng vừa sinh ra, ta lưu id của item, model trong đơn.
+                    if (tikiEvent.type == "ORDER_CREATED_SUCCESSFULLY")
+                    {
+                        tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+                    }
+                    else // if (tikiEvent.payload.status == "canceled") // Hủy đơn
+                    {
+                        tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+                    }
 
                     MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
                         commonOrder, status, tikiEvent.created_at, oldStatus,
@@ -107,13 +122,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             return listOrderEvent;
         }
 
-        public void DoWork()
+        public void DoWork(MySqlConnection conn)
         {
             // Ghi log
             MyLogger.GetInstance().Info("Start pulling Tiki events");
             // Lấy ack_id từ db
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
             try
             {
                 TikiMySql tikiMySqler = new TikiMySql();
@@ -127,7 +140,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     List<TikiEvent> listOrderEvent = GetListOrderEventFromEventTypeAll(event_Response.events);
                     foreach (var e in listOrderEvent)
                     {
-                            HandleOrderEvent(e, tikiMySqler, conn);
+                        HandleOrderEvent(e, tikiMySqler, conn);
                     }
                 }
             }
@@ -136,7 +149,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
-            conn.Close();
             MyLogger.GetInstance().Info("End pulling Tiki events");
         }
 

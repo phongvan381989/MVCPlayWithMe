@@ -58,7 +58,59 @@ namespace MVCPlayWithMe.General
             PLAY_WITH_ME,
             TIKI,
             SHOPEE,
-            LAZADA
+            LAZADA,
+            ALL
+        }
+
+        // Trả về kiểu Enum
+        public static EECommerceType GetEECommerceTypeFromString(string eType)
+        {
+            EECommerceType eEnumType = EECommerceType.ALL;
+            if(eType == ePlayWithMe)
+            {
+                eEnumType = EECommerceType.PLAY_WITH_ME;
+            }
+            else if (eType == eTiki)
+            {
+                eEnumType = EECommerceType.TIKI;
+            }
+            else if (eType == eShopee)
+            {
+                eEnumType = EECommerceType.SHOPEE;
+            }
+            else if (eType == eLazada)
+            {
+                eEnumType = EECommerceType.LAZADA;
+            }
+            return eEnumType;
+        }
+
+        // Trả về kiểu int với ALL type là -1;
+        public static int GetIntECommerceTypeFromString(string eType)
+        {
+            EECommerceType eEnumType = EECommerceType.ALL;
+            if (eType == ePlayWithMe)
+            {
+                eEnumType = EECommerceType.PLAY_WITH_ME;
+            }
+            else if (eType == eTiki)
+            {
+                eEnumType = EECommerceType.TIKI;
+            }
+            else if (eType == eShopee)
+            {
+                eEnumType = EECommerceType.SHOPEE;
+            }
+            else if (eType == eLazada)
+            {
+                eEnumType = EECommerceType.LAZADA;
+            }
+
+            if (eEnumType == EECommerceType.ALL)
+            {
+                return -1;
+            }
+            return (int)eEnumType;
         }
 
         public enum ECommerceOrderStatus
@@ -79,7 +131,7 @@ namespace MVCPlayWithMe.General
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
         #region Tiki Deal Discount
-        // THời gian bắt đầu mặc định là thời điểm hiện tại + 10 phút
+        // Thời gian bắt đầu mặc định là thời điểm hiện tại + 10 phút
         // Khoảng thời gian mặc định là 180 ngày
         // qty_max, qty_limit không giới hạn mặc định là 10000
         public static int qtyMaxTikiDealDiscount = 10000;

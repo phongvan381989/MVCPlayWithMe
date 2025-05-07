@@ -1924,5 +1924,54 @@ namespace MVCPlayWithMe.Models
 
             return quantity;
         }
+
+        public List<ProductSellingStatistics> GetProductSellingStatistics(
+            int eCommmerce, // -1 nếu lấy tất cả các sàn, web
+            int intervalDay,
+            int publisherId, // -1 nếu lấy tất cả nhà phát hành
+            MySqlConnection conn)
+        {
+            var statisticsList = new List<ProductSellingStatistics>();
+
+            using (var command = new MySqlCommand("st_tbOutput_Selling_Statistics", conn))
+            {
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                // Thêm tham số đầu vào cho stored procedure
+                command.Parameters.AddWithValue("inECommmerce", eCommmerce);
+                command.Parameters.AddWithValue("inIntervalDay", intervalDay);
+                command.Parameters.AddWithValue("inPublisherId", publisherId);
+
+                using (var rdr = command.ExecuteReader())
+                {
+                    // Lấy chỉ số cột một lần trước khi vào vòng lặp
+                    int productIdIndex = rdr.GetOrdinal("Id");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    int publisherIdIndex = rdr.GetOrdinal("PublisherId");
+                    int soldQuantityIndex = rdr.GetOrdinal("SoldQuantity");
+                    int quantityIndex = rdr.GetOrdinal("Quantity");
+                    int newImportedQuantityIndex = rdr.GetOrdinal("NewImportedQuantity");
+                    int comboIdIndex = rdr.GetOrdinal("ComboId");
+
+                    while (rdr.Read())
+                    {
+                        var statistic = new ProductSellingStatistics
+                        {
+                            id = rdr.GetInt32(productIdIndex),
+                            name = rdr.GetString(nameIndex),
+                            publisherId = rdr.GetInt32(publisherIdIndex),
+                            soldQuantity = rdr.IsDBNull(soldQuantityIndex)? 0 : rdr.GetInt32(soldQuantityIndex),
+                            quantityInWarehouse = rdr.GetInt32(quantityIndex),
+                            newImportedQuantity = rdr.IsDBNull(newImportedQuantityIndex) ? 0 : rdr.GetInt32(newImportedQuantityIndex),
+                            comboId = rdr.GetInt32(comboIdIndex)
+                        };
+
+                        statisticsList.Add(statistic);
+                    }
+                }
+            }
+
+            return statisticsList;
+        }
     }
 }

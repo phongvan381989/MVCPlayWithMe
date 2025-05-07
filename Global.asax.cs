@@ -14,6 +14,8 @@ using System.Web.Routing;
 using System.Threading;
 using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
+using MySql.Data.MySqlClient;
 
 namespace MVCPlayWithMe
 {
@@ -67,15 +69,28 @@ namespace MVCPlayWithMe
                 {
                     try
                     {
-                        // Công việc chạy nền
-                        //MyLogger.GetInstance().Info($"Background thread running at {DateTime.Now}");
-                        TikiPullEventService tikiPullEventService = new TikiPullEventService();
-                        tikiPullEventService.DoWork();
-                        Thread.Sleep(20 * 60 * 1000); // Tạm dừng 20 phút trước lần lặp tiếp theo
+                        using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                        {
+                            conn.Open();
+                            // Công việc chạy nền
+                            //MyLogger.GetInstance().Info($"Background thread running at {DateTime.Now}");
+                            TikiPullEventService tikiPullEventService = new TikiPullEventService();
+                            tikiPullEventService.DoWork(conn);
+                        }
+                        // Hiện tại là 3h-4h, gọi 1 lần duy nhất mỗi ngày
+                        if (DateTime.Now.Hour == 3 && DateTime.Now.Minute < 25)
+                        {
+                            DealAction.CheckAndCreateDeal_Background();
+                            Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
+                        }
                     }
                     catch (Exception ex)
                     {
                         MyLogger.GetInstance().Info($"Error in background thread: {ex.Message}");
+                    }
+                    finally
+                    {
+                        Thread.Sleep(20 * 60 * 1000); // Tạm dừng 20 phút trước lần lặp tiếp theo
                     }
                 }
             });

@@ -1098,19 +1098,15 @@
             EmptyAndFocusProductCodeElement();
 
             // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
-            if (CheckOrderStatusIsCancel(order) ||
-                order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
-                document.getElementsByClassName("btn-enough-product")[0].disabled = true;
-            }
-            else {
+            if (order.orderStatusInWarehoue == bookedOrderStatusInWarehouse) {
                 document.getElementsByClassName("btn-enough-product")[0].disabled = false;
             }
+            else {
+                document.getElementsByClassName("btn-enough-product")[0].disabled = true;
+            }
 
-            // Đơn đã đóng và đang ở trạng thái Đã Đóng
-            // Đơn đã đóng và khách hủy nên đang ở trạng thái Hủy Giữ Chỗ
-            // ta cho phép có thể hoàn hàng
-            if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse ||
-                order.orderStatusInWarehoue == unbookedOrderStatusInWarehouse && !isEmptyOrSpaces(order.shipCode)) {
+            // Đơn đang ở trạng thái Đã Đóng
+            if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
                 document.getElementsByClassName("btn-return-order")[0].disabled = false;
             }
             else {
@@ -1252,12 +1248,9 @@
             let needNum = currentOrder.listQuantity[lsIndex[0]] * currentOrder.listMapping[lsIndex[0]][lsIndex[1]].quantity;
             // Hiển thị số lượng xuất kho / số lượng cần
             oneRow.getElementsByClassName("need-quatity")[0].innerHTML = checkedNum + "/" + SpanRed(needNum);
-            if (lsIndex[0] == 0 && lsIndex[1] == 0) {// Row đầu tiên bị che
-                oneRow.scrollIntoView(false);
-            }
-            else {
-                oneRow.scrollIntoView(true);
-            }
+            oneRow.scrollIntoView(false);
+            document.getElementById("order-detail-modal").scrollBy(0, 2 * document.getElementsByClassName("xcvxvdgdfw")[0].offsetHeight); // Dịch xuống thêm 100px
+
             ResetBackgroundColorOfRowMappingAll();
             // Thay đổi background
             oneRow.style.backgroundColor = "rgba(0,0,0,0.2)";

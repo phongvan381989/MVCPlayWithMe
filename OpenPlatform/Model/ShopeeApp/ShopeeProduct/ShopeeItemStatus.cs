@@ -8,6 +8,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct
 {
     public class ShopeeItemStatus
     {
+        public static readonly string[] ShopeeItemStatusArray =
+        {
+            "NORMAL",
+            "BANNED",
+            "UNLIST",
+            "REVIEWING",
+            "SELLER_DELETE",
+            "SHOPEE_DELETE"
+        };
+
         // NORMAL/BANNED/UNLIST/REVIEWING/SELLER_DELETE/SHOPEE_DELETE
         public enum EnumShopeeItemStatus
         {
@@ -31,21 +41,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct
         public EnumShopeeItemStatus index;
         public string GetString()
         {
-            string str = null;
-            if (index == EnumShopeeItemStatus.NORMAL)
-                str = "NORMAL";
-            else if (index == EnumShopeeItemStatus.BANNED)
-                str = "BANNED";
-            else if (index == EnumShopeeItemStatus.UNLIST)
-                str = "UNLIST";
-            else if (index == EnumShopeeItemStatus.REVIEWING)
-                str = "DELETED";
-            else if (index == EnumShopeeItemStatus.SELLER_DELETE)
-                str = "DELETED";
-            else if (index == EnumShopeeItemStatus.SHOPEE_DELETE)
-                str = "DELETED";
+            //string str = null;
+            //if (index == EnumShopeeItemStatus.NORMAL)
+            //    str = "NORMAL";
+            //else if (index == EnumShopeeItemStatus.BANNED)
+            //    str = "BANNED";
+            //else if (index == EnumShopeeItemStatus.UNLIST)
+            //    str = "UNLIST";
+            //else if (index == EnumShopeeItemStatus.REVIEWING)
+            //    str = "DELETED";
+            //else if (index == EnumShopeeItemStatus.SELLER_DELETE)
+            //    str = "DELETED";
+            //else if (index == EnumShopeeItemStatus.SHOPEE_DELETE)
+            //    str = "DELETED";
 
-            return str;
+            return ShopeeItemStatusArray[(int)index];
         }
     }
 }
