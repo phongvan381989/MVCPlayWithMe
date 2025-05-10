@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySql.Data.MySqlClient;
@@ -993,6 +994,55 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 MyLogger.GetInstance().Info(ex.ToString());
             }
+        }
+
+        // Lấy danh sách xuất hàng theo đơn hàng của một sản phẩm
+        // Dữ liệu được sắp xếp từ mới đến cũ theo thời gian
+        public List<TbEcommerceOrder> GetOrderStatistics(
+            int eCommmerce, // -1 nếu lấy tất cả các sàn, web
+            int intervalDay,
+            MySqlConnection conn)
+        {
+            var list = new List<TbEcommerceOrder>();
+
+            using (var command = new MySqlCommand("st_tbECommerceOrder_Order_Statistics", conn))
+            {
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+                command.Parameters.AddWithValue("inECommmerce", eCommmerce);
+                command.Parameters.AddWithValue("inIntervalDay", intervalDay);
+
+                using (var rdr = command.ExecuteReader())
+                {
+                    // Lấy chỉ số cột một lần trước khi vào vòng lặp
+                    //int idIndex = rdr.GetOrdinal("Id");
+                    int codeIndex = rdr.GetOrdinal("Code");
+                    int shipcodeIndex = rdr.GetOrdinal("ShipCode");
+                    int eCommmerceIndex = rdr.GetOrdinal("ECommmerce");
+                    //int productIdIndex = rdr.GetOrdinal("ProductId");
+                    //int quantityIndex = rdr.GetOrdinal("Quantity");
+                    int timeIndex = rdr.GetOrdinal("Time");
+                    int eCommerceOrderIndex = rdr.GetOrdinal("ECommerceOrder");
+
+                    while (rdr.Read())
+                    {
+                        var output = new TbEcommerceOrder
+                        {
+                            //id = rdr.GetInt32(idIndex),
+                            code = rdr.GetString(codeIndex),
+                            shipCode = rdr.IsDBNull(shipcodeIndex) ? string.Empty: rdr.GetString(shipcodeIndex),
+                            eCommerce = rdr.GetInt32(eCommmerceIndex),
+                            //productId = rdr.GetInt32(productIdIndex),
+                            //quantity = rdr.GetInt32(quantityIndex),
+                            time = rdr.GetDateTime(timeIndex),
+                            status = rdr.IsDBNull(eCommerceOrderIndex) ? 0 : 1 // khác 0 ý nghĩa chung là đơn hủy
+                        };
+
+                        list.Add(output);
+                    }
+                }
+            }
+
+            return list;
         }
     }
 }

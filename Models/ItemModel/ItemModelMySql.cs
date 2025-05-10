@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.ProductModel;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;

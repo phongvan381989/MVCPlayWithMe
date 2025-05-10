@@ -69,13 +69,13 @@
                         @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
                         <div>
                             <button type="button" style="margin-left: 30px; margin-right:10px;"
-                                    title="Sản phẩm trong kho chưa đăng bán trên sàn thương mại điện tử.
+                                    title="Sản phẩm trong kho chưa mapping với bất kỳ sản phẩm nào trên sàn thương mại điện tử.
                         Kết quả trả về được sắp xếp tồn kho tăng dần. Chọn nhà phát hành để lọc sau khi lấy được tất cả"
                                     onclick="SearchDontSellOnECommerce(false)">
                                 Chưa đăng bán
                             </button>
 
-                            <button type="button" title="Sản phẩm trong kho chưa đăng bán trên sàn thương mại điện tử.
+                            <button type="button" title="Khách không thể mua lẻ sản phẩm. Do sản phẩm trong kho chưa mapping riêng lẻ / một mình với bất kỳ sản phẩm nào trên sàn thương mại điện tử.
                         Kết quả trả về được sắp xếp tồn kho tăng dần. Chọn nhà phát hành để lọc sau khi lấy được tất cả"
                                     onclick="SearchDontSellOnECommerce(true)">
                                 Chưa đăng bán riêng lẻ.
@@ -85,10 +85,10 @@
                 </div>
             </div>
 
-            <div style="position:relative;">
+            <div style="position:relative;" id="nfkalzu9825">
                 <button type="button" title="Kết quả lọc theo nhà phát hành, mã, ISBN, tên và tên combo.
                         Kết quả trả về được sắp xếp tồn kho tăng dần."
-                        onclick="SearchProduct()" id="nfkalzu9825">
+                        onclick="SearchProduct()">
                     Tìm kiếm
                 </button>
                 <button type="button" title="Cập nhật số lượng theo danh sách hiển thị bên dưới."
@@ -241,11 +241,11 @@
             if (checkBox.checked == true) {
                 document.getElementById("xmskgjskjp0258").style.display = "block";
                 document.getElementById("anzgnsg88720n").style.display = "none";
-                document.getElementById("nfkalzu9825").disabled = true;
+                document.getElementById("nfkalzu9825").style.display = "none";
             } else {
                 document.getElementById("xmskgjskjp0258").style.display = "none";
                 document.getElementById("anzgnsg88720n").style.display = "block";
-                document.getElementById("nfkalzu9825").disabled = false;
+                document.getElementById("nfkalzu9825").style.display = "block";
             }
             RefreshResultView();
             ResfreshListData();

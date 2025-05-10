@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.ProductModel
 {
     // Chứa thông tin phục vụ tìm kiếm sản phẩm trong kho
     public class ProductSearchParameter

@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
@@ -1601,6 +1602,32 @@ namespace MVCPlayWithMe.Controllers
                 statisticsList = new List<ProductSellingStatistics>();
             }
             return JsonConvert.SerializeObject(statisticsList);
+        }
+
+        // Lấy lịch sử bán hàng của một sản phẩm trong kho
+        [HttpPost]
+        public string GetOutputOfProduct(int id)
+        {
+            List<Output> outputList = null;
+
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Output>());
+            }
+
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                outputList = sqler.GetOutputOfProduct(id, conn);
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                outputList = new List<Output>();
+            }
+            return JsonConvert.SerializeObject(outputList);
         }
     }
 }

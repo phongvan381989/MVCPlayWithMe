@@ -352,13 +352,14 @@
     <Compile Include="Models\Order\OrderMySql.cs" />
     <Compile Include="Models\Order\OrderPay.cs" />
     <Compile Include="Models\Order\OrderTrack.cs" />
+    <Compile Include="Models\Output.cs" />
     <Compile Include="Models\PriceQuantity.cs" />
-    <Compile Include="Models\ProductCommonInfoWithCombo.cs" />
-    <Compile Include="Models\ProductIdName.cs" />
-    <Compile Include="Models\Product.cs" />
-    <Compile Include="Models\ProductMySql.cs" />
-    <Compile Include="Models\ProductSearchParameter.cs" />
-    <Compile Include="Models\ProductSellingStatistics.cs" />
+    <Compile Include="Models\ProductModel\ProductCommonInfoWithCombo.cs" />
+    <Compile Include="Models\ProductModel\ProductIdName.cs" />
+    <Compile Include="Models\ProductModel\Product.cs" />
+    <Compile Include="Models\ProductModel\ProductMySql.cs" />
+    <Compile Include="Models\ProductModel\ProductSearchParameter.cs" />
+    <Compile Include="Models\ProductModel\ProductSellingStatistics.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
@@ -713,6 +714,7 @@
     <Content Include="Views\TikiDealDiscount\Index.cshtml" />
     <Content Include="Views\Product\SellingStatistics.cshtml" />
     <Content Include="Views\Product\HintQuantityFromPublisher.cshtml" />
+    <Content Include="Views\ProductECommerce\OrderStatistics.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

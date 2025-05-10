@@ -3,6 +3,7 @@ using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.Models.ProductModel;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;

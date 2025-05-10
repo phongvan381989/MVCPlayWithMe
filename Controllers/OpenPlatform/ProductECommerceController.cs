@@ -1083,5 +1083,39 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             return JsonConvert.SerializeObject(result);
         }
+
+        public ActionResult OrderStatistics()
+        {
+            if (AuthentAdministrator() == null)
+                return View("~/Views/Administrator/Login.cshtml");
+
+            return View();
+        }
+
+        // Lấy lịch sử đơn hàng
+        [HttpPost]
+        public string GetOrderStatistics(int eType, int intervalDay)
+        {
+            List<TbEcommerceOrder> outputList = null;
+
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<TbEcommerceOrder>());
+            }
+
+            try
+            {
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                outputList = tikiSqler.GetOrderStatistics(eType, intervalDay, conn);
+                conn.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                outputList = new List<TbEcommerceOrder>();
+            }
+            return JsonConvert.SerializeObject(outputList);
+        }
     }
 }

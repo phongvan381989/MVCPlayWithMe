@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeConfig;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;

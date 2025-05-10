@@ -12,11 +12,17 @@ var cartKey = "cart";
 var customerInforKey = "cusinfor";
 var uidKey = "uid";
 var visitorType = "visitorType"; // Chỉ có cookie này khi đăng nhập như người quản trị
-var eShopee = "SHOPEE";
-var eTiki = "TIKI";
-var eLazada = "LAZADA";
-var ePlayWithMe = "PLAYWITHME";
 var eAll = "ALL";
+var ePlayWithMe = "PLAYWITHME";
+var eTiki = "TIKI";
+var eShopee = "SHOPEE";
+var eLazada = "LAZADA";
+
+var intAll = -1;
+var intPlayWithMe = 0;
+var intTiki = 1;
+var intShopee = 2;
+var intLazada = 3;
 var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
@@ -1105,6 +1111,7 @@ async function UpdateStatusOfProduct(id, productStatus) {
     });
 }
 
+// Trả về tên sàn
 function GetECommerceType() {
     let ecommerce = eAll; // Tương ứng tất cả
 
@@ -1119,6 +1126,26 @@ function GetECommerceType() {
     }
     else if (document.getElementById("play-with-me-e-ecommonerce-type").checked == true) {
         ecommerce = ePlayWithMe;
+    }
+
+    return ecommerce;
+}
+
+// Trả về chỉ số sàn kiểu int
+function GetIntECommerceType() {
+    let ecommerce = intAll; // Tương ứng tất cả
+
+    if (document.getElementById("tiki-e-ecommonerce-type").checked == true) {
+        ecommerce = intTiki;
+    }
+    else if (document.getElementById("shopee-e-ecommonerce-type").checked == true) {
+        ecommerce = intShopee;
+    }
+    else if (document.getElementById("lazada-e-ecommonerce-type").checked == true) {
+        ecommerce = intLazada;
+    }
+    else if (document.getElementById("play-with-me-e-ecommonerce-type").checked == true) {
+        ecommerce = intPlayWithMe;
     }
 
     return ecommerce;
@@ -1184,4 +1211,26 @@ function SortTable(tableId, thEle) {
 function ExtractNumber(text) {
     const match = text.match(/\d+/); // Extract the first number in the string
     return match ? parseInt(match[0], 10) : 0; // Convert to integer, default to 0 if no number found
+}
+
+// Từ loại sàn kiểu int trả về tên sàn
+//public enum EECommerceType {
+//    PLAYWITHME,
+//    TIKI,
+//    SHOPEE,
+//    LAZADA,
+//    ALL
+//}
+function GetEEcomnerceNameFromIntType(type) {
+    let name = ePlayWithMe;
+    if (type === intTiki) {
+        name = eTiki;
+    }
+    else if (type === intShopee) {
+        name = eShopee;
+    }
+    else if (type === intLazada) {
+        name = eLazada;
+    }
+    return name;
 }

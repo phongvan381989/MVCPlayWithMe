@@ -10,7 +10,7 @@ using System.Text;
 using System.Web;
 using static MVCPlayWithMe.General.Common;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.ProductModel
 {
     public class ProductMySql : BasicMySql
     {
@@ -1972,6 +1972,53 @@ namespace MVCPlayWithMe.Models
             }
 
             return statisticsList;
+        }
+
+        // Lấy danh sách xuất hàng theo đơn hàng của một sản phẩm
+        // Dữ liệu được sắp xếp từ mới đến cũ theo thời gian
+        public List<Output> GetOutputOfProduct(
+            int productId,
+            MySqlConnection conn)
+        {
+            var list = new List<Output>();
+
+            using (var command = new MySqlCommand("st_tbOutput_Get_Of_Product", conn))
+            {
+                command.CommandType = System.Data.CommandType.StoredProcedure;
+
+                // Thêm tham số đầu vào cho stored procedure
+                command.Parameters.AddWithValue("inProductId", productId);
+
+                using (var rdr = command.ExecuteReader())
+                {
+                    // Lấy chỉ số cột một lần trước khi vào vòng lặp
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int codeIndex = rdr.GetOrdinal("Code");
+                    int eCommmerceIndex = rdr.GetOrdinal("ECommmerce");
+                    int productIdIndex = rdr.GetOrdinal("ProductId");
+                    int quantityIndex = rdr.GetOrdinal("Quantity");
+                    int timeIndex = rdr.GetOrdinal("Time");
+                    int eCommerceOrderIndex = rdr.GetOrdinal("ECommerceOrder");
+
+                    while (rdr.Read())
+                    {
+                        var output = new Output
+                        {
+                            id = rdr.GetInt32(idIndex),
+                            code = rdr.GetString(codeIndex),
+                            eCommmerce = rdr.GetInt32(eCommmerceIndex),
+                            productId = rdr.GetInt32(productIdIndex),
+                            quantity = rdr.GetInt32(quantityIndex),
+                            time = rdr.GetDateTime(timeIndex),
+                            isCancel = rdr.IsDBNull(eCommerceOrderIndex) ? false : true
+                        };
+
+                        list.Add(output);
+                    }
+                }
+            }
+
+            return list;
         }
     }
 }

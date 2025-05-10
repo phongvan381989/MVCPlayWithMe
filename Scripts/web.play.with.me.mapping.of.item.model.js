@@ -213,7 +213,7 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
     }
 
     // enum {
-    //    PLAY_WITH_ME  0,
+    //    PLAYWITHME  0,
     //    TIKI  1,
     //    SHOPEE  2,
     //    LAZADA  3
@@ -267,8 +267,8 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
             // Tên sàn
             cell4.innerHTML = item.eType;
 
-            //// Số lượng model trên sàn
-            //cell5.innerHTML = model.quantity_sellable;
+            // Số lượng model trên sàn
+            cell5.innerHTML = "";//model.quantity_sellable;
             //cell5.id = item.eType + "_" + item.itemId + "_" + model.modelId + "_quantity";
 
             // Tên
@@ -278,6 +278,20 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
             else {
                 cell6.innerHTML = item.name + "--" + model.name;
             }
+            cell6.title = "Click để tới trang thay đổi mapping.";
+            cell6.style.cursor = "pointer";
+            cell6.onclick = function () {
+                let url = "";
+                if (item.eType == eTiki) {
+                    url = "/ProductECommerce/Item?eType=TIKI&id=" + item.itemId;
+                }
+                else if (item.eType == eShopee) {
+                    url = "/ProductECommerce/Item?eType=SHOPEE&id=" + item.itemId;
+                }
+                if (url !== "") {
+                    window.open(url);
+                }
+            };
 
             // Liên kết
             GenerateDivMapping(cell7, model.mapping);

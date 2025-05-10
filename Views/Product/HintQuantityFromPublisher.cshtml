@@ -20,10 +20,10 @@
                     <datalist id="list-Publisher"></datalist>
 
                     <select id="interval-day" name="interval-day" title="Khoảng thời gian lấy dữ liệu số lượng đã bán"
-                            onchange="ChangeIntervalDay()">
-                        <option value="90">90 ngày</option>
-                        <option value="180">180 ngày</option>
-                        <option value="360">360 ngày</option>
+                            onchange="ChangeIntervalDay(this)">
+                        <option value="90">90 Ngày</option>
+                        <option value="180">180 Ngày</option>
+                        <option value="360">360 Ngày</option>
                     </select>
                 </div>
             </div>
@@ -43,9 +43,9 @@
                             title="Sản phẩm trung bình bán được / tháng (30 ngày). Lấy lượt bán trong 90 ngày chia 3">
                             Lượng Bán Sản Phẩm/Tháng
                         </th>
-                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                        <th id="xvxvxsg64sgs" style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
                             title="Số lượng đã bán tron khoảng thời gian đã chọn">
-                            Lượng Bán Trong Khoảng Thời Gian
+                            Lượng Bán Trong 90 Ngày
                         </th>
                         <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)">Tồn kho</th>
                         <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
@@ -88,11 +88,12 @@
             ShowListBasicInfo(listBasicInfo, document.getElementById("myTableStatistics"));
         }
 
-        function ChangeIntervalDay() {
+        function ChangeIntervalDay(ele) {
             DeleteRowsExcludeHead(document.getElementById("myTableStatistics"));
             document.getElementById("count-result").innerHTML = "";
             document.getElementById("container-statistics").style.display = "none";
             document.getElementById("publisher-id").value = "";
+            document.getElementById("xvxvxsg64sgs").innerHTML = "Lượng Bán Trong " + ele.options[ele.selectedIndex].text;
         }
 
         function ShowListBasicInfo(list, table) {

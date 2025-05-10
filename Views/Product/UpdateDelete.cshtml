@@ -6,6 +6,7 @@
 <html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
 </head>
 <body>
 
@@ -26,6 +27,20 @@
                     Xóa
                 </button>
             </div>
+            <br />
+            <div style="margin-bottom: 100px;">
+                @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
+                <div id="count-result"></div>
+                <table id="myTable">
+                    <tr>
+                        <th style="display:none"></th>
+                        <th>Sàn</th>
+                        <th>Mã Đơn Hàng</th>
+                        <th>Số Lượng</th>
+                        <th>Thời Gian</th>
+                    </tr>
+                </table>
+            </div>
         </div>
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
@@ -35,6 +50,7 @@
     <script src="~/Scripts/web.play.with.me.product.upload.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
+        let listOutput = [];
         ShowUpdateButtonForOne();
 
         ShowProductFromObject();
@@ -43,6 +59,122 @@
             // Lấy id
             let id = GetValueFromUrlName("id");
             window.open("MappingOfProduct?id=" + id);
+        }
+
+        GetOutputOfProduct();
+
+        function ECommerceTypeChange() {
+            let index = GetIntECommerceType();
+            if (DEBUG) {
+                console.log("ECommerceTypeChange index: " + index);
+            }
+            let listOutputTem = [];
+            if (index == intAll) {
+                listOutputTem = listOutput;
+            }
+            else {
+                let length = listOutput.length;
+                for (let i = 0; i < length; i++) {
+                    if (listOutput[i].eCommmerce === index) {
+                        listOutputTem.push(listOutput[i]);
+                    }
+                }
+            }
+            // Show
+            ShowListOutput(listOutputTem, document.getElementById("myTable"));
+        }
+
+        async function GetOutputOfProduct() {
+            // Lấy id
+            let id = GetValueFromUrlName("id");
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", id);
+
+            let query = "/Product/GetOutputOfProduct";
+
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+
+            if (responseDB.responseText != "null") {
+                listOutput = JSON.parse(responseDB.responseText);
+            }
+            else {
+                listOutput = [];
+            }
+
+            // Chọn Tất cả
+            document.getElementById("all-e-ecommonerce-type").checked = true;
+
+            // Show
+            ShowListOutput(listOutput, document.getElementById("myTable"));
+        }
+
+        function ShowListOutput(list, table) {
+            DeleteRowsExcludeHead(table);
+
+            let length = list.length;
+            // Số lượng sản phẩm thực tế bán.
+            let realCount = 0;
+            let normalOrderCount = 0;
+            let cancelOrderCount = 0;
+
+            if (length == 0) {
+                document.getElementById("count-result").innerHTML =
+                    "Tổng " + length + " đơn. Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount + " . Số lượng thực tế bán sau khi trừ hoàn hàng: " + realCount + " sản phẩm";
+                return;
+            }
+
+            for (let i = 0; i < length; i++) {
+                let obj = list[i];
+
+                if (obj.isCancel)// đơn hoàn / hủy
+                {
+                    cancelOrderCount++;
+                }
+                else {
+                    normalOrderCount++;
+                    realCount = realCount + obj.quantity;
+                }
+
+                let row = table.insertRow(-1);
+                // Insert new cells (<td> elements)
+                let cell1 = row.insertCell(0);
+                let cell2 = row.insertCell(1);
+                let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+                let cell5 = row.insertCell(4);
+
+                // Id
+                cell1.innerHTML = obj.id;
+                cell1.style.display = "none";
+
+                // Sàn
+                cell2.innerHTML = GetEEcomnerceNameFromIntType(obj.eCommmerce);
+
+                // Mã đơn hàng
+                let p = document.createElement("p");
+                p.innerHTML = obj.code;
+                if (obj.isCancel)// đơn hoàn / hủy
+                {
+                    p.style.color = "red";
+                    p.title = "Đơn hoàn / hủy";
+                }
+                //p.style.cursor = "pointer";
+                //p.onclick = function () {
+                //    let url = "/Product/UpdateDelete?id=" + obj.id.toString();
+                //    window.open(url);
+                //}
+                cell3.append(p);
+
+                // Số lượng
+                cell4.innerHTML = obj.quantity;
+
+                // Thời gian
+                cell5.innerHTML = obj.time;
+            }
+
+            document.getElementById("count-result").innerHTML =
+                "Tổng " + length + " đơn. Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount + " . Số lượng thực tế bán sau khi trừ hoàn hàng: " + realCount + " sản phẩm";
         }
     </script>
 </body>
