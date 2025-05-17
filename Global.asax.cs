@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
 using MySql.Data.MySqlClient;
+using MVCPlayWithMe.OpenPlatform;
 
 namespace MVCPlayWithMe
 {
@@ -82,6 +83,9 @@ namespace MVCPlayWithMe
                         {
                             DealAction.CheckAndCreateDeal_Background();
                             Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
+
+                            // Lấy sản phẩm mới / mới cập nhật trên sàn và lưu db
+                            CommonOpenPlatform.GetNewItemAndInsertIfDontExist(3);
                         }
                     }
                     catch (Exception ex)

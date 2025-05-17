@@ -38,7 +38,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             List<DealCreatedResponseDetail> listDeal = DealAction.SearchDeal(sku);
             // Insert nếu chưa tồn tại
-            sqler.InsertTikiDealDiscountConnectOut(listDeal, conn);
+            sqler.InsertCheckExistTikiDealDiscountConnectOut(listDeal, conn);
             return listDeal;
         }
 
@@ -176,6 +176,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
+                    conn.Open();
                     List<DealCreatedResponseDetail> listDeal = SearchDealCore(sku, conn);
 
                     Boolean dontCreateDeal = false;
@@ -214,7 +215,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                                 {
                                     // Lưu chương trình tạo thành công
                                     // Insert nếu chưa tồn tại
-                                    sqler.InsertTikiDealDiscountConnectOut(dealCreatingResponse.dealList, conn);
+                                    sqler.InsertCheckExistTikiDealDiscountConnectOut(dealCreatingResponse.dealList, conn);
                                 }
                             }
                         }
@@ -471,7 +472,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         {
                             // Lưu chương trình tạo thành công
                             // Insert nếu chưa tồn tại
-                            sqler.InsertTikiDealDiscountConnectOut(dealCreatingResponse.dealList, conn);
+                            sqler.InsertCheckExistTikiDealDiscountConnectOut(dealCreatingResponse.dealList, conn);
                         }
                     }
                 }

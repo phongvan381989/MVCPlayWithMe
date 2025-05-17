@@ -31,9 +31,10 @@
 
             <button type="button" onclick="ShowModalFromSku()" style="margin-right:10px;"
                      title="Từ sku sản phẩm trên sàn tiki, tạo chương trình giảm giá">Tạo Chương Trình Giảm Giá</button>
-            <button type="button" title="Lưu dữ liệu chương trình giảm giá của tất cả sku đang bật bán vào db.
-                    Hàm mất thời gian, dùng 1 lần để lưu dữ liệu. CÂN NHẮC"
-                    onclick="SaveDealDiscountOfAllSku()" style="margin-right:10px;display:none;">
+
+            <button type="button" title="Lưu dữ liệu mới, cập nhật chương trình giảm giá của tất cả sku đang bật bán vào db.
+                    Hàm mất thời gian, dữ liệu. CÂN NHẮC?"
+                    onclick="SaveDealDiscountOfAllSku()" style="margin-right:10px">
                 Lưu Chương Trình Giảm Giá Vào DB
             </button>
 
@@ -52,12 +53,13 @@
         </div>
         <div class="display-flex-padding1020-flex-warap-wrap">
             <button type="button" title="Lấy danh sách sản phẩm đang bật bán, chưa mapping, mapping và
-                    có tồn kho khác không và chưa tham gia chương trình
+                    có tồn kho lớn hơn 0 vì tiki không cho set khi tồn kho = 0
+                    và chưa tham gia chương trình
                     giảm giá nào đang chạy, sắp chạy.
                     Dữ liệu lấy từ DB nên nếu tạo chương trình giảm giá trực tiếp trên nhà bán Tiki
                     và chưa cập nhật thì sẽ không lấy được dữ liệu."
                     onclick="GetItemsNoDealDiscountRunning()" style="margin-right:10px;">
-                Sản Phẩm Chưa Giảm Giá
+                Sản Phẩm Chưa Giảm Giá Từ DB
             </button>
 
             <button type="button" id="btnCreateDealForAllInTheTable"
@@ -445,6 +447,7 @@
         }
 
         function DisplayItemsNoDealDiscountRunning(inListTikiItem) {
+            document.getElementById("sku-tiki-item").value = "";
             document.getElementById("id-container-get-deal-discount-of-sku").style.display = "none";
             DeleteRowsExcludeHead(document.getElementById("myTableGetDealDiscountOfSku"));
 
@@ -546,6 +549,12 @@
         }
 
         async function SaveDealDiscountOfAllSku() {
+
+            let text = "Lưu dữ liệu mới, cập nhật chương trình giảm giá của tất cả sku đang bật bán vào db. Hàm mất thời gian, dữ liệu. CÂN NHẮC?";
+            if (confirm(text) == false) {
+                return;
+            }
+
             const searchParams = new URLSearchParams();
 
             let query = "/TikiDealDiscount/SaveDealDiscountOfAllSku";

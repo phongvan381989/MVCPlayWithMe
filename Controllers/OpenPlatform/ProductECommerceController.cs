@@ -21,7 +21,7 @@ using System.Data;
 using System.IO;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
-using static MVCPlayWithMe.OpenPlatform.Model.CommonOpenPlatform;
+using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
 
 namespace MVCPlayWithMe.Controllers.OpenPlatform
@@ -82,7 +82,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(lsCommonItem);
         }
 
-        // Lấy sản phẩm NORMAL, update trong 1 tháng gần đây và chưa được lưu db
+        // Lấy sản phẩm NORMAL, tạo mới/cập nhật trong 1 tháng gần đây và chưa được lưu db
         [HttpPost]
         public string GetNewItemOneMonth(string eType)
         {
@@ -161,8 +161,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
                 }
 
-                // Cập nhật trạng thái item vào DB
-                shopeeSqler.ShopeeUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
+                //// Cập nhật trạng thái item vào DB
+                //shopeeSqler.ShopeeUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
             }
             catch (Exception ex)
             {
@@ -182,53 +182,28 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 update_time_to - 31 * 24 * 3600,
                 update_time_to);
 
-            List<ShopeeItem> lsNonExistOnDb = new List<ShopeeItem>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-
-            conn.Open();
-
             try
             {
-                // Lấy danh sách item chưa được lưu trong db
-                MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM webplaywithme.tbshopeeitem WHERE `TMDTShopeeItemId` = @inTMDTShopeeItemId LIMIT 1;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", 0L);
-
-                MySqlDataReader rdr = null;
-                Boolean isExist = false;
-
-                foreach (var shopeeItem in ls)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    isExist = false;
-                    cmd.Parameters[0].Value = shopeeItem.item_id;
-                    rdr = cmd.ExecuteReader();
-                    while (rdr.Read())
+                    conn.Open();
+                    List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem =
+                        ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItem(ls);
+                    foreach (var pro in lsShopeeBaseInfoItem)
                     {
-                        isExist = true;
+                        CommonItem item = new CommonItem(pro);
+                        // Không tồn tại trong DB ta insert
+                        if (!shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn))
+                        {
+                            lsCommonItem.Add(item);
+                        }
                     }
-                    rdr.Close();
-
-                    if (!isExist)
-                    {
-                        lsNonExistOnDb.Add(shopeeItem);
-                    }
-                }
-
-                List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem = 
-                    ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItem(lsNonExistOnDb);
-                foreach (var pro in lsShopeeBaseInfoItem)
-                {
-                    CommonItem item = new CommonItem(pro);
-                    // Không tồn tại trong DB ta insert
-                    shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
-                    lsCommonItem.Add(item);
                 }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
             return lsCommonItem;
         }
 
@@ -248,8 +223,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
             }
-            // Cập nhật trạng thái item vào DB
-            tikiSqler.TikiUpdateStatusOfItemToDbConnectOut(lsCommonItem, conn);
+            //// Cập nhật trạng thái item vào DB
+            //tikiSqler.TikiUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
 
             conn.Close();
             return lsCommonItem;
@@ -260,43 +235,19 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             DateTime dtNow = DateTime.Now;
             List<TikiProduct> lsTikiItem = GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(-31), dtNow);
-            List<TikiProduct> lsNonExistOnDb = new List<TikiProduct>();
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             conn.Open();
             try
             {
-                // Lấy danh sách item chưa được lưu trong db
-                MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM webplaywithme.tbtikiitem WHERE `TikiId` = @inTikiId LIMIT 1;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inTikiId", 0);
-
-                MySqlDataReader rdr = null;
-                Boolean isExist = false;
-
-                foreach (var tikiItem in lsTikiItem)
-                {
-                    isExist = false;
-                    cmd.Parameters[0].Value = tikiItem.product_id;
-                    rdr = cmd.ExecuteReader();
-                    while (rdr.Read())
-                    {
-                        isExist = true;
-                    }
-                    rdr.Close();
-
-                    if (!isExist)
-                    {
-                        lsNonExistOnDb.Add(tikiItem);
-                    }
-                }
-
-                foreach (var pro in lsNonExistOnDb)
+                foreach (var pro in lsTikiItem)
                 {
                     CommonItem item = new CommonItem(pro);
-                    // Không tồn tại trong DB ta insert
-                    tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
-                    lsCommonItem.Add(item);
+                    // Không tồn tại ta thêm vào danh sách
+                    if (!tikiSqler.TikiInsertIfDontExistConnectOut(item, conn))
+                    {
+                        lsCommonItem.Add(item);
+                    }
                 }
             }
             catch (Exception ex)
@@ -311,7 +262,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             ShopeeGetItemBaseInfoItem pro = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(id);
             if (pro == null)
+            {
                 return null;
+            }
 
             CommonItem item = new CommonItem(pro);
             try
@@ -348,7 +301,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             TikiProduct pro = null;
             pro = GetListProductTiki.GetProductFromOneShop(id);
             if (pro == null)
+            {
                 return null;
+            }
 
             CommonItem item = new CommonItem(pro);
             // Không tồn tại trong DB ta insert

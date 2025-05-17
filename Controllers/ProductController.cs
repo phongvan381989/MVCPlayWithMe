@@ -24,6 +24,7 @@ namespace MVCPlayWithMe.Controllers
     public class ProductController : BasicController
     {
         public ProductMySql sqler;
+        TikiDealDiscountMySql tikiDealDiscountMySql;
         public ComboMySql comboSqler;
         public CategoryMySql categorySqler;
         public PublisherMySql publisherSqler;
@@ -33,6 +34,7 @@ namespace MVCPlayWithMe.Controllers
             comboSqler = new ComboMySql();
             categorySqler = new CategoryMySql();
             publisherSqler = new PublisherMySql();
+            tikiDealDiscountMySql = new TikiDealDiscountMySql();
         }
 
         private void GetViewDataForInput()
@@ -1428,6 +1430,13 @@ namespace MVCPlayWithMe.Controllers
 
             TikiUpdateStock.TikiProductUpdateQuantity(itemId, quantity, result);
 
+            // Tồn kho <= 0 ta cập nhật trạng thái của deal đang chạy của sku về CLOSE
+            // vì tiki tắt khi tồn kho <=0.
+            if (quantity <= Common.minQuantityOfDealTiki)
+            {
+                tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId(itemId, conn);
+            }
+
             return result;
         }
 
@@ -1447,6 +1456,13 @@ namespace MVCPlayWithMe.Controllers
             int quantity = commonItem.models[0].GetQuatityFromListMapping();
 
             TikiUpdateStock.TikiProductUpdateQuantity((int)commonItem.itemId, quantity, result);
+
+            // Tồn kho <= 0 ta cập nhật trạng thái của deal đang chạy của sku về CLOSE
+            // vì tiki tắt khi tồn kho <=0.
+            if (quantity <= Common.minQuantityOfDealTiki)
+            {
+                tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId((int)commonItem.itemId, conn);
+            }
 
             commonItem.result = result;
         }

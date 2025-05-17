@@ -13,7 +13,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TikiDealDiscountMySql
     {
-        public void InsertTikiDealDiscountConnectOut(List<DealCreatedResponseDetail> listDeal,
+        public void InsertCheckExistTikiDealDiscountConnectOut(List<DealCreatedResponseDetail> listDeal,
             MySqlConnection conn)
         {
             try
@@ -115,7 +115,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
 
                 // Tồn kho bằng 0 không set được chương trình giảm giá.
-                // Loại bỏ Item đã mapping nhưng tồn kho bằng 0.
+                // Tồn kho <= 3 tiki sẽ tắt chương trình giảm giá
+                // Loại bỏ Item đã mapping nhưng tồn kho <= 3.
                 // Chưa mapping vẫn lấy để hiển thị nhưng sẽ không tạo deal giảm giá được.
                 TikiMySql tikiSqler = new TikiMySql();
                 foreach (var simpleTiki in simpleTikiProducts)
@@ -124,7 +125,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     item.models.Add(new CommonModel());
                     tikiSqler.TikiGetItemFromIdConnectOut(simpleTiki.id, item, conn);
                     if (item.models[0].mapping.Count == 0 ||
-                        (item.models[0].mapping.Count > 0 && item.models[0].GetQuatityFromListMapping() > 0))
+                        (item.models[0].mapping.Count > 0 && item.models[0].GetQuatityFromListMapping() > Common.minQuantityOfDealTiki))
                     {
                         simpleTiki.models = item.models;
                         simpleTikiProductsTemp.Add(simpleTiki);
@@ -240,6 +241,25 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             return tikiId;
+        }
+
+        // Khi update tồn kho lên tiki, nếu tồn kho = 0 ta cập nhật trạng thái của deal đang chạy của sku về CLOSE
+        // vì tiki tắt khi tồn kho <=0.
+        public void UpdateIsActiveCloseFromItemId(int itemId, MySqlConnection conn)
+        {
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Update_IsActive_Close_From_ItemId", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inItemId", itemId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
     }
 }

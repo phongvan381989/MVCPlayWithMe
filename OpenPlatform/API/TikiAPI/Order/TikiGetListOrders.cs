@@ -10,7 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
 using MVCPlayWithMe.OpenPlatform.Model;
-using static MVCPlayWithMe.OpenPlatform.Model.CommonOpenPlatform;
+using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 {

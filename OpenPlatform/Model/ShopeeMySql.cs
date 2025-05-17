@@ -135,9 +135,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Nếu đã lưu model trong db nhưng không còn tồn tại trên sàn TMDT ta xóa trong db
         // Ta chỉ check được với model khi chọn xem item, check item đã bị xóa trên db 
         // không thực hiện ở đây
-        public MySqlResultState ShopeeInsertIfDontExistConnectOut(CommonItem item, MySqlConnection conn)
+        // Trả về true nếu item đã tồn tại và không thêm mới model nào,
+        // ngược lại trả về false
+        public Boolean ShopeeInsertIfDontExistConnectOut(CommonItem item, MySqlConnection conn)
         {
-            MySqlResultState result = new MySqlResultState();
+            Boolean exist = false;
             try
             {
                 // Kiểm tra itemId đã tồn tại trong bảng tbshopeeitem
@@ -146,16 +148,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", item.itemId);
 
                 int itemIdInserted = 0;
-                MySqlDataReader rdr = null;
 
-                rdr = cmd.ExecuteReader();
-                Boolean exist = false;
-                while (rdr.Read())
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
-                    itemIdInserted = MyMySql.GetInt32(rdr,"Id");
-                    exist = true;
+                    while (rdr.Read())
+                    {
+                        itemIdInserted = MyMySql.GetInt32(rdr, "Id");
+                        exist = true;
+                    }
                 }
-                rdr.Close();
                 int status = 0;
                 // Lưu item, model vào db lần đầu
                 if (!exist)
@@ -174,10 +175,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     MyLogger.GetInstance().Warn("Start xử lý model trên sàn có thay đổi so với model lưu trên db");
 
+                    // Cập nhật trạng thái item vào DB
+                    ShopeeUpdateStatusOfItemToDbConnectOut(item, conn);
+
                     // Cập nhật trạng thái Item
                     List<CommonItem> listCommonItem = new List<CommonItem>();
                     listCommonItem.Add(item);
-                    ShopeeUpdateStatusOfItemToDbConnectOut(listCommonItem, conn);
+                    ShopeeUpdateStatusOfItemListToDbConnectOut(listCommonItem, conn);
 
                     // Lấy list shopee model id đã lưu trong db
                     List<Tuple<int, long>> lsTupleTMDTShopeeModelOnDb = ListModelOfItem(item.itemId, conn);
@@ -236,19 +240,23 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                     // Thêm model mới vào tbshopeemodel
                     {
-                        foreach(var m in lsTMDTShopeeModelNeedSaveOnDb)
+                        if (lsTMDTShopeeModelNeedSaveOnDb.Count > 0)
                         {
-                            InserttbShopeeModel(itemIdInserted, m, conn);
+                            exist = false;
+                            foreach (var m in lsTMDTShopeeModelNeedSaveOnDb)
+                            {
+                                InserttbShopeeModel(itemIdInserted, m, conn);
+                            }
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                Common.SetResultException(ex, result);
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
-            return result;
+            return exist;
         }
 
         // Lấy được thông tin chi tiết
@@ -275,6 +283,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         Product product = new Product();
                         product.id = MyMySql.GetInt32(rdr, "ProductId");
                         product.name = MyMySql.GetString(rdr, "ProductName");
+                        product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
                         product.SetFirstSrcImage();
                         map.product = product;
 
@@ -337,42 +346,43 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 foreach (var pro in lsShopeeItem)
                 {
                     cmd.Parameters[0].Value = pro.item_id;
-                    MySqlDataReader rdr = cmd.ExecuteReader();
-
                     CommonItem item = new CommonItem(pro);
-
-                    while (rdr.Read())
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
                     {
-                        if (MyMySql.GetInt32(rdr, "ShopeeMappingId") != -1)
+                        while (rdr.Read())
                         {
-                            Mapping map = new Mapping();
-                            map.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
-
-                            Product product = new Product();
-                            product.id = MyMySql.GetInt32(rdr, "ProductId");
-                            product.name = MyMySql.GetString(rdr, "ProductName");
-                            product.SetFirstSrcImage();
-                            map.product = product;
-
-                            modelIdTemp = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
-                            // Tìm model object
-                            foreach (var model in item.models)
+                            if (MyMySql.GetInt32(rdr, "ShopeeMappingId") != -1)
                             {
-                                if (model.modelId == modelIdTemp)
+                                Mapping map = new Mapping();
+                                map.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
+
+                                Product product = new Product();
+                                product.id = MyMySql.GetInt32(rdr, "ProductId");
+                                product.name = MyMySql.GetString(rdr, "ProductName");
+                                product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                product.SetFirstSrcImage();
+                                map.product = product;
+
+                                modelIdTemp = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                                // Tìm model object
+                                foreach (var model in item.models)
                                 {
-                                    // Chưa được xét
-                                    if (model.pWMMappingModelId == 0)
+                                    if (model.modelId == modelIdTemp)
                                     {
-                                        model.pWMMappingModelId = MyMySql.GetInt32(rdr, "PWMMappingModelId");
+                                        // Chưa được xét
+                                        if (model.pWMMappingModelId == 0)
+                                        {
+                                            model.pWMMappingModelId = MyMySql.GetInt32(rdr, "PWMMappingModelId");
+                                        }
+                                        model.mapping.Add(map);
+                                        break;
                                     }
-                                    model.mapping.Add(map);
-                                    break;
                                 }
                             }
                         }
-                    }
 
-                    rdr.Close();
+
+                    }
 
                     lsCommonItem.Add(item);
                 }
@@ -383,7 +393,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void ShopeeUpdateStatusOfItemToDbConnectOut(List<CommonItem> lsCommonItem, MySqlConnection conn)
+        public void ShopeeUpdateStatusOfItemListToDbConnectOut(
+            List<CommonItem> lsCommonItem,
+            MySqlConnection conn)
         {
             if (lsCommonItem == null || lsCommonItem.Count == 0)
             {
@@ -403,6 +415,26 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters[1].Value = commonItem.itemId;
                     cmd.ExecuteNonQuery();
                 }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        public void ShopeeUpdateStatusOfItemToDbConnectOut(
+            CommonItem commonItem,
+            MySqlConnection conn)
+        {
+            try
+            {
+                // Cập nhật source của item
+                MySqlCommand cmd = new MySqlCommand("UPDATE tbshopeeitem SET Status = @inStatus WHERE TMDTShopeeItemId = @inItemId", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inStatus", CommonOpenPlatform.ShopeeGetEnumValueFromString(commonItem.item_status));
+                cmd.Parameters.AddWithValue("@inItemId", commonItem.itemId);
+                cmd.ExecuteNonQuery();
+
             }
             catch (Exception ex)
             {

@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Dev;
+using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
@@ -137,16 +138,8 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        [HttpPost]
-        public string TikiTestSomething()
+        private void TikiTestSomething1()
         {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
-
-            MySqlResultState result = new MySqlResultState();
-
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             conn.Open();
             CommonOrder commonOrder = new CommonOrder();
@@ -169,6 +162,19 @@ namespace MVCPlayWithMe.Controllers
 
             tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
             conn.Close();
+        }
+
+        [HttpPost]
+        public string TikiTestSomething()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            //CommonOpenPlatform.GetNewItemAndInsertIfDontExist(5);
 
             return JsonConvert.SerializeObject(result);
         }

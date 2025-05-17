@@ -33,13 +33,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.Parameters.AddWithValue("@inSuperSku", item.superSku);
                 cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
 
-                MySqlDataReader rdr = null;
-                rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
-                    id = MyMySql.GetInt32(rdr, "LastId");
+                    while (rdr.Read())
+                    {
+                        id = MyMySql.GetInt32(rdr, "LastId");
+                    }
                 }
-                rdr.Close();
             }
             catch(Exception ex)
             {
@@ -48,38 +48,46 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return id;
         }
 
+        // Kiểm tra item đã tồn tại trong bảng tbtikiitem
+        public Boolean CheckItemExistIntbTikiItem(int itemId,
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM webplaywithme.tbtikiitem WHERE `TikiId` = @inTikiId LIMIT 1;", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inTikiId", itemId);
+
+            MySqlDataReader rdr = null;
+            Boolean isExist = false;
+
+            using (rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    isExist = true;
+                }
+            }
+            return isExist;
+        }
+
         // Check item đã được lưu vào bảng tương ứng tbtikiitem, tbtikimapping
         // Nếu chưa lưu ta thực hiện lưu
         // Nếu đã lưu item trong db nhưng không còn tồn tại trên sàn TMDT ta xóa trong db
         // Ta chỉ check chọn xem item, check item đã bị xóa trên db 
         // không thực hiện ở đây
-        public void TikiInsertIfDontExistConnectOut(CommonItem item, MySqlConnection conn)
+        // return true: nếu tồn tại ngược lại false
+        public Boolean TikiInsertIfDontExistConnectOut(CommonItem item, MySqlConnection conn)
         {
             try
             {
                 // Nếu Id và Supper Id bằng nhau, đây là sản phẩm cha chung ảo
-                if ((int)item.itemId == item.tikiSuperId)
+                if (item.TikiCheckVirtalParent())
                 {
-                    return;
+                    return true;
                 }
 
                 // Kiểm tra itemId đã tồn tại trong bảng tbtikiitem
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", Common.ConvertLongToInt(item.itemId));
+                Boolean exist = CheckItemExistIntbTikiItem((int)item.itemId, conn);
 
-                //int itemIdInserted = 0;
-                MySqlDataReader rdr = null;
-
-                rdr = cmd.ExecuteReader();
-                Boolean exist = false;
-                while (rdr.Read())
-                {
-                    //itemIdInserted = MyMySql.GetInt32(rdr, "TikiItemId");
-                    exist = true;
-                    break;
-                }
-                rdr.Close();
                 int status = 0;
                 // Lưu item vào db lần đầu
                 if (!exist)
@@ -87,12 +95,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     status = item.bActive ? 0 : 1;
                     //itemIdInserted = TikiInsert(item, conn);
                     TikiInsert(item, conn);
+                    return false;
+                }
+                else
+                {
+                    // Cập nhật trạng thái item vào DB
+                    TikiUpdateStatusOfItemToDbConnectOut(item, conn);
                 }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
+            return true;
         }
 
         // Lấy được thông tin mapping chi tiết
@@ -149,7 +164,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
 
-                int tikiIndex = 0, 
+                int TikiMappingIdIndex = 0, 
                     tikiMappingQuantityIndex = 0,
                     productIdIndex = 0,
                     productNameIndex = 0,
@@ -158,24 +173,29 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 foreach (var pro in lsTikiItem)
                 {
                     cmd.Parameters[0].Value = pro.product_id;
-                    MySqlDataReader rdr = cmd.ExecuteReader();
-                    if (!isSetIndex)
-                    {
-                        tikiIndex = rdr.GetOrdinal("TikiMappingId");
-                        tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
-                        productIdIndex = rdr.GetOrdinal("ProductId");
-                        productNameIndex = rdr.GetOrdinal("ProductName");
-                        productBookCoverPriceIndex = rdr.GetOrdinal("ProductBookCoverPrice");
-                        isSetIndex = true;
-                    }
-
                     CommonItem item = new CommonItem(pro);
-
-                    while (rdr.Read())
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
                     {
-                        if ((rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex)) != -1)
+
+                        while (rdr.Read())
                         {
+                            if (!isSetIndex)
+                            {
+                                TikiMappingIdIndex = rdr.GetOrdinal("TikiMappingId");
+
+                                tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
+                                productIdIndex = rdr.GetOrdinal("ProductId");
+                                productNameIndex = rdr.GetOrdinal("ProductName");
+                                productBookCoverPriceIndex = rdr.GetOrdinal("ProductBookCoverPrice");
+                                isSetIndex = true;
+                            }
+                            if (rdr.IsDBNull(TikiMappingIdIndex))
+                            {
+                                continue;
+                            }
+
                             Mapping map = new Mapping();
+
                             map.quantity = rdr.GetInt32(tikiMappingQuantityIndex);
 
                             Product product = new Product();
@@ -186,9 +206,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             map.product = product;
                             item.models[0].mapping.Add(map);
                         }
-                    }
 
-                    rdr.Close();
+                    }
                     lsCommonItem.Add(item);
                 }
             }
@@ -199,7 +218,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void TikiUpdateStatusOfItemToDbConnectOut(
+        public void TikiUpdateStatusOfItemListToDbConnectOut(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -221,6 +240,26 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters[1].Value = (int)commonItem.itemId;
                     cmd.ExecuteNonQuery();
                 }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        public void TikiUpdateStatusOfItemToDbConnectOut(
+            CommonItem commonItem,
+            MySqlConnection conn)
+        {
+            try
+            {
+                // Cập nhật source của item
+                MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inStatus", commonItem.bActive ? 0 : 1);
+                cmd.Parameters.AddWithValue("@inTikiId", (int)commonItem.itemId);
+                cmd.ExecuteNonQuery();
+
             }
             catch (Exception ex)
             {
@@ -375,16 +414,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inTMDTTikiItemId", Common.ConvertLongToInt(commonForMapping.itemId));
 
-                    MySqlDataReader rdr = null;
 
-                    rdr = cmd.ExecuteReader();
- 
-                    while (rdr.Read())
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
                     {
-                        itemIdInserted = MyMySql.GetInt32(rdr, "TikiItemId");
-                        break;
+                        while (rdr.Read())
+                        {
+                            itemIdInserted = MyMySql.GetInt32(rdr, "TikiItemId");
+                            break;
+                        }
                     }
-                    rdr.Close();
                 }
 
                 // Xóa mapping cũ

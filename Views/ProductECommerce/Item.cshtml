@@ -36,15 +36,15 @@
                     <img class="item-image-ACvv">
                 </a>
                 <div class="fcpaxm09zf">
-                    <div class="item-status-azc"></div>
-                    <div class="item-name-vsfc"></div>
+                    <div id="item-status-azc"></div>
+                    <div id="item-name-vsfc"></div>
                 </div>
             </div>
             <div id="model-list">
             </div>
             @Html.Partial("~/Views/Shared/ItemModel/Mapping.cshtml")
 
-            <button type="button" onclick="UpdateEEcommerceMapping()">Cập nhật</button>
+            <button type="button" id="update-eEcommerce-mapping" onclick="UpdateEEcommerceMapping()">Cập nhật</button>
         </div>
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
@@ -73,6 +73,31 @@
             return type;
         }
 
+        function GetQuantityFromListMapping(mapping) {
+            if (DEBUG) {
+                console.log("GetQuantityFromListMapping Call");
+                console.log("mapping: " + JSON.stringify(mapping));
+            }
+            let qty = Number.MAX_SAFE_INTEGER;
+
+            if (mapping.length === 0) {
+                qty = 0;
+            }
+
+            for (const m of mapping) {
+                const calculatedQty = Math.floor(m.product.quantity / m.quantity);
+                if (qty > calculatedQty) {
+                    qty = calculatedQty;
+                }
+            }
+
+            if (qty < 0) {
+                qty = 0;
+            }
+
+            return qty;
+        }
+
         async function ViewItemFromId() {
             ShowCircleLoader();
 
@@ -97,7 +122,7 @@
             else {
                 document.getElementsByClassName("item-image-ACvv")[0].src = srcNoImageThumbnail;
             }
-            document.getElementsByClassName("item-name-vsfc")[0].innerHTML = commonItem.name;
+            document.getElementById("item-name-vsfc").innerHTML = commonItem.name;
             let itemStatus;
             if (commonItem.bActive) {
                 itemStatus = "Đang Bật Bán Trên Sàn";
@@ -105,9 +130,19 @@
             else {
                 itemStatus = "Đang Tắt Bán Trên Sàn";
             }
-            document.getElementsByClassName("item-status-azc")[0].innerHTML = itemStatus;
+
+            document.getElementById("item-status-azc").innerHTML = itemStatus;
 
             UpdateModelNameIfNeed(commonItem);
+
+            // Nếu sản phẩm tiki và là cha chung ảo hiện thông báo và không hiển thị model, mapping
+            if (commonItem.eType === eTiki && commonItem.itemId == commonItem.tikiSuperId) {
+                itemStatus = itemStatus + ". --------->Đây Là Sản Phẩm Cha Ảo";
+                document.getElementById("item-status-azc").innerHTML = itemStatus;
+                document.getElementById("update-eEcommerce-mapping").style.display = "none";
+                return;
+            }
+
             // Hiển thị danh sách mapping
             ShowModelEEcommerce(commonItem);
         }
@@ -123,6 +158,16 @@
                     }
                 }
             }
+        }
+
+        // Thêm dòng hiển thị số lượng trên sàn, số lượng thực tế trong kho
+        function AddQuantityInfor(modelObj, container) {
+            let p = document.createElement("p");
+            p.innerHTML = "Số lượng trên sàn: " + modelObj.quantity_sellable +
+                " .Tồn trong kho: " + GetQuantityFromListMapping(modelObj.mapping);
+            const div = document.createElement("div");
+            div.appendChild(p);
+            container.appendChild(div);
         }
 
         // Thêm nút sinh model trên web voibenho
@@ -244,6 +289,9 @@
             modelContainer.modelId = modelObj.modelId; // Tiki mặc định là -1 vì không có phân loại
 
             modelList.appendChild(modelContainer);
+
+            // Thêm dòng hiển thị số lượng trên sàn, số lượng thực tế trong kho
+            AddQuantityInfor(modelObj, modelContainer);
 
             // model không phải là item
             if (modelObj.modelId != -1) {

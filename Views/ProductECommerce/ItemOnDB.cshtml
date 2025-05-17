@@ -19,6 +19,10 @@
             <div title="Lấy itemid, modelid sản phẩm Shopee, Tiki, Lazada đã được lưu trên db.">
                 <button type="button" class="pwm-btn-common" onclick="GetItemOnDB()"><span class="pwm-btn-text-common">Lấy Sản Phẩm</span></button>
             </div>
+            <div>
+                <input type="checkbox" id="find-non-mapping" onclick="FindNonMapping()">
+                <label for="find-non-mapping"> Tìm Sản Phẩm Chưa Mapping</label><br>
+            </div>
         </div>
 
         <div>
@@ -32,7 +36,7 @@
                         <th>Mã Model</th>
                         <th>Tên Model</th>
                         <th>Trạng Thái</th>
-                        <th title="Thông báo cân nhắc tắt/ẩn sản phẩm trên sàn.">
+                        <th title="Thông báo cân nhắc tắt/ẩn sản phẩm trên sàn khi mapping có sản phẩm ngừng kinh doanh.">
                         Cân Nhắc Ẩn/Tắt</th>
                         <th title="Tiki có hiển thị dữ liệu này">SKU</th>
                     </tr>
@@ -61,9 +65,11 @@
             listItem = [];
             DeleteRowsExcludeHead(document.getElementById("myTable"));
             document.getElementById("count-common-item-result").innerHTML = "";
+            document.getElementById("find-non-mapping").checked = false;
         }
 
         async function GetItemOnDB() {
+            document.getElementById("find-non-mapping").checked = false;
             if (GetECommerceType() == eLazada) {
                 return;
             }
@@ -112,9 +118,11 @@
             // Nếu trong danh sách mapping của item có ít nhất 1 sản phẩm trong kho ngừng kinh doanh,
             // sản phẩm trên sàn ở trạng thái bình thường thì cân nhắc việc ẩn/tắt kinh doanh.
             let isHide = false;
+            let isMapping = false;
 
             for (let i = 0; i < length; i++) {
                 isHide = false;
+                isMapping = true;
                 let item = list[i];
 
                 modelLength = item.models.length;
@@ -131,11 +139,21 @@
                             break;
                         }
                     }
+                    // Kiểm tra item đã được mapping
+                    for (let j = 0; j < modelLength; j++) {
+                        let model = item.models[j];
+                        if (model.mapping.length == 0) {
+                            isMapping = false;
+                            break;
+                        }
+                    }
+
                 }
 
                 for (let j = 0; j < modelLength; j++) {
 
                     let row = table.insertRow(-1);
+                    row.isMapping = isMapping;
                     let model = item.models[j];
                     // Insert new cells (<td> elements)
                     let cell1 = row.insertCell(0);
@@ -153,23 +171,35 @@
                         // item Id
                         cell1.innerHTML = item.itemId;
                         cell1.className = "go-to-detail-item";
-                        cell1.title = "Xóa item khỏi cơ sở dữ liệu";
-                        cell1.onclick = async function () {
-                            if (confirm("Chỉ xóa khi item không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA item và thông tin liên quan?") == false) {
-                                return;
+                        cell1.onclick = function () {
+                            let url = "";
+                            if (item.eType == eTiki) {
+                                url = "/ProductECommerce/Item?eType=TIKI&id=" + item.itemId;
                             }
-                            // Lấy id
-                            let id = Number(this.innerHTML);
-                            const searchParams = new URLSearchParams();
-                            searchParams.append("eType", GetECommerceType());
-                            searchParams.append("itemId", id);
-                            let query = "/ProductECommerce/DeleteItemOnDB";
-                            ShowCircleLoader();
-                            let responseDB = await RequestHttpPostPromise(searchParams, query);
-                            RemoveCircleLoader();
-
-                            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
+                            else if (item.eType == eShopee) {
+                                url = "/ProductECommerce/Item?eType=SHOPEE&id=" + item.itemId;
+                            }
+                            if (url !== "") {
+                                window.open(url);
+                            }
                         };
+                        //cell1.title = "Xóa item khỏi cơ sở dữ liệu";
+                        //cell1.onclick = async function () {
+                        //    if (confirm("Chỉ xóa khi item không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA item và thông tin liên quan?") == false) {
+                        //        return;
+                        //    }
+                        //    // Lấy id
+                        //    let id = Number(this.innerHTML);
+                        //    const searchParams = new URLSearchParams();
+                        //    searchParams.append("eType", GetECommerceType());
+                        //    searchParams.append("itemId", id);
+                        //    let query = "/ProductECommerce/DeleteItemOnDB";
+                        //    ShowCircleLoader();
+                        //    let responseDB = await RequestHttpPostPromise(searchParams, query);
+                        //    RemoveCircleLoader();
+
+                        //    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
+                        //};
 
                         // Tên Item
                         cell2.innerHTML = item.name;
@@ -179,23 +209,23 @@
                     if (model.modelId != -1) {
                         cell3.innerHTML = model.modelId;
                         cell3.className = "go-to-detail-item";
-                        cell3.title = "Xóa model khỏi cơ sở dữ liệu";
-                        cell3.onclick = async function () {
-                            if (confirm("Chỉ xóa khi model không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA model và thông tin liên quan?") == false) {
-                                return;
-                            }
-                            // Lấy id
-                            let id = Number(this.innerHTML);
-                            const searchParams = new URLSearchParams();
-                            searchParams.append("eType", GetECommerceType());
-                            searchParams.append("modelId", id);
-                            let query = "/ProductECommerce/DeleteShopeeModelOnDB";
-                            ShowCircleLoader();
-                            let responseDB = await RequestHttpPostPromise(searchParams, query);
-                            RemoveCircleLoader();
+                        //cell3.title = "Xóa model khỏi cơ sở dữ liệu";
+                        //cell3.onclick = async function () {
+                        //    if (confirm("Chỉ xóa khi model không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA model và thông tin liên quan?") == false) {
+                        //        return;
+                        //    }
+                        //    // Lấy id
+                        //    let id = Number(this.innerHTML);
+                        //    const searchParams = new URLSearchParams();
+                        //    searchParams.append("eType", GetECommerceType());
+                        //    searchParams.append("modelId", id);
+                        //    let query = "/ProductECommerce/DeleteShopeeModelOnDB";
+                        //    ShowCircleLoader();
+                        //    let responseDB = await RequestHttpPostPromise(searchParams, query);
+                        //    RemoveCircleLoader();
 
-                            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
-                        };
+                        //    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
+                        //};
                     }
 
                     // Tên model
@@ -229,6 +259,27 @@
 
                     cell7.innerHTML = item.sku;
                 }
+            }
+        }
+
+        function FindNonMapping() {
+            var checkBox = document.getElementById("find-non-mapping");
+
+            const table = document.getElementById("myTable");
+            const rows = table.querySelectorAll("tr"); // Lấy tất cả các hàng trong bảng
+
+            if (checkBox.checked == true) {
+                rows.forEach((row) => {
+                    if (row.isMapping) {
+                        row.style.display = "none"; // Ẩn nếu ismapping=true, hiện nếu ismapping=false
+                    }
+                });
+                document.getElementById("count-common-item-result").style.display = "none";
+            } else {
+                rows.forEach((row) => {
+                    row.style.display = ""; // Ẩn nếu ismapping=true, hiện nếu ismapping=false
+                });
+                document.getElementById("count-common-item-result").style.display = "block";
             }
         }
 

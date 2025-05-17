@@ -11,7 +11,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
-using static MVCPlayWithMe.OpenPlatform.Model.CommonOpenPlatform;
+using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {

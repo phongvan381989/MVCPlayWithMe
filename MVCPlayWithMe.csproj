@@ -374,6 +374,7 @@
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdateStock.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\CommonTikiAPI.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
+    <Compile Include="OpenPlatform\CommonOpenPlatform.cs" />
     <Compile Include="OpenPlatform\Model\TaxAndFee.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\DealDiscount\DealCreatingResponse.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\DealDiscount\DealCreatedResponseDetail.cs" />
@@ -389,7 +390,6 @@
     <Compile Include="OpenPlatform\Model\CommonForMapping.cs" />
     <Compile Include="OpenPlatform\Model\CommonModel.cs" />
     <Compile Include="OpenPlatform\Model\CommonItem.cs" />
-    <Compile Include="OpenPlatform\Model\CommonOpenPlatform.cs" />
     <Compile Include="OpenPlatform\Model\CommonOrder.cs" />
     <Compile Include="OpenPlatform\Model\TbEcommerceOrder.cs" />
     <Compile Include="OpenPlatform\Model\ObjectGeneral.cs" />
