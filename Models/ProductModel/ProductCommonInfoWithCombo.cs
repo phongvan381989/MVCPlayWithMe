@@ -8,6 +8,7 @@ namespace MVCPlayWithMe.Models.ProductModel
     public class ProductCommonInfoWithCombo : BasicObject
     {
         public int comboId { get; set; }
+        public string comboCode { get; set; }
         public string comboName { get; set; }
         public int categoryId { get; set; }
         public string categoryName { get; set; }

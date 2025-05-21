@@ -102,6 +102,17 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        public ActionResult RecheckImport()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return AuthenticationFail();
+            }
+            //ViewDataGetListProductName();
+
+            return View();
+        }
+
         public ActionResult SellingStatistics()
         {
             if (AuthentAdministrator() == null)

@@ -37,7 +37,7 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public string CreateCombo(string name)
+        public string CreateCombo(string name, string code)
         {
             if (AuthentAdministrator() == null)
             {
@@ -51,7 +51,13 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
 
-            result = sqler.CreateNewCombo(name);
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                result = new MySqlResultState(EMySqlResultState.INVALID, "Mã không hợp lệ.");
+                return JsonConvert.SerializeObject(result);
+            }
+
+            result = sqler.CreateNewCombo(name, code);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -70,14 +76,14 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string UpdateCombo(int id, string name)
+        public string UpdateCombo(int id, string name, string code)
         {
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = sqler.UpdateCombo(id, name);
+            MySqlResultState result = sqler.UpdateCombo(id, name, code);
             return JsonConvert.SerializeObject(result);
         }
 

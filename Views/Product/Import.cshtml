@@ -11,11 +11,16 @@
         .akfhz95nzk{
             margin:5px 25px 5px 5px;
         }
-        .sfxvsg90svx{
+        /*.sfxvsg90svx{
             display:flex;
-        }
+        }*/
         .adasdxjnf98{
             display:flex;
+        }
+        textarea {
+            width: 100%;
+            height: 200px;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -47,32 +52,40 @@
                  rõ sai sót ở đâu. Số lượng có thể là số âm" style="margin-right:20px;">
                     <label for="discount">Chiết khấu(%):</label>
                     <div>
-                        <input type="number" min="0" max="100" step="5" class="margin-vertical" id="discount" value="0">
+                        <input type="number" min="0" max="100" step="1" class="margin-vertical" id="discount" value="0">
                     </div>
                 </div>
 
                 <div title="Số lượng nhập kho">
                     <label for="quantity_import">Số lượng:</label>
                     <div>
-                        <input type="number" class="margin-vertical" id="quantity_import" value="0">
+                        <input type="number" min="0" step="1" class="margin-vertical" id="quantity_import" value="0">
                     </div>
                 </div>
             </div>
             <br />
 
-            <div class="config-max-width sfxvsg90svx">
-                <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
-                        title="Lọc theo code_isbn hoặc tên hoặc tên combo và thêm sản phẩm vào danh sách nhập kho bên dưới.
-                        Nếu các tiêu chí lọc trống, thêm tất cả sản phẩm của nhà phát hành."
-                        id="add-head-list">
-                    Thêm vào danh sách
-                </button>
-                <div style="display:none;" title="Nhập Từ File Excel. File excel có định dạng:
-            Mã | Tên | Giá Bìa | Chiết Khấu | Giá Bán | Số Lượng | Tổng Tiền">
-                    <label for="import-excel-file">Chọn file excel:</label>
-                    <input type="file" id="import-excel-file"
-                           accept=".xlsx"><br>
-                    <button type="button" onclick="UploadExcelFile()">Gửi File Excel</button>
+            <div class="config-max-width">
+                <div>
+                    <input type="checkbox" id="checkbox-on-off-csv-format" onclick="OnOffCSVFormat()">
+                    <label for="checkbox-on-off-csv-format">Nhập Từ Dữ Liệu Định Dạng CSV</label>
+                </div>
+                <div id="div-csv-textarea" style="display:none;">
+                    <textarea id="csvInput" placeholder="code,quantity
+8938532871558,10
+8938519861398,
+8938519861404,"></textarea>
+                    <br>
+                </div>
+                <div>
+                    <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
+                            title="Lọc chính xác theo code_isbn hoặc tên hoặc mã combo hoặc tên combo khi nhập vào ô tìm kiếm.
+                            Và thêm sản phẩm vào danh sách nhập kho bên dưới kèm số lượng nếu chưa tồn tại, 
+                            ngược lại cộng gộp số lượng.
+                            Nếu các tiêu chí lọc trống, thêm tất cả sản phẩm của nhà phát hành."
+                            id="add-head-list">
+                        Thêm Vào Danh Sách
+                    </button>
                 </div>
             </div>
             <br />
@@ -83,7 +96,9 @@
             <table id="myTable">
                 <tr>
                     <th style="display:none"></th>
+                    <th>STT</th>
                     <th style="width:200px">Ảnh</th>
+                    <th>Mã</th>
                     <th>Tên</th>
                     <th>Giá Bìa</th>
                     <th>Chiết Khấu</th>
@@ -120,6 +135,8 @@
         let listSaveInfo = [];
 
         let discount = 0;
+
+        let isOnCSVFormat = false;
 
         GetListPublisher();
 
@@ -180,15 +197,24 @@
             document.getElementById("combo-id").value = "";
         }
 
-        document.getElementById("discount").addEventListener("input", function (event) {
-            discount = this.value;
-            if (isEmptyOrSpaces(discount))
-                discount = 0;
-            if (discount < 0)
-                discount = 0;
-            else if (discount > 100)
-                discount = 100;
-        });
+        //document.getElementById("discount").addEventListener("input", function (event) {
+        //    discount = this.value;
+
+        //    if (discount < 0)
+        //        discount = 0;
+        //    else if (discount > 100)
+        //        discount = 100;
+        //    this.value = discount;
+        //});
+
+        //document.getElementById("quantity_import").addEventListener("input", function (event) {
+        //    let quantity = this.value;
+        //    if (isEmptyOrSpaces(quantity))
+        //        quantity = 0;
+        //    if (quantity < 0)
+        //        quantity = 0;
+        //    this.value = discount;
+        //});
 
         document.getElementById("code-or-isbn").addEventListener("keypress", function (event) {
             if (event.key === "Enter") {
@@ -226,11 +252,19 @@
             document.getElementById("product-name-id").value = "";
         });
 
-        function CheckProductExistInTable(obj, table) {
+        // Nếu đã tồn tại cộng thêm số lượng
+        function AddQuantityIfExistInTable(obj, table) {
             let length = table.rows.length;
             let exist = false;
             for (let i = 1; i < length; i++) {
                 if (table.rows[i].cells[0].innerHTML == obj.id) {
+                    if (DEBUG) {
+                        console.log("value: " + Number(table.rows[i].cells[8].childNodes[0].value));
+                        console.log("typeof " + typeof Number(table.rows[i].cells[8].childNodes[0].value));
+                        console.log("typeof obj.quantity" + typeof obj.quantity);
+                    }
+                    table.rows[i].cells[8].childNodes[0].value =
+                        Number(table.rows[i].cells[8].childNodes[0].value) + obj.quantity;
                     exist = true;
                     break;
                 }
@@ -245,61 +279,111 @@
                 CreateMustClickOkModal("Danh sách sản phẩm chưa được tải về. Vui lòng chọn nhà phát hành, để tải danh sách sản phẩm tương ứng. Hoặc thử lại sau nếu đã chọn nhà phát hành", null);
                 return;
             }
-            let code = document.getElementById("code-or-isbn").value;
-            let nameId = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
-            let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value)
-            //if (DEBUG) {
-            //    console.log("code: " + code);
-            //    console.log("nameId: " + nameId);
-            //    console.log("comboId: " + comboId);
-            //}
-            if (!isEmptyOrSpaces(code)) {
-                if (code.length != 13) {
-                    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
-                    return;
+            if (isOnCSVFormat === false) {
+                let code = document.getElementById("code-or-isbn").value;
+                let nameId = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
+                let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value)
+                //if (DEBUG) {
+                //    console.log("code: " + code);
+                //    console.log("nameId: " + nameId);
+                //    console.log("comboId: " + comboId);
+                //}
+                //Dùng thuộc tính quantity lưu số lượng nhập kho của sản phẩm
+                let inputQuantity = Number(document.getElementById("quantity_import").value);
+
+                if (!isEmptyOrSpaces(code)) {
+                    //if (code.length != 13) {
+                    //    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
+                    //    return;
+                    //}
+                    //if (code.substring(0, 2) != "89" &&
+                    //    code.substring(0, 6) != "978604") {
+                    //    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
+                    //    return;
+                    //}
+                    //if (code.substring(0, 2) == "89") {// Tìm theo mã sản phẩm
+                    //    for (let i = 0; i < length; i++) {
+                    //        if (listBasicInfo[i].code === code) {
+                    //            listBasicInfo[i].quantity = inputQuantity;
+                    //            listInsertTemp.push(listBasicInfo[i]);
+                    //            break;
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    //{// Tìm theo isbn
+                        for (let i = 0; i < length; i++) {
+                            if (listBasicInfo[i].code === code || listBasicInfo[i].barcode === code) {
+                                listBasicInfo[i].quantity = inputQuantity;
+                                listInsertTemp.push(listBasicInfo[i]);
+                                break;
+                            }
+                        }
+                    //}
                 }
-                if (code.substring(0, 2) != "89" &&
-                    code.substring(0, 6) != "978604") {
-                    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
-                    return;
-                }
-                if (code.substring(0, 2) == "89") {// Tìm theo mã sản phẩm
+                else if (nameId != null) { // Tìm theo tên
                     for (let i = 0; i < length; i++) {
-                        if (listBasicInfo[i].code === code) {
+                        if (listBasicInfo[i].id == nameId) {
+                            listBasicInfo[i].quantity = inputQuantity;
                             listInsertTemp.push(listBasicInfo[i]);
                             break;
                         }
                     }
                 }
-                else {// Tìm theo isbn
+                else if (comboId != null) {
                     for (let i = 0; i < length; i++) {
-                        if (listBasicInfo[i].barcode === code) {
+                        if (listBasicInfo[i].comboId == comboId) {
+                            listBasicInfo[i].quantity = inputQuantity;
                             listInsertTemp.push(listBasicInfo[i]);
-                            break;
                         }
                     }
                 }
+                //else {
+                //    listInsertTemp = listBasicInfo;
+                //}
             }
-            else if (nameId != null) { // Tìm theo tên
-                for (let i = 0; i < length; i++) {
-                    if (listBasicInfo[i].id == nameId) {
-                        listInsertTemp.push(listBasicInfo[i]);
-                        break;
+            else {// Lấy dữ liệu nhập từ csv
+                // Lấy dữ liệu nhập từ csv
+                let data = ConvertCSVForImport("csvInput");
+                // Lấy dữ liệu từ cuối file csv, để khi show ra table, dữ liệu hiển thị giống thứ tự với file csv
+                let exist = false;
+                for (let i = data.length - 1; i >= 0; i--) {
+                    exist = false;
+                    for (let j = 0; j < listBasicInfo.length; j++) {
+                        if (listBasicInfo[j].code === data[i].code ||
+                            listBasicInfo[j].barcode === data[i].code ||
+                            listBasicInfo[j].comboCode === data[i].code) {
+                            if (data[i].quantity !== 0) {
+                                let existInsert = false;
+                                // Tìm xem đã tồn tại vì có thể lúc đầu đã được thêm theo mã 89/isbn sau lại được thêm theo mã combo
+                                for (let k = 0; k < listInsertTemp.length; k++) {
+                                    if (listInsertTemp[k].id === listBasicInfo[j].id) {
+                                        existInsert = true;
+                                        listInsertTemp[k].quantity = listInsertTemp[k].quantity + data[i].quantity;
+                                    }
+                                }
+                                if (!existInsert) {
+                                    listBasicInfo[j].quantity = data[i].quantity;
+                                    listInsertTemp.push(listBasicInfo[j]);
+                                }
+                            }
+                            exist = true;
+                            if (listBasicInfo[j].comboCode !== data[i].code) {
+                                break;
+                            }
+                        }
+                    }
+                    if (!exist && data[i].quantity != 0) {
+                        let productTemp = {
+                            id: -1,
+                            code: data[i].code
+                        };
+                        listInsertTemp.push(productTemp);
                     }
                 }
-            }
-            else if (comboId != null) {
-                for (let i = 0; i < length; i++) {
-                    if (listBasicInfo[i].comboId == comboId) {
-                        listInsertTemp.push(listBasicInfo[i]);
-                    }
-                }
-            }
-            else {
-                listInsertTemp = listBasicInfo;
             }
             //if (DEBUG) {
-            //    console.log("listInsertTemp.length: " + listInsertTemp.length);
+            //    console.log("listInsertTemp: " + JSON.stringify(listInsertTemp));
             //}
 
             if (listInsertTemp.length > 0) {
@@ -309,7 +393,7 @@
                 for (let i = 0; i < listInsertTemp.length; i++) { // Thêm vào hàng đầu tiên của table
                     let objBasicInfo = listInsertTemp[i];
                     // Kiểm tra sản phẩm đã xuất hiện trong danh sách hiển thị
-                    if (CheckProductExistInTable(objBasicInfo, table)) {
+                    if (objBasicInfo.id !== -1 && AddQuantityIfExistInTable(objBasicInfo, table)) {
                         continue;
                     }
 
@@ -325,84 +409,110 @@
                     let cell6 = row.insertCell(5);
                     let cell7 = row.insertCell(6);
                     let cell8 = row.insertCell(7);
+                    let cell9 = row.insertCell(8);
+                    let cell10 = row.insertCell(9);
 
-                    // Id
-                    cell1.innerHTML = objBasicInfo.id;
-                    cell1.style.display = "none";
+                    if (objBasicInfo.id !== -1) {
+                        // Id
+                        cell1.innerHTML = objBasicInfo.id;
+                        cell1.style.display = "none";
 
-                    // Image
-                    let img = document.createElement("img");
-                    if (objBasicInfo.imageSrc.length > 0) {
-                        img.setAttribute("src", Get320VersionOfImageSrc(objBasicInfo.imageSrc[0]));
-                    } else {
-                        img.setAttribute("src", srcNoImageThumbnail);
-                    }
-                    img.height = thumbnailHeight;
-                    img.width = thumbnailWidth;
-                    img.className = "go-to-detail-product";
-                    img.onclick = function () {
-                        window.open("UpdateDelete?id=" + objBasicInfo.id);
-                    };
-                    cell2.append(img);
+                        // STT
 
-                    // Tên
-                    cell3.innerHTML = objBasicInfo.name;
-
-                    // Giá bìa
-                    cell4.innerHTML = objBasicInfo.bookCoverPrice;
-
-                    // Chiết khấu
-                    cell5.innerHTML = discount;
-
-                    // Giá nhập
-                    let importPrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
-                    cell6.innerHTML = importPrice;
-
-                    // Số lượng nhập
-                    // Focus vào đây
-                    let input7 = document.createElement("input");
-                    input7.type = "number";
-                    cell7.appendChild(input7);
-                    input7.focus();
-                    input7.value = document.getElementById("quantity_import").value;
-                    input7.addEventListener("keypress", function (event) {
-                        if (event.key === "Enter") {
-                            event.preventDefault();
-                            let codeTemp = document.getElementById("code-or-isbn").value;
-                            let nameTemp = document.getElementById("product-name-id").value;
-                            let comboTemp = document.getElementById("combo-id").value;
-
-                            if (!isEmptyOrSpaces(codeTemp)) {
-                                //document.getElementById("product-name-id").value = "";
-                                //document.getElementById("combo-id").value = "";
-                                document.getElementById("code-or-isbn").focus();
-                                document.getElementById("code-or-isbn").select();
-                            }
-                            else if (!isEmptyOrSpaces(nameTemp)) {
-                                //document.getElementById("code-or-isbn").value = "";
-                                document.getElementById("product-name-id").focus();
-                                document.getElementById("product-name-id").select();
-                            }
-                            else if (!isEmptyOrSpaces(comboTemp)) {
-                                document.getElementById("combo-id").focus();
-                                document.getElementById("combo-id").select();
-                            }
+                        // Image
+                        let img = document.createElement("img");
+                        if (objBasicInfo.imageSrc.length > 0) {
+                            img.setAttribute("src", Get320VersionOfImageSrc(objBasicInfo.imageSrc[0]));
+                        } else {
+                            img.setAttribute("src", srcNoImageThumbnail);
                         }
-                    });
+                        img.height = thumbnailHeight;
+                        img.width = thumbnailWidth;
+                        img.className = "go-to-detail-product";
+                        img.onclick = function () {
+                            window.open("UpdateDelete?id=" + objBasicInfo.id);
+                        };
+                        cell3.append(img);
 
-                    // Nút xóa
-                    let btn = document.createElement("button");
-                    btn.onclick = function () {
-                        this.parentElement.parentElement.remove();
-                    };
-                    btn.innerHTML = "Xóa";
-                    cell8.appendChild(btn)
+                        // Mã
+                        cell4.innerHTML = objBasicInfo.code + " - " + objBasicInfo.barcode;
 
+                        // Tên
+                        cell5.innerHTML = objBasicInfo.name;
+
+                        // Giá bìa
+                        cell6.innerHTML = objBasicInfo.bookCoverPrice;
+
+                        // Chiết khấu
+                        cell7.innerHTML = discount;
+
+                        // Giá nhập
+                        let importPrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
+                        cell8.innerHTML = importPrice;
+
+                        // Số lượng nhập
+                        // Focus vào đây
+                        let inputQuan = document.createElement("input");
+                        inputQuan.type = "number";
+                        cell9.appendChild(inputQuan);
+                        inputQuan.focus();
+                        inputQuan.value = objBasicInfo.quantity;
+                        inputQuan.addEventListener("keypress", function (event) {
+                            if (event.key === "Enter") {
+                                event.preventDefault();
+                                let codeTemp = document.getElementById("code-or-isbn").value;
+                                let nameTemp = document.getElementById("product-name-id").value;
+                                let comboTemp = document.getElementById("combo-id").value;
+
+                                if (!isEmptyOrSpaces(codeTemp)) {
+                                    //document.getElementById("product-name-id").value = "";
+                                    //document.getElementById("combo-id").value = "";
+                                    document.getElementById("code-or-isbn").focus();
+                                    document.getElementById("code-or-isbn").select();
+                                }
+                                else if (!isEmptyOrSpaces(nameTemp)) {
+                                    //document.getElementById("code-or-isbn").value = "";
+                                    document.getElementById("product-name-id").focus();
+                                    document.getElementById("product-name-id").select();
+                                }
+                                else if (!isEmptyOrSpaces(comboTemp)) {
+                                    document.getElementById("combo-id").focus();
+                                    document.getElementById("combo-id").select();
+                                }
+                            }
+                        });
+
+                        // Nút xóa
+                        let btn = document.createElement("button");
+                        btn.onclick = function () {
+                            this.parentElement.parentElement.remove();
+                        };
+                        btn.innerHTML = "Xóa";
+                        cell10.appendChild(btn)
+                    }
+                    else {
+                        // Id
+                        cell1.innerHTML = -1;
+                        cell1.style.display = "none";
+
+                        // STT
+
+                        // Mã, trong trường hợp này là code, mã này không được tìm thấy
+                        let p = document.createElement("p");
+                        p.innerHTML = objBasicInfo.code;
+                        p.title = "Không tìm thấy mã này."
+                        p.style.cursor = "pointer";
+                        p.style.color = "red";
+                        cell4.append(p);
+                    }
                     //alert(JSON.stringify(objBasicInfo));
                 }
+
+                // Gọi hàm sau khi dữ liệu đã được load
+                updateSTT("myTable", 1);
             }
             else {
-                CreateMustClickOkModal("Không tìm thấy sản phẩm phù hợp", null);
+                CreateMustClickOkModal("Không tìm thấy sản phẩm phù hợp hoặc sản phẩm đã được thêm vào danh sách hiển thị", null);
             }
         }
 
@@ -421,13 +531,14 @@
             let rows = document.getElementById("myTable").rows;
             let length = rows.length;
             for (let i = 1; i < length; i++) {
-                if (rows[i].cells[6].childNodes[0].value != 0) {
+                if (Number(rows[i].cells[0].innerHTML) !== -1 &&
+                    rows[i].cells[6].childNodes[0].value != 0) {
                     let obj = new objImport(
                         Number(rows[i].cells[0].innerHTML),
+                        Number(rows[i].cells[7].innerHTML),
+                        Number(rows[i].cells[8].childNodes[0].value),
                         Number(rows[i].cells[5].innerHTML),
-                        rows[i].cells[6].childNodes[0].value,
-                        Number(rows[i].cells[3].innerHTML),
-                        Number(rows[i].cells[4].innerHTML)
+                        Number(rows[i].cells[6].innerHTML)
                     );
                     listSaveInfo.push(obj);
                 }
@@ -462,20 +573,13 @@
             DeleteRowsExcludeHead(document.getElementById("myTable"));
         }
 
-        async function UploadExcelFile() {
-            let inputExcel = document.getElementById("import-excel-file");
-            if (!inputExcel.files.length) {
-                CreateMustClickOkModal("Chưa chọn file excel.", null);
-                return;
-            }
-
-            let url = "/Product/UploadExcelFile";
-            let responseDB = await RequestHttpPotstPromiseUploadFile(inputExcel.files[0], url);
-            if (responseDB.responseText != "null") {
-                let lisImportFromExcel = JSON.parse(responseDB.responseText);
-            }
-            else {
-                CreateMustClickOkModal("Đọc file excel thất bại.", null);
+        function OnOffCSVFormat() {
+            isOnCSVFormat = document.getElementById("checkbox-on-off-csv-format").checked;
+            if (isOnCSVFormat === true) {
+                document.getElementById("div-csv-textarea").style.display = "block";
+            } else {
+                document.getElementById("div-csv-textarea").style.display = "none";
+                document.getElementById("csvInput").value = "";
             }
         }
     </script>

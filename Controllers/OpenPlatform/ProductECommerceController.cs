@@ -306,9 +306,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             CommonItem item = new CommonItem(pro);
-            // Không tồn tại trong DB ta insert
-            tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
-            tikiSqler.TikiGetItemFromIdConnectOut(id, item, conn);
+            if(!string.IsNullOrEmpty(item.imageSrc)) // Không có ảnh đại diện, có thể đây là sản phẩm cha ảo
+            {
+                // Không tồn tại trong DB ta insert
+                tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
+                tikiSqler.TikiGetItemFromIdConnectOut(id, item, conn);
+            }
+
             return item;
         }
 

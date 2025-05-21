@@ -242,29 +242,37 @@
             let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value)
 
             if (!isEmptyOrSpaces(code)) {
-                if (code.length != 13) {
-                    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
-                    return;
-                }
-                if (code.substring(0, 2) != "89" &&
-                    code.substring(0, 6) != "978604") {
-                    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
-                    return;
-                }
-                if (code.substring(0, 2) == "89") {// Tìm theo mã sản phẩm
-                    for (let i = 0; i < length; i++) {
-                        if (listBasicInfo[i].code === code) {
-                            listInsertTemp.push(listBasicInfo[i]);
-                            break;
-                        }
-                    }
-                }
-                else {// Tìm theo isbn
-                    for (let i = 0; i < length; i++) {
-                        if (listBasicInfo[i].barcode === code) {
-                            listInsertTemp.push(listBasicInfo[i]);
-                            break;
-                        }
+                //if (code.length != 13) {
+                //    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
+                //    return;
+                //}
+                //if (code.substring(0, 2) != "89" &&
+                //    code.substring(0, 6) != "978604") {
+                //    CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không chính xác", null);
+                //    return;
+                //}
+                //if (code.substring(0, 2) == "89") {// Tìm theo mã sản phẩm
+                //    for (let i = 0; i < length; i++) {
+                //        if (listBasicInfo[i].code === code) {
+                //            listInsertTemp.push(listBasicInfo[i]);
+                //            break;
+                //        }
+                //    }
+                //}
+                //else {// Tìm theo isbn
+                //    for (let i = 0; i < length; i++) {
+                //        if (listBasicInfo[i].barcode === code) {
+                //            listInsertTemp.push(listBasicInfo[i]);
+                //            break;
+                //        }
+                //    }
+                //}
+
+                for (let i = 0; i < length; i++) {
+                    if (listBasicInfo[i].code === code ||
+                        listBasicInfo[i].barcode === code) {
+                        listInsertTemp.push(listBasicInfo[i]);
+                        break;
                     }
                 }
             }

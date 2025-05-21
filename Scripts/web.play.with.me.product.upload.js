@@ -83,19 +83,19 @@ function AddUpdateParameters(searchParams) {
     }
 
     let code = document.getElementById("code").value;
-    if (!isEmptyOrSpaces(code)){
-        if (code.length != 13 || code.substring(0, 2) != "89") {
+    if (!IsValidString(code)) {
+        //if (code.length != 13 || code.substring(0, 2) != "89") {
             CreateMustClickOkModal("Mã sản phẩm không chính xác.", null);
             return false;
-        }
+        //}
     }
 
     let barcode = document.getElementById("barcode").value;
-    if (!isEmptyOrSpaces(barcode)) {
-        if (barcode.length != 13 || barcode.substring(0, 6) != "978604") {
+    if (!IsValidString(barcode)) {
+        //if (barcode.length != 13 || barcode.substring(0, 6) != "978604") {
             CreateMustClickOkModal("Mã ISBN không chính xác.", null);
             return false;
-        }
+        //}
     }
 
     searchParams.append("quantity", GetValueInputById("quantity", 0));

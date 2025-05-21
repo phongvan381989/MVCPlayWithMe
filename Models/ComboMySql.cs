@@ -26,11 +26,13 @@ namespace MVCPlayWithMe.Models
                 MySqlDataReader rdr = cmd.ExecuteReader();
                 int idIndex = rdr.GetOrdinal("Id");
                 int nameIndex = rdr.GetOrdinal("Name");
+                int codeIndex = rdr.GetOrdinal("Code");
 
                 while (rdr.Read())
                 {
                     ls.Add(new Combo(rdr.GetInt32(idIndex),
-                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
+                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
+                        rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
                 }
 
                 rdr.Close();
@@ -65,7 +67,8 @@ namespace MVCPlayWithMe.Models
                     if (combo == null)
                     {
                         combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"),
-                            MyMySql.GetString(rdr, "TBComboName"));
+                            MyMySql.GetString(rdr, "TBComboName"),
+                            MyMySql.GetString(rdr, "TBComboCode"));
                     }
 
                     proIdTem = MyMySql.GetInt32(rdr, "Id");
@@ -116,15 +119,16 @@ namespace MVCPlayWithMe.Models
             return combo;
         }
 
-        public MySqlResultState CreateNewCombo(string name)
+        public MySqlResultState CreateNewCombo(string name, string code)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            int parasLength = 3;
+            int parasLength = 4;
             paras = new MySqlParameter[parasLength];
 
             paras[0] = new MySqlParameter("@comboName", name);
+            paras[1] = new MySqlParameter("@comboCode", code);
             MyMySql.AddOutParameters(paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCombo_Insert", paras);
@@ -165,16 +169,17 @@ namespace MVCPlayWithMe.Models
         //    return result;
         //}
 
-        public MySqlResultState UpdateCombo(int id, string name)
+        public MySqlResultState UpdateCombo(int id, string name, string code)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            int parasLength = 4;
+            int parasLength = 5;
             paras = new MySqlParameter[parasLength];
 
             paras[0] = new MySqlParameter("@comboId", id);
             paras[1] = new MySqlParameter("@comboName", name);
+            paras[2] = new MySqlParameter("@comboCode", code);
             MyMySql.AddOutParameters(paras);
 
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCombo_Update", paras);

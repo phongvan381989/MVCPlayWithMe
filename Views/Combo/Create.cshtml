@@ -13,8 +13,12 @@
 
     <div id="biggestContainer">
         <div>
-            <label for="combo-id">Combo:</label>
-            <input class="config-max-width margin-vertical" id="combo-id" title="Tên combo thêm mới. Tên combo mới cần chưa tồn tại">
+            <label for="combo-code">Mã Combo:</label>
+            <input class="config-max-width margin-vertical" id="combo-code" title="Mã combo thêm mới. Mã combo mới cần chưa tồn tại">
+        </div>
+        <div>
+            <label for="combo-name">Tên Combo:</label>
+            <input class="config-max-width margin-vertical" id="combo-name" title="Tên combo thêm mới. Tên combo mới cần chưa tồn tại">
         </div>
         <br />
         <div>
@@ -28,6 +32,7 @@
                 <tr>
                     <th style="display:none">Id</th>
                     <th>STT</th>
+                    <th>Mã</th>
                     <th>Tên</th>
                 </tr>
             </table>
@@ -39,23 +44,33 @@
     <script>
         let listCombo = [];
 
-        function CreateCombo() {
-            let name = document.getElementById("combo-id").value;
-            if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
-                document.getElementById("combo-id").focus();
+        async function CreateCombo() {
+            let name = document.getElementById("combo-name").value.trim();
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Tên Combo không hợp lệ.")) {
+                document.getElementById("combo-name").focus();
                 return;
             }
 
-            const xhttp = new XMLHttpRequest();
-            xhttp.onload = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    CheckStatusResponseAndShowPrompt(this.responseText, "Thêm combo thành công.", "Thêm combo lỗi.");
-                }
+            let code = document.getElementById("combo-code").value.trim();
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Mã Combo không hợp lệ.")) {
+                document.getElementById("combo-code").focus();
+                return;
             }
-            let query = "/Combo/CreateCombo?name=";
-            query = query + name;
-            xhttp.open("GET", query);
-            xhttp.send();
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("name", name);
+            searchParams.append("code", code);
+            let url = "/Combo/CreateCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpGetPromise(searchParams, url);
+            RemoveCircleLoader();
+            if (responseDB.responseText != "null") {
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thêm mới thành công.", "Thêm mới thất bại.");
+            }
+            else {
+                CreateMustClickOkModal("Thêm mới thất bại.", null);
+            }
         }
 
         async function ShowListCombo() {
@@ -96,6 +111,7 @@
                 let cell1 = row.insertCell(0);
                 let cell2 = row.insertCell(1);
                 let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
 
                 // Id
                 cell1.innerHTML = combo.id;
@@ -103,6 +119,9 @@
 
                 // STT
                 cell2.innerHTML = i + 1;
+
+                // Mã
+                cell3.innerHTML = combo.code;
 
                 // Name
                 let name = document.createElement("p");
@@ -114,7 +133,7 @@
                     let id = Number(this.parentElement.parentElement.children[0].innerHTML);
                     window.open("/Combo/UpdateDelete?id=" + id);
                 };
-                cell3.append(name);
+                cell4.append(name);
             }
         }
     </script>

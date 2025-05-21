@@ -715,6 +715,7 @@
     <Content Include="Views\Product\SellingStatistics.cshtml" />
     <Content Include="Views\Product\HintQuantityFromPublisher.cshtml" />
     <Content Include="Views\ProductECommerce\OrderStatistics.cshtml" />
+    <Content Include="Views\Product\RecheckImport.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

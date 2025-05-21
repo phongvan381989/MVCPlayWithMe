@@ -115,6 +115,10 @@ function CheckValidSDT(sdt) {
     return true;
 }
 
+function IsValidString(str) {
+    return typeof str === 'string' && str.trim() !== '';
+}
+
 // Check mã sản phẩm hợp lệ bắt đầu 89, dài 13
 // 89..., VD: 8938519861794
 function CheckValidProductCode(code) {
@@ -135,6 +139,7 @@ function CheckValidProductISBN(code) {
     }
 
     return true;
+
 }
 function CheckPassWordValid(passWord, repassWord) {
     if (passWord !== repassWord) {
@@ -271,9 +276,9 @@ function CheckIsEmptyOrSpacesAndShowResult(str, strResult) {
 // str: giá trị text đầu vào
 function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
 {
-    if (DEBUG) {
-        console.log("GetDataFromDatalist CALL value: " + str);
-    }
+    //if (DEBUG) {
+    //    console.log("GetDataFromDatalist CALL value: " + str);
+    //}
     let option = document.getElementById(datalistId).options;
     if (option === null) {
         return null;
@@ -1233,4 +1238,50 @@ function GetEEcomnerceNameFromIntType(type) {
         name = eLazada;
     }
     return name;
+}
+
+// Hàm cập nhật cột STT, đánh số từ 1, trừ dòng tiêu đề
+function updateSTT(tableId, sttIndex) {
+    // Lấy bảng theo ID
+    const table = document.getElementById(tableId);
+
+    // Lấy tất cả các hàng (tr) của bảng
+    const rows = table.getElementsByTagName("tr");
+
+    // Duyệt qua các hàng, bắt đầu từ hàng thứ 2 (bỏ qua hàng tiêu đề)
+    for (let i = 1; i < rows.length; i++) {
+        const sttCell = rows[i].cells[sttIndex]; // chỉ số cột STT
+        sttCell.textContent = i; // Gán số thứ tự
+    }
+}
+
+// Từ file csv lấy được thông tin nhập kho
+//code, quantity
+//8938532871558, 10
+//8938532871565, 10
+//8938532871572, 10
+function ConvertCSVForImport(csvId) {
+    let data = [];
+    const csvText = document.getElementById(csvId).value.trim();
+    if (DEBUG) {
+        console.log("csvText: " + csvText);
+    }
+    if (!csvText) {
+        return data;
+    }
+
+    const rows = csvText.split('\n');
+    const headers = rows[0].split(',');
+
+    data = rows.slice(1).map(row => {
+        const values = row.split(',');
+        return {
+            [headers[0]]: values[0],
+            [headers[1]]: values[1] ? parseInt(values[1], 10) : 0
+        };
+    });
+    if (DEBUG) {
+        console.log("return of convertToCSV: " + JSON.stringify(data));
+    }
+    return data;
 }

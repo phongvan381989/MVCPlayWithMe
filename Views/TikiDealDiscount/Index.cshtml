@@ -119,23 +119,26 @@
                         <input type="number" id="taxFeePercent" name="taxFeePercent" disabled>%<br><br>
 
                         <label for="packingCost">Chi phí đóng gói:</label>
-                        <input type="text" id="packingCost" name="packingCost">VND<br><br>
+                        <input type="text" id="packingCost" name="packingCost"
+                               title="Thay đổi để cập nhật giá bán" 
+                               oninput="CaculateSalePrice()">VND<br><br>
 
                         <label for="absoluteMinProfit" title="Là lợi nhuận tuyệt đối tối thiểu trên một sản phẩm mà
                                có thể tăng thêm mức chiết khấu (so với mức chiết khấu mặt bằng chung) bán ra. Ví dụ: SP giá bìa 500.000
                                Mong muốn lợi nhuận tuyệt đối tối thiểu là 30.000 thì ta có thể chiết khấu sâu hơn so với SP giá bìa
                                300.000
                                ">Lợi nhuận tuyệt đối:</label>
-                        <input type="text" id="absoluteMinProfit" name="absoluteMinProfit">VND<br><br>
+                        <input type="text" id="absoluteMinProfit" name="absoluteMinProfit"
+                               title="Thay đổi để cập nhật giá bán" oninput="CaculateSalePrice()">VND<br><br>
 
                         <label for="profitPercent">Thay đổi % lợi nhuận để tính giá bán:</label>
                         <input type="number" id="profitPercent" name="profitPercent" step="0.1" min="0" max="100"
-                               title="Phần trăm lợi nhuận mong muốn(so với giá nhập) để tính giá bán"
+                               title="Phần trăm lợi nhuận mong muốn(so với giá nhập) để cập nhật giá bán"
                                 oninput="CaculateSalePrice()">%<br><br>
 
                         <div class="display-flex-align-items-center">
                             <label for="salePrice" title="Giá bán">Giá bán:</label>
-                            <input type="text" id="salePrice" name="salePrice"><div>VND</div><br><br>
+                            <input type="text" id="salePrice" name="salePrice" disabled><div>VND</div><br><br>
 
                             <label for="saleDiscount" style="margin-left: 20px;" title="Tính được giá bán từ chiết khấu bán và giá bìa">Chiết khấu bán:</label>
                             <input type="number" id="saleDiscount" name="saleDiscount" disabled><div>%</div><br><br>
@@ -638,18 +641,22 @@
             const m = GetVNDValue("absoluteMinProfit");
             const x = (parseFloat(document.getElementById("profitPercent").value)) / 100;
 
-            if (DEBUG) {
-                console.log("p: " + p);
-                console.log("dI: " + dI);
-                console.log("t: " + t);
-                console.log("c: " + c);
-                console.log("m: " + m);
-                console.log("x: " + x);
-            }
+            //if (DEBUG) {
+            //    console.log("p: " + p);
+            //    console.log("dI: " + dI);
+            //    console.log("t: " + t);
+            //    console.log("c: " + c);
+            //    console.log("m: " + m);
+            //    console.log("x: " + x);
+            //}
             let salePrice = CaculateSalePriceCore(p, dI, x, t, c, m);
-
+            
             // Tính chiết khấu bán so với giá bìa
             let dO = 1 - salePrice / p;
+            //if (DEBUG) {
+            //    console.log("salePrice: " + salePrice);
+            //    console.log("saleDiscount: " + Math.round(dO * 100 * 10) / 10);
+            //}
             SetFormattedMoneyInput("salePrice", salePrice);
             document.getElementById("saleDiscount").value = Math.round(dO * 100 * 10) / 10;
         }

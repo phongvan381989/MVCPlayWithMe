@@ -1304,8 +1304,7 @@
         // Nếu click checkbox bằng tay thì không tự động click "Đủ Sản Phẩm"
         async function AddProduct() {
             let code = document.getElementsByName("product-code-isbn")[0];
-            if (!CheckValidProductCode(code.value) &&
-                !CheckValidProductISBN(code.value)) {
+            if (!IsValidString(code.value)) {
                 let x = document.getElementById("myMaSP-ISBNKhongDung");
                 x.play();
                 await CreateMustClickOkModal("Mã sản phẩm hoặc ISBN không đúng.", function () { EmptyAndFocusProductCodeElement(); });

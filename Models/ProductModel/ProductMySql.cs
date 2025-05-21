@@ -767,6 +767,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                 int nameIndex = rdr.GetOrdinal("Name");
                 int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
                 int comboIdIndex = rdr.GetOrdinal("ComboId");
+                int comboCodeIndex = rdr.GetOrdinal("ComboCode");
                 int comboNameIndex = rdr.GetOrdinal("ComboName");
                 while (rdr.Read())
                 {
@@ -777,6 +778,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                     product.name = rdr.GetString(nameIndex);
                     product.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
                     product.comboId = rdr.GetInt32(comboIdIndex);
+                    product.comboCode = rdr.IsDBNull(comboCodeIndex) ? string.Empty : rdr.GetString(comboCodeIndex);
                     product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
                     product.SetFirstSrcImage();
                     ls.Add(product);

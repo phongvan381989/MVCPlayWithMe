@@ -21,10 +21,16 @@
     <div id="biggestContainer">
         <div id="result-find-id">
             <div>
-                <label for="combo-id">Combo:</label>
-                <input type="text" class="config-max-width margin-vertical"
-                       id="combo-id"
-                       title="Tên combo mới cần chưa tồn tại">
+                <div>
+                    <label for="combo-code">Mã Combo:</label>
+                    <input class="config-max-width margin-vertical" id="combo-code" title="Mã combo thêm mới. Mã combo mới cần chưa tồn tại">
+                </div>
+                <div>
+                    <label for="combo-name">Tên Combo:</label>
+                    <input type="text" class="config-max-width margin-vertical"
+                           id="combo-name"
+                           title="Tên combo mới cần chưa tồn tại">
+                </div>
                 <div>
                     <table id="product-table" style="display:none;">
                         <tr>
@@ -127,7 +133,8 @@
             }
             else {
                 combo = JSON.parse(responseDB.responseText);
-                document.getElementById("combo-id").value = combo.name;
+                document.getElementById("combo-name").value = combo.name;
+                document.getElementById("combo-code").value = combo.code;
 
                 ShowProductTable(combo.products);
 
@@ -138,15 +145,22 @@
         }
 
         async function UpdateCombo() {
-            let name = document.getElementById("combo-id").value;
-            if (CheckIsEmptyOrSpacesAndShowResult(name, "Combo không hợp lệ.")) {
-                document.getElementById("combo-id").focus();
+            let name = document.getElementById("combo-name").value.trim();
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Tên Combo không hợp lệ.")) {
+                document.getElementById("combo-name").focus();
+                return;
+            }
+
+            let code = document.getElementById("combo-code").value.trim();
+            if (CheckIsEmptyOrSpacesAndShowResult(name, "Mã Combo không hợp lệ.")) {
+                document.getElementById("combo-code").focus();
                 return;
             }
 
             const searchParams = new URLSearchParams();
             searchParams.append("id", GetValueFromUrlName("id"));
             searchParams.append("name", name);
+            searchParams.append("code", code);
             let query = "/Combo/UpdateCombo";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);

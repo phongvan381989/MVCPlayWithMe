@@ -115,12 +115,16 @@
 
             document.getElementById("anzka89zbhfj").href = GetTMDTItemUrlFromCommonItem(commonItem);
 
+            let tikiIsVirtualParent = false;
             // Hiển thị sản phẩm của sàn
             if (commonItem.imageSrc) {
                 document.getElementsByClassName("item-image-ACvv")[0].src = commonItem.imageSrc;
             }
             else {
                 document.getElementsByClassName("item-image-ACvv")[0].src = srcNoImageThumbnail;
+                if (commonItem.eType === eTiki) {
+                    tikiIsVirtualParent = true;
+                }
             }
             document.getElementById("item-name-vsfc").innerHTML = commonItem.name;
             let itemStatus;
@@ -136,8 +140,9 @@
             UpdateModelNameIfNeed(commonItem);
 
             // Nếu sản phẩm tiki và là cha chung ảo hiện thông báo và không hiển thị model, mapping
-            if (commonItem.eType === eTiki && commonItem.itemId == commonItem.tikiSuperId) {
-                itemStatus = itemStatus + ". --------->Đây Là Sản Phẩm Cha Ảo";
+            if ((commonItem.eType === eTiki && commonItem.itemId == commonItem.tikiSuperId)
+                || tikiIsVirtualParent) {
+                itemStatus = itemStatus + ". --------->Đây Có Thể Là Sản Phẩm Cha Ảo, Không Được Insert Vào DB";
                 document.getElementById("item-status-azc").innerHTML = itemStatus;
                 document.getElementById("update-eEcommerce-mapping").style.display = "none";
                 return;

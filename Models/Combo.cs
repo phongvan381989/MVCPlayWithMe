@@ -13,6 +13,14 @@ namespace MVCPlayWithMe.Models
             products = new List<Product>();
         }
 
+        public Combo(int idInput, string nameInput, string codeInput) : base(idInput, nameInput)
+        {
+            products = new List<Product>();
+            code = codeInput;
+        }
+
+        public string code { get; set; }
+
         // danh sách sản phẩm thuộc combo
         public List<Product> products { get; set; }
     }
