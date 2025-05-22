@@ -1059,6 +1059,127 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
+        public List<Product> GetProductHasCombo(MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+
+            MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Has_Combo", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            {
+                ConvertQuicklyRowFromDataMySql(rdr, ls);
+            }
+
+            return ls;
+        }
+
+
+
+        // Kiểm tra xem combo đã được bán full và riêng lẻ ở cùng 1 sản phẩm cha trên sàn
+        // True: Nếu đã thỏa mã, ngược lại false
+        public Boolean TikiDontSellFullComboAndSigleConnectOut(Combo combo, MySqlConnection conn)
+        {
+            try
+            {
+                Dictionary<int, Dictionary<int, List<int>>> dictionary =
+                    new Dictionary<int, Dictionary<int, List<int>>>();
+
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_Combo_ProductId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCount", combo.products.Count);
+                cmd.Parameters.AddWithValue("@inProductId", combo.products[0].id);
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    int idIndex = rdr.GetOrdinal("Id");// index của row trong db
+                    int productIdMappingIndex = rdr.GetOrdinal("ProductIdMapping");
+                    int superIdIndex = rdr.GetOrdinal("superId");
+                    int id = 0, productIdMapping = 0, superId = 0;
+                    while (rdr.Read())
+                    {
+                        superId = rdr.GetInt32(superIdIndex);
+                        id = rdr.GetInt32(idIndex);
+                        productIdMapping = rdr.IsDBNull(productIdMappingIndex)? -1 : rdr.GetInt32(productIdMappingIndex);
+                        if (dictionary.ContainsKey(superId))
+                        {
+                            if (dictionary[superId].ContainsKey(id))
+                            {
+                                dictionary[superId][id].Add(productIdMapping);
+                            }
+                            else
+                            {
+                                dictionary[superId].Add(id, new List<int>() { productIdMapping });
+                            }
+                        }
+                        else
+                        {
+                            dictionary.Add(superId, new Dictionary<int, List<int>>
+                            {{ id, new List<int>() { productIdMapping } }});
+                        }
+                    }
+                }
+                if(dictionary.Count == 0)
+                {
+                    return false;
+                }
+
+                List<int> lsProIdInCombo = new List<int>();
+                foreach (var pro in combo.products)
+                {
+                    lsProIdInCombo.Add(pro.id);
+                }
+                Boolean isCombo = false; // check combo đã được mapping đủ
+                Boolean isSigle = false; // sản phẩm riêng lẻ được mapping đủ
+
+                foreach (var proId in lsProIdInCombo)
+                {
+                    isSigle = false;
+                    // Duyệt qua tất cả các value
+                    foreach (var dic1 in dictionary.Values)
+                    {
+                        foreach (var ls in dic1.Values)
+                        {
+                            // Chuyển đổi thành HashSet và so sánh
+                            if (ls.Count > 1)
+                            {
+                                if (!isCombo && ls.Count == lsProIdInCombo.Count)
+                                {
+                                    isCombo = new HashSet<int>(ls).SetEquals(lsProIdInCombo);
+                                    if (isSigle)
+                                        break;
+                                }
+                            }
+                            else
+                            {
+                                if (proId == ls[0])
+                                {
+                                    isSigle = true;
+                                    if (isCombo)
+                                        break;
+                                }
+                            }
+                        }
+                        if (isSigle && isCombo)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (!isSigle)
+                    {
+                        break;
+                    }
+                }
+
+                return isCombo && isSigle;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return false;
+        }
+
         //// Đếm số record kết quả trả về, phục vụ phân trang
         //public int SearchProductCount(ProductSearchParameter searchParameter)
         //{

@@ -47,6 +47,36 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
+        public List<Combo> GetListComboConnectOut(MySqlConnection conn)
+        {
+            List<Combo> ls = new List<Combo>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    int codeIndex = rdr.GetOrdinal("Code");
+
+                    while (rdr.Read())
+                    {
+                        ls.Add(new Combo(rdr.GetInt32(idIndex),
+                            rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
+                            rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return ls;
+        }
+
         public Combo GetCombo(int id)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);

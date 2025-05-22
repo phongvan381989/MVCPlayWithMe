@@ -11,7 +11,7 @@ namespace MVCPlayWithMe.Models
         public int quantity { set; get; }
         public Product product { get; set; }
 
-        // id tương ứng trong tbMapping
+        // id tương ứng trong bảng
         public int id { get; set; }
 
         public Mapping()

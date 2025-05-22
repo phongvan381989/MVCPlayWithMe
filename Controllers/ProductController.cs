@@ -703,6 +703,157 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
+        private List<Product> TikiSearchDontSellFullComboAndSigleOnECommerce(
+            List<Combo> lsCombo,
+            MySqlConnection conn)
+        {
+            List<Combo> lsComboDontSellFull = new List<Combo>();
+            Boolean isComboDontSellFull = false;
+            foreach (var combo in lsCombo)
+            {
+                isComboDontSellFull = false;
+                List<CommonItem> lsCommonItem = comboSqler.TikiGetListMappingOfCombo(combo.id, conn);
+                foreach (var commonItem in lsCommonItem)
+                {
+                    List<Mapping> mapping = commonItem.models[0].mapping;
+                    if (mapping.Count == combo.products.Count) // Là sản phẩm combo
+                    {
+                        Boolean isMapped = false;
+                        for (int i = 0; i < mapping.Count; i++)
+                        {
+                            isMapped = false;
+                            for (int j = 0; j < combo.products.Count; j++)
+                            {
+                                if (mapping[i].product.id == combo.products[j].id)
+                                {
+                                    isMapped = true;
+                                    break;
+                                }
+                            }
+                            if (!isMapped)
+                            {
+                                break;
+                            }
+                        }
+
+                        if (isMapped)// Là sản phẩm combo
+                        {
+                            // Ta lấy danh sách commonItem có cùng cha, và bán sản phẩm lẻ
+                            List<CommonItem> lsCI = new List<CommonItem>();
+                            foreach (var cI in lsCommonItem)
+                            {
+                                if (cI.tikiSuperId == commonItem.tikiSuperId
+                                    && cI.models[0].mapping.Count == 1)
+                                {
+                                    lsCI.Add(cI);
+                                }
+                            }
+
+                            // Kiểm tra lsCI mỗi phần tử đã mapping với một sản phẩm trong combo
+                            //List<int> lsProductId = new List<int>();
+                            Boolean isExist = false;
+                            foreach (var pro in combo.products)
+                            {
+                                isExist = false;
+                                foreach (var cI in lsCI)
+                                {
+                                    if (pro.id == cI.models[0].mapping[0].product.id)
+                                    {
+                                        isExist = true;
+                                        break;
+                                    }
+                                }
+                                if (!isExist)
+                                {
+                                    break;
+                                }
+                            }
+
+                            if (isExist)
+                            {
+                                isComboDontSellFull = true;
+                            }
+                        }
+                    }
+
+                    if (isComboDontSellFull)
+                    {
+                        break;
+                    }
+                }
+                if (!isComboDontSellFull)
+                {
+                    lsComboDontSellFull.Add(combo);
+                }
+            }
+
+            List<Product> lsProduct = new List<Product>();
+            foreach(var combo in lsComboDontSellFull)
+            {
+                lsProduct.AddRange(combo.products);
+            }
+
+            return lsProduct;
+        }
+
+        // Chưa đăng bán đầy đủ combo, riêng lẻ ở cùng 1 sản phẩm cha / Item trên sàn
+        [HttpGet]
+        public string SearchDontSellFullComboAndSigleOnECommerce(string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            List<Product> lsSearchResult = new List<Product>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    // Lấy danh sách sản phẩm có combo
+                    List<Product> lsProduct = sqler.GetProductHasCombo(conn);
+
+                    // Tạo danh sách combo
+                    List<Combo> lsCombo = new List<Combo>();
+                    int count = lsProduct.Count();
+
+                    Product proTemp = null;
+                    Combo comboTemp = null;
+                    for (int i = 0; i < count; i++)
+                    {
+                        proTemp = lsProduct[i];
+                        if (comboTemp == null || proTemp.comboId != comboTemp.id)
+                        {
+                            lsCombo.Add(new Combo(proTemp.comboId, proTemp.comboName));
+                            comboTemp = lsCombo[lsCombo.Count - 1];
+                        }
+                        comboTemp.products.Add(proTemp);
+                    }
+
+                    if(eType == Common.eTiki)
+                    {
+                        //lsSearchResult = TikiSearchDontSellFullComboAndSigleOnECommerce(lsCombo, conn);
+                        foreach(var combo in lsCombo)
+                        {
+                            if(!sqler.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
+                            {
+                                lsSearchResult.AddRange(combo.products);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
+
         [HttpGet]
         public string ChangePage(string publisher, string codeOrBarcode,
             string name, string combo,
