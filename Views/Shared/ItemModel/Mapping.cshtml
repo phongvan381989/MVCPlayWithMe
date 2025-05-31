@@ -22,10 +22,16 @@
 
             <p> Bảng kết quả tìm kiếm:</p>
             <div>
-                <table id="myTable">
+                <table id="myTable" onchange="OnChangeMyTable()">
                     <tr>
                         <th style="display:none"></th>
-                        <th style="width:30px">Chọn</th>
+                        <th style="width:30px"  title="Chọn/Bỏ Chọn Tất Cả">
+                            <div>
+                                <input type="checkbox" id="select-all-result-search" style="margin-right: 5px;"
+                                       onclick="ClickSelectAllResultSearch()">
+                                <label for="select-all-result-search">Chọn</label>
+                            </div>
+                        </th>
                         <th style="width:200px">Ảnh</th>
                         <th>Tên</th>
                     </tr>

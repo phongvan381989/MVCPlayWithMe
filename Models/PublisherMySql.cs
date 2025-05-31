@@ -29,7 +29,7 @@ namespace MVCPlayWithMe.Models
                 {
                     ls.Add(new Publisher(rdr.GetInt32(idIndex),
                         rdr.GetString(nameIndex),
-                        rdr.GetInt32(discountIndex),
+                        rdr.GetFloat(discountIndex),
                         rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
                 }
 

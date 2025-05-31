@@ -246,6 +246,27 @@
                         if (!item.bActive) {
                             p.style.color = "red";
                         }
+                        p.itemId = item.itemId;
+                        p.currentStatus = item.item_status;
+                        p.title = "Click để thay đổi trạng thái từ ACTIVE/NORMAL tới UNACTIVE/UNNORMAL, và ngược lại."
+                        p.style.cursor = "pointer";
+                        p.onclick = async function () {
+                            if (confirm("Bạn CHẮC CHẮN muốn thay đổi trạng thái ngược lại?") == false) {
+                                return;
+                            }
+                            // Lấy id
+                            const searchParams = new URLSearchParams();
+                            searchParams.append("eType", GetECommerceType());
+                            searchParams.append("itemId", this.itemId);
+                            searchParams.append("currentStatus", this.currentStatus);
+
+                            let query = "/ProductECommerce/UpdateStatusItemOpposite";
+                            ShowCircleLoader();
+                            let responseDB = await RequestHttpPostPromise(searchParams, query);
+                            RemoveCircleLoader();
+
+                            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+                        };
                         cell5.append(p);
 
                         if (isHide) {

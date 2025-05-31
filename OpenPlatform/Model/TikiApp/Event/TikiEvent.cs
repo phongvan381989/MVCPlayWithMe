@@ -16,7 +16,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Event
         // Thời điểm thông báo được tạo (timestamp)
         public long created_at { get; set; }
 
-        // Payload chứa thông tin chi tiết về đơn hàng
+        // Payload chứa thông tin chi tiết về đơn hàng, số lượng tồn kho,...
         public Event_Payload payload { get; set; }
 
         // Loại thông báo

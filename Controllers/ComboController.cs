@@ -83,6 +83,11 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
+            if(code == null)
+            {
+                code = string.Empty;
+            }
+
             MySqlResultState result = sqler.UpdateCombo(id, name, code);
             return JsonConvert.SerializeObject(result);
         }

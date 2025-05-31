@@ -1285,3 +1285,29 @@ function ConvertCSVForImport(csvId) {
     }
     return data;
 }
+
+
+// Hàm cập nhật STT, hiển thị ở title
+// indexColumn: Cột cập nhật title nội dung STT
+// isHeader: true nếu table có dòng đầu là header
+function UpdateSTT(table, indexColumn, isHeader) {
+    if (DEBUG) {
+        console.log("UpdateSTT CALL");
+    }
+    // Lấy tất cả các hàng trong bảng
+    const rows = table.querySelectorAll('tbody tr');
+
+    // Xác định điểm bắt đầu (nếu có header thì bỏ qua dòng đầu)
+    const startIndex = isHeader ? 1 : 0;
+
+    // Duyệt qua các hàng để cập nhật STT
+    rows.forEach((row, index) => {
+        if (index >= startIndex) {
+            const sttCell = row.cells[indexColumn]; // Lấy ô cần cập nhật STT
+            const sttValue = index - startIndex + 1; // Tính số thứ tự
+
+            // Cập nhật thuộc tính title và nội dung ô (nếu cần)
+            sttCell.setAttribute('title', `STT: ${sttValue}`);
+        }
+    });
+}

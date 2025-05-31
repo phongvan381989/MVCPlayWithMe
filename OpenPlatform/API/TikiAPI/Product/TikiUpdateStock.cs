@@ -133,16 +133,23 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         }
 
         /// <summary>
-        /// Set giá bán thực tế cho id sản phẩm
+        /// Cập nhật trạng thái
         /// </summary>
         /// <param name="proId"></param>
-        /// <param name="status">enum {1: enabled, 2: disabled, 3: hided}</param>
+        /// <param name="status">enum {1: enabled, 0: disabled}</param>
         /// <returns></returns>
-        public static TikiUpdateQuantityResponse TikiProductUpdateStatus(int proId, int status)
+        public static void TikiProductUpdateStatus(int proId,
+            int status,
+            MySqlResultState result)
         {
             TikiUpdateStatus st = new TikiUpdateStatus(proId);
             st.UpdateStatus(status);
-            return TikiProductUpdate(st);
+            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = TikiProductUpdate(st);
+            result.myJson = tikiUpdateQuantityResponse;
+            if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
+            {
+                result.State = EMySqlResultState.ERROR;
+            }
         }
 
 

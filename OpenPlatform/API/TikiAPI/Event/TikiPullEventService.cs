@@ -122,6 +122,41 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             return listOrderEvent;
         }
 
+        // Xử lý event thay đổi tồn kho
+        private void HandleProductInventoryUpdateEvent(
+            TikiEvent tikiEvent,
+            TikiDealDiscountMySql tikiSqler,
+            MySqlConnection conn)
+        {
+            if(tikiEvent.payload.quantity_sellable_to == Common.minQuantityOfDealTiki)
+            {
+                // Tồn kho bằng 0, sản phẩm hết hàng. Tiki sẽ tắt deal đang chạy.
+                // Có thể trạng thái deal đã được cập nhật trực tiếp khi tồn kho trong kho giảm về 0 do trừ tồn kho theo đơn,
+                // nhưng ta vẫn cập nhật ở đây lại cho chắc.
+                tikiSqler.UpdateIsActiveCloseFromItemId(tikiEvent.payload.product_id, conn);
+            }
+        }
+
+        private List<TikiEvent> GetListProductInventoryUpdateFromEventTypeAll(List<TikiEvent> listTikiEvent)
+        {
+            List<TikiEvent> listProductInventoryUpdate = new List<TikiEvent>();
+            if (listTikiEvent == null || listTikiEvent.Count == 0)
+            {
+                return listProductInventoryUpdate;
+            }
+
+            for (int i = 0; i < listTikiEvent.Count; i++)
+            {
+                if (listTikiEvent[i].type != "PRODUCT_INVENTORY_UPDATED")
+                {
+                    continue;
+                }
+                listProductInventoryUpdate.Add(listTikiEvent[i]);
+            }
+
+            return listProductInventoryUpdate;
+        }
+
         public void DoWork(MySqlConnection conn)
         {
             // Ghi log
@@ -130,6 +165,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             try
             {
                 TikiMySql tikiMySqler = new TikiMySql();
+                TikiDealDiscountMySql tikiDealSqler = new TikiDealDiscountMySql();
                 string ack_id = tikiMySqler.GetAckIdOfLastestPullConnectOut(conn);
                 Event_Response event_Response = TikiPullEvent(ack_id);
 
@@ -141,6 +177,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     foreach (var e in listOrderEvent)
                     {
                         HandleOrderEvent(e, tikiMySqler, conn);
+                    }
+
+                    List<TikiEvent> listProductInventoryUpdate = GetListProductInventoryUpdateFromEventTypeAll(event_Response.events);
+                    MyLogger.GetInstance().Info("Start HandleProductInventoryUpdateEvent");
+                    MyLogger.GetInstance().Info(JsonConvert.SerializeObject(listProductInventoryUpdate));
+                    foreach (var e in listProductInventoryUpdate)
+                    {
+                        HandleProductInventoryUpdateEvent(e, tikiDealSqler, conn);
                     }
                 }
             }
@@ -213,6 +257,28 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     //        }
                     //    ],
                     //    "ack_id": "4c63bbb7-2fc2-433a-b1d4-322db7d34095"
+                    //}
+
+                    // Event type: PRODUCT_INVENTORY_UPDATED
+                    //{
+                    //    "created_at": 1748490404923,
+                    //    "id": "7a43592e-911b-4674-bef9-96d4f18a4cb2",
+                    //    "payload": {
+                    //                    "original_sku": "",
+                    //        "product_id": 71925545,
+                    //        "quantity_available_from": 167,
+                    //        "quantity_available_to": 167,
+                    //        "quantity_from": 0,
+                    //        "quantity_reserved_from": 0,
+                    //        "quantity_reserved_to": 2,
+                    //        "quantity_sellable_from": 167,
+                    //        "quantity_sellable_to": 165,
+                    //        "quantity_to": 0,
+                    //        "warehouse_id": 387453
+                    //    },
+                    //    "sid": "74334E866033E601CD908A23D96E12B220EC0F68",
+                    //    "type": "PRODUCT_INVENTORY_UPDATED",
+                    //    "version": "v2"
                     //}
                 }
                 try

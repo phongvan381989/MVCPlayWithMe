@@ -211,7 +211,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         // Hàm được chạy tự động trong khoảng 3h->4h sáng.
         // Check DB xem sku nào đang bật bán, không tham gia chương trình giảm giá nào, tồn kho khác 0.
         // Tạo chương trình giảm giá.
-        static public void CheckAndCreateDeal_Background()
+        static public void CheckAndCreateDeal_Background( Boolean isUpdateStatusFromTiki)
         {
             MyLogger.GetInstance().Info("CheckAndCreateDeal_Background CALL");
             try
@@ -220,8 +220,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
                 {
                     conn.Open();
                     TikiDealDiscountMySql tikiDealDiscountMySql = new TikiDealDiscountMySql();
-                    List<SimpleTikiProduct> simpleTikiProducts = 
-                        tikiDealDiscountMySql.GetItemsNoDealDiscountRunning(conn);
+                    List<SimpleTikiProduct> simpleTikiProducts =
+                        TikiDealDiscountController.GetItemsNoDealDiscountRunning_Core(conn, isUpdateStatusFromTiki);
 
                     TikiDealDiscountController tikiDealDiscountController
                          = new TikiDealDiscountController();

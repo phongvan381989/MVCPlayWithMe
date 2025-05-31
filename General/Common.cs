@@ -131,6 +131,9 @@ namespace MVCPlayWithMe.General
         public static string ePlayWithMe = "PLAYWITHME";
         public static string eAll = "ALL";
 
+        public static string tikiActive = "ACTIVE";
+        public static string tikiUnactive = "UNACTIVE";
+
         public static string tikiPWMHome = "https://tiki.vn/cua-hang/play-with-me";
 
         #region Tiki Deal Discount

@@ -797,6 +797,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Chưa đăng bán đầy đủ combo, riêng lẻ ở cùng 1 sản phẩm cha / Item trên sàn
+        // Các sản phẩm trong combo đều đang kinh doanh
         [HttpGet]
         public string SearchDontSellFullComboAndSigleOnECommerce(string eType)
         {

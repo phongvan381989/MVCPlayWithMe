@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
@@ -1075,6 +1076,50 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 outputList = new List<TbEcommerceOrder>();
             }
             return JsonConvert.SerializeObject(outputList);
+        }
+
+        public string UpdateStatusItemOpposite(string eType, long itemId, string currentStatus)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                if(eType == Common.eTiki)
+                {
+                    int id = (int)itemId;
+
+                    // Lấy tồn kho, nếu bằng = 0 thì cho phép tắt bán sản phẩm trên sàn
+                    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                    conn.Open();
+                    ProductMySql productMySql = new ProductMySql();
+                    int quantity = productMySql.TikiGetQuantityOfOneItemModelConnectOut(id, conn);
+                    if(quantity != 0 && currentStatus == Common.tikiActive)
+                    {
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Tồn kho lớn hơn 0, không cho phép tắt sản phẩm từ đây. Bạn có thẻ vào Tiki Seller tắt.";
+                    }
+                    else
+                    {
+                        TikiUpdateStock.TikiProductUpdateStatus(id, currentStatus == Common.tikiActive ? 0 : 1, result);
+                        if(result.State == EMySqlResultState.OK)
+                        {
+                            // cập nhật trạng thái item
+                            tikiSqler.TikiUpdateStatusOfItemToDbConnectOut(id, currentStatus == Common.tikiActive? 1: 0, conn);
+                        }
+                    }
+                    conn.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
         }
     }
 }

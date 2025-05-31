@@ -1075,7 +1075,6 @@ namespace MVCPlayWithMe.Models.ProductModel
         }
 
 
-
         // Kiểm tra xem combo đã được bán full và riêng lẻ ở cùng 1 sản phẩm cha trên sàn
         // True: Nếu đã thỏa mã, ngược lại false
         public Boolean TikiDontSellFullComboAndSigleConnectOut(Combo combo, MySqlConnection conn)
@@ -1145,7 +1144,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                                 if (!isCombo && ls.Count == lsProIdInCombo.Count)
                                 {
                                     isCombo = new HashSet<int>(ls).SetEquals(lsProIdInCombo);
-                                    if (isSigle)
+                                    if (isSigle && isCombo)
                                         break;
                                 }
                             }

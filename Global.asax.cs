@@ -79,9 +79,18 @@ namespace MVCPlayWithMe
                             tikiPullEventService.DoWork(conn);
                         }
                         // Hiện tại là 3h-4h, gọi 1 lần duy nhất mỗi ngày
-                        if (DateTime.Now.Hour == 3 && DateTime.Now.Minute < 25)
+                        DateTime dateNow = DateTime.Now;
+                        if (dateNow.Hour == 3 && dateNow.Minute < 25)
                         {
-                            DealAction.CheckAndCreateDeal_Background();
+                            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                            {
+                                // Hàm này mất thời gian nên không chạy hàng ngày.
+                                DealAction.CheckAndCreateDeal_Background(true);
+                            }
+                            else
+                            {
+                                DealAction.CheckAndCreateDeal_Background(false);
+                            }
                             Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
 
                             // Lấy sản phẩm mới / mới cập nhật trên sàn và lưu db

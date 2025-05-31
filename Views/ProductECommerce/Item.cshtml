@@ -284,7 +284,8 @@
             container.appendChild(div);
         }
 
-        function AddModelToScreenEEcommerce(itemObj, modelObj) {
+        // modelIndex: Stt từ 1 của model trong item
+        function AddModelToScreenEEcommerce(itemObj, modelObj, modelIndex) {
             const modelContainer = document.createElement("div");
             modelContainer.style.marginLeft = "10px";
             modelContainer.style.backgroundColor = "#e6e6e6";
@@ -312,6 +313,7 @@
                 else {
                     imgDiv.src = srcNoImageThumbnail;
                 }
+                imgDiv.title = "STT: " + modelIndex;
 
                 // Tên:
                 let nameDiv = document.createElement("div");
@@ -350,7 +352,7 @@
                 // Hiển thị mapping sản phẩm trong kho nếu có
                 let modelObj = itemObj.models[i];
 
-                let model = AddModelToScreenEEcommerce(itemObj, modelObj);
+                let model = AddModelToScreenEEcommerce(itemObj, modelObj, i + 1);
 
                 // Hiển thị mapping
                 let table = CreateModelTableMapping(model);
@@ -385,6 +387,7 @@
                     CheckObjExistAndInsert(table, listObj[j]);
                 }
 
+                UpdateSTT(table, 2, false);
                 AddMappingUpdateButtonForModel_ProductEEcomerce(model);
             }
         }

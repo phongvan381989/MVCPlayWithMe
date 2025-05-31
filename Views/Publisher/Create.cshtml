@@ -20,8 +20,8 @@
             </div>
 
             <label for="publisher-discount" title="Chiết khấu so với giá bìa khi nhập sách. 
-                   Dùng để tham khảo khi tính giá bán thực tế. Giá trị mặc định là 20">Chiết khấu:</label>
-            <input id="publisher-discount" type="number" max="100" min="0" step="0.1" value="20"/>
+                   Dùng để tham khảo khi tính giá bán thực tế. Giá trị mặc định là 40">Chiết khấu:</label>
+            <input id="publisher-discount" type="number" max="100" min="0" step="0.1" value="40"/>
 
             <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
             <textarea id="publisher-detail" class="config-max-width margin-vertical" rows="10"></textarea>
@@ -37,6 +37,8 @@
                     <th style="display:none">Id</th>
                     <th>STT</th>
                     <th>Tên</th>
+                    <th>Chiết Khấu</th>
+                    <th>Mô Tả</th>
                 </tr>
             </table>
         </div>
@@ -85,6 +87,8 @@
                 let cell1 = row.insertCell(0);
                 let cell2 = row.insertCell(1);
                 let cell3 = row.insertCell(2);
+                let cell4 = row.insertCell(3);
+                let cell5 = row.insertCell(4);
 
                 // Id
                 cell1.innerHTML = publisher.id;
@@ -104,6 +108,12 @@
                     window.open("/Publisher/UpdateDelete?id=" + id);
                 };
                 cell3.append(name);
+
+                // Chiết khấu
+                cell4.innerHTML = publisher.discount + "%";
+
+                // Mô tả
+                cell5.innerHTML = publisher.detail;
             }
         }
 

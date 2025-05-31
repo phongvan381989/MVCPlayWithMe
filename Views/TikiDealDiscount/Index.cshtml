@@ -52,10 +52,9 @@
             </button>
         </div>
         <div class="display-flex-padding1020-flex-warap-wrap">
-            <button type="button" title="Lấy danh sách sản phẩm đang bật bán, chưa mapping, mapping và
-                    có tồn kho lớn hơn 0 vì tiki không cho set khi tồn kho = 0
-                    và chưa tham gia chương trình
-                    giảm giá nào đang chạy, sắp chạy.
+            <button type="button" title="Lấy danh sách sản phẩm đang bật bán và chưa tham gia chương trình
+                    giảm giá nào đang chạy, sắp chạy. Nếu chưa mapping, mapping và
+                    có tồn kho lớn = 0 không tạo deal vì tiki không cho set khi tồn kho = 0
                     Dữ liệu lấy từ DB nên nếu tạo chương trình giảm giá trực tiếp trên nhà bán Tiki
                     và chưa cập nhật thì sẽ không lấy được dữ liệu."
                     onclick="GetItemsNoDealDiscountRunning()" style="margin-right:10px;">
@@ -93,6 +92,7 @@
             <table id="myTableGetItemsNoDealDiscountRunning">
                 <tr>
                     <th style="display:none">id</th>
+                    <th>STT</th>
                     <th>Ảnh</th>
                     <th title="Thời điểm kết thúc chương trình giảm giá">Tên</th>
                     <th>SKU</th>
@@ -470,10 +470,15 @@
                 let cell1 = row.insertCell(1);
                 let cell2 = row.insertCell(2);
                 let cell3 = row.insertCell(3);
+                let cell4 = row.insertCell(4);
 
                 // id
                 cell0.innerHTML = tikiItem.id;
                 cell0.style.display = "none";
+
+                // STT
+                cell1.innerHTML = i + 1;
+
 
                 // Ảnh
                 let imgDiv = document.createElement("img");
@@ -491,13 +496,13 @@
                     let url = "/ProductECommerce/Item?eType=TIKI&id=" + this.tikiItemId;
                         window.open(url);
                 }
-                cell1.append(imgDiv);
+                cell2.append(imgDiv);
 
                 // Tên
-                cell2.innerHTML = tikiItem.name;
+                cell3.innerHTML = tikiItem.name;
                 if (tikiItem.models[0].mapping.length == 0) {
-                    cell2.style.color = "red";
-                    cell2.title = "SKU này chưa mapping.";
+                    cell3.style.color = "red";
+                    cell3.title = "SKU này chưa mapping.";
                 }
 
                 // Sku
@@ -508,7 +513,7 @@
                     ShowModalTikiDiscountPage(this.tikiItem.id, this.tikiItem.sku);
                 }
                 p.tikiItem = tikiItem;
-                cell3.append(p);
+                cell4.append(p);
             }
         }
 

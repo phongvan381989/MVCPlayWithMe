@@ -195,7 +195,8 @@ function InsertObjToTable(table, obj) {
     let btn = document.createElement("button");
     btn.onclick = function () {
         this.parentElement.parentElement.remove();
-        UncheckboxWhenDeleteProductMapping(this.parentElement.parentElement.children[0].innerHTML);
+        //UncheckboxWhenDeleteProductMapping(this.parentElement.parentElement.children[0].innerHTML);
+        UpdateSTT(table, 2, true);
     };
     btn.innerHTML = "Xóa";
     cell5.appendChild(btn)
@@ -223,7 +224,7 @@ function CheckObjExistAndInsert(modelTable, obj) {
 
 // listObj: sản phẩm được chọn từ modal gồm: id, img, name, quantity
 // Lưu mapping được chọn tới model tương ứng
-function AddToTableMapping(container, listObj) {
+function AddToTableMappingOfModel(container, listObj) {
     // Check container chứa table mapping chưa? Nếu không thì tạo mới
     let modelTable;
     if (container.getElementsByClassName(classOfModelTable).length == 0) {
@@ -236,6 +237,8 @@ function AddToTableMapping(container, listObj) {
     for (let i = 0; i < length; i++) {
         CheckObjExistAndInsert(modelTable, listObj[i]);
     }
+
+    UpdateSTT(modelTable, 2, false);
 }
 
 function AddDistanceRows(modelContainer) {
@@ -997,6 +1000,7 @@ function AddRowToTableMapping(pro, quantity) {
     let obj = new objRowTableMapping(pro.id, src, pro.name, quantity, "", "");
 
     CheckObjExistAndInsert(table, obj);
+    UpdateSTT(table, 2, true);
 }
 
 // pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm
@@ -1004,14 +1008,17 @@ function DeleteRowFromTableMapping(pro) {
     if (pro == null)
         return;
 
-    let rows = document.getElementById("myTableMapping").rows;
+    let table = document.getElementById("myTableMapping");
+    let rows = table.rows;
     let length = rows.length;
     for (let i = 0; i < length; i++) {
         if (Number(rows[i].cells[0].innerHTML) == pro.id) {
             // Xóa row này
-            document.getElementById("myTableMapping").deleteRow(i);
+            table.deleteRow(i);
         }
     }
+
+    UpdateSTT(table, 2, true);
 }
 
 function FindProductFromList(listProduct, id) {
@@ -1038,6 +1045,36 @@ function UncheckboxWhenDeleteProductMapping(id) {
     }
 }
 
+function ClickSelectAllResultSearch() {
+    const table = document.getElementById("myTable");
+    const selectAllCheckbox = document.getElementById("select-all-result-search");
+    const isChecked = selectAllCheckbox.checked;
+    ToggleCheckboxes(table, '.row-checkbox', isChecked);
+}
+
+function ToggleCheckboxes(table, checkboxSelector, isChecked) {
+    // Lấy tất cả các checkbox trong bảng dựa trên selector
+    const checkboxes = table.querySelectorAll(checkboxSelector);
+
+    // Duyệt qua từng checkbox và cập nhật trạng thái
+    checkboxes.forEach(checkbox => {
+        //checkbox.checked = isChecked; // Cập nhật trạng thái chọn/bỏ chọn
+        if (checkbox.checked != isChecked) {
+            checkbox.click(); // Kích hoạt sự kiện click
+        }
+    });
+}
+
+function OnChangeMyTable() {
+    if (event.target.classList.contains('row-checkbox')) {
+        const table = document.getElementById("myTable");
+        const checkboxes = table.querySelectorAll('.row-checkbox');
+        const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
+        const selectAllCheckbox = document.getElementById("select-all-result-search");
+        selectAllCheckbox.checked = allChecked;
+    }
+}
+
 async function SearchProduct() {
     let codeOrBarcode = document.getElementById("code-or-isbn").value;
     let name = document.getElementById("product-name-id").value;
@@ -1052,15 +1089,18 @@ async function SearchProduct() {
     let resObj = await RequestHttpGetPromise(searchParams, url);
     RemoveCircleLoader();
     let listProduct = JSON.parse(resObj.responseText);
+    let table = document.getElementById("myTable");
 
     // Làm trống bảng
-    DeleteRowsExcludeHead(document.getElementById("myTable"));
+    DeleteRowsExcludeHead(table);
+    // Bỏ chọn tất cả
+    document.getElementById("select-all-result-search").checked = false;
     if (listProduct == null) {
         return;
     }
 
     // Show
-    let table = document.getElementById("myTable");
+
     let length = listProduct.length;
     for (let i = 0; i < length; i++) {
         let pro = listProduct[i];
@@ -1079,15 +1119,17 @@ async function SearchProduct() {
         // Checkbox
         let checkbox = document.createElement("INPUT");
         checkbox.setAttribute("type", "checkbox");
+        checkbox.className = "row-checkbox";
+        checkbox.pro = pro;
         checkbox.onclick = function () {
             // Lấy id
-            let id = Number(this.parentElement.previousSibling.innerHTML);
-            let pro = FindProductFromList(listProduct, id);
+            //let id = Number(this.parentElement.previousSibling.innerHTML);
+            //let pro = FindProductFromList(listProduct, id);
             if (this.checked == true) {
-                AddRowToTableMapping(pro, 1);
+                AddRowToTableMapping(this.pro, 1);
             }
             else {
-                DeleteRowFromTableMapping(pro);
+                DeleteRowFromTableMapping(this.pro);
             }
         }
         cell2.appendChild(checkbox)
@@ -1106,6 +1148,8 @@ async function SearchProduct() {
         // Tên
         cell4.innerHTML = pro.name;
     }
+
+    UpdateSTT(table, 3, true);
 }
 
 // 2 trường hợp dựa vào url:
@@ -1135,7 +1179,7 @@ function SaveMappingToModel() {
 
     // Mapping tới model
     if (modelMapping != null) {
-        AddToTableMapping(modelMapping, listObj);
+        AddToTableMappingOfModel(modelMapping, listObj);
     }
 
     // Đóng modal
@@ -1336,6 +1380,8 @@ async function ShowItemFromItemObject() {
         for (let j = 0; j < listObj.length; j++) {
             CheckObjExistAndInsert(table, listObj[j]);
         }
+
+        UpdateSTT(table, 2, false);
 
         // Thêm nút cập nhật mapping
         if (window.location.href.toUpperCase().includes("/ItemModel/UpdateDelete".toUpperCase())) {

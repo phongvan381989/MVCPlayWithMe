@@ -21,7 +21,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 {
     public class TikiDealDiscountController : BasicController
     {
-        public TikiDealDiscountMySql sqler;
+        public static TikiDealDiscountMySql sqler;
 
         public TikiDealDiscountController()
         {
@@ -34,11 +34,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return View();
         }
 
-        private List<DealCreatedResponseDetail> SearchDealCore(string sku, MySqlConnection conn)
+        private static List<DealCreatedResponseDetail> SearchDealCore(string sku, MySqlConnection conn)
         {
             List<DealCreatedResponseDetail> listDeal = DealAction.SearchDeal(sku);
             // Insert nếu chưa tồn tại
-            sqler.InsertCheckExistTikiDealDiscountConnectOut(listDeal, conn);
+            if (listDeal != null && listDeal.Count > 0)
+            {
+                sqler.InsertCheckExistTikiDealDiscountConnectOut(listDeal, conn);
+            }
             return listDeal;
         }
 
@@ -108,6 +111,22 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(result);
         }
 
+        static public List<SimpleTikiProduct> GetItemsNoDealDiscountRunning_Core(MySqlConnection conn,
+            Boolean isUpdateStatusFromTiki)
+        {
+            // Lấy trạng thái từ Tiki deal đang chạy
+            if (isUpdateStatusFromTiki)
+            {
+                UpdateDealStatusOfRunningDealOnDB_Core(conn);
+            }
+
+            // Lấy những sản phẩm chưa gắn với deal nào
+            List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
+            simpleTikiProducts = sqler.GetItemsNoDealDiscountRunning(conn);
+
+            return simpleTikiProducts;
+        }
+
         [HttpPost]
         public string GetItemsNoDealDiscountRunning()
         {
@@ -121,12 +140,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-                    simpleTikiProducts = sqler.GetItemsNoDealDiscountRunning(conn);
+                    simpleTikiProducts = GetItemsNoDealDiscountRunning_Core(conn, false);
                 }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
+                simpleTikiProducts = new List<SimpleTikiProduct>();
             }
 
             return JsonConvert.SerializeObject(simpleTikiProducts);
@@ -211,7 +231,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                             }
                             else
                             {
-                                if (dealCreatingResponse.dealList != null)
+                                if (dealCreatingResponse.dealList != null && dealCreatingResponse.dealList.Count > 0)
                                 {
                                     // Lưu chương trình tạo thành công
                                     // Insert nếu chưa tồn tại
@@ -324,6 +344,22 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return salePrice;
         }
 
+
+        // Hàm này mục đích cập nhật trạng thái mới nhất của những deal đang chạy
+        // vì tiki có thể tắt deal mà mình không biết
+        // Hàm này mất thời gian. Tính bằng 10 phút và gọi API TIKI liên tục. Hạn chế sử dụng.
+        public static void UpdateDealStatusOfRunningDealOnDB_Core(MySqlConnection conn)
+        {
+            List<SimpleTikiProduct> simpleTikiProducts = sqler.GetItemsHasDealDiscountRunning(conn);
+
+            // Lấy deal từ TIki và thêm mới / cập nhật trạng thái của deal mới nhất
+            List<DealCreatedResponseDetail> listDeal = new List<DealCreatedResponseDetail>();
+            foreach (var pro in simpleTikiProducts)
+            {
+                SearchDealCore(pro.sku, conn);
+            }
+        }
+
         [HttpPost]
         public string UpdateDealStatusOfRunningDealOnDB()
         {
@@ -337,14 +373,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-                    List<SimpleTikiProduct> simpleTikiProducts = sqler.GetItemsHasDealDiscountRunning(conn);
-
-                    // Lấy deal
-                    List<DealCreatedResponseDetail> listDeal = new List<DealCreatedResponseDetail>();
-                    foreach (var pro in simpleTikiProducts)
-                    {
-                        SearchDealCore(pro.sku, conn);
-                    }
+                    UpdateDealStatusOfRunningDealOnDB_Core(conn);
                 }
             }
             catch (Exception ex)
@@ -430,6 +459,17 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 ProductMySql productMySql = new ProductMySql();
                 foreach (var simpleTiki in listSimpleTikiProduct)
                 {
+                    // Tồn kho bằng 0 không set được chương trình giảm giá vì
+                    // tiki sẽ tắt chương trình giảm giá
+                    // Loại bỏ Item đã mapping nhưng tồn kho = 0.
+                    // Chưa mapping cũng không set deal
+                    if (simpleTiki.models[0].mapping.Count == 0 ||
+                         (simpleTiki.models[0].mapping.Count > 0 && 
+                         simpleTiki.models[0].GetQuatityFromListMapping() == Common.minQuantityOfDealTiki))
+                    {
+                        continue;
+                    }
+
                     special_price = CaculateSalePriceCoreFromCommonModel(simpleTiki.models[0],
                         listPublisher,
                         taxAndFee);
@@ -468,7 +508,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     }
                     else
                     {
-                        if (dealCreatingResponse.dealList != null)
+                        if (dealCreatingResponse.dealList != null && dealCreatingResponse.dealList.Count > 0)
                         {
                             // Lưu chương trình tạo thành công
                             // Insert nếu chưa tồn tại

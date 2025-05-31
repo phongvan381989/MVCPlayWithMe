@@ -152,10 +152,6 @@
             }
 
             let code = document.getElementById("combo-code").value.trim();
-            if (CheckIsEmptyOrSpacesAndShowResult(name, "Mã Combo không hợp lệ.")) {
-                document.getElementById("combo-code").focus();
-                return;
-            }
 
             const searchParams = new URLSearchParams();
             searchParams.append("id", GetValueFromUrlName("id"));

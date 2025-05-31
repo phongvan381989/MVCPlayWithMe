@@ -100,7 +100,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 else
                 {
                     // Cập nhật trạng thái item vào DB
-                    TikiUpdateStatusOfItemToDbConnectOut(item, conn);
+                    TikiUpdateStatusOfItemToDbConnectOut((int)item.itemId, item.bActive ? 0 : 1, conn);
                 }
             }
             catch (Exception ex)
@@ -248,7 +248,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         public void TikiUpdateStatusOfItemToDbConnectOut(
-            CommonItem commonItem,
+            int itemId,
+            int status,
             MySqlConnection conn)
         {
             try
@@ -256,10 +257,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 // Cập nhật source của item
                 MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn);
                 cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inStatus", commonItem.bActive ? 0 : 1);
-                cmd.Parameters.AddWithValue("@inTikiId", (int)commonItem.itemId);
+                cmd.Parameters.AddWithValue("@inStatus", status);
+                cmd.Parameters.AddWithValue("@inTikiId", itemId);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -337,11 +337,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         commonItem.bActive = rdr.GetInt32(statusIndex) == 0 ? true : false;
                         if (commonItem.bActive)
                         {
-                            commonItem.item_status = "ACTIVE";
+                            commonItem.item_status = Common.tikiActive;
                         }
                         else
                         {
-                            commonItem.item_status = "UNACTIVE";
+                            commonItem.item_status = Common.tikiUnactive;
                         }
 
                         CommonModel commonModel = new CommonModel();

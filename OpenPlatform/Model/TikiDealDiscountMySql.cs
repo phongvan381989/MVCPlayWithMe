@@ -18,7 +18,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             try
             {
-                foreach (var deal in listDeal)
+                // Thực tế chỉ cần cập nhật trạng thái của deal mới nhất, nên ta sẽ bỏ qua deal cũ
+                // Phần tử đầu là mới nhất từ kiểm tra dữ liệu thực tế TIKI trả về
+                DealCreatedResponseDetail deal = listDeal[0];
+                //foreach (var deal in listDeal)
                 {
                     // Nếu tồn tại thì cập nhật trạng thái Active ngược lại thêm mới
                     MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
@@ -76,7 +79,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlConnection conn)
         {
             List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
-            List<SimpleTikiProduct> simpleTikiProductsTemp = new List<SimpleTikiProduct>();
             try
             {
                 // Cập nhật lại trạng thái theo thời gian bắt đầu, kết thúc deal
@@ -114,29 +116,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                 }
 
-                // Tồn kho bằng 0 không set được chương trình giảm giá.
-                // Tồn kho <= 3 tiki sẽ tắt chương trình giảm giá
-                // Loại bỏ Item đã mapping nhưng tồn kho <= 3.
-                // Chưa mapping vẫn lấy để hiển thị nhưng sẽ không tạo deal giảm giá được.
                 TikiMySql tikiSqler = new TikiMySql();
                 foreach (var simpleTiki in simpleTikiProducts)
                 {
                     CommonItem item = new CommonItem();
                     item.models.Add(new CommonModel());
                     tikiSqler.TikiGetItemFromIdConnectOut(simpleTiki.id, item, conn);
-                    if (item.models[0].mapping.Count == 0 ||
-                        (item.models[0].mapping.Count > 0 && item.models[0].GetQuatityFromListMapping() > Common.minQuantityOfDealTiki))
-                    {
-                        simpleTiki.models = item.models;
-                        simpleTikiProductsTemp.Add(simpleTiki);
-                    }
+                    simpleTiki.models = item.models;
                 }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            return simpleTikiProductsTemp;
+            return simpleTikiProducts;
         }
 
         public List<SimpleTikiProduct> GetItemsNoDealDiscountRunning(MySqlConnection conn)
