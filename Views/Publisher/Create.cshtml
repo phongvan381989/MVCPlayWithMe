@@ -125,7 +125,7 @@
             }
 
             const searchParams = new URLSearchParams();
-            searchParams.append("name", publisherName);
+            searchParams.append("name", CapitalizeWords(publisherName));
             searchParams.append("discount", GetValueInputById("publisher-discount", 20));
             searchParams.append("detail", document.getElementById("publisher-detail").value);
             let query = "/Publisher/CreatePublisher";

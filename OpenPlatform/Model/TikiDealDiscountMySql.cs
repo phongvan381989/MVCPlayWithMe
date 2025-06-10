@@ -13,7 +13,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TikiDealDiscountMySql
     {
-        public void InsertCheckExistTikiDealDiscountConnectOut(List<DealCreatedResponseDetail> listDeal,
+        public void InsertCheckExistTikiDealDiscountOfOneSkuConnectOut(
+            List<DealCreatedResponseDetail> listDeal, // Danh sách deal của 1 sku
             MySqlConnection conn)
         {
             try
@@ -41,6 +42,67 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@p_CreatedAt", deal.created_at);
 
                     cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        public void InsertCheckExistTikiDealDiscountOfSkuListConnectOut(
+            List<DealCreatedResponseDetail> listDeal, // Danh sách deal của nhiều sku
+            MySqlConnection conn)
+        {
+            try
+            {
+                // Thực tế chỉ cần cập nhật trạng thái của deal mới nhất, nên ta sẽ bỏ qua deal cũ
+                // Phần tử đầu là mới nhất từ kiểm tra dữ liệu thực tế TIKI trả về
+
+                // Danh sách sku đã insert vào db
+                List<string> skuInsertedList = new List<string>();
+                DealCreatedResponseDetail deal = null;
+                int count = listDeal.Count();
+                //foreach (var deal in listDeal)
+                {
+                    // Nếu tồn tại thì cập nhật trạng thái Active ngược lại thêm mới
+                    MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    // Thêm tham số cho Stored Procedure
+                    cmd.Parameters.AddWithValue("@p_DealDiscount_Id", 0);
+                    cmd.Parameters.AddWithValue("@p_Sku", "");
+                    cmd.Parameters.AddWithValue("@p_SpecialPrice", 0);
+                    cmd.Parameters.AddWithValue("@p_SpecialFromDate", "");
+                    cmd.Parameters.AddWithValue("@p_SpecialToDate", "");
+                    cmd.Parameters.AddWithValue("@p_QtyMax", 0);
+                    cmd.Parameters.AddWithValue("@p_QtyLimit", 0);
+                    cmd.Parameters.AddWithValue("@p_DiscountPercent", 0.0);
+                    cmd.Parameters.AddWithValue("@p_IsActive", 0);
+                    cmd.Parameters.AddWithValue("@p_Notes", "");
+                    cmd.Parameters.AddWithValue("@p_CreatedAt", DateTime.Now);
+
+                    for(int i = 0; i < count; i++)
+                    {
+                        deal = listDeal[i];
+                        if (skuInsertedList.Contains(deal.sku))
+                        {
+                            continue;
+                        }
+                        skuInsertedList.Add(deal.sku);
+                        cmd.Parameters[0].Value = deal.id;
+                        cmd.Parameters[1].Value = deal.sku;
+                        cmd.Parameters[2].Value = deal.special_price;
+                        cmd.Parameters[3].Value = deal.special_from_date;
+                        cmd.Parameters[4].Value = deal.special_to_date;
+                        cmd.Parameters[5].Value = deal.qty_max;
+                        cmd.Parameters[6].Value = deal.qty_limit;
+                        cmd.Parameters[7].Value = deal.discount_percent;
+                        cmd.Parameters[8].Value = deal.is_active;
+                        cmd.Parameters[9].Value = deal.notes;
+                        cmd.Parameters[10].Value = deal.created_at;
+                        cmd.ExecuteNonQuery();
+                    }
                 }
             }
             catch (Exception ex)
@@ -183,7 +245,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return taxAndFee;
         }
 
-        public MySqlResultState UpdateIsActiveOff(List<int> lsDealId, MySqlConnection conn)
+        public MySqlResultState UpdateIsActiveCloseFromLsDealId(List<int> lsDealId, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -195,6 +257,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     foreach( var id in lsDealId)
                     {
                         cmd.Parameters[0].Value = id;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
+        // Cập nhật trạng thái đang chạy của sku về close
+        public MySqlResultState UpdateIsActiveCloseFromSku(List<string> skuList, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbtikidealdiscount SET IsActive = 5 WHERE Sku = @inSku AND IsActive = 2;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inSku", "");
+                    foreach (var sku in skuList)
+                    {
+                        cmd.Parameters[0].Value = sku;
                         cmd.ExecuteNonQuery();
                     }
                 }

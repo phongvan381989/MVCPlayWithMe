@@ -31,5 +31,9 @@ namespace MVCPlayWithMe.Models.ProductModel
 
         // id của combo sản phẩm
         public int comboId { get; set; }
+
+        // Hiện tại trừ ngày xuất kho theo đơn mới nhất, mục đích lấy bao ngày rồi sản phẩm hết hàng
+        // chưa được nhập hàng mới, sản phẩm bao ngày rồi chưa có đơn
+        public int daysDifference { get; set; }
     }
 }

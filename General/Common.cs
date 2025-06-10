@@ -30,8 +30,10 @@ namespace MVCPlayWithMe.General
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
 
-        // Tồn kho <= 3 deal của tiki bị tắt
-        public static readonly int minQuantityOfDealTiki = 0;
+        // Từ thực tế thấy:
+        // set deal giảm giá khi tồn kho >= 3, khi tồn kho < 3 deal của tiki bị tắt
+        // Nếu sản phẩm có tồn kho < 3, ta set deal mới thì không bị tắt
+        public static readonly int minQuantityOfDealTiki = 2;
 
         public static readonly RestClient client = new RestClient();
 

@@ -45,7 +45,7 @@ namespace MVCPlayWithMe.Controllers
             if (orderStatusPush.status != "UNPAID" &&
                 //orderStatusPush.status != "READY_TO_SHIP" &&
                 //orderStatusPush.status != "PROCESSED" &&
-                //orderStatusPush.status != "IN_CANCEL" &&
+                orderStatusPush.status != "IN_CANCEL" &&
                 //orderStatusPush.status != "TO_RETURN" && // Khách nhận, và trả hàng
                 orderStatusPush.status != "CANCELLED") // Hủy đơn
             {
@@ -63,7 +63,7 @@ namespace MVCPlayWithMe.Controllers
             ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
 
             ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
-             if (orderStatusPush.status == "CANCELLED"/* || orderStatusPush.status == "TO_RETURN"*/)
+             if (orderStatusPush.status == "CANCELLED" || orderStatusPush.status == "IN_CANCEL")
             {
                 status = ECommerceOrderStatus.UNBOOKED;
                 //if (orderStatusPush.status == "CANCELLED")

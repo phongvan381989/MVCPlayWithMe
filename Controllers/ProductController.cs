@@ -814,7 +814,7 @@ namespace MVCPlayWithMe.Controllers
                     conn.Open();
 
                     // Lấy danh sách sản phẩm có combo
-                    List<Product> lsProduct = sqler.GetProductHasCombo(conn);
+                    List<Product> lsProduct = sqler.GetActiveProductHasComboActiveAll(conn);
 
                     // Tạo danh sách combo
                     List<Combo> lsCombo = new List<Combo>();
@@ -854,6 +854,62 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
+        // Chưa đăng bán riêng lẻ tất cả sản phẩm đang kinh doanh ở cùng 1
+        // sản phẩm cha / Item trên sàn
+        [HttpGet]
+        public string SearchDontSellSigleWithParrentOnECommerce(string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            List<Product> lsSearchResult = new List<Product>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    // Lấy danh sách sản phẩm có combo
+                    List<Product> lsProduct = sqler.GetActiveProductHasComboActiveAll(conn);
+
+                    // Tạo danh sách combo
+                    List<Combo> lsCombo = new List<Combo>();
+                    int count = lsProduct.Count();
+
+                    Product proTemp = null;
+                    Combo comboTemp = null;
+                    for (int i = 0; i < count; i++)
+                    {
+                        proTemp = lsProduct[i];
+                        if (comboTemp == null || proTemp.comboId != comboTemp.id)
+                        {
+                            lsCombo.Add(new Combo(proTemp.comboId, proTemp.comboName));
+                            comboTemp = lsCombo[lsCombo.Count - 1];
+                        }
+                        comboTemp.products.Add(proTemp);
+                    }
+
+                    if (eType == Common.eTiki)
+                    {
+                        foreach (var combo in lsCombo)
+                        {
+                            if (!sqler.TikiDontSellSigleWithParrentConnectOut(combo, comboSqler, conn))
+                            {
+                                lsSearchResult.AddRange(combo.products);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
 
         [HttpGet]
         public string ChangePage(string publisher, string codeOrBarcode,
@@ -1593,12 +1649,11 @@ namespace MVCPlayWithMe.Controllers
 
             TikiUpdateStock.TikiProductUpdateQuantity(itemId, quantity, result);
 
-            // Tồn kho <= 0 ta cập nhật trạng thái của deal đang chạy của sku về CLOSE
-            // vì tiki tắt khi tồn kho <=0.
-            if (quantity <= Common.minQuantityOfDealTiki)
-            {
-                tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId(itemId, conn);
-            }
+            // Comment vì mỗi ngày check lại toàn bộ deal đang chạy
+            //if (quantity <= Common.minQuantityOfDealTiki)
+            //{
+            //    tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId(itemId, conn);
+            //}
 
             return result;
         }
@@ -1620,12 +1675,11 @@ namespace MVCPlayWithMe.Controllers
 
             TikiUpdateStock.TikiProductUpdateQuantity((int)commonItem.itemId, quantity, result);
 
-            // Tồn kho <= 0 ta cập nhật trạng thái của deal đang chạy của sku về CLOSE
-            // vì tiki tắt khi tồn kho <=0.
-            if (quantity <= Common.minQuantityOfDealTiki)
-            {
-                tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId((int)commonItem.itemId, conn);
-            }
+            // Comment vì mỗi ngày check lại toàn bộ deal đang chạy
+            //if (quantity <= Common.minQuantityOfDealTiki)
+            //{
+            //    tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId((int)commonItem.itemId, conn);
+            //}
 
             commonItem.result = result;
         }

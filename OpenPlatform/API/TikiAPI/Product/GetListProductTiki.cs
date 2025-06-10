@@ -31,20 +31,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             "limit"
         };
 
-        // maxPage == 0: lấy tất cả dữ liệu, ngược lại lấy đến khi currentPage == currentPage hoặc tất cả
+        // maxPage == 0: lấy tất cả dữ liệu, ngược lại lấy đến khi currentPage == maxPage
         public static List<TikiProduct> GetListProductsCore(
             List<DevNameValuePair> listValuePair,
             int maxPage)
         {
             List<TikiProduct> lsProduct = new List<TikiProduct>();
-            if (CommonTikiAPI.tikiConfigApp == null)
-            {
-                // Thử lấy
-                TikiMySql tikiMySql = new TikiMySql();
-                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-                if (CommonTikiAPI.tikiConfigApp == null)
-                    return lsProduct;
-            }
 
             Int32 currentPage = 1;
             while (true)
@@ -100,7 +92,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             // Add page = 1
             listValuePair.Add(new DevNameValuePair("page", ""));
 
-            // Add limit=20
+            // Add limit
             listValuePair.Add(new DevNameValuePair("limit", TikiConstValues.cstrPerPage));
 
             // Add "includes=seller,categories,inventory,attributes,images"
@@ -121,7 +113,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             // Add page = 1
             listValuePair.Add(new DevNameValuePair("page", ""));
 
-            // Add limit=20
+            // Add limit
             listValuePair.Add(new DevNameValuePair("limit", TikiConstValues.cstrPerPage));
 
             // Add "includes=seller,categories,inventory,attributes,images"
@@ -154,15 +146,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <returns></returns>
         public static TikiProduct GetProductFromOneShop(int id)
         {
-            if (CommonTikiAPI.tikiConfigApp == null)
-            {
-                // Thử lấy
-                TikiMySql tikiMySql = new TikiMySql();
-                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-                if (CommonTikiAPI.tikiConfigApp == null)
-                    return null;
-            }
-
             // Thêm ?includes=seller,categories,inventory,attributes,images để lấy full thông tin
             //string http = TikiConstValues.cstrProductsHTTPAddress + "/" + code + "?includes=seller,categories,inventory,attributes,images";
             string http = TikiConstValues.cstrProductsHTTPAddress + "/" + id.ToString() + "?includes=inventory,images";

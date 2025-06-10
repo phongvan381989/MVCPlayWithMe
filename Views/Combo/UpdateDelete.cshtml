@@ -113,7 +113,12 @@
                 cell3.append(img);
 
                 // Tên
-                cell4.innerHTML = pro.name;
+                let pName = document.createElement("p");
+                //pName.className = "go-to-detail-product";
+                pName.innerHTML = pro.name;
+
+                UpdateProductNameStyle(pName, pro.status, pro.quantity);
+                cell4.append(pName);
 
                 // Số lượng tồn kho
                 cell5.innerHTML = pro.quantity;
@@ -155,7 +160,7 @@
 
             const searchParams = new URLSearchParams();
             searchParams.append("id", GetValueFromUrlName("id"));
-            searchParams.append("name", name);
+            searchParams.append("name", CapitalizeWords(name));
             searchParams.append("code", code);
             let query = "/Combo/UpdateCombo";
             ShowCircleLoader();

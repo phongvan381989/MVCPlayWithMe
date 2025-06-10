@@ -86,6 +86,12 @@
                                     onclick="SearchDontSellFullComboAndSigleOnECommerce()">
                                 Chưa Đăng Bán Combo + Lẻ.
                             </button>
+
+                            <button type="button" title="Chưa đăng bán riêng lẻ tất cả sản phẩm đang kinh doanh ở cùng 1
+                                    sản phẩm cha / Item trên sàn."
+                                    onclick="SearchDontSellSigleWithParrentOnECommerce()">
+                                Chưa Đăng Bán Lẻ Cùng Cha.
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -393,20 +399,6 @@
             } else if (btn.textContent === "Tắt") {
                 btn.style.backgroundColor = "red"; // Nền đỏ
                 btn.title = "Tắt sản phẩm để dừng bán";
-            }
-        }
-
-        // Cập nhật màu tên sản phẩm dựa theo trạng thái kinh doanh, ngừng kinh doanh, tồn kho
-        function UpdateProductNameStyle(p, status, quantity) {
-            if (status == 2)// ngừng kinh doanh
-            {
-                p.style.color = "aqua";
-            }
-            else if (quantity == 0) {
-                p.style.color = "red";
-            }
-            else {
-                p.style.color = "initial";
             }
         }
 
@@ -769,6 +761,16 @@
             document.getElementById("publisher-id").value = "";
 
             let url = "/Product/SearchDontSellFullComboAndSigleOnECommerce";
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetECommerceType());
+            SearchProductCore(url, searchParams);
+        }
+
+        async function SearchDontSellSigleWithParrentOnECommerce() {
+            // Làm mới input publisher
+            document.getElementById("publisher-id").value = "";
+
+            let url = "/Product/SearchDontSellSigleWithParrentOnECommerce";
             const searchParams = new URLSearchParams();
             searchParams.append("eType", GetECommerceType());
             SearchProductCore(url, searchParams);

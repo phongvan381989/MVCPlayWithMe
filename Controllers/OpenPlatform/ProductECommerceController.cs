@@ -301,7 +301,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             TikiProduct pro = null;
             pro = GetListProductTiki.GetProductFromOneShop(id);
-            if (pro == null)
+
+            if (pro == null || pro.created_by != TikiConstValues.cstrCreatedBy)
             {
                 return null;
             }
@@ -764,7 +765,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
                     {
                         result.State = EMySqlResultState.INVALID;
-                        result.Message = "Đơn hàng đã bị hủy.";
+                        result.Message = "Đơn hàng đã bị hủy hoặc đã đóng.";
                     }
                     else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                     {

@@ -58,7 +58,7 @@
             }
 
             const searchParams = new URLSearchParams();
-            searchParams.append("name", name);
+            searchParams.append("name", CapitalizeWords(name));
             searchParams.append("code", code);
             let url = "/Combo/CreateCombo";
 

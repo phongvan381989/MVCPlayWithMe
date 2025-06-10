@@ -50,6 +50,12 @@
                         <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)">Tồn kho</th>
                         <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
                             title="Chỉ mục combo, click vào để sắp xếp theo combo">Chỉ Số Combo</th>
+                        <th style="cursor:pointer;" onclick="SortTable('myTableStatistics', this)"
+                            title="Ngày phát sinh đơn cách hiện tại bao ngày. Nếu tồn kho = 0, bao ngày rồi chưa nhập hàng.
+                            Nếu giá trị lớn hơn khoảng đã chọn, có nghĩa trong khoảng thời gian đã chọn không có đơn nào,
+                            chứ không phải chính xác số ngày hiển thị chưa có đơn.">
+                            Bao Ngày Chưa Có Đơn
+                        </th>
                     </tr>
                 </table>
             </div>
@@ -120,6 +126,7 @@
                 let cell5 = row.insertCell(4);
                 let cell6 = row.insertCell(5);
                 let cell7 = row.insertCell(6);
+                let cell8 = row.insertCell(7);
 
                 // Id
                 cell1.innerHTML = obj.id;
@@ -151,6 +158,15 @@
 
                 // Combo id
                 cell7.innerHTML = obj.comboId;
+
+                // Bao ngày chưa có đơn
+                let pdaysDifference = document.createElement("p");
+                pdaysDifference.innerHTML = obj.daysDifference;
+                cell8.append(pdaysDifference);
+                if (obj.daysDifference >
+                    ConvertToInt(document.getElementById("interval-day").value)) {
+                    pdaysDifference.title = "Trong khoảng thời gian đã chọn không phát sinh đơn nào cả";
+                }
             }
         }
     </script>

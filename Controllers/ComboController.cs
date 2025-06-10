@@ -51,11 +51,11 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
 
-            if (string.IsNullOrWhiteSpace(code))
-            {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Mã không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
-            }
+            //if (string.IsNullOrWhiteSpace(code))
+            //{
+            //    result = new MySqlResultState(EMySqlResultState.INVALID, "Mã không hợp lệ.");
+            //    return JsonConvert.SerializeObject(result);
+            //}
 
             result = sqler.CreateNewCombo(name, code);
             return JsonConvert.SerializeObject(result);

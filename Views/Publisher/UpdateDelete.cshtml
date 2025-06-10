@@ -60,7 +60,7 @@
             let publisherDetail = document.getElementById("publisher-detail").value;
             const searchParams = new URLSearchParams();
             searchParams.append("id", GetValueFromUrlName("id"));
-            searchParams.append("name", publisherName);
+            searchParams.append("name", CapitalizeWords(publisherName));
             searchParams.append("discount", GetValueInputById("publisher-discount", 20));
             searchParams.append("detail", publisherDetail);
             let query = "/Publisher/UpdatePublisher";

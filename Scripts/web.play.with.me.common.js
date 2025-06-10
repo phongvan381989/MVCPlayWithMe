@@ -28,6 +28,8 @@ var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
 var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
 
+var tikiConstDiscount = 10;
+
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;
 }
@@ -1310,4 +1312,49 @@ function UpdateSTT(table, indexColumn, isHeader) {
             sttCell.setAttribute('title', `STT: ${sttValue}`);
         }
     });
+}
+
+// Viết hoa chữ cái đầu của từ
+function CapitalizeWords(input) {
+    return input
+        .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
+        .split(' ')    // Tách chuỗi thành mảng các từ
+        .map(word => {
+            let i = 0;
+            // Bỏ qua các ký tự không phải chữ cái (hỗ trợ Unicode)
+            while (i < word.length && !/\p{L}/u.test(word[i])) {
+                i++;
+            }
+            // Nếu tìm thấy ký tự chữ cái, viết hoa ký tự đó
+            return word.slice(0, i) +
+                (i < word.length ? word[i].toUpperCase() : '') +
+                word.slice(i + 1);
+        })
+        .join(' '); // Gộp các từ lại thành chuỗi
+}
+
+// Loại bỏ khoảng trắng ở đầu và cuối, viết hoa chữ cái đầu
+function TrimCapitalizeWords(input) {
+    let inputTemp = input.trim();
+    return inputTemp
+        .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
+        .split(' ')    // Tách chuỗi thành mảng các từ
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Viết hoa chữ cái đầu và giữ phần còn lại
+        .join(' ');    // Gộp các từ lại thành chuỗi
+}
+
+// Cập nhật màu tên sản phẩm dựa theo trạng thái kinh doanh, ngừng kinh doanh, tồn kho
+function UpdateProductNameStyle(p, status, quantity) {
+    if (status == 2)// ngừng kinh doanh
+    {
+        p.style.color = "aqua";
+        p.title = "Sản phẩm ngừng kinh doanh";
+    }
+    else if (quantity == 0) {
+        p.style.color = "red";
+        p.title = "Sản phẩm hết hàng";
+    }
+    else {
+        p.style.color = "initial";
+    }
 }

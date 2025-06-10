@@ -85,14 +85,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
         static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(
             EnumOrderItemFilterByDate interval, CommonOrderStatus orderStatus)
         {
-            if (CommonTikiAPI.tikiConfigApp == null)
-            {
-                // Thử lấy
-                TikiMySql tikiMySql = new TikiMySql();
-                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-                if (CommonTikiAPI.tikiConfigApp == null)
-                    return null;
-            }
 
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrder = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();
             //GET /integration/v2/orders?page=1&limit=20&status=queueing&item_inventory_type=backorder&item_confirmation_status=waiting&filter_date_by=last30days
@@ -107,7 +99,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
                     // Add page = 1
                     listValuePair.Add(new DevNameValuePair("page", currentPage.ToString()));
 
-                    // Add limit=20
+                    // Add limit
                     listValuePair.Add(new DevNameValuePair("limit", TikiConstValues.cstrPerPage));
 
                     // Add status=queueing
@@ -183,14 +175,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 
         static public MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder TikiGetOrderFromCode(string code)
         {
-            if (CommonTikiAPI.tikiConfigApp == null)
-            {
-                // Thử lấy
-                TikiMySql tikiMySql = new TikiMySql();
-                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-                if (CommonTikiAPI.tikiConfigApp == null)
-                    return null;
-            }
 
             MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder order = null;
             //GET /integration/v2/orders/510916693

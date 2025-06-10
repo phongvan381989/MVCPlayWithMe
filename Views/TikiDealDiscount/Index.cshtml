@@ -53,8 +53,8 @@
         </div>
         <div class="display-flex-padding1020-flex-warap-wrap">
             <button type="button" title="Lấy danh sách sản phẩm đang bật bán và chưa tham gia chương trình
-                    giảm giá nào đang chạy, sắp chạy. Nếu chưa mapping, mapping và
-                    có tồn kho lớn = 0 không tạo deal vì tiki không cho set khi tồn kho = 0
+                    giảm giá nào đang chạy, sắp chạy, đã mapping và
+                    có tồn kho lớn hơn 0 không tạo deal vì tiki không cho set khi tồn kho = 0
                     Dữ liệu lấy từ DB nên nếu tạo chương trình giảm giá trực tiếp trên nhà bán Tiki
                     và chưa cập nhật thì sẽ không lấy được dữ liệu."
                     onclick="GetItemsNoDealDiscountRunning()" style="margin-right:10px;">
@@ -131,9 +131,9 @@
                         <input type="text" id="absoluteMinProfit" name="absoluteMinProfit"
                                title="Thay đổi để cập nhật giá bán" oninput="CaculateSalePrice()">VND<br><br>
 
-                        <label for="profitPercent">Thay đổi % lợi nhuận để tính giá bán:</label>
+                        <label for="profitPercent">Lợi nhuận so với giá vốn:</label>
                         <input type="number" id="profitPercent" name="profitPercent" step="0.1" min="0" max="100"
-                               title="Phần trăm lợi nhuận mong muốn(so với giá nhập) để cập nhật giá bán"
+                               title="Thay đổi để cập nhật giá bán.Phần trăm lợi nhuận mong muốn(so với giá nhập) để cập nhật giá bán"
                                 oninput="CaculateSalePrice()">%<br><br>
 
                         <div class="display-flex-align-items-center">
@@ -276,6 +276,15 @@
             SetFormattedMoneyInput("absoluteMinProfit", taxAndFeeTiki.minProfit);
 
             document.getElementById("profitPercent").value = taxAndFeeTiki.expectedPercentProfit;
+
+            document.getElementById("profitPercent").title = "";
+            document.getElementById("profitPercent").disabled = false;
+
+            document.getElementById("packingCost").disabled = false;
+            document.getElementById("packingCost").title = "";
+
+            document.getElementById("absoluteMinProfit").disabled = false;
+            document.getElementById("absoluteMinProfit").title = "";
             CaculateSalePrice();
 
             document.getElementById("btnCreateOneDeal").sku = sku;
@@ -655,15 +664,37 @@
             //    console.log("x: " + x);
             //}
             let salePrice = CaculateSalePriceCore(p, dI, x, t, c, m);
-            
-            // Tính chiết khấu bán so với giá bìa
-            let dO = 1 - salePrice / p;
+
+            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
+            // Ta tính lại giá bán, bán dưới điểm hòa vốn
+            let dO = tikiConstDiscount;
+            if (salePrice > p) {
+                salePrice = p * (100 - dO) / 100;
+                // Làm tròn salePrice là bội của 100 VND
+                if (salePrice % 100 != 0) {
+                    salePrice = salePrice - salePrice % 100;
+                }
+                let title = "Vì giá bìa rẻ, chấp nhận bán dưới giá vốn và chiết khấu một chút so với giá bìa. Disable ô nhập này";
+                document.getElementById("profitPercent").value = 0;
+                document.getElementById("profitPercent").title = title;
+                document.getElementById("profitPercent").disabled = true;
+
+                document.getElementById("packingCost").disabled = true;
+                document.getElementById("packingCost").title = title;
+
+                document.getElementById("absoluteMinProfit").disabled = true;
+                document.getElementById("absoluteMinProfit").title = title;
+            }
+            else {
+                // Tính chiết khấu bán so với giá bìa
+                dO = 100 - salePrice / p * 100;
+            }
             //if (DEBUG) {
             //    console.log("salePrice: " + salePrice);
             //    console.log("saleDiscount: " + Math.round(dO * 100 * 10) / 10);
             //}
             SetFormattedMoneyInput("salePrice", salePrice);
-            document.getElementById("saleDiscount").value = Math.round(dO * 100 * 10) / 10;
+            document.getElementById("saleDiscount").value = Math.round(dO * 10) / 10;
         }
 
         async function CreateOneDeal(btn) {

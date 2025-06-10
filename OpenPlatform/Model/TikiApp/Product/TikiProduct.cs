@@ -127,5 +127,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
         /// inventory information
         /// </summary>
         public TikiInventory inventory { get; set; }
+
+        // Giờ không đăng theo, tạo mới sản phẩm
+        // "created_by": "HUEHOANG1293@GMAIL.COM"
+        public string created_by { get; set; }
     }
 }

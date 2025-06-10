@@ -128,13 +128,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             TikiDealDiscountMySql tikiSqler,
             MySqlConnection conn)
         {
-            if(tikiEvent.payload.quantity_sellable_to == Common.minQuantityOfDealTiki)
-            {
-                // Tồn kho bằng 0, sản phẩm hết hàng. Tiki sẽ tắt deal đang chạy.
-                // Có thể trạng thái deal đã được cập nhật trực tiếp khi tồn kho trong kho giảm về 0 do trừ tồn kho theo đơn,
-                // nhưng ta vẫn cập nhật ở đây lại cho chắc.
-                tikiSqler.UpdateIsActiveCloseFromItemId(tikiEvent.payload.product_id, conn);
-            }
+            // Comment vì mỗi ngày check lại toàn bộ deal đang chạy
+            //MyLogger.GetInstance().Info("Start HandleProductInventoryUpdateEvent");
+            //if (tikiEvent.payload.quantity_sellable_to == Common.minQuantityOfDealTiki)
+            //{
+            //    MyLogger.GetInstance().Info("Start quantity_sellable_to = 0. Deal will turn off.");
+            //    MyLogger.GetInstance().Info(JsonConvert.SerializeObject(tikiEvent));
+            //    // Tồn kho bằng 0, sản phẩm hết hàng. Tiki sẽ tắt deal đang chạy.
+            //    // Có thể trạng thái deal đã được cập nhật trực tiếp khi tồn kho trong kho giảm về 0 do trừ tồn kho theo đơn,
+            //    // nhưng ta vẫn cập nhật ở đây lại cho chắc.
+            //    tikiSqler.UpdateIsActiveCloseFromItemId(tikiEvent.payload.product_id, conn);
+            //}
+            //MyLogger.GetInstance().Info("Start End");
         }
 
         private List<TikiEvent> GetListProductInventoryUpdateFromEventTypeAll(List<TikiEvent> listTikiEvent)
@@ -179,13 +184,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                         HandleOrderEvent(e, tikiMySqler, conn);
                     }
 
-                    List<TikiEvent> listProductInventoryUpdate = GetListProductInventoryUpdateFromEventTypeAll(event_Response.events);
-                    MyLogger.GetInstance().Info("Start HandleProductInventoryUpdateEvent");
-                    MyLogger.GetInstance().Info(JsonConvert.SerializeObject(listProductInventoryUpdate));
-                    foreach (var e in listProductInventoryUpdate)
-                    {
-                        HandleProductInventoryUpdateEvent(e, tikiDealSqler, conn);
-                    }
+                    //List<TikiEvent> listProductInventoryUpdate = GetListProductInventoryUpdateFromEventTypeAll(event_Response.events);
+
+                    //MyLogger.GetInstance().Info(JsonConvert.SerializeObject(listProductInventoryUpdate));
+                    //foreach (var e in listProductInventoryUpdate)
+                    //{
+                    //    HandleProductInventoryUpdateEvent(e, tikiDealSqler, conn);
+                    //}
                 }
             }
             catch (Exception ex)

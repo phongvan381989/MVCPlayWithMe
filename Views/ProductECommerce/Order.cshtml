@@ -196,12 +196,12 @@
                 <label for="order-status-all">Tất Cả</label>
             </div>
             <div class="display-flex-margin-right20-align-items-center">
-                <input type="radio" id="order-status-packed" name="order-status-packed-returned-booked-unbooked" 
+                <input type="radio" id="order-status-packed" name="order-status-packed-returned-booked-unbooked"
                        class="margin-left20 dont-pack-order" onchange="ChangeOrderStatusInWarehouse()">
                 <label for="order-status-packed">Đã Đóng</label>
             </div>
             <div class="display-flex-margin-right20-align-items-center">
-                <input type="radio" id="order-status-returned" name="order-status-packed-returned-booked-unbooked" 
+                <input type="radio" id="order-status-returned" name="order-status-packed-returned-booked-unbooked"
                        class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
                 <label for="order-status-returned">Đã Hoàn</label>
             </div>
@@ -215,7 +215,7 @@
                        class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
                 <label for="order-status-unbooked">Hủy Giữ Chỗ</label>
             </div>
-            <div  class="display-flex-margin-right20-align-items-center">
+            <div class="display-flex-margin-right20-align-items-center">
                 <label id="count-order-on-view" style="padding-left:20px;"> 0 đơn hàng</label>
             </div>
         </div>
@@ -256,6 +256,10 @@
         <audio id="mySPDaDuSoLuong">
             <source src="~/Media/SPDaDuSoLuong.m4a" type="audio/m4a">
             <source src="~/Media/SPDaDuSoLuong.wav" type="audio/wav">
+        </audio>
+        <audio id="myDonDaDongHoacHuy">
+            <source src="~/Media/DonDaDongHoacHuy.m4a" type="audio/m4a">
+            <source src="~/Media/DonDaDongHoacHuy.wav" type="audio/wav">
         </audio>
     </div>
     <div id="order-detail-modal" class="order-modal">
@@ -853,6 +857,7 @@
 
             let isBigQuantity = false;
             let isDontMapping = false;
+            let isPackedOrCancelled = false;
 
             for (let i = 0; i < order.listItemId.length; i++) {
                 let container = document.createElement("div");
@@ -1100,11 +1105,13 @@
             EmptyAndFocusProductCodeElement();
 
             // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
-            if (order.orderStatusInWarehoue == bookedOrderStatusInWarehouse) {
+            if (order.orderStatusInWarehoue == bookedOrderStatusInWarehouse ||
+                isEmptyOrSpaces(order.orderStatusInWarehoue)) { // Vì push message xịt, nên chưa có thông tin
                 document.getElementsByClassName("btn-enough-product")[0].disabled = false;
             }
             else {
                 document.getElementsByClassName("btn-enough-product")[0].disabled = true;
+                isPackedOrCancelled = true;
             }
 
             // Đơn đang ở trạng thái Đã Đóng
@@ -1116,14 +1123,20 @@
             }
 
             ShowModalInOrderPage();
-            if (isBigQuantity) {
-                let x = document.getElementById("myAudioBigQuantity");
+            if (isPackedOrCancelled) {
+                let x = document.getElementById("myDonDaDongHoacHuy");
                 x.play();
             }
-
-            if (isDontMapping) {
+            else {
                 if (isBigQuantity) {
-                    await new Promise(res => setTimeout(res, 2000));
+                    let x = document.getElementById("myAudioBigQuantity");
+                    x.play();
+                }
+
+                if (isDontMapping) {
+                    if (isBigQuantity) { // Nghỉ 2 giây cho đọc xong đoạn isBigQuantity
+                        await new Promise(res => setTimeout(res, 2000));
+                    }
 
                     let x = document.getElementById("myCoSPTrongDonHangChuaMapping");
                     x.play();
@@ -1305,6 +1318,13 @@
         // Nếu sản phẩm trong kho đã được thêm đủ cho đơn, tự động click "Đủ Sản Phẩm"
         // Nếu click checkbox bằng tay thì không tự động click "Đủ Sản Phẩm"
         async function AddProduct() {
+            // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
+            if (currentOrder.orderStatusInWarehoue != bookedOrderStatusInWarehouse) {
+                let x = document.getElementById("myDonDaDongHoacHuy");
+                x.play();
+                return;
+            }
+
             let code = document.getElementsByName("product-code-isbn")[0];
             if (!IsValidString(code.value)) {
                 let x = document.getElementById("myMaSP-ISBNKhongDung");

@@ -67,6 +67,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <returns></returns>
         static public IRestResponse ExcuteRequest(RestRequest request)
         {
+            if (CommonTikiAPI.tikiConfigApp == null)
+            {
+                // Thử lấy
+                TikiMySql tikiMySql = new TikiMySql();
+                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+                if (CommonTikiAPI.tikiConfigApp == null)
+                    return null;
+            }
+
             request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty: tikiConfigApp.tikiAu.access_token));
             IRestResponse response = Common.client.Execute(request);
             MyLogger.InfoRestLog(Common.client, request, response);

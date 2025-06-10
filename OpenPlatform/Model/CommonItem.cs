@@ -251,6 +251,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             //imageSrc = pro.thumbnail;
             if (pro.images.Count > 0)
             {
+                // Tìm ảnh đại diện theo thumbnail
                 if (!string.IsNullOrWhiteSpace(pro.thumbnail))
                 {
                     // Tìm ảnh giống tên với thumbnail
@@ -271,7 +272,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
                 else
                 {
-                    imageSrc = pro.images[0].url;
+                    // Tìm ảnh đại diện theo index/position
+                    int position = 0;
+                    foreach (var image in pro.images)
+                    {
+                        if (image.position == 0)
+                        {
+                            imageSrc = image.url;
+                            break;
+                        }
+                    }
                 }
             }
 

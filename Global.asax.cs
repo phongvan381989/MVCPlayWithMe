@@ -82,15 +82,15 @@ namespace MVCPlayWithMe
                         DateTime dateNow = DateTime.Now;
                         if (dateNow.Hour == 3 && dateNow.Minute < 25)
                         {
-                            if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
-                            {
-                                // Hàm này mất thời gian nên không chạy hàng ngày.
-                                DealAction.CheckAndCreateDeal_Background(true);
-                            }
-                            else
-                            {
-                                DealAction.CheckAndCreateDeal_Background(false);
-                            }
+                            //if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
+                            //{
+                            //    // Hàm này mất thời gian nên không chạy hàng ngày.
+                              DealAction.CheckAndCreateDeal_Background(true);
+                            //}
+                            //else
+                            //{
+                            //    DealAction.CheckAndCreateDeal_Background(false);
+                            //}
                             Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
 
                             // Lấy sản phẩm mới / mới cập nhật trên sàn và lưu db

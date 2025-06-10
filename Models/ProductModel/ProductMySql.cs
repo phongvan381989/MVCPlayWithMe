@@ -1059,7 +1059,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public List<Product> GetProductHasCombo(MySqlConnection conn)
+        public List<Product> GetActiveProductHasComboActiveAll(MySqlConnection conn)
         {
             List<Product> ls = new List<Product>();
 
@@ -1171,6 +1171,80 @@ namespace MVCPlayWithMe.Models.ProductModel
                 }
 
                 return isCombo && isSigle;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return false;
+        }
+
+        // Kiểm tra xem combo đã được bán riêng lẻ ở cùng 1 sản phẩm cha trên sàn
+        // True: Nếu đã thỏa mã, ngược lại false
+        public Boolean TikiDontSellSigleWithParrentConnectOut(Combo combo,
+            ComboMySql comboSqler,
+            MySqlConnection conn)
+        {
+            try
+            {
+                List<CommonItem>  lsCommonItem  = comboSqler.TikiGetListMappingOfCombo(combo.id, conn);
+
+                Dictionary<int, List<CommonItem>> dictionary =
+                    new Dictionary<int, List<CommonItem>>();
+
+                foreach (var commonItem in lsCommonItem)
+                {
+                    if (commonItem.tikiSuperId != 0)
+                    {
+                        if (dictionary.ContainsKey(commonItem.tikiSuperId))
+                        {
+                            dictionary[commonItem.tikiSuperId].Add(commonItem);
+                        }
+                        else
+                        {
+                            dictionary.Add(commonItem.tikiSuperId, new List<CommonItem> { commonItem });
+                        }
+                    }
+                }
+                if (dictionary.Count == 0)
+                {
+                    return false;
+                }
+
+                List<int> lsProIdInCombo = new List<int>();
+                foreach (var pro in combo.products)
+                {
+                    lsProIdInCombo.Add(pro.id);
+                }
+                Boolean isSigle = false; // sản phẩm riêng lẻ được mapping đủ
+
+                foreach (var proId in lsProIdInCombo)
+                {
+                    isSigle = false;
+                    // Duyệt qua tất cả các value
+                    foreach (var lsCI in dictionary.Values)
+                    {
+                        foreach (var cI in lsCI)
+                        {
+                            if(cI.models[0].mapping.Count == 1 &&
+                                cI.models[0].mapping[0].product.id == proId)
+                            {
+                                isSigle = true;
+                                break;
+                            }
+                        }
+                        if (isSigle)
+                        {
+                            break;
+                        }
+                    }
+                    if (!isSigle)
+                    {
+                        break;
+                    }
+                }
+
+                return isSigle;
             }
             catch (Exception ex)
             {
@@ -2074,6 +2148,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                     int quantityIndex = rdr.GetOrdinal("Quantity");
                     int newImportedQuantityIndex = rdr.GetOrdinal("NewImportedQuantity");
                     int comboIdIndex = rdr.GetOrdinal("ComboId");
+                    int daysDifferenceIndex = rdr.GetOrdinal("DaysDifference");
 
                     while (rdr.Read())
                     {
@@ -2085,7 +2160,8 @@ namespace MVCPlayWithMe.Models.ProductModel
                             soldQuantity = rdr.IsDBNull(soldQuantityIndex)? 0 : rdr.GetInt32(soldQuantityIndex),
                             quantityInWarehouse = rdr.GetInt32(quantityIndex),
                             newImportedQuantity = rdr.IsDBNull(newImportedQuantityIndex) ? 0 : rdr.GetInt32(newImportedQuantityIndex),
-                            comboId = rdr.GetInt32(comboIdIndex)
+                            comboId = rdr.GetInt32(comboIdIndex),
+                            daysDifference = rdr.IsDBNull(daysDifferenceIndex) ? intervalDay + 1 : rdr.GetInt32(daysDifferenceIndex)
                         };
 
                         statisticsList.Add(statistic);

@@ -104,7 +104,7 @@ function AddUpdateParameters(searchParams) {
 
     searchParams.append("barcode", barcode);
 
-    searchParams.append("name", productName);
+    searchParams.append("name", CapitalizeWords(productName));
 
 
     let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value);
@@ -402,7 +402,7 @@ async function UpdateName() {
 
     const searchParams = new URLSearchParams();
     searchParams.append("id", GetValueFromUrlName("id"));
-    searchParams.append("name", productName);
+    searchParams.append("name", CapitalizeWords(productName));
 
     let url = "/Product/UpdateName";
 

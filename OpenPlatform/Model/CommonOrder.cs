@@ -41,7 +41,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public List<int> listQuantity { get; set; }
 
-        // Trạng thái đóng hàng đi từ, hoàn hàng về kho
+        // Trạng thái:
+        //"Đã Đóng", "Đã Hoàn", "Giữ Chỗ", "Hủy Giữ Chỗ", hoặc trống
         public string orderStatusInWarehoue { get; set; }
 
         /// <summary>
