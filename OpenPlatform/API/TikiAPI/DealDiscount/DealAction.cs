@@ -377,6 +377,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
             {
                 MyLogger.GetInstance().Info(ex.ToString());
             }
+            MyLogger.GetInstance().Info("CheckAndCreateDeal_Background END");
         }
     }
 }

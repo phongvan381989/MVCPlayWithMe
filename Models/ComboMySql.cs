@@ -132,6 +132,7 @@ namespace MVCPlayWithMe.Models
                         product.quantity = MyMySql.GetInt32(rdr, "Quantity");
                         product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
                         product.discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat("Discount");
+                        product.language = MyMySql.GetString(rdr, "Language");
 
                         product.SetFirstSrcImage();
                         combo.products.Add(product);

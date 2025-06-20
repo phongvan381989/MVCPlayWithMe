@@ -999,6 +999,54 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
+        // Khi nhận được thông báo có đơn hỏa tốc, thêm dữ liệu vào bảng này. Khi xác nhận đã biết có đơn hỏa tốc
+        // (từ mini app khởi động cùng window, khi được đóng,...) sẽ xóa khỏi bảng này
+        public void InsertTbExpressOrder(string code,
+            EECommerceType type,
+            MySqlConnection conn)
+        {
+            MyLogger.GetInstance().Info("Call InsertTbExpressOrder");
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Insert", conn))
+                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    // Thêm các tham số
+                    cmd.Parameters.AddWithValue("@p_Code", code);
+                    cmd.Parameters.AddWithValue("@p_ECommerce", (int)type);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+            }
+        }
+
+        public void UpdateStatusToKnownTbExpressOrder(string code,
+            EECommerceType type,
+            MySqlConnection conn)
+        {
+            MyLogger.GetInstance().Info("Call UpdateStatusToKnownTbExpressOrder");
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Update_Status_To_Known", conn))
+                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    // Thêm các tham số
+                    cmd.Parameters.AddWithValue("@p_Code", code);
+                    cmd.Parameters.AddWithValue("@p_ECommerce", (int)type);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+            }
+        }
+
         public void UpdateCancelledStatusTbItemOfEcommerceOder(CommonOrder commonOrder,
              EECommerceType type,
             MySqlConnection conn)
@@ -1081,6 +1129,156 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             return list;
+        }
+
+        // Khi nhận được thông báo có đơn hỏa tốc, thêm dữ liệu vào bảng này. Khi xác nhận đã biết có đơn hỏa tốc
+        // (từ mini app khởi động cùng window, khi được đóng,...) sẽ xóa khỏi bảng này
+        public void InsertTbTikiCategory(
+            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls,
+            MySqlConnection conn)
+        {
+            MyLogger.GetInstance().Info("Call InsertTbTikiCategory");
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiCategory_Insert", conn))
+                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    // Thêm các tham số
+                    cmd.Parameters.AddWithValue("@p_Name", "");
+                    cmd.Parameters.AddWithValue("@p_TikiCategoryId", 0);
+                    foreach (var category in ls)
+                    {
+                        cmd.Parameters[0].Value = category.name;
+                        cmd.Parameters[1].Value = category.id;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+            }
+        }
+
+        public List<int> GetCatetoryIdList(MySqlConnection conn)
+        {
+            List<int> CatetoryIdList = new List<int>();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("SELECT TikiCategoryId FROM webplaywithme.tb_tiki_category;", conn))
+                {
+                    cmd.CommandType = System.Data.CommandType.Text;
+
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        // Sử dụng GetOrdinal để lấy index của cột trước khi đọc
+                        int TikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
+
+                        while (reader.Read())
+                        {
+                            CatetoryIdList.Add(reader.GetInt32(TikiCategoryIdOrdinal));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+                CatetoryIdList.Clear();
+            }
+            return CatetoryIdList;
+        }
+
+        public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> 
+            GetTikiAttributesOfCategory(int categoryId, MySqlConnection conn)
+        {
+            var attributes = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>();
+            var query = "SELECT * FROM tb_tiki_attribute_of_category WHERE CategoryId = @in_CategoryId";
+            using (var command = new MySqlCommand(query, conn))
+            {
+                command.CommandType = CommandType.Text;
+                command.Parameters.AddWithValue("@in_CategoryId", categoryId);
+                using (var reader = command.ExecuteReader())
+                {
+                    // Sử dụng GetOrdinal để lấy index của cột trước khi đọc
+                    int codeOrdinal = reader.GetOrdinal("Code");
+                    int dataTypeOrdinal = reader.GetOrdinal("DataType");
+                    int defaultValueOrdinal = reader.GetOrdinal("DefaultValue");
+                    int descriptionOrdinal = reader.GetOrdinal("Description");
+                    int descriptionEnOrdinal = reader.GetOrdinal("DescriptionEn");
+                    int displayNameOrdinal = reader.GetOrdinal("DisplayName");
+                    int displayNameEnOrdinal = reader.GetOrdinal("DisplayNameEn");
+                    int attributeIdOrdinal = reader.GetOrdinal("AttributeId");
+                    int inputTypeOrdinal = reader.GetOrdinal("InputType");
+                    int isRequiredOrdinal = reader.GetOrdinal("IsRequired");
+                    int categoryIdOrdinal = reader.GetOrdinal("CategoryId");
+
+                    while (reader.Read())
+                    {
+                        var attribute = new MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute
+                        {
+                            code = reader.GetString(codeOrdinal),
+                            data_type = reader.IsDBNull(dataTypeOrdinal) ? null : reader.GetString(dataTypeOrdinal),
+                            default_value = reader.IsDBNull(defaultValueOrdinal) ? null : reader.GetString(defaultValueOrdinal),
+                            description = reader.IsDBNull(descriptionOrdinal) ? null : reader.GetString(descriptionOrdinal),
+                            description_en = reader.IsDBNull(descriptionEnOrdinal) ? null : reader.GetString(descriptionEnOrdinal),
+                            display_name = reader.IsDBNull(displayNameOrdinal) ? null : reader.GetString(displayNameOrdinal),
+                            display_name_en = reader.IsDBNull(displayNameEnOrdinal) ? null : reader.GetString(displayNameEnOrdinal),
+                            id = reader.GetInt32(attributeIdOrdinal),
+                            input_type = reader.IsDBNull(inputTypeOrdinal) ? null : reader.GetString(inputTypeOrdinal),
+                            is_required = reader.GetBoolean(isRequiredOrdinal),
+                            category_id = reader.GetInt32(categoryIdOrdinal)
+                        };
+                        attributes.Add(attribute);
+                    }
+                }
+            }
+
+            return attributes;
+        }
+
+        public void InsertTikiAttributesOfCategory(
+            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes,
+            MySqlConnection conn
+            )
+        {
+            using (var command = new MySqlCommand("st_tbTikiAttributeOfCategory_Insert", conn))
+            {
+                command.CommandType = CommandType.StoredProcedure;
+
+                // Tạo các tham số một lần
+                command.Parameters.Add("@p_Code", MySqlDbType.VarChar, 255);
+                command.Parameters.Add("@p_DataType", MySqlDbType.VarChar, 100);
+                command.Parameters.Add("@p_DefaultValue", MySqlDbType.VarChar, 255);
+                command.Parameters.Add("@p_Description", MySqlDbType.Text);
+                command.Parameters.Add("@p_DescriptionEn", MySqlDbType.Text);
+                command.Parameters.Add("@p_DisplayName", MySqlDbType.VarChar, 255);
+                command.Parameters.Add("@p_DisplayNameEn", MySqlDbType.VarChar, 255);
+                command.Parameters.Add("@p_AttributeId", MySqlDbType.Int32);
+                command.Parameters.Add("@p_InputType", MySqlDbType.VarChar, 100);
+                command.Parameters.Add("@p_IsRequired", MySqlDbType.Bit);
+                command.Parameters.Add("@p_CategoryId", MySqlDbType.Int32);
+
+                // Lặp qua danh sách và cập nhật giá trị tham số
+                foreach (var attribute in attributes)
+                {
+                    command.Parameters["@p_Code"].Value = (object)attribute.code ?? DBNull.Value;
+                    command.Parameters["@p_DataType"].Value = (object)attribute.data_type ?? DBNull.Value;
+                    command.Parameters["@p_DefaultValue"].Value = (object)attribute.default_value ?? DBNull.Value;
+                    command.Parameters["@p_Description"].Value = (object)attribute.description ?? DBNull.Value;
+                    command.Parameters["@p_DescriptionEn"].Value = (object)attribute.description_en ?? DBNull.Value;
+                    command.Parameters["@p_DisplayName"].Value = (object)attribute.display_name ?? DBNull.Value;
+                    command.Parameters["@p_DisplayNameEn"].Value = (object)attribute.display_name_en ?? DBNull.Value;
+                    command.Parameters["@p_AttributeId"].Value = attribute.id;
+                    command.Parameters["@p_InputType"].Value = (object)attribute.input_type ?? DBNull.Value;
+                    command.Parameters["@p_IsRequired"].Value = attribute.is_required;
+                    command.Parameters["@p_CategoryId"].Value = attribute.category_id;
+
+                    // Thực thi lệnh
+                    command.ExecuteNonQuery();
+                }
+            }
         }
     }
 }

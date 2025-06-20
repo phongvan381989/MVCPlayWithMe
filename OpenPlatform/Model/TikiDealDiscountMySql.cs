@@ -190,6 +190,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
+                simpleTikiProducts = new List<SimpleTikiProduct>();
             }
             return simpleTikiProducts;
         }

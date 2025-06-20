@@ -119,6 +119,17 @@
     </div>
 
     <div>
+        <label for="book-language">Ngôn ngữ:</label><br>
+        <select class="config-max-width margin-vertical" id="book-language">
+            <option value="Song ngữ">Song ngữ</option>
+            <option value="Tiếng Anh">Tiếng Anh</option>
+            <option value="Tiếng Việt">Tiếng Việt</option>
+            <option value="Đa ngữ">Đa ngữ</option>
+        </select>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
+
+    <div>
         <label for="page-number">Số trang:</label>
         <input type="number" class="config-max-width margin-vertical" id="page-number">
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")

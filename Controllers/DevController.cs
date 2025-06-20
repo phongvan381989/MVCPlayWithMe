@@ -1,8 +1,11 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Dev;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
@@ -13,6 +16,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Web;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
@@ -162,6 +166,198 @@ namespace MVCPlayWithMe.Controllers
 
             tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
             conn.Close();
+        }
+
+        private void RecursionGetCategoryOfTiki(int id,
+            string parrentName,
+            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls)
+        {
+            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> lsTem = TikiCategoryAction.GetChildrenCategory(id);
+            if(lsTem == null || lsTem.Count == 0)
+            {
+                return;
+            }
+
+            Thread.Sleep(1000);
+            foreach ( var category in lsTem)
+            {
+                if(category.is_primary == false)
+                {
+                    if (!string.IsNullOrWhiteSpace(parrentName))
+                    {
+                        category.name = parrentName + ">" + category.name;
+                    }
+                    RecursionGetCategoryOfTiki(category.id, category.name, ls);
+                }
+                else
+                {
+                    category.name = parrentName + ">" + category.name;
+                    ls.Add(category);
+                }
+            }
+        }
+
+        // Lấy category của Tiki phục vụ đăng sản phẩm tự động cho sàn Tiki
+        // NOTE: Gọi 1 lần DUY NHẤT TRONG ĐỜI, gọi lần sau dữ liệu sẽ bị duplicate
+        private void GetCategoryOfTiki()
+        {
+            // id: 8322 - Tương ứng Category cụ tổ : Nhà Sách Tiki
+            // Ta đi lấy đến đời thấp nhất: is_primary = true;
+            //int greatFather = 8322;// "Nhà Sách Tiki"
+            //int greatFather = 393;// "Sách thiếu nhi "
+            int greatFather = 316; // "Sách tiếng Việt"
+            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls =
+                new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory>();
+
+            RecursionGetCategoryOfTiki(greatFather, "Sách tiếng Việt", ls);
+            MyLogger.GetInstance().Info(JsonConvert.SerializeObject(ls));
+            // Lưu db
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    TikiMySql tikiSqler = new TikiMySql();
+                    tikiSqler.InsertTbTikiCategory(ls, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        // NOTE: Gọi 1 lần DUY NHẤT TRONG ĐỜI, gọi lần sau dữ liệu sẽ bị duplicate
+        private void InsertData_AttributeOfCategory()
+        {
+            // Lấy danh sách category id
+            List<int> categoryIdList = new List<int>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    TikiMySql tikiSqler = new TikiMySql();
+                    categoryIdList = tikiSqler.GetCatetoryIdList(conn);
+
+                    List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributeListGeneral =
+    new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>();
+                    foreach (var categoryId in categoryIdList)
+                    {
+                        // Lấy attribute mà category có thể có
+                        List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributeList =
+                            TikiCategoryAction.GetAttributeOfCategory(categoryId);
+
+                        Thread.Sleep(1000);
+                        foreach (var attr in  attributeList)
+                        {
+                            // Lấy những attribute thỏa mãn "is_required": true
+                            if( attr.is_required )
+                            {
+                                attr.category_id = categoryId;
+                                attributeListGeneral.Add(attr);
+                            }
+                        }
+                    }
+
+                    // Lưu vào db
+                    tikiSqler.InsertTikiAttributesOfCategory(attributeListGeneral, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        static string GetTikiAgeGroups(int minAge, int maxAge)
+        {
+            // Danh sách mức độ tuổi trên Tiki
+            var tikiAgeGroups = new Dictionary<string, (int min, int max)>
+            {
+                { "Từ 0 - 3 tuổi", (0, 36) },
+                { "Từ 4 - 6 tuổi", (37, 72) },
+                { "Từ 7 - 9 tuổi", (73, 108) },
+                { "Từ 10 - 12 tuổi", (109, 144) },
+                { "Từ 13 - 18 tuổi", (145, 215) },
+                { "Người lớn", (216, int.MaxValue) }, // Từ 18 tuổi trở lên
+            };
+
+            // Kết quả phù hợp
+            var matchingGroups = new List<string>();
+
+            foreach (var group in tikiAgeGroups)
+            {
+                var range = group.Value;
+                // Kiểm tra nếu khoảng tuổi này giao nhau với (minAge, maxAge)
+                if (range.max >= minAge && range.min <= maxAge) 
+                {
+                    matchingGroups.Add(group.Key);
+                }
+            }
+            int length = matchingGroups.Count();
+            string str = "";
+            for(int i = 0; i < length - 1; i++)
+            {
+                str = str + matchingGroups[i];
+                if(i != length - 1)
+                {
+                    str = str + ",";
+                }
+            }
+            
+
+            return str;
+        }
+
+        // Từ sản phẩm trong kho, tạo sản phẩm trên sàn Tiki
+        private void CreateTikiProductFromProductIdInWarehouse(int id)
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    // Lấy sản phẩm trong kho
+                    ProductMySql productMySql = new ProductMySql();
+                    Product product = productMySql.GetProductFromId(id, conn);
+
+                    TikiCreatingProduct tikiCreatingProduct = new TikiCreatingProduct();
+                    // Từ category sản phẩm trong kho, lấy category tương ứng trên Tiki
+                    tikiCreatingProduct.category_id = 
+                        productMySql.GetTikiCategoryIdFromProductCategoryId(product.categoryId, conn);
+                    // Tên đăng gồm: Tên combo "-" tên sản phẩm.
+                    tikiCreatingProduct.name = product.comboName + " - " + product.name;
+                    // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
+                    if(!tikiCreatingProduct.name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+                    {
+                        tikiCreatingProduct.name = "Sách " + tikiCreatingProduct.name;
+                    }
+
+                    tikiCreatingProduct.description = product.detail;
+                    tikiCreatingProduct.market_price = product.bookCoverPrice;
+
+                    // Attribute. Ta chỉ cập nhật những thuộc tính bắt buộc phải có
+                    TikiMySql tikiMySql = new TikiMySql();
+                    List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes = 
+                        tikiMySql.GetTikiAttributesOfCategory(tikiCreatingProduct.category_id, conn);
+                    var tikiAttributesGroups = new Dictionary<string, object>();
+                    foreach (var attr in attributes)
+                    {
+                        if(attr.input_type == "multiselect")
+                        {
+                            // Bán sách nên chỉ có age_group - Phù hợp với độ tuổi là nhiều lựa chọn
+                            // Từ khoảng tuổi sản phẩm chọn ra những khoảng tuổi thích hơp gồm:
+                            // "Người lớn", "Từ 0 - 3 tuổi", "Từ 10 - 12 tuổi", "Từ 13 - 18 tuổi", "Từ 4 - 6 tuổi", "Từ 7 - 9 tuổi"
+                        }
+                        string str = GetTikiAgeGroups(product.minAge, product.maxAge);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
 
         [HttpPost]

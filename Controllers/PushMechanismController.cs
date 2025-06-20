@@ -102,6 +102,11 @@ namespace MVCPlayWithMe.Controllers
 
                 if (shopeeOrderDetail != null)
                 {
+                    // Nếu đơn hàng là hỏa tốc, ta thêm vào bảng đơn hỏa tốc
+                    if(shopeeOrderDetail.checkout_shipping_carrier == CommonOpenPlatform.ShopeeExpress)
+                    {
+                        tikiSqler.InsertTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                    }
 
                     CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
                     shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOut(commonOrder, conn);

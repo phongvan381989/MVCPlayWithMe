@@ -185,7 +185,8 @@
             </button>
 
             <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetailFromServer()"
-                    title="Lấy dữ liệu từ server">
+                    title="Ưu tiên nhập MÃ ĐƠN. Với SHOPEE nếu là mã vận chuyển thì với sẽ lấy mã đơn từ server voi bé nhỏ nếu có lưu.
+                    Còn không thì chịu, phải lên sàn lấy mã đơn.">
                 Chi Tiết Đơn Hàng Từ Server
             </button>
         </div>
@@ -274,6 +275,9 @@
 
                         <p class="xxvsfszfasf cccaaa4545 nvns63099"> Mã Vận Đơn: </p>
                         <p class="gsbmlxm88 cccaaa4545 nvns63099"></p>
+                    </div>
+                    <div id="message-to-seller" style="display:none;color:orange">
+
                     </div>
                     <input type="text" class="nvns63099" name="product-code-isbn" />
                     <button type="button" class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
@@ -474,7 +478,7 @@
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
             if (responseDB.responseText == "null") {
-                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+                await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại với mã đơn thay vì mã vận chuyển, nếu không được thử lại sau.", null);
                 return;
             }
 
@@ -686,6 +690,14 @@
                 cell0.innerHTML = order.ecommerceName;
 
                 // Mã Đơn Hàng
+                //let pOrder = document.createElement("p");
+                //pOrder.innerHTML = order.code;
+
+                // Nếu là đơn hỏa tốc hiện thị màu cam đặc trưng của shopee
+                if (order.isExpress) {
+                    cell1.style.color = "orange";
+                    cell1.title = "Đơn hỏa tốc.";
+                }
                 cell1.innerHTML = order.code;
 
                 // Mã Vận Đơn
@@ -854,6 +866,14 @@
             document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
 
             document.getElementsByClassName("gsbmlxm88")[0].innerHTML = order.shipCode;
+
+            if (order.messageToSeller != "") {
+                document.getElementById("message-to-seller").style.display = "block";
+                document.getElementById("message-to-seller").innerHTML = "khách nhắn: " + order.messageToSeller;
+            } else {
+                document.getElementById("message-to-seller").style.display = "none";
+                document.getElementById("message-to-seller").innerHTML = "";
+            }
 
             let isBigQuantity = false;
             let isDontMapping = false;
@@ -1123,7 +1143,11 @@
             }
 
             ShowModalInOrderPage();
-            if (isPackedOrCancelled) {
+            // Đơn đã hoàn không thông báo gì
+            if (order.orderStatusInWarehoue == returnedOrderStatusInWarehouse) {
+
+            }
+            else if (isPackedOrCancelled ) {
                 let x = document.getElementById("myDonDaDongHoacHuy");
                 x.play();
             }
@@ -1319,7 +1343,8 @@
         // Nếu click checkbox bằng tay thì không tự động click "Đủ Sản Phẩm"
         async function AddProduct() {
             // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
-            if (currentOrder.orderStatusInWarehoue != bookedOrderStatusInWarehouse) {
+            if (!isEmptyOrSpaces(currentOrder.orderStatusInWarehoue) && // Vì push message xịt, nên chưa có thông tin
+                currentOrder.orderStatusInWarehoue != bookedOrderStatusInWarehouse) {
                 let x = document.getElementById("myDonDaDongHoacHuy");
                 x.play();
                 return;

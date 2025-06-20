@@ -39,6 +39,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string status { get; set; }
 
+        // true: Nếu là đơn hỏa tốc, ngược lại false. Hỏa tốc theo phong cách SHOPEE
+        public Boolean isExpress { get; set; }
+
+        // Tin nhắn của khách
+        public string messageToSeller { get; set; }
+
         public List<int> listQuantity { get; set; }
 
         // Trạng thái:
@@ -84,6 +90,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             id = -1;
             code = string.Empty;
             status = string.Empty;
+            messageToSeller = string.Empty;
+            isExpress = false;
             listItemId = new List<long>();
             listModelId = new List<long>();
             created_at = new DateTime();
@@ -105,6 +113,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             id = order.id;
             code = order.code;
             status = order.status;
+            messageToSeller = string.Empty;
+            isExpress = false;
             listItemId = new List<long>();
             listModelId = new List<long>();
             listItemSuperId = new List<int>();
@@ -143,6 +153,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             // Lấy mã vận đơn
             shipCode = order.shipCode;
             status = order.order_status;
+            messageToSeller = order.message_to_seller;
+            if(order.checkout_shipping_carrier == CommonOpenPlatform.ShopeeExpress)
+            {
+                isExpress = true;
+            }
+            else
+            {
+                isExpress = false;
+            }
             created_at = Common.GetDateFromTimestamp(order.create_time);
             listItemId = new List<long>();
             listModelId = new List<long>();

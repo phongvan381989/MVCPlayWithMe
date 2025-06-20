@@ -372,10 +372,17 @@
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeGetModelList.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdatePrice.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeUpdateStock.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\Category\TikiCategoryAction.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\CommonTikiAPI.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
     <Compile Include="OpenPlatform\CommonOpenPlatform.cs" />
     <Compile Include="OpenPlatform\Model\TaxAndFee.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttribute.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttributeData.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttributeValue.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttributeValueDataPage.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiCategory.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiCategoryData.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\DealDiscount\DealCreatingResponse.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\DealDiscount\DealCreatedResponseDetail.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\DealDiscount\DealMessageEnVn.cs" />
@@ -525,6 +532,7 @@
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiAtributeSpecificationAtribute.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiAttribute.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiCategory.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiCreatingProduct.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiImage.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiInventory.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiIventoryWarehouseStocks.cs" />

@@ -514,7 +514,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             if (eType == eShopee)
             {
-                Common.DownloadImageAddWaterMarkAndReduce(imageUrl, Path.Combine(path, "0.jfif"));
+                Common.DownloadImageAddWaterMarkAndReduce(imageUrl, Path.Combine(path, "0.jfif"), false);
             }
             else if (eType == eTiki)
             {
@@ -522,7 +522,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 string fileExtension = Path.GetExtension(imageUrl);
                 if (!string.IsNullOrEmpty(fileExtension))
                 {
-                    Common.DownloadImageAddWaterMarkAndReduce(imageUrl, Path.Combine(path, "0" + fileExtension));
+                    Common.DownloadImageAddWaterMarkAndReduce(imageUrl, Path.Combine(path, "0" + fileExtension), false);
                 }
             }
 
@@ -634,6 +634,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             if (ecommerce == Common.eShopee)
             {
+                // Nếu là mã đơn ta thử lấy mã vận đơn từ server
                 // Lấy mã đơn hàng từ mã đơn hàng hoặc mã vận đơn
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
@@ -642,16 +643,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     sn_trackingNumber, ref sn, ref trackingNumber, conn);
                conn.Close();
 
-                if (!string.IsNullOrEmpty(sn))
+                if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
                 {
-                    ShopeeOrderDetail shopeeOrderDetail =
-                        ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
+                    // Ta cần lấy sn từ mã đơn
+                    sn = sn_trackingNumber; // Nếu người dùng nhập mã vận chuyển ở đây thì không tìm thấy
+                }
+                ShopeeOrderDetail shopeeOrderDetail =
+                ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
 
-                    if (shopeeOrderDetail != null)
-                    {
-                        shopeeOrderDetail.shipCode = trackingNumber;
-                        commonOrder = new CommonOrder(shopeeOrderDetail);
-                    }
+                if (shopeeOrderDetail != null)
+                {
+                    shopeeOrderDetail.shipCode = trackingNumber;
+                    commonOrder = new CommonOrder(shopeeOrderDetail);
                 }
             }
             else if (ecommerce == Common.eTiki)
@@ -691,7 +694,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             conn.Open();
             try
             {
-
                 // Nếu sản phẩm trên shopee, tiki chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
                 // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
 
@@ -754,6 +756,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     else if (eType == Common.ePlayWithMe)
                     {
                         eECommerceType = EECommerceType.PLAY_WITH_ME;
+                    }
+
+                    // Nếu là đơn hỏa tốc, cập nhật trạng thái sang đã biết có đơn. Trạng thái này khả năng cao đã
+                    // được cập nhật từ mini app viết mục đích nhắc có đơn hỏa tốc
+                    if(order.isExpress)
+                    {
+                        tikiSqler.UpdateStatusToKnownTbExpressOrder(order.code, eECommerceType, conn);
                     }
 
                     TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
@@ -863,7 +872,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             int i = 0;
             foreach(var s in commonItem.imageSrcList)
             {
-                Common.DownloadImageAddWaterMarkAndReduce(s, Path.Combine(path, i.ToString() + ".jfif"));
+                Common.DownloadImageAddWaterMarkAndReduce(s, Path.Combine(path, i.ToString() + ".jfif"), true);
                 i++;
             }
 
@@ -958,7 +967,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 if (!string.IsNullOrEmpty(commonModel.imageSrc))
                 {
                     DownloadImageAddWaterMarkAndReduce(commonModel.imageSrc, Path.Combine(path,
-                        newModelId.ToString() + ".jfif"));
+                        newModelId.ToString() + ".jfif"), false);
                 }
             }
 

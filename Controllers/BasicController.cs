@@ -275,8 +275,10 @@ namespace MVCPlayWithMe.Controllers
                 // Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
                 if (Common.ImageExtensions.Contains(Path.GetExtension(saveToFileLoc).ToLower()))
                 {
-                    string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
-                    Common.ReduceImageSizeAndSave(newsaveToFileLoc);
+                    // Tiki không cho dùng ảnh có logo khi đăng sản phẩm nên commnet chức năng thêm logo
+                    //string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
+                    //Common.ReduceImageSizeAndSave(newsaveToFileLoc);
+                    Common.ReduceImageSizeAndSave(saveToFileLoc);
                 }
             }
 

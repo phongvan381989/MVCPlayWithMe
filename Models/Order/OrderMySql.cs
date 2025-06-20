@@ -1147,7 +1147,7 @@ namespace MVCPlayWithMe.Models.Order
             }
         }
 
-        // Cập nhật trạng thái đơn hàng đã đóng/ đã hoàn
+        // Lấy trạng thái từ DB và cập nhật trạng thái đơn hàng đã đóng/ đã hoàn vào List<CommonOrder>
         // Hàm này dùng cho sàn: web PWM, Tiki, Shopee,...
         public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
         {

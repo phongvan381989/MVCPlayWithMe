@@ -47,6 +47,8 @@ namespace MVCPlayWithMe.OpenPlatform
             return (int)ShopeeProductStatus.BANNED;
         }
 
+        public const string ShopeeExpress = "Hỏa Tốc";
+
         public enum CommonOrderStatus
         {
             ALL, // Tất cả trạng thái đơn hàng

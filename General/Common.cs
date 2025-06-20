@@ -876,10 +876,16 @@ namespace MVCPlayWithMe.General
 
         /// <summary>
         /// Tải ảnh từ url, add water mark và sinh phiên bản _320
+        /// Tiki không cho dùng ảnh có logo khi đăng sản phẩm nên commnet chức năng thêm logo nên khi tải sản phẩm
+        /// cho Product ta không add watermark
         /// </summary>
         /// <param name="url"></param>
         /// <param name="fileName"></param>
-        public static void DownloadImageAddWaterMarkAndReduce(string url, string fileName)
+        /// <param name="isAddWatermark">isAddWatermark: true sinh watermark và xóa ảnh cũ, false thì không</param>
+        public static void DownloadImageAddWaterMarkAndReduce(
+            string url,
+            string fileName,
+            Boolean isAddWatermark)
         {
             if(string.IsNullOrEmpty(url) || string.IsNullOrEmpty(fileName))
             {
@@ -889,10 +895,18 @@ namespace MVCPlayWithMe.General
             int rs = DownloadImageAndSaveWithName(url, fileName);
             if(rs == 1)
             {
-                // Thêm water mark
-                string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(fileName);
-                // sinh phiên bản _320
-                ReduceImageSizeAndSave(newsaveToFileLoc);
+                // Tiki không cho dùng ảnh có logo khi đăng sản phẩm nên commnet chức năng thêm logo
+                if (isAddWatermark)
+                {
+                    // Thêm water mark
+                    string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(fileName);
+                    // sinh phiên bản _320
+                    ReduceImageSizeAndSave(newsaveToFileLoc);
+                }
+                else
+                {
+                    ReduceImageSizeAndSave(fileName);
+                }
             }
         }
         #endregion

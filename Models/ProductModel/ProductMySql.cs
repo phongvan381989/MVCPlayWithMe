@@ -51,7 +51,9 @@ namespace MVCPlayWithMe.Models.ProductModel
             product.detail = MyMySql.GetString(rdr, "Detail");
             product.status = MyMySql.GetInt32(rdr, "Status");
             product.quantity = MyMySql.GetInt32(rdr, "Quantity");
+            product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
             product.discount = rdr.GetFloat("Discount");
+            product.language = MyMySql.GetString(rdr, "Language");
             product.SetSrcImageVideo();
 
             return product;
@@ -170,33 +172,55 @@ namespace MVCPlayWithMe.Models.ProductModel
         /// </summary>
         /// <param name="id"></param>
         /// <returns>Có thể trả về null</returns>
-        public Product GetProductFromId(int id)
+        public Product GetProductFromId(int id, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             Product product = null;
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Id", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inId", id);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
-                    product = ConvertRowFromDataMySql(rdr);
+                    while (rdr.Read())
+                    {
+                        product = ConvertRowFromDataMySql(rdr);
+                    }
                 }
-                rdr.Close();
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
                 product = null;
             }
-
-            conn.Close();
             return product;
+        }
+
+        // Từ id của sản phẩm trong kho lấy được id của category tương ứng trên sàn tiki
+        public int GetTikiCategoryIdFromProductCategoryId(int productId, MySqlConnection conn)
+        {
+            int id = 0;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("SELECT TikiCategoryId FROM webplaywithme.tbcategory WHERE Id = @in_Id LIMIT 1;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@in_Id", id);
+
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        id = MyMySql.GetInt32(rdr, "TikiCategoryId");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                id = 0;
+            }
+            return id;
         }
 
         ///// <summary>
@@ -286,7 +310,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             MySqlResultState result = new MySqlResultState();
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[26];
+            paras = new MySqlParameter[27];
             paras[0] = new MySqlParameter("@inproCode", pro.code);
             paras[1] = new MySqlParameter("@inbarcode", pro.barcode);
             paras[2] = new MySqlParameter("@inproductName", pro.name);
@@ -313,6 +337,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             paras[23] = new MySqlParameter("@inpageNumber", pro.pageNumber);
             paras[24] = new MySqlParameter("@inQuantity", pro.quantity);
             paras[25] = new MySqlParameter("@inDiscount", pro.discount);
+            paras[26] = new MySqlParameter("@inLanguage", pro.language);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
@@ -376,7 +401,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
 
-            paras = new MySqlParameter[22];
+            paras = new MySqlParameter[23];
             paras[0] = new MySqlParameter("@inComboId", pro.comboId);
             paras[1] = new MySqlParameter("@inCategoryId", pro.categoryId);
             paras[2] = new MySqlParameter("@inBookCoverPrice", pro.bookCoverPrice);
@@ -397,6 +422,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             paras[17] = new MySqlParameter("@inProStatus", pro.status);
             paras[18] = new MySqlParameter("@inpageNumber", pro.pageNumber);
             paras[19] = new MySqlParameter("@inDiscount", pro.discount);
+            paras[20] = new MySqlParameter("@inLanguage", pro.language);
 
             MyMySql.AddOutParameters(paras);
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Common_Info_With_Combo", paras);
@@ -409,7 +435,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         )
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlParameter[] paras = new MySqlParameter[27];
+            MySqlParameter[] paras = new MySqlParameter[28];
             paras[0] = new MySqlParameter("@inproductId", pro.id);
             paras[1] = new MySqlParameter("@inproCode", pro.code);
             paras[2] = new MySqlParameter("@inbarcode", pro.barcode);
@@ -437,6 +463,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             paras[24] = new MySqlParameter("@inpageNumber", pro.pageNumber);
             paras[25] = new MySqlParameter("@inQuantity", pro.quantity);
             paras[26] = new MySqlParameter("@inDiscount", pro.discount);
+            paras[27] = new MySqlParameter("@inLanguage", pro.language);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try

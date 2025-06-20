@@ -75,8 +75,14 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
+            Product product = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                product = sqler.GetProductFromId(id, conn);
+            }
 
-            return JsonConvert.SerializeObject(sqler.GetProductFromId(id));
+            return JsonConvert.SerializeObject(product);
         }
 
         public ActionResult UpdateDelete(int id)
@@ -203,6 +209,7 @@ namespace MVCPlayWithMe.Controllers
                 int productWeight,
                 string positionInWarehouse,
                 int hardCover,
+                string bookLanguge,
                 int minAge,
                 int maxAge,
                 int parentId, // Nếu không có sản phẩm cha, parentId = -1
@@ -237,6 +244,7 @@ namespace MVCPlayWithMe.Controllers
                  productWeight,
                  positionInWarehouse,
                  hardCover,
+                 bookLanguge,
                  minAge,
                  maxAge,
                  parentId,
@@ -271,6 +279,7 @@ namespace MVCPlayWithMe.Controllers
                 int productWeight,
                 string positionInWarehouse,
                 int hardCover,
+                string bookLanguge,
                 int minAge,
                 int maxAge,
                 int parentId, // Nếu không có sản phẩm cha, parentId = -1
@@ -306,6 +315,7 @@ namespace MVCPlayWithMe.Controllers
                  productWeight,
                  positionInWarehouse,
                  hardCover,
+                 bookLanguge,
                  minAge,
                  maxAge,
                  parentId,
@@ -363,6 +373,7 @@ namespace MVCPlayWithMe.Controllers
                 int productWeight,
                 string positionInWarehouse,
                 int hardCover,
+                string bookLanguge,
                 int minAge,
                 int maxAge,
                 int republish,
@@ -391,6 +402,7 @@ namespace MVCPlayWithMe.Controllers
                  productWeight,
                  positionInWarehouse,
                  hardCover,
+                 bookLanguge,
                  minAge,
                  maxAge,
                  republish,

@@ -61,6 +61,9 @@
     let hardCover = document.getElementById("hard-cover").value;
     searchParams.append("hardCover", hardCover);
 
+    let bookLanguge = document.getElementById("book-language").value;
+    searchParams.append("bookLanguge", bookLanguge);
+
     let minAge = GetValueInputById("min-age", -1);
     searchParams.append("minAge", minAge);
 
@@ -105,7 +108,6 @@ function AddUpdateParameters(searchParams) {
     searchParams.append("barcode", barcode);
 
     searchParams.append("name", CapitalizeWords(productName));
-
 
     let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value);
     if (comboId == null) {
@@ -261,6 +263,7 @@ function SetProductCommonInfoWithCombo(product) {
     }
     document.getElementById("position-in-warehouse").value = product.positionInWarehouse;
     document.getElementById("hard-cover").value = product.hardCover;
+    document.getElementById("book-language").value = product.language;
     if (product.minAge != -1) {
         document.getElementById("min-age").value = product.minAge;
     }

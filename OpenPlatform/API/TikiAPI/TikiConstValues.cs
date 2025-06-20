@@ -28,6 +28,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrSearchDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals";
         public const string cstrOffDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals/off-many";
         public const string cstrCreatedBy = "HUEHOANG1293@GMAIL.COM";
+        public const string cstrCategory = "https://api.tiki.vn/integration/v2/categories";
 
         // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa => Không ổn
         // Ta sẽ tính lại giá bán, bán dưới điểm hòa vốn. Ta sẽ chiết khấu 1 con số phần trăm cố định
