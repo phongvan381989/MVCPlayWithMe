@@ -92,6 +92,12 @@
                                     onclick="SearchDontSellSigleWithParrentOnECommerce()">
                                 Chưa Đăng Bán Lẻ Cùng Cha.
                             </button>
+
+                            <button type="button" title="Chưa đăng bán hoàn toàn riêng lẻ, xét với tất cả sản phẩm đang kinh doanh,
+                                    không có sản phẩm cha, anh em gì cả."
+                                    onclick="SearchDontSellSigleWithNoParrentOnECommerce()">
+                                Chưa Đăng Bán Lẻ Không Có Cha.
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -771,6 +777,15 @@
             document.getElementById("publisher-id").value = "";
 
             let url = "/Product/SearchDontSellSigleWithParrentOnECommerce";
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetECommerceType());
+            SearchProductCore(url, searchParams);
+        }
+        async function SearchDontSellSigleWithNoParrentOnECommerce() {
+            // Làm mới input publisher
+            document.getElementById("publisher-id").value = "";
+
+            let url = "/Product/SearchDontSellSigleWithNoParrentOnECommerce";
             const searchParams = new URLSearchParams();
             searchParams.append("eType", GetECommerceType());
             SearchProductCore(url, searchParams);

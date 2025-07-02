@@ -37,6 +37,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             }
             return null;
         }
+
         public static void TikiProductUpdateQuantity(int itemId,
             int quantity,
             MySqlResultState result
@@ -95,7 +96,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             }
         }
 
-
         /// <summary>
         /// Kiểm tra tồn kho thực tế và trên sàn có bằng nhau không.
         /// Nếu bằng nhau thì không cần cập nhật số lượng
@@ -151,7 +151,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                 result.State = EMySqlResultState.ERROR;
             }
         }
-
 
         /// <summary>
         /// Từ đơn hàng mới trong khoảng thời gian, ta lấy được số lượng hàng cần xuất

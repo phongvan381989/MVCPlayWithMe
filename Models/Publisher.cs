@@ -13,6 +13,10 @@ namespace MVCPlayWithMe.Models
 
         public string detail { get; set; }
 
+        public string tikiCertificate { get; set; }
+
+        public string tikiAttributeValue { get; set; }
+
         public Publisher(int idInput, string nameInput,
             float discountInput, string detalInput) : base(idInput, nameInput)
         {

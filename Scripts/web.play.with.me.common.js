@@ -28,7 +28,7 @@ var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
 var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
 
-var tikiConstDiscount = 10;
+var tikiConstDiscount = 5;
 
 function isEmptyOrSpaces(str) {
     return str === null || str.match(/^[ |	]*$/) !== null;

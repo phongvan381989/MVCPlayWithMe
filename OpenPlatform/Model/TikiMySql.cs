@@ -1280,5 +1280,27 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
             }
         }
+
+        public void TikiInsert_tbTikiTrackCreateProduct(string track_id,
+            string state,
+            string reason,
+            string request_id,
+            MySqlConnection conn)
+        {
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiTrackCreateProduct_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@intrack_id", track_id);
+                cmd.Parameters.AddWithValue("@instate", state);
+                cmd.Parameters.AddWithValue("@inreason", reason);
+                cmd.Parameters.AddWithValue("@inrequest_id", request_id);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
     }
 }

@@ -25,6 +25,7 @@ namespace MVCPlayWithMe.Models
                 int nameIndex = rdr.GetOrdinal("Name");
                 int discountIndex = rdr.GetOrdinal("Discount");
                 int detailIndex = rdr.GetOrdinal("Detail");
+                int tikiCertificateIndex = rdr.GetOrdinal("TikiCertificate");
                 while (rdr.Read())
                 {
                     ls.Add(new Publisher(rdr.GetInt32(idIndex),
@@ -43,7 +44,8 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public MySqlResultState CreateNewPublisher(string name, float discount, string detail)
+        public MySqlResultState CreateNewPublisher(string name, float discount,
+            string detail)
         {
             MySqlResultState result = null;
             MySqlParameter[] paras = null;
@@ -159,8 +161,10 @@ namespace MVCPlayWithMe.Models
                     publisher = new Publisher(MyMySql.GetInt32(rdr, "Id"),
                         MyMySql.GetString(rdr, "Name"),
                         rdr.GetFloat("Discount"),
-                        MyMySql.GetString(rdr, "Detail")
-                        );
+                        MyMySql.GetString(rdr, "Detail"));
+
+                    publisher.tikiCertificate = MyMySql.GetString(rdr, "TikiCertificate");
+                    publisher.tikiAttributeValue = MyMySql.GetString(rdr, "TikiAttributeValue");
                 }
                 rdr.Close();
             }

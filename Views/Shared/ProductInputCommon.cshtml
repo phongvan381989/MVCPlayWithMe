@@ -108,6 +108,13 @@
         <input type="text" list="list-publishing-company" class="config-max-width margin-vertical" id="publishing-company-id">
 
         <datalist id="list-publishing-company"></datalist>
+
+        <div style="float: right; display:flex;">
+            <button type="button" onclick="UpdatePublishingCompany()" class="diplay-none-when-create"
+                    style="display:none; margin-left:20px;">
+                Cập nhật
+            </button>
+        </div>
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 
@@ -119,13 +126,20 @@
     </div>
 
     <div>
-        <label for="book-language">Ngôn ngữ:</label><br>
-        <select class="config-max-width margin-vertical" id="book-language">
+        <label for="book-language-id">Ngôn ngữ:</label><br>
+        <select class="config-max-width margin-vertical" id="book-language-id">
             <option value="Song ngữ">Song ngữ</option>
             <option value="Tiếng Anh">Tiếng Anh</option>
             <option value="Tiếng Việt">Tiếng Việt</option>
             <option value="Đa ngữ">Đa ngữ</option>
         </select>
+
+        <div style="float: right; display:flex;">
+            <button type="button" onclick="UpdateLanguage()" class="diplay-none-when-create"
+                    style="display:none; margin-left:20px;">
+                Cập nhật
+            </button>
+        </div>
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 

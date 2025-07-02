@@ -16,34 +16,36 @@
             <div>
                 <label for="publisher-id">Nhà phát hành:</label>
                 <input class="config-max-width margin-vertical"
-                       id="publisher-id"/>
+                       id="publisher-id" />
             </div>
 
-            <label for="publisher-discount" title="Chiết khấu so với giá bìa khi nhập sách. 
+            <div>
+                <label for="publisher-discount" title="Chiết khấu so với giá bìa khi nhập sách.
                    Dùng để tham khảo khi tính giá bán thực tế. Giá trị mặc định là 40">Chiết khấu:</label>
-            <input id="publisher-discount" type="number" max="100" min="0" step="0.1" value="40"/>
+                <input id="publisher-discount" type="number" max="100" min="0" step="0.1" value="40" />
+            </div>
+            <div>
+                <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
+                <textarea id="publisher-detail" class="config-max-width margin-vertical" rows="10"></textarea>
+            </div>
 
-            <label for="publisher-detail">Thông tin chi tiết thêm:</label><br>
-            <textarea id="publisher-detail" class="config-max-width margin-vertical" rows="10"></textarea>
-        </div>
+            <div>
+                <button type="button" onclick="CreatePublisher()" style="margin-right:20px;">Thêm Mới</button>
+                <button type="button" onclick="ShowListPublisher()"> Lấy Danh Sách Nhà Phát Hành</button>
+            </div>
+            <div>
+                <table id="publisher-table" style="display:none;">
+                    <tr>
+                        <th style="display:none">Id</th>
+                        <th>STT</th>
+                        <th>Tên</th>
+                        <th>Chiết Khấu</th>
+                        <th>Mô Tả</th>
+                    </tr>
+                </table>
+            </div>
 
-        <div>
-            <button type="button" onclick="CreatePublisher()" style="margin-right:20px;">Thêm Mới</button>
-            <button type="button" onclick="ShowListPublisher()"> Lấy Danh Sách Nhà Phát Hành</button>
         </div>
-        <div>
-            <table id="publisher-table" style="display:none;">
-                <tr>
-                    <th style="display:none">Id</th>
-                    <th>STT</th>
-                    <th>Tên</th>
-                    <th>Chiết Khấu</th>
-                    <th>Mô Tả</th>
-                </tr>
-            </table>
-        </div>
-
-    </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>

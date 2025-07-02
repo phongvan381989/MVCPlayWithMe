@@ -68,7 +68,9 @@ namespace MVCPlayWithMe.General
         /// <summary>
         /// 9
         /// </summary>
-        OUT_MIN
+        OUT_MIN,
+
+        PENDING
     }
     public class MySqlResultState
     {

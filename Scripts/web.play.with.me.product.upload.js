@@ -61,7 +61,7 @@
     let hardCover = document.getElementById("hard-cover").value;
     searchParams.append("hardCover", hardCover);
 
-    let bookLanguge = document.getElementById("book-language").value;
+    let bookLanguge = document.getElementById("book-language-id").value;
     searchParams.append("bookLanguge", bookLanguge);
 
     let minAge = GetValueInputById("min-age", -1);
@@ -263,7 +263,7 @@ function SetProductCommonInfoWithCombo(product) {
     }
     document.getElementById("position-in-warehouse").value = product.positionInWarehouse;
     document.getElementById("hard-cover").value = product.hardCover;
-    document.getElementById("book-language").value = product.language;
+    document.getElementById("book-language-id").value = product.language;
     if (product.minAge != -1) {
         document.getElementById("min-age").value = product.minAge;
     }
@@ -309,7 +309,7 @@ async function UpdateProductPromise() {
     try {
         ShowCircleLoader();
         // Cập nhật vào db
-        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        let responseDB = await RequestHttpPostPromise(searchParams, url);
         const obj = JSON.parse(responseDB.responseText);
         if (obj == null) {
             CreateMustClickOkModal("Có lỗi xẩy ra.", null);
@@ -394,6 +394,43 @@ function ShowUpdateButtonForOne() {
         //}
         collection[i].disabled = false;
     }
+}
+
+async function UpdateImage_Video() {
+    let productID = GetValueFromUrlName("id");
+    const searchParams = new URLSearchParams();
+    searchParams.append("productId", productID);
+
+    let urlUp = "/Product/UploadFile";
+    let urlDeleteAllFileWithType = "/Product/DeleteAllFileWithType";
+
+    try {
+        ShowCircleLoader();
+
+        // Upload ảnh/video sản phẩm lên server
+        let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        //alert("Cập nhật sản phẩm lỗi.");
+        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+        return;
+    }
+
+    // Đợi load ảnh xong
+    while (true) {
+        await Sleep(1000);
+
+        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+            alert("Cập nhật sản phẩm thành công.");
+            break;
+        }
+    }
+    RemoveCircleLoader();
+    // Refresh page
+    //window.scrollTo(0, 0);
+    //await Sleep(1000)
+    //window.location.reload();
 }
 
 async function UpdateName() {
@@ -648,6 +685,58 @@ async function UpdatePublisherId() {
     }
 }
 
+async function UpdatePublishingCompany() {
+    let publishingCompany = document.getElementById("publishing-company-id").value;
+    if (!IsValidString(publishingCompany)) {
+        CreateMustClickOkModal("Không lấy được thông tin nhà xuất bản cần cập nhật.", null);
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("publishingCompany", publishingCompany);
+
+    let url = "/Product/UpdatePublishingCompany";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateLanguage() {
+    let language = document.getElementById("book-language-id").value;
+    if (!IsValidString(language)) {
+        CreateMustClickOkModal("Không lấy được thông tin ngôn ngữ cần cập nhật.", null);
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("language", language);
+
+    let url = "/Product/UpdateLanguage";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật lỗi.", null);
+        return;
+    }
+}
+
 async function GetProductFromId(id) {
     const searchParams = new URLSearchParams();
     searchParams.append("id", id);
@@ -655,20 +744,6 @@ async function GetProductFromId(id) {
     let query = "/Product/GetProductFromId";
 
     return RequestHttpPostPromise(searchParams, query);
-}
-
-async function ShowProductFromObject() {
-    let responseDB = await GetProductFromId(GetValueFromUrlName("id"));
-    let product;
-    if (responseDB.responseText != "null") {
-        GetSomeData();
-        product = JSON.parse(responseDB.responseText);
-    }
-    else {
-        ShowDoesntFindId();
-        return;
-    }
-    SetProductInfomation(product);
 }
 
 function GetSomeData() {

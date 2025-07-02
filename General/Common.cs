@@ -29,6 +29,7 @@ namespace MVCPlayWithMe.General
         public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
+        public static readonly string httpsVoiBeNho = "https://voibenho.com";
 
         // Từ thực tế thấy:
         // set deal giảm giá khi tồn kho >= 3, khi tồn kho < 3 deal của tiki bị tắt

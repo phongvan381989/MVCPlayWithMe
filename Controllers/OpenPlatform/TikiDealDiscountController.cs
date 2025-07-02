@@ -376,7 +376,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 taxAndFee.minProfit);
             // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
             // Ta tính lại giá bán, bán dưới điểm hòa vốn
-            if(salePrice > p)
+            if(salePrice >= p)
             {
                 salePrice = p * (100 - TikiConstValues.constDiscount) / 100;
                 // Làm tròn salePrice là bội của 100 VND

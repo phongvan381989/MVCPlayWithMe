@@ -1,9 +1,15 @@
 ﻿<form class="config-max-width">
-
-    @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
-
-    @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
-
+    <div>
+        @Html.Partial("~/Views/Shared/VideoSelect.cshtml")
+    </div>
+    <div>
+        @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
+        <button type="button" onclick="UpdateImage_Video()" class="diplay-none-when-create"
+                style="float: right; display:none">
+            Cập nhật ảnh và video
+        </button>
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
     <div>
         <label for="product-name-id">Tên:</label>
         <input type="text" class="config-max-width margin-vertical" id="product-name-id">

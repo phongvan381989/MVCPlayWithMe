@@ -272,14 +272,18 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
                 else
                 {
-                    // Tìm ảnh đại diện theo index/position
-                    int position = 0;
+                    // Tìm ảnh đại diện theo index/position. Tìm position giá trị nhỏ nhất
+                    int position = Int32.MaxValue;
                     foreach (var image in pro.images)
                     {
-                        if (image.position == 0)
+                        if (image.position < position)
                         {
+                            position = image.position;
                             imageSrc = image.url;
-                            break;
+                            if (position == 0)
+                            {
+                                break;
+                            }
                         }
                     }
                 }

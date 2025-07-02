@@ -14,7 +14,9 @@ namespace MVCPlayWithMe.Models.ProductModel
         public string categoryName { get; set; }
         public int bookCoverPrice { get; set; }
         public float discount { get; set; }
+        // Tên các dịch giả được ngăn cách bởi dấu ,. VD: Nguyễn Văn A, Nguyễn Văn B
         public string author { get; set; }
+        // Tên các dịch giả được ngăn cách bởi dấu ,. VD: Nguyễn Văn A, Nguyễn Văn B
         public string translator { get; set; }
         public int publisherId { get; set; }
         public string publisherName { get; set; }

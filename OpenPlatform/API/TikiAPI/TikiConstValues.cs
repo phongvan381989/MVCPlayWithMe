@@ -29,9 +29,52 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrOffDeal = "https://api-sellercenter.tiki.vn/campdeal/openapi/v1/deals/off-many";
         public const string cstrCreatedBy = "HUEHOANG1293@GMAIL.COM";
         public const string cstrCategory = "https://api.tiki.vn/integration/v2/categories";
+        public const string cstrCreateProduct = "https://api.tiki.vn/integration/v2.1/requests";
+        public const string cstrTrackingRequestCreateProduct = "https://api.tiki.vn/integration/v2/tracking/";
 
         // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa => Không ổn
         // Ta sẽ tính lại giá bán, bán dưới điểm hòa vốn. Ta sẽ chiết khấu 1 con số phần trăm cố định
-        public const int constDiscount = 10;
+        public const int constDiscount = 5;
+
+        public const string inventory_type = "dropship";
+
+        public static string GenerateRandomSKUString()
+        {
+            string prefix = "VBN"; // Phần bắt đầu của SKU
+
+            // Thời gian hiện tại theo định dạng yyyyMMddHHmmss
+            string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+
+            int randomLength = 5; // Độ dài phần ngẫu nhiên
+
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            Random random = new Random();
+            char[] result = new char[randomLength];
+
+            for (int i = 0; i < randomLength; i++)
+            {
+                result[i] = chars[random.Next(chars.Length)];
+            }
+            string sku = prefix + timestamp + new string(result);
+            return sku;
+        }
+
+        public static long GenerateRandomMincodeLong()
+        {
+            // Bước 1: Lấy thời gian hiện tại theo định dạng yymmddHHmmss
+            string timestamp = DateTime.Now.ToString("yyMMddHHmmss");
+
+            // Bước 2: Sinh số ngẫu nhiên 5 chữ số
+            Random random = new Random();
+            int randomNumber = random.Next(10000, 99999); // Sinh số ngẫu nhiên từ 10000 đến 99999
+
+            // Bước 3: Kết hợp thời gian và số ngẫu nhiên
+            string randomCode = $"{timestamp}{randomNumber}";
+
+            // Bước 4: Chuyển sang kiểu long
+            long finalCode = long.Parse(randomCode);
+
+            return finalCode;
+        }
     }
 }

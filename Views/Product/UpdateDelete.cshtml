@@ -30,6 +30,17 @@
             <br />
             <div style="margin-bottom: 100px;">
                 @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+                <div>
+                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical"
+                           title="Tên khi tạo sản phẩm trên sàn thương mại:Tiki, Shopee, Lazada,...">
+                    <button type="button" style="margin-left: 30px;"
+                            title="Tạo sản phẩm trên sàn thương mại điện tử với tên như trên"
+                            onclick="CreateProductOnECommerce()">
+                        Tạo Sản Phẩm Trên Sàn TMDT Với Tên Trên
+                    </button>
+                </div>
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
                 <div id="count-result"></div>
                 <table id="myTable">
                     <tr>
@@ -54,6 +65,43 @@
         ShowUpdateButtonForOne();
 
         ShowProductFromObject();
+
+        async function ShowProductFromObject() {
+            let responseDB = await GetProductFromId(GetValueFromUrlName("id"));
+            let product;
+            if (responseDB.responseText != "null") {
+                GetSomeData();
+                product = JSON.parse(responseDB.responseText);
+            }
+            else {
+                ShowDoesntFindId();
+                return;
+            }
+            SetProductInfomation(product);
+
+            document.getElementById("product-name-when-creating").value = GenerateName(product);
+        }
+
+        function GenerateName(product) {
+            // Tên đăng gồm: Tên combo "-" tên sản phẩm.
+            let name = product.comboName + " - " + product.name;
+
+            // Bỏ chữ "combo" ở đầu tên nếu có (không phân biệt hoa thường)
+            if (name.trimStart().toLowerCase().startsWith("combo")) {
+                // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
+                name = name.trimStart().substring(5).trim();
+            } else {
+                // Loại bỏ khoảng trắng nếu không có "combo"
+                name = name.trim();
+            }
+
+            // Nếu tên có chữ "sách" ở đầu rồi thì thôi, không thêm vào.
+            if (!name.toLowerCase().startsWith("sách")) {
+                name = "Sách " + name;
+            }
+
+            return name;
+        }
 
         function MappingOfProduct() {
             // Lấy id
@@ -175,6 +223,49 @@
 
             document.getElementById("count-result").innerHTML =
                 "Tổng " + length + " đơn. Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount + " . Số lượng thực tế bán sau khi trừ hoàn hàng: " + realCount + " sản phẩm";
+        }
+
+        async function CreateProductOnECommerce() {
+            if (!IsValidString(document.getElementById("category-id").value)) {
+                CreateMustClickOkModal("Chưa có thông tin thể loại");
+                document.getElementById("category-id").focus();
+                return;
+            }
+
+            if (!IsValidString(document.getElementById("publishing-company-id").value))
+            {
+                CreateMustClickOkModal("Chưa có thông tin nhà xuất bản");
+                document.getElementById("publishing-company-id").focus();
+                return;
+            }
+
+            if (!IsValidString(document.getElementById("book-language-id").value)) {
+                CreateMustClickOkModal("Chưa có thông tin ngôn ngữ");
+                document.getElementById("book-language-id").focus();
+                return;
+            }
+
+            // Lấy id
+            let id = GetValueFromUrlName("id");
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", id);
+            searchParams.append("eType", GetECommerceType());
+            searchParams.append("name", document.getElementById("product-name-when-creating").value);
+
+            let url = "/Product/CreateProductOnECommerce";
+
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpGetPromise(searchParams, url);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi.", null);
+                return;
+            }
         }
     </script>
 </body>

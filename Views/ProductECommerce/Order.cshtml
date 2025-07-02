@@ -262,6 +262,10 @@
             <source src="~/Media/DonDaDongHoacHuy.m4a" type="audio/m4a">
             <source src="~/Media/DonDaDongHoacHuy.wav" type="audio/wav">
         </audio>
+        <audio id="myKhachNhanShop">
+            <source src="~/Media/KhachNhanShop.m4a" type="audio/m4a">
+            <source src="~/Media/KhachNhanShop.wav" type="audio/wav">
+        </audio>
     </div>
     <div id="order-detail-modal" class="order-modal">
         <div class="order-content-modal">
@@ -1152,13 +1156,25 @@
                 x.play();
             }
             else {
+                let isNeedSleep = false;
+                // Khách có nhắn với shop
+                if (order.messageToSeller != "") {
+                    let x = document.getElementById("myKhachNhanShop");
+                    x.play();
+                    isNeedSleep = true;
+                }
                 if (isBigQuantity) {
+                    if (isNeedSleep) { // Nghỉ 2 giây cho đọc xong đoạn trước
+                        await new Promise(res => setTimeout(res, 2000));
+                    }
+
                     let x = document.getElementById("myAudioBigQuantity");
                     x.play();
+                    isNeedSleep = true;
                 }
 
                 if (isDontMapping) {
-                    if (isBigQuantity) { // Nghỉ 2 giây cho đọc xong đoạn isBigQuantity
+                    if (isNeedSleep) { // Nghỉ 2 giây cho đọc xong đoạn trước
                         await new Promise(res => setTimeout(res, 2000));
                     }
 

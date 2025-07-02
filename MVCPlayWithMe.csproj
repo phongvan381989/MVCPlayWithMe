@@ -375,6 +375,7 @@
     <Compile Include="OpenPlatform\API\TikiAPI\Category\TikiCategoryAction.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\CommonTikiAPI.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
+    <Compile Include="OpenPlatform\API\TikiAPI\Product\TikiCreateProduct.cs" />
     <Compile Include="OpenPlatform\CommonOpenPlatform.cs" />
     <Compile Include="OpenPlatform\Model\TaxAndFee.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttribute.cs" />

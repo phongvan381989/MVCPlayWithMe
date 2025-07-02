@@ -198,14 +198,14 @@ namespace MVCPlayWithMe.Models.ProductModel
         }
 
         // Từ id của sản phẩm trong kho lấy được id của category tương ứng trên sàn tiki
-        public int GetTikiCategoryIdFromProductCategoryId(int productId, MySqlConnection conn)
+        public int GetTikiCategoryIdFromProductCategoryId(int categoryId, MySqlConnection conn)
         {
             int id = 0;
             try
             {
                 MySqlCommand cmd = new MySqlCommand("SELECT TikiCategoryId FROM webplaywithme.tbcategory WHERE Id = @in_Id LIMIT 1;", conn);
                 cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@in_Id", id);
+                cmd.Parameters.AddWithValue("@in_Id", categoryId);
 
                 using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
@@ -498,6 +498,56 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
 
             conn.Close();
+
+            return result;
+        }
+
+        public MySqlResultState UpdateProductFromFahasa(
+            int productId,
+                string author,
+                int publishingTime,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight,
+                int hardCover,
+                int minAge,
+                int maxAge,
+                string detail,
+                int pageNumber
+        )
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlParameter[] paras = new MySqlParameter[12];
+            paras[0] = new MySqlParameter("@inproductId", productId);
+            paras[1] = new MySqlParameter("@inauthor", author);
+            paras[2] = new MySqlParameter("@inpublishingTime", publishingTime);
+            paras[3] = new MySqlParameter("@inproductLong", productLong);
+            paras[4] = new MySqlParameter("@inproductWide", productWide);
+            paras[5] = new MySqlParameter("@inproductHigh", productHigh);
+            paras[6] = new MySqlParameter("@inproductWeight", productWeight);
+            paras[7] = new MySqlParameter("@inhardCover", hardCover);
+            paras[8] = new MySqlParameter("@inminAge", minAge);
+            paras[9] = new MySqlParameter("@inmaxAge", maxAge);
+            paras[10] = new MySqlParameter("@indetail", detail);
+            paras[11] = new MySqlParameter("@inpageNumber", pageNumber);
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_From_Fahasa", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddRange(paras);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
 
             return result;
         }
@@ -1042,7 +1092,9 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public List<Product> SearchDontSellOnECommerce (Boolean isSingle, string eType)
+        public List<Product> SearchDontSellOnECommerce (Boolean isSingle,
+            string eType,
+            MySqlConnection conn)
         {
             string store = string.Empty;
             if (eType == Common.eTiki)
@@ -1064,25 +1116,21 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
 
             List<Product> ls = new List<Product>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand(store, conn);
                 cmd.CommandType = CommandType.StoredProcedure;
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                ConvertQuicklyRowFromDataMySql(rdr, ls);
-
-                rdr.Close();
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    ConvertQuicklyRowFromDataMySql(rdr, ls);
+                }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
-            conn.Close();
             return ls;
         }
 
@@ -1278,6 +1326,31 @@ namespace MVCPlayWithMe.Models.ProductModel
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
             return false;
+        }
+
+
+        public List<Product> TikiDontSellSigleWithNoParrentConnectOut(
+            MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+            try
+            {
+
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    ConvertQuicklyRowFromDataMySql(rdr, ls);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            conn.Close();
+            return ls;
         }
 
         //// Đếm số record kết quả trả về, phục vụ phân trang
@@ -1605,6 +1678,54 @@ namespace MVCPlayWithMe.Models.ProductModel
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inId", id);
                 cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdatePublishingCompany(int id, string publishingCompany)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(" UPDATE `tbProducts`SET `PublishingCompany` = @inPublishingCompany WHERE `Id` = @inId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
+        }
+
+        public MySqlResultState UpdateLanguage(int id, string language)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(" UPDATE `tbProducts`SET `Language` = @inLanguage WHERE `Id` = @inId;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inId", id);
+                cmd.Parameters.AddWithValue("@inLanguage", language);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception ex)

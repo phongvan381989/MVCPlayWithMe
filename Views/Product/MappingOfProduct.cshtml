@@ -23,6 +23,20 @@
             margin: 10px 10px 10px 10px;
             border-radius: 5px;
         }
+
+        .fcnal986j {
+            margin-right: 40px;
+            border: 1px solid #e9ecef;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 3px 4px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .lk09Jbvrd {
+            display: inline;
+            margin-right: 20px;
+        }
     </style>
 </head>
 <body onload="GetListCommonItemMappingFromProductId()">
@@ -36,6 +50,23 @@
 
             </div>
             <div class="config-max-width padding-container">
+                <div class="fcnal986j">
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFxjg" name="status-radio" value="All"
+                               onclick="ShowResultWithFilter()" />
+                        <label for="nvnlFxjg">Tất cả</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFfesg" name="status-radio" value="On" checked
+                               onclick="ShowResultWithFilter()" />
+                        <label for="nvnlFfesg">Đang bán</label>
+                    </div>
+                    <div class="lk09Jbvrd">
+                        <input type="radio" id="nvnlFfesg" name="status-radio" value="Off"
+                               onclick="ShowResultWithFilter()" />
+                        <label for="nvnlFfesg">Dừng bán</label>
+                    </div>
+                </div>
                 <table id="myTable">
                     @Html.Partial("~/Views/Shared/Product/TableOfMapping.cshtml")
                 </table>
@@ -84,8 +115,35 @@
                 ShowDoesntFindId();
                 return;
             }
+
+            ShowResultWithFilter();
+        }
+
+        function ShowResultWithFilter() {
             let table = document.getElementById("myTable");
-            ShowListCommonItem(listCommonItem, table, false);
+            let obj = document.querySelector('input[name="status-radio"]:checked');
+            let listCommonItemTem = [];
+            if (obj.value == "All") {
+                listCommonItemTem = listCommonItem;
+            }
+            else if (obj.value == "On") { // Hiển thị những item đang bán
+                for (let i = 0; i < listCommonItem.length; i++) {
+                    if (listCommonItem[i].bActive) {
+                        listCommonItemTem.push(listCommonItem[i]);
+                    }
+                }
+            }
+            else { // Item dừng bán
+                for (let i = 0; i < listCommonItem.length; i++) {
+                    if (!listCommonItem[i].bActive) {
+                        listCommonItemTem.push(listCommonItem[i]);
+                    }
+                }
+            }
+
+            // Show table
+            ShowListCommonItem(listCommonItemTem, table, false);
+
         }
     </script>
 </body>

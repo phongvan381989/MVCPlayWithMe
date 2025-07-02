@@ -18,6 +18,9 @@ using System.IO;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using System.Net;
+using System.Globalization;
+using System.Threading;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -28,6 +31,7 @@ namespace MVCPlayWithMe.Controllers
         public ComboMySql comboSqler;
         public CategoryMySql categorySqler;
         public PublisherMySql publisherSqler;
+        TikiMySql tikiMySql;
         public ProductController () : base ()
         {
             sqler = new ProductMySql();
@@ -35,6 +39,7 @@ namespace MVCPlayWithMe.Controllers
             categorySqler = new CategoryMySql();
             publisherSqler = new PublisherMySql();
             tikiDealDiscountMySql = new TikiDealDiscountMySql();
+            tikiMySql = new TikiMySql();
         }
 
         private void GetViewDataForInput()
@@ -189,6 +194,7 @@ namespace MVCPlayWithMe.Controllers
         //        parentId = sqler.GetProductIdFromName(parentName);
         //}
 
+        [HttpPost]
         public string AddNewPro(
                 int quantity,
                 string code,
@@ -258,6 +264,7 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        [HttpPost]
         public string UpdateProduct(
                 int productId,
                 int quantity,
@@ -328,6 +335,54 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = sqler.UpdateProduct(pro);
 
             return JsonConvert.SerializeObject(result);
+        }
+
+        // Cập nhật một vài thông tin sản phẩm từ url web fahasa từ tool bên ngoài
+        [HttpPost]
+        public string UpdateProductFromFahasa(
+                int productId,
+                string author,
+                int publishingTime,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight,
+                int hardCover,
+                int minAge,
+                int maxAge,
+                string detail,
+                int pageNumber,
+                string user, // user và password méo mã hóa đâu, khoai lắm hardcode ba lăng nhăng
+                string password
+                )
+        {
+            if (user != "xvbsgsg" || password != "sgn65mxbnxkb")
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            string decodeDetail = WebUtility.UrlDecode(detail);
+
+            MySqlResultState result = sqler.UpdateProductFromFahasa(
+                productId,
+                author,
+                publishingTime,
+                productLong,
+                productWide,
+                productHigh,
+                productWeight,
+                hardCover,
+                minAge,
+                maxAge,
+                decodeDetail,
+                pageNumber
+                );
+            string re = "Ok";
+            if(result.State != EMySqlResultState.OK)
+            {
+                re = "Fail";
+            }
+            return re;
         }
 
         /// <summary>
@@ -709,8 +764,12 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new List<Product>());
             }
-
-            List<Product>  lsSearchResult = sqler.SearchDontSellOnECommerce(isSingle, eType);
+            List<Product> lsSearchResult = new List<Product>();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                lsSearchResult = sqler.SearchDontSellOnECommerce(isSingle, eType, conn);
+            }
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -923,6 +982,36 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
+        // Chưa đăng bán hoàn toàn riêng lẻ, xét với tất cả sản phẩm đang kinh doanh
+        [HttpGet]
+        public string SearchDontSellSigleWithNoParrentOnECommerce(string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            List<Product> lsSearchResult = new List<Product>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    if (eType == Common.eTiki)
+                    {
+                        lsSearchResult = sqler.TikiDontSellSigleWithNoParrentConnectOut(conn);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
         [HttpGet]
         public string ChangePage(string publisher, string codeOrBarcode,
             string name, string combo,
@@ -1066,6 +1155,28 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(sqler.UpdatePublisherId(id, publisherId));
+        }
+
+        [HttpGet]
+        public string UpdatePublishingCompany(int id, string publishingCompany)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(sqler.UpdatePublishingCompany(id, publishingCompany));
+        }
+
+        [HttpGet]
+        public string UpdateLanguage(int id, string language)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(sqler.UpdateLanguage(id, language));
         }
 
         // str có dạng: 12,45,24
@@ -1873,6 +1984,315 @@ namespace MVCPlayWithMe.Controllers
                 outputList = new List<Output>();
             }
             return JsonConvert.SerializeObject(outputList);
+        }
+
+        public static List<string> GetTikiAgeGroups(int minAge, int maxAge)
+        {
+            // Danh sách mức độ tuổi trên Tiki
+            var tikiAgeGroups = new Dictionary<string, (int min, int max)>
+            {
+                { "Từ 0 - 3 tuổi", (0, 36) },
+                { "Từ 4 - 6 tuổi", (37, 72) },
+                { "Từ 7 - 9 tuổi", (73, 108) },
+                { "Từ 10 - 12 tuổi", (109, 144) },
+                { "Từ 13 - 18 tuổi", (145, 215) },
+                { "Người lớn", (216, int.MaxValue) }, // Từ 18 tuổi trở lên
+            };
+
+            // Kết quả phù hợp
+            var matchingGroups = new List<string>();
+
+            foreach (var group in tikiAgeGroups)
+            {
+                var range = group.Value;
+                // Kiểm tra nếu khoảng tuổi này giao nhau với (minAge, maxAge)
+                if (range.max >= minAge && range.min <= maxAge)
+                {
+                    matchingGroups.Add(group.Key);
+                }
+            }
+            //int length = matchingGroups.Count();
+            //string str = "";
+            //for (int i = 0; i < length; i++)
+            //{
+            //    str = str + matchingGroups[i];
+            //    if (i < length - 1)
+            //    {
+            //        str = str + ",";
+            //    }
+            //}
+
+            return matchingGroups;
+        }
+
+        // Sinh tên tự động để đăng lên sàn nếu chưa có
+        string GenerateName(Product product)
+        {
+            // Tên đăng gồm: Tên combo "-" tên sản phẩm.
+            string name = product.comboName + " - " + product.name;
+            // Bỏ chữ combo ở đầu tên nếu có
+            // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
+            if (name.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
+            {
+                // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
+                name = name.TrimStart().Substring(5).Trim();
+            }
+            else
+            {
+                // Loại bỏ khoảng trắng nếu không có "combo"
+                name = name.Trim();
+            }
+
+            // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
+            if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            {
+                name = "Sách " + name;
+            }
+
+            return name;
+        }
+
+        // Từ sản phẩm trong kho, tạo sản phẩm trên sàn Tiki
+        public TikiCreateProductTrackingResponse CreateTikiProductFromProductIdInWarehouse(int id, string name)
+        {
+            TikiCreateProductTrackingResponse trackObj = null;
+            try
+            {
+                TikiCreatingProduct tikiCreatingProduct = new TikiCreatingProduct();
+
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    // Lấy sản phẩm trong kho
+                    ProductMySql productMySql = new ProductMySql();
+                    Product product = productMySql.GetProductFromId(id, conn);
+
+                    // Từ category id sản phẩm trong kho, lấy category tương ứng trên Tiki
+                    tikiCreatingProduct.category_id =
+                        productMySql.GetTikiCategoryIdFromProductCategoryId(product.categoryId, conn);
+
+                    if (string.IsNullOrEmpty(name))
+                    {
+                        tikiCreatingProduct.name = GenerateName(product);
+                    }
+                    else
+                    {
+                        tikiCreatingProduct.name = name;
+                    }
+
+                    tikiCreatingProduct.description = product.detail;
+                    tikiCreatingProduct.market_price = product.bookCoverPrice;
+
+                    PublisherMySql publisherMySql = new PublisherMySql();
+                    Publisher publisher = publisherMySql.GetPublisher(product.publisherId);
+
+                    // Attribute. Ta chỉ cập nhật những thuộc tính bắt buộc phải có và 1 vài thuộc tính khác
+                    List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes =
+                        tikiMySql.GetTikiAttributesOfCategory(tikiCreatingProduct.category_id, conn);
+                    var tikiAttributesGroups = new Dictionary<string, object>();
+                    //string product_height = (product.productHigh / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                    //string product_length = (product.productLong / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                    //string product_width = (product.productWide / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                    //string product_weight_kg = ((float)product.productWide / 1000).ToString("0.0", CultureInfo.InvariantCulture);
+                    foreach (var attr in attributes)
+                    {
+                        if (attr.code == "age_group")
+                        {
+                            // Bán sách nên chỉ có age_group - Phù hợp với độ tuổi là nhiều lựa chọn
+                            // Từ khoảng tuổi sản phẩm chọn ra những khoảng tuổi thích hơp gồm:
+                            // "Người lớn", "Từ 0 - 3 tuổi", "Từ 10 - 12 tuổi", "Từ 13 - 18 tuổi", "Từ 4 - 6 tuổi", "Từ 7 - 9 tuổi"
+                            ///string str = GetTikiAgeGroups(product.minAge, product.maxAge);
+                            tikiCreatingProduct.attributes.age_group = GetTikiAgeGroups(product.minAge, product.maxAge);
+                        }
+                        else if (attr.code == "book_cover")
+                        {
+                            if (product.hardCover == 1)
+                            {
+                                tikiCreatingProduct.attributes.book_cover = "Bìa cứng";
+                            }
+                            else
+                            {
+                                tikiCreatingProduct.attributes.book_cover = "Bìa mềm";
+                            }
+                        }
+                        else if (attr.code == "language_book")
+                        {
+                            tikiCreatingProduct.attributes.language_book = product.language;
+                        }
+                        else if (attr.code == "manufacturer")
+                        {
+                            tikiCreatingProduct.attributes.manufacturer = product.publishingCompany;
+                        }
+                        else if (attr.code == "product_height")
+                        {
+                            tikiCreatingProduct.attributes.product_height =
+                                (product.productHigh / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                        }
+                        else if (attr.code == "product_length")
+                        {
+                            tikiCreatingProduct.attributes.product_length =
+                                (product.productLong / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                        }
+                        else if (attr.code == "product_width")
+                        {
+                            tikiCreatingProduct.attributes.product_width =
+                                (product.productWide / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                        }
+                        else if (attr.code == "product_weight_kg")
+                        {
+                            tikiCreatingProduct.attributes.product_weight_kg =
+                                (product.productWide / 1000.0 + 0.1).ToString("0.0", CultureInfo.InvariantCulture);
+                        }
+                        else if (attr.code == "publisher_vn")
+                        {
+                            tikiCreatingProduct.attributes.publisher_vn = publisher.tikiAttributeValue;
+                        }
+                    }
+
+                    // number_of_page
+                    if (product.pageNumber > 0)
+                    {
+                        tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
+                    }
+                    // dimensions
+                    if (product.productLong > 0 && product.productWide > 0)
+                    {
+                        string strTemp = 
+                            (product.productLong / 10.0).ToString("0.0", CultureInfo.InvariantCulture)
+                            + " x " +
+                            (product.productWide / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
+                        if (product.productHigh > 0)
+                        {
+                            strTemp = strTemp + " x " + (product.productHigh / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
+                        }
+                        strTemp = strTemp + " cm";
+                        tikiCreatingProduct.attributes.dimensions = strTemp;
+                    }
+
+                    // dịch giả
+                    if(!string.IsNullOrEmpty(product.translator))
+                    {
+                        tikiCreatingProduct.attributes.dich_gia = product.translator;
+                    }
+
+                    // Tác giả. Thuộc tính này là "input_type": "multiselect"
+                    if (!string.IsNullOrEmpty(product.author))
+                    {
+                        tikiCreatingProduct.attributes.author = product.author.Split(',')
+                                   .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
+                                   .ToList();
+                    }
+
+                    product.SetSrcImageVideo();
+                    if (product.imageSrc.Count > 0)
+                    {
+                        tikiCreatingProduct.image = Common.httpsVoiBeNho + product.imageSrc[0];
+                        foreach (var img in product.imageSrc)
+                        {
+                            tikiCreatingProduct.images.Add(Common.httpsVoiBeNho + img);
+                        }
+                    }
+
+                    Variant variant = new Variant();
+                    variant.price = product.bookCoverPrice;
+                    variant.inventory_type = TikiConstValues.inventory_type;
+                    variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
+                    variant.sku = TikiConstValues.GenerateRandomSKUString();
+                    variant.min_code = TikiConstValues.GenerateRandomMincodeLong();
+
+                    WarehouseStock warehouseStock = new WarehouseStock();
+                    warehouseStock.warehouseId = TikiConstValues.intIdKho28Ngo3TTDL;
+                    warehouseStock.qtyAvailable = product.quantity;
+
+                    variant.warehouse_stocks.Add(warehouseStock);
+                    tikiCreatingProduct.variants.Add(variant);
+
+                    // certificate_files
+                    CertificateFile certificateFile = new CertificateFile();
+                    certificateFile.type = "category";
+                    certificateFile.document_id = 18;
+
+                    certificateFile.url = publisher.tikiCertificate;
+
+                    //tikiCreatingProduct.certificate_files.Add(certificateFile);
+
+                    // meta_data
+                    MetaData metaData = new MetaData();
+                    metaData.is_auto_turn_on = true;
+                    tikiCreatingProduct.meta_data = metaData;
+
+                    // Tạo sản phẩm
+                    trackObj = TikiCreateProduct.CreateProduct(tikiCreatingProduct);
+                    if (trackObj != null)
+                    {
+                        tikiMySql.TikiInsert_tbTikiTrackCreateProduct(trackObj.track_id,
+                            trackObj.state,
+                            trackObj.reason,
+                            trackObj.request_id,
+                            conn);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                trackObj = null;
+            }
+
+            return trackObj;
+        }
+
+        public string CreateProductOnECommerce(int id, string eType, string name)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            List<Product> lsSearchResult = new List<Product>();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                if (eType == Common.eTiki)
+                {
+                    TikiCreateProductTrackingResponse trackObj = CreateTikiProductFromProductIdInWarehouse(id, name);
+                    if(trackObj == null)
+                    {
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Có lỗi xảy ra. Vui lòng checklog để sửa.";
+                    }
+                    else
+                    {
+                        if(trackObj.state == "queuing")
+                        {
+                            // Ta đợi 5 giây, lấy lại trạng thái để xem đã được approved
+                            Thread.Sleep(5000);
+                            trackObj = TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
+                            if (trackObj != null)
+                            {
+                                tikiMySql.TikiInsert_tbTikiTrackCreateProduct(trackObj.track_id,
+                                    trackObj.state,
+                                    trackObj.reason,
+                                    trackObj.request_id,
+                                    conn);
+                            }
+
+                            if(trackObj.state != "approved")
+                            {
+                                result.State = EMySqlResultState.PENDING;
+                                result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Chưa hỗ trợ tạo sản phẩm trên " + eType;
+                }
+            }
+            return JsonConvert.SerializeObject(result);
         }
     }
 }

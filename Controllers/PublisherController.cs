@@ -20,7 +20,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string CreatePublisher(string name, float discount, string detail)
+        public string CreatePublisher(string name, float discount, string detail, string tikiCertificate)
         {
             if (AuthentAdministrator() == null)
             {
