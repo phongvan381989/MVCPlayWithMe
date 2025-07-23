@@ -10,7 +10,7 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class ComboMySql : BasicMySql
+    public class ComboMySql
     {
         public List<Combo> GetListCombo()
         {
@@ -44,6 +44,61 @@ namespace MVCPlayWithMe.Models
             }
 
             conn.Close();
+            return ls;
+        }
+
+        // Danh sách combo và cả sản phẩm đơn giản thuộc combo
+        public List<Combo> GetListComboIncludeSimpleProducts(MySqlConnection conn)
+        {
+            List<Combo> ls = new List<Combo>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All_Include_Simple_Product", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                MySqlDataReader rdr = cmd.ExecuteReader();
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+                int productIdIndex = rdr.GetOrdinal("ProductId");
+                int productNameIndex = rdr.GetOrdinal("ProductName");
+
+                Combo combo = null;
+                int comboId = 0;
+                int comboIdTemp = 0;
+                string comboName = "";
+                while (rdr.Read())
+                {
+                    comboId = rdr.GetInt32(idIndex);
+                    if(comboId != comboIdTemp)
+                    {
+                        comboIdTemp = comboId;
+                        comboName = rdr.GetString(nameIndex);
+
+                        // Bỏ chữ combo ở đầu tên nếu có
+                        // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
+                        if (comboName.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
+                        {
+                            // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
+                            comboName = comboName.TrimStart().Substring(5).Trim();
+                        }
+                        else
+                        {
+                            // Loại bỏ khoảng trắng nếu không có "combo"
+                            comboName = comboName.Trim();
+                        }
+
+                        combo = new Combo(comboId, comboName);
+                        ls.Add(combo);
+                    }
+                    combo.products.Add(new Product(rdr.GetInt32(productIdIndex), rdr.GetString(productNameIndex)));
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
             return ls;
         }
 

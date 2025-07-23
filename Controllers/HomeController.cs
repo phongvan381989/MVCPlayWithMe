@@ -51,7 +51,7 @@ namespace MVCPlayWithMe.Controllers
             int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
             if (itemOnRow == System.Int32.MinValue)
             {
-                MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
+                MyLogger.GetInstance().Info("Search call keyword: " + keyword + ", page" + page);
                 itemOnRow = Common.itemOnRowDefault;
             }
             searchParameter.offset = itemOnRow * Common.rowOnPage;

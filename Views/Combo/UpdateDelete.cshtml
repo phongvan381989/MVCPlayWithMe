@@ -51,6 +51,36 @@
                             sẽ không cập nhật">
                         Cập Nhật Thông Tin Chung
                     </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonHardCover()"
+                            title="Cập nhật chỉ thông tin Bìa chung">
+                        Cập Nhật Bìa Chung
+                    </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonAge()"
+                            title="Cập nhật chỉ thông tin tuổi chung">
+                        Cập Nhật Tuổi Chung
+                    </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonLanguage()"
+                            title="Cập nhật chỉ thông tin tuổi chung">
+                        Cập Nhật Ngôn Ngữ Chung
+                    </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonDimension()"
+                            title="Cập nhật chỉ kích thước dài, rộng, cao, nặng chung">
+                        Cập Nhật Dài, Rông, Cao, Nặng Chung
+                    </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonCategory()"
+                            title="Cập nhật thể loại">
+                        Cập Nhật Thể Loại
+                    </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonPageNumber()"
+                            title="Cập nhật số trang chung">
+                        Cập Nhật Số Trang
+                    </button>
                 </div>
             </div>
             <br />
@@ -208,6 +238,124 @@
             }
 
             let query = "/Product/UpdateCommonInfoWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonHardCover() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+            let hardCover = document.getElementById("hard-cover").value;
+            searchParams.append("hardCover", hardCover);
+
+            let query = "/Product/UpdateCommonHardCoverWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonAge() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+            let minAge = GetValueInputById("min-age", -1);
+            searchParams.append("minAge", minAge);
+
+            let maxAge = GetValueInputById("max-age", -1);
+            searchParams.append("maxAge", maxAge);
+
+            let query = "/Product/UpdateCommonAgeWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonLanguage() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+            searchParams.append("language", document.getElementById("book-language-id").value);
+
+            let query = "/Product/UpdateCommonLanguageWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonDimension() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+
+            let productLong = GetValueInputById("product-long", 0);
+            searchParams.append("productLong", productLong);
+
+            let productWide = GetValueInputById("product-wide", 0);
+            searchParams.append("productWide", productWide);
+
+            let productHigh = GetValueInputById("product-high", 0);
+            searchParams.append("productHigh", productHigh);
+
+            let productWeight = GetValueInputById("product-weight", 0);
+            searchParams.append("productWeight", productWeight);
+
+            let query = "/Product/UpdateCommonDimensionWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        
+        async function UpdateCommonCategory() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+
+            let categoryName = document.getElementById("category-id").value;
+            let categoryId = GetDataIdFromCategoryDatalist(categoryName);
+            if (categoryId == null) {
+                CreateMustClickOkModal("Thể loại chưa chính xác.");
+                document.getElementById("category-id").focus();
+                return;
+            }
+            else {
+                searchParams.append("categoryId", categoryId);
+            }
+
+            let query = "/Product/UpdateCommonCategoryWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonPageNumber() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+
+            let pageNumber = GetValueInputById("page-number", 0);
+            searchParams.append("pageNumber", pageNumber);
+            if (pageNumber == 0) {
+                CreateMustClickOkModal("Số trang chưa chính xác.");
+                document.getElementById("page-number").focus();
+                return;
+            }
+
+            let query = "/Product/UpdateCommonPageNumberWithCombo";
 
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);

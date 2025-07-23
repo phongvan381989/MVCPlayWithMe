@@ -13,7 +13,7 @@ let item = null; // Khi chọn item để xem, cập nhật thông tin
 // Giá trị này chỉ tăng, không giảm
 // Tăng khi add thêm model, mục đích cấu thành id của các tag, để id là khác nhau
 let autoIncrease = 0;
-let isFinishUploadImageModel = 0;
+//let isFinishUploadImageModel = 0;
 let modelMapping = null; // model đang chọn mapping
 
 // Thêm nút xóa phân loại
@@ -60,6 +60,7 @@ function AddMappingButtonForModel(container) {
         // Get the modal
         let modal = document.getElementById("myModal");
         modal.style.display = "block";
+        document.getElementById("product-name-id").focus();
     }
     btn.appendChild(btnContent);
     btn.className = "margin-vertical";
@@ -658,7 +659,7 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
      itemId, discount, imageExtension,
     listProIdMapping, listQuantityMapping) {
 
-    isFinishUploadImageModel++;
+    //isFinishUploadImageModel++;
     //const reader = new FileReader();
     let parrent = fileElement.parentElement;
     parrent.ctrl = CreateThrobber(fileElement);
@@ -698,7 +699,7 @@ function ModelUpload(url, model, modelId, fileElement, file, modelName, quota, e
         model.modelId = obj.myAnything;
         self.ctrl.update(100);
 
-        isFinishUploadImageModel--;
+        //isFinishUploadImageModel--;
     }, null);
 }
 
@@ -755,9 +756,14 @@ async function AddItemModel() {
 
         // Upload ảnh/video item lên server
         let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleteAllFileWithType, itemId);
+        if (!respinseSendFile) {
+            alert("Upload ảnh/video (item) lỗi.");
+            RemoveCircleLoader();
+            return;
+        }
 
         // Upload thông tin,ảnh model lên server
-        isFinishUploadImageModel = 0;
+        //isFinishUploadImageModel = 0;
         let listModelOnly = GetListModelOnly();
         let length = listModelOnly.length;
 
@@ -788,22 +794,22 @@ async function AddItemModel() {
         return;
     }
 
-    // Đợi upload xong ảnh/video của item
-    while (true) {
-        await Sleep(1000);
-        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
-            break;
-        }
-    }
+    //// Đợi upload xong ảnh/video của item
+    //while (true) {
+    //    await Sleep(1000);
+    //    if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+    //        break;
+    //    }
+    //}
 
     // Đợi upload xong ảnh của model
-    while (true) {
-        await Sleep(1000);
-        if (isFinishUploadImageModel == 0) {
-            alert("Tạo sản phẩm thành công.");
-            break;
-        }
-    }
+    //while (true) {
+    //    await Sleep(1000);
+    //    if (isFinishUploadImageModel == 0) {
+    //        alert("Tạo sản phẩm thành công.");
+    //        break;
+    //    }
+    //}
 
     // Refresh page
     RemoveCircleLoader();
@@ -841,7 +847,7 @@ async function UpdateItemModel() {
         let respinseSendFile = await SendFilesPromise(urlUpItem, urlDeleteAllFileWithType, itemId);
 
         // Upload thông tin,ảnh model lên server
-        isFinishUploadImageModel = 0;
+        //isFinishUploadImageModel = 0;
         let listModelOnly = GetListModelOnly();
         let length = listModelOnly.length;
 
@@ -873,22 +879,22 @@ async function UpdateItemModel() {
         return;
     }
 
-    // Đợi upload xong ảnh/video của item
-    while (true) {
-        await Sleep(1000);
-        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
-            break;
-        }
-    }
+    //// Đợi upload xong ảnh/video của item
+    //while (true) {
+    //    await Sleep(1000);
+    //    if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+    //        break;
+    //    }
+    //}
 
-    // Đợi upload xong ảnh của model
-    while (true) {
-        await Sleep(1000);
-        if (isFinishUploadImageModel == 0) {
-            alert("Cập nhật sản phẩm thành công.");
-            break;
-        }
-    }
+    //// Đợi upload xong ảnh của model
+    //while (true) {
+    //    await Sleep(1000);
+    //    if (isFinishUploadImageModel == 0) {
+    //        alert("Cập nhật sản phẩm thành công.");
+    //        break;
+    //    }
+    //}
 
     // Refresh page
     RemoveCircleLoader();
@@ -982,6 +988,7 @@ function EmptyModal() {
     // Làm trống bảng
     DeleteRowsExcludeHead(document.getElementById("myTable"));
     DeleteRowsExcludeHead(document.getElementById("myTableMapping"));
+
 }
 
 // pro là sản phẩm được chọn mapping từ bảng kết quả tìm kiếm

@@ -37,13 +37,13 @@ namespace MVCPlayWithMe.Controllers
                 return;
             }
 
-            // Check status: UNPAID, READY_TO_SHIP, CANCELLED, TO_RETURN đề phòng miss thông báo.
+            // Check status: UNPAID, READY_TO_SHIP, CANCELLED, IN_CANCEL đề phòng miss thông báo.
             // UNPAID, READY_TO_SHIP: thông báo này đến trước sự kiện đóng đơn
             // Những trạng thái khác không xử lý. Ví dụ trạng thái SHIPPED. Khi có 100 đơn hàng, shipper lấy hàng quét liên tục 
             // sẽ có 100 thông báo gửi về server cùng lúc, nếu ta không return ở đây có thể gây treo server.
             // Trạng thái PROCESSED khi ta xác nhận 100 đơn cùng lúc cũng có thể gây treo server nên ta cũng không xử lý.
             if (orderStatusPush.status != "UNPAID" &&
-                //orderStatusPush.status != "READY_TO_SHIP" &&
+                orderStatusPush.status != "READY_TO_SHIP" &&// Phục vụ nhắc âm thanh khi có đơn hỏa tốc
                 //orderStatusPush.status != "PROCESSED" &&
                 orderStatusPush.status != "IN_CANCEL" &&
                 //orderStatusPush.status != "TO_RETURN" && // Khách nhận, và trả hàng
@@ -82,12 +82,19 @@ namespace MVCPlayWithMe.Controllers
                 //}
             }
 
+            if (orderStatusPush.status == "READY_TO_SHIP")
+            {
+                // Nếu là hỏa tốc và đã được lưu thì cập nhật trạng thái sang ready to ship
+                tikiSqler.UpdateStatusToReadyToShipTbExpressOrder(orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
+            }
+
             if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
             {
                 return;
             }
 
             // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
+            // Hoặc UNPAID không nhân được do lỗi, nhận được READY_TO_SHIP rồi lại nhận được UNPAID
             // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
             if (orderStatusPush.update_time < tbEcommerceOrderLastest.updateTime)
             {
@@ -103,9 +110,17 @@ namespace MVCPlayWithMe.Controllers
                 if (shopeeOrderDetail != null)
                 {
                     // Nếu đơn hàng là hỏa tốc, ta thêm vào bảng đơn hỏa tốc
-                    if(shopeeOrderDetail.checkout_shipping_carrier == CommonOpenPlatform.ShopeeExpress)
+                    if(CommonOpenPlatform.IsShopeeExpress(shopeeOrderDetail.checkout_shipping_carrier))
                     {
-                        tikiSqler.InsertTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                        if(orderStatusPush.status == "UNPAID")
+                        {
+                            tikiSqler.InsertTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                        }
+                        else if(orderStatusPush.status == "READY_TO_SHIP")
+                        {
+                            tikiSqler.InsertTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                            tikiSqler.UpdateStatusToReadyToShipTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                        }
                     }
 
                     CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);

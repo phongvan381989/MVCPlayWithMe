@@ -8,7 +8,7 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class PublisherMySql : BasicMySql
+    public class PublisherMySql
     {
         public List<Publisher> GetListPublisherConnectOut(MySqlConnection conn)
         {

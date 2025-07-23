@@ -21,25 +21,32 @@ using System.Web.Mvc;
 using System.Net;
 using System.Globalization;
 using System.Threading;
+using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
+using QuanLyKho.Model.Dev.ShopeeApp.ShopeeCreateProduct;
+using System.Threading.Tasks;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
 
 namespace MVCPlayWithMe.Controllers
 {
     public class ProductController : BasicController
     {
-        public ProductMySql sqler;
+        public ProductMySql productSqler;
         TikiDealDiscountMySql tikiDealDiscountMySql;
         public ComboMySql comboSqler;
         public CategoryMySql categorySqler;
         public PublisherMySql publisherSqler;
+        ShopeeMySql shopeeMysql;
         TikiMySql tikiMySql;
         public ProductController () : base ()
         {
-            sqler = new ProductMySql();
+            productSqler = new ProductMySql();
             comboSqler = new ComboMySql();
             categorySqler = new CategoryMySql();
             publisherSqler = new PublisherMySql();
             tikiDealDiscountMySql = new TikiDealDiscountMySql();
             tikiMySql = new TikiMySql();
+            shopeeMysql = new ShopeeMySql();
         }
 
         private void GetViewDataForInput()
@@ -84,7 +91,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 conn.Open();
-                product = sqler.GetProductFromId(id, conn);
+                product = productSqler.GetProductFromId(id, conn);
             }
 
             return JsonConvert.SerializeObject(product);
@@ -230,6 +237,8 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
+            string decodeDetail = WebUtility.UrlDecode(detail);
+
             Product pro = new Product(-1,
                  quantity,
                  code,
@@ -255,12 +264,12 @@ namespace MVCPlayWithMe.Controllers
                  maxAge,
                  parentId,
                  republish,
-                 detail,
+                 decodeDetail,
                  status,
                  pageNumber
                  );
 
-             MySqlResultState result = sqler.AddNewPro(pro);
+             MySqlResultState result = productSqler.AddNewPro(pro);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -301,6 +310,8 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
+            string decodeDetail = WebUtility.UrlDecode(detail);
+
             Product pro = new Product(
                 productId,
                 quantity,
@@ -327,12 +338,12 @@ namespace MVCPlayWithMe.Controllers
                  maxAge,
                  parentId,
                  republish,
-                 detail,
+                 decodeDetail,
                  status,
                  pageNumber
                  );
 
-            MySqlResultState result = sqler.UpdateProduct(pro);
+            MySqlResultState result = productSqler.UpdateProduct(pro);
 
             return JsonConvert.SerializeObject(result);
         }
@@ -363,7 +374,7 @@ namespace MVCPlayWithMe.Controllers
 
             string decodeDetail = WebUtility.UrlDecode(detail);
 
-            MySqlResultState result = sqler.UpdateProductFromFahasa(
+            MySqlResultState result = productSqler.UpdateProductFromFahasa(
                 productId,
                 author,
                 publishingTime,
@@ -400,7 +411,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = sqler.DeleteProduct(id);
+            MySqlResultState result = productSqler.DeleteProduct(id);
 
             // xóa thư mục ảnh video của sản phẩm
             string path = Common.GetAbsoluteProductMediaFolderPath(id.ToString());
@@ -464,7 +475,120 @@ namespace MVCPlayWithMe.Controllers
                  status,
                  pageNumber
                 );
-            MySqlResultState result = sqler.UpdateCommonInfoWithCombo(pro);
+            MySqlResultState result = productSqler.UpdateCommonInfoWithCombo(pro);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public string UpdateCommonHardCoverWithCombo(
+                int comboId,
+                int hardCover
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonHardCoverWithCombo(comboId, hardCover, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public string UpdateCommonAgeWithCombo(
+                int comboId,
+                int minAge,
+                int maxAge
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonAgeWithCombo(comboId, minAge, maxAge, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        //string bookLanguge
+        public string UpdateCommonLanguageWithCombo(
+                int comboId,
+                string language
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonLanguageWithCombo(comboId, language, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public string UpdateCommonDimensionWithCombo(
+                int comboId,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonDimensionWithCombo(comboId, productLong, productWide, productHigh, productWeight, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        //
+        public string UpdateCommonCategoryWithCombo(
+                int comboId,
+                int categoryId
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonCategoryWithCombo(comboId, categoryId, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+        public string UpdateCommonPageNumberWithCombo(
+                int comboId,
+                int pageNumber
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonPageNumberWithCombo(comboId, pageNumber, conn);
+            }
             return JsonConvert.SerializeObject(result);
         }
 
@@ -501,6 +625,19 @@ namespace MVCPlayWithMe.Controllers
             }
 
             var productId = Request.Headers["productId"];
+            // Kiểm tra xem id sản phẩm có tồn tại. Có trường hợp sản phẩm đã xóa thành công,
+            // nhưng web vẫn hiển thị nên cập nhật được ảnh
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                Product product = productSqler.GetProductFromId(Common.ConvertStringToInt32(productId), conn);
+                if(product == null)
+                {
+                    return JsonConvert.SerializeObject(
+                        new MySqlResultState(EMySqlResultState.DONT_EXIST, "Sản phẩm không tồn tại."));
+                }
+            }
+
             string path = Common.GetAbsoluteProductMediaFolderPath(productId);
             if (path == null)
             {
@@ -508,6 +645,58 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(SaveImageVideo(path));
+        }
+
+        // Xóa ảnh của sản phẩm trước khi up ảnh mới từ thư mục
+        [HttpPost]
+        public string DeleteImageBeforeUploadImageFromLocalTool(string productId)
+        {
+            string path = Common.GetAbsoluteProductMediaFolderPath(productId);
+            if (path != null)
+            {
+                // Xóa ảnh ở thư mục cũ nếu có
+                Common.DeleteAllImage(path);
+            }
+            return "Ok";
+        }
+
+        // Nhận file ảnh sản phẩm upload từ tool phía client, xóa ảnh cũ nếu có
+        [HttpPost]
+        public string UploadImageFromLocalTool(HttpPostedFileBase file, string productId)
+        {
+            if (file != null && file.ContentLength > 0)
+            {
+                string path = Common.GetAbsoluteProductMediaFolderPath(productId);
+                if (path == null)
+                {
+                    path = Common.CreateAbsoluteProductMediaFolderPath(productId);
+                }
+                //else
+                //{
+                //    // Xóa ảnh ở thư mục cũ nếu có
+                //    Common.DeleteAllImage(path);
+                //}
+
+                // Tạo đường dẫn lưu ảnh
+                string fileName = Path.GetFileName(file.FileName);
+
+                path = path + fileName;
+                // Lưu ảnh
+                file.SaveAs(path);
+
+                // Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
+                if (Common.ImageExtensions.Contains(Path.GetExtension(path).ToLower()))
+                {
+                    // Tiki không cho dùng ảnh có logo khi đăng sản phẩm nên commnet chức năng thêm logo
+                    //string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
+                    //Common.ReduceImageSizeAndSave(newsaveToFileLoc);
+                    Common.ReduceImageSizeAndSave(path);
+                }
+
+                return "Ok. Upload thành công: " + fileName;
+            }
+
+            return "Ok. Không có file nào được gửi.";
         }
 
         [HttpPost]
@@ -576,7 +765,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<Product>());
             }
 
-            List<Product> ls = sqler.GetProductIdCodeBarcodeNameBookCoverPrice(publisherId);
+            List<Product> ls = productSqler.GetProductIdCodeBarcodeNameBookCoverPrice(publisherId);
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -600,7 +789,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 else
                 {
-                    result = sqler.AddListImport(ls);
+                    result = productSqler.AddListImport(ls);
                 }
             }
             catch (Exception ex)
@@ -649,7 +838,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 else
                 {
-                    result = sqler.CreateOrderManually(ls, sumPay);
+                    result = productSqler.CreateOrderManually(ls, sumPay);
                 }
             }
             catch (Exception ex)
@@ -672,7 +861,7 @@ namespace MVCPlayWithMe.Controllers
                 fromDate = "2018-08-05";
             if (Common.ParameterOfURLQueryIsNullOrEmpty(toDate))
                 toDate = DateTime.Now.ToString(Common.dateFormat);
-            List<Import> ls = sqler.GetImportList(fromDate, toDate, publisher);
+            List<Import> ls = productSqler.GetImportList(fromDate, toDate, publisher);
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -694,7 +883,7 @@ namespace MVCPlayWithMe.Controllers
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Danh sách cần cập nhât không đúng.";
                 }
-                result = sqler.UpdateListImport(ls);
+                result = productSqler.UpdateListImport(ls);
             }
             catch (Exception ex)
             {
@@ -750,7 +939,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.combo = combo;
             //searchParameter.status = status;
             List<Product> lsSearchResult;
-            lsSearchResult = sqler.SearchProduct(searchParameter);
+            lsSearchResult = productSqler.SearchProduct(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -768,7 +957,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 conn.Open();
-                lsSearchResult = sqler.SearchDontSellOnECommerce(isSingle, eType, conn);
+                lsSearchResult = productSqler.SearchDontSellOnECommerce(isSingle, eType, conn);
             }
 
             return JsonConvert.SerializeObject(lsSearchResult);
@@ -885,7 +1074,7 @@ namespace MVCPlayWithMe.Controllers
                     conn.Open();
 
                     // Lấy danh sách sản phẩm có combo
-                    List<Product> lsProduct = sqler.GetActiveProductHasComboActiveAll(conn);
+                    List<Product> lsProduct = productSqler.GetActiveProductHasComboActiveAll(conn);
 
                     // Tạo danh sách combo
                     List<Combo> lsCombo = new List<Combo>();
@@ -909,7 +1098,7 @@ namespace MVCPlayWithMe.Controllers
                         //lsSearchResult = TikiSearchDontSellFullComboAndSigleOnECommerce(lsCombo, conn);
                         foreach(var combo in lsCombo)
                         {
-                            if(!sqler.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
+                            if(!productSqler.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
                             {
                                 lsSearchResult.AddRange(combo.products);
                             }
@@ -943,7 +1132,7 @@ namespace MVCPlayWithMe.Controllers
                     conn.Open();
 
                     // Lấy danh sách sản phẩm có combo
-                    List<Product> lsProduct = sqler.GetActiveProductHasComboActiveAll(conn);
+                    List<Product> lsProduct = productSqler.GetActiveProductHasComboActiveAll(conn);
 
                     // Tạo danh sách combo
                     List<Combo> lsCombo = new List<Combo>();
@@ -966,7 +1155,7 @@ namespace MVCPlayWithMe.Controllers
                     {
                         foreach (var combo in lsCombo)
                         {
-                            if (!sqler.TikiDontSellSigleWithParrentConnectOut(combo, comboSqler, conn))
+                            if (!productSqler.TikiDontSellSigleWithParrentConnectOut(combo, comboSqler, conn))
                             {
                                 lsSearchResult.AddRange(combo.products);
                             }
@@ -997,11 +1186,8 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-
-                    if (eType == Common.eTiki)
-                    {
-                        lsSearchResult = sqler.TikiDontSellSigleWithNoParrentConnectOut(conn);
-                    }
+                    lsSearchResult = 
+                        productSqler.SearchDontSellSigleWithNoParrentOnECommerceConnectOut(eType, conn);
                 }
             }
             catch (Exception ex)
@@ -1031,7 +1217,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.offset = offset;
 
             List<Product> lsSearchResult;
-            lsSearchResult = sqler.SearchProductChangePage(searchParameter);
+            lsSearchResult = productSqler.SearchProductChangePage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -1044,7 +1230,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateName(id, name));
+            return JsonConvert.SerializeObject(productSqler.UpdateName(id, name));
         }
 
         [HttpGet]
@@ -1055,7 +1241,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateCode(id, code));
+            return JsonConvert.SerializeObject(productSqler.UpdateCode(id, code));
         }
 
         [HttpPost]
@@ -1066,7 +1252,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateQuantity(id, quantity));
+            return JsonConvert.SerializeObject(productSqler.UpdateQuantity(id, quantity));
         }
 
         [HttpGet]
@@ -1077,7 +1263,18 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateISBN(id, isbn));
+            return JsonConvert.SerializeObject(productSqler.UpdateISBN(id, isbn));
+        }
+
+        [HttpPost]
+        public string UpdateDetail(int id, string detail)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(productSqler.UpdateDetail(id, detail));
         }
 
         [HttpGet]
@@ -1088,7 +1285,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateBookCoverPrice(id, bookCoverPrice));
+            return JsonConvert.SerializeObject(productSqler.UpdateBookCoverPrice(id, bookCoverPrice));
         }
 
         [HttpGet]
@@ -1099,7 +1296,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateDiscountWhenImport(id, discount));
+            return JsonConvert.SerializeObject(productSqler.UpdateDiscountWhenImport(id, discount));
         }
 
         [HttpGet]
@@ -1110,7 +1307,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdatePositionInWarehouse(id, positionInWarehouse));
+            return JsonConvert.SerializeObject(productSqler.UpdatePositionInWarehouse(id, positionInWarehouse));
         }
 
         [HttpGet]
@@ -1121,7 +1318,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateStatusOfProduct(id, statusOfProduct));
+            return JsonConvert.SerializeObject(productSqler.UpdateStatusOfProduct(id, statusOfProduct));
         }
 
         [HttpGet]
@@ -1132,7 +1329,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateComboId(id, comboId));
+            return JsonConvert.SerializeObject(productSqler.UpdateComboId(id, comboId));
         }
 
         [HttpGet]
@@ -1143,7 +1340,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateCategoryId(id, categoryId));
+            return JsonConvert.SerializeObject(productSqler.UpdateCategoryId(id, categoryId));
         }
 
         [HttpGet]
@@ -1154,7 +1351,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdatePublisherId(id, publisherId));
+            return JsonConvert.SerializeObject(productSqler.UpdatePublisherId(id, publisherId));
         }
 
         [HttpGet]
@@ -1165,7 +1362,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdatePublishingCompany(id, publishingCompany));
+            return JsonConvert.SerializeObject(productSqler.UpdatePublishingCompany(id, publishingCompany));
         }
 
         [HttpGet]
@@ -1176,7 +1373,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.UpdateLanguage(id, language));
+            return JsonConvert.SerializeObject(productSqler.UpdateLanguage(id, language));
         }
 
         // str có dạng: 12,45,24
@@ -1208,7 +1405,7 @@ namespace MVCPlayWithMe.Controllers
             GetListIntFromString(lsId, listId);
             GetListIntFromString(lsQuantity, listQuantity);
 
-            return JsonConvert.SerializeObject(sqler.UpdateQuantityFromList(lsId, lsQuantity));
+            return JsonConvert.SerializeObject(productSqler.UpdateQuantityFromList(lsId, lsQuantity));
         }
 
         [HttpPost]
@@ -1219,7 +1416,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<string>());
             }
 
-            return JsonConvert.SerializeObject(sqler.GetListAuthor());
+            return JsonConvert.SerializeObject(productSqler.GetListAuthor());
         }
 
         
@@ -1231,7 +1428,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<string>());
             }
 
-            return JsonConvert.SerializeObject(sqler.GetListTranslator());
+            return JsonConvert.SerializeObject(productSqler.GetListTranslator());
         }
 
         [HttpPost]
@@ -1242,7 +1439,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<string>());
             }
 
-            return JsonConvert.SerializeObject(sqler.GetListPublishingCompany());
+            return JsonConvert.SerializeObject(productSqler.GetListPublishingCompany());
         }
 
         [HttpPost]
@@ -1252,7 +1449,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new List<ProductIdName>());
             }
-            return JsonConvert.SerializeObject(sqler.GetListProductName());
+            return JsonConvert.SerializeObject(productSqler.GetListProductName());
         }
 
         [HttpGet]
@@ -1295,7 +1492,7 @@ namespace MVCPlayWithMe.Controllers
                         if (string.IsNullOrEmpty(item.imageSrc))
                         {
                             item.imageSrc = pro.image.image_url_list[0];
-                            sqler.UpdateImageSrcShopeeItem(item.itemId, item.imageSrc, conn);
+                            productSqler.UpdateImageSrcShopeeItem(item.itemId, item.imageSrc, conn);
                         }
 
                         // Lấy imageSrc cho model nếu có
@@ -1320,7 +1517,7 @@ namespace MVCPlayWithMe.Controllers
                                             if (m.modelId == model.model_id)
                                             {
                                                 m.imageSrc = option.image.image_url;
-                                                sqler.UpdateImageSrcShopeeModel(m.modelId, m.imageSrc, conn);
+                                                productSqler.UpdateImageSrcShopeeModel(m.modelId, m.imageSrc, conn);
                                                 break;
                                             }
                                         }
@@ -1402,7 +1599,7 @@ namespace MVCPlayWithMe.Controllers
         private List<CommonItem> ShopeeGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
         {
             // Danh sách sản phẩm Shopee
-            List<CommonItem> listCommonItem = sqler.ShopeeGetListNeedUpdateQuantityConnectOut(conn);
+            List<CommonItem> listCommonItem = productSqler.ShopeeGetListNeedUpdateQuantityConnectOut(conn);
             //ShopeeGetStatusImageSrcQuantitySellable(listCommonItem);
             foreach(var commonItem in listCommonItem)
             {
@@ -1445,7 +1642,7 @@ namespace MVCPlayWithMe.Controllers
         private List<CommonItem>TikiGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
         {
             // Danh sách sản phẩm Tiki
-            List<CommonItem> listCommonItem = sqler.TikiGetListNeedUpdateQuantityConnectOut(conn);
+            List<CommonItem> listCommonItem = productSqler.TikiGetListNeedUpdateQuantityConnectOut(conn);
             //TikiGetStatusImageSrcQuantitySellable(listCommonItem);
             foreach( var commonItem in listCommonItem)
             {
@@ -1534,7 +1731,7 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
 
-            sqler.UpdateStatusOfNeedUpdateQuantityConnectOut(listProductIdUpdateSuccess, conn);
+            productSqler.UpdateStatusOfNeedUpdateQuantityConnectOut(listProductIdUpdateSuccess, conn);
         }
         public List<CommonItem> GetListNeedUpdateQuantityAndUpdate_Core()
         {
@@ -1545,7 +1742,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 conn.Open();
                 // Danh sách sản phẩm trong kho có thay đổi số lượng cần cập nhật
-                List<int> listProductId = sqler.GetListProductOfNeedUpdateQuantityConnectOut(conn);
+                List<int> listProductId = productSqler.GetListProductOfNeedUpdateQuantityConnectOut(conn);
 
                 List<CommonItem> shopeeList = ShopeeGetListNeedUpdateQuantityAndUpdate(conn);
                 List<CommonItem> tikiList = TikiGetListNeedUpdateQuantityAndUpdate(conn);
@@ -1584,7 +1781,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<Product>());
             }
             List<Product> ls = null;
-            ls = sqler.GetListProductInWarehoueChangedQuantity();
+            ls = productSqler.GetListProductInWarehoueChangedQuantity();
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -1602,7 +1799,7 @@ namespace MVCPlayWithMe.Controllers
         private List<CommonItem> ShopeeGetListMappingOfProduct(int id, MySqlConnection conn)
         {
             // Danh sách sản phẩm Shopee
-            List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfProduct(id, conn);
+            List<CommonItem> shopeeList = productSqler.ShopeeGetListMappingOfProduct(id, conn);
             //ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
             return shopeeList;
         }
@@ -1610,7 +1807,7 @@ namespace MVCPlayWithMe.Controllers
         private List<CommonItem> TikiGetListMappingOfProduct(int id, MySqlConnection conn)
         {
             // Danh sách sản phẩm Tiki
-            List<CommonItem> tikiList = sqler.TikiGetListMappingOfProduct(id, conn);
+            List<CommonItem> tikiList = productSqler.TikiGetListMappingOfProduct(id, conn);
             //TikiGetStatusImageSrcQuantitySellable(tikiList);
             return tikiList;
         }
@@ -1672,8 +1869,7 @@ namespace MVCPlayWithMe.Controllers
                     if (f.failed_reason == "model ID not exist in sku")
                     {
                         // Xóa bỏ mọi thứ liên quan đến model_id vĩnh viễn khỏi cơ sở dữ liệu
-                        ShopeeMySql sqlShopee = new ShopeeMySql();
-                        sqlShopee.ShopeeDeleteModelOnDB(f.model_id);
+                        shopeeMysql.ShopeeDeleteModelOnDB(f.model_id);
                     }
                     else if (f.failed_reason.Contains(st.item_id.ToString() + " status is abnormal"))
                     {
@@ -1708,7 +1904,7 @@ namespace MVCPlayWithMe.Controllers
             MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = sqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
+            int quantity = productSqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
 
             MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st =
                     new MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
@@ -1768,7 +1964,7 @@ namespace MVCPlayWithMe.Controllers
         private MySqlResultState TikiUpdateQuantityOfOneItemModel(int itemId, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = sqler.TikiGetQuantityOfOneItemModelConnectOut(itemId, conn);
+            int quantity = productSqler.TikiGetQuantityOfOneItemModelConnectOut(itemId, conn);
 
             TikiUpdateStock.TikiProductUpdateQuantity(itemId, quantity, result);
 
@@ -1921,7 +2117,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
-                statisticsList  = sqler.GetProductSellingStatistics(
+                statisticsList  = productSqler.GetProductSellingStatistics(
                     Common.GetIntECommerceTypeFromString(eType),
                     intervalDay, -1, conn);
                 conn.Close();
@@ -1948,7 +2144,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
-                statisticsList = sqler.GetProductSellingStatistics(
+                statisticsList = productSqler.GetProductSellingStatistics(
                     -1, intervalDay, publisherId, conn);
                 conn.Close();
             }
@@ -1975,7 +2171,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
-                outputList = sqler.GetOutputOfProduct(id, conn);
+                outputList = productSqler.GetOutputOfProduct(id, conn);
                 conn.Close();
             }
             catch (Exception ex)
@@ -2025,212 +2221,215 @@ namespace MVCPlayWithMe.Controllers
             return matchingGroups;
         }
 
-        // Sinh tên tự động để đăng lên sàn nếu chưa có
-        string GenerateName(Product product)
+        // Vì tiki hiển thị detail liền tù tì, không có xuống dòng nên cần thêm thẻ <p> nếu chưa có
+        string GetDescriptsFromDetail(string detail)
         {
-            // Tên đăng gồm: Tên combo "-" tên sản phẩm.
-            string name = product.comboName + " - " + product.name;
-            // Bỏ chữ combo ở đầu tên nếu có
-            // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
-            if (name.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
+            if (string.IsNullOrWhiteSpace(detail))
             {
-                // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
-                name = name.TrimStart().Substring(5).Trim();
-            }
-            else
-            {
-                // Loại bỏ khoảng trắng nếu không có "combo"
-                name = name.Trim();
+                return string.Empty;
             }
 
-            // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
-            if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            // Nếu đã có <p> thì không làm gì cả
+            if (detail.Contains("<p>"))
             {
-                name = "Sách " + name;
+                return detail;
             }
 
-            return name;
+            // Phân tách theo dòng và bọc mỗi dòng không rỗng bằng thẻ <p>
+            var lines = detail.Split('\n');
+            var result = new List<string>();
+
+            foreach (var line in lines)
+            {
+                var trimmed = line.Trim();
+                if (!string.IsNullOrEmpty(trimmed))
+                {
+                    result.Add($"<p>{trimmed}</p>");
+                }
+            }
+
+            return string.Join("\n", result);
         }
-
         // Từ sản phẩm trong kho, tạo sản phẩm trên sàn Tiki
-        public TikiCreateProductTrackingResponse CreateTikiProductFromProductIdInWarehouse(int id, string name)
+        public TikiCreateProductTrackingResponse CreateTikiProductFromProductIdInWarehouse(int id,
+            string name,
+            MySqlConnection conn)
         {
             TikiCreateProductTrackingResponse trackObj = null;
             try
             {
                 TikiCreatingProduct tikiCreatingProduct = new TikiCreatingProduct();
 
-                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                // Lấy sản phẩm trong kho
+                Product product = productSqler.GetProductFromId(id, conn);
+
+                // Từ category id sản phẩm trong kho, lấy category tương ứng trên Tiki
+                tikiCreatingProduct.category_id =
+                    productSqler.GetTikiCategoryIdFromProductCategoryId(product.categoryId, conn);
+
+                if (string.IsNullOrEmpty(name))
                 {
-                    conn.Open();
-                    // Lấy sản phẩm trong kho
-                    ProductMySql productMySql = new ProductMySql();
-                    Product product = productMySql.GetProductFromId(id, conn);
+                    tikiCreatingProduct.name = Product.GenerateName(product);
+                }
+                else
+                {
+                    tikiCreatingProduct.name = name;
+                }
 
-                    // Từ category id sản phẩm trong kho, lấy category tương ứng trên Tiki
-                    tikiCreatingProduct.category_id =
-                        productMySql.GetTikiCategoryIdFromProductCategoryId(product.categoryId, conn);
+                tikiCreatingProduct.description = GetDescriptsFromDetail(product.detail);
+                tikiCreatingProduct.market_price = product.bookCoverPrice;
 
-                    if (string.IsNullOrEmpty(name))
+                PublisherMySql publisherMySql = new PublisherMySql();
+                Publisher publisher = publisherMySql.GetPublisher(product.publisherId);
+
+                // Attribute. Ta chỉ cập nhật những thuộc tính bắt buộc phải có và 1 vài thuộc tính khác
+                List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes =
+                    tikiMySql.GetTikiAttributesOfCategory(tikiCreatingProduct.category_id, conn);
+                var tikiAttributesGroups = new Dictionary<string, object>();
+                //string product_height = (product.productHigh / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                //string product_length = (product.productLong / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                //string product_width = (product.productWide / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                //string product_weight_kg = ((float)product.productWide / 1000).ToString("0.0", CultureInfo.InvariantCulture);
+                foreach (var attr in attributes)
+                {
+                    if (attr.code == "age_group")
                     {
-                        tikiCreatingProduct.name = GenerateName(product);
+                        // Bán sách nên chỉ có age_group - Phù hợp với độ tuổi là nhiều lựa chọn
+                        // Từ khoảng tuổi sản phẩm chọn ra những khoảng tuổi thích hơp gồm:
+                        // "Người lớn", "Từ 0 - 3 tuổi", "Từ 10 - 12 tuổi", "Từ 13 - 18 tuổi", "Từ 4 - 6 tuổi", "Từ 7 - 9 tuổi"
+                        ///string str = GetTikiAgeGroups(product.minAge, product.maxAge);
+
+                        int minAge = product.minAge <= 0 ? 0 : product.minAge;
+                        int maxAge = product.maxAge <= 0 ? 10000 : product.maxAge;
+                        tikiCreatingProduct.attributes.age_group = GetTikiAgeGroups(minAge, maxAge);
                     }
-                    else
+                    else if (attr.code == "book_cover")
                     {
-                        tikiCreatingProduct.name = name;
-                    }
-
-                    tikiCreatingProduct.description = product.detail;
-                    tikiCreatingProduct.market_price = product.bookCoverPrice;
-
-                    PublisherMySql publisherMySql = new PublisherMySql();
-                    Publisher publisher = publisherMySql.GetPublisher(product.publisherId);
-
-                    // Attribute. Ta chỉ cập nhật những thuộc tính bắt buộc phải có và 1 vài thuộc tính khác
-                    List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes =
-                        tikiMySql.GetTikiAttributesOfCategory(tikiCreatingProduct.category_id, conn);
-                    var tikiAttributesGroups = new Dictionary<string, object>();
-                    //string product_height = (product.productHigh / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                    //string product_length = (product.productLong / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                    //string product_width = (product.productWide / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                    //string product_weight_kg = ((float)product.productWide / 1000).ToString("0.0", CultureInfo.InvariantCulture);
-                    foreach (var attr in attributes)
-                    {
-                        if (attr.code == "age_group")
+                        if (product.hardCover == 1)
                         {
-                            // Bán sách nên chỉ có age_group - Phù hợp với độ tuổi là nhiều lựa chọn
-                            // Từ khoảng tuổi sản phẩm chọn ra những khoảng tuổi thích hơp gồm:
-                            // "Người lớn", "Từ 0 - 3 tuổi", "Từ 10 - 12 tuổi", "Từ 13 - 18 tuổi", "Từ 4 - 6 tuổi", "Từ 7 - 9 tuổi"
-                            ///string str = GetTikiAgeGroups(product.minAge, product.maxAge);
-                            tikiCreatingProduct.attributes.age_group = GetTikiAgeGroups(product.minAge, product.maxAge);
+                            tikiCreatingProduct.attributes.book_cover = "Bìa cứng";
                         }
-                        else if (attr.code == "book_cover")
+                        else
                         {
-                            if (product.hardCover == 1)
-                            {
-                                tikiCreatingProduct.attributes.book_cover = "Bìa cứng";
-                            }
-                            else
-                            {
-                                tikiCreatingProduct.attributes.book_cover = "Bìa mềm";
-                            }
-                        }
-                        else if (attr.code == "language_book")
-                        {
-                            tikiCreatingProduct.attributes.language_book = product.language;
-                        }
-                        else if (attr.code == "manufacturer")
-                        {
-                            tikiCreatingProduct.attributes.manufacturer = product.publishingCompany;
-                        }
-                        else if (attr.code == "product_height")
-                        {
-                            tikiCreatingProduct.attributes.product_height =
-                                (product.productHigh / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                        }
-                        else if (attr.code == "product_length")
-                        {
-                            tikiCreatingProduct.attributes.product_length =
-                                (product.productLong / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                        }
-                        else if (attr.code == "product_width")
-                        {
-                            tikiCreatingProduct.attributes.product_width =
-                                (product.productWide / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                        }
-                        else if (attr.code == "product_weight_kg")
-                        {
-                            tikiCreatingProduct.attributes.product_weight_kg =
-                                (product.productWide / 1000.0 + 0.1).ToString("0.0", CultureInfo.InvariantCulture);
-                        }
-                        else if (attr.code == "publisher_vn")
-                        {
-                            tikiCreatingProduct.attributes.publisher_vn = publisher.tikiAttributeValue;
+                            tikiCreatingProduct.attributes.book_cover = "Bìa mềm";
                         }
                     }
-
-                    // number_of_page
-                    if (product.pageNumber > 0)
+                    else if (attr.code == "language_book")
                     {
-                        tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
+                        tikiCreatingProduct.attributes.language_book = product.language;
                     }
-                    // dimensions
-                    if (product.productLong > 0 && product.productWide > 0)
+                    else if (attr.code == "manufacturer")
                     {
-                        string strTemp = 
-                            (product.productLong / 10.0).ToString("0.0", CultureInfo.InvariantCulture)
-                            + " x " +
-                            (product.productWide / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
-                        if (product.productHigh > 0)
-                        {
-                            strTemp = strTemp + " x " + (product.productHigh / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
-                        }
-                        strTemp = strTemp + " cm";
-                        tikiCreatingProduct.attributes.dimensions = strTemp;
+                        tikiCreatingProduct.attributes.manufacturer = product.publishingCompany;
                     }
-
-                    // dịch giả
-                    if(!string.IsNullOrEmpty(product.translator))
+                    else if (attr.code == "product_height")
                     {
-                        tikiCreatingProduct.attributes.dich_gia = product.translator;
+                        tikiCreatingProduct.attributes.product_height =
+                            (product.productHigh / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
                     }
-
-                    // Tác giả. Thuộc tính này là "input_type": "multiselect"
-                    if (!string.IsNullOrEmpty(product.author))
+                    else if (attr.code == "product_length")
                     {
-                        tikiCreatingProduct.attributes.author = product.author.Split(',')
-                                   .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
-                                   .ToList();
+                        tikiCreatingProduct.attributes.product_length =
+                            (product.productLong / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
                     }
-
-                    product.SetSrcImageVideo();
-                    if (product.imageSrc.Count > 0)
+                    else if (attr.code == "product_width")
                     {
-                        tikiCreatingProduct.image = Common.httpsVoiBeNho + product.imageSrc[0];
-                        foreach (var img in product.imageSrc)
-                        {
-                            tikiCreatingProduct.images.Add(Common.httpsVoiBeNho + img);
-                        }
+                        tikiCreatingProduct.attributes.product_width =
+                            (product.productWide / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
                     }
-
-                    Variant variant = new Variant();
-                    variant.price = product.bookCoverPrice;
-                    variant.inventory_type = TikiConstValues.inventory_type;
-                    variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
-                    variant.sku = TikiConstValues.GenerateRandomSKUString();
-                    variant.min_code = TikiConstValues.GenerateRandomMincodeLong();
-
-                    WarehouseStock warehouseStock = new WarehouseStock();
-                    warehouseStock.warehouseId = TikiConstValues.intIdKho28Ngo3TTDL;
-                    warehouseStock.qtyAvailable = product.quantity;
-
-                    variant.warehouse_stocks.Add(warehouseStock);
-                    tikiCreatingProduct.variants.Add(variant);
-
-                    // certificate_files
-                    CertificateFile certificateFile = new CertificateFile();
-                    certificateFile.type = "category";
-                    certificateFile.document_id = 18;
-
-                    certificateFile.url = publisher.tikiCertificate;
-
-                    //tikiCreatingProduct.certificate_files.Add(certificateFile);
-
-                    // meta_data
-                    MetaData metaData = new MetaData();
-                    metaData.is_auto_turn_on = true;
-                    tikiCreatingProduct.meta_data = metaData;
-
-                    // Tạo sản phẩm
-                    trackObj = TikiCreateProduct.CreateProduct(tikiCreatingProduct);
-                    if (trackObj != null)
+                    else if (attr.code == "product_weight_kg")
                     {
-                        tikiMySql.TikiInsert_tbTikiTrackCreateProduct(trackObj.track_id,
-                            trackObj.state,
-                            trackObj.reason,
-                            trackObj.request_id,
-                            conn);
+                        tikiCreatingProduct.attributes.product_weight_kg =
+                            (product.productWeight / 1000.0 + 0.1).ToString("0.0", CultureInfo.InvariantCulture);
                     }
+                    else if (attr.code == "publisher_vn")
+                    {
+                        tikiCreatingProduct.attributes.publisher_vn = publisher.tikiAttributeValue;
+                    }
+                }
+
+                // number_of_page
+                if (product.pageNumber > 0)
+                {
+                    tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
+                }
+                // dimensions
+                if (product.productLong > 0 && product.productWide > 0)
+                {
+                    string strTemp = 
+                        (product.productLong / 10.0).ToString("0.0", CultureInfo.InvariantCulture)
+                        + " x " +
+                        (product.productWide / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
+                    if (product.productHigh > 0)
+                    {
+                        strTemp = strTemp + " x " + (product.productHigh / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
+                    }
+                    strTemp = strTemp + " cm";
+                    tikiCreatingProduct.attributes.dimensions = strTemp;
+                }
+
+                // dịch giả
+                if(!string.IsNullOrEmpty(product.translator))
+                {
+                    tikiCreatingProduct.attributes.dich_gia = product.translator;
+                }
+
+                // Tác giả. Thuộc tính này là "input_type": "multiselect"
+                if (!string.IsNullOrEmpty(product.author))
+                {
+                    tikiCreatingProduct.attributes.author = product.author.Split(',')
+                                .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
+                                .ToList();
+                }
+
+                product.SetSrcImageVideo();
+                if (product.imageSrc.Count > 0)
+                {
+                    tikiCreatingProduct.image = Common.httpsVoiBeNho + product.imageSrc[0];
+                    for(int i = 1; i < product.imageSrc.Count; i++)
+                    {
+                        tikiCreatingProduct.images.Add(Common.httpsVoiBeNho + product.imageSrc[i]);
+                    }
+                }
+
+                Variant variant = new Variant();
+                variant.price = product.bookCoverPrice;
+                variant.inventory_type = TikiConstValues.inventory_type;
+                variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
+                variant.sku = TikiConstValues.GenerateRandomSKUString();
+                variant.min_code = TikiConstValues.GenerateRandomMincodeLong();
+
+                WarehouseStock warehouseStock = new WarehouseStock();
+                warehouseStock.warehouseId = TikiConstValues.intIdKho28Ngo3TTDL;
+                warehouseStock.qtyAvailable = product.quantity;
+
+                variant.warehouse_stocks.Add(warehouseStock);
+                tikiCreatingProduct.variants.Add(variant);
+
+                // certificate_files
+                CertificateFile certificateFile = new CertificateFile();
+                certificateFile.type = "category";
+                certificateFile.document_id = 18;
+
+                certificateFile.url = Common.GetSrcCertificateFolderPath(Common.eTiki) +  publisher.tikiCertificate;
+
+                tikiCreatingProduct.certificate_files.Add(certificateFile);
+
+                // meta_data
+                MetaData metaData = new MetaData();
+                metaData.is_auto_turn_on = true;
+                tikiCreatingProduct.meta_data = metaData;
+
+                // Tạo sản phẩm
+                trackObj = TikiCreateProduct.CreateProduct(tikiCreatingProduct);
+                if (trackObj != null)
+                {
+                    tikiMySql.TikiInsert_tbTikiTrackCreateProduct(trackObj.track_id,
+                        trackObj.state,
+                        trackObj.reason,
+                        trackObj.request_id,
+                        tikiCreatingProduct.name,
+                        conn);
                 }
             }
             catch (Exception ex)
@@ -2242,21 +2441,21 @@ namespace MVCPlayWithMe.Controllers
             return trackObj;
         }
 
-        public string CreateProductOnECommerce(int id, string eType, string name)
+        [HttpPost]
+        public async Task<string> CreateProductOnECommerce(int id, string eType, string name)
         {
             if (AuthentAdministrator() == null)
             {
-                return JsonConvert.SerializeObject(new List<Product>());
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
             MySqlResultState result = new MySqlResultState();
-            List<Product> lsSearchResult = new List<Product>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 conn.Open();
                 if (eType == Common.eTiki)
                 {
-                    TikiCreateProductTrackingResponse trackObj = CreateTikiProductFromProductIdInWarehouse(id, name);
+                    TikiCreateProductTrackingResponse trackObj = CreateTikiProductFromProductIdInWarehouse(id, name, conn);
                     if(trackObj == null)
                     {
                         result.State = EMySqlResultState.INVALID;
@@ -2275,6 +2474,7 @@ namespace MVCPlayWithMe.Controllers
                                     trackObj.state,
                                     trackObj.reason,
                                     trackObj.request_id,
+                                    string.Empty,
                                     conn);
                             }
 
@@ -2286,6 +2486,10 @@ namespace MVCPlayWithMe.Controllers
                         }
                     }
                 }
+                else if(eType == Common.eShopee)
+                {
+                    result = await CreateShopeeProductFromProductIdInWarehouse(id, name, true, conn);
+                }
                 else
                 {
                     result.State = EMySqlResultState.INVALID;
@@ -2293,6 +2497,273 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
             return JsonConvert.SerializeObject(result);
+        }
+
+        public async Task<MySqlResultState> UploadImageOnECommerce_Core(int id, string eType,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            List<string> src = Product.GetProductImageAbsolutePath(id.ToString());
+            if (eType == Common.eShopee)
+            {
+                int length = src.Count > ShopeeMediaSpace.maxImageOnItem ? ShopeeMediaSpace.maxImageOnItem : src.Count;
+                for (int i = 0; i < length; i++)
+                {
+                    ShopeeUploadImageResponseHTTP objResponse =
+                        await ShopeeMediaSpace.ShopeeUpload_Image(src[i]);
+
+                    if(!string.IsNullOrEmpty(objResponse.error))
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = objResponse.error;
+                        break;
+                    }
+
+                    result = shopeeMysql.InserttbShopeeMediaSpace(0,
+                        objResponse.response.image_info.image_id,
+                        id, 0, conn);
+                    if (result.State != EMySqlResultState.OK)
+                    {
+                        break;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<string> UploadImageOnECommerce(int id, string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                if (eType == Common.eShopee)
+                {
+                    result = await UploadImageOnECommerce_Core(id, eType, conn);
+                }
+                else
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Chưa hỗ trợ trên " + eType;
+                }
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+        // Nếu up sản phẩm thành công, ta lấy sản phẩm và insert vào db, mapping luôn
+        // Item chỉ có 1 model
+        private async Task InsertNewItem_OneModelAndMapping(long ItemId, int productId,
+            MySqlConnection conn)
+        {
+            ShopeeGetItemBaseInfoItem pro = 
+                ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(ItemId);
+            if (pro == null)
+            {
+                return;
+            }
+
+            CommonItem item = new CommonItem(pro);
+            int itemIdInserted = shopeeMysql.InserttbShopeeItem(item, conn);
+
+            // Vì chỉ có 1 model
+            int modelIdInsert = shopeeMysql.InserttbShopeeModel(itemIdInserted, item.models[0], conn);
+
+            // Ta mapping
+            shopeeMysql.ShopeeInsertNewMappingOneOfModel(modelIdInsert, productId, 1, conn);
+        }
+
+        public async Task<MySqlResultState> CreateShopeeProductFromProductIdInWarehouse(
+            int productId,
+            string name,
+            Boolean isNeedUploadImage,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            // Lấy sản phẩm trong kho
+            Product product = productSqler.GetProductFromId(productId, conn);
+
+            if (isNeedUploadImage)
+            {
+                // Cần kiểm tra xem đã up ảnh lên shopee chưa? 
+                // Không mỗi lần đăng sản phẩm lại up ảnh lại không cần thiết
+
+                int count = shopeeMysql.GetQuantityOfProductImageUploadedToShopee(0, productId, 0, conn);
+
+                if(count == -1)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không đếm được số ảnh sản phẩm đã up lên shopp.";
+                    return result;
+                }
+                if(count== 0 || // chưa up ảnh lên shopee
+                    product.imageSrc.Count != count)// SỐ lượng ảnh sản phẩm và ảnh đã up có sự thay đổi. Ta up lại lên shopee
+                {
+
+                    // Trước khi up xóa bỏ id ảnh cũ nếu có
+                    if (count > 0)
+                    {
+                        result = shopeeMysql.DeleteProductImageUploadedToShopee(0, productId, 0, conn);
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            return result;
+                        }
+                    }
+
+                    result = await UploadImageOnECommerce_Core(productId, Common.eShopee, conn);
+                    if (result.State != EMySqlResultState.OK)
+                    {
+                        return result;
+                    }
+                }
+            }
+
+            // Tạo đối tượng tham số của request
+            ShopeeAddItem_RequestParameters requsetParameters = new ShopeeAddItem_RequestParameters();
+            requsetParameters.original_price = product.bookCoverPrice;
+            if(product.detail.Length < 100)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Mô tả sản phẩm quá ngắn.";
+                return result;
+            }
+            requsetParameters.description = Common.CleanHtml(product.detail);
+
+            if (product.productWeight < 1)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Khối lượng sản phẩm quá nhẹ.";
+                return result;
+            }
+            requsetParameters.weight = (float)product.productWeight / 1000 + (float)0.1;
+
+            if (string.IsNullOrEmpty(name))
+            {
+                requsetParameters.item_name = Product.GenerateName(product);
+            }
+            else
+            {
+                requsetParameters.item_name = name;
+            }
+
+            requsetParameters.item_status = "NORMAL";
+
+            if(product.productLong <= 0 ||
+                product.productHigh <= 0 ||
+                product.productWide <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Kích thước sản phẩm quá nhỏ.";
+                return result;
+            }
+
+            ShopeeDimension dimension = new ShopeeDimension();
+            dimension.package_length = product.productLong / 10 + 1;
+            dimension.package_width = product.productWide / 10 + 1;
+            dimension.package_height = product.productHigh / 10 + 1;
+            requsetParameters.dimension = dimension;
+
+            // Logistic channel setting
+            requsetParameters.logistic_info = ShopeeLogistic.GetLogisticInfo(false);
+            if(requsetParameters.logistic_info.Count == 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Không lấy được đơn vị vận vận chuyển.";
+                return result;
+            }
+
+            if (!product.categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm không phải là sách, chưa được hỗ trợ đăng.";
+                return result;
+            }
+
+            // attribute
+            if(string.IsNullOrEmpty(product.language))
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm chưa có thuộc tính ngôn ngữ.";
+                return result;
+            }
+
+            if (product.publishingTime < 2000)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm chưa có thuộc tính năm xuất bản.";
+                return result;
+            }
+
+            if (product.pageNumber <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm chưa có thuộc tính số trang.";
+                return result;
+            }
+            requsetParameters.attribute_list = ShopeeAddItem.GetAttributeOfChildren_AdultBook(product);
+
+            // category
+            // Sách trẻ em
+            if(product.maxAge != 0 && product.maxAge <= 12 * 18)
+            {
+                requsetParameters.category_id = 101541;
+            }
+            else
+            {
+                // Sách người lớn
+                requsetParameters.category_id = 101543;
+            }
+
+            // Image
+            List<string> image = shopeeMysql.GetUploadedImageOfProductOnShopee(0, product.id, 0, conn);
+            requsetParameters.image = new ShopeeImage(image);
+
+            // Thương hiệu là tên tác giả, nhiều tác giả thì lựa chọn thương hiệu nhiều tác giả.
+            ShopeeBrandRequestParameter brand = null;
+            if(product.author.IndexOf(',') > 0)
+            {
+                // Hardcode luông
+                brand = new ShopeeBrandRequestParameter(1139260, "Nhiều tác giả");
+            }
+            else
+            {
+                brand = shopeeMysql.GetBrandFromName(product.author, conn);
+                if(brand == null)
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Tác giả chưa được đăng ký thương hiệu.";
+                    return result;
+                }
+            }
+            requsetParameters.brand = brand;
+
+            // Tồn kho
+            requsetParameters.seller_stock = new List<ShopeeSellerStock>();
+            requsetParameters.seller_stock.Add(new ShopeeSellerStock(product.quantity));
+
+            ShopeeAddItemResponseHTTP objResponse = 
+                ShopeeAddItem.ShopeeProductAddItem(requsetParameters);
+            if(objResponse == null)
+            {
+                result.State = EMySqlResultState.EMPTY;
+                result.Message = "ShopeeProductAddItem response null";
+            }
+            else if (!string.IsNullOrEmpty(objResponse.error))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = objResponse.error;
+            }
+
+            // Nếu up sản phẩm thành công, ta lấy sản phẩm và cập nhật mapping luôn
+            // Lấy item id sản phẩm mới đăng thành công
+            //objResponse.response.item_id;
+            await InsertNewItem_OneModelAndMapping(objResponse.response.item_id, productId, conn);
+
+            return result;
         }
     }
 }

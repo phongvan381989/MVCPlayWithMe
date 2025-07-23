@@ -14,7 +14,7 @@ using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
-    public class TikiMySql : BasicMySql
+    public class TikiMySql
     {
         //private int TikiInsert(int supperId, int tikiId, string name,
         //    int status, string sku, string superSku, MySqlConnection conn)
@@ -370,6 +370,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lsCommonItem;
         }
 
+        public Dictionary<int, string> TikiGetListItemDontMapping(MySqlConnection conn)
+        {
+            Dictionary<int, string> dic = new Dictionary<int, string>();
+            MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Dont_Mapping", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            try
+            {
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    while (rdr.Read())
+                    {
+                        dic.Add(rdr.GetInt32(idIndex), rdr.GetString(nameIndex));
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return dic;
+        }
+
         public MySqlResultState TikiDeleteItemOnDB(int itemId)
         {
             MySqlResultState resultState = new MySqlResultState();
@@ -392,6 +417,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             conn.Close();
             return resultState;
+        }
+
+        public MySqlResultState TikiUpdateMappingSignle(int itemId,
+            int productId,
+            int quantity,
+            MySqlConnection conn
+            )
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTikiItemId", itemId);
+                cmd.Parameters.AddWithValue("@inProductId", productId);
+                cmd.Parameters.AddWithValue("@inQuantity", quantity);
+
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -455,8 +505,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
+                Common.SetResultException(ex, result);
             }
             conn.Close();
             return result;
@@ -587,6 +636,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlConnection conn)
         {
             TbEcommerceOrder lastest = new TbEcommerceOrder();
+            lastest.updateTime = 0;
             lastest.status = (int)ECommerceOrderStatus.DONT_EXIST; // Giá trị mặc định
             try
             {
@@ -1005,10 +1055,33 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             EECommerceType type,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("Call InsertTbExpressOrder");
+            MyLogger.GetInstance().Info("Call InsertTbExpressOrder, code: " + code);
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Insert", conn))
+                {
+                    cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+                    // Thêm các tham số
+                    cmd.Parameters.AddWithValue("@p_Code", code);
+                    cmd.Parameters.AddWithValue("@p_ECommerce", (int)type);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info(ex.ToString());
+            }
+        }
+
+        public void UpdateStatusToReadyToShipTbExpressOrder(string code,
+            EECommerceType type,
+            MySqlConnection conn)
+        {
+            MyLogger.GetInstance().Info("Call UpdateStatusToReadyToShipTbExpressOrder");
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Update_Status_To_Ready_To_Ship", conn))
                 {
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
@@ -1285,6 +1358,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             string state,
             string reason,
             string request_id,
+            string name,
             MySqlConnection conn)
         {
             try
@@ -1295,6 +1369,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.Parameters.AddWithValue("@instate", state);
                 cmd.Parameters.AddWithValue("@inreason", reason);
                 cmd.Parameters.AddWithValue("@inrequest_id", request_id);
+                cmd.Parameters.AddWithValue("@inName", name);
                 cmd.ExecuteNonQuery();
             }
             catch (Exception ex)

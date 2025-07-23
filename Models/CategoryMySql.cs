@@ -8,7 +8,7 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class CategoryMySql : BasicMySql
+    public class CategoryMySql
     {
         public List<Category> GetListCategory()
         {

@@ -12,7 +12,7 @@ using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Models.ProductModel
 {
-    public class ProductMySql : BasicMySql
+    public class ProductMySql
     {
         /// <summary>
         /// TỪ dữ liệu select db, ta trả về đối tượng Product
@@ -426,6 +426,163 @@ namespace MVCPlayWithMe.Models.ProductModel
 
             MyMySql.AddOutParameters(paras);
             result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Common_Info_With_Combo", paras);
+
+            return result;
+        }
+
+        public MySqlResultState UpdateCommonHardCoverWithCombo(int comboId,
+                int hardCover, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET  
+               `HardCover` = @inHardCover
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inHardCover", hardCover);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public MySqlResultState UpdateCommonAgeWithCombo(int comboId,
+                int minAge,
+                int maxAge, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET  
+               `MinAge` = @inMinAge, `MaxAge` = @inMaxAge
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inMinAge", minAge);
+                    cmd.Parameters.AddWithValue("@inMaxAge", maxAge);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public MySqlResultState UpdateCommonLanguageWithCombo(int comboId,
+                string language, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET 
+               `Language` = @inLanguage
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inLanguage", language);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public MySqlResultState UpdateCommonDimensionWithCombo(int comboId,
+                int productLong,
+                int productWide,
+                int productHigh,
+                int productWeight,
+                MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET 
+               `ProductLong` = @inProductLong, `ProductWide` = @inProductWide, `ProductHigh` = @inProductHigh,
+                `ProductWeight` = @inProductWeight
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inProductLong", productLong);
+                    cmd.Parameters.AddWithValue("@inProductWide", productWide);
+                    cmd.Parameters.AddWithValue("@inProductHigh", productHigh);
+                    cmd.Parameters.AddWithValue("@inProductWeight", productWeight);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public MySqlResultState UpdateCommonCategoryWithCombo(int comboId,
+                int categoryId,
+                MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET 
+               `CategoryId` = @inCategoryId
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        // 
+        public MySqlResultState UpdateCommonPageNumberWithCombo(int comboId,
+                int pageNumber,
+                MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET 
+               `PageNumber` = @inPageNumber
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPageNumber", pageNumber);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
 
             return result;
         }
@@ -1118,12 +1275,15 @@ namespace MVCPlayWithMe.Models.ProductModel
             List<Product> ls = new List<Product>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand(store, conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                if (!string.IsNullOrEmpty(store))
                 {
-                    ConvertQuicklyRowFromDataMySql(rdr, ls);
+                    MySqlCommand cmd = new MySqlCommand(store, conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        ConvertQuicklyRowFromDataMySql(rdr, ls);
+                    }
                 }
             }
             catch (Exception ex)
@@ -1329,13 +1489,47 @@ namespace MVCPlayWithMe.Models.ProductModel
         }
 
 
-        public List<Product> TikiDontSellSigleWithNoParrentConnectOut(
+        public List<Product> SearchDontSellSigleWithNoParrentOnECommerceConnectOut(
+            string eType,
             MySqlConnection conn)
         {
             List<Product> ls = new List<Product>();
             try
             {
+                string store = "";
+                if(eType == eTiki)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent";
+                }
+                else if(eType == eShopee)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
+                }
+                if (!string.IsNullOrEmpty(store))
+                {
+                    MySqlCommand cmd = new MySqlCommand(store, conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
 
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        ConvertQuicklyRowFromDataMySql(rdr, ls);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return ls;
+        }
+
+        public List<Product> ShopeeDontSellSigleWithNoParrentConnectOut(
+            MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+            try
+            {
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
 
@@ -1349,7 +1543,42 @@ namespace MVCPlayWithMe.Models.ProductModel
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
-            conn.Close();
+            return ls;
+        }
+
+        // Lấy danh sách sản phẩm đơn giản với thông tin combo
+        public List<Product> GetSimpleComboAllConnectOut(
+            MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Get_Simple_Combo_All", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    int comboIdIndex = rdr.GetOrdinal("ComboId");
+                    int comboNameIndex = rdr.GetOrdinal("ComboName");
+
+                    while (rdr.Read())
+                    {
+                        Product product = new Product();
+                        product.id = rdr.GetInt32(idIndex);
+                        product.name = rdr.GetString(nameIndex);
+                        product.comboId = rdr.GetInt32(comboIdIndex);
+                        product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
+
+                        ls.Add(product);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
             return ls;
         }
 
@@ -1516,6 +1745,30 @@ namespace MVCPlayWithMe.Models.ProductModel
             MyMySql.AddOutParameters(paras);
 
             MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbProducts_Update_Barcode", paras);
+            return result;
+        }
+
+        public MySqlResultState UpdateDetail(int id, string detail)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+
+                    MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbproducts SET Detail = @inDetail WHERE Id = @inId;", conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inId", id);
+                    cmd.Parameters.AddWithValue("@inDetail", detail);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
             return result;
         }
 

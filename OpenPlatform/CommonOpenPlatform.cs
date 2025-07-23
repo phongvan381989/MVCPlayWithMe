@@ -47,8 +47,6 @@ namespace MVCPlayWithMe.OpenPlatform
             return (int)ShopeeProductStatus.BANNED;
         }
 
-        public const string ShopeeExpress = "Hỏa Tốc";
-
         public enum CommonOrderStatus
         {
             ALL, // Tất cả trạng thái đơn hàng
@@ -102,6 +100,17 @@ namespace MVCPlayWithMe.OpenPlatform
             }
 
             MyLogger.GetInstance().Info("END get item and insert if dont exist");
+        }
+
+        // Kiểm tra trạng thái đơn Shopee có phải là hỏa tốc
+        public static Boolean IsShopeeExpress(string checkout_shipping_carrier)
+        {
+            if((checkout_shipping_carrier.IndexOf("Hỏa Tốc", StringComparison.OrdinalIgnoreCase) >= 0)||
+                (checkout_shipping_carrier.IndexOf("Siêu Tốc", StringComparison.OrdinalIgnoreCase) >= 0))
+            {
+                return true;
+            }
+            return false;
         }
     }
 }

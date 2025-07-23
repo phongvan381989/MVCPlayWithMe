@@ -133,7 +133,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
                 else
                 {
-                    MyLogger.GetInstance().Info("ConvertStringToInt32 return System.Int32.MinValue");
+                    MyLogger.GetInstance().Info("GetItemFromId call eType: " + eType + ", id: " + id);
                 }
             }
             conn.Close();
@@ -392,6 +392,57 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 ls = tikiSqler.TikiGetItemOnDB();
             }
             return JsonConvert.SerializeObject(ls);
+        }
+
+        // Nếu tên sản phẩm trên sàn bao gồm cả tên combo, tên sản phẩm trong kho thì mapping tương ứng
+        [HttpPost]
+        public string AutoUpdateMapping(string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+                //// Lấy danh sách combo, sản phẩm thuộc combo trong kho
+                //ComboMySql comboMysql = new ComboMySql();
+                //List<Combo> lsCombo = comboMysql.GetListComboIncludeSimpleProducts(conn);
+                // Lấy danh sách sản phẩm tron kho đơn giản
+                ProductMySql productMySql = new ProductMySql();
+                List<Product> lsProduct = productMySql.GetSimpleComboAllConnectOut(conn);
+                string nameTemp = "";
+                if (eType == Common.eTiki)
+                {
+                    // Lấy danh sách sản phẩm trên sàn chưa mapping
+                    Dictionary<int, string> dic = tikiSqler.TikiGetListItemDontMapping(conn);
+                    foreach(var item in dic)
+                    {
+                        foreach (var pro in lsProduct)
+                        {
+                            nameTemp = Product.GenerateName(pro);
+                            if(nameTemp == item.Value)
+                            {
+                                tikiSqler.TikiUpdateMappingSignle(item.Key, pro.id, 1, conn);
+                                break;
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    resultState.State = EMySqlResultState.DONT_EXIST;
+                    resultState.Message = "Chưa hỗ trợ sàn " + eType;
+                }
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+            return JsonConvert.SerializeObject(resultState);
         }
 
         // Xóa item trên db

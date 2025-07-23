@@ -131,6 +131,27 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
              return token;
         }
 
+        // Lưu code mới trong Redirect URL sau khi được chủ shop ủy quyền
+        public static MySqlResultState ShopeeSaveCode(string code)
+        {
+            MySqlResultState result = null;
+            try
+            {
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                result = shopeeMySql.ShopeeSaveCode(code);
+                if (result.State == EMySqlResultState.OK)
+                {
+                    // Cập nhật lại shopee authen
+                    shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
+                }
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
         /// <summary>
         /// Làm mới access token khi bị hết hạn
         /// </summary>
@@ -235,11 +256,49 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             var hash = new HMACSHA256(byte_partner_key);
             byte[] tmp_sign = hash.ComputeHash(byte_base_string);
             string sign = BitConverter.ToString(tmp_sign).Replace("-", "").ToLower();
-            string url = String.Format(CommonShopeeAPI.cShopeeHost + path + "?partner_id={0}&timestamp={1}&sign={2}&shop_id={3}&access_token={4}" + DevNameValuePair.GetQueryStringWithAndPrefix(ls), partner_id, timest, sign, shop_id, access_token);
+            string url = String.Format(CommonShopeeAPI.cShopeeHost + path +
+                "?partner_id={0}&timestamp={1}&sign={2}&shop_id={3}&access_token={4}" +
+                DevNameValuePair.GetQueryStringWithAndPrefix(ls), partner_id, timest, sign, shop_id, access_token);
             return url;
         }
 
         public static IRestResponse ShopeeGetMethod(string path, List<DevNameValuePair> ls)
+        {
+            string url = GenerateURLShopeeAPI(path, ls);
+            IRestResponse response = null;
+            try
+            {
+                RestRequest request = new RestRequest(url, Method.GET);
+
+                response = Common.client.Execute(request);
+                MyLogger.InfoRestLog(Common.client, request, response);
+
+                if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token và thử lại
+                {
+                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    {
+                        response = null;
+                    }
+                    else
+                    {
+                        url = GenerateURLShopeeAPI(path, ls);
+
+                        request = new RestRequest(url, Method.GET);
+
+                        response = Common.client.Execute(request);
+                        MyLogger.InfoRestLog(Common.client, request, response);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                response = null;
+            }
+            return response;
+        }
+
+        public static async Task<IRestResponse> ShopeeGetMethodAsync(string path, List<DevNameValuePair> ls)
         {
             string url = GenerateURLShopeeAPI(path, ls);
             IRestResponse response = null;

@@ -13,7 +13,7 @@ namespace MVCPlayWithMe.Models.Customer
     /// <summary>
     /// Khách vãng lai không lưu userCookieIdentify vào db
     /// </summary>
-    public class CustomerMySql : BasicMySql
+    public class CustomerMySql
     {
         /// <summary>
         /// Chỉ lấy Id của customer
@@ -132,7 +132,7 @@ namespace MVCPlayWithMe.Models.Customer
 
         public MySqlResultState LoginCustomer(string userName, string password)
         {
-            return Login(userName, password, "st_tbCustomer_Get_Salt_Hash");
+            return MyMySql.Login(userName, password, "st_tbCustomer_Get_Salt_Hash");
         }
 
         private void GetCustomerFromDataReader(MySqlDataReader rdr, Customer customer)
@@ -481,7 +481,7 @@ namespace MVCPlayWithMe.Models.Customer
         public MySqlResultState ChangePasswordCustomer(int id, string oldPassWord, 
             string newPassWord, string renewPassWord)
         {
-            return ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
+            return MyMySql.ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
                 "st_tbCustomer_Get_Salt_Hash_From_Id",
                 "st_tbCustomer_ChangePassword");
         }

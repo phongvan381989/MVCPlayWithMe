@@ -218,78 +218,83 @@ namespace MVCPlayWithMe.Controllers
         // trong kho hoặc item (ProductControler và ItemModelControler)
         public MySqlResultState SaveImageVideo(string path)
         {
-            var length = Request.ContentLength;
-            var bytes = new byte[length];
-            Request.InputStream.Read(bytes, 0, length);
-
-            var fileName = Request.Headers["fileName"];
-            var id = Request.Headers["productId"];
-            // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media,
-            //ta lấy chỉ tên
-            var originalFileName = Request.Headers["originalFileName"];
-            var exist = Request.Headers["exist"];
-            var finish = Request.Headers["finish"];
-
-            if (exist == "true")
+            MySqlResultState result = new MySqlResultState();
+            try
             {
-                MySqlResultState rs = new MySqlResultState();
-                try
+                var length = Request.ContentLength;
+                var bytes = new byte[length];
+                Request.InputStream.Read(bytes, 0, length);
+
+                var fileName = Request.Headers["fileName"];
+                var id = Request.Headers["productId"];
+                // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media,
+                //ta lấy chỉ tên
+                var originalFileName = Request.Headers["originalFileName"];
+                var exist = Request.Headers["exist"];
+                var finish = Request.Headers["finish"];
+
+                if (exist == "true")
                 {
                     // originalFileName ví dụ: \Media\Product\553\0.png chứa cả đường dẫn từ thư mục media, ta lấy chỉ tên
                     originalFileName = Path.GetFileName(originalFileName);
-                    if (originalFileName != fileName) // Xóa file khác giống tên mới
+                    if (originalFileName != fileName)
                     {
                         // Xóa file cũ cùng tên không kể đuôi nếu có
                         Common.DeleteImageVideoWithoutExtension(path + fileName);
                         System.IO.File.Move(path + originalFileName, path + fileName);
                     }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Common.SetResultException(ex, rs);
+                    // Xóa file cũ cùng tên không kể đuôi nếu có
+                    Common.DeleteImageVideoWithoutExtension(path + fileName);
+
+                    if (length > 0)
+                    {
+                        // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
+                        var saveToFileLoc = string.Format("{0}{1}",
+                                                      path,
+                                                       fileName);
+
+                        // save the file.
+                        var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
+                        fileStream.Write(bytes, 0, length);
+                        fileStream.Close();
+
+                        //// Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
+                        //if (Common.ImageExtensions.Contains(Path.GetExtension(saveToFileLoc).ToLower()))
+                        //{
+                            //// Tiki không cho dùng ảnh có logo khi đăng sản phẩm nên commnet chức năng thêm logo
+                            //string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
+                            //Common.ReduceImageSizeAndSave(newsaveToFileLoc);
+                            //Common.ReduceImageSizeAndSave(saveToFileLoc);
+                        //}
+                    }
                 }
 
-                // Xóa bỏ ảnh/video không cần lưu nữa với những file có tên lớn hơn tên cuối cùng được lưu
                 if (finish == "true")
                 {
+                    // Xóa bỏ ảnh/video không cần lưu nữa với những file có tên lớn hơn tên cuối cùng được lưu
                     Common.DeleteImageVideoNameGreat(path + fileName);
-                }
-                return rs;
-            }
 
-            // Xóa file cũ cùng tên không kể đuôi nếu có
-            Common.DeleteImageVideoWithoutExtension(path + fileName);
+                    // Xóa ảnh version 320 và sinh lại
+                    Common.DeleteAllImage320(path);
 
-            if (length > 0)
-            {
-                // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
-                var saveToFileLoc = string.Format("{0}{1}",
-                                              path,
-                                               fileName);
+                    // Sinh lại phiên bản 320 từ thư mục gốc
+                    if(!Common.ReduceImageSizeFromFolder(path))
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Giảm kích thước ảnh lỗi.";
+                    }
 
-                // save the file.
-                var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
-                fileStream.Write(bytes, 0, length);
-                fileStream.Close();
-
-                // Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
-                if (Common.ImageExtensions.Contains(Path.GetExtension(saveToFileLoc).ToLower()))
-                {
-                    // Tiki không cho dùng ảnh có logo khi đăng sản phẩm nên commnet chức năng thêm logo
-                    //string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
-                    //Common.ReduceImageSizeAndSave(newsaveToFileLoc);
-                    Common.ReduceImageSizeAndSave(saveToFileLoc);
                 }
             }
-
-            // Xóa bỏ ảnh/video không cần lưu nữa.
-            // Những file có tên lớn hơn tên cuối cùng được lưu
-            if (finish == "true")
+            catch(Exception ex)
             {
-                Common.DeleteImageVideoNameGreat(path + fileName);
+                Common.SetResultException(ex, result);
             }
 
-            return new MySqlResultState();
+            return result;
         }
 
         // Xóa file trong thư mục tương ứng với id
@@ -301,11 +306,11 @@ namespace MVCPlayWithMe.Controllers
             }
             if (fileType == "isImage")
             {
-                Common.DeleteAllImage(path, id.ToString());
+                Common.DeleteAllImage(path);
             }
             else if (fileType == "isVideo")
             {
-                Common.DeleteAllVideo(path, id.ToString());
+                Common.DeleteAllVideo(path);
             }
             MySqlResultState rs = new MySqlResultState();
             return JsonConvert.SerializeObject(rs);

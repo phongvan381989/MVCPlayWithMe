@@ -117,7 +117,8 @@ function AddUpdateParameters(searchParams) {
 
     searchParams.append("parentId", -1);
 
-    searchParams.append("detail", document.getElementById("detail").value);
+    let encodeDetail = encodeURIComponent(document.getElementById("detail").value)
+    searchParams.append("detail", encodeDetail);
 
     if (AddUpdateWithCommonParameters(searchParams) === false) {
         return false;
@@ -176,7 +177,10 @@ async function AddNewProPromise() {
         productID = obj.myAnything;
 
         // Upload ảnh/video sản phẩm lên server
-        let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
+        let isOk = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
+        if (isOk) {
+            alert("Tạo sản phẩm thành công.");
+        }
     }
     catch (error) {
         RemoveCircleLoader();
@@ -185,14 +189,14 @@ async function AddNewProPromise() {
     }
 
     // Đợi load ảnh xong
-    while (true) {
-        await Sleep(1000);
+    //while (true) {
+    //    await Sleep(1000);
 
-        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
-            alert("Tạo sản phẩm thành công.");
-            break;
-        }
-    }
+    //    if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+    //        alert("Tạo sản phẩm thành công.");
+    //        break;
+    //    }
+    //}
     RemoveCircleLoader();
     //// Refresh page
     //window.scrollTo(0, 0);
@@ -324,23 +328,26 @@ async function UpdateProductPromise() {
 
         // Upload ảnh/video sản phẩm lên server
         let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
+        if (respinseSendFile) {
+            alert("Cập nhật sản phẩm thành công.");
+        }
     }
     catch (error) {
         RemoveCircleLoader();
         //alert("Cập nhật sản phẩm lỗi.");
-        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi. " + error.message, null);
         return;
     }
 
-    // Đợi load ảnh xong
-    while (true) {
-        await Sleep(1000);
+    //// Đợi load ảnh xong
+    //while (true) {
+    //    await Sleep(1000);
 
-        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
-            alert("Cập nhật sản phẩm thành công.");
-            break;
-        }
-    }
+    //    if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+    //        alert("Cập nhật sản phẩm thành công.");
+    //        break;
+    //    }
+    //}
     RemoveCircleLoader();
     // Refresh page
     //window.scrollTo(0, 0);
@@ -398,8 +405,6 @@ function ShowUpdateButtonForOne() {
 
 async function UpdateImage_Video() {
     let productID = GetValueFromUrlName("id");
-    const searchParams = new URLSearchParams();
-    searchParams.append("productId", productID);
 
     let urlUp = "/Product/UploadFile";
     let urlDeleteAllFileWithType = "/Product/DeleteAllFileWithType";
@@ -409,23 +414,29 @@ async function UpdateImage_Video() {
 
         // Upload ảnh/video sản phẩm lên server
         let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
+        //if (DEBUG) {
+        //    console.log("respinseSendFile: " + JSON.stringify(respinseSendFile));
+        //}
+        if (respinseSendFile) {
+            alert("Cập nhật sản phẩm thành công.");
+        }
     }
     catch (error) {
         RemoveCircleLoader();
         //alert("Cập nhật sản phẩm lỗi.");
-        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+        await CreateMustClickOkModal("Cập nhật ảnh video lỗi. " + error.message, null);
         return;
     }
 
-    // Đợi load ảnh xong
-    while (true) {
-        await Sleep(1000);
+    //// Đợi load ảnh xong
+    //while (true) {
+    //    await Sleep(1000);
 
-        if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
-            alert("Cập nhật sản phẩm thành công.");
-            break;
-        }
-    }
+    //    if (isFinishUploadImage == 0 && isFinishUploadVideo == 0) {
+    //        alert("Cập nhật sản phẩm thành công.");
+    //        break;
+    //    }
+    //}
     RemoveCircleLoader();
     // Refresh page
     //window.scrollTo(0, 0);
@@ -516,6 +527,27 @@ async function UpdateISBN() {
         // Cập nhật vào db
         ShowCircleLoader();
         let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật tên lỗi.", null);
+        return;
+    }
+}
+async function UpdateDetail() {
+    let detail = document.getElementById("detail").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("detail", detail);
+
+    let url = "/Product/UpdateDetail";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpPostPromise(searchParams, url);
         RemoveCircleLoader();
         CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
     }

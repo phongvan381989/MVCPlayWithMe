@@ -17,6 +17,8 @@ using System.Drawing.Drawing2D;
 using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Windows;
+using System.Threading;
+using System.Text.RegularExpressions;
 
 namespace MVCPlayWithMe.General
 {
@@ -30,6 +32,12 @@ namespace MVCPlayWithMe.General
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
         public static readonly string httpsVoiBeNho = "https://voibenho.com";
+
+        public static readonly JsonSerializerSettings jsonSerializersettings = new JsonSerializerSettings
+        {
+            NullValueHandling = NullValueHandling.Ignore,
+            MissingMemberHandling = MissingMemberHandling.Ignore
+        };
 
         // Từ thực tế thấy:
         // set deal giảm giá khi tồn kho >= 3, khi tồn kho < 3 deal của tiki bị tắt
@@ -168,6 +176,9 @@ namespace MVCPlayWithMe.General
         public static string MediaFolderPath;
         public static string TemporaryImageShopeeMediaFolderPath;
         public static string TemporaryImageTikiMediaFolderPath;
+
+        public static string srcCertificateFolderPath;
+
         public static string ConvertIntToVNDFormat(int money)
         {
             // Thêm ','
@@ -206,6 +217,29 @@ namespace MVCPlayWithMe.General
             {
                 //Directory.CreateDirectory(path);
                 path = null;
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Lấy được đường dẫn Src thư mục chứa certificate của sàn, nhà phát hành.
+        /// eType: TIKI, SHOPEE, LAZADA,..
+        /// </summary>
+        /// <returns></returns>
+        public static string GetSrcCertificateFolderPath(string eType)
+        {
+            string path = string.Empty;
+            if (eType == eTiki)
+            {
+                path = srcCertificateFolderPath + eTiki + @"/";
+            }
+            else if (eType == eShopee)
+            {
+                path = srcCertificateFolderPath + eShopee + @"/";
+            }
+            else if (eType == eLazada)
+            {
+                path = srcCertificateFolderPath + eLazada + @"/";
             }
             return path;
         }
@@ -322,19 +356,30 @@ namespace MVCPlayWithMe.General
         public static string GetFirstProductImageSrc(string productId)
         {
             string src = string.Empty;
-            string path = Common.absoluteProductMediaFolderPath + productId + @"/0.jpg";
-            if (!File.Exists(path))
+            try
             {
-                path = Common.absoluteProductMediaFolderPath + productId + @"/0.png";
-                if (!File.Exists(path))
+                string path = Common.absoluteProductMediaFolderPath + productId;
+                if (Directory.Exists(path))
                 {
-                    path = Common.absoluteProductMediaFolderPath + productId + @"/0.jfif";
-                    if (!File.Exists(path))
-                        return src;
+                    // Tìm tất cả file có tên là "0" và phần mở rộng hợp lệ
+                    string matchedFile = Directory
+                        .EnumerateFiles(path)
+                        .FirstOrDefault(f =>
+                            Path.GetFileNameWithoutExtension(f).Equals("0", StringComparison.OrdinalIgnoreCase)
+                            && ImageExtensions.Contains(Path.GetExtension(f).ToLower())
+                        );
+
+                    if (matchedFile != null)
+                    {
+                        src = ProductMediaFolderPath + productId + @"/" + Path.GetFileName(matchedFile);
+                    }
                 }
             }
-            src = ProductMediaFolderPath + productId + @"/" + Path.GetFileName(path);
-
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                src = string.Empty;
+            }
             return src;
         }
 
@@ -345,8 +390,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         private static int ConvertNameToInt(string fullFileName)
         {
-            int intName = -1;
-            intName = Common.ConvertStringToInt32(Path.GetFileNameWithoutExtension(fullFileName));
+            int intName = Common.ConvertStringToInt32(Path.GetFileNameWithoutExtension(fullFileName));
             return intName;
         }
 
@@ -355,12 +399,17 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="src"> Mảng tên file gồm cả đường dẫn</param>
         /// <returns></returns>
-        private static void SortSourceFile(List<string> src)
+        public static void SortSourceFile(List<string> src)
         {
             IDictionary<int, string> dicSrc = new Dictionary<int, string>();
+            int indexTemp = 0;
             foreach(var file in src)
             {
-                dicSrc.Add(ConvertNameToInt(file), file);
+                indexTemp = ConvertNameToInt(file);
+                if (indexTemp != Int32.MinValue && !dicSrc.ContainsKey(indexTemp))
+                {
+                    dicSrc.Add(ConvertNameToInt(file), file);
+                }
             }
 
             src.Clear();
@@ -461,7 +510,7 @@ namespace MVCPlayWithMe.General
                         maxName = intName;
                 }
             }
-            MyLogger.GetInstance().Info("maxName: " + maxName);
+            //MyLogger.GetInstance().Info("maxName: " + maxName);
             return maxName;
         }
 
@@ -483,7 +532,7 @@ namespace MVCPlayWithMe.General
                         maxName = intName;
                 }
             }
-            MyLogger.GetInstance().Info("maxName: " + maxName);
+            //MyLogger.GetInstance().Info("maxName: " + maxName);
             return maxName;
         }
 
@@ -517,10 +566,17 @@ namespace MVCPlayWithMe.General
         public static void DeleteNormalAnd320Image(string path)
         {
             // Xóa ảnh gốc
-            System.IO.File.Delete(path);
+            if (File.Exists(path))
+            {
+                System.IO.File.Delete(path);
+            }
 
             // Xóa ảnh phiên bản 320
-            System.IO.File.Delete(Get320PathFromOriginal(path, false));
+            string path320 = Get320PathFromOriginal(path, false);
+            if (File.Exists(path320))
+            {
+                System.IO.File.Delete(path320);
+            }
         }
 
         /// <summary>
@@ -544,7 +600,8 @@ namespace MVCPlayWithMe.General
                 {
                     if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
                     {
-                        DeleteNormalAnd320Image(f);
+                        System.IO.File.Delete(f);
+                        //DeleteNormalAnd320Image(f);
                         //MyLogger.GetInstance().Info("Delete: " + f);
                         break;
                     }
@@ -611,6 +668,7 @@ namespace MVCPlayWithMe.General
             return;
         }
 
+
         // Xóa dữ liệu media ở Media\Item\itemId\Model
         public static void DeleteImageModelInclude320(int itemId, int modelId)
         {
@@ -666,8 +724,7 @@ namespace MVCPlayWithMe.General
         /// 
         /// </summary>
         /// <param name="path">Folder chứa image/video</param>
-        /// <param name="productId"></param>
-        public static void DeleteAllImage(string path, string productId)
+        public static void DeleteAllImage(string path)
         {
             string[] files =  Directory.GetFiles(path);
 
@@ -678,17 +735,23 @@ namespace MVCPlayWithMe.General
                     System.IO.File.Delete(f);
                 }
             }
-
-            // Xóa cả thư mục ảnh phiên bản 320
-            string x = Path.GetDirectoryName(path) + "_320";
-            if(Directory.Exists(x))
-            {
-                Directory.Delete(x, true);
-            }
-            return;
+            DeleteAllImage320(path);
         }
 
-        public static void DeleteAllVideo(string path, string productId)
+        // Xóa tất cả ảnh của thư mục 320 nếu có
+        static public void DeleteAllImage320(string path)
+        {
+            // Không xóa thư mục, xóa file ảnh trong thư mục
+            string x = Path.GetDirectoryName(path) + "_320";
+            string[] files = Directory.GetFiles(x);
+
+            foreach (var f in files)
+            {
+                System.IO.File.Delete(f);
+            }
+        }
+
+        public static void DeleteAllVideo(string path)
         {
             string[] files = Directory.GetFiles(path);
 
@@ -1473,81 +1536,129 @@ namespace MVCPlayWithMe.General
         /// <param name="quality"> An integer from 0 to 100, with 100 being the highest quality. </param> 
         static void SaveJpeg(string path, System.Drawing.Image img, int quality)
         {
-            // Encoder parameter for image quality 
-            EncoderParameter qualityParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-            // JPEG image codec 
-            ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
-            EncoderParameters encoderParams = new EncoderParameters(1);
-            encoderParams.Param[0] = qualityParam;
-            img.Save(path, jpegCodec, encoderParams);
-            encoderParams.Dispose();
+            try
+            {
+                // Encoder parameter for image quality 
+                EncoderParameter qualityParam = new EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+                // JPEG image codec 
+                ImageCodecInfo jpegCodec = GetEncoderInfo("image/jpeg");
+                EncoderParameters encoderParams = new EncoderParameters(1);
+                encoderParams.Param[0] = qualityParam;
+                img.Save(path, jpegCodec, encoderParams);
+                encoderParams.Dispose();
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn("SaveJpeg called with: " + path);
+                MyLogger.GetInstance().Warn(ex.Message);
+            }
         }
 
         static System.Drawing.Image ResizeImage(System.Drawing.Image imgToResize, System.Drawing.Size size)
         {
-            int sourceWidth = imgToResize.Width;
-            int sourceHeight = imgToResize.Height;
-
-            float nPercent = 0;
-            float nPercentW = 0;
-            float nPercentH = 0;
-
-            nPercentW = ((float)size.Width / (float)sourceWidth);
-            nPercentH = ((float)size.Height / (float)sourceHeight);
-
-            if (nPercentH < nPercentW)
-                nPercent = nPercentH;
-            else
-                nPercent = nPercentW;
-
-            int destWidth = (int)(sourceWidth * nPercent);
-            int destHeight = (int)(sourceHeight * nPercent);
-
-            Bitmap b = new Bitmap(destWidth, destHeight);
-            using (Graphics g = Graphics.FromImage((System.Drawing.Image)b))
+            try
             {
-                g.SmoothingMode = SmoothingMode.HighQuality;
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.PixelOffsetMode = PixelOffsetMode.HighQuality;
-                g.DrawImage(imgToResize, 0, 0, destWidth, destHeight);
+                int sourceWidth = imgToResize.Width;
+                int sourceHeight = imgToResize.Height;
+
+                float nPercent = 0;
+                float nPercentW = 0;
+                float nPercentH = 0;
+
+                nPercentW = ((float)size.Width / (float)sourceWidth);
+                nPercentH = ((float)size.Height / (float)sourceHeight);
+
+                if (nPercentH < nPercentW)
+                    nPercent = nPercentH;
+                else
+                    nPercent = nPercentW;
+
+                int destWidth = (int)(sourceWidth * nPercent);
+                int destHeight = (int)(sourceHeight * nPercent);
+
+                Bitmap b = new Bitmap(destWidth, destHeight);
+                using (Graphics g = Graphics.FromImage((System.Drawing.Image)b))
+                {
+                    g.SmoothingMode = SmoothingMode.HighQuality;
+                    g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                    g.PixelOffsetMode = PixelOffsetMode.HighQuality;
+                    g.DrawImage(imgToResize, 0, 0, destWidth, destHeight);
+                }
+                return (System.Drawing.Image)b;
             }
-            return (System.Drawing.Image)b;
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn("ResizeImage called");
+                MyLogger.GetInstance().Warn(ex.Message);
+            }
+            return null;
+        }
+
+        // Từ thư mục sản phẩm gốc, sinh ra và lưu ảnh 320
+        public static Boolean ReduceImageSizeFromFolder(string path)
+        {
+            string[] files = Directory.GetFiles(path);
+
+            foreach (var f in files)
+            {
+                if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
+                {
+                    if(!ReduceImageSizeAndSave(f))
+                    {
+                        Thread.Sleep(2000);
+                        // Thử lại 1 lần
+                        if(!ReduceImageSizeAndSave(f))
+                        {
+                            return false;
+                        }
+                    }
+                }
+            }
+            return true;
         }
 
         /// <summary>
         /// Giảm kích thước ảnh về 320 và lưu vào thư mục tương ứng có thêm _320 VD: 570_320
         /// </summary>
         /// <param name="path">Đường dẫn và tên file</param>
-        public static void ReduceImageSizeAndSave(string path)
+        public static Boolean ReduceImageSizeAndSave(string path)
         {
-            System.Drawing.Image myImage = null;
-            System.Drawing.Image newImage = null;
-
-            System.Drawing.Size size = new System.Drawing.Size(320, 320);
-            string path320 = Get320PathFromOriginal(path, true);
             try
             {
+                System.Drawing.Image myImage = null;
+                System.Drawing.Image newImage = null;
+
+                System.Drawing.Size size = new System.Drawing.Size(320, 320);
+                string path320 = Get320PathFromOriginal(path, true);
+
                 // First load the image somehow
                 using (myImage = System.Drawing.Image.FromFile(path, true))
                 {
                     using (newImage = ResizeImage(myImage, size))
                     {
-                        if (Path.GetExtension(path).ToLower() == ".png" ||
-                            Path.GetExtension(path).ToLower() == ".jpg")
+                        if (newImage != null)
                         {
-                            newImage.Save(path320);
-                        }
-                        else
-                        {
-                            SaveJpeg(path320, newImage, 100);
+                            if (Path.GetExtension(path).ToLower() == ".png" ||
+                                Path.GetExtension(path).ToLower() == ".jpg")
+                            {
+                                newImage.Save(path320);
+                            }
+                            else
+                            {
+                                SaveJpeg(path320, newImage, 100);
+                            }
                         }
                     }
                 }
             }
             catch(Exception ex)
             {
+                MyLogger.GetInstance().Info("ReduceImageSizeAndSave Call with path: " + path);
                 MyLogger.GetInstance().Warn(ex.Message);
+                return false;
             }
+
+            return true;
         }
         #endregion
 
@@ -1668,5 +1779,23 @@ namespace MVCPlayWithMe.General
             return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
         }
         #endregion
+
+        // Xóa tag html<>, nhiều ký tự xuống dòng giữ lại chỉ 1
+        public static string CleanHtml(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // 1. Xóa tất cả thẻ HTML
+            string noTags = Regex.Replace(input, "<.*?>", "");
+
+            // 2. Chuẩn hóa xuống dòng: chuyển tất cả về \n
+            noTags = noTags.Replace("\r\n", "\n").Replace("\r", "\n");
+
+            // 3. Rút gọn các dòng trống: thay 2+ dòng trống bằng 1 dòng trống
+            string result = Regex.Replace(noTags, @"\n{2,}", "\n");
+
+            return result.Trim(); // bỏ khoảng trắng đầu/cuối nếu có
+        }
     }
 }

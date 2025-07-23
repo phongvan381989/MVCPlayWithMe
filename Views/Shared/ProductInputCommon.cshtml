@@ -67,7 +67,7 @@
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     <div>
-        <label for="author-id">Tác giả:</label>
+        <label for="author-id" title="Cách nhau dấu ',' nếu có nhiều tác giả">Tác giả:</label>
         <input type="text" list="list-author" class="config-max-width margin-vertical" id="author-id">
 
         <datalist id="list-author"></datalist>
@@ -75,7 +75,7 @@
     </div>
 
     <div>
-        <label for="translator-id">Người dịch:</label>
+        <label for="translator-id" title="Cách nhau dấu ',' nếu có nhiều người dịch">Người dịch:</label>
         <input type="text" list="list-translator" class="config-max-width margin-vertical" id="translator-id">
 
         <datalist id="list-translator"></datalist>
@@ -128,9 +128,9 @@
     <div>
         <label for="book-language-id">Ngôn ngữ:</label><br>
         <select class="config-max-width margin-vertical" id="book-language-id">
+            <option value="Tiếng Việt">Tiếng Việt</option>
             <option value="Song ngữ">Song ngữ</option>
             <option value="Tiếng Anh">Tiếng Anh</option>
-            <option value="Tiếng Việt">Tiếng Việt</option>
             <option value="Đa ngữ">Đa ngữ</option>
         </select>
 

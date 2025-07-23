@@ -43,6 +43,8 @@ namespace MVCPlayWithMe
                 System.Web.HttpContext.Current.Server.MapPath(Common.ItemMediaFolderPath);
 
             Common.MediaFolderPath = ConfigurationManager.AppSettings["MediaFolderPath"];
+            Common.srcCertificateFolderPath = @"https://voibenho.com/Media/Certificate/";
+
             Common.TemporaryImageShopeeMediaFolderPath = 
                 ConfigurationManager.AppSettings["TemporaryImageShopeeMediaFolderPath"];
             Common.TemporaryImageTikiMediaFolderPath = 

@@ -8,7 +8,7 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class AdministratorMySql : BasicMySql
+    public class AdministratorMySql
     {
         /// <summary>
         ///  Chỉ lấy Id của administrator
@@ -200,7 +200,7 @@ namespace MVCPlayWithMe.Models
         /// <returns>A result state.</returns>
         public MySqlResultState LoginAdministrator(string userName, string password)
         {
-            return Login(userName, password, "st_tbAdministrator_Get_Salt_Hash");
+            return MyMySql.Login(userName, password, "st_tbAdministrator_Get_Salt_Hash");
         }
 
         /// <summary>
@@ -269,7 +269,7 @@ namespace MVCPlayWithMe.Models
         public MySqlResultState ChangePasswordAdministrator(int id, string oldPassWord,
             string newPassWord, string renewPassWord)
         {
-            return ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
+            return MyMySql.ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
                 "st_tbAdministrator_Get_Salt_Hash_From_Id",
                 "st_tbAdministrator_ChangePassword");
         }

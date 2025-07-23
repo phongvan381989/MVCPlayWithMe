@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 
@@ -37,6 +38,16 @@ namespace MVCPlayWithMe.Models.ProductModel
         public Product(int idIn)
         {
             id = idIn;
+            imageSrc = new List<string>();
+            videoSrc = new List<string>();
+        }
+
+        public Product(int idIn, string nameIn)
+        {
+            id = idIn;
+            name = nameIn;
+            imageSrc = new List<string>();
+            videoSrc = new List<string>();
         }
 
         public Product(
@@ -115,6 +126,68 @@ namespace MVCPlayWithMe.Models.ProductModel
             string src = Common.GetFirstProductImageSrc(id.ToString());
             if (!string.IsNullOrEmpty(src))
                 imageSrc.Add(src);
+        }
+
+        // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
+        static public string GenerateName(Product product)
+        {
+            // Tên đăng gồm: Sách Tên combo "-" tên sản phẩm.
+            string name = product.name;
+            if (!string.IsNullOrEmpty(product.comboName))
+            {
+                name = product.comboName + " - " + product.name;
+            }
+            // Bỏ chữ combo ở đầu tên nếu có
+            // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
+            if (name.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
+            {
+                // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
+                name = name.TrimStart().Substring(5).Trim();
+            }
+            else
+            {
+                // Loại bỏ khoảng trắng nếu không có "combo"
+                name = name.Trim();
+            }
+
+            if (product.categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            {
+                // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
+                if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+                {
+                    name = "Sách " + name;
+                }
+            }
+
+            return name;
+        }
+
+        /// <summary>
+        /// Từ id sản phẩm, lấy được đường dẫn tuyệt đối của ảnh sản phẩm
+        /// </summary>
+        /// <param name="productId"></param>
+        /// <returns></returns>
+        public static List<string> GetProductImageAbsolutePath(string productId)
+        {
+            List<string> src = new List<string>();
+
+            string path = Common.absoluteProductMediaFolderPath + productId + @"/";
+            if (!Directory.Exists(path))
+            {
+                return src;
+            }
+
+            string[] files = Directory.GetFiles(path);
+            foreach (var file in files)
+            {
+                if (Common.ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                {
+                    src.Add(file);
+                }
+            }
+
+            Common.SortSourceFile(src);
+            return src;
         }
     }
 }

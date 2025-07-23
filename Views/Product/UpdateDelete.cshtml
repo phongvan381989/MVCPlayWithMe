@@ -7,6 +7,12 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .objImage {
+            object-fit: contain;
+            background-color: #f0f0f0; /* tùy chọn: giúp thấy rõ phần trống nếu ảnh không phủ hết */
+        }
+    </style>
 </head>
 <body>
 
@@ -32,12 +38,19 @@
                 @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
                 <div>
-                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical"
-                           title="Tên khi tạo sản phẩm trên sàn thương mại:Tiki, Shopee, Lazada,...">
+                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical" disabled
+                           title="Tên khi tạo sản phẩm trên sàn thương mại:Tiki, Shopee, Lazada,...
+                           Tên này bằng: Sách + tên combo - tên sản phẩm. Sửa tên combo, tên sản phẩm nếu muốn thay đổi tên trên sàn">
                     <button type="button" style="margin-left: 30px;"
                             title="Tạo sản phẩm trên sàn thương mại điện tử với tên như trên"
                             onclick="CreateProductOnECommerce()">
                         Tạo Sản Phẩm Trên Sàn TMDT Với Tên Trên
+                    </button>
+
+                    <button type="button" style="margin-left: 30px;"
+                            title="Tải ảnh lên sàn. Hiện tại hỗ trợ SHOPEE"
+                            onclick="UploadImageOnECommerce()">
+                        Tải Ảnh Lên Sàn
                     </button>
                 </div>
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
@@ -83,8 +96,11 @@
         }
 
         function GenerateName(product) {
-            // Tên đăng gồm: Tên combo "-" tên sản phẩm.
-            let name = product.comboName + " - " + product.name;
+            // Tên đăng gồm: Sách Tên combo "-" tên sản phẩm.
+            let name = product.name;
+            if (IsValidString(product.comboName)) {
+                name = product.comboName + " - " + product.name;
+            }
 
             // Bỏ chữ "combo" ở đầu tên nếu có (không phân biệt hoa thường)
             if (name.trimStart().toLowerCase().startsWith("combo")) {
@@ -244,6 +260,33 @@
                 document.getElementById("book-language-id").focus();
                 return;
             }
+            // Sản phẩm phải có ảnh
+            if (document.getElementsByClassName("objImage").length < 1) {
+                CreateMustClickOkModal("Sản phẩm không có ảnh.");
+                return;
+            }
+
+            // Sản phẩm phải có tối thiểu là 2 ảnh
+            if (document.getElementsByClassName("objImage").length < 2) {
+                let text = "Sản phẩm chỉ có 1 ảnh, bạn muốn ĐĂNG BÁN?";
+                if (confirm(text) == false)
+                    return;
+            }
+            // Sản phẩm chưa set kích thước, hoặc khối lượng
+            if (document.getElementById("product-long").value <= 0 ||
+                document.getElementById("product-wide").value <= 0 ||
+                document.getElementById("product-high").value <= 0 ||
+                document.getElementById("product-weight").value <= 0) {
+                CreateMustClickOkModal("Sản phẩm chưa set kích thước, hoặc khối lượng");
+                    return;
+            }
+
+            // Sản phẩm phải có mô tả dài ít nhất 100 ký tự
+            if (document.getElementById("detail").value.length < 100) {
+                CreateMustClickOkModal("Chưa có mô tả chi tiết sản phẩm hoặc ngắn hơn 100 ký tự");
+                document.getElementById("detail").focus();
+                return;
+            }
 
             // Lấy id
             let id = GetValueFromUrlName("id");
@@ -257,6 +300,29 @@
 
             try {
                 // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi.", null);
+                return;
+            }
+        }
+
+        async function UploadImageOnECommerce() {
+
+            // Lấy id
+            let id = GetValueFromUrlName("id");
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("id", id);
+            searchParams.append("eType", GetECommerceType());
+
+            let url = "/Product/UploadImageOnECommerce";
+
+            try {
                 ShowCircleLoader();
                 let responseDB = await RequestHttpGetPromise(searchParams, url);
                 RemoveCircleLoader();

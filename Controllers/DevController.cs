@@ -10,15 +10,19 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
+using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
@@ -81,6 +85,58 @@ namespace MVCPlayWithMe.Controllers
                     }
 
                     shopeeSqler.UpdateImageSourceTotbShopeeItem_ModelConnectOut(lsCommonItem, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> ShopeeGetBrandList(long categoryId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                ShopeeMySql shopeeSqler = new ShopeeMySql();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    //List<ShoppeBrandObject> brandList = 
+                    result = await ShopeeBrand.ShopeeGetBrandList(categoryId, shopeeSqler, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        //
+        [HttpPost]
+        public async Task<string> ShopeeGetChannelList()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                List<ShopeeLogisticInfo> ls = ShopeeLogistic.GetLogisticInfo(true);
+                if(ls.Count == 0)
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Không lấy được kênh vận chuyển.";
                 }
             }
             catch (Exception ex)
@@ -272,6 +328,127 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
+        // Từ category sản phẩm trên tiki đã mapping với sản phẩm trong kho,
+        // ta cập nhật category Id sản phẩm trong kho
+        private void UpdateCategoryIdOfProduct()
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    List<int> listProId = new List<int>();
+                    // Lấy id sản phẩm trong kho chưa có category Id (-1), trạng thái bình thường
+                    {
+                        MySqlCommand cmd = new MySqlCommand(
+                        @"SELECT Id FROM webplaywithme.tbproducts WHERE CategoryId = -1 AND Status <> 2 ORDER BY Id;",
+                    conn);
+                        cmd.CommandType = CommandType.Text;
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            int idOrdinal = reader.GetOrdinal("Id");
+                            while (reader.Read())
+                            {
+                                listProId.Add(reader.GetInt32(idOrdinal));
+                            }
+                        }
+                    }
+
+                    List<int> listTikiCategoryId = new List<int>();
+                    // Lấy tiki category Id
+                    {
+                        MySqlCommand cmd = new MySqlCommand(
+                        @"SELECT TikiCategoryId FROM webplaywithme.tbcategory;",
+                    conn);
+                        cmd.CommandType = CommandType.Text;
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            int tikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
+                            while (reader.Read())
+                            {
+                                listTikiCategoryId.Add(reader.GetInt32(tikiCategoryIdOrdinal));
+                            }
+                        }
+                    }
+
+                    int count = 0;
+                    while (listProId.Count > 0 && count <= 1000)
+                    {
+                        count++;
+                        // Lấy id sản phẩm trên tiki trạng thái bình thường / đã tắt, đã mapping và danh sách id sản phẩm trong kho
+                        // được mapping
+                        int tikiId = 0;
+                        List<int> listProIdMapping = new List<int>();
+                        {
+                            MySqlCommand cmd = new MySqlCommand(
+                            @"SELECT tbtikiitem.TikiId, tbtikimapping.ProductId
+                            FROM  tbtikiitem LEFT JOIN tbtikimapping ON tbtikiitem.Id = tbtikimapping.TikiItemId
+                            WHERE tbtikiitem.Id = 
+                            (
+	                            SELECT tbtikiitem.Id
+	                            FROM tbtikimapping LEFT JOIN tbtikiitem ON tbtikimapping.TikiItemId = tbtikiitem.Id
+	                            WHERE tbtikimapping.ProductId = @inProductId AND tbtikiitem.Status = 1 LIMIT 1
+                            ) ORDER BY tbtikimapping.ProductId;",
+                        conn);
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@inProductId", listProId[0]);
+                            using (var reader = cmd.ExecuteReader())
+                            {
+                                int tikiIdOrdinal = reader.GetOrdinal("TikiId");
+                                int productIdOrdinal = reader.GetOrdinal("ProductId");
+                                while (reader.Read())
+                                {
+                                    if(tikiId == 0)
+                                    {
+                                        tikiId = reader.GetInt32(tikiIdOrdinal);
+                                    }
+                                    listProIdMapping.Add(reader.GetInt32(productIdOrdinal));
+                                }
+                            }
+                        }
+
+                        // Từ tikiId lấy được category id của sản phẩm trên sàn tiki trong chi tiết sản phẩm
+                        TikiProduct pro = GetListProductTiki.GetProductFromOneShop(tikiId);
+                        int tikiCategoryIdTemp = 0;
+                        if(pro == null)
+                        {
+                            listProId.RemoveAt(0);
+                        }
+                        else
+                        {
+                            foreach (var cat in pro.categories)
+                            {
+                                if(listTikiCategoryId.Contains(cat.id))
+                                {
+                                    tikiCategoryIdTemp = cat.id;
+                                    break;
+                                }
+                            }
+                        }
+
+                        // Cập nhật categoryId của tbProducts từ id sản phẩm và TikiCategoryId trong tbCategory
+                        {
+                            MySqlCommand cmd = new MySqlCommand(
+                            @"st_tbProducts_Update_CategoryId_From_TikiCategoryId", conn);
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@in_productId", 0);
+                            cmd.Parameters.AddWithValue("@in_tikicategoryId", tikiCategoryIdTemp);
+                            foreach (var proId in listProIdMapping)
+                            {
+                                cmd.Parameters["@in_productId"].Value = proId;
+                                cmd.ExecuteNonQuery();
+                                // Loại bỏ sản phẩm ra khỏi list chờ cập nhật
+                                listProId.Remove(proId);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
 
         [HttpPost]
         public string TikiTestSomething()
@@ -283,8 +460,8 @@ namespace MVCPlayWithMe.Controllers
 
             MySqlResultState result = new MySqlResultState();
 
-            //ProductController.CreateTikiProductFromProductIdInWarehouse(582);
-
+            ShopeeGetAttributeTreeResponseHTTP response =
+                ShopeeCategory.ShopeeGetAttributeTreeOfCategory(101541);
 
             return JsonConvert.SerializeObject(result);
         }
@@ -357,12 +534,13 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string ShopeeSaveCode(string code)
         {
+            MySqlResultState result = new MySqlResultState();
+
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-
-            MySqlResultState result = sqler.ShopeeSaveCode(code);
+            result = CommonShopeeAPI.ShopeeSaveCode(code);
 
             return JsonConvert.SerializeObject(result);
         }

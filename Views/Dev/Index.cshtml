@@ -63,9 +63,24 @@
 
         <div class="fmx09gx8">
             <div class="gmxk9381"> SHOPEE</div>
+            <div class="gmxk9381">
+                <input type="text" id="shopee_something_input"
+                       class="config-max-width margin-vertical"
+                       placeholder="Nhập thông tin gì đó phục vụ các hàm. VD: id thể loại,..." />
+            </div>
             <button type="button" onclick="ShopeeSaveImageSourceOfItemAndModel()" disabled
                     title="Lấy url ảnh đại diện của item, model shopee cập nhật vào db đối với item, model chưa có image url.">
                 Lấy URL ảnh Item, model lưu vào db
+            </button>
+
+            <button type="button" onclick="ShopeeGetBrandList()"
+                    title="Lấy danh sách thương hiệu trạng thái bình thường theo id thể loại.">
+                Lấy danh sách thương hiệu
+            </button>
+
+            <button type="button" onclick="ShopeeGetChannelList()"
+                    title="Lấy danh sách kênh vận chuyển. Sẽ được lưu vào chương trình chứ không lưu db vì dữ liệu nhỏ, lấy nhanh">
+                Lấy danh sách kênh vận chuyển
             </button>
         </div>
 
@@ -140,6 +155,38 @@
             RemoveCircleLoader();
 
             CheckStatusResponseAndShowPrompt(responseDB.responseText, "Lấy ảnh thành công", "Lấy ảnh có lỗi");
+        }
+
+        async function ShopeeGetBrandList() {
+            let categoryId = 0;
+            try {
+                categoryId = BigInt(document.getElementById("shopee_something_input").value);
+            } catch (e) {
+                categoryId = 0;
+            }
+            if (categoryId == 0) {
+                CreateMustClickOkModal("Id Thể loại không đúng", null);
+                document.getElementById("shopee_something_input").focus();
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("categoryId", categoryId);
+            let query = "/Dev/ShopeeGetBrandList";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        async function ShopeeGetChannelList() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/ShopeeGetChannelList";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
         }
 
         async function TikiSaveImageSourceOfItemAndModel() {

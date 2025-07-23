@@ -131,7 +131,7 @@
                         <input type="text" id="absoluteMinProfit" name="absoluteMinProfit"
                                title="Thay đổi để cập nhật giá bán" oninput="CaculateSalePrice()">VND<br><br>
 
-                        <label for="profitPercent">Lợi nhuận so với giá vốn:</label>
+                        <label for="profitPercent">Lợi nhuận so với giá bán:</label>
                         <input type="number" id="profitPercent" name="profitPercent" step="0.1" min="0" max="100"
                                title="Thay đổi để cập nhật giá bán.Phần trăm lợi nhuận mong muốn(so với giá nhập) để cập nhật giá bán"
                                 oninput="CaculateSalePrice()">%<br><br>
@@ -608,26 +608,28 @@
         // p: giá bìa, 
         // dI: chiết khấu nhập, VD: 0.4
         // dO: chiết khấu bán,
-        // x: % lợi nhuận mong muốn so với giá thực tế nhập sách
+        // x: % lợi nhuận mong muốn so với GIÁ BÁN
         // t: phần trăm phí trả sản + thuế nộp nhà nước so với giá bán trên sàn
         // c: chi phí đóng gói cố đinh
+        // NOTE: Bỏ qua lợi nhuận tuyệt đối m
         // m: lợi nhuận tuyệt đối. Nếu giá bìa lớn ta có thể chiết khấu sâu hơn khi bán để lợi nhuận tối thiểu bằng m
         // Giá bán  - giá nhập  - thuế phí   - phí đóng hàng = lợi nhuận còn lại
-        // p(1 - dO) - p(1 -dI) - p(1 - dO)t - c             = p(1 - dI) x
+        // p(1 - dO) - p(1 -dI) - p(1 - dO)t - c             = p(1 - dO) x
         //
-        // p(1 - dO)(1 - t) = p(1 -dI) + c + pdIx
-        // =>p(1 - dO) = (p(1 -dI) + c + p(1 - dI)x) / (1 - t)
+        // p(1 - dO)(1 - t -x) = p(1 -dI) + c
+        // =>p(1 - dO) = (p(1 -dI) + c) / (1 - t - x)
         // Làm tròn xuống thành số nguyên
         function CaculateSalePriceCore(p, dI, x, t, c, m) {
             let salePrice = 0;
             if (p === 0) {
                 return salePrice;
             }
-            if (p * (1 - dI) * x > m) {
-                x = m / (p * (1 - dI));
-            }
 
-            salePrice = Math.floor((p * (1 - dI) + c + p * (1 - dI) * x) / (1 - t));
+            //if (p * (1 - dI) * x > m) {
+            //    x = m / (p * (1 - dI));
+            //}
+
+            salePrice = Math.floor((p * (1 - dI) + c) / (1 - t - x));
 
             // Làm tròn salePrice là bội của 100 VND
             if (salePrice % 100 != 0) {

@@ -11,13 +11,15 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
+using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
     /// <summary>
     /// Xử lý db liên quan đến shopee
     /// </summary>
-    public class ShopeeMySql : BasicMySql
+    public class ShopeeMySql
     {
         /// <summary>
         /// Đóng mở kết nối bên ngoài
@@ -27,7 +29,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// <param name="status"></param>
         /// <param name="detail"></param>
         /// <returns>-2 nếu tMDTShopeeItemId đã tồn tại, -1 nếu có lỗi</returns>
-        private int InserttbShopeeItem(CommonItem item, MySqlConnection conn)
+        public int InserttbShopeeItem(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
             MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Insert", conn);
@@ -67,7 +69,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// <param name="name"></param>
         /// <param name="status"></param>
         /// <returns>-2 nếu tMDTShopeeModelId đã tồn tại, -1 nếu có lỗi</returns>
-        private int InserttbShopeeModel(int itemId, CommonModel model, MySqlConnection conn)
+        public int InserttbShopeeModel(int itemId, CommonModel model, MySqlConnection conn)
         {
             MyLogger.GetInstance().Warn("Start InserttbShopeeModel");
             MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
@@ -646,6 +648,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
+        // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
+        public MySqlResultState ShopeeInsertNewMappingOneOfModel(int modelId, 
+            int productId, 
+            int quantity,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlCommand cmd = new MySqlCommand("st_tbShopeeMapping_Insert", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@inShopeeModelId", modelId);
+            cmd.Parameters.AddWithValue("@inProductId", productId);
+            cmd.Parameters.AddWithValue("@inProductQuantity", quantity);
+            result = MyMySql.MyExcuteNonQuery(cmd);
+            return result;
+        }
+
         // Lấy mapping của sản phẩm trong đơn hàng
         public void ShopeeGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
         {
@@ -710,7 +728,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 conn.Open();
 
                 // Lưu vào bảng tbECommerceOrder
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen", conn);
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen WHERE Id = 1", conn);
                 cmd.CommandType = CommandType.Text;
                 MySqlDataReader rdr = null;
                 rdr = cmd.ExecuteReader();
@@ -761,6 +779,30 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
 
             return resultState;
+        }
+
+        public MySqlResultState ShopeeSaveCode(string code)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+
+                MySqlCommand cmd = new MySqlCommand(
+                    "UPDATE webplaywithme.tbshopeeauthen SET `Code` = @inCode, `RefreshCodeTime` = NOW() WHERE `Id` = 1", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inCode", code);
+
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            conn.Close();
+            return result;
         }
 
         public MySqlResultState CopyShopeeProductImageToProduct()
@@ -856,7 +898,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
                     int tmdtShopeeItemIdIndex = rdr.GetOrdinal("TMDTShopeeItemId");
-                    CommonItem commonItem = null;
                     while (rdr.Read())
                     {
                         lsItem.Add(rdr.GetInt64(tmdtShopeeItemIdIndex));
@@ -1021,6 +1062,182 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             rdr.Close();
 
             return trackingNumber;
+        }
+
+        // khi upload ảnh lên Shopee, lưu id ảnh
+        public MySqlResultState InserttbShopeeMediaSpace(
+            int mediaType, // 0: là ảnh, 1: video
+            string mediaId,
+            int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn) 
+        {
+            MySqlCommand cmd =
+                new MySqlCommand("st_tbshopee_media_space_Insert", conn);
+            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+            cmd.Parameters.AddWithValue("@p_MediaId", mediaId);
+            cmd.Parameters.AddWithValue("@p_ProductId", productId);
+            cmd.Parameters.AddWithValue("@p_ProductType", productType);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            return MyMySql.MyExcuteNonQuery(cmd);
+        }
+
+        public List<string> GetUploadedImageOfProductOnShopee(
+            int mediaType, // 0: là ảnh, 1: video
+            int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn
+            )
+        {
+            List<string> images = new List<string>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand(
+                "st_tbshopee_media_space_Get_MediaId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+                cmd.Parameters.AddWithValue("@p_ProductId", productId);
+                cmd.Parameters.AddWithValue("@p_ProductType", productType);
+                MySqlDataReader rdr = null;
+
+                using (rdr = cmd.ExecuteReader())
+                {
+                    int mediaIdIndex = rdr.GetOrdinal("MediaId");
+                    while (rdr.Read())
+                    {
+                        images.Add( rdr.GetString(mediaIdIndex));
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                images.Clear();
+            }
+            return images;
+        }
+
+        // Lấy số lượng ảnh đã up lên shopee của sản phẩm
+        public int GetQuantityOfProductImageUploadedToShopee(
+            int mediaType, // 0: là ảnh, 1: video
+            int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd =
+                new MySqlCommand(@"SELECT COUNT(Id) AS Count FROM tbshopee_media_space 
+            WHERE MediaType = @p_MediaType 
+            AND ProductId = @p_ProductId 
+            AND ProductType = @p_ProductType;", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+            cmd.Parameters.AddWithValue("@p_ProductId", productId);
+            cmd.Parameters.AddWithValue("@p_ProductType", productType);
+            int count = 0;
+            try
+            {
+                MySqlDataReader rdr = null;
+                using (rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        count = rdr.GetInt32(rdr.GetOrdinal("Count"));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                count = -1; // Có lỗi
+            }
+
+            return count;
+        }
+
+        // Vì upload lại ảnh lên shopee, xóa id ảnh cũ đã lưu trong db
+        public MySqlResultState DeleteProductImageUploadedToShopee(
+            int mediaType, // 0: là ảnh, 1: video
+            int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn)
+        {
+            MyLogger.GetInstance().Info("DeleteProductImageUploadedToShopee CALL");
+            MyLogger.GetInstance().Info("mediaType: " + mediaType + ", productId: " + productId + ", productType: " + productType);
+
+            MySqlCommand cmd =
+                new MySqlCommand(@"DELETE FROM tbshopee_media_space 
+            WHERE MediaType = @p_MediaType 
+            AND ProductId = @p_ProductId 
+            AND ProductType = @p_ProductType;", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+            cmd.Parameters.AddWithValue("@p_ProductId", productId);
+            cmd.Parameters.AddWithValue("@p_ProductType", productType);
+            MySqlResultState resultState = MyMySql.MyExcuteNonQuery(cmd);
+
+            return resultState;
+        }
+
+
+        // khi upload ảnh lên Shopee, lưu id ảnh
+        public MySqlResultState InserttbShopeeBrand(
+            long categoryId,
+            List<ShopeeBrandObject> brandList,
+            MySqlConnection conn)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            MySqlCommand cmd =
+                new MySqlCommand("st_tbShopee_Brand_Insert", conn);
+            cmd.Parameters.AddWithValue("@p_CategoryId", categoryId);
+            cmd.Parameters.AddWithValue("@p_OriginalBrandName", "");
+            cmd.Parameters.AddWithValue("@p_BrandId", 0L);
+            cmd.CommandType = CommandType.StoredProcedure;
+            try
+            {
+                foreach (var brand in brandList)
+                {
+                    cmd.Parameters[1].Value = brand.original_brand_name;
+                    cmd.Parameters[2].Value = brand.brand_id;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            return resultState;
+        }
+
+        public ShopeeBrandRequestParameter GetBrandFromName(string brandName, MySqlConnection conn)
+        {
+            ShopeeBrandRequestParameter brand = null;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand(
+                @"SELECT * FROM webplaywithme.tbshopee_brand WHERE OriginalBrandName LIKE '%" + brandName +
+                @"%' ORDER BY CHAR_LENGTH(OriginalBrandName) ASC LIMIT 1; ", conn);
+                cmd.CommandType = CommandType.Text;
+                MySqlDataReader rdr = null;
+
+                using (rdr = cmd.ExecuteReader())
+                {
+                    int brandIdIndex = rdr.GetOrdinal("BrandId");
+                    int originalBrandNameIndex = rdr.GetOrdinal("OriginalBrandName");
+                    while (rdr.Read())
+                    {
+                        brand = new ShopeeBrandRequestParameter(rdr.GetInt64(brandIdIndex),
+                            rdr.GetString(originalBrandNameIndex));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                brand = null;
+            }
+            return brand;
         }
     }
 }

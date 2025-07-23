@@ -16,8 +16,11 @@
         <div class="e-product-filter">
             @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
-            <div title="Lấy itemid, modelid sản phẩm Shopee, Tiki, Lazada đã được lưu trên db.">
+            <div style="display: flex;" title="Lấy itemid, modelid sản phẩm Shopee, Tiki, Lazada đã được lưu trên db.">
                 <button type="button" class="pwm-btn-common" onclick="GetItemOnDB()"><span class="pwm-btn-text-common">Lấy Sản Phẩm</span></button>
+                <button type="button" class="pwm-btn-common" onclick="AutoUpdateMapping()" 
+                        title="Nếu sản phẩm chưa được mapping, tên sản phẩm trên sàn trùn tên được sinh tự động từ sản phẩm trong kho sẽ được mapping tương ứng,
+                        CÓ KHẢ NĂNG LỖI nếu tên có sự trùng lặp"><span class="pwm-btn-text-common">Tự Động Mapping Theo Tên</span></button>
             </div>
             <div>
                 <input type="checkbox" id="find-non-mapping" onclick="FindNonMapping()">
@@ -94,6 +97,17 @@
                 let table = document.getElementById("myTable");
                 ShowListCommonItemOnDB(listItem, table);
             }
+        }
+
+        async function AutoUpdateMapping() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetECommerceType());
+
+            let query = "/ProductECommerce/AutoUpdateMapping";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+            RemoveCircleLoader();
         }
 
         function ShowListCommonItemOnDB(list, table) {

@@ -235,32 +235,30 @@ const isImage = "isImage";
 const isVideo = "isVideo";
 
 function DeleteAllFileWithType(url, productId, fileType) {
+    if (!IsValidString(url)) {
+        return;
+    }
     const searchParams = new URLSearchParams();
     searchParams.append("id", productId);
     searchParams.append("fileType", fileType);
-    let OnloadFuntion = function () {
-        if (this.readyState == 4 && this.status == 200) {
-        }
-    }
-    RequestHttpPost(OnloadFuntion, searchParams, url);
+    return RequestHttpPostPromise(searchParams, url);
 }
 
 //
-function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
-    return new Promise(function (resolve, reject) {
-        const imgs = document.getElementsByClassName("objImage");
-        isFinishUploadImage = imgs.length;
+async function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
+    const imgs = document.getElementsByClassName("objImage");
+    //isFinishUploadImage = imgs.length;
 
-        const videos = document.getElementsByClassName("objVideo");
-        isFinishUploadVideo = videos.length;
+    const videos = document.getElementsByClassName("objVideo");
+    //isFinishUploadVideo = videos.length;
 
         // Upload ảnh lên server
+    if (imgs.length > 0) {
         for (let i = 0; i < imgs.length; i++) {
-
             let exist;
             if (imgs[i].file == null) {
                 exist = "true";
-                isFinishUploadImage = isFinishUploadImage - 1;
+                //isFinishUploadImage = isFinishUploadImage - 1;
             }
             else {
                 exist = "false";
@@ -273,20 +271,32 @@ function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
             else {
                 finish = "false";
             }
-            new FileUpload(urlCreate, productId, imgs[i], isImage, imgs[i].file, imgs[i].fileName, i, exist, finish);
-        }
-        if (!isEmptyOrSpaces(urlDeleteAllFileWithType)) {// Trường hợp cập nhật mới gửi lệnh xóa ảnh cũ
-            // Không có ảnh nào gửi lệnh xóa ảnh trên server
-            if (imgs.length == 0) {
-                DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isImage);
+            // Để đơn giản Up từng ảnh một, xong mới up ảnh tiếp theo. Nếu có lỗi một ảnh thì dừng lại
+            let responseDB = await FileUpload(urlCreate, productId, imgs[i], isImage, imgs[i].file, imgs[i].fileName, i, exist, finish);
+            if (!CheckStatusResponse(responseDB.responseText)) {
+                CreateMustClickOkModal("Upload ảnh lỗi ở ảnh thứ " + i);
+                return false;
             }
+            //else {
+            //    alert("Xong ảnh: " + i);
+            //}
         }
-        // Upload video lên server
+    }
+    else {
+        // Không có ảnh nào gửi lệnh xóa ảnh trên server
+        let responseDB = await DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isImage);
+        if (!CheckStatusResponse(responseDB.responseText)) {
+            CreateMustClickOkModal("Xóa ảnh lỗi.");
+            return false;
+        }
+    }
+    // Upload video lên server
+    if (videos.length > 0) {
         for (let i = 0; i < videos.length; i++) {
             let exist;
             if (videos[i].file == null) {
                 exist = "true";
-                isFinishUploadVideo = isFinishUploadVideo - 1;
+                //isFinishUploadVideo = isFinishUploadVideo - 1;
             }
             else {
                 exist = "false";
@@ -300,23 +310,32 @@ function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) {
                 finish = "false";
             }
 
-            new FileUpload(urlCreate, productId, videos[i], isVideo, videos[i].file, videos[i].fileName, i, exist, finish);
-        }
-        if (!isEmptyOrSpaces(urlDeleteAllFileWithType)) {// Trường hợp cập nhật mới gửi lệnh xóa video cũ
-            // Không có ảnh nào gửi lệnh xóa video trên server
-            if (videos.length == 0) {
-                DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isVideo);
+            let responseDB = await FileUpload(urlCreate, productId, videos[i], isVideo, videos[i].file, videos[i].fileName, i, exist, finish);
+            if (!CheckStatusResponse(responseDB.responseText)) {
+                CreateMustClickOkModal("Upload video lỗi.");
+                return false;
             }
         }
-        resolve("done");
-    });
+    }
+    else {
+        // Không có ảnh nào gửi lệnh xóa video trên server
+        let responseDB = await DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isVideo);
+        if (!CheckStatusResponse(responseDB.responseText)) {
+            CreateMustClickOkModal("Xóa Video lỗi.");
+            return false;
+        }
+    }
+    return true;
 }
 
-let isFinishUploadImage = 0;
-let isFinishUploadVideo = 0;
+//let isFinishUploadImage = 0;
+//let isFinishUploadVideo = 0;
 
 // exist: true nếu file này đã tồn tại trên server, ngược lại false
 function FileUpload(url, productId, fileElement, fileType, file, originalFileName, fileOrder, exist, finish) {
+    if (DEBUG) {
+        console.log("FileUpload Call");
+    }
     //const reader = new FileReader();
     this.ctrl = CreateThrobber(fileElement);
     const xhr = new XMLHttpRequest();
@@ -335,26 +354,37 @@ function FileUpload(url, productId, fileElement, fileType, file, originalFileNam
         self.ctrl.update(100);
         //const canvas = self.ctrl.ctx.canvas;
         //canvas.parentNode.removeChild(canvas);
-        if (fileType === isImage) {
-            isFinishUploadImage = isFinishUploadImage - 1;
-        } else if (fileType === isVideo) {
-            isFinishUploadVideo = isFinishUploadVideo - 1;
-        }
+        //if (fileType === isImage) {
+        //    isFinishUploadImage = isFinishUploadImage - 1;
+        //} else if (fileType === isVideo) {
+        //    isFinishUploadVideo = isFinishUploadVideo - 1;
+        //}
     }, false);
     xhr.open("POST", url);
     //xhr.overrideMimeType('text/plain; charset=x-user-defined-binary');
     xhr.setRequestHeader("Content-Type", "multipart/form-data");
     //let newFileName = `${fileOrder}.${GetExtensionOfFileName(fileName)}`;
-    xhr.setRequestHeader("fileName", `${fileOrder}.${GetExtensionOfFileName(originalFileName)}`);
+    let simpleName = RemoveVietnameseDiacritics(originalFileName);
+    xhr.setRequestHeader("fileName", `${fileOrder}.${GetExtensionOfFileName(simpleName)}`);
     xhr.setRequestHeader("productId", productId);
-    xhr.setRequestHeader("originalFileName", originalFileName);
+    xhr.setRequestHeader("originalFileName", simpleName);
     xhr.setRequestHeader("exist", exist);
     xhr.setRequestHeader("finish", finish);
-    xhr.send(file);
+    if (DEBUG) {
+        console.log(`Request: POST ${url}`);
+        console.log(`Set header: Content-Type: multipart/form-data`);
+        console.log(`Set header: fileName: ${fileOrder}.${GetExtensionOfFileName(simpleName)}`);
+        console.log(`Set header: productId: ${productId}`);
+        console.log(`Set header: originalFileName: ${simpleName}`);
+        console.log(`Set header: exist: ${exist}`);
+        console.log(`Set header: finish: ${finish}`);
+    }
+    //xhr.send(file);
     //reader.onload = (evt) => {
     //    xhr.send(evt.target.result);
     //};
     //reader.readAsBinaryString(file);
+    return RequestHttpPostUpFilePromise(xhr, url, file);
 }
 
 function CreateThrobber(fileElement) {

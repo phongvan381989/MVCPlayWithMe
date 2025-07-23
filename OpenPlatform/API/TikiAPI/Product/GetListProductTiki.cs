@@ -148,7 +148,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         {
             // Thêm ?includes=seller,categories,inventory,attributes,images để lấy full thông tin
             //string http = TikiConstValues.cstrProductsHTTPAddress + "/" + code + "?includes=seller,categories,inventory,attributes,images";
-            string http = TikiConstValues.cstrProductsHTTPAddress + "/" + id.ToString() + "?includes=inventory,images";
+
+            // Lấy 1 sản phẩm nên lấy tất cả thông tin
+            string http = TikiConstValues.cstrProductsHTTPAddress + "/" + id.ToString() + "?includes=seller,categories,inventory,attributes,images";
             IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {

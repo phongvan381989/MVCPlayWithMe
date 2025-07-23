@@ -154,14 +154,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             shipCode = order.shipCode;
             status = order.order_status;
             messageToSeller = order.message_to_seller;
-            if(order.checkout_shipping_carrier == CommonOpenPlatform.ShopeeExpress)
-            {
-                isExpress = true;
-            }
-            else
-            {
-                isExpress = false;
-            }
+
+            isExpress = CommonOpenPlatform.IsShopeeExpress(order.checkout_shipping_carrier);
             created_at = Common.GetDateFromTimestamp(order.create_time);
             listItemId = new List<long>();
             listModelId = new List<long>();

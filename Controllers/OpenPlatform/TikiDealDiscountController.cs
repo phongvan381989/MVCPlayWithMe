@@ -326,14 +326,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         // p: giá bìa, 
         // dI: chiết khấu nhập, VD: 0.4
         // dO: chiết khấu bán,
-        // x: % lợi nhuận mong muốn so với giá thực tế nhập sách
+        // x: % lợi nhuận mong muốn so với GIÁ NHẬP SÁCH
         // t: phần trăm phí trả sản + thuế nộp nhà nước so với giá bán trên sàn
         // c: chi phí đóng gói cố đinh
         // m: lợi nhuận tuyệt đối. Nếu giá bìa lớn ta có thể chiết khấu sâu hơn khi bán để lợi nhuận tối thiểu bằng m
         // Giá bán  - giá nhập  - thuế phí   - phí đóng hàng = lợi nhuận còn lại
         // p(1 - dO) - p(1 -dI) - p(1 - dO)t - c             = p(1 - dI) x
         //
-        // p(1 - dO)(1 - t) = p(1 -dI) + c + pdIx
+        // p(1 - dO)(1 - t) = p(1 -dI) + c + p(1 - dI) x
         // =>p(1 - dO) = (p(1 -dI) + c + p(1 - dI)x) / (1 - t)
         // Làm tròn xuống thành số nguyên
         private static int CaculateSalePriceCore(int p, float dI, float x, float t, int c, int m)
@@ -344,6 +344,69 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             int salePrice = (int)Math.Floor((p * (1 - dI) + c + p * (1 - dI) * x) / (1 - t));
+
+            // Làm tròn salePrice là bội của 100 VND
+            if (salePrice % 100 != 0)
+            {
+                salePrice = salePrice - salePrice % 100;
+            }
+
+            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
+            // Ta tính lại giá bán, bán dưới điểm hòa vốn
+            if (salePrice >= p)
+            {
+                salePrice = p * (100 - TikiConstValues.constDiscount) / 100;
+                // Làm tròn salePrice là bội của 100 VND
+                if (salePrice % 100 != 0)
+                {
+                    salePrice = salePrice - salePrice % 100;
+                }
+            }
+
+            return salePrice;
+        }
+
+        // Xây dựng công thức tính giá bán
+        // p: giá bìa, 
+        // dI: chiết khấu nhập, VD: 0.4
+        // dO: chiết khấu bán,
+        // x: % lợi nhuận mong muốn so với GIÁ BÁN
+        // t: phần trăm phí trả sản + thuế nộp nhà nước so với giá bán trên sàn
+        // c: chi phí đóng gói cố đinh
+        // NOTE: Bỏ qua lợi nhuận tuyệt đối m
+        // m: lợi nhuận tuyệt đối. Nếu giá bìa lớn ta có thể chiết khấu sâu hơn khi bán để lợi nhuận tối thiểu bằng m
+        // Giá bán  - giá nhập  - thuế phí   - phí đóng hàng = lợi nhuận còn lại
+        // p(1 - dO) - p(1 -dI) - p(1 - dO)t - c             = p(1 - dO) x
+        //
+        // p(1 - dO)(1 - t -x) = p(1 -dI) + c
+        // =>p(1 - dO) = (p(1 -dI) + c) / (1 - t - x)
+        // Làm tròn xuống thành số nguyên
+        private static int CaculateSalePriceCore_Ver2(int p, float dI, float x, float t, int c, int m)
+        {
+            //if (p * (1 - dO) * x > m)
+            //{
+            //    x = m / (p * (1 - dI));
+            //}
+
+            int salePrice = 0;
+            if(p == 0)
+            {
+                return salePrice;
+            }
+
+            salePrice = (int)Math.Floor((p * (1 - dI) + c) / (1 - t - x));
+
+            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
+            // Ta tính lại giá bán, bán dưới điểm hòa vốn => Chấp nhận lỗ
+            if (salePrice >= p)
+            {
+                salePrice = p * (100 - TikiConstValues.constDiscount) / 100;
+                // Làm tròn salePrice là bội của 100 VND
+                if (salePrice % 100 != 0)
+                {
+                    salePrice = salePrice - salePrice % 100;
+                }
+            }
 
             // Làm tròn salePrice là bội của 100 VND
             if (salePrice % 100 != 0)
@@ -369,22 +432,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Lấy chiết khấu với 1 chữ số sau dấu phảy
             float dI = commonModel.GetDiscount(listPublisher) / 100;
 
-            salePrice = CaculateSalePriceCore(p, dI,
+            salePrice = CaculateSalePriceCore_Ver2(p, dI,
                 taxAndFee.expectedPercentProfit / 100,
                 (taxAndFee.tax + taxAndFee.fee) / 100,
                 taxAndFee.packingCost,
                 taxAndFee.minProfit);
-            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
-            // Ta tính lại giá bán, bán dưới điểm hòa vốn
-            if(salePrice >= p)
-            {
-                salePrice = p * (100 - TikiConstValues.constDiscount) / 100;
-                // Làm tròn salePrice là bội của 100 VND
-                if (salePrice % 100 != 0)
-                {
-                    salePrice = salePrice - salePrice % 100;
-                }
-            }
 
             return salePrice;
         }
@@ -509,7 +561,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Tính giá bìa, chiết khấu hợp lý theo nhà phát hành hoặc sản phẩm, thuế, phí, lợi nhuận mong muốn.
             // Từ đó tính giá bán.
-            int special_price;
+            int sale_price;
             List<CreatingRequestBody> listCreatingRequestBody = new List<CreatingRequestBody>();
             CreatingRequestBody creatingRequestBodyTemp = null;
             try
@@ -517,15 +569,15 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 ProductMySql productMySql = new ProductMySql();
                 foreach (var simpleTiki in listSimpleTikiProduct)
                 {
-                    special_price = CaculateSalePriceCoreFromCommonModel(simpleTiki.models[0],
+                    sale_price = CaculateSalePriceCoreFromCommonModel(simpleTiki.models[0],
                         listPublisher,
                         taxAndFee);
-                    if (!string.IsNullOrEmpty(simpleTiki.sku) && special_price != 0)
+                    if (!string.IsNullOrEmpty(simpleTiki.sku) && sale_price != 0)
                     {
                         creatingRequestBodyTemp = new CreatingRequestBody();
                         listCreatingRequestBody.Add(creatingRequestBodyTemp);
 
-                        creatingRequestBodyTemp.ls.Add(new CreatingRequestBodyObject(simpleTiki.sku, special_price));
+                        creatingRequestBodyTemp.ls.Add(new CreatingRequestBodyObject(simpleTiki.sku, sale_price));
                     }
                     else
                     {

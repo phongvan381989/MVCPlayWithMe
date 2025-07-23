@@ -89,29 +89,5 @@ namespace MVCPlayWithMe.Models.Dev
             conn.Close();
             return result;
         }
-
-        public MySqlResultState ShopeeSaveCode(string code)
-        {
-            MySqlResultState result = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand(
-                    "UPDATE webplaywithme.tbshopeeauthen SET `Code` = @inCode  WHERE `Id` = 1", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inCode", code);
-
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, result);
-            }
-
-            conn.Close();
-            return result;
-        }
     }
 }

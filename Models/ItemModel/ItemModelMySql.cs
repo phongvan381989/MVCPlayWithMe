@@ -10,7 +10,7 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models.ItemModel
 {
-    public class ItemModelMySql : BasicMySql
+    public class ItemModelMySql
     {
         public List<BasicIdName> GetListItemName()
         {

@@ -15,7 +15,7 @@ using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Models.Order
 {
-    public class OrderMySql : BasicMySql
+    public class OrderMySql
     {
         // Từ model id, lấy được thông tin của model
         public void GetCart(List<Cart> ls)

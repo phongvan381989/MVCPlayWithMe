@@ -388,13 +388,16 @@ function RequestHttpPotstPromiseUploadFile(file, url) {
 }
 
 function RequestHttpPostUpFilePromise(xhttp, url, file) {
+    if (DEBUG) {
+        console.log(url);
+    }
     return new Promise(function (resolve, reject) {
         xhttp.onload = function () {
             if (this.readyState == 4 && this.status == 200) {
-                //if (DEBUG) {
-                //    console.log(this.responseText);
-                //}
-                resolve(this.responseText);
+                if (DEBUG) {
+                    console.log(this.responseText);
+                }
+                resolve(this);
             }
         };
         xhttp.onerror = function () {
@@ -1357,4 +1360,13 @@ function UpdateProductNameStyle(p, status, quantity) {
     else {
         p.style.color = "initial";
     }
+}
+
+// Chuyển tiếng Việt thành không có dấu
+function RemoveVietnameseDiacritics(str) {
+    return str
+        .normalize('NFD')                    // Tách chữ và dấu
+        .replace(/[\u0300-\u036f]/g, '')     // Xóa dấu
+        .replace(/đ/g, 'd')                  // thay đ
+        .replace(/Đ/g, 'D');                 // thay Đ
 }

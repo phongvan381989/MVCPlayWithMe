@@ -8,7 +8,7 @@ using System.Web;
 
 namespace MVCPlayWithMe.Models
 {
-    public class AdministrativeAddressMySql : BasicMySql
+    public class AdministrativeAddressMySql
     {
         private string pro;
         private string dis;
