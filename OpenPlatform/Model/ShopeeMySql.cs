@@ -738,6 +738,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
                     shopeeAuthen.partnerKey = MyMySql.GetString(rdr, "PartnerKey");
                     shopeeAuthen.code = MyMySql.GetString(rdr, "Code");
+                    shopeeAuthen.validAccessTokenTime = MyMySql.GetDateTime(rdr, "ValidAccessTokenTime");
                     shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
                     shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
                 }
@@ -763,13 +764,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 conn.Open();
 
                 MySqlCommand cmd =
-                    new MySqlCommand("UPDATE `tbShopeeAuthen` SET `AccessToken`=@AccessToken," +
-                    " `RefreshToken`=@RefreshToken WHERE `Id` = 1", conn);
+                    new MySqlCommand(@"UPDATE `tbShopeeAuthen` SET `AccessToken`=@AccessToken,
+                     `RefreshToken`=@RefreshToken,
+                     `ValidAccessTokenTime` = @ValidAccessTokenTime
+                     WHERE `Id` = 1", conn);
                 cmd.Parameters.AddWithValue("@AccessToken", shopeeToken.access_token);
                 cmd.Parameters.AddWithValue("@RefreshToken", shopeeToken.refresh_token);
+                cmd.Parameters.AddWithValue("@ValidAccessTokenTime",
+                    DateTime.Now.AddSeconds(shopeeToken.expire_in - 300)); // 300 giây là trừ hao
                 cmd.CommandType = CommandType.Text;
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {

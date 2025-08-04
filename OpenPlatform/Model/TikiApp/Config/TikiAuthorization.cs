@@ -1,4 +1,6 @@
-﻿namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
+﻿using System;
+
+namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
 {
     /// <summary>
     /// Chứa thông tin ủy quyền connect tới shop Tiki
@@ -24,5 +26,6 @@
         public string expires_in { get; set; }
         public string scope { get; set; }
         public string token_type { get; set; }
+        public DateTime refreshAccessTokenTime { get; set; }
     }
 }

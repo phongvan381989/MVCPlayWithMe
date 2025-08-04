@@ -1524,6 +1524,45 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
+        public List<int> SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOut(
+            string eType,
+            MySqlConnection conn)
+        {
+            List<int> ls = new List<int>();
+            try
+            {
+                string store = "";
+                if (eType == eTiki)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent";
+                }
+                else if (eType == eShopee)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
+                }
+                if (!string.IsNullOrEmpty(store))
+                {
+                    MySqlCommand cmd = new MySqlCommand(store, conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        int idIndex = rdr.GetOrdinal("Id");
+                        while (rdr.Read())
+                        {
+                            ls.Add(rdr.GetInt32(idIndex));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return ls;
+        }
+
         public List<Product> ShopeeDontSellSigleWithNoParrentConnectOut(
             MySqlConnection conn)
         {
@@ -1546,8 +1585,8 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        // Lấy danh sách sản phẩm đơn giản với thông tin combo
-        public List<Product> GetSimpleComboAllConnectOut(
+        // Lấy danh sách sản phẩm đơn giản với thông tin combo, category
+        public List<Product> GetSimpleComboCategoryAllConnectOut(
             MySqlConnection conn)
         {
             List<Product> ls = new List<Product>();
@@ -1562,6 +1601,8 @@ namespace MVCPlayWithMe.Models.ProductModel
                     int nameIndex = rdr.GetOrdinal("Name");
                     int comboIdIndex = rdr.GetOrdinal("ComboId");
                     int comboNameIndex = rdr.GetOrdinal("ComboName");
+                    int categoryIdIndex = rdr.GetOrdinal("CategoryId");
+                    int categoryNameIndex = rdr.GetOrdinal("CategoryName");
 
                     while (rdr.Read())
                     {
@@ -1570,7 +1611,8 @@ namespace MVCPlayWithMe.Models.ProductModel
                         product.name = rdr.GetString(nameIndex);
                         product.comboId = rdr.GetInt32(comboIdIndex);
                         product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
-
+                        product.categoryId = rdr.GetInt32(categoryIdIndex);
+                        product.categoryName = rdr.IsDBNull(categoryNameIndex) ? string.Empty : rdr.GetString(categoryNameIndex);
                         ls.Add(product);
                     }
                 }

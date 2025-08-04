@@ -264,17 +264,30 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
         public static IRestResponse ShopeeGetMethod(string path, List<DevNameValuePair> ls)
         {
-            string url = GenerateURLShopeeAPI(path, ls);
             IRestResponse response = null;
             try
             {
+                // Nếu access token hết hạn, ta làm mới
+                if (DateTime.Now > shopeeAuthen.validAccessTokenTime)
+                {
+                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    {
+                        return null;
+                    }
+                }
+
+                string url = GenerateURLShopeeAPI(path, ls);
+
                 RestRequest request = new RestRequest(url, Method.GET);
 
                 response = Common.client.Execute(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
 
-                if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token và thử lại
+                // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
+                // Làm mới access token và thử lại
+                if (response.StatusCode == HttpStatusCode.Forbidden)
                 {
+                    MyLogger.GetInstance().Info("ShopeeGetMethod call because response.StatusCode == HttpStatusCode.Forbidden");
                     if (ShopeeGetRefreshTokenShopLevel() == null)
                     {
                         response = null;
@@ -300,17 +313,31 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
         public static async Task<IRestResponse> ShopeeGetMethodAsync(string path, List<DevNameValuePair> ls)
         {
-            string url = GenerateURLShopeeAPI(path, ls);
             IRestResponse response = null;
             try
             {
+                // Nếu access token hết hạn, ta làm mới
+                if (DateTime.Now > shopeeAuthen.validAccessTokenTime)
+                {
+                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    {
+                        return null;
+                    }
+                }
+
+                string url = GenerateURLShopeeAPI(path, ls);
+
                 RestRequest request = new RestRequest(url, Method.GET);
 
                 response = Common.client.Execute(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
 
-                if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token và thử lại
+                // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
+                // Làm mới access token và thử lại
+                if (response.StatusCode == HttpStatusCode.Forbidden)
                 {
+                    MyLogger.GetInstance().Info("ShopeeGetMethodAsync call because response.StatusCode == HttpStatusCode.Forbidden");
+
                     if (ShopeeGetRefreshTokenShopLevel() == null)
                     {
                         response = null;
@@ -341,20 +368,33 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
         public static IRestResponse ShopeePostMethod(string path, string body)
         {
-            string url = GenerateURLShopeeAPI(path, null);
-
-            var request = new RestRequest(url, Method.POST);
-            request.AddHeader("Content-Type", "application/json");
-            request.AddParameter("application/json", body, ParameterType.RequestBody);
-
             IRestResponse response = null;
             try
             {
+                // Nếu access token hết hạn, ta làm mới
+                if (DateTime.Now > shopeeAuthen.validAccessTokenTime)
+                {
+                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    {
+                        return null;
+                    }
+                }
+
+                string url = GenerateURLShopeeAPI(path, null);
+
+                var request = new RestRequest(url, Method.POST);
+                request.AddHeader("Content-Type", "application/json");
+                request.AddParameter("application/json", body, ParameterType.RequestBody);
+
                 response = Common.client.Execute(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
 
-                if (response.StatusCode == HttpStatusCode.Forbidden) // Làm mới access token và thử lại
+                // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
+                // Làm mới access token và thử lại
+                if (response.StatusCode == HttpStatusCode.Forbidden)
                 {
+                    MyLogger.GetInstance().Info("ShopeePostMethod call because response.StatusCode == HttpStatusCode.Forbidden");
+
                     if (ShopeeGetRefreshTokenShopLevel() == null)
                     {
                         response = null;

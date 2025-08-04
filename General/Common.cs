@@ -1780,7 +1780,22 @@ namespace MVCPlayWithMe.General
         }
         #endregion
 
-        // Xóa tag html<>, nhiều ký tự xuống dòng giữ lại chỉ 1
+        // Thay thế 3 hoặc nhiều dấu xuống dòng liên tiếp bằng 2 dấu xuống dòng
+        public static string ReplaceMoreNewLineCharacterByTwo(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // 1. Chuẩn hóa xuống dòng: chuyển tất cả về \n
+            input = input.Replace("\r\n", "\n").Replace("\r", "\n");
+
+            // 2. Rút gọn các dòng trống: thay 3+ dòng trống bằng 2 dòng trống
+            string result = Regex.Replace(input, @"\n{3,}", "\n\n");
+
+            return result.Trim(); // bỏ khoảng trắng đầu/cuối nếu có
+        }
+
+        // Xóa tag html<>, "&nbsp;", "&nbsp" nhiều ký tự xuống dòng giữ lại chỉ 1
         public static string CleanHtml(string input)
         {
             if (string.IsNullOrEmpty(input))
@@ -1788,14 +1803,10 @@ namespace MVCPlayWithMe.General
 
             // 1. Xóa tất cả thẻ HTML
             string noTags = Regex.Replace(input, "<.*?>", "");
+            // 2. Xóa các dạng &nbsp;, &nbsp (không phân biệt chữ hoa thường)
+            string noNbsp = Regex.Replace(noTags, @"&nbsp;?", "", RegexOptions.IgnoreCase);
 
-            // 2. Chuẩn hóa xuống dòng: chuyển tất cả về \n
-            noTags = noTags.Replace("\r\n", "\n").Replace("\r", "\n");
-
-            // 3. Rút gọn các dòng trống: thay 2+ dòng trống bằng 1 dòng trống
-            string result = Regex.Replace(noTags, @"\n{2,}", "\n");
-
-            return result.Trim(); // bỏ khoảng trắng đầu/cuối nếu có
+            return ReplaceMoreNewLineCharacterByTwo(noNbsp); // bỏ khoảng trắng đầu/cuối nếu có
         }
     }
 }

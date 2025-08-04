@@ -235,9 +235,6 @@ const isImage = "isImage";
 const isVideo = "isVideo";
 
 function DeleteAllFileWithType(url, productId, fileType) {
-    if (!IsValidString(url)) {
-        return;
-    }
     const searchParams = new URLSearchParams();
     searchParams.append("id", productId);
     searchParams.append("fileType", fileType);
@@ -284,11 +281,14 @@ async function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) 
     }
     else {
         // Không có ảnh nào gửi lệnh xóa ảnh trên server
-        let responseDB = await DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isImage);
-        if (!CheckStatusResponse(responseDB.responseText)) {
-            CreateMustClickOkModal("Xóa ảnh lỗi.");
-            return false;
+        if (IsValidString(urlDeleteAllFileWithType)) {
+            let responseDB = await DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isImage);
+            if (!CheckStatusResponse(responseDB.responseText)) {
+                CreateMustClickOkModal("Xóa ảnh lỗi.");
+                return false;
+            }
         }
+        
     }
     // Upload video lên server
     if (videos.length > 0) {
@@ -319,10 +319,12 @@ async function SendFilesPromise(urlCreate, urlDeleteAllFileWithType, productId) 
     }
     else {
         // Không có ảnh nào gửi lệnh xóa video trên server
-        let responseDB = await DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isVideo);
-        if (!CheckStatusResponse(responseDB.responseText)) {
-            CreateMustClickOkModal("Xóa Video lỗi.");
-            return false;
+        if (IsValidString(urlDeleteAllFileWithType)) {
+            let responseDB = await DeleteAllFileWithType(urlDeleteAllFileWithType, productId, isVideo);
+            if (!CheckStatusResponse(responseDB.responseText)) {
+                CreateMustClickOkModal("Xóa Video lỗi.");
+                return false;
+            }
         }
     }
     return true;

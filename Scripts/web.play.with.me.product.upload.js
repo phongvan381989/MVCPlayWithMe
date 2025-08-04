@@ -413,11 +413,11 @@ async function UpdateImage_Video() {
         ShowCircleLoader();
 
         // Upload ảnh/video sản phẩm lên server
-        let respinseSendFile = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
+        let isOK = await SendFilesPromise(urlUp, urlDeleteAllFileWithType, productID);
         //if (DEBUG) {
         //    console.log("respinseSendFile: " + JSON.stringify(respinseSendFile));
         //}
-        if (respinseSendFile) {
+        if (isOK) {
             alert("Cập nhật sản phẩm thành công.");
         }
     }
@@ -536,12 +536,10 @@ async function UpdateISBN() {
     }
 }
 async function UpdateDetail() {
-    let detail = document.getElementById("detail").value;
-
     const searchParams = new URLSearchParams();
     searchParams.append("id", GetValueFromUrlName("id"));
-    searchParams.append("detail", detail);
-
+    let encodeDetail = encodeURIComponent(document.getElementById("detail").value)
+    searchParams.append("detail", encodeDetail);
     let url = "/Product/UpdateDetail";
 
     try {

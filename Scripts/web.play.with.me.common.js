@@ -1161,7 +1161,6 @@ function GetIntECommerceType() {
     return ecommerce;
 }
 
-
 // --------- Xử lý tiền ----------------
 // Add event khi nhập số tiền
 function AddEventFormatInputVND(inputId) {

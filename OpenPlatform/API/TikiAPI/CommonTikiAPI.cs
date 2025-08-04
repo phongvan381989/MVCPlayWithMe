@@ -36,10 +36,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             try
             {
                 response = Common.client.Execute(request);
+                MyLogger.InfoRestLog(Common.client, request, response);
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
+                return "Có lỗi: " + ex.Message;
             }
 
             if (response.StatusCode != HttpStatusCode.OK)
@@ -69,18 +71,34 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         {
             if (CommonTikiAPI.tikiConfigApp == null)
             {
-                // Thử lấy
                 TikiMySql tikiMySql = new TikiMySql();
                 CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
                 if (CommonTikiAPI.tikiConfigApp == null)
                     return null;
             }
 
+            // Nếu access token hết hạn, ta làm mới
+            if (Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) == System.Int32.MinValue ||
+                DateTime.Now > 
+                tikiConfigApp.tikiAu.refreshAccessTokenTime.AddSeconds(
+                Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) - 600) // Trừ hao 600 giây
+                )
+            {
+                string str = RefreshDataAuthorization();
+                if (!string.IsNullOrEmpty(str))
+                {
+                    return null;
+                }
+            }
+
             request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty: tikiConfigApp.tikiAu.access_token));
             IRestResponse response = Common.client.Execute(request);
             MyLogger.InfoRestLog(Common.client, request, response);
+
+            // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
             if (response.StatusCode == HttpStatusCode.Unauthorized)
             {
+                MyLogger.GetInstance().Info("ExcuteRequest call because response.StatusCode == response.StatusCode == HttpStatusCode.Unauthorized");
                 MyLogger.GetInstance().Info("Expried token:" + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty : tikiConfigApp.tikiAu.access_token));
                 // Làm mới access token
                 string str;

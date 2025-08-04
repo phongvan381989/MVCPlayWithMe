@@ -411,9 +411,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 //// Lấy danh sách combo, sản phẩm thuộc combo trong kho
                 //ComboMySql comboMysql = new ComboMySql();
                 //List<Combo> lsCombo = comboMysql.GetListComboIncludeSimpleProducts(conn);
-                // Lấy danh sách sản phẩm tron kho đơn giản
+                // Lấy danh sách sản phẩm trong kho đơn giản
                 ProductMySql productMySql = new ProductMySql();
-                List<Product> lsProduct = productMySql.GetSimpleComboAllConnectOut(conn);
+                List<Product> lsProduct = productMySql.GetSimpleComboCategoryAllConnectOut(conn);
                 string nameTemp = "";
                 if (eType == Common.eTiki)
                 {

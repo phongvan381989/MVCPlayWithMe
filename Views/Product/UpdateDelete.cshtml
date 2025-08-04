@@ -38,7 +38,7 @@
                 @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
                 <div>
-                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical" disabled
+                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical"
                            title="Tên khi tạo sản phẩm trên sàn thương mại:Tiki, Shopee, Lazada,...
                            Tên này bằng: Sách + tên combo - tên sản phẩm. Sửa tên combo, tên sản phẩm nếu muốn thay đổi tên trên sàn">
                     <button type="button" style="margin-left: 30px;"
@@ -47,7 +47,7 @@
                         Tạo Sản Phẩm Trên Sàn TMDT Với Tên Trên
                     </button>
 
-                    <button type="button" style="margin-left: 30px;"
+                    <button type="button" style="margin-left: 30px; display:none;"
                             title="Tải ảnh lên sàn. Hiện tại hỗ trợ SHOPEE"
                             onclick="UploadImageOnECommerce()">
                         Tải Ảnh Lên Sàn
@@ -78,10 +78,9 @@
         ShowUpdateButtonForOne();
 
         ShowProductFromObject();
-
+        let product = null;
         async function ShowProductFromObject() {
             let responseDB = await GetProductFromId(GetValueFromUrlName("id"));
-            let product;
             if (responseDB.responseText != "null") {
                 GetSomeData();
                 product = JSON.parse(responseDB.responseText);
@@ -119,6 +118,25 @@
             return name;
         }
 
+        function GenerateShopeeName(product) {
+            // Tên đăng gồm: Sách + tên sản phẩm.
+            let name = product.name.trim();
+
+            // Nếu tên có chữ "sách" ở đầu rồi thì thôi, không thêm vào.
+            if (!name.toLowerCase().startsWith("sách")) {
+
+                // Nếu combo có chữ ehon thì thêm
+                if (/ehon/i.test(product.comboName)) {
+                    name = "Sách Ehon " + name;
+                }
+                else {
+                    name = "Sách " + name;
+                }
+            }
+
+            return name;
+        }
+
         function MappingOfProduct() {
             // Lấy id
             let id = GetValueFromUrlName("id");
@@ -132,6 +150,11 @@
             if (DEBUG) {
                 console.log("ECommerceTypeChange index: " + index);
             }
+
+            if (index == intShopee) {
+                document.getElementById("product-name-when-creating").value = GenerateShopeeName(product);
+            }
+
             let listOutputTem = [];
             if (index == intAll) {
                 listOutputTem = listOutput;
@@ -260,6 +283,7 @@
                 document.getElementById("book-language-id").focus();
                 return;
             }
+
             // Sản phẩm phải có ảnh
             if (document.getElementsByClassName("objImage").length < 1) {
                 CreateMustClickOkModal("Sản phẩm không có ảnh.");

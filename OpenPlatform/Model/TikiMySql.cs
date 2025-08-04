@@ -615,7 +615,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 rdr = cmd.ExecuteReader();
                                 while (rdr.Read())
                                 {
-                                        quantity = MyMySql.GetInt32(rdr, "Result");
+                                    quantity = MyMySql.GetInt32(rdr, "Result");
                                 }
                                 rdr.Close();
                             }
@@ -878,6 +878,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     config.tikiAu.expires_in = MyMySql.GetString(rdr, "ExpiresIn");
                     config.tikiAu.token_type = MyMySql.GetString(rdr, "TokenType");
                     config.tikiAu.scope = MyMySql.GetString(rdr, "Scope");
+                    config.tikiAu.refreshAccessTokenTime = MyMySql.GetDateTime(rdr, "RefreshAccessTokenTime");
                 }
                 rdr.Close();
             }
@@ -905,11 +906,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     ",`ExpiresIn`=@ExpiresIn" +
                     ",`TokenType`=@TokenType" +
                     ",`Scope`=@Scope" +
+                    ",`RefreshAccessTokenTime`=@RefreshAccessTokenTime" +
                     " WHERE `Id` = 1;", conn);
                 cmd.Parameters.AddWithValue("@AccessToken", accessToken.access_token);
                 cmd.Parameters.AddWithValue("@ExpiresIn", accessToken.expires_in);
                 cmd.Parameters.AddWithValue("@TokenType", accessToken.token_type);
                 cmd.Parameters.AddWithValue("@Scope", accessToken.scope);
+                cmd.Parameters.AddWithValue("@RefreshAccessTokenTime", DateTime.Now);
                 cmd.CommandType = CommandType.Text;
                 cmd.ExecuteNonQuery();
 

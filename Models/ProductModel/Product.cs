@@ -19,6 +19,11 @@ namespace MVCPlayWithMe.Models.ProductModel
         /// </summary>
         public int parentId { get; set; }
         public string parentName { get; set; }
+
+
+        // Độ dài mô tả không quá 5000 ký tự, và không ngắn hơn 100 ký tự
+        public static int minLengthDetail = 100;
+        public static int maxLengthDetail = 5000;
         public string detail { get; set; }
 
         // Số lượng hàng tồn kho, giá trị này được cập nhật khi có thông tin nhập / xuất kho
@@ -156,6 +161,32 @@ namespace MVCPlayWithMe.Models.ProductModel
                 if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
                 {
                     name = "Sách " + name;
+                }
+            }
+
+            return name;
+        }
+
+        // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
+        static public string GenerateShopeeName(Product product)
+        {
+            // Tên đăng gồm: Sách + tên sản phẩm.
+            string name = product.name.Trim();
+
+            if (product.categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            {
+                // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
+                if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+                {
+                    // Nếu combo có chữ ehon  thì thêm
+                    if (product.comboName.IndexOf("ehon", StringComparison.OrdinalIgnoreCase) > 0)
+                    {
+                        name = "Sách Ehon " + name;
+                    }
+                    else
+                    {
+                        name = "Sách " + name;
+                    }
                 }
             }
 

@@ -65,7 +65,7 @@
                         <input type="checkbox" id="checkbox-on-off-dont-sell" onclick="OnOffSearchDontSellOnECommerce()">
                         <label for="checkbox-on-off-dont-sell">Tìm sản phẩm chưa đăng bán</label>
                     </div>
-                    <div style="margin-bottom:10px;"id="xmskgjskjp0258">
+                    <div style="margin-bottom:10px;" id="xmskgjskjp0258">
                         @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
                         <div>
                             <button type="button" style="margin-left: 30px; margin-right:10px;"
@@ -97,6 +97,13 @@
                                     không có sản phẩm cha, anh em gì cả."
                                     onclick="SearchDontSellSigleWithNoParrentOnECommerce()">
                                 Chưa Đăng Bán Lẻ Không Có Cha.
+                            </button>
+                        </div>
+                        <div id="xcvnai9309xvx0">
+                            <button type="button" style="margin-left: 30px; margin-top: 15px;"
+                                    title="Tạo sản phẩm riêng lẻ không cha trên sàn thương mại điện tử của những sản phẩm bên dưới nếu sản phẩm chưa được đăng riêng lẻ không cha"
+                                    onclick="CreateProductOnECommerceFromList()">
+                                Tạo Sản Phẩm Riêng Lẻ Không Cha Trên Sàn TMDT Từ Danh Sách
                             </button>
                         </div>
                     </div>
@@ -343,7 +350,6 @@
         }
 
         async function UpdateQuantityFromListBelow() {
-
             let text = "Bạn chắc chắn cập nhật cho tất cả sản phẩm trong danh sách bên dưới?";
             if (confirm(text) == false)
                 return;
@@ -369,8 +375,8 @@
 
             let url = "/Product/UpdateQuantityFromListBelow";
             const searchParams = new URLSearchParams();
-            searchParams.append("listId", listId);
-            searchParams.append("listQuantity", listQuantity);
+            searchParams.append("listId", JSON.stringify(listId));
+            searchParams.append("listQuantity", JSON.stringify(listQuantity));
             try {
                 // Cập nhật vào db
                 ShowCircleLoader();
@@ -781,6 +787,7 @@
             searchParams.append("eType", GetECommerceType());
             SearchProductCore(url, searchParams);
         }
+
         async function SearchDontSellSigleWithNoParrentOnECommerce() {
             // Làm mới input publisher
             document.getElementById("publisher-id").value = "";
@@ -789,6 +796,50 @@
             const searchParams = new URLSearchParams();
             searchParams.append("eType", GetECommerceType());
             SearchProductCore(url, searchParams);
+        }
+
+        async function CreateProductOnECommerceFromList() {
+            let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
+            if (publisherId == null) {
+                CreateMustClickOkModal("Chưa chọn nhà phát hành.");
+                document.getElementById("publisher-id").focus();
+                return;
+            }
+            let text = "Bạn chắc chắn muốn thực hiện. Chức năng này rất mất thời gian?";
+            if (confirm(text) == false)
+                return;
+
+            let listId = [];
+            let rows = document.getElementsByClassName("axvsg892757");
+            for (let i = 0; i < rows.length; i++) {
+                if (!isEmptyOrSpaces(rows[i].cells[5].getElementsByTagName("input")[0].value)) {
+                    listId.push(parseInt(rows[i].cells[0].innerHTML));
+                }
+            }
+            if (listId.length == 0) {
+                CreateMustClickOkModal("Danh sách trống.");
+                return;
+            }
+
+            //if (DEBUG) {
+            //    console.log("listId: " + JSON.stringify(listId));
+            //}
+
+            let url = "/Product/CreateProductOnECommerceFromList";
+            const searchParams = new URLSearchParams();
+            searchParams.append("listId", JSON.stringify(listId));
+            searchParams.append("eType", GetECommerceType());
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi ở đâu đó.", null);
+                return;
+            }
         }
     </script>
 </body>

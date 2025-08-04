@@ -1273,8 +1273,8 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-
-            return JsonConvert.SerializeObject(productSqler.UpdateDetail(id, detail));
+            string decodeDetail = WebUtility.UrlDecode(detail);
+            return JsonConvert.SerializeObject(productSqler.UpdateDetail(id, decodeDetail));
         }
 
         [HttpGet]
@@ -1376,34 +1376,33 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(productSqler.UpdateLanguage(id, language));
         }
 
-        // str có dạng: 12,45,24
-        private void GetListIntFromString(List<int> lsint, string str)
-        {
-            try
-            {
-                string[] arr = str.Split(new char[] { ',' });
-                for (int i = 0; i < arr.Length; i++)
-                {
-                    lsint.Add(int.Parse(arr[i]));
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn("str: " + str + ". " + ex.ToString());
-                lsint.Clear();
-            }
-        }
+        //// str có dạng: 12,45,24
+        //private void GetListIntFromString(List<int> lsint, string str)
+        //{
+        //    try
+        //    {
+        //        string[] arr = str.Split(new char[] { ',' });
+        //        for (int i = 0; i < arr.Length; i++)
+        //        {
+        //            lsint.Add(int.Parse(arr[i]));
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn("str: " + str + ". " + ex.ToString());
+        //        lsint.Clear();
+        //    }
+        //}
 
+        [HttpPost]
         public string UpdateQuantityFromListBelow(string listId, string listQuantity)
         {
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-            List<int> lsId = new List<int>();
-            List<int> lsQuantity = new List<int>();
-            GetListIntFromString(lsId, listId);
-            GetListIntFromString(lsQuantity, listQuantity);
+            List<int> lsId = JsonConvert.DeserializeObject<List<int>>(listId);
+            List<int> lsQuantity = JsonConvert.DeserializeObject<List<int>>(listQuantity);
 
             return JsonConvert.SerializeObject(productSqler.UpdateQuantityFromList(lsId, lsQuantity));
         }
@@ -2222,17 +2221,17 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Vì tiki hiển thị detail liền tù tì, không có xuống dòng nên cần thêm thẻ <p> nếu chưa có
-        string GetDescriptsFromDetail(string detail)
+        string GetDescriptsFromDetailForTiki(string detail)
         {
             if (string.IsNullOrWhiteSpace(detail))
             {
                 return string.Empty;
             }
 
-            // Nếu đã có <p> thì không làm gì cả
+            // Nếu đã có <p>
             if (detail.Contains("<p>"))
             {
-                return detail;
+                return Common.ReplaceMoreNewLineCharacterByTwo(detail);
             }
 
             // Phân tách theo dòng và bọc mỗi dòng không rỗng bằng thẻ <p>
@@ -2276,7 +2275,7 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.name = name;
                 }
 
-                tikiCreatingProduct.description = GetDescriptsFromDetail(product.detail);
+                tikiCreatingProduct.description = GetDescriptsFromDetailForTiki(product.detail);
                 tikiCreatingProduct.market_price = product.bookCoverPrice;
 
                 PublisherMySql publisherMySql = new PublisherMySql();
@@ -2453,42 +2452,59 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 conn.Open();
+                // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không cha
+                List<int> needList =
+                    productSqler.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOut(
+                    eType, conn
+                    );
+
                 if (eType == Common.eTiki)
                 {
-                    TikiCreateProductTrackingResponse trackObj = CreateTikiProductFromProductIdInWarehouse(id, name, conn);
-                    if(trackObj == null)
+                    if (needList.Contains(id))
                     {
-                        result.State = EMySqlResultState.INVALID;
-                        result.Message = "Có lỗi xảy ra. Vui lòng checklog để sửa.";
-                    }
-                    else
-                    {
-                        if(trackObj.state == "queuing")
+                        TikiCreateProductTrackingResponse trackObj = CreateTikiProductFromProductIdInWarehouse(id, name, conn);
+                        if (trackObj == null)
                         {
-                            // Ta đợi 5 giây, lấy lại trạng thái để xem đã được approved
-                            Thread.Sleep(5000);
-                            trackObj = TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
-                            if (trackObj != null)
+                            result.State = EMySqlResultState.INVALID;
+                            result.Message = "Có lỗi xảy ra. Vui lòng checklog để sửa.";
+                        }
+                        else
+                        {
+                            if (trackObj.state == "queuing")
                             {
-                                tikiMySql.TikiInsert_tbTikiTrackCreateProduct(trackObj.track_id,
-                                    trackObj.state,
-                                    trackObj.reason,
-                                    trackObj.request_id,
-                                    string.Empty,
-                                    conn);
-                            }
+                                // Ta đợi 5 giây, lấy lại trạng thái để xem đã được approved
+                                Thread.Sleep(5000);
+                                trackObj = TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
+                                if (trackObj != null)
+                                {
+                                    tikiMySql.TikiInsert_tbTikiTrackCreateProduct(trackObj.track_id,
+                                        trackObj.state,
+                                        trackObj.reason,
+                                        trackObj.request_id,
+                                        string.Empty,
+                                        conn);
+                                }
 
-                            if(trackObj.state != "approved")
-                            {
-                                result.State = EMySqlResultState.PENDING;
-                                result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state;
+                                if (trackObj.state != "approved")
+                                {
+                                    result.State = EMySqlResultState.PENDING;
+                                    result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state;
+                                }
                             }
                         }
                     }
                 }
                 else if(eType == Common.eShopee)
                 {
-                    result = await CreateShopeeProductFromProductIdInWarehouse(id, name, true, conn);
+                    if (needList.Contains(id))
+                    {
+                        result = await CreateShopeeProductFromProductIdInWarehouse(id, name, true, conn);
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Sản phẩm đã được đăng riêng lẻ không cha.";
+                    }
                 }
                 else
                 {
@@ -2577,15 +2593,174 @@ namespace MVCPlayWithMe.Controllers
             shopeeMysql.ShopeeInsertNewMappingOneOfModel(modelIdInsert, productId, 1, conn);
         }
 
+        public MySqlResultState CheckValidBookProductInfo(Product product)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            if (product.status == 2)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm đã ngừng kinh doanh.";
+                return result;
+            }
+
+            if(product.imageSrc.Count == 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm chưa có ảnh. Cần tối thiểu 1 ảnh.";
+                return result;
+            }
+
+            if (product.categoryId <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thông tin thể loại.";
+                return result;
+            }
+            if (product.bookCoverPrice <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Giá không hợp lý.";
+                return result;
+            }
+            if (string.IsNullOrWhiteSpace(product.author))
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thông tin tác giả.";
+                return result;
+            }
+
+            if (product.publisherId <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thông tin nhà phát hành.";
+                return result;
+            }
+
+            if (string.IsNullOrWhiteSpace(product.publishingCompany))
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thông tin nhà xuất bản.";
+                return result;
+            }
+
+            if (product.publishingTime <= 2000)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thông tin năm xuất bản.";
+                return result;
+            }
+
+            if (product.productLong <= 0 ||
+                product.productHigh <= 0 ||
+                product.productWide <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Kích thước sản phẩm quá nhỏ.";
+                return result;
+            }
+
+            if (product.productWeight < 1)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Khối lượng sản phẩm quá nhẹ.";
+                return result;
+            }
+
+            if (product.pageNumber <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thuộc tính số trang.";
+                return result;
+            }
+
+            if (string.IsNullOrEmpty(product.language))
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thuộc tính ngôn ngữ.";
+                return result;
+            }
+
+            string realDetail = Common.CleanHtml(product.detail);
+
+            if (realDetail.Length < Product.minLengthDetail)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Mô tả sản phẩm ngắn hơn " + Product.minLengthDetail.ToString() + " ký tự.";
+                return result;
+            }
+
+            if(realDetail.Length > Product.maxLengthDetail)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Mô tả sản phẩm dài hơn "+ Product.maxLengthDetail.ToString() + " ký tự.";
+                return result;
+            }
+
+            return result;
+        }
+
+        // Sản phẩm kích thước vượt ngưỡng của kênh vận chuyển sẽ bị loại
+        public MySqlResultState ShopeeCheckLogisticInfo(
+            ShopeeAddItem_RequestParameters requsetParameters)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            // NOTE: Hardcode chỉ với kênh Tủ Nhận Hàng
+            // "logistics_channel_id": 50039,
+            // "logistics_channel_name": "Tủ Nhận Hàng",
+            //"item_max_dimension": {
+            //    "dimension_sum": 0,
+            //        "height": 8,
+            //        "length": 32,
+            //        "unit": "cm",
+            //        "width": 26
+            //    }
+            //"volume_limit": {
+            //"item_max_volume": 0,
+            //        "item_min_volume": 0
+            //    },
+            //    "weight_limit": {
+            //        "item_max_weight": 2,
+            //        "item_min_weight": 0
+            //    }
+            if(requsetParameters.dimension.package_length > 32 ||
+                requsetParameters.weight > 2)
+            {
+                // Loại bỏ khỏi danh sách vận chuyển
+                for(int i = 0; i < requsetParameters.logistic_info.Count; i++)
+                {
+                    if(requsetParameters.logistic_info[i].logistic_id == 50039)
+                    {
+                        requsetParameters.logistic_info.RemoveAt(i);
+                        break;
+                    }
+                }
+            }
+            return result;
+        }
+
         public async Task<MySqlResultState> CreateShopeeProductFromProductIdInWarehouse(
             int productId,
             string name,
             Boolean isNeedUploadImage,
             MySqlConnection conn)
         {
-            MySqlResultState result = new MySqlResultState();
+            MyLogger.GetInstance().Info("CreateShopeeProductFromProductIdInWarehouse Call productId: " + productId +", name: " + name + ", isNeedUploadImage: " + isNeedUploadImage.ToString());
             // Lấy sản phẩm trong kho
             Product product = productSqler.GetProductFromId(productId, conn);
+            MySqlResultState result = CheckValidBookProductInfo(product);
+            if(result.State != EMySqlResultState.OK)
+            {
+                return result;
+            }
+
+            if (!product.categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm không phải là sách, chưa được hỗ trợ đăng.";
+                return result;
+            }
 
             if (isNeedUploadImage)
             {
@@ -2625,20 +2800,9 @@ namespace MVCPlayWithMe.Controllers
             // Tạo đối tượng tham số của request
             ShopeeAddItem_RequestParameters requsetParameters = new ShopeeAddItem_RequestParameters();
             requsetParameters.original_price = product.bookCoverPrice;
-            if(product.detail.Length < 100)
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Mô tả sản phẩm quá ngắn.";
-                return result;
-            }
+
             requsetParameters.description = Common.CleanHtml(product.detail);
 
-            if (product.productWeight < 1)
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Khối lượng sản phẩm quá nhẹ.";
-                return result;
-            }
             requsetParameters.weight = (float)product.productWeight / 1000 + (float)0.1;
 
             if (string.IsNullOrEmpty(name))
@@ -2652,15 +2816,6 @@ namespace MVCPlayWithMe.Controllers
 
             requsetParameters.item_status = "NORMAL";
 
-            if(product.productLong <= 0 ||
-                product.productHigh <= 0 ||
-                product.productWide <= 0)
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Kích thước sản phẩm quá nhỏ.";
-                return result;
-            }
-
             ShopeeDimension dimension = new ShopeeDimension();
             dimension.package_length = product.productLong / 10 + 1;
             dimension.package_width = product.productWide / 10 + 1;
@@ -2669,46 +2824,23 @@ namespace MVCPlayWithMe.Controllers
 
             // Logistic channel setting
             requsetParameters.logistic_info = ShopeeLogistic.GetLogisticInfo(false);
-            if(requsetParameters.logistic_info.Count == 0)
+
+            if (requsetParameters.logistic_info.Count == 0)
             {
                 result.State = EMySqlResultState.INVALID;
                 result.Message = "Không lấy được đơn vị vận vận chuyển.";
                 return result;
             }
 
-            if (!product.categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Sản phẩm không phải là sách, chưa được hỗ trợ đăng.";
-                return result;
-            }
+            // LOại bỏ kênh vận chuyển không phù hợp kích thước, cân nặng
+            ShopeeCheckLogisticInfo(requsetParameters);
 
             // attribute
-            if(string.IsNullOrEmpty(product.language))
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Sản phẩm chưa có thuộc tính ngôn ngữ.";
-                return result;
-            }
-
-            if (product.publishingTime < 2000)
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Sản phẩm chưa có thuộc tính năm xuất bản.";
-                return result;
-            }
-
-            if (product.pageNumber <= 0)
-            {
-                result.State = EMySqlResultState.INVALID;
-                result.Message = "Sản phẩm chưa có thuộc tính số trang.";
-                return result;
-            }
             requsetParameters.attribute_list = ShopeeAddItem.GetAttributeOfChildren_AdultBook(product);
 
             // category
             // Sách trẻ em
-            if(product.maxAge != 0 && product.maxAge <= 12 * 18)
+            if(product.maxAge > 0 && product.maxAge <= 12 * 18)
             {
                 requsetParameters.category_id = 101541;
             }
@@ -2751,11 +2883,13 @@ namespace MVCPlayWithMe.Controllers
             {
                 result.State = EMySqlResultState.EMPTY;
                 result.Message = "ShopeeProductAddItem response null";
+                return result;
             }
             else if (!string.IsNullOrEmpty(objResponse.error))
             {
                 result.State = EMySqlResultState.ERROR;
-                result.Message = objResponse.error;
+                result.Message = JsonConvert.SerializeObject(objResponse.error);
+                return result;
             }
 
             // Nếu up sản phẩm thành công, ta lấy sản phẩm và cập nhật mapping luôn
@@ -2764,6 +2898,68 @@ namespace MVCPlayWithMe.Controllers
             await InsertNewItem_OneModelAndMapping(objResponse.response.item_id, productId, conn);
 
             return result;
+        }
+
+        [HttpPost]
+        public async Task<string> CreateProductOnECommerceFromList(string listId, string eType)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            MySqlResultState resultUp = null;
+            MySqlResultState resultTemp = null;
+            List<int> lsId = JsonConvert.DeserializeObject<List<int>>(listId);
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    if (eType == Common.eShopee)
+                    {
+                        // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không cha
+                        List<int> needList =
+                            productSqler.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOut(
+                            eType, conn
+                            );
+                        foreach (var productId in lsId)
+                        {
+                            if(!needList.Contains(productId))
+                            {
+                                continue;
+                            }
+
+                            resultTemp = await CreateShopeeProductFromProductIdInWarehouse(productId,
+                                null, true, conn);
+
+                            if (resultTemp.State != EMySqlResultState.OK && resultUp == null)
+                            {
+                                resultUp = new MySqlResultState();
+                                resultUp.State = EMySqlResultState.INVALID;
+                                resultUp.Message = "Có sản phẩm đăng lỗi. Lấy lại danh sách sản phẩm, và đăng từng sản phẩm một để biết lỗi cụ thể.";
+                            }
+                            Thread.Sleep(5000);
+                        }
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Chưa hỗ trợ tạo nhiều sản phẩm trên " + eType;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            if(resultUp != null && result.State == EMySqlResultState.OK)
+            {
+                result = resultUp;
+            }
+            return JsonConvert.SerializeObject(result);
         }
     }
 }
