@@ -219,6 +219,21 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        public static float GetFloat(MySqlDataReader rdr, string columnName)
+        {
+            if (Convert.IsDBNull(rdr[columnName]))
+                return -1;
+
+            try
+            {
+                return rdr.GetFloat(columnName);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
         public static byte[] GetByteArray(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))

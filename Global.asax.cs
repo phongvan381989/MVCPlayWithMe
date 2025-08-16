@@ -17,6 +17,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
 using MySql.Data.MySqlClient;
 using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 
 namespace MVCPlayWithMe
 {
@@ -55,11 +56,13 @@ namespace MVCPlayWithMe
             MyMySql.connStr = ConfigurationManager.AppSettings["AdminConectMysql"];
             MyMySql.customerConnStr = ConfigurationManager.AppSettings["CustomerVBNConectMysql"];
 
-            TikiMySql tikiMySql = new TikiMySql();
-            CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            CommonShopeeAPI.shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                CommonTikiAPI.tikiConfigApp = CommonTikiAPI.GetTikiConfigApp(conn);
+                CommonShopeeAPI.shopeeAuthen = CommonShopeeAPI.ShopeeGetAuthen(conn);
+                LazadaAuthenAPI.lazadaAuthen = LazadaAuthenAPI.LazadaGetAuthFromDB(conn);
+            }
 
             // Khởi tạo cờ kiểm soát
             _isRunning = true;

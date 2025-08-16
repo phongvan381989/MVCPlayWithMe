@@ -85,6 +85,19 @@
         </div>
 
         <div class="fmx09gx8">
+            <div class="gmxk9381"> LAZADA</div>
+            <button type="button" onclick="LazadaUpdateQuantityAll()" disabled
+                    title="Cập nhật số lượng tất cả sản phẩm đang bật bán trên sàn.">
+                Cập nhật giá tất cả bật bán
+            </button>
+
+            <button type="button" onclick="LazadaUpdatePrice_SalePriceAll()" disabled
+                    title="Cập nhật giá bìa, giá bán cho tất cả sản phẩm đang bật bán.">
+                Cập nhật giá bìa, giá bán tất cả bật bán
+            </button>
+        </div>
+
+        <div class="fmx09gx8">
             <div class="gmxk9381"> TIKI</div>
             <button type="button" onclick="TikiSaveImageSourceOfItemAndModel()" disabled
                     title="Lấy url ảnh đại diện của item tiki cập nhật vào db đối với item chưa có image url.">
@@ -182,6 +195,26 @@
         async function ShopeeGetChannelList() {
             const searchParams = new URLSearchParams();
             let query = "/Dev/ShopeeGetChannelList";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        async function LazadaUpdateQuantityAll() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/LazadaUpdateQuantityAll";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        async function LazadaUpdatePrice_SalePriceAll() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/LazadaUpdatePrice_SalePriceAll";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

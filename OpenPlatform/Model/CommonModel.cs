@@ -19,6 +19,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public string name { get; set; }
 
+        // dùng cho sàn Lazada
+        public string sellerSku { get; set; }
+
         /// <summary>
         /// Đường dẫn chứa ảnh đại diện
         /// </summary>

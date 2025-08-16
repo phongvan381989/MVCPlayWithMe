@@ -3,19 +3,21 @@ using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
-using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -137,6 +139,110 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.INVALID;
                     result.Message = "Không lấy được kênh vận chuyển.";
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> LazadaUpdateQuantityAll()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                LazadaMySql sqler = new LazadaMySql();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    List<CommonItem> ls = sqler.LazadaGetItemOnDB(conn);
+                    ProductController.LazadaUpdateQuantity_Core(ls);
+
+                    // Lấy danh sách item cập nhật số lượng sai
+                    List<CommonItem> failLs = new List<CommonItem>();
+                    foreach (var item in ls)
+                    {
+                        foreach(var model in item.models)
+                        {
+                            if(!string.IsNullOrEmpty(model.whyUpdateFail))
+                            {
+                                failLs.Add(item);
+                                break;
+                            }
+                        }
+                        if(failLs.Count > 0 && failLs.Last().itemId == item.itemId)
+                        {
+                            break;
+                        }
+                    }
+
+                    if(failLs.Count > 0)
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Có item cập nhật lỗi";
+                        result.myJson = JsonConvert.SerializeObject(failLs);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        // Cập nhật giá bìa price, và giá bán spacial_price tất cả sản phẩm
+        [HttpPost]
+        public async Task<string> LazadaUpdatePrice_SalePriceAll()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                LazadaMySql sqler = new LazadaMySql();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    List<CommonItem> ls = sqler.LazadaGetItemOnDB(conn);
+
+                    ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
+
+                    // Lấy danh sách item cập nhật số lượng sai
+                    List<CommonItem> failLs = new List<CommonItem>();
+                    foreach (var item in ls)
+                    {
+                        foreach (var model in item.models)
+                        {
+                            if (!string.IsNullOrEmpty(model.whyUpdateFail))
+                            {
+                                failLs.Add(item);
+                                break;
+                            }
+                        }
+                        if (failLs.Count > 0 && failLs.Last().itemId == item.itemId)
+                        {
+                            break;
+                        }
+                    }
+
+                    if (failLs.Count > 0)
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Có item cập nhật lỗi";
+                        result.myJson = JsonConvert.SerializeObject(failLs);
+                    }
                 }
             }
             catch (Exception ex)
@@ -450,6 +556,59 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
+        // Thêm mới SellerSku sản phẩm của Lazada
+        private string LazadaInsertSellerSku()
+        {
+            MySqlResultState result = new MySqlResultState();
+            List<LazadaProduct> ls = LazadaProductAPI.GetProductAll();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(
+                        @"UPDATE tb_lazada_model SET SellerSku = @inSellerSku WHERE TMDTLazadaModelId = @inTMDTLazadaModelId;",
+                    conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inSellerSku", "");
+                    cmd.Parameters.AddWithValue("@inTMDTLazadaModelId", 0L);
+                    foreach (var pro in ls)
+                    {
+                        foreach(var sku in pro.skus)
+                        {
+                            cmd.Parameters[0].Value = sku.SellerSku;
+                            cmd.Parameters[1].Value = sku.SkuId;
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        private void LazadaUpdatePrice_SalePrice()
+        {
+            LazadaMySql sqler = new LazadaMySql();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                List<CommonItem> ls = sqler.LazadaGetItemOnDB(conn);
+                foreach(var item in ls)
+                {
+                    if(item.itemId == 3015755086)
+                    {
+                        List<CommonItem> lsTemp = new List<CommonItem>();
+                        lsTemp.Add(item);
+                        ProductController.LazadaUpdatePrice_SpecialPrice_Core(lsTemp, conn);
+                    }
+                }
+            }
+        }
+
         [HttpPost]
         public string TikiTestSomething()
         {
@@ -460,8 +619,11 @@ namespace MVCPlayWithMe.Controllers
 
             MySqlResultState result = new MySqlResultState();
 
-            ShopeeGetAttributeTreeResponseHTTP response =
-                ShopeeCategory.ShopeeGetAttributeTreeOfCategory(101541);
+            //ShopeeGetAttributeTreeResponseHTTP response =
+            //    ShopeeCategory.ShopeeGetAttributeTreeOfCategory(101541);
+
+            //Boolean isOK = LazadaProductAPI.UpdateQuantity();
+            LazadaUpdatePrice_SalePrice();
 
             return JsonConvert.SerializeObject(result);
         }

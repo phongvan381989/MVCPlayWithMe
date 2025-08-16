@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct
+namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct
 {
     public  class ShopeeDimension
     {

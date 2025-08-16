@@ -32,10 +32,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrCreateProduct = "https://api.tiki.vn/integration/v2.1/requests";
         public const string cstrTrackingRequestCreateProduct = "https://api.tiki.vn/integration/v2/tracking/";
 
-        // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa => Không ổn
-        // Ta sẽ tính lại giá bán, bán dưới điểm hòa vốn. Ta sẽ chiết khấu 1 con số phần trăm cố định
-        public const int constDiscount = 5;
-
         public const string inventory_type = "dropship";
 
         public static string GenerateRandomSKUString()

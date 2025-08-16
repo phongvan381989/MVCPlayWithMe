@@ -73,9 +73,6 @@
 
         async function GetItemOnDB() {
             document.getElementById("find-non-mapping").checked = false;
-            if (GetECommerceType() == eLazada) {
-                return;
-            }
 
             // Lấy tất cả sản phẩm của sàn, mất thời gian
             if (listItem.length == 0) {
@@ -185,13 +182,17 @@
                         // item Id
                         cell1.innerHTML = item.itemId;
                         cell1.className = "go-to-detail-item";
+                        cell1.eType = item.eType;
                         cell1.onclick = function () {
                             let url = "";
-                            if (item.eType == eTiki) {
+                            if (this.eType == eTiki) {
                                 url = "/ProductECommerce/Item?eType=TIKI&id=" + item.itemId;
                             }
-                            else if (item.eType == eShopee) {
+                            else if (this.eType == eShopee) {
                                 url = "/ProductECommerce/Item?eType=SHOPEE&id=" + item.itemId;
+                            }
+                            else if (this.eType == eLazada) {
+                                url = "/ProductECommerce/Item?eType=LAZADA&id=" + item.itemId;
                             }
                             if (url !== "") {
                                 window.open(url);

@@ -52,7 +52,7 @@ function AddDeleteButtonForModel(container) {
 }
 
 // Thêm nút liên kết sản phẩm
-function AddMappingButtonForModel(container) {
+function AddMappingButtonForModel(container, name) {
     let btn = document.createElement("BUTTON");
     let btnContent = document.createTextNode("Liên kết sản phẩm");
     btn.onclick = function () {
@@ -61,6 +61,9 @@ function AddMappingButtonForModel(container) {
         let modal = document.getElementById("myModal");
         modal.style.display = "block";
         document.getElementById("product-name-id").focus();
+        if (IsValidString(name)) {
+            SearchProductFromTMDTNameForMapping(name);
+        }
     }
     btn.appendChild(btnContent);
     btn.className = "margin-vertical";
@@ -501,7 +504,7 @@ function AddModelToScreen() {
     AddDeleteButtonForModel(modelContainer);
 
     // Thêm nút mapping
-    AddMappingButtonForModel(modelContainer);
+    AddMappingButtonForModel(modelContainer, null);
 
     //AddDistanceRows(modelContainer);
     AddDistanceRows(modelList);
@@ -789,7 +792,7 @@ async function AddItemModel() {
         }
     }
     catch (err) {
-        alert("Tạo sản phẩm lỗi.");
+        alert("Tạo sản phẩm lỗi. " + err.Message);
         RemoveCircleLoader();
         return;
     }
@@ -874,7 +877,7 @@ async function UpdateItemModel() {
     }
     catch (err) {
         //alert("Cập nhật sản phẩm lỗi.");
-        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+        await CreateMustClickOkModal("Cập nhật sản phẩm lỗi. " + err.Message, null);
         RemoveCircleLoader();
         return;
     }
@@ -1082,22 +1085,7 @@ function OnChangeMyTable() {
     }
 }
 
-async function SearchProduct() {
-    let codeOrBarcode = document.getElementById("code-or-isbn").value;
-    let name = document.getElementById("product-name-id").value;
-    let combo = document.getElementById("combo-id").value;
-    const searchParams = new URLSearchParams();
-    searchParams.append("codeOrBarcode", codeOrBarcode);
-    searchParams.append("name", name);
-    searchParams.append("combo", combo);
-
-    let url = "/ItemModel/SearchProduct";
-    ShowCircleLoader();
-    let resObj = await RequestHttpGetPromise(searchParams, url);
-    RemoveCircleLoader();
-    let listProduct = JSON.parse(resObj.responseText);
-    let table = document.getElementById("myTable");
-
+function ShowResultSearchProductForMapping(listProduct, table) {
     // Làm trống bảng
     DeleteRowsExcludeHead(table);
     // Bỏ chọn tất cả
@@ -1107,7 +1095,6 @@ async function SearchProduct() {
     }
 
     // Show
-
     let length = listProduct.length;
     for (let i = 0; i < length; i++) {
         let pro = listProduct[i];
@@ -1157,6 +1144,47 @@ async function SearchProduct() {
     }
 
     UpdateSTT(table, 3, true);
+}
+
+async function SearchProductForMapping() {
+    let codeOrBarcode = document.getElementById("code-or-isbn").value;
+    let name = document.getElementById("product-name-id").value;
+    let combo = document.getElementById("combo-id").value;
+    const searchParams = new URLSearchParams();
+    searchParams.append("codeOrBarcode", codeOrBarcode);
+    searchParams.append("name", name);
+    searchParams.append("combo", combo);
+
+    let url = "/Product/SearchProductForMapping";
+    ShowCircleLoader();
+    let resObj = await RequestHttpGetPromise(searchParams, url);
+    RemoveCircleLoader();
+    let listProduct = JSON.parse(resObj.responseText);
+    let table = document.getElementById("myTable");
+
+    ShowResultSearchProductForMapping(listProduct, table);
+}
+
+async function SearchProductFromTMDTNameForMapping(tmdtName) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("tmdtName", tmdtName);
+    //if (DEBUG) {
+    //    console.log("SearchProductFromTMDTNameForMapping Call tmdtName: " + tmdtName);
+    //}
+
+    let url = "/Product/SearchProductFromTMDTNameForMapping";
+    ShowCircleLoader();
+    let resObj = await RequestHttpGetPromise(searchParams, url);
+    RemoveCircleLoader();
+    let listProduct = JSON.parse(resObj.responseText);
+    let table = document.getElementById("myTable");
+
+    ShowResultSearchProductForMapping(listProduct, table);
+
+    // Nếu listProduct chỉ có một sản phẩm, ta tự động thêm vào bảng liên kết
+    if (listProduct != null && listProduct.length == 1) {
+        document.getElementsByClassName("row-checkbox")[0].click();
+    }
 }
 
 // 2 trường hợp dựa vào url:

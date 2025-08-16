@@ -60,6 +60,9 @@
     <Reference Include="K4os.Hash.xxHash, Version=1.0.6.0, Culture=neutral, PublicKeyToken=32cd54395057cec3, processorArchitecture=MSIL">
       <HintPath>..\packages\K4os.Hash.xxHash.1.0.6\lib\net46\K4os.Hash.xxHash.dll</HintPath>
     </Reference>
+    <Reference Include="LazopSdk">
+      <HintPath>..\LazopSDK\bin\Debug\LazopSdk.dll</HintPath>
+    </Reference>
     <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
     </Reference>
@@ -362,6 +365,9 @@
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
+    <Compile Include="OpenPlatform\API\LazadaAPI\CommonLazadaAPI.cs" />
+    <Compile Include="OpenPlatform\API\LazadaAPI\LazadaAuthenAPI.cs" />
+    <Compile Include="OpenPlatform\API\LazadaAPI\LazadaProductAPI.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\CommonShopeeAPI.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeCreateProduct\ShopeeAddItem.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeCreateProduct\ShopeeBrand.cs" />
@@ -381,6 +387,15 @@
     <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\Product\TikiCreateProduct.cs" />
     <Compile Include="OpenPlatform\CommonOpenPlatform.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\CommonLazadaResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuth.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuthTokenCreateResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetProductItemResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetProductsResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaParameterPriceUpdate.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaParameterQuantityUpdate.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaUpdatePriceQuantityReponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaMySql.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAddItemResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAddItem_RequestParameters.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAttributeTree.cs" />
@@ -754,6 +769,9 @@
     </None>
     <Content Include="Scripts\jquery-3.3.1.slim.min.map" />
     <Content Include="Scripts\jquery-3.3.1.min.map" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>

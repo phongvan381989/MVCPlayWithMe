@@ -2,7 +2,6 @@
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using Newtonsoft.Json;
-using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
 using RestSharp;
 using System;
 using System.Collections.Generic;

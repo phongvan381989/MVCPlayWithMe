@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.ProductModel;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,10 @@ namespace MVCPlayWithMe.Controllers
     public class ItemModelController : BasicController
     {
         public ItemModelMySql sqler;
-        public ProductMySql productSqler;
-        
+
         public ItemModelController()
         {
             sqler = new ItemModelMySql();
-            productSqler = new ProductMySql();
         }
 
         // GET: ItemModel
@@ -284,31 +283,6 @@ namespace MVCPlayWithMe.Controllers
             // Xóa media file
             Common.DeleteMediaItemInclude320(itemId);
             return JsonConvert.SerializeObject(result);
-        }
-
-        /// <summary>
-        ///  TÌm kiếm các sản phẩm trong kho
-        /// </summary>
-        /// <param name="codeOrBarcode"></param>
-        /// <param name="name"></param>
-        /// <param name="combo"></param>
-        /// <returns></returns>
-        [HttpGet]
-        public string SearchProduct(string codeOrBarcode, string name, string combo)
-        {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(null);
-            }
-
-            ProductSearchParameter searchParameter = new ProductSearchParameter();
-            searchParameter.codeOrBarcode = codeOrBarcode;
-            searchParameter.name = name;
-            searchParameter.combo = combo;
-            searchParameter.start = 0;
-            searchParameter.offset = 1000000;// Lớn để lấy tất cả kết quả
-            List<Product> ls = productSqler.SearchProductChangePage(searchParameter);
-            return JsonConvert.SerializeObject(ls);
         }
 
         /// <summary>

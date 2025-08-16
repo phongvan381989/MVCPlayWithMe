@@ -19,6 +19,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Id model
         /// </summary>
         public long modelId { get; set; }
+
+        // Id của model trong db
+        public int dbModelId { get; set; }
+
         public List<int> lsProductId { get; set; }
         public List<int> lsProductQuantity { get; set; }
 

@@ -96,6 +96,23 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
         }
 
+        private void ConvertQuicklyRowFromDataMySqlForMapping(MySqlDataReader rdr, List<Product> ls)
+        {
+            int idIndex = rdr.GetOrdinal("Id");
+            int nameIndex = rdr.GetOrdinal("Name");
+            int statusIndex = rdr.GetOrdinal("Status");
+
+            while (rdr.Read())
+            {
+                Product product = new Product();
+                product.id = rdr.GetInt32(idIndex);
+                product.name = rdr.GetString(nameIndex);
+                product.status = rdr.GetInt32(statusIndex);
+                product.SetFirstSrcImage();
+
+                ls.Add(product);
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -1249,6 +1266,32 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
+        // Tìm kiếm không phân trang
+        public List<Product> SearchProductForMapping(
+            ProductSearchParameter searchParameter,
+            MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_For_Mapping", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    ConvertQuicklyRowFromDataMySqlForMapping(rdr, ls);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return ls;
+        }
+
         public List<Product> SearchDontSellOnECommerce (Boolean isSingle,
             string eType,
             MySqlConnection conn)
@@ -1688,6 +1731,29 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
 
             conn.Close();
+            return ls;
+        }
+
+        public List<Product> SearchProductFromTMDTNameForMapping(string tmdtName,
+            MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_From_TMDT_Name_For_Mapping", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTName", tmdtName);
+
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    ConvertQuicklyRowFromDataMySqlForMapping(rdr, ls);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
             return ls;
         }
 
@@ -2526,6 +2592,34 @@ namespace MVCPlayWithMe.Models.ProductModel
                 }
 
                 rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                quantity = 0;
+            }
+
+            return quantity;
+        }
+
+        // Lấy được số lượng thực tế trong kho của sản phẩm
+        public int LazadaGetQuantityOfOneItemModelConnectOut(long itemId, long modelId, MySqlConnection conn)
+        {
+            int quantity = 0;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbLazadaModel_Get_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inItemId", itemId);
+                cmd.Parameters.AddWithValue("@inModelId", modelId);
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                { 
+                    int quantityIndex = rdr.GetOrdinal("Quantity");
+                    while (rdr.Read())
+                    {
+                        quantity = rdr.GetInt32(quantityIndex);
+                    }
+                }
             }
             catch (Exception ex)
             {

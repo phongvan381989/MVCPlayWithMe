@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
+using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 {
@@ -21,6 +23,37 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         public const string cShopeeHost = "https://partner.shopeemobile.com";
 
         static public ShopeeAuthen shopeeAuthen = null;
+
+        static public ShopeeAuthen ShopeeGetAuthen(MySqlConnection conn)
+        {
+            ShopeeAuthen shopeeAuthen = new ShopeeAuthen();
+            try
+            {
+                // Lưu vào bảng tbECommerceOrder
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen WHERE Id = 1", conn);
+                cmd.CommandType = CommandType.Text;
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        shopeeAuthen.shopId = MyMySql.GetString(rdr, "ShopId");
+                        shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
+                        shopeeAuthen.partnerKey = MyMySql.GetString(rdr, "PartnerKey");
+                        shopeeAuthen.code = MyMySql.GetString(rdr, "Code");
+                        shopeeAuthen.validAccessTokenTime = MyMySql.GetDateTime(rdr, "ValidAccessTokenTime");
+                        shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
+                        shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                shopeeAuthen = null;
+            }
+            return shopeeAuthen;
+        }
+
         /// <summary>
         /// Generate Authorization Token
         /// </summary>
@@ -123,9 +156,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             if (token != null)
             {
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
-                shopeeMySql.ShopeeSaveToken(token);
-                // Cập nhật lại shopee authen
-                shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    shopeeMySql.ShopeeSaveToken(token, conn);
+                    // Cập nhật lại shopee authen
+                    shopeeAuthen = ShopeeGetAuthen(conn);
+                }
             }
 
              return token;
@@ -138,11 +175,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             try
             {
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
-                result = shopeeMySql.ShopeeSaveCode(code);
-                if (result.State == EMySqlResultState.OK)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    // Cập nhật lại shopee authen
-                    shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
+                    conn.Open();
+                    result = shopeeMySql.ShopeeSaveCode(code, conn);
+                    if (result.State == EMySqlResultState.OK)
+                    {
+                        // Cập nhật lại shopee authen
+                        shopeeAuthen = ShopeeGetAuthen(conn);
+                    }
                 }
             }
             catch(Exception ex)
@@ -224,9 +265,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 MyLogger.GetInstance().Info("new refresh_token from token: " + token.refresh_token);
 
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
-                shopeeMySql.ShopeeSaveToken(token);
-                // Cập nhật lại shopee authen
-                shopeeAuthen = shopeeMySql.ShopeeGetAuthen();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    shopeeMySql.ShopeeSaveToken(token, conn);
+                    // Cập nhật lại shopee authen
+                    shopeeAuthen = ShopeeGetAuthen(conn);
+                }
             }
             MyLogger.GetInstance().Info("new access_token from db: " + shopeeAuthen.shopeeToken.access_token);
             MyLogger.GetInstance().Info("new refresh_token from db: " + shopeeAuthen.shopeeToken.refresh_token);

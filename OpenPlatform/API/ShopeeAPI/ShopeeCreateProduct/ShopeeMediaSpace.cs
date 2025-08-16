@@ -1,7 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using Newtonsoft.Json;
-using QuanLyKho.Model.Dev.ShopeeApp.ShopeeCreateProduct;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct
+namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
 {
     class ShopeeMediaSpace
     {

@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using Newtonsoft.Json;
@@ -96,7 +97,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public string detail { get; set; }
 
-        // Shopee cập nhật số lượng trả về kết quả ở đây
+        // Sàn cập nhật số lượng trả về kết quả ở đây
         public MySqlResultState result { get; set; }
 
         public CommonItem()
@@ -229,6 +230,98 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             catch(Exception ex)
             {
                 MyLogger.GetInstance().Info("CommonItem from ShopeeGetItemBaseInfoItem crashed. " + ex.ToString());
+                MyLogger.GetInstance().Info(JsonConvert.SerializeObject(pro));
+            }
+        }
+
+        CommonModel LazadaGetCommonModelFromSku(LazadaSku sku, string itemName)
+        {
+            CommonModel commonModel = new CommonModel();
+            commonModel.modelId = sku.SkuId;
+            if (string.IsNullOrEmpty(itemName))
+            {
+                commonModel.name = sku.mySkuName;
+            }
+            else
+            {
+                // Không set, tên giống tên item
+            }
+            commonModel.price = (int)sku.special_price;
+            commonModel.market_price = (int)sku.price;
+            commonModel.quantity_sellable = sku.quantity;
+
+            // Lấy tên file ảnh
+            if (sku.Images == null || sku.Images.Count == 0)
+            {
+                commonModel.imageSrc = imageSrc;
+            }
+            else
+            {
+                commonModel.imageSrc = sku.Images[0];
+            }
+            if (sku.Status.ToLower() == "active")
+            {
+                commonModel.bActive = true;
+            }
+            else
+            {
+                commonModel.bActive = false;
+            }
+
+            commonModel.sellerSku = sku.SellerSku;
+
+            return commonModel;
+        }
+
+        public CommonItem(LazadaProduct pro)
+        {
+            try
+            {
+                eType = Common.eLazada;
+                models = new List<CommonModel>();
+
+                itemId = pro.item_id;
+                //sku = pro.skus;
+                name = pro.attributes.name;
+                item_status = pro.status;
+                if (pro.status.ToLower() == "active")
+                    bActive = true;
+                else
+                    bActive = false;
+                has_model = pro.skus.Count > 1 ? true : false;
+                if (pro.images == null || pro.images.Count == 0)
+                {
+                    imageSrc = null;
+                }
+                else
+                {
+                    imageSrc = pro.images[0];
+                }
+
+                // Lấy url ảnh, video của item shopee phục vụ sinh item trên voibenho
+                imageSrcList = new List<string>();
+                foreach (var s in pro.images)
+                {
+                    imageSrcList.Add(s);
+                }
+
+                detail = pro.attributes.description;
+
+                if (!has_model)
+                {
+                    models.Add(LazadaGetCommonModelFromSku(pro.skus[0], pro.attributes.name));
+                }
+                else
+                {
+                    foreach(var sku in pro.skus)
+                    {
+                        models.Add(LazadaGetCommonModelFromSku(sku, null));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info("CommonItem from LazadaProduct crashed. " + ex.ToString());
                 MyLogger.GetInstance().Info(JsonConvert.SerializeObject(pro));
             }
         }

@@ -21,11 +21,12 @@ using System.Web.Mvc;
 using System.Net;
 using System.Globalization;
 using System.Threading;
-using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
-using QuanLyKho.Model.Dev.ShopeeApp.ShopeeCreateProduct;
 using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
+using MVCPlayWithMe.OpenPlatform;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -38,6 +39,7 @@ namespace MVCPlayWithMe.Controllers
         public PublisherMySql publisherSqler;
         ShopeeMySql shopeeMysql;
         TikiMySql tikiMySql;
+        LazadaMySql lazadaMySql;
         public ProductController () : base ()
         {
             productSqler = new ProductMySql();
@@ -47,6 +49,7 @@ namespace MVCPlayWithMe.Controllers
             tikiDealDiscountMySql = new TikiDealDiscountMySql();
             tikiMySql = new TikiMySql();
             shopeeMysql = new ShopeeMySql();
+            lazadaMySql = new LazadaMySql();
         }
 
         private void GetViewDataForInput()
@@ -944,6 +947,60 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
+        [HttpGet]
+        public string SearchProductForMapping(
+            string codeOrBarcode, string name, string combo)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new List<Product>());
+            }
+
+            ProductSearchParameter searchParameter = new ProductSearchParameter();
+            searchParameter.codeOrBarcode = codeOrBarcode;
+            searchParameter.name = name;
+            searchParameter.combo = combo;
+            List<Product> lsSearchResult = null;
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    lsSearchResult = productSqler.SearchProductForMapping(searchParameter, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(lsSearchResult);
+        }
+
+        // Lấy những sản phẩm trong kho có tên được chứa
+        // trong tên sản phẩm trên sàn thương mại điện tử, không phân biệt hoa thường
+        // Hàm này mục đích hiển thị những sản phẩm mapping tiềm năng khi mở modal mapping,
+        // đỡ phải tìm kiếm mỏi tay.
+        [HttpGet]
+        public string SearchProductFromTMDTNameForMapping(string tmdtName)
+        {
+            List<Product> ls = null;
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    ls = productSqler.SearchProductFromTMDTNameForMapping(tmdtName, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls = new List<Product>();
+            }
+            return JsonConvert.SerializeObject(ls);
+        }
+
         // isSignle: true lấy sản phẩm trong kho chưa được bán như 1 sản phẩm riêng lẻ trên sàn (mapping chỉ có 1 mình sản phẩm), web.
         // Ngược lại lấy sản phẩm trong kho chưa được bán trên sàn cả 1 sản phẩm riêng lẻ, combo.
         [HttpGet]
@@ -1608,6 +1665,128 @@ namespace MVCPlayWithMe.Controllers
             return listCommonItem;
         }
 
+        static public void LazadaUpdateQuantity_Core(List<CommonItem> listCommonItem)
+        {
+            List<LazadaParameterQuantity_PriceUpdate> skus = new List<LazadaParameterQuantity_PriceUpdate>();
+            foreach (var commonItem in listCommonItem)
+            {
+                foreach (var commonModel in commonItem.models)
+                {
+                    // Chưa mapping set quantity = 0
+                    skus.Add(new LazadaParameterQuantity_PriceUpdate(commonItem.itemId,
+                        commonModel.modelId,
+                        commonModel.GetQuatityFromListMapping()));
+                }
+            }
+            if(skus.Count == 0)
+            {
+                return;
+            }
+
+            Boolean isOk = LazadaProductAPI.UpdateQuantity(skus);
+            if (!isOk)
+            {
+                // Từ những sku không cập nhật thành công,
+                //ta truy ngược lại những sản phẩm thuộc item không cập nhật thành công
+                foreach (var sku in skus)
+                {
+                    if (!string.IsNullOrEmpty(sku.message))
+                    {
+                        foreach (var item in listCommonItem)
+                        {
+                            if (item.itemId == sku.itemId)
+                            {
+                                foreach (var model in item.models)
+                                {
+                                    if (model.modelId == sku.skuId)
+                                    {
+                                        model.whyUpdateFail = sku.message;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        static public void LazadaUpdatePrice_SpecialPrice_Core(List<CommonItem> listCommonItem,
+            MySqlConnection conn)
+        {
+            List<LazadaParameterQuantity_PriceUpdate> skus = new List<LazadaParameterQuantity_PriceUpdate>();
+
+            // Lấy danh sách thuế phí
+            TikiDealDiscountMySql sqler = new TikiDealDiscountMySql();
+            TaxAndFee taxAndFee = sqler.GetTaxAndFee(Common.eLazada, conn);
+
+            // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
+            PublisherMySql publisherSqler = new PublisherMySql();
+            List<Publisher> listPublisher = publisherSqler.GetListPublisherConnectOut(conn);
+
+            // Tính giá bìa, chiết khấu hợp lý theo nhà phát hành hoặc sản phẩm, thuế, phí, lợi nhuận mong muốn.
+            // Từ đó tính giá bán.
+            int sale_price;
+
+            foreach (var commonItem in listCommonItem)
+            {
+                foreach (var commonModel in commonItem.models)
+                {
+                    if(commonModel.mapping.Count == 0)
+                    {
+                        continue;
+                    }
+
+                    sale_price = CommonOpenPlatform.CaculateSalePriceCoreFromCommonModel(commonModel,
+                        listPublisher,
+                        taxAndFee);
+
+                    skus.Add(new LazadaParameterQuantity_PriceUpdate(commonItem.itemId,
+                        commonModel.modelId,
+                        commonModel.GetBookCoverPrice(),
+                        sale_price));
+                }
+            }
+            if (skus.Count == 0)
+            {
+                return;
+            }
+
+            Boolean isOk = LazadaProductAPI.UpdatePrice_SalePrie(skus);
+            if (!isOk)
+            {
+                // Từ những sku không cập nhật thành công,
+                //ta truy ngược lại những sản phẩm thuộc item không cập nhật thành công
+                foreach (var sku in skus)
+                {
+                    if (!string.IsNullOrEmpty(sku.message))
+                    {
+                        foreach (var item in listCommonItem)
+                        {
+                            if (item.itemId == sku.itemId)
+                            {
+                                foreach (var model in item.models)
+                                {
+                                    if (model.modelId == sku.skuId)
+                                    {
+                                        model.whyUpdateFail = sku.message;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        // Trả về danh sách id sản phẩm mapping với sku cập nhật lỗi
+        private List<CommonItem> LazadaGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
+        {
+            List<CommonItem> listCommonItem = lazadaMySql.LazadaGetListNeedUpdateQuantityConnectOut(conn);
+
+            LazadaUpdateQuantity_Core(listCommonItem);
+            return listCommonItem;
+        }
+
         // Lấy trạng thái sản phẩm, image đại diện, số lượng trên sàn Tiki.
         // Cập nhật số lượng với sản phẩm active
         public void TikiGetStatusImageSrcQuantitySellable(List<CommonItem> tikiList)
@@ -1656,7 +1835,8 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="listCommonItem"></param>
         /// <param name="listProductIdChanged"></param>
         /// <returns></returns>
-        private List<int> GetListProductIdUpdateFail(List<CommonItem> listCommonItem, List<int> listProductIdChanged)
+        private List<int> GetListProductIdUpdateFail(List<CommonItem> listCommonItem,
+            List<int> listProductIdChanged)
         {
             List<int> listProductIdUpdateFail = new List<int>();
             foreach(var commonItem in listCommonItem)
@@ -1708,6 +1888,24 @@ namespace MVCPlayWithMe.Controllers
                         }
                     }
                 }
+                else if (commonItem.eType == Common.eLazada)
+                {
+                    foreach (var model in commonItem.models)
+                    {
+                        if (!string.IsNullOrEmpty(model.whyUpdateFail))
+                        {
+                            foreach (var mapping in model.mapping)
+                            {
+                                if (listProductIdChanged.Contains(mapping.product.id) &&
+                                    !listProductIdUpdateFail.Contains(mapping.product.id))
+                                {
+                                    listProductIdUpdateFail.Add(mapping.product.id);
+                                }
+                            }
+                            break;
+                        }
+                    }
+                }
             }
             return listProductIdUpdateFail;
         }
@@ -1745,9 +1943,12 @@ namespace MVCPlayWithMe.Controllers
 
                 List<CommonItem> shopeeList = ShopeeGetListNeedUpdateQuantityAndUpdate(conn);
                 List<CommonItem> tikiList = TikiGetListNeedUpdateQuantityAndUpdate(conn);
+                List<CommonItem> lazadaList = LazadaGetListNeedUpdateQuantityAndUpdate(conn);
+
 
                 ls.AddRange(tikiList);
                 ls.AddRange(shopeeList);
+                ls.AddRange(lazadaList);
 
                 UpdateStatusOfNeedUpdateQuantityConnectOut(conn, ls, listProductId);
             }
@@ -1803,6 +2004,13 @@ namespace MVCPlayWithMe.Controllers
             return shopeeList;
         }
 
+        private List<CommonItem> LazadaGetListMappingOfProduct(int id, MySqlConnection conn)
+        {
+            // Danh sách sản phẩm Shopee
+            List<CommonItem> ls = lazadaMySql.LazadaGetListMappingOfProduct(id, conn);
+            return ls;
+        }
+
         private List<CommonItem> TikiGetListMappingOfProduct(int id, MySqlConnection conn)
         {
             // Danh sách sản phẩm Tiki
@@ -1819,24 +2027,26 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<CommonItem>());
             }
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<CommonItem> ls = new List<CommonItem>();
             try
             {
-                conn.Open();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
 
-                List<CommonItem> shopeeList = ShopeeGetListMappingOfProduct(id, conn);
-                List<CommonItem> tikiList = TikiGetListMappingOfProduct(id, conn);
+                    List<CommonItem> shopeeList = ShopeeGetListMappingOfProduct(id, conn);
+                    List<CommonItem> tikiList = TikiGetListMappingOfProduct(id, conn);
+                    List<CommonItem> lazadaList = LazadaGetListMappingOfProduct(id, conn);
 
-                ls.AddRange(tikiList);
-                ls.AddRange(shopeeList);
-
+                    ls.AddRange(tikiList);
+                    ls.AddRange(shopeeList);
+                    ls.AddRange(lazadaList);
+                }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
             // Lấy danh sách sản phẩm
             return JsonConvert.SerializeObject(ls);
         }
@@ -1922,6 +2132,19 @@ namespace MVCPlayWithMe.Controllers
             return result;
         }
 
+        // Cập nhật số lượng sản phẩm của 1 model từ itemId, modelId
+        private MySqlResultState LazadaUpdateQuantityOfOneItemModel(long itemId,
+            long modelId,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            int quantity = productSqler.LazadaGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
+
+            result.myJson = LazadaProductAPI.UpdateQuantityOfOneItemModel(
+                new LazadaParameterQuantity_PriceUpdate(itemId, modelId, quantity));
+
+            return result;
+        }
 
         // Cập nhật số lượng sản phẩm của tất cả model trong commonItem một lần
         private void ShopeeUpdateQuantityOfOneItem(CommonItem commonItem, MySqlConnection conn)
@@ -2027,6 +2250,10 @@ namespace MVCPlayWithMe.Controllers
                     {
                         result = ShopeeUpdateQuantityOfOneItemModel(itemId, modelId, conn);
                     }
+                    else if (eType == Common.eLazada)
+                    {
+                        result = LazadaUpdateQuantityOfOneItemModel(itemId, modelId, conn);
+                    }
                 }
             }
             catch (Exception ex)
@@ -2041,6 +2268,7 @@ namespace MVCPlayWithMe.Controllers
             MySqlConnection conn
             )
         {
+            List<CommonItem> lazadaList = new List<CommonItem>();
             foreach (CommonItem commonItem in listCommonItem)
             {
                 if (commonItem.eType == Common.eTiki)
@@ -2051,7 +2279,13 @@ namespace MVCPlayWithMe.Controllers
                 {
                     ShopeeUpdateQuantityOfOneItem(commonItem, conn);
                 }
+                else if (commonItem.eType == Common.eLazada)
+                {
+                    lazadaList.Add(commonItem);
+                }
             }
+
+            LazadaUpdateQuantity_Core(lazadaList);
         }
 
         // Cập nhật số lượng lên sàn và cập nhật trạng thái sản phẩm ở tbNeedUpdateQuantity

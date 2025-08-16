@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Web;
-using QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
@@ -180,11 +179,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Cập nhật trạng thái item vào DB
                     ShopeeUpdateStatusOfItemToDbConnectOut(item, conn);
 
-                    // Cập nhật trạng thái Item
-                    List<CommonItem> listCommonItem = new List<CommonItem>();
-                    listCommonItem.Add(item);
-                    ShopeeUpdateStatusOfItemListToDbConnectOut(listCommonItem, conn);
-
                     // Lấy list shopee model id đã lưu trong db
                     List<Tuple<int, long>> lsTupleTMDTShopeeModelOnDb = ListModelOfItem(item.itemId, conn);
 
@@ -335,7 +329,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         public void ShopeeGetListCommonItemFromListShopeeItemConnectOut(
-            List<ShopeeGetItemBaseInfoItem> lsShopeeItem,
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -345,10 +338,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", long.MaxValue);
                 long modelIdTemp;
-                foreach (var pro in lsShopeeItem)
+                foreach (var item in lsCommonItem)
                 {
-                    cmd.Parameters[0].Value = pro.item_id;
-                    CommonItem item = new CommonItem(pro);
+                    cmd.Parameters[0].Value = item.itemId;
                     using (MySqlDataReader rdr = cmd.ExecuteReader())
                     {
                         while (rdr.Read())
@@ -382,8 +374,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                 }
                             }
                         }
-
-
                     }
 
                     lsCommonItem.Add(item);
@@ -436,7 +426,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.Parameters.AddWithValue("@inStatus", CommonOpenPlatform.ShopeeGetEnumValueFromString(commonItem.item_status));
                 cmd.Parameters.AddWithValue("@inItemId", commonItem.itemId);
                 cmd.ExecuteNonQuery();
-
             }
             catch (Exception ex)
             {
@@ -444,14 +433,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public List<CommonItem> ShopeeGetItemOnDB()
+        public List<CommonItem> ShopeeGetItemOnDB(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_Item_Model_All", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 long itemId = long.MaxValue;
@@ -514,8 +500,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 MyLogger.GetInstance().Warn(ex.ToString());
                 lsCommonItem = null;
             }
-
-            conn.Close();
             return lsCommonItem;
         }
 
@@ -582,8 +566,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 conn.Open();
-                // Lấy danh sách shopeeModelId
-                List<long> lsShopeeModelId = new List<long>();
                 {
                     MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_From_ItemId_ModelId", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
@@ -598,7 +580,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                         while (rdr.Read())
                         {
-                            lsShopeeModelId.Add(MyMySql.GetInt32(rdr, "ShopeeModelId"));
+                            ls[i].dbModelId = MyMySql.GetInt32(rdr, "ShopeeModelId");
                         }
                         rdr.Close();
                     }
@@ -611,7 +593,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inShopeeModelId", 0);
                     for (int i = 0; i < length; i++)
                     {
-                        cmd.Parameters[0].Value = lsShopeeModelId[i];
+                        cmd.Parameters[0].Value = ls[i].dbModelId;
                         cmd.ExecuteNonQuery();
                     }
                 }
@@ -625,11 +607,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inProductQuantity", 0);
                     for (int i = 0; i < length; i++)
                     {
-                        cmd.Parameters[0].Value = lsShopeeModelId[i];
-                        for (int j = 0; j < ls[i].lsProductId.Count; j++)
+                        if (ls[i].dbModelId > 0)
                         {
-                            // Nếu model chưa được mapping
-                            if (ls[i].lsProductId.Count > 0)
+                            cmd.Parameters[0].Value = ls[i].dbModelId;
+                            for (int j = 0; j < ls[i].lsProductId.Count; j++)
                             {
                                 cmd.Parameters[1].Value = ls[i].lsProductId[j];
                                 cmd.Parameters[2].Value = ls[i].lsProductQuantity[j];
@@ -641,7 +622,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
@@ -719,50 +699,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public ShopeeAuthen ShopeeGetAuthen()
-        {
-            ShopeeAuthen shopeeAuthen = new ShopeeAuthen();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                // Lưu vào bảng tbECommerceOrder
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen WHERE Id = 1", conn);
-                cmd.CommandType = CommandType.Text;
-                MySqlDataReader rdr = null;
-                rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    shopeeAuthen.shopId = MyMySql.GetString(rdr, "ShopId");
-                    shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
-                    shopeeAuthen.partnerKey = MyMySql.GetString(rdr, "PartnerKey");
-                    shopeeAuthen.code = MyMySql.GetString(rdr, "Code");
-                    shopeeAuthen.validAccessTokenTime = MyMySql.GetDateTime(rdr, "ValidAccessTokenTime");
-                    shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
-                    shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
-                }
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                shopeeAuthen = null;
-            }
-
-            conn.Close();
-
-            return shopeeAuthen;
-        }
-
-        public MySqlResultState ShopeeSaveToken(ShopeeToken shopeeToken)
+        public MySqlResultState ShopeeSaveToken(ShopeeToken shopeeToken,
+            MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd =
                     new MySqlCommand(@"UPDATE `tbShopeeAuthen` SET `AccessToken`=@AccessToken,
                      `RefreshToken`=@RefreshToken,
@@ -779,20 +721,14 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 Common.SetResultException(ex, resultState);
             }
-
-            conn.Close();
-
             return resultState;
         }
 
-        public MySqlResultState ShopeeSaveCode(string code)
+        public MySqlResultState ShopeeSaveCode(string code, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand(
                     "UPDATE webplaywithme.tbshopeeauthen SET `Code` = @inCode, `RefreshCodeTime` = NOW() WHERE `Id` = 1", conn);
                 cmd.CommandType = CommandType.Text;
@@ -804,8 +740,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 Common.SetResultException(ex, result);
             }
-
-            conn.Close();
             return result;
         }
 

@@ -12,12 +12,46 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 {
     public class CommonTikiAPI
     {
         static public TikiConfigApp tikiConfigApp;
+
+        static public TikiConfigApp GetTikiConfigApp(MySqlConnection conn)
+        {
+            TikiConfigApp config = new TikiConfigApp();
+            try
+            {
+                // Lưu vào bảng tbECommerceOrder
+                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbTikiAuthen", conn);
+                cmd.CommandType = CommandType.Text;
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        config.appID = MyMySql.GetString(rdr, "AppId");
+                        config.homeAddress = MyMySql.GetString(rdr, "Home");
+                        config.secretAppCode = MyMySql.GetString(rdr, "Secret");
+                        config.tikiAu.access_token = MyMySql.GetString(rdr, "AccessToken");
+                        config.tikiAu.expires_in = MyMySql.GetString(rdr, "ExpiresIn");
+                        config.tikiAu.token_type = MyMySql.GetString(rdr, "TokenType");
+                        config.tikiAu.scope = MyMySql.GetString(rdr, "Scope");
+                        config.tikiAu.refreshAccessTokenTime = MyMySql.GetDateTime(rdr, "RefreshAccessTokenTime");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                config = null;
+            }
+
+            return config;
+        }
 
         /// <summary>
         /// Khi Access token phục vụ authorization hết hạn, gọi hàm này lấy access token mới và lưu và db xml
@@ -51,10 +85,19 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             TikiAuthorization accessToken = JsonConvert.DeserializeObject<TikiAuthorization>(response.Content);
             TikiMySql tikiMySql = new TikiMySql();
 
-            tikiMySql.TikiSaveAccessToken(accessToken);
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            try
+            {
+                conn.Open();
+                tikiMySql.TikiSaveAccessToken(accessToken, conn);
 
-            // Cập nhật
-            tikiConfigApp = tikiMySql.GetTikiConfigApp();
+                // Cập nhật
+                tikiConfigApp = GetTikiConfigApp(conn);
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
 
             MyLogger.GetInstance().Info("New token: " + accessToken.access_token);
             return string.Empty;
@@ -69,13 +112,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <returns></returns>
         static public IRestResponse ExcuteRequest(RestRequest request)
         {
-            if (CommonTikiAPI.tikiConfigApp == null)
-            {
-                TikiMySql tikiMySql = new TikiMySql();
-                CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-                if (CommonTikiAPI.tikiConfigApp == null)
-                    return null;
-            }
+            //if (CommonTikiAPI.tikiConfigApp == null)
+            //{
+            //    TikiMySql tikiMySql = new TikiMySql();
+            //    CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
+            //    if (CommonTikiAPI.tikiConfigApp == null)
+            //        return null;
+            //}
 
             // Nếu access token hết hạn, ta làm mới
             if (Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) == System.Int32.MinValue ||

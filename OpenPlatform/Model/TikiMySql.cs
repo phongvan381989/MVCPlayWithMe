@@ -300,14 +300,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             //}
         }
 
-        public List<CommonItem> TikiGetItemOnDB()
+        public List<CommonItem> TikiGetItemOnDB(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
 
@@ -365,8 +362,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 MyLogger.GetInstance().Warn(ex.ToString());
                 lsCommonItem = null;
             }
-
-            conn.Close();
             return lsCommonItem;
         }
 
@@ -856,51 +851,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
         //}
 
-        public TikiConfigApp GetTikiConfigApp()
-        {
-            TikiConfigApp config = new TikiConfigApp();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                // Lưu vào bảng tbECommerceOrder
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbTikiAuthen", conn);
-                cmd.CommandType = CommandType.Text;
-                MySqlDataReader rdr = null;
-                rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    config.appID = MyMySql.GetString(rdr, "AppId");
-                    config.homeAddress = MyMySql.GetString(rdr, "Home");
-                    config.secretAppCode = MyMySql.GetString(rdr, "Secret");
-                    config.tikiAu.access_token = MyMySql.GetString(rdr, "AccessToken");
-                    config.tikiAu.expires_in = MyMySql.GetString(rdr, "ExpiresIn");
-                    config.tikiAu.token_type = MyMySql.GetString(rdr, "TokenType");
-                    config.tikiAu.scope = MyMySql.GetString(rdr, "Scope");
-                    config.tikiAu.refreshAccessTokenTime = MyMySql.GetDateTime(rdr, "RefreshAccessTokenTime");
-                }
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                config = null;
-            }
-
-            conn.Close();
-
-            return config;
-        }
-
-        public MySqlResultState TikiSaveAccessToken(TikiAuthorization accessToken)
+        public MySqlResultState TikiSaveAccessToken(TikiAuthorization accessToken,
+            MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand(
                     "UPDATE `tbTikiAuthen` SET `AccessToken`=@AccessToken" +
                     ",`ExpiresIn`=@ExpiresIn" +
@@ -921,9 +877,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 Common.SetResultException(ex, resultState);
             }
-
-            conn.Close();
-
             return resultState;
         }
 

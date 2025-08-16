@@ -173,8 +173,7 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
 
     let result = JSON.parse(responseDB.responseText);
     if (eType == eTiki) {
-        if (result.myJson == null)
-        {
+        if (result.myJson == null) {
             ele.innerHTML = "Có lỗi không xác định. Vui lòng thử lại sau.";
         }
         else if (result.myJson.errors != null && result.myJson.errors.length > 0) {
@@ -184,12 +183,23 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
             ele.innerHTML = "Xong";
         }
     }
-    else if (eType = eShopee) {
+    else if (eType == eShopee) {
         if (result.myJson == null) {
             ele.innerHTML = "Có lỗi không xác định. Vui lòng thử lại sau.";
         }
         else if (result.myJson.response.failure_list.length > 0) {
             ele.innerHTML = result.myJson.failure_list[0].failed_reason;
+        }
+        else {
+            ele.innerHTML = "Xong";
+        }
+    }
+    else if (eType == eLazada) {
+        if (result.myJson == null) {
+            ele.innerHTML = "LazadaRefreshAccessTokenIfNeed thất bại.";
+        }
+        else if (result.myJson.code != null && result.myJson.code != "0") {
+            ele.innerHTML = result.myJson.message;
         }
         else {
             ele.innerHTML = "Xong";
@@ -287,6 +297,9 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
                 }
                 else if (item.eType == eShopee) {
                     url = "/ProductECommerce/Item?eType=SHOPEE&id=" + item.itemId;
+                }
+                else if (item.eType == eLazada) {
+                    url = "/ProductECommerce/Item?eType=LAZADA&id=" + item.itemId;
                 }
                 if (url !== "") {
                     window.open(url);

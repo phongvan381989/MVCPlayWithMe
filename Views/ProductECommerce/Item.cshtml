@@ -44,7 +44,15 @@
             </div>
             @Html.Partial("~/Views/Shared/ItemModel/Mapping.cshtml")
 
-            <button type="button" id="update-eEcommerce-mapping" onclick="UpdateEEcommerceMapping()">Cập nhật</button>
+            <button type="button" id="update-eEcommerce-mapping" onclick="UpdateEEcommerceMapping()"
+                    title="Cập nhật tất cả liên kết">
+                Cập nhật tất cả liên kết
+            </button>
+
+            <button type="button" id="update-price-sale-price" onclick="UpdatePrice_SalePrice()"
+                    title="Cập nhật giá bìa, giá bán đối với sản phẩm sàn Lazada">
+                Cập nhật giá bán, giá bìa
+            </button>
         </div>
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
@@ -59,16 +67,16 @@
         let vbnItemId = 0;
 
         function GetEEcommerceTypeFromUrl() {
-            let type = "SHOPEE";
+            let type = eShopee;
 
             if (window.location.href.includes("SHOPEE")) {
-                type = "SHOPEE";
+                type = eShopee;
             }
             else if (window.location.href.includes("TIKI")) {
-                type = "TIKI";
+                type = eTiki;
             }
             else if (window.location.href.includes("LAZADA")) {
-                type = "LAZADA";
+                type = eLazada;
             }
             return type;
         }
@@ -336,7 +344,11 @@
             //}
 
             // Thêm nút mapping
-            AddMappingButtonForModel(modelContainer);
+            let tmdtName = itemObj.name;
+            if (IsValidString(modelObj.name)) {
+                tmdtName = tmdtName + " - " + modelObj.name;
+            }
+            AddMappingButtonForModel(modelContainer, tmdtName);
 
             AddDistanceRows(modelContainer);
             AddDistanceRows(modelList);
@@ -437,7 +449,7 @@
             }
             catch (err) {
                 //alert("Cập nhật sản phẩm lỗi.");
-                await CreateMustClickOkModal("Cập nhật sản phẩm lỗi.", null);
+                await CreateMustClickOkModal("Cập nhật sản phẩm lỗi. " + err.Message, null);
             }
             return GetEasyPromise();
         }
@@ -450,6 +462,31 @@
             let listModelOnly = GetListModelOnly();
             await UpdateEEcommerceMapping_Core(listModelOnly);
             window.scrollTo(0, 0);
+        }
+
+        
+        async function UpdatePrice_SalePrice() {
+            if (GetEEcommerceTypeFromUrl() != eLazada) {
+                CreateMustClickOkModal("Không hỗ trợ ngoài sàn " + eLazada, null);
+                return;
+            }
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetEEcommerceTypeFromUrl());
+            searchParams.append("id", GetValueFromUrlName("id"));
+
+            let url = "/ProductECommerce/UpdatePrice_SalePrice";
+
+            try {
+                ShowCircleLoader();
+                let responseDB = await RequestHttpGetPromise(searchParams, url);
+                RemoveCircleLoader();
+
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật lỗi.");
+            }
+            catch (err) {
+                await CreateMustClickOkModal("Cập nhật lỗi. " + err.Message, null);
+            }
+            return GetEasyPromise();
         }
 
         async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId, btnElement) {
@@ -484,7 +521,7 @@
                 }
             }
             catch (err) {
-                await CreateMustClickOkModal("Sinh model sản phẩm lỗi.", null);
+                await CreateMustClickOkModal("Sinh model sản phẩm lỗi. " + err.Message, null);
                 RemoveCircleLoader();
                 return;
             }

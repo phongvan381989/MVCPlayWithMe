@@ -1,4 +1,5 @@
-﻿using RestSharp;
+﻿using Lazop.Api;
+using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -96,6 +97,13 @@ namespace MVCPlayWithMe.General
         public static void FatalRestLog(RestClient client, RestRequest request, IRestResponse response)
         {
             RestLog(client, request, response, log4net.Core.Level.Fatal);
+        }
+
+        public static void LazadaRestLog(LazopRequest request, LazopResponse response)
+        {
+            Logger.Info(request.reqUrl);
+            Logger.Info(response.IsError());
+            Logger.Info(response.Body);
         }
     }
 }

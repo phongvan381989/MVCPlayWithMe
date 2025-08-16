@@ -10,7 +10,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace QuanLyKho.ViewModel.Dev.ShopeeAPI.ShopeeCreateProduct
+namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
 {
     class ShopeeLogistic
     {

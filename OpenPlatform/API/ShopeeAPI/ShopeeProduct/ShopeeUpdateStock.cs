@@ -1,9 +1,7 @@
 ﻿using Newtonsoft.Json;
 using MVCPlayWithMe.General;
-//using QuanLyKho.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
-//using QuanLyKho.Model.InOutWarehouse;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using RestSharp;
 using System;

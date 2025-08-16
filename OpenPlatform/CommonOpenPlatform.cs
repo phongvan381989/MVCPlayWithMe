@@ -1,5 +1,7 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
@@ -14,6 +16,10 @@ namespace MVCPlayWithMe.OpenPlatform
 {
     public class CommonOpenPlatform
     {
+        // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa => Không ổn
+        // Ta sẽ tính lại giá bán, bán dưới điểm hòa vốn. Ta sẽ chiết khấu 1 con số phần trăm cố định
+        public const int constDiscount = 1;
+
         // Theo SHOPEE: Enumerated type that defines the current status of the item. Applicable values:
         // NORMAL, BANNED, UNLIST, SELLER_DELETE, SHOPEE_DELETE, REVIEWING.
         public enum ShopeeProductStatus
@@ -111,6 +117,126 @@ namespace MVCPlayWithMe.OpenPlatform
                 return true;
             }
             return false;
+        }
+
+        // Xây dựng công thức tính giá bán
+        // p: giá bìa, 
+        // dI: chiết khấu nhập, VD: 0.4
+        // dO: chiết khấu bán,
+        // x: % lợi nhuận mong muốn so với GIÁ NHẬP SÁCH
+        // t: phần trăm phí trả sản + thuế nộp nhà nước so với giá bán trên sàn
+        // c: chi phí đóng gói cố đinh
+        // m: lợi nhuận tuyệt đối. Nếu giá bìa lớn ta có thể chiết khấu sâu hơn khi bán để lợi nhuận tối thiểu bằng m
+        // Giá bán  - giá nhập  - thuế phí   - phí đóng hàng = lợi nhuận còn lại
+        // p(1 - dO) - p(1 -dI) - p(1 - dO)t - c             = p(1 - dI) x
+        //
+        // p(1 - dO)(1 - t) = p(1 -dI) + c + p(1 - dI) x
+        // =>p(1 - dO) = (p(1 -dI) + c + p(1 - dI)x) / (1 - t)
+        // Làm tròn xuống thành số nguyên
+        private static int CaculateSalePriceCore(int p, float dI, float x, float t, int c, int m)
+        {
+            if (p * (1 - dI) * x > m)
+            {
+                x = m / (p * (1 - dI));
+            }
+
+            int salePrice = (int)Math.Floor((p * (1 - dI) + c + p * (1 - dI) * x) / (1 - t));
+
+            // Làm tròn salePrice là bội của 100 VND
+            if (salePrice % 100 != 0)
+            {
+                salePrice = salePrice - salePrice % 100;
+            }
+
+            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
+            // Ta tính lại giá bán, bán dưới điểm hòa vốn
+            if (salePrice >= p)
+            {
+                salePrice = p * (100 - constDiscount) / 100;
+                // Làm tròn salePrice là bội của 100 VND
+                if (salePrice % 100 != 0)
+                {
+                    salePrice = salePrice - salePrice % 100;
+                }
+            }
+
+            return salePrice;
+        }
+
+        // Xây dựng công thức tính giá bán
+        // p: giá bìa, 
+        // dI: chiết khấu nhập, VD: 0.4
+        // dO: chiết khấu bán,
+        // x: % lợi nhuận mong muốn so với GIÁ BÁN
+        // t: phần trăm phí trả sản + thuế nộp nhà nước so với giá bán trên sàn
+        // c: chi phí đóng gói cố đinh
+        // NOTE: Bỏ qua lợi nhuận tuyệt đối m
+        // m: lợi nhuận tuyệt đối. Nếu giá bìa lớn ta có thể chiết khấu sâu hơn khi bán để lợi nhuận tối thiểu bằng m
+        // Giá bán  - giá nhập  - thuế phí   - phí đóng hàng = lợi nhuận còn lại
+        // p(1 - dO) - p(1 -dI) - p(1 - dO)t - c             = p(1 - dO) x
+        //
+        // p(1 - dO)(1 - t -x) = p(1 -dI) + c
+        // =>p(1 - dO) = (p(1 -dI) + c) / (1 - t - x)
+        // Làm tròn xuống thành số nguyên
+        private static int CaculateSalePriceCore_Ver2(int p, float dI, float x, float t, int c, int m)
+        {
+            //if (p * (1 - dO) * x > m)
+            //{
+            //    x = m / (p * (1 - dI));
+            //}
+
+            int salePrice = 0;
+            if (p == 0)
+            {
+                return salePrice;
+            }
+
+            salePrice = (int)Math.Floor((p * (1 - dI) + c) / (1 - t - x));
+
+            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
+            // Ta tính lại giá bán, bán dưới điểm hòa vốn => Chấp nhận lỗ
+            if (salePrice >= p)
+            {
+                salePrice = p * (100 - constDiscount) / 100;
+                // Làm tròn salePrice là bội của 100 VND
+                if (salePrice % 100 != 0)
+                {
+                    salePrice = salePrice - salePrice % 100;
+                }
+            }
+
+            // Làm tròn salePrice là bội của 100 VND
+            if (salePrice % 100 != 0)
+            {
+                salePrice = salePrice - salePrice % 100;
+            }
+
+            return salePrice;
+        }
+
+
+        public static int CaculateSalePriceCoreFromCommonModel(CommonModel commonModel,
+        List<Publisher> listPublisher,
+        TaxAndFee taxAndFee
+        )
+        {
+            int p = commonModel.GetBookCoverPrice();
+            int salePrice = 0;
+            if (p == 0)
+            {
+                return salePrice;
+            }
+
+            // Lấy chiết khấu với 1 chữ số sau dấu phảy
+            float dI = commonModel.GetDiscount(listPublisher) / 100;
+
+            salePrice = CaculateSalePriceCore_Ver2(p, dI,
+                taxAndFee.expectedPercentProfit / 100,
+                (taxAndFee.tax + taxAndFee.fee) / 100,
+                taxAndFee.packingCost,
+                taxAndFee.minProfit);
+
+            return salePrice;
         }
     }
 }

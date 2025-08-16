@@ -3,6 +3,7 @@ using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
@@ -10,6 +11,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
@@ -20,6 +22,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Threading.Tasks;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
@@ -31,6 +34,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
     {
         public ShopeeMySql shopeeSqler;
         public TikiMySql tikiSqler;
+        public LazadaMySql lazadaSqler;
         public ItemModelMySql itemModelSqler;
         public OrderMySql ordersqler;
 
@@ -38,6 +42,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         {
             shopeeSqler = new ShopeeMySql();
             tikiSqler = new TikiMySql();
+            lazadaSqler = new LazadaMySql();
             itemModelSqler = new ItemModelMySql();
             ordersqler = new OrderMySql();
         }
@@ -64,7 +69,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string GetProductAll(string eType)
+        public async Task<string> GetProductAll(string eType)
         {
             List<CommonItem> lsCommonItem = null;
             if (AuthentAdministrator() == null)
@@ -79,6 +84,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             else if(eType == Common.eTiki)
             {
                 lsCommonItem = TikiGetProductAll();
+            }
+            else if(eType == Common.eLazada)
+            {
+                lsCommonItem = await LazadaGetProductAll();
             }
             return JsonConvert.SerializeObject(lsCommonItem);
         }
@@ -100,6 +109,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             else if (eType == Common.eTiki)
             {
                 lsCommonItem = TikiGetNewItemOneMonth();
+            }
+            else if(eType == Common.eLazada)
+            {
+                lsCommonItem = LazadaGetNewItemOneMonth();
             }
 
             return JsonConvert.SerializeObject(lsCommonItem);
@@ -136,6 +149,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     MyLogger.GetInstance().Info("GetItemFromId call eType: " + eType + ", id: " + id);
                 }
             }
+            else if (eType == Common.eLazada)
+            {
+                long lid = Common.ConvertStringToInt64(id);
+                if (lid != Int64.MinValue)
+                {
+                    commonItem = LazadaGetItemFromIdConnectOut(lid, conn);
+                }
+            }
             conn.Close();
             return JsonConvert.SerializeObject(commonItem);
         }
@@ -155,12 +176,15 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             try
             {
-                shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsShopeeBaseInfoItem, lsCommonItem, conn);
                 // Không tồn tại trong DB ta insert
-                foreach (var item in lsCommonItem)
+                foreach (var pro in lsShopeeBaseInfoItem)
                 {
+                    CommonItem item = new CommonItem(pro);
+                    lsCommonItem.Add(item);
                     shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
                 }
+
+                shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsCommonItem, conn);
 
                 //// Cập nhật trạng thái item vào DB
                 //shopeeSqler.ShopeeUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
@@ -170,6 +194,36 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
             conn.Close();
+            return lsCommonItem;
+        }
+
+        async Task<List<CommonItem>> LazadaGetProductAll()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+
+            try
+            {
+                // Lấy toàn bộ sản phẩm Lazada mất thời gian
+                List<LazadaProduct>  lsLazadaProduct = LazadaProductAPI.GetProductAll();
+
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    // Không tồn tại trong DB ta insert
+                    foreach (var pro in lsLazadaProduct)
+                    {
+                        CommonItem item = new CommonItem(pro);
+                        lsCommonItem.Add(item);
+                        lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn);
+                    }
+
+                    lazadaSqler.LazadaGetListCommonItemFromListItemConnectOut(lsCommonItem, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
             return lsCommonItem;
         }
 
@@ -195,6 +249,34 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         CommonItem item = new CommonItem(pro);
                         // Không tồn tại trong DB ta insert
                         if (!shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn))
+                        {
+                            lsCommonItem.Add(item);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return lsCommonItem;
+        }
+
+        List<CommonItem> LazadaGetNewItemOneMonth()
+        {
+            List<CommonItem> lsCommonItem = new List<CommonItem>();
+
+            try
+            {
+                List<LazadaProduct> lsLazadaProduct = LazadaProductAPI.GetNewProductOneMonth();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    foreach (var pro in lsLazadaProduct)
+                    {
+                        CommonItem item = new CommonItem(pro);
+                        // Không tồn tại trong DB ta insert
+                        if (!lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn))
                         {
                             lsCommonItem.Add(item);
                         }
@@ -282,6 +364,29 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return item;
         }
 
+        private CommonItem LazadaGetItemFromIdConnectOut(long id, MySqlConnection conn)
+        {
+            LazadaProduct pro = LazadaProductAPI.GetProductItem(id);
+            if (pro == null)
+            {
+                return null;
+            }
+
+            CommonItem item = new CommonItem(pro);
+            try
+            {
+                // Không tồn tại trong DB ta insert
+                lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn);
+
+                lazadaSqler.LazadaGetItemFromIdConnectOut(id, item, conn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return item;
+        }
+
         private MySqlResultState UpdateMapping(string eType, List<CommonForMapping> ls)
         {
             MySqlResultState result = null;
@@ -292,6 +397,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             else if(eType == Common.eTiki)
             {
                 result = tikiSqler.TikiUpdateMapping(ls);
+            }
+            else if (eType == Common.eLazada)
+            {
+                result = lazadaSqler.LazadaUpdateMapping(ls);
             }
 
             return result;
@@ -383,13 +492,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return JsonConvert.SerializeObject(ls);
             }
 
-            if (eType == Common.eShopee)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                ls = shopeeSqler.ShopeeGetItemOnDB();
-            }
-            else if (eType == Common.eTiki)
-            {
-                ls = tikiSqler.TikiGetItemOnDB();
+                conn.Open();
+                if (eType == Common.eShopee)
+                {
+                    ls = shopeeSqler.ShopeeGetItemOnDB(conn);
+                }
+                else if (eType == Common.eTiki)
+                {
+                    ls = tikiSqler.TikiGetItemOnDB(conn);
+                }
+                else if (eType == Common.eLazada)
+                {
+                    ls = lazadaSqler.LazadaGetItemOnDB(conn);
+                }
             }
             return JsonConvert.SerializeObject(ls);
         }
@@ -1043,11 +1160,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public string UpdateBookCoverPriceToEEcommerce(string strCommonItem)
         {
-            if (AuthentAdministrator() == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
-
             MySqlResultState result = new MySqlResultState();
 
             try
@@ -1180,6 +1292,45 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 MyLogger.GetInstance().Warn(ex.ToString());
                 Common.SetResultException(ex, result);
             }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpGet]
+        public string UpdatePrice_SalePrice(string eType, long id)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            if (eType != Common.eLazada)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Hiện tại chức năng chỉ có với sàn " + eType;
+            }
+            else
+            {
+                try
+                {
+                    LazadaMySql sqler = new LazadaMySql();
+                    using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                    {
+                        conn.Open();
+                        CommonItem item = LazadaGetItemFromIdConnectOut(id, conn);
+                        List<CommonItem> ls = new List<CommonItem>();
+
+                        ls.Add(item);
+                        ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
+
             return JsonConvert.SerializeObject(result);
         }
     }
