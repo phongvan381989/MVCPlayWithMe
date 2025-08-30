@@ -18,7 +18,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
     class ShopeeBrand
     {
         // Danh sách quá dài, nhiều nghìn thương hiệu nên ta insert db trong hàm luôn
-        // sách trẻ em 101541, sách người lớn 101543 có chung brand id
+        // category id: sách trẻ em 101541, sách người lớn 101543 có chung brand id
         public static async Task<MySqlResultState> ShopeeGetBrandList(
             long categoryId,
             ShopeeMySql shopeeSqler,

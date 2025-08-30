@@ -1140,6 +1140,33 @@ namespace MVCPlayWithMe.Models.Order
                         cmd.ExecuteNonQuery();
                     }
                 }
+                else if (order.ecommerceName == Common.eLazada)
+                {
+                    // Cập nhật bảng item
+                    {
+                        MySqlCommand cmd = new MySqlCommand(
+                            "UPDATE tb_lazada_item SET Status=0 WHERE Status<>0 AND TMDTLazadaItemId=@inTMDTItemId", conn);
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inTMDTItemId", 0L);
+                        foreach (var id in order.listItemId)
+                        {
+                            cmd.Parameters[0].Value = id;
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                    // Cập nhật bảng model
+                    {
+                        MySqlCommand cmd = new MySqlCommand(
+                            "UPDATE tb_lazada_model SET Status=0 WHERE Status<>0 AND TMDTLazadaModelId=@inTMDTModelId", conn);
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inTMDTModelId", 0L);
+                        foreach (var id in order.listModelId)
+                        {
+                            cmd.Parameters[0].Value = id;
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {

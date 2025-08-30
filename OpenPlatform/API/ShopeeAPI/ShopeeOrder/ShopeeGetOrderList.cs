@@ -50,7 +50,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// Lấy thông tin cơ bản danh sách đơn hàng trong khoảng thời gian nhỏ hơn 15 ngày
         /// </summary>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeGetOrderListBaseInfo> ShopeeOrderGetOrderListBaseAllWithSmallTimeRange(long time_from, long time_to, ShopeeOrderStatus status)
+        public static List<ShopeeGetOrderListBaseInfo> ShopeeOrderGetOrderListBaseAllWithSmallTimeRange(
+            long time_from,
+            long time_to,
+            string status)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
             // Required
@@ -74,8 +77,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
 
             // The order_status filter for retriveing orders and each one only every request.
             // Available value: UNPAID/READY_TO_SHIP/PROCESSED/SHIPPED/COMPLETED/IN_CANCEL/CANCELLED/INVOICE_PENDING
-            if (status.index != ShopeeOrderStatus.EnumShopeeOrderStatus.ALL)
-                ls.Add(new DevNameValuePair("order_status", status.GetString()));
+            if (status != ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.ALL])
+                ls.Add(new DevNameValuePair("order_status", status));
 
             // Optional fields in response. Available value: order_status.
             ls.Add(new DevNameValuePair("response_optional_fields", "order_status"));
@@ -125,7 +128,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// <param name="time_to"></param>
         /// <param name="status"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeGetOrderListBaseInfo> ShopeeOrderGetOrderListBaseAll(DateTime time_from, DateTime time_to, ShopeeOrderStatus status)
+        public static List<ShopeeGetOrderListBaseInfo> ShopeeOrderGetOrderListBaseAll(DateTime time_from,
+            DateTime time_to,
+            string status)
         {
             long ltime_from = Common.GetTimestamp(time_from);
             long ltime_to = Common.GetTimestamp(time_to);

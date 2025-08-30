@@ -11,6 +11,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
@@ -598,7 +599,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (eType == Common.eShopee)
             {
                 long id = Common.ConvertStringToInt64(modelId);
-                resultState = shopeeSqler.ShopeeDeleteModelOnDB(id);
+                resultState = ShopeeMySql.ShopeeDeleteModelOnDB(id);
             }
             return JsonConvert.SerializeObject(resultState);
         }
@@ -734,8 +735,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
             }
 
-            // Lấy đơn hàng của Shopee
-            List<ShopeeOrderDetail> lsOrderShopeeFullInfo;
+            // Lấy đơn hàng của Shopee, Lazada
+            List<ShopeeOrderDetail> lsOrderShopeeFullInfo = null ;
             DateTime time_from, time_to;
             time_from = DateTime.Now;
             time_to = DateTime.Now;
@@ -746,36 +747,55 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
                 time_from = time_to.AddDays(-30);
 
-            ShopeeOrderStatus shopeeOrderStatus = new ShopeeOrderStatus(); // Lấy tất cả trạng thái
-
-            if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
-            {
-                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.PROCESSED;
-            }
-            else if (eOrderStatus == CommonOrderStatus.CANCELLED)
-            {
-                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED;
-            }
-
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             conn.Open();
 
-            lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, shopeeOrderStatus, conn);
-
-            if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+            // Lấy đơn hàng của shopee, lazada
+            List<LazadaOrder> lsOrderLazadaFullInfo = null;
+            if (eOrderStatus == CommonOrderStatus.CANCELLED)
             {
-                // Ta lấy thêm đơn có trạng thái READY_TO_SHIP
-                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.READY_TO_SHIP;
-                List<ShopeeOrderDetail> lsOrderShopeeTemp = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, shopeeOrderStatus, conn);
-                lsOrderShopeeFullInfo.AddRange(lsOrderShopeeTemp);
+                // Shopee
+                lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED],
+                conn);
 
-                // Ta lấy thêm đơn có trạng thái UNPAID
-                shopeeOrderStatus.index = ShopeeOrderStatus.EnumShopeeOrderStatus.UNPAID;
-                lsOrderShopeeTemp = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(time_from, time_to, shopeeOrderStatus, conn);
-                lsOrderShopeeFullInfo.AddRange(lsOrderShopeeTemp);
+                // Lazada
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailCanceled(time_from);
+            }
+            else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+            {
+                // Shopee
+                lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToPickUp(
+                time_from,
+                time_to,
+                conn);
+
+                // Lazada
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailToPickUp(time_from);
+            }
+            else
+            {
+                // Shopee
+                lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(
+                    time_from,
+                    time_to,
+                    ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.ALL],
+                    conn);
+
+                // Lazada
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailAll(time_from);
             }
 
+            // Shopee
             foreach (var order in lsOrderShopeeFullInfo)
+            {
+                lsCommonOrder.Add(new CommonOrder(order));
+            }
+
+            // Lazada
+            foreach (var order in lsOrderLazadaFullInfo)
             {
                 lsCommonOrder.Add(new CommonOrder(order));
             }
@@ -807,8 +827,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
                 string sn = string.Empty, trackingNumber = string.Empty;
-                shopeeSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
-                    sn_trackingNumber, ref sn, ref trackingNumber, conn);
+                tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+                    sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.SHOPEE, conn);
                conn.Close();
 
                 if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
@@ -862,7 +882,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             conn.Open();
             try
             {
-                // Nếu sản phẩm trên shopee, tiki chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+                // Nếu sản phẩm trên shopee, tiki,... chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
                 // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
 
                 // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
@@ -879,6 +899,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 else if (order.ecommerceName == eShopee)
                 {
                     shopeeSqler.ShopeeGetMappingOfCommonOrderConnectOut(order, conn);
+                }
+                else if (order.ecommerceName == eLazada)
+                {
+                    lazadaSqler.LazadaGetMappingOfCommonOrderConnectOut(order, conn);
                 }
                 else if (order.ecommerceName == ePlayWithMe)
                 {
@@ -1004,8 +1028,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         if (result != null && result.myAnything == 1)
                         {
                             // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                            ProductController productController = new ProductController();
-                            productController.GetListNeedUpdateQuantityAndUpdate_Core();
+                            ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
                         }
                     }
                 }

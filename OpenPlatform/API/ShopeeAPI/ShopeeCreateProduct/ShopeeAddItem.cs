@@ -14,7 +14,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
     public class ShopeeAddItem
     {
         //Get attribute của sách trẻ em, người lớn. Hiện tại đang giống nhau
-        public static List<ShopeeAttribute> GetAttributeOfChildren_AdultBook(Product product)
+        public static List<ShopeeAttribute> GetAttributeOfChildren_AudultBook(Product product)
         {
             List<ShopeeAttribute> attribute_list = new List<ShopeeAttribute>();
             ShopeeAttribute shopeeAttribute = null;

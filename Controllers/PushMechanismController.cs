@@ -1,9 +1,12 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaNotification;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MySql.Data.MySqlClient;
@@ -30,7 +33,7 @@ namespace MVCPlayWithMe.Controllers
         /// Giữ chỗ trong kho khi phát sinh đơn, nên cập nhật lại tồn kho 
         /// và số lượng nên các sản phẩm khác trên các nền tảng SHOPEE, TIKI, LAZADA,...
         /// </summary>
-        private void HandleOrderStatusPush(OrderStatusPush orderStatusPush)
+        private void ShopeeHandleOrderStatusPush(OrderStatusPush orderStatusPush)
         {
             if (orderStatusPush == null)
             {
@@ -71,8 +74,8 @@ namespace MVCPlayWithMe.Controllers
                     // Khách hủy và đã có mã vận đơn nhưng chưa được lưu db do chưa xác nhận đã đóng,
                     // ta sẽ lưu vào db ở đây
 
-                    string trackingNumber = shopeeMySql.GetTrackingNumberFromSNConnectOut(
-                    orderStatusPush.ordersn, conn);
+                    string trackingNumber = tikiSqler.GetTrackingNumberFromSNConnectOut(
+                    orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
 
                     if (string.IsNullOrEmpty(trackingNumber))
                     {
@@ -126,16 +129,6 @@ namespace MVCPlayWithMe.Controllers
                     CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
                     shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOut(commonOrder, conn);
 
-                    // Nếu đơn hàng vừa sinh ra, ta lưu id của item, model trong đơn.
-                    if (orderStatusPush.status == "UNPAID")
-                    {
-                        tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
-                    }
-                    else
-                    {
-                        tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
-                    }
-
                     MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
                         commonOrder, status, orderStatusPush.update_time, oldStatus,
                         EECommerceType.SHOPEE, conn);
@@ -143,8 +136,7 @@ namespace MVCPlayWithMe.Controllers
                     if (resultState != null && resultState.myAnything == 1)
                     {
                         // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        ProductController productController = new ProductController();
-                        productController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
                     }
                 }
             }
@@ -156,7 +148,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Cập nhật trạng thái Item vào db khi có thay đổi
-        private void HandleViolationItemPush(ViolationItemPush violationItemPush)
+        private void ShopeeHandleViolationItemPush(ViolationItemPush violationItemPush)
         {
             if (violationItemPush == null)
             {
@@ -191,12 +183,12 @@ namespace MVCPlayWithMe.Controllers
                 if (code == 3)
                 {
                     OrderStatusPush orderStatusPush = JsonConvert.DeserializeObject<OrderStatusPush>(obj["data"].ToString());
-                    HandleOrderStatusPush(orderStatusPush);
+                    ShopeeHandleOrderStatusPush(orderStatusPush);
                 }
                 else if (code == 16)
                 {
                     ViolationItemPush violationItemPush = JsonConvert.DeserializeObject<ViolationItemPush>(obj["data"].ToString());
-                    HandleViolationItemPush(violationItemPush);
+                    ShopeeHandleViolationItemPush(violationItemPush);
                 }
             }
             catch (Exception ex)
@@ -204,7 +196,6 @@ namespace MVCPlayWithMe.Controllers
                 MyLogger.GetInstance().Warn("ThreadShopeeNotifications calling " + ex.ToString());
             }
         }
-
 
         // Test với:
         // POST https://voibenho.com/PushMechanism/ShopeeNotifications
@@ -231,6 +222,146 @@ namespace MVCPlayWithMe.Controllers
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn("ShopeeNotifications calling " + ex.ToString());
+            }
+
+            Response.StatusCode = 200;
+            return string.Empty;
+        }
+
+        private void LazadaHandleOrderStatusPush(LazadaOrderStatusPush orderStatusPush)
+        {
+            if (orderStatusPush == null)
+            {
+                return;
+            }
+
+            // Possible values are unpaid, pending, canceled, ready_to_ship, 
+            // delivered, returned, shipped , failed, topack,toship,shipping and lost
+            // Check status: unpaid, pending, topack, canceled đề phòng miss thông báo.
+            if (orderStatusPush.order_status != "unpaid" &&
+                orderStatusPush.order_status != "pending" &&
+                orderStatusPush.order_status != "canceled") // Hủy đơn
+            {
+                return;
+            }
+            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            conn.Open();
+            TikiMySql tikiSqler = new TikiMySql();
+            LazadaMySql lazadaMySql = new LazadaMySql();
+
+            TbEcommerceOrder tbEcommerceOrderLastest = tikiSqler.GetLastestStatusOfECommerceOrder(
+                orderStatusPush.order_status,
+                EECommerceType.LAZADA, conn);
+
+            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
+
+            ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
+            if (orderStatusPush.order_status == "canceled")
+            {
+                status = ECommerceOrderStatus.UNBOOKED;
+            }
+
+            if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            {
+                return;
+            }
+
+            // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
+            if (orderStatusPush.status_update_time < tbEcommerceOrderLastest.updateTime)
+            {
+                return;
+            }
+
+            try
+            {
+                // Giữ chỗ nếu đơn hàng vừa sinh ra.
+                // Hủy giữ chỗ nếu đơn hàng bị khách hủy và đang ở trạng thái giữ chỗ.
+                List<LazadaOrderItem> orderItems = LazadaOrderAPI.LazadaGetOrderItems(orderStatusPush.trade_order_id);
+                if (orderItems.Count != 0)
+                {
+                    LazadaOrder order = new LazadaOrder();
+                    order.order_id = orderItems[0].order_id;
+                    order.orderItems = orderItems;
+
+                    CommonOrder commonOrder = new CommonOrder(order);
+                    lazadaMySql.LazadaGetMappingOfCommonOrderConnectOut(commonOrder, conn);
+
+                    MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                        commonOrder, status, orderStatusPush.status_update_time, oldStatus,
+                        EECommerceType.LAZADA, conn);
+
+                    if (resultState != null && resultState.myAnything == 1)
+                    {
+                        // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            conn.Close();
+        }
+
+        public void ThreadLazadaNotifications(string requestBody)
+        {
+            try
+            {
+                MyLogger.GetInstance().Info("ThreadLazadaNotifications get notification");
+                MyLogger.GetInstance().Info(requestBody);
+
+                if (string.IsNullOrEmpty(requestBody))
+                {
+                    return;
+                }
+
+                JObject obj = JObject.Parse(requestBody);
+                int message_type = obj["message_type"] != null ? (int)obj["message_type"] : -1;
+                if (message_type == -1)
+                {
+                    MyLogger.GetInstance().Info("Lazada cant get message_type from requestBody");
+                    return;
+                }
+
+                // Webhook API Trade Order Notifications: Lấy thay đổi trạng thái đơn hàng
+                if (message_type == 0)
+                {
+                    LazadaOrderStatusPush orderStatusPush = JsonConvert.DeserializeObject<LazadaOrderStatusPush>(obj["data"].ToString());
+                    LazadaHandleOrderStatusPush(orderStatusPush);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn("ThreadLazadaNotifications calling " + ex.ToString());
+            }
+        }
+
+        // Test với:
+        // POST https://voibenho.com/PushMechanism/LazadaNotifications
+        //
+        [HttpPost]
+        public string LazadaNotifications()
+        {
+            try
+            {
+                // Đọc request body
+                string requestBody;
+                using (var reader = new StreamReader(Request.InputStream))
+                {
+                    requestBody = reader.ReadToEnd();
+                }
+
+                // Đẩy công việc vào Task.Run
+                Task.Run(() =>
+                {
+                    // Xử lý công việc dài hạn trong nền
+                    ThreadLazadaNotifications(requestBody);
+                });
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn("LazadaNotifications calling " + ex.ToString());
             }
 
             Response.StatusCode = 200;

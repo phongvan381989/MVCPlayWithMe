@@ -42,6 +42,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         public string Status { get; set; }
         public int quantity { get; set; }
         public string product_weight { get; set; }
+
         public List<string> Images { get; set; }
         public string SellerSku { get; set; }
         public string ShopSku { get; set; }
@@ -100,7 +101,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
     public class Attributes
     {
         public string author { get; set; }
-        public string isbn_issn { get; set; }
         public string language { get; set; }
         public string short_description { get; set; }
         public string name { get; set; }
@@ -110,6 +110,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         public string gift_wrapping { get; set; }
         public int preorder_days { get; set; }
         public string brand { get; set; }
+        public string brand_id { get; set; }
         public string preorder { get; set; }
     }
 

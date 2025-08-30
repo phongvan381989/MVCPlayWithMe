@@ -1548,6 +1548,10 @@ namespace MVCPlayWithMe.Models.ProductModel
                 {
                     store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
                 }
+                else if(eType == eLazada)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
+                }
                 if (!string.IsNullOrEmpty(store))
                 {
                     MySqlCommand cmd = new MySqlCommand(store, conn);
@@ -1582,6 +1586,10 @@ namespace MVCPlayWithMe.Models.ProductModel
                 else if (eType == eShopee)
                 {
                     store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
+                }
+                else if(eType == eLazada)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
                 }
                 if (!string.IsNullOrEmpty(store))
                 {
@@ -2098,7 +2106,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
-        public void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        public static void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
         {
             CommonItem commonItem = null;
             CommonModel commonModel = null;
@@ -2182,7 +2190,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         // Kết nối đóng mở bên ngoài
         // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm shopee có thay đổi số lượng
         // cần cập nhật
-        public List<CommonItem> ShopeeGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        public static List<CommonItem> ShopeeGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -2232,7 +2240,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return listCI;
         }
 
-        public void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        public static void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
         {
             CommonItem commonItem = null;
             CommonModel commonModel = null;
@@ -2293,7 +2301,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         // Kết nối đóng mở bên ngoài
         // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm Tiki có thay đổi số lượng
         // cần cập nhật
-        public List<CommonItem> TikiGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        public static List<CommonItem> TikiGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -2414,7 +2422,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         ///  Cập nhật trạng thái từ 1 sang 0 của tbNeedUpdateQuantity
         /// </summary>
         /// <param name="listProId"></param>
-        public void UpdateStatusOfNeedUpdateQuantityConnectOut(List<int> listProId, MySqlConnection conn)
+        public static void UpdateStatusOfNeedUpdateQuantityConnectOut(List<int> listProId, MySqlConnection conn)
         {
             try
             {
@@ -2433,7 +2441,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
         }
 
-        public List<int> GetListProductOfNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        public static List<int> GetListProductOfNeedUpdateQuantityConnectOut(MySqlConnection conn)
         {
             List<int> listProductId = new List<int>();
             try

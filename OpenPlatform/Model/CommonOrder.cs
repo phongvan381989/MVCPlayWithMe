@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
 using System;
@@ -136,9 +137,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 listModelName.Add("");
             }
             created_at = order.created_at;
-
-            //TikiMySql tikiMySql = new TikiMySql();
-            //orderStatusInWarehoue = tikiMySql.TikiGetOrderStatusInWarehoue(code, (int)Common.EECommerceType.TIKI);
         }
 
         /// <summary>
@@ -176,8 +174,69 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 listItemName.Add(e.item_name);
                 listModelName.Add(e.model_name);
             }
-            //TikiMySql tikiMySql = new TikiMySql();
-            //orderStatusInWarehoue = tikiMySql.TikiGetOrderStatusInWarehoue(code, (int)Common.EECommerceType.SHOPEE);
+        }
+
+        public CommonOrder(LazadaOrder order)
+        {
+            ecommerceName = Common.eLazada;
+
+            id = order.order_id;
+            code = order.orderItems[0].tracking_code;
+            if (order.statuses != null && order.statuses.Count != 0)
+            {
+                status = order.statuses[0];
+            }
+            messageToSeller = order.buyer_note;
+            isExpress = false;
+            if (!string.IsNullOrEmpty(order.created_at))
+            {
+                created_at = Common.LazadaParseCustomDateTime(order.created_at);
+            }
+
+            listItemId = new List<long>();
+            listModelId = new List<long>();
+            listItemSuperId = new List<int>();
+            listThumbnail = new List<string>();
+            listQuantity = new List<int>();
+
+            listItemName = new List<string>();
+            listModelName = new List<string>();
+            listMapping = new List<List<Mapping>>();
+
+            long itemId, modelId;
+            Boolean isExist;
+            int index = 0;
+            foreach (var e in order.orderItems)
+            {
+                isExist = false;
+                // Nếu item đã tồn tại ta tăng số lượng. Vì lazada liệt kê lại
+                itemId = Common.ConvertStringToInt64(e.product_id);
+                modelId = Common.ConvertStringToInt64(e.sku_id);
+                for(int i = 0; i < listItemId.Count();i++)
+                {
+                    if(listItemId[i] == itemId && listModelId[i] == modelId)
+                    {
+                        isExist = true;
+                        index = i;
+                        break;
+                    }
+                }
+                if (isExist)
+                {
+                    listQuantity[index] = listQuantity[index] + 1;
+                }
+                else
+                {
+                    listItemId.Add(itemId);
+                    listModelId.Add(modelId);
+                    listThumbnail.Add(e.product_main_image);
+                    listQuantity.Add(1);
+
+                    listItemName.Add(e.name);
+                    //listModelName.Add();
+                }
+            }
+
         }
     }
 }

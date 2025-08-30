@@ -27,7 +27,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailAll(
             DateTime time_from,
             DateTime time_to,
-            ShopeeOrderStatus status,
+            string status,
             MySqlConnection conn)
         {
             List<ShopeeOrderDetail> rs = new List<ShopeeOrderDetail>();
@@ -46,6 +46,37 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
             UpdateTrackingNumber(rs, conn);
             return rs;
         }
+
+        public static List<ShopeeOrderDetail> ShopeeOrderGetOrderDetailToPickUp(
+            DateTime time_from,
+            DateTime time_to,
+            MySqlConnection conn)
+        {
+            List<ShopeeOrderDetail> lsOrderShopeeFullInfo = ShopeeOrderGetOrderDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.PROCESSED],
+                conn);
+
+            lsOrderShopeeFullInfo.AddRange(
+                ShopeeOrderGetOrderDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.READY_TO_SHIP],
+                conn)
+                );
+
+            lsOrderShopeeFullInfo.AddRange(
+                ShopeeOrderGetOrderDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.UNPAID],
+                conn)
+                );
+
+            return lsOrderShopeeFullInfo;
+        }
+
 
         // Lấy mã vận đơn / ship code / tracking number
         public static void UpdateTrackingNumber(List<ShopeeOrderDetail> rs, MySqlConnection conn)

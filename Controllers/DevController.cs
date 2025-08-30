@@ -12,6 +12,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
@@ -243,6 +244,76 @@ namespace MVCPlayWithMe.Controllers
                         result.Message = "Có item cập nhật lỗi";
                         result.myJson = JsonConvert.SerializeObject(failLs);
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> LazadaGetCategoryTree()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                LazadaProductAPI.LazadaGetCategoryTree();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> LazadaGetCategoryAttributes(int categoryId)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                LazadaProductAPI.LazadaGetCategoryAttributes(categoryId);
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> LazadaGetBrandByPages()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                Boolean isError = false;
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    isError = LazadaProductAPI.LazadaGetBrandByPages(conn);
+                }
+                if(isError)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Có lỗi";
                 }
             }
             catch (Exception ex)
@@ -609,6 +680,11 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
+        //private List<LazadaOrder> LazadaGetOrders(DateTime fromDate)
+        //{
+
+        //}
+
         [HttpPost]
         public string TikiTestSomething()
         {
@@ -623,9 +699,25 @@ namespace MVCPlayWithMe.Controllers
             //    ShopeeCategory.ShopeeGetAttributeTreeOfCategory(101541);
 
             //Boolean isOK = LazadaProductAPI.UpdateQuantity();
-            LazadaUpdatePrice_SalePrice();
+            //List<LazadaOrder> orders = LazadaOrderAPI.LazadaGetOrders(DateTime.Now.AddDays(-100), null);
+            //List<LazadaOrderItem> orderItems = LazadaOrderAPI.GetOrderItems(513278818272637);
 
-            return JsonConvert.SerializeObject(result);
+
+            //List<LazadaUploadImage> images = new List<LazadaUploadImage>();
+            //LazadaUploadImage image = LazadaProductAPI.LazadaUploadImage(@"C:\Users\phong\OneDrive\Desktop\ProductImageTemp\0.png");
+            //if(image != null)
+            //{
+            //    images.Add(image);
+            //}
+            //LazadaMySql sqler = new LazadaMySql();
+            //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            //{
+            //    conn.Open();
+            //    sqler.InserttbLazadaMediaSpace(1234, 0, 0, images, conn);
+            //}
+            LazadaProductAPI.LazadaCreateProductTest();
+
+           return JsonConvert.SerializeObject(result);
         }
 
         ///// <summary>

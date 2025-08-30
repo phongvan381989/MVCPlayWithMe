@@ -101,7 +101,9 @@ namespace MVCPlayWithMe.General
 
         public static void LazadaRestLog(LazopRequest request, LazopResponse response)
         {
+            Logger.Info(request.GetHttpMethod());
             Logger.Info(request.reqUrl);
+            Logger.Info(request.GetApiParamsString());
             Logger.Info(response.IsError());
             Logger.Info(response.Body);
         }

@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Lazop.Api;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -10,6 +11,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 {
     public class CommonLazadaAPI
     {
+        public static string serverUrl = "https://api.lazada.vn/rest";
+
+        public static ILazopClient GetLazopClient()
+        {
+            ILazopClient client = new LazopClient(serverUrl,
+                    LazadaAuthenAPI.lazadaAuthen.appKey,
+                    LazadaAuthenAPI.lazadaAuthen.appSecret);
+            return client;
+        }
+
         public static string FormatDateTimeWithOffset(DateTime date)
         {
             string raw = date.ToString("yyyy-MM-ddTHH:mm:sszzz");

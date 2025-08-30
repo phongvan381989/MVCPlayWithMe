@@ -238,6 +238,39 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        // Lấy danh sách id sản phẩm đang kinh doanh thuộc combo
+        public List<int> GetProductIdsOfCombo(int comboId)
+        {
+            List<int> productIds = new List<int>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    MySqlCommand cmd = new MySqlCommand(
+                    "SELECT Id FROM tbproducts WHERE ComboId = @in_ComboId AND Status = 0;", conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@in_ComboId", comboId);
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        int idIndex = rdr.GetOrdinal("Id");
+
+                        while (rdr.Read())
+                        {
+                            productIds.Add(rdr.GetInt32(idIndex));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                productIds.Clear();
+            }
+
+            return productIds;
+        }
+
         //public MySqlResultState DeleteCombo(string name)
         //{
 
@@ -301,10 +334,9 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inComboId", comboId);
                 cmd.CommandType = CommandType.StoredProcedure;
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                ProductMySql productMySql = new ProductMySql();
                 while (rdr.Read())
                 {
-                    productMySql.ShopeeReadCommonItem(listCI, rdr);
+                    ProductMySql.ShopeeReadCommonItem(listCI, rdr);
                 }
 
                 rdr.Close();
@@ -328,10 +360,9 @@ namespace MVCPlayWithMe.Models
                 cmd.Parameters.AddWithValue("@inComboId", comboId);
                 cmd.CommandType = CommandType.StoredProcedure;
                 MySqlDataReader rdr = cmd.ExecuteReader();
-                ProductMySql productMySql = new ProductMySql();
                 while (rdr.Read())
                 {
-                    productMySql.TikiReadCommonItem(listCI, rdr);
+                    ProductMySql.TikiReadCommonItem(listCI, rdr);
                 }
 
                 rdr.Close();

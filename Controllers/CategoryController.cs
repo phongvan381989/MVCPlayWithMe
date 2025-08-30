@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -96,10 +97,14 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            Category category = sqler.GetCategory(id);
-            if (category != null)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                ViewData["categoryName"] = category.name;
+                conn.Open();
+                Category category = sqler.GetCategory(id, conn);
+                if (category != null)
+                {
+                    ViewData["categoryName"] = category.name;
+                }
             }
             return View();
         }

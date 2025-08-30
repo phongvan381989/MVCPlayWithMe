@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -82,6 +83,23 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             return id;
+        }
+
+        // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
+        public MySqlResultState LazadaInsertNewMappingOneOfModel(int modelId,
+            int productId,
+            int quantity,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            MySqlCommand cmd = new MySqlCommand("st_tbLazadaMapping_Insert", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@inModelId", modelId);
+            cmd.Parameters.AddWithValue("@inProductId", productId);
+            cmd.Parameters.AddWithValue("@inProductQuantity", quantity);
+
+            result = MyMySql.MyExcuteNonQuery(cmd);
+            return result;
         }
 
         public void LazadaUpdateStatusOfItemToDbConnectOut(
@@ -355,7 +373,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void LazadaReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        public static void LazadaReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
         {
             CommonItem commonItem = null;
             CommonModel commonModel = null;
@@ -440,9 +458,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             commonModel.mapping.Add(mapping);
         }
 
-        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm shopee có thay đổi số lượng
+        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm lazada có thay đổi số lượng
         // cần cập nhật
-        public List<CommonItem> LazadaGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        public static List<CommonItem> LazadaGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -605,6 +623,219 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 lsCommonItem = null;
             }
             return lsCommonItem;
+        }
+
+        // Lấy mapping của sản phẩm trong đơn hàng
+        public void LazadaGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
+        {
+            string status = string.Empty;
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbLazadaMapping_Get_From_Item_ModelId", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inTMDTItemId", long.MinValue);
+                cmd.Parameters.AddWithValue("@inTMDTModelId", long.MinValue);
+
+                int quantity = 0;
+                Product pro = null;
+                for (int i = 0; i < commonOrder.listItemId.Count; i++)
+                {
+                    cmd.Parameters[0].Value = commonOrder.listItemId[i];
+                    if (commonOrder.listModelId[i] == 0)
+                        cmd.Parameters[1].Value = -1;
+                    else
+                        cmd.Parameters[1].Value = commonOrder.listModelId[i];
+
+                    commonOrder.listMapping.Add(new List<Mapping>());
+
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            // Đã được mapping
+                            if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                            {
+                                quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                pro = new Product();
+                                pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                                pro.code = MyMySql.GetString(rdr, "ProductCode");
+                                pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+                                pro.name = MyMySql.GetString(rdr, "ProductName");
+                                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+                                pro.SetFirstSrcImage();
+                                commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        public void InserttbLazadaBrand(List<LazadaBrandModule> modules, MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand("st_tbLazadaBrand_Insert", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@p_Name", "");
+            cmd.Parameters.AddWithValue("@p_GlobalIdentifier", "");
+            cmd.Parameters.AddWithValue("@p_NameEn", "");
+            cmd.Parameters.AddWithValue("@p_BrandId", 0L);
+
+            try
+            {
+                foreach(var module in modules)
+                {
+                    cmd.Parameters[0].Value = module.name;
+                    cmd.Parameters[1].Value = module.global_identifier;
+                    cmd.Parameters[2].Value = module.name_en;
+                    cmd.Parameters[3].Value = module.brand_id;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+        }
+
+        public MySqlResultState InserttbLazadaMediaSpace(
+            int productId,
+            int mediaType, // 0: là ảnh, 1: video
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            List<LazadaUploadImage> images,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState(); 
+
+            if (images == null || images.Count == 0)
+            {
+                return result;
+            }
+
+            MySqlCommand cmd = new MySqlCommand("st_tbLazadaMediaSpace_Insert", conn);
+            cmd.CommandType = CommandType.StoredProcedure;
+
+            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+            cmd.Parameters.AddWithValue("@p_Url", "");
+            cmd.Parameters.AddWithValue("@p_ProductId", productId);
+            cmd.Parameters.AddWithValue("@p_ProductType", productType);
+            cmd.Parameters.AddWithValue("@p_HashCode", "");
+
+            try
+            {
+                foreach (var image in images)
+                {
+                    cmd.Parameters["@p_Url"].Value = image.url;
+                    cmd.Parameters["@p_HashCode"].Value = image.hash_code;
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
+        // Lấy số lượng ảnh đã up lên Lazada của sản phẩm
+        public int GetQuantityOfProductImageUploadedToLazada(
+            int mediaType, // 0: là ảnh, 1: video
+            int productId, // Id của sản phẩm trong kho upload ảnh lên Lazada
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd =
+                new MySqlCommand(@"SELECT COUNT(Id) AS Count FROM tb_lazada_media_space 
+            WHERE MediaType = @p_MediaType 
+            AND ProductId = @p_ProductId 
+            AND ProductType = @p_ProductType;", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+            cmd.Parameters.AddWithValue("@p_ProductId", productId);
+            cmd.Parameters.AddWithValue("@p_ProductType", productType);
+            int count = 0;
+            try
+            {
+                MySqlDataReader rdr = null;
+                using (rdr = cmd.ExecuteReader())
+                {
+                    while (rdr.Read())
+                    {
+                        count = rdr.GetInt32(rdr.GetOrdinal("Count"));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                count = -1; // Có lỗi
+            }
+
+            return count;
+        }
+
+        // Vì upload lại ảnh lên Lazada, xóa id ảnh cũ đã lưu trong db
+        public MySqlResultState DeleteProductImageUploadedToLazada(
+            int mediaType, // 0: là ảnh, 1: video
+            int productId, // Id của sản phẩm trong kho upload ảnh lên Lazada
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn)
+        {
+
+            MySqlCommand cmd =
+                new MySqlCommand(@"DELETE FROM tb_lazada_media_space 
+            WHERE MediaType = @p_MediaType 
+            AND ProductId = @p_ProductId 
+            AND ProductType = @p_ProductType;", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+            cmd.Parameters.AddWithValue("@p_ProductId", productId);
+            cmd.Parameters.AddWithValue("@p_ProductType", productType);
+            MySqlResultState resultState = MyMySql.MyExcuteNonQuery(cmd);
+
+            return resultState;
+        }
+
+        public List<string> GetUploadedImageOfProductOnLazada(
+            int mediaType, // 0: là ảnh, 1: video
+            int productId, // Id của sản phẩm trong kho upload ảnh lên sàn
+            int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
+            MySqlConnection conn
+            )
+        {
+            List<string> images = new List<string>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand(
+                @"SELECT Id, Url FROM tb_lazada_media_space 
+    WHERE MediaType = @p_MediaType AND ProductId = @p_ProductId AND ProductType = @p_ProductType
+    ORDER BY Id ASC;", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+                cmd.Parameters.AddWithValue("@p_ProductId", productId);
+                cmd.Parameters.AddWithValue("@p_ProductType", productType);
+                MySqlDataReader rdr = null;
+
+                using (rdr = cmd.ExecuteReader())
+                {
+                    int urlIndex = rdr.GetOrdinal("Url");
+                    while (rdr.Read())
+                    {
+                        images.Add(rdr.GetString(urlIndex));
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                images.Clear();
+            }
+            return images;
         }
     }
 }

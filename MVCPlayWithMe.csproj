@@ -367,6 +367,7 @@
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\CommonLazadaAPI.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\LazadaAuthenAPI.cs" />
+    <Compile Include="OpenPlatform\API\LazadaAPI\LazadaOrderAPI.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\LazadaProductAPI.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\CommonShopeeAPI.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeCreateProduct\ShopeeAddItem.cs" />
@@ -390,11 +391,18 @@
     <Compile Include="OpenPlatform\Model\LazadaApp\CommonLazadaResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuth.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuthTokenCreateResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaNotification\LazadaOrderStatusPush.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrderItemsResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrdersResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCreateProductRequest.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCreateProductResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetBrandByPagesResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetProductItemResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetProductsResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaParameterPriceUpdate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaParameterQuantityUpdate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaUpdatePriceQuantityReponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaUploadImageResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaMySql.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAddItemResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAddItem_RequestParameters.cs" />

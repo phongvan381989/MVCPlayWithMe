@@ -246,7 +246,7 @@ namespace MVCPlayWithMe.Controllers
                 // Model chỉ có ảnh không có video
                 // Thêm watermark logo voi bé nhỏ và save ảnh phiên bản 320
                 string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(saveToFileLoc);
-                Common.ReduceImageSizeAndSave(newsaveToFileLoc);
+                Common.ReduceImageSizeTo320AndSave(newsaveToFileLoc);
             }
 
             return JsonConvert.SerializeObject(result);

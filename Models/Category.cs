@@ -10,5 +10,12 @@ namespace MVCPlayWithMe.Models
         public Category(int idInput, string nameInput) : base(idInput, nameInput)
         {
         }
+
+        public int tikiCategoryId { get; set; }
+
+        public long shopeeCategoryId { get; set; }
+
+        public long lazadaCategoryId { get; set; }
+
     }
 }

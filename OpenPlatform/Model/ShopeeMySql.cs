@@ -12,6 +12,7 @@ using System.Data;
 using System.Linq;
 using System.Web;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
@@ -530,7 +531,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Trường hợp item chỉ có 1 modelId, modelId khác -1 hàm dưới chưa xóa dữ liệu tương ứng trong bảng tbShopeeItem
         // Kết quả là có 1 item không có model nào trong DB
         // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
-        public MySqlResultState ShopeeDeleteModelOnDB(long modelId)
+        public static MySqlResultState ShopeeDeleteModelOnDB(long modelId)
         {
             MySqlResultState resultState = new MySqlResultState();
             if (modelId == -1)
@@ -956,52 +957,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             cmd.ExecuteNonQuery();
         }
 
-        // Lấy mã đơn, mã đơn hàng từ mã đơn hoặc mã đơn hàng
-        public void GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
-            string sn_trackingNumber,
-            ref string sn,
-            ref string trackingNumber,
-            MySqlConnection conn)
-        {
-            sn = string.Empty;
-            trackingNumber = string.Empty;
-            MySqlCommand cmd = new MySqlCommand(
-                "SELECT `Code`, `ShipCode` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = 2 ORDER BY `ShipCode` DESC LIMIT 1", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
-            cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
-            MySqlDataReader rdr = null;
-
-            rdr = cmd.ExecuteReader();
-            while (rdr.Read())
-            {
-                sn = MyMySql.GetString(rdr, "Code");
-                trackingNumber = MyMySql.GetString(rdr, "ShipCode");
-            }
-            rdr.Close();
-        }
-
-        public string GetTrackingNumberFromSNConnectOut(
-            string sn,
-            MySqlConnection conn)
-        {
-            string trackingNumber = string.Empty;
-            MySqlCommand cmd = new MySqlCommand(
-                "SELECT `ShipCode` FROM webplaywithme.tbecommerceorder WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = 2 LIMIT 1", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inCode", sn);
-            MySqlDataReader rdr = null;
-
-            rdr = cmd.ExecuteReader();
-            while (rdr.Read())
-            {
-                trackingNumber = MyMySql.GetString(rdr, "ShipCode");
-            }
-            rdr.Close();
-
-            return trackingNumber;
-        }
-
         // khi upload ảnh lên Shopee, lưu id ảnh
         public MySqlResultState InserttbShopeeMediaSpace(
             int mediaType, // 0: là ảnh, 1: video
@@ -1148,13 +1103,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public ShopeeBrandRequestParameter GetBrandFromName(string brandName, MySqlConnection conn)
+        public ShopeeBrandRequestParameter GetBrandFromName(
+            string brandName,
+            MySqlConnection conn)
         {
+            brandName = brandName.ToLower().Trim();
             ShopeeBrandRequestParameter brand = null;
             try
             {
                 MySqlCommand cmd = new MySqlCommand(
-                @"SELECT * FROM webplaywithme.tbshopee_brand WHERE OriginalBrandName LIKE '%" + brandName +
+                @"SELECT * FROM webplaywithme.tbshopee_brand WHERE LOWER(OriginalBrandName) LIKE '%" + brandName +
                 @"%' ORDER BY CHAR_LENGTH(OriginalBrandName) ASC LIMIT 1; ", conn);
                 cmd.CommandType = CommandType.Text;
                 MySqlDataReader rdr = null;

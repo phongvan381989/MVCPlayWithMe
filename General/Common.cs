@@ -791,6 +791,11 @@ namespace MVCPlayWithMe.General
 
         public static Int32 ConvertStringToInt32(string str)
         {
+            if(string.IsNullOrEmpty(str))
+            {
+                return System.Int32.MinValue;
+            }
+
             int rs;
             try
             {
@@ -965,11 +970,11 @@ namespace MVCPlayWithMe.General
                     // Thêm water mark
                     string newsaveToFileLoc = Common.AddWatermark_DeleteOriginalImageFunc(fileName);
                     // sinh phiên bản _320
-                    ReduceImageSizeAndSave(newsaveToFileLoc);
+                    ReduceImageSizeTo320AndSave(newsaveToFileLoc);
                 }
                 else
                 {
-                    ReduceImageSizeAndSave(fileName);
+                    ReduceImageSizeTo320AndSave(fileName);
                 }
             }
         }
@@ -1483,6 +1488,34 @@ namespace MVCPlayWithMe.General
             return dateTime;
         }
 
+        // input ex: "2025-08-14 13:40:52 +0700"
+        public static DateTime LazadaParseCustomDateTime(string input)
+        {
+            if (string.IsNullOrWhiteSpace(input))
+            {
+                return GetDefaultDateTime();
+            }
+
+            // nếu offset ở cuối có dạng +0700 thì thêm dấu ":" -> +07:00
+            if (input.Length >= 5 && 
+                (input[input.Length - 5] == '+' || input[input.Length - 5] == '-'))
+            {
+                input = input.Insert(input.Length - 2, ":");
+            }
+
+            string format = "yyyy-MM-dd HH:mm:ss zzz";
+
+            if (DateTimeOffset.TryParseExact(input, format,
+                                             CultureInfo.InvariantCulture,
+                                             DateTimeStyles.None,
+                                             out DateTimeOffset dto))
+            {
+                return dto.DateTime;   // trả về theo local time
+            }
+
+            return GetDefaultDateTime(); ;
+        }
+
         public static string GetTimeNowddMMyyyy()
         {
             return DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
@@ -1499,11 +1532,17 @@ namespace MVCPlayWithMe.General
             return str.Replace(" ", "%20").Replace(":", "%3A");
         }
 
+        // Trả giá trị mặc định là ngày sinh Sâu béo
+        public static DateTime GetDefaultDateTime()
+        {
+            return new DateTime(2018, 8, 5);
+        }
+
         public static DateTime ConvertStringToDateTime(string str)
         {
             // Trả giá trị mặc định là ngày sinh Sâu béo
             if (string.IsNullOrEmpty(str))
-                return DateTime.ParseExact("05/08/2018 01:01:01", "dd/MM/yyyy", CultureInfo.InvariantCulture);
+                return GetDefaultDateTime();
 
             return DateTime.ParseExact(str, "dd/MM/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
         }
@@ -1603,11 +1642,11 @@ namespace MVCPlayWithMe.General
             {
                 if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
                 {
-                    if(!ReduceImageSizeAndSave(f))
+                    if(!ReduceImageSizeTo320AndSave(f))
                     {
                         Thread.Sleep(2000);
                         // Thử lại 1 lần
-                        if(!ReduceImageSizeAndSave(f))
+                        if(!ReduceImageSizeTo320AndSave(f))
                         {
                             return false;
                         }
@@ -1621,7 +1660,7 @@ namespace MVCPlayWithMe.General
         /// Giảm kích thước ảnh về 320 và lưu vào thư mục tương ứng có thêm _320 VD: 570_320
         /// </summary>
         /// <param name="path">Đường dẫn và tên file</param>
-        public static Boolean ReduceImageSizeAndSave(string path)
+        public static Boolean ReduceImageSizeTo320AndSave(string path)
         {
             try
             {
@@ -1652,6 +1691,70 @@ namespace MVCPlayWithMe.General
                 }
             }
             catch(Exception ex)
+            {
+                MyLogger.GetInstance().Info("ReduceImageSizeAndSave Call with path: " + path);
+                MyLogger.GetInstance().Warn(ex.Message);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Có những ảnh kích thước lớn, 12MB, up ở Lazada sẽ báo lỗi. Ta giảm kích thước về khoảng nhỏ hơn 5MB
+        /// Xóa ảnh lớn và lưu ảnh mới trùng tên.
+        /// </summary>
+        /// <param name="path">Đường dẫn và tên file</param>
+        public static Boolean ReduceImageSizeToMediumAndSave(string path, double maximumMB)
+        {
+            try
+            {
+                do
+                {
+                    FileInfo fi = new FileInfo(path);
+                    double sizeInMB = fi.Length / (1024.0 * 1024.0);
+                    if (sizeInMB < maximumMB)
+                    {
+                        return true;
+                    }
+
+                    System.Drawing.Image myImage = null;
+                    System.Drawing.Image newImage = null;
+
+                    string tempFile = path + ".tmp";
+
+                    // First load the image somehow
+                    using (myImage = System.Drawing.Image.FromFile(path, true))
+                    {
+                        int divide = 2;
+                        System.Drawing.Size size = new System.Drawing.Size(myImage.Width / divide,
+                            myImage.Height / divide);
+
+                        using (newImage = ResizeImage(myImage, size))
+                        {
+                            if (newImage != null)
+                            {
+                                if (Path.GetExtension(path).ToLower() == ".png" ||
+                                    Path.GetExtension(path).ToLower() == ".jpg")
+                                {
+                                    newImage.Save(tempFile);
+                                }
+                                else
+                                {
+                                    SaveJpeg(tempFile, newImage, 100);
+                                }
+                            }
+                        }
+                    }
+
+                    // --- Xóa file cũ và thay bằng file mới ---
+                    File.Delete(path);
+                    File.Move(tempFile, path);
+                    Thread.Sleep(100);
+                }
+                while (true);
+            }
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Info("ReduceImageSizeAndSave Call with path: " + path);
                 MyLogger.GetInstance().Warn(ex.Message);
@@ -1795,8 +1898,23 @@ namespace MVCPlayWithMe.General
             return result.Trim(); // bỏ khoảng trắng đầu/cuối nếu có
         }
 
-        // Xóa tag html<>, "&nbsp;", "&nbsp" nhiều ký tự xuống dòng giữ lại chỉ 1
-        public static string CleanHtml(string input)
+        // Thay thế 3 hoặc nhiều dấu xuống dòng liên tiếp bằng 1 dấu xuống dòng
+        public static string ReplaceMoreNewLineCharacterByOne(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // 1. Chuẩn hóa xuống dòng: chuyển tất cả về \n
+            input = input.Replace("\r\n", "\n").Replace("\r", "\n");
+
+            // 2. Rút gọn các dòng trống: thay 2+ dòng trống bằng 1 dòng trống
+            string result = Regex.Replace(input, @"\n{2,}", "\n");
+
+            return result.Trim(); // bỏ khoảng trắng đầu/cuối nếu có
+        }
+
+        // Xóa tag html<>, "&nbsp;", "&nbsp" nhiều ký tự xuống dòng giữ lại 2
+        public static string CleanHtml_ByTwo(string input)
         {
             if (string.IsNullOrEmpty(input))
                 return input;
@@ -1807,6 +1925,20 @@ namespace MVCPlayWithMe.General
             string noNbsp = Regex.Replace(noTags, @"&nbsp;?", "", RegexOptions.IgnoreCase);
 
             return ReplaceMoreNewLineCharacterByTwo(noNbsp); // bỏ khoảng trắng đầu/cuối nếu có
+        }
+
+        // Xóa tag html<>, "&nbsp;", "&nbsp" nhiều ký tự xuống dòng giữ lại chỉ 1
+        public static string CleanHtml_ByOne(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+
+            // 1. Xóa tất cả thẻ HTML
+            string noTags = Regex.Replace(input, "<.*?>", "");
+            // 2. Xóa các dạng &nbsp;, &nbsp (không phân biệt chữ hoa thường)
+            string noNbsp = Regex.Replace(noTags, @"&nbsp;?", "", RegexOptions.IgnoreCase);
+
+            return ReplaceMoreNewLineCharacterByOne(noNbsp); // bỏ khoảng trắng đầu/cuối nếu có
         }
     }
 }

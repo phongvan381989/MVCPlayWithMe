@@ -83,6 +83,16 @@
                     </button>
                 </div>
             </div>
+            <div style="margin-bottom: 10px;">
+                @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
+
+                <button type="button" style="margin-left: 30px;"
+                        title="Tạo sản phẩm riêng lẻ, không cha và chưa đăng bán trên sàn thương mại điện tử."
+                        onclick="CreateProductOfComboOnECommerce()">
+                    Tạo Sản Phẩm Trên Sàn TMDT
+                </button>
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+            </div>
             <br />
             <div id="button_group_id">
                 <button type="button" style="margin-right:20px;" onclick="UpdateCombo()"
@@ -93,8 +103,8 @@
                 <button type="button" onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
             </div>
         </div>
-        @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
-    </div>
+            @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
+        </div>
 
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
@@ -105,6 +115,10 @@
 
         let combo = null;
         document.getElementById("adjxn90snkx").remove();
+
+        // Chọn Tất cả
+        document.getElementById("all-e-ecommonerce-type").checked = true;
+
         function ShowProductTable(list) {
             let length = list.length;
             if (length == 0)
@@ -318,7 +332,6 @@
             CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
         }
 
-        
         async function UpdateCommonCategory() {
             const searchParams = new URLSearchParams();
             searchParams.append("comboId", GetValueFromUrlName("id"));
@@ -362,6 +375,28 @@
             RemoveCircleLoader();
 
             CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function CreateProductOfComboOnECommerce() {
+            // Lấy id
+            let id = GetValueFromUrlName("id");
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", id);
+            searchParams.append("eType", GetECommerceType());
+
+            let url = "/Product/CreateProductOfComboOnECommerce";
+
+            try {
+                // Cập nhật vào db
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, url);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+            }
+            catch (error) {
+                CreateMustClickOkModal("Cập nhật lỗi.", null);
+                return;
+            }
         }
     </script>
 </body>

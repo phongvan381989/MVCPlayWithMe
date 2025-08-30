@@ -56,15 +56,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     CommonOrder commonOrder = new CommonOrder(tikiOrder);
                     tikiSqler.TikiGetMappingOfCommonOrderConnectOut(commonOrder, conn);
 
-                    // Nếu đơn hàng vừa sinh ra, ta lưu id của item, model trong đơn.
-                    if (tikiEvent.type == "ORDER_CREATED_SUCCESSFULLY")
-                    {
-                        tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
-                    }
-                    else // if (tikiEvent.payload.status == "canceled") // Hủy đơn
-                    {
-                        tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
-                    }
 
                     MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
                         commonOrder, status, tikiEvent.created_at, oldStatus,
@@ -73,8 +64,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     if (resultState != null && resultState.myAnything == 1)
                     {
                         // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        ProductController productController = new ProductController();
-                        productController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
                     }
                 }
             }

@@ -562,57 +562,62 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             EECommerceType eCommerceType)
         {
             Boolean isNeedExecuteReader = true;
-            MySqlDataReader rdr = null;
             if (storeName == "st_tbOutput_Insert")
             {
                 isNeedExecuteReader = false;
+            }
+
+            if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+            {
+                UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+            }
+            else
+            {
+                InsertTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
             }
 
             MySqlResultState resultState = new MySqlResultState();
             try
             {
                 // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
+                int delta = 1;
+                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
                 {
-                    MySqlCommand cmd = new MySqlCommand(storeName, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
-                    int productId = 0;
-                    int quantity = 0;
-                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                    delta = -1;
+                }
+                MySqlCommand cmd = new MySqlCommand(storeName, conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                cmd.Parameters.AddWithValue("@inProductId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+                int productId = 0;
+                int quantity = 0;
+                for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                {
+                    for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
                     {
-                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                        quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                        if(quantity == 0)
                         {
-                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
-                            if(quantity == 0)
-                            {
-                                continue;
-                            }
+                            continue;
+                        }
 
-                            productId = commonOrder.listMapping[i][j].product.id;
-                            cmd.Parameters[2].Value = productId;
-                            if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                        productId = commonOrder.listMapping[i][j].product.id;
+                        cmd.Parameters[2].Value = productId;
+                        cmd.Parameters[3].Value = quantity * delta;
+                        if (!isNeedExecuteReader)
+                        {
+                            cmd.ExecuteNonQuery();
+                        }
+                        else
+                        {
+                            using (MySqlDataReader rdr = cmd.ExecuteReader())
                             {
-                                cmd.Parameters[3].Value = quantity * -1;
-                            }
-                            else
-                            {
-                                cmd.Parameters[3].Value = quantity;
-                            }
-                            if (!isNeedExecuteReader)
-                            {
-                                cmd.ExecuteNonQuery();
-                            }
-                            else
-                            {
-                                rdr = cmd.ExecuteReader();
                                 while (rdr.Read())
                                 {
                                     quantity = MyMySql.GetInt32(rdr, "Result");
                                 }
-                                rdr.Close();
                             }
                         }
                     }
@@ -655,6 +660,55 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
 
             return lastest;
+        }
+
+        // Lấy mã đơn, mã đơn hàng từ mã đơn hoặc mã đơn hàng
+        public void GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+            string sn_trackingNumber,
+            ref string sn,
+            ref string trackingNumber,
+            EECommerceType type,
+            MySqlConnection conn)
+        {
+            sn = string.Empty;
+            trackingNumber = string.Empty;
+            MySqlCommand cmd = new MySqlCommand(
+                "SELECT `Code`, `ShipCode` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
+            cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
+            cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
+            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    sn = MyMySql.GetString(rdr, "Code");
+                    trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                }
+            }
+        }
+
+        public string GetTrackingNumberFromSNConnectOut(
+            string sn,
+            EECommerceType type,
+            MySqlConnection conn)
+        {
+            string trackingNumber = string.Empty;
+            MySqlCommand cmd = new MySqlCommand(
+                "SELECT `ShipCode` FROM webplaywithme.tbecommerceorder WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = @inECommmerce LIMIT 1", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", sn);
+            cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
+
+            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            {
+                while (rdr.Read())
+                {
+                    trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                }
+            }
+
+            return trackingNumber;
         }
 
         // Từ trạng thái mới, cũ của đơn hàng kiểm tra xem cần tiếp tục cập nhật vào db
@@ -796,7 +850,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
                         (status == ECommerceOrderStatus.RETURNED))
                     {
-                        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, "st_tbOutput_Insert", commonOrder, status, eCommerceType);
+                        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn,
+                            "st_tbOutput_Insert", commonOrder, status, eCommerceType);
                         resultState.myAnything = 1; // Có thay đổi tồn kho.
                     }
                     else
@@ -967,7 +1022,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        // Lưu thông tin vào đơn hàng, item id, model id của đơn hàng
+        // Lưu thông tin sản phẩm trên san vào db, item id, model id của đơn hàng
+        // Có check tồn tại
         public void InsertTbItemOfEcommerceOder(CommonOrder commonOrder,
             EECommerceType type,
             MySqlConnection conn)

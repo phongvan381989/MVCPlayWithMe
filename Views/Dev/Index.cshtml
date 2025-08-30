@@ -86,6 +86,11 @@
 
         <div class="fmx09gx8">
             <div class="gmxk9381"> LAZADA</div>
+            <div class="gmxk9381">
+                <input type="text" id="lazada_something_input"
+                       class="config-max-width margin-vertical"
+                       placeholder="Nhập thông tin gì đó phục vụ các hàm. VD: id thể loại,..." />
+            </div>
             <button type="button" onclick="LazadaUpdateQuantityAll()" disabled
                     title="Cập nhật số lượng tất cả sản phẩm đang bật bán trên sàn.">
                 Cập nhật giá tất cả bật bán
@@ -94,6 +99,23 @@
             <button type="button" onclick="LazadaUpdatePrice_SalePriceAll()" disabled
                     title="Cập nhật giá bìa, giá bán cho tất cả sản phẩm đang bật bán.">
                 Cập nhật giá bìa, giá bán tất cả bật bán
+            </button>
+
+            <button type="button" onclick="LazadaGetCategoryTree()"
+                    title="Lấy danh sách thể loại tất cả. Lưu vào log.">
+                Lấy danh sách thể lọai
+            </button>
+
+            <button type="button" onclick="LazadaGetCategoryAttributes()"
+                    title="Lấy thuộc tính của thể loại từ id thể loại. Lưu vào log.">
+                Lấy thuộc tính của thể loại
+            </button>
+
+            <button type="button" onclick="LazadaGetBrandByPages()" disabled
+                    title="NOTE:MẤT THỜI GIAN.
+                    Lấy thương hiệu của tất cả thể loại. Lưu vào DB.
+                    Vì không kiểm tra tồn tại trong DB nên cần xóa dữ liệu cũ, reset cột Id">
+                Lấy thương hiệu tất cả thể loại
             </button>
         </div>
 
@@ -180,6 +202,7 @@
             if (categoryId == 0) {
                 CreateMustClickOkModal("Id Thể loại không đúng", null);
                 document.getElementById("shopee_something_input").focus();
+                return;
             }
 
             const searchParams = new URLSearchParams();
@@ -215,6 +238,50 @@
         async function LazadaUpdatePrice_SalePriceAll() {
             const searchParams = new URLSearchParams();
             let query = "/Dev/LazadaUpdatePrice_SalePriceAll";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        async function LazadaGetCategoryTree() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/LazadaGetCategoryTree";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        
+        async function LazadaGetCategoryAttributes() {
+            let categoryId = 0;
+            try {
+                categoryId = BigInt(document.getElementById("lazada_something_input").value);
+            } catch (e) {
+                categoryId = 0;
+            }
+            if (categoryId == 0) {
+                CreateMustClickOkModal("Id Thể loại không đúng", null);
+                document.getElementById("lazada_something_input").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("categoryId", categoryId);
+            let query = "/Dev/LazadaGetCategoryAttributes";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        async function LazadaGetBrandByPages() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/LazadaGetBrandByPages";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

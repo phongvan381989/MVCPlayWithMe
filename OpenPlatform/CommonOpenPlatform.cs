@@ -238,5 +238,32 @@ namespace MVCPlayWithMe.OpenPlatform
 
             return salePrice;
         }
+
+        public static int CaculateSalePriceCoreFromBookCoverPrice(
+            int bookCoverPrice,
+            float discountOfProduct, // chiết khấu của sản phẩm nếu có, không có thì sẽ là 0
+            float discountOfPublisher, // Chiết khấu chung của nhà phát hành
+            TaxAndFee taxAndFee
+        )
+        {
+            int p = bookCoverPrice;
+            int salePrice = 0;
+            if (p == 0)
+            {
+                return salePrice;
+            }
+
+            // Lấy chiết khấu với 1 chữ số sau dấu phảy
+            float dI = discountOfProduct < discountOfPublisher? discountOfPublisher: discountOfProduct;
+            dI = dI / 100;
+
+            salePrice = CaculateSalePriceCore_Ver2(p, dI,
+                taxAndFee.expectedPercentProfit / 100,
+                (taxAndFee.tax + taxAndFee.fee) / 100,
+                taxAndFee.packingCost,
+                taxAndFee.minProfit);
+
+            return salePrice;
+        }
     }
 }
