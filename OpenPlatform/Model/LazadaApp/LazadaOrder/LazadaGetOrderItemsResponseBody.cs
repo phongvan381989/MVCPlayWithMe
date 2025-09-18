@@ -47,5 +47,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder
 
         // Product main image URL
         public string product_main_image { get; set; }
+
+        // Ex: "TÊN SÁCH:COMBO 3 CUỐN". Trong đó "TÊN SÁCH" là tên variation
+        public string variation { get; set; }
+
+        // Nếu variation khác rỗng, ta lấy tên cụ thể của 1 variation
+        public string GetVariationName()
+        {
+            string va = string.Empty;
+            if(!string.IsNullOrEmpty(variation))
+            {
+                int index = variation.IndexOf(':');
+
+                string result = index != -1 ? variation.Substring(index + 1).Trim() : "";
+            }
+            return va;
+        }
     }
 }

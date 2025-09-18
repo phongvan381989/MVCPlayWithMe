@@ -25,5 +25,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaConfig
         public int expires_in { get; set; }
         public int refresh_expires_in { get; set; }
         public string refresh_token { get; set; }
+
+        public Boolean IsValid()
+        {
+            if(string.IsNullOrEmpty(access_token)||
+               string.IsNullOrEmpty(refresh_token) ||
+               expires_in <= 0 || refresh_expires_in <=0)
+            {
+                return false;
+            }
+
+            return true;
+        }
     }
 }

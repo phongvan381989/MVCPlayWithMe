@@ -136,12 +136,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
                     }
              */
             shopeeAttribute = new ShopeeAttribute(100673);
-            if (product.language == "Tiếng Việt")
-            {
-                shopeeAttribute.attribute_value_list.Add(
-                    new ShopeeAttributeValue(5471, null, null));
-            }
-            else if (product.language == "Tiếng Anh")
+            if (product.language == "Tiếng Anh")
             {
                 shopeeAttribute.attribute_value_list.Add(
                     new ShopeeAttributeValue(3539, null, null));
@@ -149,8 +144,24 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
             else
             {
                 shopeeAttribute.attribute_value_list.Add(
-                    new ShopeeAttributeValue(0, product.language, null));
+                    new ShopeeAttributeValue(5471, null, null));
             }
+
+            //if (product.language == "Tiếng Việt")
+            //{
+            //    shopeeAttribute.attribute_value_list.Add(
+            //        new ShopeeAttributeValue(5471, null, null));
+            //}
+            //else if (product.language == "Tiếng Anh")
+            //{
+            //    shopeeAttribute.attribute_value_list.Add(
+            //        new ShopeeAttributeValue(3539, null, null));
+            //}
+            //else
+            //{
+            //    shopeeAttribute.attribute_value_list.Add(
+            //        new ShopeeAttributeValue(0, product.language, null));
+            //}
             attribute_list.Add(shopeeAttribute);
 
             /*

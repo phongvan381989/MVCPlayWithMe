@@ -577,6 +577,7 @@ namespace MVCPlayWithMe.Controllers
             }
             return JsonConvert.SerializeObject(result);
         }
+
         public string UpdateCommonPageNumberWithCombo(
                 int comboId,
                 int pageNumber
@@ -591,6 +592,44 @@ namespace MVCPlayWithMe.Controllers
             {
                 conn.Open();
                 result = productSqler.UpdateCommonPageNumberWithCombo(comboId, pageNumber, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string UpdateCommonPublishingTimeWithCombo(
+                int comboId,
+                int publishingTime
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonPublishingTimeWithCombo(comboId, publishingTime, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string UpdateCommonBookCoverPriceWithCombo(
+                int comboId,
+                int bookCoverPrice
+            )
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                conn.Open();
+                result = productSqler.UpdateCommonBookCoverPriceWithCombo(comboId, bookCoverPrice, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -2746,7 +2785,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     if (needList.Contains(id))
                     {
-                        result = await CreateLazadaProductFromProductIdInWarehouse(id, name, true, conn);
+                        result = await LazadaCreateProductFromProductIdInWarehouse(id, name, true, conn);
                     }
                     else
                     {
@@ -2988,6 +3027,73 @@ namespace MVCPlayWithMe.Controllers
             return result;
         }
 
+        public MySqlResultState LazadaCheckValidProductInfo(Product product)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            if (product.status == 2)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm đã ngừng kinh doanh.";
+                return result;
+            }
+
+            if (product.imageSrc.Count == 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Sản phẩm chưa có ảnh. Cần tối thiểu 1 ảnh.";
+                return result;
+            }
+
+            if (product.categoryId <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Chưa có thông tin thể loại.";
+                return result;
+            }
+
+            if (product.bookCoverPrice <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Giá không hợp lý.";
+                return result;
+            }
+
+            if (product.productLong <= 0 ||
+                product.productHigh <= 0 ||
+                product.productWide <= 0)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Kích thước sản phẩm quá nhỏ.";
+                return result;
+            }
+
+            if (product.productWeight < 1)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Khối lượng sản phẩm quá nhẹ.";
+                return result;
+            }
+
+            string realDetail = Common.CleanHtml_ByTwo(product.detail);
+
+            if (realDetail.Length < Product.minLengthDetail)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Mô tả sản phẩm ngắn hơn " + Product.minLengthDetail.ToString() + " ký tự.";
+                return result;
+            }
+
+            if (realDetail.Length > Product.maxLengthDetail)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Mô tả sản phẩm dài hơn " + Product.maxLengthDetail.ToString() + " ký tự.";
+                return result;
+            }
+
+            return result;
+        }
+
         // Sản phẩm kích thước vượt ngưỡng của kênh vận chuyển sẽ bị loại
         public MySqlResultState ShopeeCheckLogisticInfo(
             ShopeeAddItem_RequestParameters requestParameters)
@@ -3183,6 +3289,7 @@ namespace MVCPlayWithMe.Controllers
             // Nếu up sản phẩm thành công, ta lấy sản phẩm và cập nhật mapping luôn
             // Lấy item id sản phẩm mới đăng thành công
             //objResponse.response.item_id;
+            Thread.Sleep(5000);
             await ShopeeInsertNewItem_OneModelAndMapping(objResponse.response.item_id, productId, conn);
 
             return result;
@@ -3284,10 +3391,12 @@ namespace MVCPlayWithMe.Controllers
                 brandId = 184898;
                 brand = "Wabooks";
             }
-            //else if (product.categoryId == 19) // Muki
-            //{
-            //    brandId = 184898;
-            //}
+            else if (product.publisherId == 19) // Muki
+            {
+                // NOTE: Muki không có thương hiệu nên ta đăng nhờ thương hiệu FAHASA
+                brandId = 2101;
+                brand = "FAHASA";
+            }
             else if (product.publisherId == 20) // Đinh Tị Books
             {
                 brandId = 124098239;
@@ -3339,7 +3448,9 @@ namespace MVCPlayWithMe.Controllers
             lazadaMySql.LazadaInsertNewMappingOneOfModel(modelIdInsert, productId, 1, conn);
         }
 
-        public async Task<MySqlResultState> CreateLazadaProduct_Book_Core(
+
+        // Tạo sản phẩm là sách thực tế đều yêu cầu trường thông tin giống nhau
+        public async Task<MySqlResultState> LazadaCreateProduct_Book_Core(
             Product product,
             string name,
             Boolean isNeedUploadImage,
@@ -3440,6 +3551,13 @@ namespace MVCPlayWithMe.Controllers
                 if (response != null)
                 {
                     result.Message = response.message;
+                    if(response.detail != null && response.detail.Count > 0)
+                    {
+                        foreach(var de in response.detail)
+                        {
+                            result.Message = result.Message + ", " + de.message;
+                        }
+                    }
                 }
             }
             else
@@ -3447,6 +3565,118 @@ namespace MVCPlayWithMe.Controllers
                 // Nếu up sản phẩm thành công, ta lấy sản phẩm và cập nhật mapping luôn
                 // Lấy item id sản phẩm mới đăng thành công
                 //objResponse.response.item_id;
+                Thread.Sleep(5000);
+                await LazadaInsertNewItem_OneModelAndMapping(response.data.item_id, product.id, conn);
+            }
+
+            return result;
+        }
+
+        // Tạo sản phẩm là đồ chơi học tập và giáo dục: 10333
+        // Learning and educational toys
+        public async Task<MySqlResultState> LazadaCreateProduct_LearningAndEducationalToys(
+            Product product,
+            string name,
+            Boolean isNeedUploadImage,
+            long categoryId,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = LazadaCheckValidProductInfo(product);
+            if (result.State != EMySqlResultState.OK)
+            {
+                return result;
+            }
+
+            await LazadaUploadImage(isNeedUploadImage, product, conn, result);
+            if (result.State != EMySqlResultState.OK)
+            {
+                return result;
+            }
+
+            // Tạo đối tượng tham số của request
+            LazadaCreateProductRequest request = new LazadaCreateProductRequest();
+            request.Request = new LazadaCreateProductRequest_Core();
+            request.Request.Product = new LazadaProductRequest();
+            LazadaProductRequest lazadaPro = request.Request.Product;
+            lazadaPro.PrimaryCategory = categoryId.ToString();
+
+            lazadaPro.Attributes =
+                new AttributesRequest();
+            // name
+            if (string.IsNullOrEmpty(name))
+            {
+                lazadaPro.Attributes.name = Product.GenerateName(product);
+            }
+            else
+            {
+                lazadaPro.Attributes.name = name;
+            }
+
+            // description
+            lazadaPro.Attributes.description = Common.CleanHtml_ByOne(product.detail);
+
+            //--------- "is_mandatory": 1------------
+            lazadaPro.Skus = new LazadaSkusRequest();
+            lazadaPro.Skus.Sku = new List<LazadaSkuRequest>();
+            LazadaSkuRequest lazadaSku = new LazadaSkuRequest();
+            lazadaPro.Skus.Sku.Add(lazadaSku);
+
+            // giá bìa và giá bán
+            lazadaSku.price = product.bookCoverPrice.ToString();
+            lazadaSku.special_price = LazadaCaculateSpecial_Price(product, conn).ToString();
+
+            // SellerSku
+            lazadaSku.SellerSku = TikiConstValues.GenerateRandomSKUString();
+
+            // package_weight - kg
+            // Khối lượng kiện hàng nên nằm trong khoảng 0.001 và 300.0
+            lazadaSku.package_weight = ((product.productWeight + 100) / 1000.0).ToString("F1");
+
+            // package_width - cm
+            lazadaSku.package_width = (product.productWide / 10 + 1).ToString();
+
+            // package_length - cm
+            lazadaSku.package_length = (product.productLong / 10 + 1).ToString();
+
+            // package_height - cm
+            lazadaSku.package_height = (product.productHigh / 10 + 1).ToString();
+
+            // quantity
+            lazadaSku.quantity = product.quantity.ToString();
+
+            // brand
+            LazadaGetBrandForAttributesRequest(lazadaPro.Attributes, product);
+
+            //--------- "is_key_prop": 1------------
+            lazadaPro.Attributes.recommended_age = "Trẻ 0 – 4 tuổi";
+
+            // Cần pin hay không
+            lazadaPro.Attributes.battery_required = "KHÔNG";
+
+            // Ảnh của sản phẩm, không cần ảnh của sku vì chỉ có 1 sku
+            List<string> images = lazadaMySql.GetUploadedImageOfProductOnLazada(0, product.id, 0, conn);
+            LazadaProductImageRequest lazadaProductImageRequest = new LazadaProductImageRequest();
+            lazadaProductImageRequest.Image = images;
+            lazadaPro.Images = lazadaProductImageRequest;
+
+            LazadaCreateProductResponseBody response =
+                LazadaProductAPI.LazadaCreateProduct(request);
+
+            if (response == null ||
+                response.code != "0")
+            {
+                result.State = EMySqlResultState.ERROR;
+                if (response != null)
+                {
+                    result.Message = response.message;
+                }
+            }
+            else
+            {
+                // Nếu up sản phẩm thành công, ta lấy sản phẩm và cập nhật mapping luôn
+                // Lấy item id sản phẩm mới đăng thành công
+                //objResponse.response.item_id;
+                Thread.Sleep(5000);
                 await LazadaInsertNewItem_OneModelAndMapping(response.data.item_id, product.id, conn);
             }
 
@@ -3459,7 +3689,7 @@ namespace MVCPlayWithMe.Controllers
             Boolean isNeedUploadImage,
             MySqlConnection conn)
         {
-            MySqlResultState result = await CreateLazadaProduct_Book_Core(product, name, isNeedUploadImage, 8666, conn);
+            MySqlResultState result = await LazadaCreateProduct_Book_Core(product, name, isNeedUploadImage, 8666, conn);
             return result;
         }
 
@@ -3469,17 +3699,17 @@ namespace MVCPlayWithMe.Controllers
             Boolean isNeedUploadImage,
             MySqlConnection conn)
         {
-            MySqlResultState result = await CreateLazadaProduct_Book_Core(product, name, isNeedUploadImage, 8464, conn);
+            MySqlResultState result = await LazadaCreateProduct_Book_Core(product, name, isNeedUploadImage, 8464, conn);
             return result;
         }
 
-        public async Task<MySqlResultState> CreateLazadaProductFromProductIdInWarehouse(
+        public async Task<MySqlResultState> LazadaCreateProductFromProductIdInWarehouse(
             int productId,
             string name,
             Boolean isNeedUploadImage,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("CreateLazadaProductFromProductIdInWarehouse Call productId: " + productId + ", name: " + name + ", isNeedUploadImage: " + isNeedUploadImage.ToString());
+            MyLogger.GetInstance().Info("LazadaCreateProductFromProductIdInWarehouse Call productId: " + productId + ", name: " + name + ", isNeedUploadImage: " + isNeedUploadImage.ToString());
             // Lấy sản phẩm trong kho
             Product product = productSqler.GetProductFromId(productId, conn);
 
@@ -3523,7 +3753,11 @@ namespace MVCPlayWithMe.Controllers
                     )
                 {
                     //result = await CreateLazadaProduct_8666_SachTruyenNganChoBe(product, name, isNeedUploadImage, conn);
-                    result = await CreateLazadaProduct_Book_Core(product, name, isNeedUploadImage, cate.lazadaCategoryId, conn);
+                    result = await LazadaCreateProduct_Book_Core(product, name, isNeedUploadImage, cate.lazadaCategoryId, conn);
+                }
+                else if (cate.lazadaCategoryId == 10333)// Đồ Chơi Học Tập Và Giáo Dục)
+                {
+                    result = await LazadaCreateProduct_LearningAndEducationalToys(product, name, isNeedUploadImage, cate.lazadaCategoryId, conn);
                 }
                 else
                 {
@@ -3578,7 +3812,7 @@ namespace MVCPlayWithMe.Controllers
                         }
                         else if (eType == Common.eLazada)
                         {
-                            resultTemp = await CreateLazadaProductFromProductIdInWarehouse(productId,
+                            resultTemp = await LazadaCreateProductFromProductIdInWarehouse(productId,
                             null, true, conn);
                         }
 

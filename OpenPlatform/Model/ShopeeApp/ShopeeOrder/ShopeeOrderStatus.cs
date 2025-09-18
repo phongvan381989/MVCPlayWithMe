@@ -47,5 +47,26 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
             "COMPLETED",
             "ALL"
         };
+
+
+        // READY_TO_SHIP/PROCESSED/SHIPPED/CANCELLED/MATCHED
+        public enum EnumShopeeBookingStatus
+        {
+            READY_TO_SHIP,
+            PROCESSED,
+            SHIPPED,
+            CANCELLED,
+            MATCHED,
+            ALL
+        }
+
+        static public string[] shopeeBookingStatusArray = {
+            "READY_TO_SHIP",
+            "PROCESSED",
+            "SHIPPED",
+            "CANCELLED",
+            "MATCHED",
+            "ALL"
+        };
     }
 }

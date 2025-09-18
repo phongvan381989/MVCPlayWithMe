@@ -11,7 +11,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaNotification
         public string order_status { get; set; }
 
         // Is trade_order_id mapping to order_id ?     Yes
-        public long trade_order_id { get; set; }
+        public string trade_order_id { get; set; }
 
         // #timestamp of the order status update
         //update time (seconds)

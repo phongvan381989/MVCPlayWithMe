@@ -178,7 +178,7 @@
         @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
         <div class="display-flex-margin10">
-            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn" />
+            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn hoặc mã booking" />
             <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetailFromDownloadedList()"
                     title="Tìm trong danh sách dữ liệu đã tải về">
                 Chi Tiết Đơn Hàng Từ Danh Sách Đã Tải
@@ -189,6 +189,7 @@
                     Còn không thì chịu, phải lên sàn lấy mã đơn.">
                 Chi Tiết Đơn Hàng Từ Server
             </button>
+            <input id="is-booking-code" type="checkbox">
         </div>
         <div class="display-flex-margin10" title="Lọc trạng thái: đã đóng, đã hoàn, giữ chỗ, hủy giữ chỗ.">
             <div class="display-flex-margin-right20-align-items-center">
@@ -460,7 +461,7 @@
         async function OrderDetailFromServer() {
             let orderCodeValue = document.getElementsByName("order-code")[0].value;
             if (isEmptyOrSpaces(orderCodeValue)) {
-                await CreateMustClickOkModal("Chưa nhập mã đơn hàng hoặc mã vận đơn.", null);
+                await CreateMustClickOkModal("Chưa nhập mã đơn hàng hoặc mã vận đơn hoặc mã booking.", null);
                 EmptyAndFocusOrderCodeElement();
                 return;
             }
@@ -472,9 +473,16 @@
                 return;
             }
 
+            checkbox = document.getElementById("is-booking-code");
+            let isBookingCode = 0;
+            if (checkbox.checked) {
+                isBookingCode = 1;
+            }
+
             const searchParams = new URLSearchParams();
             searchParams.append("ecommerce", ecomerce);
             searchParams.append("sn_trackingNumber", orderCodeValue);
+            searchParams.append("isBookingCode", isBookingCode);
 
             let query = "/ProductECommerce/GetOrderFromOrderSN_TrackingNumber";
 
@@ -703,6 +711,16 @@
                     cell1.title = "Đơn hỏa tốc.";
                 }
                 cell1.innerHTML = order.code;
+                if (order.code == null || order.code === "") {
+                    // Là booking
+                    cell1.innerHTML = order.bookingCode;
+                    cell1.style.color = "pink";
+                    cell1.title = "Là booking.";
+                }
+                else if (IsValidString(order.bookingCode)) {
+                    cell1.title = "Đơn được matched với booking: " + order.bookingCode;
+                    cell1.style.color = "pink";
+                }
 
                 // Mã Vận Đơn
                 cell2.innerHTML = order.shipCode;
@@ -922,7 +940,7 @@
                     img.width = thumbnailWidth;
                     img.title = "Click để cập nhật liên kết"
                     img.onclick = function () {
-                        if (order.ecommerceName == eTiki || order.ecommerceName == eShopee) {
+                        if (order.ecommerceName == eTiki || order.ecommerceName == eShopee || order.ecommerceName == eLazada) {
                             let url = "Item?eType=" + order.ecommerceName + "&id=" + order.listItemId[i].toString()
                             window.open(url);
                         }
@@ -964,6 +982,10 @@
                     // Item là shopee
                     else if (order.ecommerceName == eShopee) {
                         a.href = GetShopeeItemUrl(order.listItemId[i]);
+                    }
+                    // Item là lazada
+                    else if (order.ecommerceName == eLazada) {
+                        a.href = GetLazadaItemUrl(order.listItemId[i]);
                     }
                     nameEle.appendChild(a);
 

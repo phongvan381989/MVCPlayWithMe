@@ -710,7 +710,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         /// <summary>
-        /// 
+        /// Cần lấy danh sách order và booking
         /// </summary>
         /// <param name="fromTo"> 0: 1 ngày, 1: 7 ngày, 2: 30 ngày</param>
         /// <param name="orderStatus"> 0: tất cả, 1: Cần gửi hàng, 2: Hủy</param>
@@ -737,6 +737,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Lấy đơn hàng của Shopee, Lazada
             List<ShopeeOrderDetail> lsOrderShopeeFullInfo = null ;
+            List<ShopeeBookingDetail> lsBookingShopeeFullInfo = null;
             DateTime time_from, time_to;
             time_from = DateTime.Now;
             time_to = DateTime.Now;
@@ -761,6 +762,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED],
                 conn);
 
+                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+                    time_from,
+                    time_to,
+                    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.CANCELLED],
+                    conn);
+
                 // Lazada
                 lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailCanceled(time_from);
             }
@@ -772,8 +779,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 time_to,
                 conn);
 
+                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+                    time_from,
+                    time_to,
+                    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.READY_TO_SHIP],
+                    conn);
+
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailToPickUp(time_from);
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailReadyToShip(time_from);
             }
             else
             {
@@ -784,6 +797,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.ALL],
                     conn);
 
+                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+                    time_from,
+                    time_to,
+                    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.ALL],
+                    conn);
+
                 // Lazada
                 lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailAll(time_from);
             }
@@ -792,6 +811,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             foreach (var order in lsOrderShopeeFullInfo)
             {
                 lsCommonOrder.Add(new CommonOrder(order));
+            }
+            foreach (var order in lsBookingShopeeFullInfo)
+            {
+                if (string.IsNullOrEmpty(order.order_sn))
+                {
+                    // Đảm bảo chưa có đơn matched
+                    lsCommonOrder.Add(new CommonOrder(order));
+                }
             }
 
             // Lazada
@@ -804,14 +831,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             lsCommonOrder.AddRange(ordersqler.GetListCommonOrder(fromTo));
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
-            ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+            ordersqler.GetOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
             conn.Close();
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
 
-        // Từ tên sàn, mã đơn hoặc mã vận đơn (với sàn SHOPEE) lấy được thông tin CommonOrder
+        // Từ tên sàn, mã đơn hoặc mã vận đơn (với sàn SHOPEE, LAZADA) hoặc mã booking lấy được thông tin CommonOrder
         [HttpPost]
-        public string GetOrderFromOrderSN_TrackingNumber(string ecommerce, string sn_trackingNumber)
+        public string GetOrderFromOrderSN_TrackingNumber(string ecommerce,
+            string sn_trackingNumber,
+            int isBookingCode) // 0: tức là false, ngược lại là true
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
             if (AuthentAdministrator() == null)
@@ -822,27 +851,68 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             if (ecommerce == Common.eShopee)
             {
-                // Nếu là mã đơn ta thử lấy mã vận đơn từ server
-                // Lấy mã đơn hàng từ mã đơn hàng hoặc mã vận đơn
+                // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn 
+                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+                conn.Open();
+                if (isBookingCode == 0)
+                {
+                    string sn = string.Empty, trackingNumber = string.Empty;
+                    tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+                        sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.SHOPEE, conn);
+                    conn.Close();
+
+                    if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
+                    {
+                        // Ta cần lấy sn từ mã đơn
+                        sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
+                    }
+                    ShopeeOrderDetail shopeeOrderDetail =
+                    ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
+
+                    if (shopeeOrderDetail != null)
+                    {
+                        shopeeOrderDetail.shipCode = trackingNumber;
+                        commonOrder = new CommonOrder(shopeeOrderDetail);
+                    }
+                }
+                else
+                {
+                    // Thử tìm theo mã vận đơn
+                    // Lấy chi tiết booking
+                    ShopeeBookingDetail detail =
+                        ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSN(sn_trackingNumber);
+                    if (detail != null)
+                    {
+                        ShopeeMySql shopeeMySql = new ShopeeMySql();
+                        commonOrder = new CommonOrder(detail); ;
+                    }
+                }
+            }
+            else if (ecommerce == Common.eLazada)
+            {
+                // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn 
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 conn.Open();
                 string sn = string.Empty, trackingNumber = string.Empty;
                 tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
-                    sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.SHOPEE, conn);
-               conn.Close();
+                    sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.LAZADA, conn);
+                conn.Close();
 
                 if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
                 {
                     // Ta cần lấy sn từ mã đơn
-                    sn = sn_trackingNumber; // Nếu người dùng nhập mã vận chuyển ở đây thì không tìm thấy
+                    sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
                 }
-                ShopeeOrderDetail shopeeOrderDetail =
-                ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
-
-                if (shopeeOrderDetail != null)
+                long order_id = Common.ConvertStringToInt64(sn);
+                if (order_id > 0)
                 {
-                    shopeeOrderDetail.shipCode = trackingNumber;
-                    commonOrder = new CommonOrder(shopeeOrderDetail);
+                    LazadaOrder orderDetail =
+                    LazadaOrderAPI.LazadaGetOrderDetail(order_id);
+
+                    if (orderDetail != null)
+                    {
+                        commonOrder = new CommonOrder(orderDetail);
+                    }
                 }
             }
             else if (ecommerce == Common.eTiki)
@@ -860,7 +930,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
-            ordersqler.UpdateOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+            ordersqler.GetOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -945,33 +1015,52 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         TikiPullEventService tikiPullEventService = new TikiPullEventService();
                         tikiPullEventService.DoWork(conn);
                     }
+                    else if (eType == Common.eLazada)
+                    {
+                        eECommerceType = EECommerceType.LAZADA;
+                    }
                     else if (eType == Common.ePlayWithMe)
                     {
                         eECommerceType = EECommerceType.PLAY_WITH_ME;
                     }
-
-                    // Nếu là đơn hỏa tốc, cập nhật trạng thái sang đã biết có đơn. Trạng thái này khả năng cao đã
-                    // được cập nhật từ mini app viết mục đích nhắc có đơn hỏa tốc
-                    if(order.isExpress)
+                    // Là đơn booking
+                    if (string.IsNullOrEmpty(order.code) && !string.IsNullOrEmpty(order.bookingCode))
                     {
-                        tikiSqler.UpdateStatusToKnownTbExpressOrder(order.code, eECommerceType, conn);
+                        TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
+                            order.bookingCode, eECommerceType, conn);
+                        ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
+
+                        ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
+
+                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+                        order, status, 0, oldStatus,
+                        EECommerceType.SHOPEE, conn);
                     }
-
-                    TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
-                        order.code, eECommerceType, conn);
-                    ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
-
-                    ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
-                    // Chuẩn bị đóng nhưng khách đã hủy đơn
-                    if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
+                    else
                     {
-                        result.State = EMySqlResultState.INVALID;
-                        result.Message = "Đơn hàng đã bị hủy hoặc đã đóng.";
-                    }
-                    else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
-                    {
-                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                        order, status, 0, oldStatus, eECommerceType, conn);
+                        // Nếu là đơn hỏa tốc, cập nhật trạng thái sang đã biết có đơn. Trạng thái này khả năng cao đã
+                        // được cập nhật từ mini app viết mục đích nhắc có đơn hỏa tốc
+                        if (order.isExpress)
+                        {
+                            tikiSqler.UpdateStatusToKnownTbExpressOrder(order.code, eECommerceType, conn);
+                        }
+
+                        TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                            order.code, eECommerceType, conn);
+                        ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+
+                        ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
+                        // Chuẩn bị đóng nhưng khách đã hủy đơn
+                        if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
+                        {
+                            result.State = EMySqlResultState.INVALID;
+                            result.Message = "Đơn hàng đã bị hủy hoặc đã đóng.";
+                        }
+                        else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                        {
+                            result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                            order, status, 0, oldStatus, eECommerceType, conn);
+                        }
                     }
                 }
             }
@@ -1014,21 +1103,36 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-
-                    TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
-                        order.code, eECommerceType, conn);
-                    ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
-
-                    ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
-                    if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                    // Là đơn booking
+                    if (string.IsNullOrEmpty(order.code) && !string.IsNullOrEmpty(order.bookingCode))
                     {
-                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                        order, status, 0, oldStatus, eECommerceType, conn);
+                        TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
+                            order.bookingCode, eECommerceType, conn);
+                        ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
 
-                        if (result != null && result.myAnything == 1)
+                        ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
+
+                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+                        order, status, 0, oldStatus,
+                        EECommerceType.SHOPEE, conn);
+                    }
+                    else
+                    {
+                        TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                            order.code, eECommerceType, conn);
+                        ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+
+                        ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
+                        if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                         {
-                            // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                            ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                            result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                            order, status, 0, oldStatus, eECommerceType, conn);
+
+                            if (result != null && result.myAnything == 1)
+                            {
+                                // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                                ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                            }
                         }
                     }
                 }

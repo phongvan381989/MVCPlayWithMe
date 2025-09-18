@@ -30,6 +30,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string code { get; set; }
 
+        // Mã booking, có trên Shopee
+        public string bookingCode { get; set; }
+
+        // Trạng thái booking
+        public string bookingStatus { get; set; }
+
+        // Trạng thái đã có đơn match với booking
+        public string matchStatus { get; set; }
+
         /// <summary>
         /// Mã vận đơn
         /// </summary>
@@ -148,6 +157,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             id = -1;
             code = order.order_sn;
+            bookingCode = order.booking_sn;
             // Lấy mã vận đơn
             shipCode = order.shipCode;
             status = order.order_status;
@@ -176,12 +186,45 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
+        // Đơn hàng đặc biệt vì không có mã đơn hàng, chứa dữ liệu của booking, và danh sách sản phẩm
+        public CommonOrder(ShopeeBookingDetail booking)
+        {
+            ecommerceName = Common.eShopee;
+
+            code = booking.order_sn;
+            bookingCode = booking.booking_sn;
+            bookingStatus = booking.booking_status;
+            matchStatus = booking.match_status;
+
+            created_at = Common.GetDateFromTimestamp(booking.create_time);
+            listItemId = new List<long>();
+            listModelId = new List<long>();
+            listThumbnail = new List<string>();
+            listQuantity = new List<int>();
+
+            listItemName = new List<string>();
+            listModelName = new List<string>();
+            listMapping = new List<List<Mapping>>();
+
+            foreach (ShopeeGetOrderDetailItem e in booking.item_list)
+            {
+                listItemId.Add(e.item_id);
+                listModelId.Add(e.model_id);
+                listThumbnail.Add(e.image_info.image_url);
+                listQuantity.Add(e.model_quantity_purchased);
+
+                listItemName.Add(e.item_name);
+                listModelName.Add(e.model_name);
+            }
+        }
+
         public CommonOrder(LazadaOrder order)
         {
             ecommerceName = Common.eLazada;
 
             id = order.order_id;
-            code = order.orderItems[0].tracking_code;
+            code = order.order_id.ToString();
+            shipCode = order.orderItems[0].tracking_code;
             if (order.statuses != null && order.statuses.Count != 0)
             {
                 status = order.statuses[0];
@@ -233,7 +276,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     listQuantity.Add(1);
 
                     listItemName.Add(e.name);
-                    //listModelName.Add();
+                   listModelName.Add(e.GetVariationName());
                 }
             }
 

@@ -6,6 +6,7 @@ using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
@@ -15,6 +16,7 @@ using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySql.Data.MySqlClient;
@@ -29,6 +31,8 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
+using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
+using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -379,28 +383,28 @@ namespace MVCPlayWithMe.Controllers
 
         private void TikiTestSomething1()
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            CommonOrder commonOrder = new CommonOrder();
-            commonOrder.code = "ABCDEDFTest";
-            commonOrder.listItemId.Add(1000);
-            commonOrder.listItemId.Add(2000);
+            //MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            //conn.Open();
+            //CommonOrder commonOrder = new CommonOrder();
+            //commonOrder.code = "ABCDEDFTest";
+            //commonOrder.listItemId.Add(1000);
+            //commonOrder.listItemId.Add(2000);
 
-            commonOrder.listModelId.Add(1);
-            commonOrder.listModelId.Add(2);
+            //commonOrder.listModelId.Add(1);
+            //commonOrder.listModelId.Add(2);
 
-            commonOrder.listQuantity.Add(1);
-            commonOrder.listQuantity.Add(1);
+            //commonOrder.listQuantity.Add(1);
+            //commonOrder.listQuantity.Add(1);
 
-            TikiMySql tikiSqler = new TikiMySql();
-            tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+            //TikiMySql tikiSqler = new TikiMySql();
+            //tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
 
-            tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+            //tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
 
-            tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+            //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
 
-            tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
-            conn.Close();
+            //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+            //conn.Close();
         }
 
         private void RecursionGetCategoryOfTiki(int id,
@@ -684,6 +688,51 @@ namespace MVCPlayWithMe.Controllers
         //{
 
         //}
+        public string GetListOrderLazada(int fromTo, int orderStatus)
+        {
+            List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(lsCommonOrder);
+            }
+            CommonOrderStatus eOrderStatus = (CommonOrderStatus)orderStatus;
+
+            // Lấy đơn hàng của Lazada
+            DateTime time_from, time_to;
+            time_from = DateTime.Now;
+            time_to = DateTime.Now;
+            if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.today)
+                time_from = time_to.AddDays(-1);
+            else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last7days)
+                time_from = time_to.AddDays(-7);
+            else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
+                time_from = time_to.AddDays(-30);
+
+            // Lấy đơn hàng của lazada
+            List<LazadaOrder> lsOrderLazadaFullInfo = null;
+            if (eOrderStatus == CommonOrderStatus.CANCELLED)
+            {
+                // Lazada
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailCanceled(time_from);
+            }
+            else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+            {
+                // Lazada
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailReadyToShip(time_from);
+            }
+            else
+            {
+                // Lazada
+                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailAll(time_from);
+            }
+
+            // Lazada
+            foreach (var order in lsOrderLazadaFullInfo)
+            {
+                lsCommonOrder.Add(new CommonOrder(order));
+            }
+            return JsonConvert.SerializeObject(lsCommonOrder);
+        }
 
         [HttpPost]
         public string TikiTestSomething()
@@ -715,7 +764,16 @@ namespace MVCPlayWithMe.Controllers
             //    conn.Open();
             //    sqler.InserttbLazadaMediaSpace(1234, 0, 0, images, conn);
             //}
-            LazadaProductAPI.LazadaCreateProductTest();
+            //LazadaProductAPI.LazadaCreateProductTest();
+
+            //GetListOrderLazada(2, 0);
+
+            //DateTime now = DateTime.Now;
+            //ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+            //    now.AddDays(-14),
+            //    now,
+            //    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.ALL],
+            //    null);
 
            return JsonConvert.SerializeObject(result);
         }
@@ -810,6 +868,42 @@ namespace MVCPlayWithMe.Controllers
 
             if(CommonShopeeAPI.ShopeeGetTokenShopLevel() == null)
             {
+                result.State = EMySqlResultState.ERROR;
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string LazadaGetAccessTokenFromCodeForFirst(string code)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            Boolean isOk = LazadaAuthenAPI.LazadaAuthTokenCreateAndSaveDB(code);
+            if (!isOk)
+            {
+                result.State = EMySqlResultState.ERROR;
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public string LazadaRefreshAccessToken()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            Boolean isOk = LazadaAuthenAPI.LazadaAuthTokenRefresh();
+            if (!isOk)
+            { 
                 result.State = EMySqlResultState.ERROR;
             }
 

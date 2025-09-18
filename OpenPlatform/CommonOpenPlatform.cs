@@ -108,7 +108,7 @@ namespace MVCPlayWithMe.OpenPlatform
             MyLogger.GetInstance().Info("END get item and insert if dont exist");
         }
 
-        // Kiểm tra trạng thái đơn Shopee có phải là hỏa tốc
+        // Kiểm tra trạng thái đơn Shopee có phải là Hoả Tốc - Trong Ngày, Siêu Tốc - 4 Giờ
         public static Boolean IsShopeeExpress(string checkout_shipping_carrier)
         {
             if((checkout_shipping_carrier.IndexOf("Hỏa Tốc", StringComparison.OrdinalIgnoreCase) >= 0)||

@@ -119,8 +119,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    lsModel.Add(Tuple.Create(MyMySql.GetInt32(rdr, "ShopeeModelId"), 
-                        MyMySql.GetInt64(rdr, "TMDTShopeeModelId")));
+                    if (MyMySql.GetInt32(rdr, "ShopeeModelId") != -1 &&
+                        MyMySql.GetInt64(rdr, "TMDTShopeeModelId") != -1)
+                    {
+                        lsModel.Add(Tuple.Create(MyMySql.GetInt32(rdr, "ShopeeModelId"),
+                            MyMySql.GetInt64(rdr, "TMDTShopeeModelId")));
+                    }
                 }
                 rdr.Close();
             }
@@ -202,6 +206,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             lsTMDTShopeeModelNeedDeleteOnDb.Add(id.Item1);
                         }
                     }
+
                     if (lsTMDTShopeeModelNeedDeleteOnDb.Count > 0)
                     {
                         // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
@@ -695,7 +700,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
         }

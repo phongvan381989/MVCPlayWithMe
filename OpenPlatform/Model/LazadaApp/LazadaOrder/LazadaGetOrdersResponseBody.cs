@@ -19,6 +19,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder
         // Displayed in the Head section, this number tells the complete number of all orders 
         // for the current filter set in the database(included offset and limit).
         public int count { get; set; }
+
         public List<LazadaOrder> orders { get; set; }
     }
 

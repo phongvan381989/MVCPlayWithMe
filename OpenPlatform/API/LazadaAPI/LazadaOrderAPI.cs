@@ -13,6 +13,43 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
     {
         public static int limitOfGetOrders = 100;
 
+        public static LazadaOrder LazadaGetOrder(long order_id)
+        {
+            LazadaOrder order = null;
+            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            {
+                return order;
+            }
+
+            try
+            {
+                ILazopClient client = CommonLazadaAPI.GetLazopClient();
+
+                LazopRequest request = new LazopRequest();
+                request.SetApiName("/order/get");
+                request.SetHttpMethod("GET");
+
+                request.AddApiParameter("order_id", order_id.ToString());
+
+                LazopResponse response = client.Execute(request,
+                    LazadaAuthenAPI.lazadaAuthen.accessToken);
+                MyLogger.LazadaRestLog(request, response);
+
+                if (!response.IsError())
+                {
+                    LazadaGetOrderResponseBody objectRes =
+                    JsonConvert.DeserializeObject<LazadaGetOrderResponseBody>(response.Body, Common.jsonSerializersettings);
+                    order = objectRes.data;
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                order = null;
+            }
+            return order;
+        }
+
         // status = null or empty để lấy tất cả trạng thái
         public static List<LazadaOrder> LazadaGetOrders(DateTime fromDate,
             string status)
@@ -84,6 +121,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                         break;
                     }
 
+                    if(objectRes.data.count == 0)
+                    {
+                        break;
+                    }
+
                     ls.AddRange(objectRes.data.orders);
 
                     offset = offset + objectRes.data.count;
@@ -111,8 +153,29 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             }
         }
 
+        public static LazadaOrder LazadaGetOrderDetail(long order_id)
+        {
+            LazadaOrder order = null;
+            try
+            {
+                order = LazadaGetOrder(order_id);
+                if (order != null)
+                {
+                    List<LazadaOrder> orders = new List<LazadaOrder>();
+                    orders.Add(order);
+                    LazadaGetItemsFromOrders(orders);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                order = null;
+            }
+            return order;
+        }
+
         // Đơn hàng nhà bán cần gửi cho bên vận chuyển
-        public static List<LazadaOrder> LazadaGetOrdersDetailToPickUp(DateTime fromDate)
+        public static List<LazadaOrder> LazadaGetOrdersDetailReadyToShip(DateTime fromDate)
         {
             // unpaid,
             List<LazadaOrder> orders = LazadaGetOrders(fromDate,
@@ -122,9 +185,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             orders.AddRange(LazadaGetOrders(fromDate,
                 LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.pending]));
 
-            // topack
+            // ready_to_ship
             orders.AddRange(LazadaGetOrders(fromDate,
-                LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.topack]));
+                LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.ready_to_ship]));
+
+            LazadaGetItemsFromOrders(orders);
 
             return orders;
         }
@@ -143,7 +208,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         // Tất cả đơn hàng
         public static List<LazadaOrder> LazadaGetOrdersDetailAll(DateTime fromDate)
         {
-            // canceled,
             List<LazadaOrder> orders = LazadaGetOrders(fromDate, null);
 
             LazadaGetItemsFromOrders(orders);

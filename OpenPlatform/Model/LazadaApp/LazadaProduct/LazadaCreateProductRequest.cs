@@ -86,6 +86,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         public string version { get; set; }
 
         public string isbn_issn { get; set; }
+
+
+        // Độ tuổi phù hợp
+        public string recommended_age { get; set; }
+
+        public string battery_required { get; set; }
     }
 
     public class LazadaProductImageRequest

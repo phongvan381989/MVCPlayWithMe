@@ -134,6 +134,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         }
 
         // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
+        // Nếu sản phẩm là sách dựa vào category thì thêm chữ "Sách" ở đầu tên
         static public string GenerateName(Product product)
         {
             // Tên đăng gồm: Sách Tên combo "-" tên sản phẩm.
@@ -168,7 +169,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         }
 
         // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
-        static public string GenerateShopeeName(Product product)
+        static public string ShopeeGenerateNameForBook(Product product)
         {
             // Tên đăng gồm: Sách + tên sản phẩm.
             string name = product.name.Trim();

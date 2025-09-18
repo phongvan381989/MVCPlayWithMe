@@ -81,6 +81,16 @@
                             title="Cập nhật số trang chung">
                         Cập Nhật Số Trang
                     </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonPublishingTime()"
+                            title="Cập nhật năm xuất bản chung">
+                        Cập Nhật Năm Xuất Bản
+                    </button>
+
+                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonBookCoverPrice()"
+                            title="Cập nhật giá bìa chung">
+                        Cập Nhật Giá Bìa Chung
+                    </button>
                 </div>
             </div>
             <div style="margin-bottom: 10px;">
@@ -369,6 +379,48 @@
             }
 
             let query = "/Product/UpdateCommonPageNumberWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonPublishingTime() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+
+            let publishingTime = GetValueInputById("publishing-time", 0);
+            if (publishingTime == 0) {
+                CreateMustClickOkModal("Năm xuất bản chưa chính xác.");
+                document.getElementById("publishing-time").focus();
+                return;
+            }
+            searchParams.append("publishingTime", publishingTime);
+
+            let query = "/Product/UpdateCommonPublishingTimeWithCombo";
+
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function UpdateCommonBookCoverPrice() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("comboId", GetValueFromUrlName("id"));
+
+            let bookCoverPrice = GetValueInputById("book-cover-price", 0);
+            if (bookCoverPrice == 0) {
+                CreateMustClickOkModal("Giá bìa chưa chính xác.");
+                document.getElementById("book-cover-price").focus();
+                return;
+            }
+            searchParams.append("bookCoverPrice", bookCoverPrice);
+
+            let query = "/Product/UpdateCommonBookCoverPriceWithCombo";
 
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);

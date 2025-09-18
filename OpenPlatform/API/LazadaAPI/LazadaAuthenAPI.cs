@@ -1,4 +1,5 @@
 ﻿using Lazop.Api;
+using Lazop.Api.Util;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaConfig;
 using MySql.Data.MySqlClient;
@@ -15,40 +16,42 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
     public class LazadaAuthenAPI
     {
         public static LazadaAuth lazadaAuthen;
-        public static string serverUrl = "https://api.lazada.com/rest";
 
         // Sau khi shopee ủy quyền, ta có được code từ url call back.
-        // Từ code ta lấy được access, refresh token lần đầu
-        public static Boolean LazadaAuthTokenCreate(string code)
+        // Từ code ta lấy được access, refresh token lần đầu và lưu vào db
+        public static Boolean LazadaAuthTokenCreateAndSaveDB(string code)
         {
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            try
             {
-                conn.Open();
-
-                try
+                LazopClient client = new LazopClient(UrlConstants.API_AUTHORIZATION_URL,
+                    lazadaAuthen.appKey, lazadaAuthen.appSecret);
+                LazopRequest request = new LazopRequest("/auth/token/create");
+                request.AddApiParameter("code", code);
+                LazopResponse response = client.Execute(request);
+                MyLogger.LazadaRestLog(request, response);
+                if(response.IsError())
                 {
-                    LazopClient client = new LazopClient(serverUrl,
-                        lazadaAuthen.appKey, lazadaAuthen.appSecret);
-                    LazopRequest request = new LazopRequest("/auth/token/create");
-                    request.AddApiParameter("code", code);
-                    LazopResponse response = client.Execute(request);
-                    MyLogger.LazadaRestLog(request, response);
-
-                    JsonSerializerSettings settings = new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        MissingMemberHandling = MissingMemberHandling.Ignore
-                    };
-                    LazadaAuthTokenCreateResponseBody token =
-                        JsonConvert.DeserializeObject<LazadaAuthTokenCreateResponseBody>(response.Body, settings);
-
-                    LazadaSaveToken(token, conn);
-                }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.Message);
                     return false;
                 }
+
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                LazadaAuthTokenCreateResponseBody token =
+                    JsonConvert.DeserializeObject<LazadaAuthTokenCreateResponseBody>(response.Body, settings);
+
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    LazadaSaveToken(token, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                return false;
             }
             return true;
         }
@@ -56,41 +59,49 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         // Khi access token hết hạn, ta làm mới
         public static Boolean LazadaAuthTokenRefresh()
         {
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            try
             {
-                conn.Open();
-
-                try
+                LazopClient client = new LazopClient(UrlConstants.API_AUTHORIZATION_URL,
+                    lazadaAuthen.appKey, lazadaAuthen.appSecret);
+                LazopRequest request = new LazopRequest("/auth/token/refresh");
+                request.AddApiParameter("refresh_token", lazadaAuthen.refreshToken);
+                LazopResponse response = client.Execute(request);
+                MyLogger.LazadaRestLog(request, response);
+                if (response.IsError())
                 {
-                    LazopClient client = new LazopClient(serverUrl,
-                        lazadaAuthen.appKey, lazadaAuthen.appSecret);
-                    LazopRequest request = new LazopRequest("/auth/token/refresh");
-                    request.AddApiParameter("refresh_token", lazadaAuthen.refreshToken);
-                    LazopResponse response = client.Execute(request);
-                    MyLogger.LazadaRestLog(request, response);
-
-                    JsonSerializerSettings settings = new JsonSerializerSettings
-                    {
-                        NullValueHandling = NullValueHandling.Ignore,
-                        MissingMemberHandling = MissingMemberHandling.Ignore
-                    };
-                    LazadaAuthTokenCreateResponseBody token =
-                        JsonConvert.DeserializeObject<LazadaAuthTokenCreateResponseBody>(response.Body, settings);
-
-                    LazadaSaveToken(token, conn);
-                }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.Message);
                     return false;
                 }
+
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                LazadaAuthTokenCreateResponseBody token =
+                    JsonConvert.DeserializeObject<LazadaAuthTokenCreateResponseBody>(response.Body, settings);
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    LazadaSaveToken(token, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                return false;
             }
             return true;
         }
 
-        public static void LazadaSaveToken(LazadaAuthTokenCreateResponseBody lazadaToken,
+        public static Boolean LazadaSaveToken(LazadaAuthTokenCreateResponseBody lazadaToken,
     MySqlConnection conn)
         {
+            if(!lazadaToken.IsValid())
+            {
+                MyLogger.GetInstance().Warn(JsonConvert.SerializeObject(lazadaToken));
+                return false;
+            }
+
             try
             {
                 MySqlCommand cmd =
@@ -112,7 +123,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
+                return false;
             }
+            return true;
         }
 
         public static LazadaAuth LazadaGetAuthFromDB(MySqlConnection conn)
@@ -151,10 +164,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
         public static Boolean LazadaRefreshAccessTokenIfNeed()
         {
-            if (lazadaAuthen.refreshDatetime.AddSeconds(lazadaAuthen.expiresIn - 300)
-                < DateTime.Now)
+            try
             {
-                return LazadaAuthTokenRefresh();
+                if (lazadaAuthen.refreshDatetime.AddSeconds(lazadaAuthen.expiresIn - 300)
+                    < DateTime.Now)
+                {
+                    return LazadaAuthTokenRefresh();
+                }
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                return false;
             }
             return true;
         }

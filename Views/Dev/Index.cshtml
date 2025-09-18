@@ -22,6 +22,13 @@
             border-radius: 5px;
         }
 
+        .nsklnksjn {
+            background-color: #ff3399;
+            padding: 10px;
+            margin: 10px 0px 10px 0px;
+            border-radius: 5px;
+        }
+
         .gmxk9381 {
             margin: 10px 5px 10px 5px;
             width: 100%;
@@ -171,6 +178,35 @@
                     DB đã có live partner key, code">
                 Lấy Và Lưu Refresh Access Token Ngay Sau Ủy Quyền
             </button>
+
+        </div>
+
+        <div class="nsklnksjn">
+            <div class="gmxk9381"> Lấy URL Ủy quyền LAZADA</div>
+            <div class="flpzni5136">
+                <input type="text" id="generate_authority_url_lazada" class="config-max-width margin-vertical"
+                       title="Hiển thị đường dẫn gửi chủ shop ủy quyền cho phần mềm" />
+                <button type="button" onclick="LazadaGenerateAuthorityUrl()"
+                        title="Lấy được đường dẫn gửi chủ shop ủy quyền cho phần mềm">
+                    Lấy Url ủy quyền gửi chủ shop
+                </button>
+            </div>
+
+            <div class="flpzni5136">
+                <input type="text" id="code_after_authority_lazada" class="config-max-width margin-vertical"
+                       title="code có được sau khi chủ shop uy quyền, trả về trong url callback" />
+                <button type="button" onclick="LazadaGetAccessTokenFromCodeForFirst()"
+                        title="Sau khi chủ shop uy quyền, ta lấy được access, refresh token lần đầu và lưu vào db">
+                    Get Access Token From Code For First
+                </button>
+            </div>
+
+            <div class="flpzni5136">
+                <button type="button" onclick="LazadaRefreshAccessToken()"
+                        title="Làm mới access token từ refresh token">
+                    Refresh Access Token
+                </button>
+            </div>
 
         </div>
     </div>
@@ -407,6 +443,43 @@
 
             const searchParams = new URLSearchParams();
             let query = "/Dev/ShopeeGetTokenShopLevelAfterAuthorization";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+        }
+
+        function LazadaGenerateAuthorityUrl() {
+            let urlAuth = "https://auth.lazada.com/oauth/authorize?response_type=code&force_auth=true&redirect_uri=https://vnexpress.net/&client_id=133247";
+            document.getElementById("generate_authority_url_lazada").value = urlAuth;
+        }
+
+        async function LazadaGetAccessTokenFromCodeForFirst() {
+            let text = "Bạn vừa được chủ shop ủy quyền?";
+            if (confirm(text) == false)
+                return;
+
+            let code = document.getElementById("code_after_authority_lazada").value;
+            if (CheckIsEmptyOrSpacesAndShowResult(code, "code không hợp lệ.")) {
+                document.getElementById("code_after_authority_lazada").focus();
+                return;
+            }
+
+            const searchParams = new URLSearchParams();
+            searchParams.append("code", code);
+            let query = "/Dev/LazadaGetAccessTokenFromCodeForFirst";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+        }
+
+        async function LazadaRefreshAccessToken() {
+
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/LazadaRefreshAccessToken";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

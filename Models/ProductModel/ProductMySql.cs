@@ -604,6 +604,56 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        public MySqlResultState UpdateCommonPublishingTimeWithCombo(int comboId,
+                int publishingTime,
+                MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET 
+               `PublishingTime` = @inPublishingTime
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPublishingTime", publishingTime);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public MySqlResultState UpdateCommonBookCoverPriceWithCombo(int comboId,
+                int bookCoverPrice,
+                MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbProducts` SET 
+               `BookCoverPrice` = @inBookCoverPrice
+                WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
         public MySqlResultState UpdateProduct(
             Product pro
         )

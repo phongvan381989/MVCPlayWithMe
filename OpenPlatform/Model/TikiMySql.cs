@@ -556,7 +556,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
         // storeName: st_tbOutput_Insert hoặc st_tbOutput_Insert_If_DontExist_When_Packing
-        public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut(MySqlConnection conn,
+        public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut_OldVersion(MySqlConnection conn,
             string storeName,
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
@@ -567,13 +567,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 isNeedExecuteReader = false;
             }
 
-            if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+            // Có mã đơn, không phải chỉ booking shopee
+            if (!string.IsNullOrEmpty(commonOrder.code))
             {
-                UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
-            }
-            else
-            {
-                InsertTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                {
+                    UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                }
+                else
+                {
+                    InsertTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                }
             }
 
             MySqlResultState resultState = new MySqlResultState();
@@ -631,6 +635,71 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
+        // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi
+        // giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
+        // Kết nối được mở đóng bên ngoài hàm
+        public MySqlResultState UpdateOutputAndProductTableFromOrder_BookingConnectOut(
+            MySqlConnection conn,
+            CommonOrder commonOrder,
+            ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            // Chỉ áp dụng với đơn hàng, không áp dụng với booking
+            if (!string.IsNullOrEmpty(commonOrder.code))
+            {
+                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                {
+                    UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                }
+                else
+                {
+                    InsertTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                }
+            }
+
+            MySqlResultState resultState = new MySqlResultState();
+            try
+            {
+                // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
+                int delta = 1;
+                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                {
+                    delta = -1;
+                }
+                MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert_Order_Booking", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                cmd.Parameters.AddWithValue("@inProductId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+                int productId = 0;
+                int quantity = 0;
+                for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                {
+                    for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                    {
+                        quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                        if (quantity == 0)
+                        {
+                            continue;
+                        }
+
+                        productId = commonOrder.listMapping[i][j].product.id;
+                        cmd.Parameters[3].Value = productId;
+                        cmd.Parameters[4].Value = quantity * delta;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            return resultState;
+        }
+
         public TbEcommerceOrder GetLastestStatusOfECommerceOrder(string code,
             EECommerceType eCommerceType,
             MySqlConnection conn)
@@ -651,6 +720,37 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     lastest.status = MyMySql.GetInt32(rdr, "Status");
                     lastest.updateTime= MyMySql.GetInt64(rdr, "UpdateTime");
+                }
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return lastest;
+        }
+
+        public TbEcommerceOrder GetLastestStatusOfECommerceBooking(string code,
+            EECommerceType eCommerceType,
+            MySqlConnection conn)
+        {
+            TbEcommerceOrder lastest = new TbEcommerceOrder();
+            lastest.updateTime = 0;
+            lastest.status = (int)ECommerceOrderStatus.DONT_EXIST; // Giá trị mặc định
+            try
+            {
+                // Lấy trạng thái cuối cùng của đơn trong bảng tbECommerceOrder
+                MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCode", code);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                MySqlDataReader rdr;
+                rdr = cmd.ExecuteReader();
+                while (rdr.Read())
+                {
+                    lastest.status = MyMySql.GetInt32(rdr, "Status");
+                    lastest.updateTime = MyMySql.GetInt64(rdr, "UpdateTime");
                 }
                 rdr.Close();
             }
@@ -738,6 +838,33 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return true;
         }
 
+        // Khi Packed theo đơn hàng, và đơn hàng này được mapping với booking, booking đã được đóng gói gửi kho 
+        // sàn thì ta không cần thay đổi tồn kho, chỉ cập nhật cột code trong tbOutput
+        public MySqlResultState UpdateOrderCodeOftbOutputWhenPacked(
+            CommonOrder commonOrder,
+            EECommerceType eCommerceType,
+            MySqlConnection conn)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = inCode 
+                WHERE `BookingCode` = inBookingCode AND `ECommmerce` = inECommmerce; ", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                cmd.ExecuteNonQuery();
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+            return resultState;
+        }
+
         /// <summary>
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         /// Insert thông tin trạng thái đơn hàng vào bảng tbECommerceOrder
@@ -756,110 +883,68 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlResultState resultState = new MySqlResultState();
             try
             {
-                do
+                // Lưu vào bảng tbECommerceOrder
                 {
-                    // Lưu vào bảng tbECommerceOrder
-                    {
-                        MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                        cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
-                        cmd.Parameters.AddWithValue("@inStatus", (int)status);
-                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                        cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
+                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
+                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
 
-                        cmd.ExecuteNonQuery();
-                    }
-                    // =>    Phức tập nên bỏ check đã mapping item chưa????
-
-                    //// Rủi ro: Nếu đơn có sản phẩm chưa được mapping thì sẽ không được cập nhật số lượng chính xác khi giữ chỗ
-                    //// Xử lý: Khi đóng đơn, (lúc này bắt buộc đã mapping) ta cần kiểm tra lại 1 lượt xem có sản phẩm, 
-                    //// số lượng chưa tồn tại trong tbOutput
-                    //// Trường hợp: thay đổi mapping khi đóng đơn so với khi giữ chỗ thì quá khù khoằm, tự sửa thủ công
-
-                    //// Trường hợp: Bước 1: giữ chỗ, Bước 2: thay đổi mapping (sửa mapping đã có / tạo mapping chưa có), Bước 3 hủy giữ chỗ (chưa đóng đơn)
-                    //// Sẽ làm sai khác xuất / nhập kho. Khù khoằm không giải quyết, tự sửa thủ công.
-
-                    //// => TẤT CẢ RỦI RO TRÊN ĐƯỢC GIẢI QUYẾT khi mapping ngay khi đăng sản phẩm (giải pháp hiện tại check thủ công),
-                    //// và khi thay đổi mapping phải kiểm tra xem có đơn nào đang trong tiến trình xử lý không
-                    //if (status == ECommerceOrderStatus.BOOKED)
-                    //{
-                    //    Boolean isNeedInsert = false;
-                    //    for (int i = 0; i < commonOrder.listMapping.Count; i++)
-                    //    {
-                    //        if (commonOrder.listMapping[i].Count == 0)
-                    //        {
-                    //            isNeedInsert = true;
-                    //            break;
-                    //        }
-                    //    }
-                    //    if (isNeedInsert)
-                    //    {
-                    //        // Có item chưa được mapping,
-                    //        MySqlCommand cmd = new MySqlCommand("INSERT INTO tbEcommerceOrder_DontMapping(`Code`, `ECommmerce`) VALUES(@inCode, @inECommmerce);", conn);
-                    //        cmd.CommandType = CommandType.Text;
-                    //        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    //        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-                    //        cmd.ExecuteNonQuery();
-                    //    }
-
-                    //}
-
-                    //if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.BOOKED)
-                    //{
-                    //    // Kiểm tra có item chưa được mapping khi giữ chỗ
-                    //    MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM tbEcommerceOrder_DontMapping WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce;", conn);
-                    //    cmd.CommandType = CommandType.Text;
-                    //    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    //    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    //    Boolean isExist = false;
-                    //    MySqlDataReader rdr = null;
-                    //    rdr = cmd.ExecuteReader();
-                    //    while (rdr.Read())
-                    //    {
-                    //        isExist = true;
-                    //        break;
-                    //    }
-                    //    rdr.Close();
-
-                    //    if (isExist)
-                    //    {
-                    //        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn, "st_tbOutput_Insert_If_DontExist_When_Packing", commonOrder, status, eCommerceType);
-                    //        resultState.myAnything = 1; // Có thay đổi tồn kho.
-
-                    //        // Xóa dữ liệu vì item trong đơn đã mapping
-                    //        MySqlCommand cmdDelete = new MySqlCommand("DELETE FROM tbEcommerceOrder_DontMapping WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce;", conn);
-                    //        cmdDelete.CommandType = CommandType.Text;
-                    //        cmdDelete.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    //        cmdDelete.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    //        cmdDelete.ExecuteNonQuery();
-                    //    }
-                    //}
-
-                    // Kiểm tra xem cần thay đổi tồn kho không?
-                     if ( // Cần xuất kho và chưa chưa xuất kho
-                        (status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.DONT_EXIST) ||
-
-                        (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.DONT_EXIST) ||
-
-                        // Cần nhập kho và chưa nhập kho
-                        // Đơn hủy và chưa Đã Đóng
-                        (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.BOOKED) ||
-
-                        // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
-                        (status == ECommerceOrderStatus.RETURNED))
-                    {
-                        resultState = UpdateOutputAndProductTableFromCommonOrderConnectOut(conn,
-                            "st_tbOutput_Insert", commonOrder, status, eCommerceType);
-                        resultState.myAnything = 1; // Có thay đổi tồn kho.
-                    }
-                    else
-                    {
-                        resultState.myAnything = 0; // Không có thay đổi tồn kho.
-                    }
+                    cmd.ExecuteNonQuery();
                 }
-                while (false);
+
+                //// Nếu có mã booking, hoàn hàng khi có đã MATCHED với đơn, ta cần cập nhật bảng tb_ecommerce_booking
+                //if (status == ECommerceOrderStatus.RETURNED
+                //    && !string.IsNullOrEmpty(commonOrder.code)
+                //    && !string.IsNullOrEmpty(commonOrder.bookingCode))
+                //{
+                //    // Lưu vào bảng tbECommerceBooking
+                //    {
+                //        MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn);
+                //        cmd.CommandType = CommandType.StoredProcedure;
+                //        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                //        cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                //        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                //        cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
+
+                //        cmd.ExecuteNonQuery();
+                //    }
+                //}
+
+                // Nếu có mã booking, và đã được đóng theo mã booking thì không cần thay đổi tồn kho theo BOOK, PACKED đơn hàng nữa
+                if ((status == ECommerceOrderStatus.PACKED || status == ECommerceOrderStatus.BOOKED)
+                    && !string.IsNullOrEmpty(commonOrder.code)
+                    && !string.IsNullOrEmpty(commonOrder.bookingCode))
+                {
+                    // Cập nhật tbOutput cho cột Code
+                    resultState = UpdateOrderCodeOftbOutputWhenPacked(commonOrder, eCommerceType, conn);
+                    return resultState;
+                }
+
+                // Kiểm tra xem cần thay đổi tồn kho không?
+                if ( // Cần xuất kho và chưa chưa xuất kho
+                    (status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.DONT_EXIST) ||
+
+                    (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.DONT_EXIST) ||
+
+                    // Cần nhập kho và chưa nhập kho
+                    // Đơn hủy và chưa Đã Đóng
+                    (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.BOOKED) ||
+
+                    // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
+                    (status == ECommerceOrderStatus.RETURNED))
+                {
+                    resultState = UpdateOutputAndProductTableFromOrder_BookingConnectOut(
+                        conn, commonOrder, status, eCommerceType);
+                    resultState.myAnything = 1; // Có thay đổi tồn kho.
+                }
+                else
+                {
+                    resultState.myAnything = 0; // Không có thay đổi tồn kho.
+                }
             }
             catch (Exception ex)
             {
@@ -869,6 +954,113 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
+        /// <summary>
+        /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
+        /// Insert thông tin trạng thái đơn hàng vào bảng tb_ecommerce_booking
+        /// Cập nhật số lượng ở tbProducts
+        /// </summary>
+        /// <param name="commonOrder"></param>
+        /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
+        public MySqlResultState UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+            CommonOrder commonOrder,
+            ECommerceOrderStatus status,
+            long update_time, // Thời gian event được sàn ghi nhận
+            ECommerceOrderStatus oldStatus, // Trạng thái mới nhất của đơn trong DB.
+            EECommerceType eCommerceType,
+            MySqlConnection conn)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            try
+            {
+                // Lưu vào bảng tbECommerceBooking
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inStatus", (int)status);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Kiểm tra xem cần thay đổi tồn kho không?
+                if ( // Cần xuất kho và chưa chưa xuất kho
+                    (status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.DONT_EXIST) ||
+
+                    (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.DONT_EXIST) ||
+
+                    // Cần nhập kho và chưa nhập kho
+                    // Đơn hủy và chưa Đã Đóng
+                    (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.BOOKED) ||
+
+                    // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
+                    (status == ECommerceOrderStatus.RETURNED))
+                {
+                    resultState = UpdateOutputAndProductTableFromOrder_BookingConnectOut(
+                        conn, commonOrder, status, eCommerceType);
+                    resultState.myAnything = 1; // Có thay đổi tồn kho.
+                }
+                else
+                {
+                    resultState.myAnything = 0; // Không có thay đổi tồn kho.
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            return resultState;
+        }
+
+        // HOàn lại số lượng về kho khi đơn được matched với booking, tbOutput sẽ cập nhật số lượng về 0
+        public MySqlResultState ReturnQuantityOfOrderMatchedBooking(
+            CommonOrder commonOrder,
+            EECommerceType eCommerceType,
+            MySqlConnection conn)
+        {
+            MyLogger.GetInstance().Info("ReturnQuantityOfOrderMatchedBooking call");
+            MySqlResultState resultState = new MySqlResultState();
+            try
+            {
+                // Lưu vào bảng tbECommerceBooking
+                {
+                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_ReturnQuantityOrderMatchedBooking", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+
+                    int productId = 0;
+                    int quantity = 0;
+                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                    {
+                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                        {
+                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            if (quantity == 0)
+                            {
+                                continue;
+                            }
+
+                            productId = commonOrder.listMapping[i][j].product.id;
+                            cmd.Parameters[2].Value = productId;
+                            cmd.Parameters[3].Value = quantity;
+                            cmd.ExecuteNonQuery();
+                        }
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+
+            return resultState;
+        }
 
         ///// <summary>
         ///// Trừ số lượng sản phẩm trong kho khi đóng đơn
@@ -1022,7 +1214,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        // Lưu thông tin sản phẩm trên san vào db, item id, model id của đơn hàng
+        // Lưu thông tin sản phẩm trên san sàn db, item id, model id của đơn hàng
         // Có check tồn tại
         public void InsertTbItemOfEcommerceOder(CommonOrder commonOrder,
             EECommerceType type,

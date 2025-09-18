@@ -1176,8 +1176,13 @@ namespace MVCPlayWithMe.Models.Order
 
         // Lấy trạng thái từ DB và cập nhật trạng thái đơn hàng đã đóng/ đã hoàn vào List<CommonOrder>
         // Hàm này dùng cho sàn: web PWM, Tiki, Shopee,...
-        public void UpdateOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
+        public void GetOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
         {
+            if (ls == null || ls.Count == 0)
+            {
+                return;
+            }
+
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             string status = string.Empty;
             try
@@ -1197,6 +1202,8 @@ namespace MVCPlayWithMe.Models.Order
                         cmd.Parameters[1].Value = (int)EECommerceType.TIKI;
                     else if (order.ecommerceName == Common.eShopee)
                         cmd.Parameters[1].Value = (int)EECommerceType.SHOPEE;
+                    else if (order.ecommerceName == Common.eLazada)
+                        cmd.Parameters[1].Value = (int)EECommerceType.LAZADA;
                     else if (order.ecommerceName == Common.ePlayWithMe)
                         cmd.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
 

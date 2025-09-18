@@ -193,6 +193,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         /// </summary>
         public float reverse_shipping_fee { get; set; }
 
+        public string booking_sn { get; set; }
+
         // Đơn ở trạng thái: UNPAID, READY_TO_SHIP => chưa được sàn sinh mã đơn.
         // Nhà bán chưa xác nhận đơn, khách hủy (trạng thái sẽ là CANCELLED) => chưa được sinh mã đơn
         // Ngược lại đã được sinh mã đơn.

@@ -110,9 +110,12 @@
                 name = name.trim();
             }
 
-            // Nếu tên có chữ "sách" ở đầu rồi thì thôi, không thêm vào.
-            if (!name.toLowerCase().startsWith("sách")) {
-                name = "Sách " + name;
+            // Nếu category có chữ sách ở đầu => sản phẩm là sách
+            if (product.categoryName.toLowerCase().startsWith("sách")) {
+                // Nếu tên có chữ "sách" ở đầu rồi thì thôi, không thêm vào.
+                if (!name.toLowerCase().startsWith("sách")) {
+                    name = "Sách " + name;
+                }
             }
 
             return name;

@@ -376,6 +376,8 @@
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeCreateProduct\ShopeeLogistic.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeCreateProduct\ShopeeMediaSpace.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeLogistic\ShopeeGetTrackingNumber.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeOrder\ShopeeGetBookingDetail.cs" />
+    <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeOrder\ShopeeGetBookingList.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeOrder\ShopeeGetOrderDetail.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeOrder\ShopeeGetOrderList.cs" />
     <Compile Include="OpenPlatform\API\ShopeeAPI\ShopeeProduct\ShopeeGetItemBaseInfo.cs" />
@@ -393,6 +395,7 @@
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuthTokenCreateResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaNotification\LazadaOrderStatusPush.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrderItemsResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrderResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrdersResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCreateProductRequest.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCreateProductResponseBody.cs" />
@@ -417,6 +420,9 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeGetCategoryResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeGetChannelListResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeUploadImageResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\ShopeeBookingSatusPush.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingListResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\TaxAndFee.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttribute.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttributeData.cs" />

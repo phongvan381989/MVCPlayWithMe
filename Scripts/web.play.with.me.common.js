@@ -31,7 +31,7 @@ var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
 var tikiConstDiscount = 5;
 
 function isEmptyOrSpaces(str) {
-    return str === null || str.match(/^[ |	]*$/) !== null;
+    return str == null || str.match(/^[ |	]*$/) !== null;
 }
 
 function GetExtensionOfFileName(fileName) {
@@ -1029,6 +1029,10 @@ async function GetListItem() {
 
 function GetShopeeItemUrl(itemid) {
     return "https://shopee.vn/product/137637267/" + itemid;
+}
+
+function GetLazadaItemUrl(itemid) {
+    return "https://www.lazada.vn/products/i" + itemid + ".html";
 }
 
 // https://tiki.vn/p76217978.html
