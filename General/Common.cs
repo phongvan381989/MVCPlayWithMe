@@ -19,6 +19,12 @@ using System.Windows.Media;
 using System.Windows;
 using System.Threading;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using MediaToolkit;
+using MediaToolkit.Model;
+using MediaToolkit.Options;
+using ImageMagick;
+using System.Net.Http;
 
 namespace MVCPlayWithMe.General
 {
@@ -176,6 +182,7 @@ namespace MVCPlayWithMe.General
         public static string MediaFolderPath;
         public static string TemporaryImageShopeeMediaFolderPath;
         public static string TemporaryImageTikiMediaFolderPath;
+        public static string absoluteForCreateMediaFolderPath;
 
         public static string srcCertificateFolderPath;
 
@@ -789,6 +796,35 @@ namespace MVCPlayWithMe.General
 
         }
 
+        // Xóa file trong thư mục
+        public static void DeleteFilesInDirectory(string directoryPath)
+        {
+            // Check if the directory exists
+            if (Directory.Exists(directoryPath))
+            {
+                // Get all file paths in the directory
+                string[] filePaths = Directory.GetFiles(directoryPath);
+
+                // Iterate through each file and delete it
+                foreach (string filePath in filePaths)
+                {
+                    try
+                    {
+                        File.Delete(filePath);
+                        //System.Console.WriteLine($"Deleted file: {filePath}");
+                    }
+                    catch (IOException ex)
+                    {
+                        MyLogger.GetInstance().Warn($"Error deleting file {filePath}: {ex.Message}");
+                    }
+                }
+            }
+            else
+            {
+                MyLogger.GetInstance().Info($"Directory not found: {directoryPath}");
+            }
+        }
+
         public static Int32 ConvertStringToInt32(string str)
         {
             if(string.IsNullOrEmpty(str))
@@ -912,35 +948,86 @@ namespace MVCPlayWithMe.General
             return 1;
         }
 
-        /// <summary>
-        /// Check xem ảnh đã tồn tại trong thư mục hay chưa? Nếu chưa ải ảnh từ địa chỉ web và lưu
-        /// </summary>
-        /// <param name="url">https://salt.tikicdn.com/cache/280x280/ts/product/c5/53/ad/991011e797c67d6910b87491ddeee138.png</param>
-        ///                   https://cf.shopee.vn/file/673f310b9b9152f0898752eb56e67ac6_tn
-        /// <param name="fileName">Tên gồm đường dẫn</param>
-        public static void DownloadVideoAndSaveWithName(string url, string fileName)
+        // <param name="fileName">Tên gồm đường dẫn</param>
+        // Trả về đường dẫn đầy đủ của ảnh trên máy nếu thành công. Ngược lại empty
+        public static async Task<string> DownloadVideo(string url, string filePath)
         {
-            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(fileName))
+            string path = string.Empty;
+            if (string.IsNullOrEmpty(url) || string.IsNullOrEmpty(filePath))
             {
-                return;
+                return path;
+            }
+
+            string extention = Path.GetExtension(url);
+            if (string.IsNullOrEmpty(extention))
+            {
+                extention = ".mp4";
+                path = filePath + extention;
+            }
+            else
+            {
+                path = Path.ChangeExtension(filePath, extention);
             }
 
             // Check xem video đã tồn tại hay chưa?
-            if (File.Exists(fileName))
-                return;
+            if (File.Exists(path))
+                return path;
 
-            RestRequest request = new RestRequest(url, Method.GET);
+            //RestRequest request = new RestRequest(url, Method.GET);
             //IRestResponse response = client.Execute(request);
 
+            //try
+            //{
+            //+    var fileBytes = client.DownloadDataAsync(request);
+            //    File.WriteAllBytes(path, fileBytes);
+            //}
+            //catch (Exception ex)
+            //{
+            //    MyLogger.GetInstance().Warn(ex.ToString());
+            //    return string.Empty;
+            //}
+
+            // Sử dụng try-catch để xử lý lỗi mạng, lỗi URL, hoặc lỗi truy cập tệp tin
             try
             {
-                var fileBytes = client.DownloadData(request);
-                File.WriteAllBytes(fileName, fileBytes);
+                HttpClient _httpClient =  new HttpClient();
+                // 1. Mở luồng dữ liệu từ URL BẤT ĐỒNG BỘ
+                // Luồng của máy chủ được giải phóng trong khi chờ kết nối và dữ liệu bắt đầu về.
+                using (var httpStream = await _httpClient.GetStreamAsync(url))
+                {
+                    // 2. Mở FileStream để ghi vào tệp tin cục bộ
+                    // FileMode.Create: Tạo tệp mới hoặc ghi đè nếu đã tồn tại.
+                    using (var fileStream = new FileStream(
+                        path,
+                        FileMode.Create,
+                        FileAccess.Write,
+                        FileShare.None,
+                        bufferSize: 8192,
+                        useAsync: true)) // useAsync=true là rất quan trọng cho I/O File Bất đồng bộ
+                    {
+                        // 3. Sao chép luồng dữ liệu BẤT ĐỒNG BỘ
+                        // Lệnh này copy toàn bộ nội dung từ httpStream sang fileStream
+                        // Nó tận dụng cơ chế I/O bất đồng bộ thực sự (True Async I/O) cho cả mạng và đĩa.
+                        await httpStream.CopyToAsync(fileStream);
+                    }
+                }
+
+                return path; // Tải thành công
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                MyLogger.GetInstance().Warn(ex.ToString());
+                // Xử lý lỗi liên quan đến HTTP (ví dụ: 404 Not Found, Timeout, Network Error)
+                MyLogger.GetInstance().Warn($"Loi mang khi tai video: {ex.Message}");
+                return string.Empty;
             }
+            catch (IOException ex)
+            {
+                // Xử lý lỗi liên quan đến I/O tệp tin (ví dụ: không đủ quyền ghi)
+                MyLogger.GetInstance().Warn($"Loi tep tin khi luu video: {ex.Message}");
+                return string.Empty;
+            }
+
+            return path;
         }
 
         /// <summary>
@@ -977,6 +1064,139 @@ namespace MVCPlayWithMe.General
                     ReduceImageSizeTo320AndSave(fileName);
                 }
             }
+        }
+
+        // Đổi định dạng ảnh
+        // Trả về đường dẫn đầy đủ của ảnh trên máy nếu thành công. Ngược lại empty
+        public static string GenerateNewImageFormat_Core(
+            string file,
+            string newFormat, // ".png", ".jpg"
+            Boolean isDelete)
+        {
+            string output = string.Empty;
+            try
+            {
+                MyLogger.GetInstance().Info($"GenerateNewImageFormat_Core Dang xu ly file: {file}");
+
+                // Đường dẫn đầu ra
+                output = Path.ChangeExtension(file, newFormat);
+
+                // Tải ảnh WebP
+                // Đọc file WebP
+                using (var image = new MagickImage(file))
+                {
+                    if (newFormat.ToUpper() == ".JPG")
+                    {
+                        image.Format = MagickFormat.Jpg; // Chuyển sang định dạng JPG
+                        //image.Quality = 90; // Đặt chất lượng JPG (90%)
+                        image.Quality = 100;
+                    }
+                    image.Write(output);
+                }
+
+                // Xóa ảnh cũ
+                if (isDelete)
+                {
+                    File.Delete(file);
+                }
+
+                MyLogger.GetInstance().Info($"Da luu: {output}");
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Info($"Loi khi xu ly file {file}: {ex.Message}");
+                return string.Empty;
+            }
+
+            return output;
+        }
+
+        public static string GetImageFormat(byte[] imageData)
+        {
+            // Kiểm tra magic numbers
+            if (imageData.Take(3).SequenceEqual(new byte[] { 0xFF, 0xD8, 0xFF }))
+                return "jpg";
+            if (imageData.Take(8).SequenceEqual(new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A }))
+                return "png";
+            if (imageData.Take(4).SequenceEqual(new byte[] { 0x47, 0x49, 0x46, 0x38 }))
+                return "gif";
+            if (imageData.Take(4).SequenceEqual(new byte[] { 0x52, 0x49, 0x46, 0x46 }) &&
+                imageData.Skip(8).Take(4).SequenceEqual(new byte[] { 0x57, 0x45, 0x42, 0x50 }))
+                return "webp";
+            if (imageData.Take(2).SequenceEqual(new byte[] { 0x42, 0x4D }))
+                return "bmp";
+
+            return "unknown"; // Không xác định được định dạng
+        }
+
+        // Tải ảnh từ url. Có đổi định dạng ảnh nếu cần
+        // Trả về đường dẫn đầy đủ của ảnh trên máy nếu thành công. Ngược lại empty
+        public static async System.Threading.Tasks.Task<string> DownloadImageFromImageSrc_CoreAsync(
+            string saveDirectory,
+            string imageSrc,
+            string fileName)// Không gồm đường dẫn
+        {
+            string savePath = string.Empty;
+            try
+            {
+                // Tải ảnh
+                savePath = Path.Combine(saveDirectory, fileName); // Đường dẫn đầy đủ
+                HttpClient _httpClient = new HttpClient();
+                byte[] imageData = await _httpClient.GetByteArrayAsync(imageSrc);
+                string imageFormat = GetImageFormat(imageData);
+
+                if (imageFormat == "webp")
+                {
+                    string savePathTemp = Path.ChangeExtension(savePath, ".webp"); ; // Đường dẫn đầy đủ
+                    File.WriteAllBytes(savePathTemp, imageData);
+                    // Gọi hàm covert ảnh webp sang định dạng jpg/png
+                    return GenerateNewImageFormat_Core(savePathTemp, Path.GetExtension(fileName), true);
+
+                }
+                else if (imageFormat == "gif")
+                {
+                    string savePathTemp = Path.ChangeExtension(savePath, ".gif"); ; // Đường dẫn đầy đủ
+                    File.WriteAllBytes(savePathTemp, imageData);
+                    // Gọi hàm covert ảnh webp sang định dạng jpg/png
+                    return GenerateNewImageFormat_Core(savePathTemp, Path.GetExtension(fileName), true);
+                }
+                else // png, jpg
+                {
+                    using (MemoryStream ms = new MemoryStream(imageData))
+                    {
+                        try
+                        {
+                            // Load ảnh từ stream
+                            using (System.Drawing.Image image = System.Drawing.Image.FromStream(ms))
+                            {
+                                if (fileName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    // Lưu ảnh với định dạng JPG
+                                    image.Save(savePath, ImageFormat.Jpeg);
+                                    MyLogger.GetInstance().Info($"Ảnh đã được lưu dưới dạng JPG tại: {savePath}");
+                                }
+                                else
+                                {
+                                    // Lưu ảnh với định dạng png
+                                    image.Save(savePath, ImageFormat.Png);
+                                    MyLogger.GetInstance().Info($"Ảnh đã được lưu dưới dạng PNG tại: {savePath}");
+                                }
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            MyLogger.GetInstance().Info($"Lỗi xử lý ảnh: {ex.Message}");
+                            return string.Empty;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                return string.Empty;
+            }
+            return savePath; ;
         }
         #endregion
 
@@ -1273,7 +1493,7 @@ namespace MVCPlayWithMe.General
         #endregion
 
         #region Xử lý mã hóa login
-        public const int SHA512Size = 64;
+        public const int SHA256Size = 64;
 
         /// <summary>
         /// Create a salt value.
@@ -1283,7 +1503,7 @@ namespace MVCPlayWithMe.General
         {
             // Generate a cryptographic random number.
             RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider();
-            byte[] buff = new byte[Common.SHA512Size];
+            byte[] buff = new byte[Common.SHA256Size];
             rng.GetBytes(buff);
             return buff;
         }
@@ -1321,6 +1541,77 @@ namespace MVCPlayWithMe.General
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Tính toán giá trị băm SHA256 cho nội dung của một file.
+        /// </summary>
+        /// <param name="filePath">Đường dẫn đầy đủ đến file cần băm.</param>
+        /// <returns>Giá trị băm SHA256 dưới dạng chuỗi hex, hoặc null nếu có lỗi.</returns>
+        public static string CalculateSHA256FileHash(string filePath)
+        {
+            // 1. Kiểm tra tính hợp lệ của đường dẫn và file
+            if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+            {
+                MyLogger.GetInstance().Info($"Loi: Duong dan khong hop le hoac file khong ton tai {filePath}");
+                return null;
+            }
+
+            try
+            {
+                // 2. Mở file để đọc theo luồng (Stream)
+                // FileMode.Open: Mở file đã tồn tại.
+                // FileAccess.Read: Chỉ đọc, không ghi.
+                // FileShare.Read: Cho phép các tiến trình khác đọc file cùng lúc.
+                using (var fileStream = File.OpenRead(filePath))
+                {
+                    // 3. Khởi tạo thuật toán băm SHA256
+                    // Đối tượng SHA256 sẽ tự động dọn dẹp (Dispose) nhờ khối using
+                    using (var sha256 = SHA256.Create())
+                    {
+                        // 4. Tính toán giá trị băm
+                        // Tính toán băm từ luồng fileStream.
+                        byte[] hashBytes = sha256.ComputeHash(fileStream);
+
+                        // 5. Chuyển đổi mảng byte băm thành chuỗi hex
+                        StringBuilder builder = new StringBuilder();
+                        foreach (byte b in hashBytes)
+                        {
+                            // Chuyển mỗi byte sang chuỗi hex 2 ký tự (x2)
+                            builder.Append(b.ToString("x2"));
+                        }
+                        MyLogger.GetInstance().Info($"SHA256 File hash: {builder.ToString()}");
+                        return builder.ToString();
+                    }
+                }
+            }
+            catch (IOException ex)
+            {
+                MyLogger.GetInstance().Warn($"Loi I/O khi doc file: {ex.Message}");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"Da xay ra loi khong xac dinh: {ex.Message}");
+                return null;
+            }
+        }
+
+        // Tính toán giá trị băm MD5
+        static public string CalculateMd5FileHash(string filePath)
+        {
+            using (var md5 = MD5.Create())
+            {
+                using (var stream = File.OpenRead(filePath))
+                {
+                    byte[] hashBytes = md5.ComputeHash(stream); // 16 bytes
+
+                    // Chuyển 16 bytes thành chuỗi hex 32 ký tự
+                    string md5Hash = BitConverter.ToString(hashBytes).Replace("-", "").ToLowerInvariant();
+                    MyLogger.GetInstance().Info(md5Hash);
+                    return md5Hash;
+                }
+            }
         }
         #endregion
 
@@ -1701,7 +1992,7 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Có những ảnh kích thước lớn, 12MB, up ở Lazada sẽ báo lỗi. Ta giảm kích thước về khoảng nhỏ hơn 5MB
+        /// Có những ảnh kích thước lớn, 12MB, up ở Lazada sẽ báo lỗi. Ta giảm kích thước về khoảng nhỏ hơn 3MB
         /// Xóa ảnh lớn và lưu ảnh mới trùng tên.
         /// </summary>
         /// <param name="path">Đường dẫn và tên file</param>
@@ -1867,6 +2158,61 @@ namespace MVCPlayWithMe.General
         //    }
 
         //}
+        #endregion
+
+        #region Xử lý video
+        /// <summary>
+        /// Trích xuất khung hình đầu tiên của video và lưu dưới dạng ảnh.
+        /// </summary>
+        /// <param name="videoPath">Đường dẫn đầy đủ đến file video (ví dụ: video.mp4).</param>
+        /// <param name="outputPath">Đường dẫn đầy đủ để lưu ảnh đầu ra (ví dụ: thumbnail.jpg).</param>
+        /// <returns>empty nếu thành công, ngược lại nếu thất bại.</returns>
+        public static string ExtractFirstFrame(string videoPath, string outputPath)
+        {
+            // Kiểm tra tính hợp lệ của đường dẫn
+            if (!File.Exists(videoPath))
+            {
+                string error = $"Loi: File video khong ton tai tai duong dan: {videoPath}";
+                MyLogger.GetInstance().Info(error);
+                return error;
+            }
+
+            // Đảm bảo thư mục đầu ra tồn tại
+            var outputDirectory = Path.GetDirectoryName(outputPath);
+            if (!Directory.Exists(outputDirectory))
+            {
+                Directory.CreateDirectory(outputDirectory);
+            }
+
+            try
+            {
+                // 1. Khởi tạo đối tượng Engine (sử dụng FFmpeg)
+                var engine = new Engine();
+
+                // 2. Định nghĩa file input và output cho MediaToolkit
+                var inputFile = new MediaFile { Filename = videoPath };
+                var outputFile = new MediaFile { Filename = outputPath };
+
+                // 3. Khởi tạo tùy chọn trích xuất
+                var options = new ConversionOptions();
+
+                // Đặt thời gian bắt đầu trích xuất là 0 (khung hình đầu tiên)
+                options.Seek = TimeSpan.FromSeconds(0);
+
+                // 4. Thực hiện việc trích xuất
+                // Get Thumbnail chỉ trích xuất một khung hình tại thời điểm Seek
+                engine.GetThumbnail(inputFile, outputFile, options);
+
+                MyLogger.GetInstance().Info($"Trich xuat thanh cong anh duoc luu tai: {outputPath}");
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                string error = $"Loi trong qua trinh trich xuat: {ex.Message}";
+                MyLogger.GetInstance().Warn(error);
+                return error;
+            }
+        }
         #endregion
 
         #region Encode/Decode base64

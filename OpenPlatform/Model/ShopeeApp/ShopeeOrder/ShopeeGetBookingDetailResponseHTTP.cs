@@ -17,8 +17,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         public List<ShopeeBookingDetail> booking_list { get; set; }
     }
 
-    public class ShopeeBookingDetail
+    public class ShopeeBookingDetail : GeneralOrder
     {
+        public ShopeeBookingDetail() : base(EnumCommerceTypeDeTail.LAZADA_ITEM)
+        {
+        }
+
         // Return by default. Shopee's unique identifier for a booking.
         public string booking_sn { get; set; }
 

@@ -49,9 +49,9 @@
                 Cập nhật tất cả liên kết
             </button>
 
-            <button type="button" id="update-price-sale-price" onclick="UpdatePrice_SalePrice()"
-                    title="Cập nhật giá bìa, giá bán đối với sản phẩm sàn Lazada">
-                Cập nhật giá bán, giá bìa
+            <button type="button" id="update-price-sale-price" onclick="UpdateQuantityPrice_SpecialPrice()"
+                    title="Cập nhật tồn kho, giá bìa, giá bán đối với sản phẩm sàn Lazada">
+                Cập nhật tồn kho, giá bán, giá bìa
             </button>
         </div>
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
@@ -464,8 +464,7 @@
             window.scrollTo(0, 0);
         }
 
-        
-        async function UpdatePrice_SalePrice() {
+        async function UpdateQuantityPrice_SpecialPrice() {
             if (GetEEcommerceTypeFromUrl() != eLazada) {
                 CreateMustClickOkModal("Không hỗ trợ ngoài sàn " + eLazada, null);
                 return;
@@ -474,7 +473,7 @@
             searchParams.append("eType", GetEEcommerceTypeFromUrl());
             searchParams.append("id", GetValueFromUrlName("id"));
 
-            let url = "/ProductECommerce/UpdatePrice_SalePrice";
+            let url = "/ProductECommerce/UpdateQuantityPrice_SpecialPrice";
 
             try {
                 ShowCircleLoader();

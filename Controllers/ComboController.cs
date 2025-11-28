@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -159,47 +160,49 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        private List<CommonItem> ShopeeGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
-        {
-            // Danh sách sản phẩm Shopee
-            List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfCombo(id, conn);
-            //productController.ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
-            return shopeeList;
-        }
+        //private List<CommonItem> ShopeeGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
+        //{
+        //    // Danh sách sản phẩm Shopee
+        //    List<CommonItem> shopeeList = sqler.ShopeeGetListMappingOfCombo(id, conn);
+        //    //productController.ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
+        //    return shopeeList;
+        //}
 
-        private List<CommonItem> TikiGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
-        {
-            // Danh sách sản phẩm Tiki
-            List<CommonItem> tikiList = sqler.TikiGetListMappingOfCombo(id, conn);
-            //productController.TikiGetStatusImageSrcQuantitySellable(tikiList);
-            return tikiList;
-        }
+        //private List<CommonItem> TikiGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
+        //{
+        //    // Danh sách sản phẩm Tiki
+        //    List<CommonItem> tikiList = TikiMySql.TikiGetListMappingOfCombo(id, conn);
+        //    //productController.TikiGetStatusImageSrcQuantitySellable(tikiList);
+        //    return tikiList;
+        //}
 
         [HttpPost]
-        public string GetListMappingOfCombo(int id)
+        public async Task <string> GetListMappingOfCombo(int id)
         {
             if (AuthentAdministrator() == null)
             {
                 return JsonConvert.SerializeObject(new List<CommonItem>());
             }
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<CommonItem> ls = new List<CommonItem>();
-            ProductController productController = new ProductController();
             try
             {
-                conn.Open();
-                List<CommonItem> shopeeList = ShopeeGetListMappingOfCombo(id, conn, productController);
-                List<CommonItem> tikiList = TikiGetListMappingOfCombo(id, conn, productController);
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfCombo(id, conn);
+                    List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfCombo(id, conn);
+                    List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfCombo(id, conn);
 
-                ls.AddRange(tikiList);
-                ls.AddRange(shopeeList);
+                    ls.AddRange(tikiList);
+                    ls.AddRange(shopeeList);
+                    ls.AddRange(lazadaList);
+                }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
             // Lấy danh sách sản phẩm
             return JsonConvert.SerializeObject(ls);
         }

@@ -28,6 +28,7 @@ using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
+using ItemForCreate = MVCPlayWithMe.OpenPlatform.Model.ItemForCreate;
 
 namespace MVCPlayWithMe.Controllers.OpenPlatform
 {
@@ -95,7 +96,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         // Lấy sản phẩm NORMAL, tạo mới/cập nhật trong 1 tháng gần đây và chưa được lưu db
         [HttpPost]
-        public string GetNewItemOneMonth(string eType)
+        public async Task<string> GetNewItemOneMonth(string eType)
         {
             List<CommonItem> lsCommonItem = null;
             if (AuthentAdministrator() == null)
@@ -113,14 +114,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             else if(eType == Common.eLazada)
             {
-                lsCommonItem = LazadaGetNewItemOneMonth();
+                lsCommonItem = await LazadaGetNewItemOneMonth();
             }
 
             return JsonConvert.SerializeObject(lsCommonItem);
         }
 
         [HttpPost]
-        public string GetItemFromId(string eType, string id)
+        public async Task<string> GetItemFromId(string eType, string id)
         {
             CommonItem commonItem = null;
             if (AuthentAdministrator() == null)
@@ -155,7 +156,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 long lid = Common.ConvertStringToInt64(id);
                 if (lid != Int64.MinValue)
                 {
-                    commonItem = LazadaGetItemFromIdConnectOut(lid, conn);
+                    commonItem = await LazadaGetItemFromIdConnectOut(lid, conn);
                 }
             }
             conn.Close();
@@ -263,7 +264,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return lsCommonItem;
         }
 
-        List<CommonItem> LazadaGetNewItemOneMonth()
+        async Task<List<CommonItem>> LazadaGetNewItemOneMonth()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
 
@@ -277,7 +278,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     {
                         CommonItem item = new CommonItem(pro);
                         // Không tồn tại trong DB ta insert
-                        if (!lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn))
+                        if ( !await lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn))
                         {
                             lsCommonItem.Add(item);
                         }
@@ -365,7 +366,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return item;
         }
 
-        private CommonItem LazadaGetItemFromIdConnectOut(long id, MySqlConnection conn)
+        private async Task<CommonItem> LazadaGetItemFromIdConnectOut(long id, MySqlConnection conn)
         {
             LazadaProduct pro = LazadaProductAPI.GetProductItem(id);
             if (pro == null)
@@ -377,9 +378,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             try
             {
                 // Không tồn tại trong DB ta insert
-                lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn);
+                await lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn);
 
-                lazadaSqler.LazadaGetItemFromIdConnectOut(id, item, conn);
+                await lazadaSqler.LazadaGetItemFromIdConnectOut(id, item, conn);
             }
             catch (Exception ex)
             {
@@ -388,7 +389,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return item;
         }
 
-        private MySqlResultState UpdateMapping(string eType, List<CommonForMapping> ls)
+        private async Task<MySqlResultState> UpdateMapping(string eType, List<CommonForMapping> ls)
         {
             MySqlResultState result = null;
             if (eType == Common.eShopee)
@@ -401,7 +402,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             else if (eType == Common.eLazada)
             {
-                result = lazadaSqler.LazadaUpdateMapping(ls);
+                result = await lazadaSqler.LazadaUpdateMapping(ls);
             }
 
             return result;
@@ -430,13 +431,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         /// <summary>
         /// str có dạng: itemId,modelId,productId,productQuantity,...,itemId,modelId,productId,productQuantity
-        /// model chưa được mapping có dạng: itemId,modelId,,,
-        /// với tiki: itemId là
+        /// model chưa được mapping có dạng: "itemId,modelId,,,"
+        /// với tiki: chỉ có itemId
+        /// NOTE: Tất cả thuộc 1 item, tức chỉ có 1 itemId dù xuất hiện nhiều lần
         /// </summary>
         /// <param name="str"></param>
         /// <returns></returns>
         [HttpPost]
-        public string UpdateMapping(string eType, string str)
+        public async Task<string> UpdateMapping(string eType, string str)
         {
             MySqlResultState result;
             if (AuthentAdministrator() == null)
@@ -471,7 +473,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     ls.Add(commonForMapping);
                 }
             }
-            result = UpdateMapping(eType, ls);
+            result = await UpdateMapping(eType, ls);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -779,10 +781,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 time_to,
                 conn);
 
-                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailToPickUp(
                     time_from,
                     time_to,
-                    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.READY_TO_SHIP],
                     conn);
 
                 // Lazada
@@ -814,11 +815,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             foreach (var order in lsBookingShopeeFullInfo)
             {
-                if (string.IsNullOrEmpty(order.order_sn))
-                {
-                    // Đảm bảo chưa có đơn matched
+                //if (string.IsNullOrEmpty(order.order_sn))
+                //{
+                //    // Đảm bảo chưa có đơn matched
                     lsCommonOrder.Add(new CommonOrder(order));
-                }
+                //}
             }
 
             // Lazada
@@ -863,7 +864,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
                     if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
                     {
-                        // Ta cần lấy sn từ mã đơn
+                        // Ta cần lấy sn từ mã đơn / vận đơn
                         sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
                     }
                     ShopeeOrderDetail shopeeOrderDetail =
@@ -877,10 +878,19 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
                 else
                 {
-                    // Thử tìm theo mã vận đơn
+                    string sn = string.Empty, trackingNumber = string.Empty;
+                    tikiSqler.GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+                        sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.SHOPEE, conn);
+                    conn.Close();
+
+                    if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã booking
+                    {
+                        // Ta cần lấy sn từ mã đơn / vận đơn
+                        sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
+                    }
                     // Lấy chi tiết booking
                     ShopeeBookingDetail detail =
-                        ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSN(sn_trackingNumber);
+                        ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSN(sn);
                     if (detail != null)
                     {
                         ShopeeMySql shopeeMySql = new ShopeeMySql();
@@ -1024,7 +1034,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         eECommerceType = EECommerceType.PLAY_WITH_ME;
                     }
                     // Là đơn booking
-                    if (string.IsNullOrEmpty(order.code) && !string.IsNullOrEmpty(order.bookingCode))
+                    if (order.isBooking)
                     {
                         TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
                             order.bookingCode, eECommerceType, conn);
@@ -1054,7 +1064,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
                         {
                             result.State = EMySqlResultState.INVALID;
-                            result.Message = "Đơn hàng đã bị hủy hoặc đã đóng.";
+                            result.Message = "Đơn hàng đã bị hủy.";
                         }
                         else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                         {
@@ -1104,7 +1114,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 {
                     conn.Open();
                     // Là đơn booking
-                    if (string.IsNullOrEmpty(order.code) && !string.IsNullOrEmpty(order.bookingCode))
+                    if (order.isBooking)
                     {
                         TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
                             order.bookingCode, eECommerceType, conn);
@@ -1146,7 +1156,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         /// <summary>
-        /// Lưu ảnh/video item shopee vào item voibenho.Xóa ảnh/video của item voibenho nếu đã tồn tại
+        /// Lưu ảnh/video item shopee vào item voibenho. Xóa ảnh/video của item voibenho nếu đã tồn tại
         /// Không xóa ảnh của model
         /// </summary>
         /// <param name="commonItem"></param>
@@ -1172,8 +1182,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Tải video nếu có
-            if(!string.IsNullOrEmpty(commonItem.videoSrc))
-                Common.DownloadVideoAndSaveWithName(commonItem.videoSrc, Path.Combine(path, "0.mp4"));
+            if (!string.IsNullOrEmpty(commonItem.videoSrc))
+            {
+                Common.DownloadVideo(commonItem.videoSrc, Path.Combine(path, "0.mp4"));
+            }
         }
 
         /// <summary>
@@ -1423,7 +1435,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpGet]
-        public string UpdatePrice_SalePrice(string eType, long id)
+        public async Task<string> UpdateQuantityPrice_SpecialPrice(string eType, long id)
         {
             if (AuthentAdministrator() == null)
             {
@@ -1443,12 +1455,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     LazadaMySql sqler = new LazadaMySql();
                     using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                     {
-                        conn.Open();
-                        CommonItem item = LazadaGetItemFromIdConnectOut(id, conn);
+                        await conn.OpenAsync();
+                        CommonItem item = await LazadaGetItemFromIdConnectOut(id, conn);
                         List<CommonItem> ls = new List<CommonItem>();
 
                         ls.Add(item);
-                        ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
+                        ProductController.LazadaUpdateQuantityPrice_SpecialPrice_Core(ls, conn);
 
                     }
                 }

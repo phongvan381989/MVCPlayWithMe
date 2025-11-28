@@ -1,10 +1,14 @@
-﻿namespace MVCPlayWithMe.OpenPlatform.Model
+﻿using MVCPlayWithMe.General;
+
+namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public enum EnumCommerceTypeDeTail
     {
         TIKI,
         SHOPEE_ITEM,
         SHOPEE_MODEL,
+        LAZADA_ITEM,
+        LAZADA_MODEL,
         NONE
     }
 
@@ -31,10 +35,13 @@
         public string TypeToString()
         {
             if (objectType == EnumCommerceTypeDeTail.TIKI)
-                return "Tiki";
+                return Common.eTiki;
             else if (objectType == EnumCommerceTypeDeTail.SHOPEE_ITEM || 
                 objectType == EnumCommerceTypeDeTail.SHOPEE_MODEL)
-                return "Shopee";
+                return Common.eShopee;
+            else if (objectType == EnumCommerceTypeDeTail.LAZADA_ITEM ||
+                objectType == EnumCommerceTypeDeTail.LAZADA_MODEL)
+                return Common.eLazada;
             return string.Empty;
         }
     }

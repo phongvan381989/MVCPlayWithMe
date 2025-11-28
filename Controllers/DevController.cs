@@ -206,7 +206,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Cập nhật giá bìa price, và giá bán spacial_price tất cả sản phẩm
         [HttpPost]
-        public async Task<string> LazadaUpdatePrice_SalePriceAll()
+        public async Task<string> LazadaUpdatePrice_SpecialPriceAll()
         {
             if (AuthentAdministrator() == null)
             {
@@ -735,7 +735,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string TikiTestSomething()
+        public async Task<string> TikiTestSomething()
         {
             if (AuthentAdministrator() == null)
             {
@@ -775,7 +775,66 @@ namespace MVCPlayWithMe.Controllers
             //    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.ALL],
             //    null);
 
-           return JsonConvert.SerializeObject(result);
+            //Common.ExtractFirstFrame(Common.absoluteForCreateMediaFolderPath + "test.mp4",
+            //    Common.absoluteForCreateMediaFolderPath + "1.jpg");
+
+            //Common.DownloadVideoAndSaveWithNameNotExtention("https://down-bs-sg.vod.susercontent.com/api/v4/11110105/mms/vn-11110105-6khw6-m29dapkxu0tu36.16000081730883931.mp4",
+            //    Common.absoluteForCreateMediaFolderPath + "0");
+
+            //LazadaProductAPI.LazadaGetVideoQuota();
+
+            //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            //{
+            //    conn.Open();
+            //    await LazadaProductAPI.LazadaUploadVideo("Sách vải lalala baby", Common.absoluteForCreateMediaFolderPath + "0.mp4", conn);
+            //}
+
+            //string md5Hash = Common.CalculateMd5FileHash(Common.absoluteForCreateMediaFolderPath + "videoThumbnail.jpg");
+
+            //await Common.DownloadVideo(
+            //    "https://down-zl-sg.vod.susercontent.com/api/v4/11110105/mms/vn-11110105-6khw6-m29dapkxu0tu36.16000081730883931.mp4",
+            //    Common.absoluteForCreateMediaFolderPath + "/0.mp4");
+
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await LazadaProductAPI.LazadaUploadVideo(
+                    "Ehon Buồn ngủ", @"C:\Users\phong\TUNM\Works\WebPlayWithMe\MVCPlayWithMe\MVCPlayWithMe\Media\Temporary\ForCreate\0.mp4",
+                    conn);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        [ValidateInput(false)]
+        public async Task<string> TikiTestSomethingWithParameter(string str)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                if (string.IsNullOrEmpty(str))
+                {
+                    result.State = EMySqlResultState.EMPTY;
+                    result.Message = "Tham số rỗng";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                ItemForCreate item = JsonConvert.DeserializeObject<ItemForCreate>(str, Common.jsonSerializersettings);
+
+                ProductController proController = new ProductController();
+                result = await proController.LazadaCreateItemFromOther(item);
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
         }
 
         ///// <summary>

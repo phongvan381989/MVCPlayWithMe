@@ -20,21 +20,21 @@ namespace MVCPlayWithMe.Models
                     CommandType = CommandType.StoredProcedure
                 };
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int idIndex = rdr.GetOrdinal("Id");
-                int nameIndex = rdr.GetOrdinal("Name");
-                int discountIndex = rdr.GetOrdinal("Discount");
-                int detailIndex = rdr.GetOrdinal("Detail");
-                int tikiCertificateIndex = rdr.GetOrdinal("TikiCertificate");
-                while (rdr.Read())
+                using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
-                    ls.Add(new Publisher(rdr.GetInt32(idIndex),
-                        rdr.GetString(nameIndex),
-                        rdr.GetFloat(discountIndex),
-                        rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    int discountIndex = rdr.GetOrdinal("Discount");
+                    int detailIndex = rdr.GetOrdinal("Detail");
+                    int tikiCertificateIndex = rdr.GetOrdinal("TikiCertificate");
+                    while (rdr.Read())
+                    {
+                        ls.Add(new Publisher(rdr.GetInt32(idIndex),
+                            rdr.GetString(nameIndex),
+                            rdr.GetFloat(discountIndex),
+                            rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
+                    }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {

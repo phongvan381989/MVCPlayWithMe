@@ -43,7 +43,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
             }
 
             rs = ShopeeOrderGetOrderDetailFromListOrderSNAll(lsOrderCode);
-            UpdateTrackingNumber(rs, conn);
+            ShopeeGetTrackingNumber.GetTrackingNumberFromDB(rs, conn);
             return rs;
         }
 
@@ -74,38 +74,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 conn)
                 );
 
+            lsOrderShopeeFullInfo.AddRange(
+                ShopeeOrderGetOrderDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.RETRY_SHIP],
+                conn)
+                );
+
             return lsOrderShopeeFullInfo;
-        }
-
-
-        // Lấy mã vận đơn / ship code / tracking number
-        public static void UpdateTrackingNumber(List<ShopeeOrderDetail> rs, MySqlConnection conn)
-        {
-            // Ta lấy từ tbecommerceorder nếu tồn tại, ngược lại lấy từ API shopee
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.UpdateTrackingNumberToListConnectOut(rs, conn);
-
-            // Đơn ở trạng thái: UNPAID, READY_TO_SHIP => chưa được sàn sinh mã vận chuyển.
-            // Nhà bán chưa xác nhận đơn, khách hủy (trạng thái sẽ là CANCELLED) => chưa được sinh mã vận chuyển
-            // Ngược lại đã được sinh mã đơn.
-            // Ở trạng thái PROCESSED: Nhà bán đã xác nhận nhưng có thể chưa được đóng nên chưa
-            // có mã vận chuyển trong db. Ta lưu vào db khi lấy được mã vận chuyển
-
-            // Nhiều khi đưa shipper đơn nhưng vẫn chưa cập nhật đã đóng => 
-            // trạng thái SHIPPED, COMPLETE mà vẫn chưa có mã vận chuyển
-            foreach (var e in rs)
-            {
-                // Mã vận chuyển đã được sinh nhưng chưa được lưu ở db
-                if (string.IsNullOrEmpty(e.shipCode) && 
-                    e.order_status != "UNPAID" &&
-                    e.order_status != "READY_TO_SHIP" &&
-                    e.order_status != "CANCELLED") // Mã vận chuyển được lấy ở xử lý event
-                {
-                    e.shipCode = ShopeeGetTrackingNumber.ShopeeGetShipCode(e.order_sn, string.Empty);
-                    shopeeMySql.UpdateTrackingNumberToDBConnectOut(e.order_sn, e.shipCode, conn);
-                }
-            }
-
         }
 
         /// <summary>

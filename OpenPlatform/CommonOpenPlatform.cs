@@ -215,7 +215,7 @@ namespace MVCPlayWithMe.OpenPlatform
         }
 
 
-        public static int CaculateSalePriceCoreFromCommonModel(CommonModel commonModel,
+        public static int CaculateSpecialPriceCoreFromCommonModel(CommonModel commonModel,
         List<Publisher> listPublisher,
         TaxAndFee taxAndFee
         )

@@ -48,8 +48,8 @@ namespace MVCPlayWithMe.Controllers
             if (orderStatusPush.status != "UNPAID" &&
                 orderStatusPush.status != "READY_TO_SHIP" &&// Phục vụ nhắc âm thanh khi có đơn hỏa tốc
                 //orderStatusPush.status != "PROCESSED" &&
-                orderStatusPush.status != "IN_CANCEL" &&
-                //orderStatusPush.status != "TO_RETURN" && // Khách nhận, và trả hàng
+                //orderStatusPush.status != "IN_CANCEL" &&
+                orderStatusPush.status != "TO_RETURN" && // Shop đưa đơn cho shiper nhưng chưa giao cho khách, khách không còn nhu cầu, trả lại nhà bán
                 orderStatusPush.status != "CANCELLED") // Hủy đơn
             {
                 return;
@@ -66,7 +66,8 @@ namespace MVCPlayWithMe.Controllers
             ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
 
             ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
-            if (orderStatusPush.status == "CANCELLED" || orderStatusPush.status == "IN_CANCEL")
+            if (orderStatusPush.status == "CANCELLED" ||
+                orderStatusPush.status == "TO_RETURN"/* || orderStatusPush.status == "IN_CANCEL"*/)
             {
                 status = ECommerceOrderStatus.UNBOOKED;
                 //if (orderStatusPush.status == "CANCELLED")
@@ -79,7 +80,7 @@ namespace MVCPlayWithMe.Controllers
 
                     if (string.IsNullOrEmpty(trackingNumber))
                     {
-                        trackingNumber = ShopeeGetTrackingNumber.ShopeeGetShipCode(orderStatusPush.ordersn, string.Empty);
+                        trackingNumber = ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumber(orderStatusPush.ordersn, string.Empty);
                         shopeeMySql.UpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
                     }
                 //}
@@ -176,9 +177,11 @@ namespace MVCPlayWithMe.Controllers
                 {
                     conn.Open();
                     TikiMySql tikiSqler = new TikiMySql();
+                    ShopeeMySql shopeeMySql = new ShopeeMySql();
                     ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
                     ECommerceOrderStatus oldStatus = ECommerceOrderStatus.DONT_EXIST;
-                    if (data.booking_status == "READY_TO_SHIP" || data.booking_status == "CANCELLED")
+                    if (data.booking_status == "READY_TO_SHIP"
+                        || data.booking_status == "CANCELLED")
                     {
                         TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
                         data.booking_sn,
@@ -190,6 +193,16 @@ namespace MVCPlayWithMe.Controllers
                         if (data.booking_status == "CANCELLED")
                         {
                             status = ECommerceOrderStatus.UNBOOKED;
+
+                            string trackingNumber = tikiSqler.GetBookingTrackingNumberFromSNConnectOut(
+                            data.booking_sn, EECommerceType.SHOPEE, conn);
+
+                            if (string.IsNullOrEmpty(trackingNumber))
+                            {
+                                trackingNumber = ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumber(
+                                    data.booking_sn);
+                                shopeeMySql.UpdateBookingTrackingNumberToDBConnectOut(data.booking_sn, trackingNumber, conn);
+                            }
                         }
 
                         if (oldStatus == status ||
@@ -207,7 +220,6 @@ namespace MVCPlayWithMe.Controllers
                         return;
                     }
 
-                    ShopeeMySql shopeeMySql = new ShopeeMySql();
                     CommonOrder commonOrder = new CommonOrder(detail);
 
                     if (data.booking_status == "MATCHED")
@@ -363,8 +375,8 @@ namespace MVCPlayWithMe.Controllers
                 return;
             }
 
-            // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
-            if (orderStatusPush.status_update_time < tbEcommerceOrderLastest.updateTime)
+            // Ta cần check xem có nhận lại event cũ, duplicate không bởi thời gian event được sàn ghi nhận.
+            if (orderStatusPush.status_update_time <= tbEcommerceOrderLastest.updateTime)
             {
                 return;
             }
@@ -430,6 +442,9 @@ namespace MVCPlayWithMe.Controllers
                 // Webhook API Trade Order Notifications: Lấy thay đổi trạng thái đơn hàng
                 if (message_type == 0)
                 {
+                    // Thực tế ghi log thấy lazada đang duplicate thông báo cùng thời điểm(bắn quá nhiều notification giống nhau ở cùng thời điểm)
+                    // Vì cùng thời điểm nên chưa kịp lưu thông tin vào db, làm trừ kho hơn một lần
+                    // Giải quyết: Ngay lập tức lấy trade_order_id id, status_update_time và so sánh với biến cũ
                     LazadaOrderStatusPush orderStatusPush = JsonConvert.DeserializeObject<LazadaOrderStatusPush>(obj["data"].ToString());
                     LazadaHandleOrderStatusPush(orderStatusPush);
                 }

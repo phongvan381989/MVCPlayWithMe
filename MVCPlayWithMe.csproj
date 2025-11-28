@@ -66,6 +66,12 @@
     <Reference Include="log4net, Version=2.0.15.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.2.0.15\lib\net45\log4net.dll</HintPath>
     </Reference>
+    <Reference Include="Magick.NET-Q8-AnyCPU, Version=7.15.4.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\Magick.NET-Q8-AnyCPU.7.15.4\lib\net40\Magick.NET-Q8-AnyCPU.dll</HintPath>
+    </Reference>
+    <Reference Include="MediaToolkit, Version=1.1.0.1, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\MediaToolkit.1.1.0.1\lib\net40\MediaToolkit.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=9.0.0.2, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.9.0.2\lib\netstandard2.0\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
     </Reference>
@@ -390,6 +396,7 @@
     <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\Product\TikiCreateProduct.cs" />
     <Compile Include="OpenPlatform\CommonOpenPlatform.cs" />
+    <Compile Include="OpenPlatform\Model\ItemForCreate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\CommonLazadaResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuth.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuthTokenCreateResponseBody.cs" />
@@ -397,15 +404,20 @@
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrderItemsResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrderResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaOrder\LazadaGetOrdersResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCompleteCreateVideoResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCreateProductRequest.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaCreateProductResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetBrandByPagesResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetProductItemResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetProductsResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaGetVideoResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaParameterPriceUpdate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaParameterQuantityUpdate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaUpdatePriceQuantityReponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaUploadImageResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaInitCreateVideoResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaUploadVideoBlockResponseBody.cs" />
+    <Compile Include="OpenPlatform\Model\LazadaApp\LazadaProduct\LazadaVideoQuotaResponseBody.cs" />
     <Compile Include="OpenPlatform\Model\LazadaMySql.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAddItemResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeAddItem_RequestParameters.cs" />
@@ -420,6 +432,7 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeGetCategoryResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeGetChannelListResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeUploadImageResponseHTTP.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetBookingTrackingNumberResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\ShopeeBookingSatusPush.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingListResponseHTTP.cs" />

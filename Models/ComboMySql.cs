@@ -7,6 +7,7 @@ using MVCPlayWithMe.Models.ProductModel;
 using System.Data;
 using System.Linq;
 using System.Web;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models
 {
@@ -239,25 +240,27 @@ namespace MVCPlayWithMe.Models
         }
 
         // Lấy danh sách id sản phẩm đang kinh doanh thuộc combo
-        public List<int> GetProductIdsOfCombo(int comboId)
+        public async Task<List<int>> GetProductIdsOfCombo(int comboId)
         {
             List<int> productIds = new List<int>();
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    MySqlCommand cmd = new MySqlCommand(
-                    "SELECT Id FROM tbproducts WHERE ComboId = @in_ComboId AND Status = 0;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@in_ComboId", comboId);
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                    "SELECT Id FROM tbproducts WHERE ComboId = @in_ComboId AND Status = 0;", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-
-                        while (rdr.Read())
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@in_ComboId", comboId);
+                        using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
                         {
-                            productIds.Add(rdr.GetInt32(idIndex));
+                            int idIndex = rdr.GetOrdinal("Id");
+
+                            while (await rdr.ReadAsync())
+                            {
+                                productIds.Add(rdr.GetInt32(idIndex));
+                            }
                         }
                     }
                 }
@@ -321,58 +324,6 @@ namespace MVCPlayWithMe.Models
             paras[0] = new MySqlParameter("@comboName", name);
             MyMySql.AddOutParameters(paras);
             return MyMySql.ExcuteGetIdStoreProceduce("st_tbCombo_GetComboIdFromName", paras);
-        }
-
-        // Kết nối đóng mở bên ngoài
-        // Lấy được Shopee Item mapping với sản phẩm trong kho thuộc 1 combo
-        public List<CommonItem> ShopeeGetListMappingOfCombo(int comboId, MySqlConnection conn)
-        {
-            List<CommonItem> listCI = new List<CommonItem>();
-            try
-            {
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_Mapping_Combo_Id", conn);
-                cmd.Parameters.AddWithValue("@inComboId", comboId);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    ProductMySql.ShopeeReadCommonItem(listCI, rdr);
-                }
-
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                listCI.Clear();
-            }
-            return listCI;
-        }
-
-        // Kết nối đóng mở bên ngoài
-        // Lấy được Tiki Item mapping với sản phẩm trong kho thuộc 1 combo
-        public List<CommonItem> TikiGetListMappingOfCombo(int comboId, MySqlConnection conn)
-        {
-            List<CommonItem> listCI = new List<CommonItem>();
-            try
-            {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_From_Mapping_Combo_Id", conn);
-                cmd.Parameters.AddWithValue("@inComboId", comboId);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
-                {
-                    ProductMySql.TikiReadCommonItem(listCI, rdr);
-                }
-
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                listCI.Clear();
-            }
-            return listCI;
         }
     }
 }

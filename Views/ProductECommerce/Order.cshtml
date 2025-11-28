@@ -178,7 +178,7 @@
         @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
         <div class="display-flex-margin10">
-            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn hoặc mã booking" />
+            <input type="text" class="vndejhx90" name="order-code" title="Mã đơn hàng hoặc mã vận đơn hoặc mã booking hoặc mã vận đơn của booking" />
             <button type="button" class="vndejhx90 btn-order-detail" onclick="OrderDetailFromDownloadedList()"
                     title="Tìm trong danh sách dữ liệu đã tải về">
                 Chi Tiết Đơn Hàng Từ Danh Sách Đã Tải
@@ -190,6 +190,7 @@
                 Chi Tiết Đơn Hàng Từ Server
             </button>
             <input id="is-booking-code" type="checkbox">
+            <label for="is-booking-code" class="vndejhx90"> Là Booking</label>
         </div>
         <div class="display-flex-margin10" title="Lọc trạng thái: đã đóng, đã hoàn, giữ chỗ, hủy giữ chỗ.">
             <div class="display-flex-margin-right20-align-items-center">
@@ -286,7 +287,7 @@
                     </div>
                     <input type="text" class="nvns63099" name="product-code-isbn" />
                     <button type="button" class="nvns63099 btn-add-product" onclick="AddProduct()">Thêm Sản Phẩm</button>
-                    <button type="button" title="Trong kho có sự thay đổi số lượng, tự động cập nhật tồn kho lên sàn."
+                    <button type="button" id="return-order-id" title="Trong kho có sự thay đổi số lượng, tự động cập nhật tồn kho lên sàn."
                             class="nvns63099 btn-return-order" onclick="ReturnedOrder()">Hoàn Hàng</button>
                 </div>
             </div>
@@ -294,7 +295,7 @@
             <div class="order-detail">
             </div>
             <div class="xcvxvdgdfw">
-                <button type="button" title="Trong kho không có sự thay đổi số lượng, vì số lượng đã thay đổi khi có đơn và giữ chỗ
+                <button type="button" id="enough-product-id" title="Trong kho không có sự thay đổi số lượng, vì số lượng đã thay đổi khi có đơn và giữ chỗ
                         Không tự động cập nhật tồn kho lên sàn." class="nvns63099 btn-enough-product" onclick="EnoughProduct()">Đủ Sản Phẩm</button>
             </div>
         </div>
@@ -420,10 +421,19 @@
             let length = listOrderTemp.length;
             let orderTemp = null;
             for (let i = 0; i < length; i++) {
-                if (listOrderTemp[i].code == orderCodeValue ||
-                    listOrderTemp[i].shipCode == orderCodeValue) {
-                    orderTemp = listOrderTemp[i];
-                    break;
+                if (!listOrderTemp[i].isBooking) {
+                    if (listOrderTemp[i].code == orderCodeValue ||
+                        listOrderTemp[i].shipCode == orderCodeValue) {
+                        orderTemp = listOrderTemp[i];
+                        break;
+                    }
+                }
+                else {
+                    if (listOrderTemp[i].bookingCode == orderCodeValue ||
+                        listOrderTemp[i].bookingShipCode == orderCodeValue) {
+                        orderTemp = listOrderTemp[i];
+                        break;
+                    }
                 }
             }
             return orderTemp;
@@ -711,26 +721,36 @@
                     cell1.title = "Đơn hỏa tốc.";
                 }
                 cell1.innerHTML = order.code;
-                if (order.code == null || order.code === "") {
+                if (order.isBooking) {
                     // Là booking
                     cell1.innerHTML = order.bookingCode;
                     cell1.style.color = "pink";
                     cell1.title = "Là booking.";
                 }
-                else if (IsValidString(order.bookingCode)) {
-                    cell1.title = "Đơn được matched với booking: " + order.bookingCode;
-                    cell1.style.color = "pink";
-                }
+                //else if (IsValidString(order.bookingCode)) {
+                //    cell1.title = "Đơn được matched với booking: " + order.bookingCode;
+                //    cell1.style.color = "pink";
+                //}
 
                 // Mã Vận Đơn
                 cell2.innerHTML = order.shipCode;
+                if (order.isBooking) {
+                    cell2.innerHTML = order.bookingShipCode;
+                }
 
                 // Trạng thái
                 cell3.innerHTML = order.status;
+                if (order.isBooking) {
+                    cell3.innerHTML = order.bookingStatus;
+                }
 
                 // Thời Gian
                 let testTime = new Date(order.millisecondsTime)
                 cell4.innerHTML = testTime.toLocaleString();
+                if (!order.isBooking && IsValidString(order.bookingCode)) {
+                    cell4.style.color = "pink";
+                    cell4.title = "Đơn đã được gửi theo booking: " + order.bookingCode;
+                }
 
                 cell5.innerHTML = order.orderStatusInWarehoue;
                 SetColorOfPackedReturned(cell5);
@@ -884,12 +904,18 @@
         async function ShowOneOrderOnModal(order) {
             let orderContainer = document.getElementsByClassName("order-detail")[0];
             orderContainer.innerHTML = "";
-            document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
-            document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
+            if (!order.isBooking) {
+                document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Đơn Hàng: ";
+                document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.code;
+                document.getElementsByClassName("gsbmlxm88")[0].innerHTML = order.shipCode;
+            }
+            else {
+                document.getElementsByClassName("xxvAFXF90")[0].innerHTML = order.ecommerceName + " Mã Booking: ";
+                document.getElementsByClassName("zcx6768SF")[0].innerHTML = order.bookingCode;
+                document.getElementsByClassName("gsbmlxm88")[0].innerHTML = order.bookingShipCode;
+            }
 
-            document.getElementsByClassName("gsbmlxm88")[0].innerHTML = order.shipCode;
-
-            if (order.messageToSeller != "") {
+            if (IsValidString(order.messageToSeller)) {
                 document.getElementById("message-to-seller").style.display = "block";
                 document.getElementById("message-to-seller").innerHTML = "khách nhắn: " + order.messageToSeller;
             } else {
@@ -1180,7 +1206,7 @@
             else {
                 let isNeedSleep = false;
                 // Khách có nhắn với shop
-                if (order.messageToSeller != "") {
+                if (IsValidString(order.messageToSeller)) {
                     let x = document.getElementById("myKhachNhanShop");
                     x.play();
                     isNeedSleep = true;
@@ -1425,20 +1451,43 @@
 
             let length = rows.length;
             for (let i = 1; i < length; i++) {
-                if (rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
+                if (currentOrder.isBooking == false &&
+                    rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
                     rows[i].cells[1].innerHTML == currentOrder.code) {// Mã đơn hàng
                     rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehoue;
                     SetColorOfPackedReturned(rows[i].cells[5]);
                     break;
                 }
+                else if (currentOrder.isBooking &&
+                    rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
+                    rows[i].cells[1].innerHTML == currentOrder.bookingCode) {// Mã đơn hàng
+                    rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehoue;
+                    SetColorOfPackedReturned(rows[i].cells[5])
+                    break;
+                }
             }
         }
+
+        function DisableButtonForDuration(id, duration) {
+            const button = document.getElementById(id);
+            // 1. DISABLE button ngay lập tức
+            button.disabled = true;
+
+            // 2. SỬ DỤNG setTimeout để hẹn giờ
+            setTimeout(() => {
+                // 3. ENABLE lại button
+                button.disabled = false;
+            }, duration);
+        }
+
         // Tồn kho không đủ nhưng vẫn thực hiện thành công. Làm cho tồn kho ở CSDL sau đó về số âm
         async function EnoughProduct() {
             if (currentOrder === null) {
                 CreateMustClickOkModal("Chưa chọn đơn hàng nào.", null);
                 return;
             }
+            // disable trong 5 giây
+            DisableButtonForDuration("enough-product-id", 5000);
 
             // kiểm tra đơn hàng đã đủ sản phẩm
             let length = currentOrder.listMapping.length;
@@ -1506,6 +1555,7 @@
             if (confirm(text) == false) {
                 return;
             }
+            DisableButtonForDuration("return-order-id", 5000);
 
             if (currentOrder === null) {
                 CreateMustClickOkModal("Chưa chọn đơn hàng nào.", null);

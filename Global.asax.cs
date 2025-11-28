@@ -45,6 +45,7 @@ namespace MVCPlayWithMe
 
             Common.MediaFolderPath = ConfigurationManager.AppSettings["MediaFolderPath"];
             Common.srcCertificateFolderPath = @"https://voibenho.com/Media/Certificate/";
+            Common.absoluteForCreateMediaFolderPath = System.Web.HttpContext.Current.Server.MapPath(Common.MediaFolderPath + "Temporary/ForCreate/");
 
             Common.TemporaryImageShopeeMediaFolderPath = 
                 ConfigurationManager.AppSettings["TemporaryImageShopeeMediaFolderPath"];

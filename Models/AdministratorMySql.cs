@@ -119,14 +119,14 @@ namespace MVCPlayWithMe.Models
 
                 MySqlParameter paSalt = new MySqlParameter();
                 paSalt.ParameterName = @"inSalt";
-                paSalt.Size = Common.SHA512Size;
+                paSalt.Size = Common.SHA256Size;
                 paSalt.MySqlDbType = MySqlDbType.Binary;
                 paSalt.Value = salt;
                 cmd.Parameters.Add(paSalt);
 
                 MySqlParameter paHash = new MySqlParameter();
                 paHash.ParameterName = @"inHash";
-                paHash.Size = Common.SHA512Size;
+                paHash.Size = Common.SHA256Size;
                 paHash.MySqlDbType = MySqlDbType.Binary;
                 paHash.Value = hash;
                 cmd.Parameters.Add(paHash);

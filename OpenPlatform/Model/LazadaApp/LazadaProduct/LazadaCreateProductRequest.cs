@@ -22,6 +22,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         public LazadaSkusRequest Skus { get; set; }
         public string PrimaryCategory { get; set; }
         public AttributesRequest Attributes { get; set; }
+        public LazadaProductSkuVariationRequest variation { get; set; }
     }
 
     public class LazadaSkusRequest
@@ -55,6 +56,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         public string special_price { get; set; }
         // public string special_from_date { get; set; }
         // public string special_to_date { get; set; }
+
+        //// Trường giá trị của variation, cần thay lại bằng tiếng Việt trước khi gửi về server Lazada
+        //public string valueOfVariation { get; set; }
+        public LazadaProductSkuSalePro saleProp { get; set; }
     }
 
     public class AttributesRequest
@@ -92,10 +97,37 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         public string recommended_age { get; set; }
 
         public string battery_required { get; set; }
+
+        public string video { get; set; }
     }
 
     public class LazadaProductImageRequest
     {
         public List<string> Image { get; set; }
+    }
+
+    public class LazadaProductSkuVariationRequest
+    {
+        public LazadaProductSkuVariationCoreRequest Variation1 { get; set; }
+    }
+
+    public class LazadaProductSkuVariationCoreRequest
+    {
+        public Boolean customize { get; set; }
+        public Boolean hasImage { get; set; }
+        public string name { get; set; }
+        public string label { get; set; }
+        public LazadaProductSkuVariationOptionRequest options { get; set; }
+    }
+
+    public class LazadaProductSkuVariationOptionRequest
+    {
+        public List<string> option { get; set; }
+    }
+
+    public class LazadaProductSkuSalePro
+    {
+        // Trường giá trị của variation, cần thay lại bằng tiếng Việt trước khi gửi về server Lazada
+        public string valueOfVariation { get; set; }
     }
 }

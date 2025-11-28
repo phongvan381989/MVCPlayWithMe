@@ -103,7 +103,7 @@
                 Cập nhật giá tất cả bật bán
             </button>
 
-            <button type="button" onclick="LazadaUpdatePrice_SalePriceAll()" disabled
+            <button type="button" onclick="LazadaUpdatePrice_SpecialPriceAll()" disabled
                     title="Cập nhật giá bìa, giá bán cho tất cả sản phẩm đang bật bán.">
                 Cập nhật giá bìa, giá bán tất cả bật bán
             </button>
@@ -127,6 +127,13 @@
         </div>
 
         <div class="fmx09gx8">
+            <div class="gmxk9381">
+                <textarea id="tiki_something_input"
+                          class="config-max-width"
+                          placeholder="Nhập thông tin gì đó phục vụ các hàm. VD: id thể loại,..."
+                          rows="20">
+                </textarea>
+            </div>
             <div class="gmxk9381"> TIKI</div>
             <button type="button" onclick="TikiSaveImageSourceOfItemAndModel()" disabled
                     title="Lấy url ảnh đại diện của item tiki cập nhật vào db đối với item chưa có image url.">
@@ -141,6 +148,10 @@
             <button type="button" onclick="TikiTestSomething()"
                     title="Test chức năng nào đó.">
                 Test chức năng nào đó
+            </button>
+            <button type="button" onclick="TikiTestSomethingWithParameter()"
+                    title="Test chức năng nào đó với tham số text.">
+                Test chức năng nào đó với tham số
             </button>
         </div>
 
@@ -271,9 +282,9 @@
             CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
         }
 
-        async function LazadaUpdatePrice_SalePriceAll() {
+        async function LazadaUpdatePrice_SpecialPriceAll() {
             const searchParams = new URLSearchParams();
-            let query = "/Dev/LazadaUpdatePrice_SalePriceAll";
+            let query = "/Dev/LazadaUpdatePrice_SpecialPriceAll";
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();
@@ -348,6 +359,18 @@
         async function TikiTestSomething() {
             const searchParams = new URLSearchParams();
             let query = "/Dev/TikiTestSomething";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        // 
+        async function TikiTestSomethingWithParameter() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/TikiTestSomethingWithParameter";
+            searchParams.append("str", document.getElementById("tiki_something_input").value)
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

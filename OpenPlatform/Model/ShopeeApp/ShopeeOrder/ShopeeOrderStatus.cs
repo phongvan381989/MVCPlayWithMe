@@ -24,7 +24,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
             UNPAID,
             READY_TO_SHIP,
             PROCESSED,// Đây là trạng thái sau khi in đơn
-            RETRY_SHIP,
+            RETRY_SHIP, // Đây là trạng thái khi không tìm được tài xế đơn hỏa tốc
             SHIPPED,
             TO_CONFIRM_RECEIVE,
             IN_CANCEL,

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using static MVCPlayWithMe.General.Common;
 
@@ -64,7 +65,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         /// </summary>
         /// <param name="rdr">Trả về ngay từ câu select</param>
         /// <returns></returns>
-        private void ConvertQuicklyRowFromDataMySql(MySqlDataReader rdr, List<Product> ls)
+        private async Task ConvertQuicklyRowFromDataMySql(MySqlDataReader rdr, List<Product> ls)
         {
             int idIndex = rdr.GetOrdinal("Id");
             int codeIndex = rdr.GetOrdinal("Code");
@@ -77,7 +78,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             int comboNameIndex = rdr.GetOrdinal("ComboName");
             int publisherIdIndex = rdr.GetOrdinal("PublisherId");
 
-            while (rdr.Read())
+            while (await rdr.ReadAsync())
             {
                 Product product = new Product();
                 product.id = rdr.GetInt32(idIndex);
@@ -1285,34 +1286,33 @@ namespace MVCPlayWithMe.Models.ProductModel
         }
 
         // Tìm kiếm không phân trang
-        public List<Product> SearchProduct(ProductSearchParameter searchParameter)
+        public async Task<List<Product>> SearchProduct(ProductSearchParameter searchParameter)
         {
             List<Product> ls = new List<Product>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Product", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
-                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
-                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
-                //cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
+                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Product", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
+                    cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                    cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                    cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+                    //cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                ConvertQuicklyRowFromDataMySql(rdr, ls);
-
-
-                rdr.Close();
+                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    {
+                        await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-
-            conn.Close();
             return ls;
         }
 
@@ -1342,7 +1342,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public List<Product> SearchDontSellOnECommerce (Boolean isSingle,
+        public async Task<List<Product>> SearchDontSellOnECommerce( Boolean isSingle,
             string eType,
             MySqlConnection conn)
         {
@@ -1370,12 +1370,14 @@ namespace MVCPlayWithMe.Models.ProductModel
             {
                 if (!string.IsNullOrEmpty(store))
                 {
-                    MySqlCommand cmd = new MySqlCommand(store, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    using (MySqlCommand cmd = new MySqlCommand(store, conn))
                     {
-                        ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                        {
+                            await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        }
                     }
                 }
             }
@@ -1387,16 +1389,18 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public List<Product> GetActiveProductHasComboActiveAll(MySqlConnection conn)
+        public async Task<List<Product>> GetActiveProductHasComboActiveAll(MySqlConnection conn)
         {
             List<Product> ls = new List<Product>();
 
-            MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Has_Combo", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Has_Combo", conn))
             {
-                ConvertQuicklyRowFromDataMySql(rdr, ls);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                {
+                    await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                }
             }
 
             return ls;
@@ -1405,43 +1409,45 @@ namespace MVCPlayWithMe.Models.ProductModel
 
         // Kiểm tra xem combo đã được bán full và riêng lẻ ở cùng 1 sản phẩm cha trên sàn
         // True: Nếu đã thỏa mã, ngược lại false
-        public Boolean TikiDontSellFullComboAndSigleConnectOut(Combo combo, MySqlConnection conn)
+        public async Task<Boolean> TikiDontSellFullComboAndSigleConnectOut(Combo combo, MySqlConnection conn)
         {
             try
             {
                 Dictionary<int, Dictionary<int, List<int>>> dictionary =
                     new Dictionary<int, Dictionary<int, List<int>>>();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_Combo_ProductId", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCount", combo.products.Count);
-                cmd.Parameters.AddWithValue("@inProductId", combo.products[0].id);
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_Combo_ProductId", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");// index của row trong db
-                    int productIdMappingIndex = rdr.GetOrdinal("ProductIdMapping");
-                    int superIdIndex = rdr.GetOrdinal("superId");
-                    int id = 0, productIdMapping = 0, superId = 0;
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCount", combo.products.Count);
+                    cmd.Parameters.AddWithValue("@inProductId", combo.products[0].id);
+                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
                     {
-                        superId = rdr.GetInt32(superIdIndex);
-                        id = rdr.GetInt32(idIndex);
-                        productIdMapping = rdr.IsDBNull(productIdMappingIndex)? -1 : rdr.GetInt32(productIdMappingIndex);
-                        if (dictionary.ContainsKey(superId))
+                        int idIndex = rdr.GetOrdinal("Id");// index của row trong db
+                        int productIdMappingIndex = rdr.GetOrdinal("ProductIdMapping");
+                        int superIdIndex = rdr.GetOrdinal("superId");
+                        int id = 0, productIdMapping = 0, superId = 0;
+                        while (await rdr.ReadAsync())
                         {
-                            if (dictionary[superId].ContainsKey(id))
+                            superId = rdr.GetInt32(superIdIndex);
+                            id = rdr.GetInt32(idIndex);
+                            productIdMapping = rdr.IsDBNull(productIdMappingIndex) ? -1 : rdr.GetInt32(productIdMappingIndex);
+                            if (dictionary.ContainsKey(superId))
                             {
-                                dictionary[superId][id].Add(productIdMapping);
+                                if (dictionary[superId].ContainsKey(id))
+                                {
+                                    dictionary[superId][id].Add(productIdMapping);
+                                }
+                                else
+                                {
+                                    dictionary[superId].Add(id, new List<int>() { productIdMapping });
+                                }
                             }
                             else
                             {
-                                dictionary[superId].Add(id, new List<int>() { productIdMapping });
-                            }
-                        }
-                        else
-                        {
-                            dictionary.Add(superId, new Dictionary<int, List<int>>
+                                dictionary.Add(superId, new Dictionary<int, List<int>>
                             {{ id, new List<int>() { productIdMapping } }});
+                            }
                         }
                     }
                 }
@@ -1507,15 +1513,44 @@ namespace MVCPlayWithMe.Models.ProductModel
             return false;
         }
 
+        private Boolean CheckDontSellSigleWithParrent(Combo combo, List<CommonItem> lsCommonItem)
+        {
+            Boolean isSigle = false; // sản phẩm riêng lẻ được mapping đủ
+            foreach (var commonItem in lsCommonItem)
+            {
+                foreach(var pro in combo.products)
+                {
+                    isSigle = false;
+                    foreach (var model in commonItem.models)
+                    {
+                        if (model.mapping.Count == 1 &&
+                                    model.mapping[0].product.id == pro.id)
+                        {
+                            isSigle = true;
+                            break;
+                        }
+                    }
+                    if(!isSigle)
+                    {
+                        break;
+                    }
+                }
+                if(isSigle)
+                {
+                    break;
+                }
+            }
+            return isSigle;
+        }
+
         // Kiểm tra xem combo đã được bán riêng lẻ ở cùng 1 sản phẩm cha trên sàn
         // True: Nếu đã thỏa mã, ngược lại false
-        public Boolean TikiDontSellSigleWithParrentConnectOut(Combo combo,
-            ComboMySql comboSqler,
+        public async Task<Boolean> TikiDontSellSigleWithParrentConnectOut(Combo combo,
             MySqlConnection conn)
         {
             try
             {
-                List<CommonItem>  lsCommonItem  = comboSqler.TikiGetListMappingOfCombo(combo.id, conn);
+                List<CommonItem> lsCommonItem = await TikiMySql.TikiGetListMappingOfCombo(combo.id, conn);
 
                 Dictionary<int, List<CommonItem>> dictionary =
                     new Dictionary<int, List<CommonItem>>();
@@ -1546,32 +1581,31 @@ namespace MVCPlayWithMe.Models.ProductModel
                 }
                 Boolean isSigle = false; // sản phẩm riêng lẻ được mapping đủ
 
-                foreach (var proId in lsProIdInCombo)
+                // Duyệt qua tất cả các value
+                foreach (var lsCI in dictionary.Values)
                 {
-                    isSigle = false;
-                    // Duyệt qua tất cả các value
-                    foreach (var lsCI in dictionary.Values)
+                    foreach (var proId in lsProIdInCombo)
                     {
+                        isSigle = false;
                         foreach (var cI in lsCI)
                         {
-                            if(cI.models[0].mapping.Count == 1 &&
+                            if (cI.models[0].mapping.Count == 1 &&
                                 cI.models[0].mapping[0].product.id == proId)
                             {
                                 isSigle = true;
                                 break;
                             }
                         }
-                        if (isSigle)
+                        if (!isSigle)
                         {
                             break;
                         }
                     }
-                    if (!isSigle)
+                    if (isSigle)
                     {
                         break;
                     }
                 }
-
                 return isSigle;
             }
             catch (Exception ex)
@@ -1581,8 +1615,34 @@ namespace MVCPlayWithMe.Models.ProductModel
             return false;
         }
 
+        // Kiểm tra xem combo đã được bán riêng lẻ ở cùng 1 sản phẩm cha trên sàn
+        // True: Nếu đã thỏa mã, ngược lại false
+        public async Task<Boolean> Shopee_LazadaDontSellSigleWithParrentConnectOut(
+            string eType, Combo combo,
+            MySqlConnection conn)
+        {
+            try
+            {
+                List<CommonItem> lsCommonItem = null;
+                if (eType == Common.eLazada)
+                {
+                    lsCommonItem = await LazadaMySql.LazadaGetListMappingOfCombo(combo.id, conn);
+                }
+                if(lsCommonItem == null || lsCommonItem.Count == 0)
+                {
+                    return false;
+                }
 
-        public List<Product> SearchDontSellSigleWithNoParrentOnECommerceConnectOut(
+                return CheckDontSellSigleWithParrent(combo, lsCommonItem);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return false;
+        }
+
+        public async Task<List<Product>> SearchDontSellSigleWithNoParrentOnECommerceConnectOut(
             string eType,
             MySqlConnection conn)
         {
@@ -1604,12 +1664,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 }
                 if (!string.IsNullOrEmpty(store))
                 {
-                    MySqlCommand cmd = new MySqlCommand(store, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    using (MySqlCommand cmd = new MySqlCommand(store, conn))
                     {
-                        ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                        {
+                            await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        }
                     }
                 }
             }
@@ -1664,18 +1726,20 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public List<Product> ShopeeDontSellSigleWithNoParrentConnectOut(
+        public async Task<List<Product>> ShopeeDontSellSigleWithNoParrentConnectOut(
             MySqlConnection conn)
         {
             List<Product> ls = new List<Product>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent", conn))
                 {
-                    ConvertQuicklyRowFromDataMySql(rdr, ls);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    {
+                        await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                    }
                 }
             }
             catch (Exception ex)
@@ -1761,34 +1825,37 @@ namespace MVCPlayWithMe.Models.ProductModel
         //}
 
         //Tìm kiếm có phân trang
-        public List<Product> SearchProductChangePage(ProductSearchParameter searchParameter)
+        public async Task<List<Product>> SearchProductChangePage(ProductSearchParameter searchParameter)
         {
             List<Product> ls = new List<Product>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
-                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
-                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
-                cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
-                cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
+                        cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                        cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                        cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+                        cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                        cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                ConvertQuicklyRowFromDataMySql(rdr, ls);
-
-                rdr.Close();
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
-            conn.Close();
             return ls;
         }
 
@@ -2154,251 +2221,6 @@ namespace MVCPlayWithMe.Models.ProductModel
 
             conn.Close();
             return result;
-        }
-
-        public static void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
-        {
-            CommonItem commonItem = null;
-            CommonModel commonModel = null;
-            int dbItemId = MyMySql.GetInt32(rdr, "ShopeeItemId");
-            int dbModelId = MyMySql.GetInt32(rdr, "ShopeeModelId");
-            if (list.Count() == 0)
-            {
-                commonItem = new CommonItem();
-                list.Add(commonItem);
-            }
-            else
-            {
-                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
-                if (list[list.Count() - 1].dbItemId != dbItemId)
-                {
-                    commonItem = new CommonItem();
-                    list.Add(commonItem);
-                }
-            }
-            if (commonItem != null)
-            {
-                commonItem.dbItemId = dbItemId;
-                commonItem.itemId = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
-                commonItem.name = MyMySql.GetString(rdr, "ShopeeItemName");
-                commonItem.imageSrc = MyMySql.GetString(rdr, "ShopeeItemImage");
-
-                int status = MyMySql.GetInt32(rdr, "ShopeeItemStatus");
-                if (status == 0)
-                    commonItem.bActive = true;
-                else
-                    commonItem.bActive = false;
-            }
-            else
-            {
-                commonItem = list[list.Count() - 1];
-            }
-
-            if (commonItem.models.Count() == 0)
-            {
-                commonModel = new CommonModel();
-                commonItem.models.Add(commonModel);
-            }
-            else
-            {
-                // Đọc sang model mới vì kết quả sql đã được order by theo itemid, modelid
-                if (commonItem.models[commonItem.models.Count() - 1].dbModelId != dbModelId)
-                {
-                    commonModel = new CommonModel();
-                    commonItem.models.Add(commonModel);
-                }
-            }
-            if (commonModel != null)
-            {
-                commonModel.dbModelId = dbModelId;
-                commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
-                commonModel.name = MyMySql.GetString(rdr, "ShopeeModelName");
-                commonModel.imageSrc = MyMySql.GetString(rdr, "ShopeeModelImage");
-                int status = MyMySql.GetInt32(rdr, "ShopeeModelStatus");
-                if (status == 0)
-                    commonModel.bActive = true;
-                else
-                    commonModel.bActive = false;
-            }
-            else
-            {
-                commonModel = commonItem.models[commonItem.models.Count() - 1];
-            }
-            // Thêm mapping
-            Mapping mapping = new Mapping();
-            mapping.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
-
-            Product product = new Product();
-            product.id = MyMySql.GetInt32(rdr, "ProductId");
-            product.name = MyMySql.GetString(rdr, "ProductName");
-            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
-            mapping.product = product;
-
-            commonModel.mapping.Add(mapping);
-        }
-
-        // Kết nối đóng mở bên ngoài
-        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm shopee có thay đổi số lượng
-        // cần cập nhật
-        public static List<CommonItem> ShopeeGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
-        {
-            List<CommonItem> listCI = new List<CommonItem>();
-            try
-            {
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_Need_Update_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
-                {
-                    ShopeeReadCommonItem(listCI, rdr);
-                }
-
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-            return listCI;
-        }
-
-        // Kết nối đóng mở bên ngoài
-        // Lấy được Shopee Item mapping với sản phẩm trong kho
-        public List<CommonItem> ShopeeGetListMappingOfProduct(int productId, MySqlConnection conn)
-        {
-            List<CommonItem> listCI = new List<CommonItem>();
-            try
-            {
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_Mapping_Product_Id", conn);
-                cmd.Parameters.AddWithValue("@inProductId", productId);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
-                {
-                    ShopeeReadCommonItem(listCI, rdr);
-                }
-
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                listCI.Clear();
-            }
-            return listCI;
-        }
-
-        public static void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
-        {
-            CommonItem commonItem = null;
-            CommonModel commonModel = null;
-            int dbItemId = MyMySql.GetInt32(rdr, "TikiItemId");
-            if (list.Count() == 0)
-            {
-                commonItem = new CommonItem(Common.eTiki);
-                list.Add(commonItem);
-            }
-            else
-            {
-                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
-                if (list[list.Count() - 1].dbItemId != dbItemId)
-                {
-                    commonItem = new CommonItem(Common.eTiki);
-                    list.Add(commonItem);
-                }
-            }
-            if (commonItem != null)
-            {
-                commonItem.dbItemId = dbItemId;
-                commonItem.itemId = MyMySql.GetInt32(rdr, "TMDTTikiItemId");
-                commonItem.name = MyMySql.GetString(rdr, "TikiItemName");
-                commonItem.imageSrc = MyMySql.GetString(rdr, "TikiItemImage");
-                commonItem.tikiSuperId = MyMySql.GetInt32(rdr, "TMDTTikiItemSuperId");
-
-                int status = MyMySql.GetInt32(rdr, "TikiItemStatus");
-                if (status != 1)
-                    commonItem.bActive = true;
-                else
-                    commonItem.bActive = false;
-            }
-            else
-            {
-                commonItem = list[list.Count() - 1];
-            }
-
-            if (commonItem.models.Count() == 0)
-            {
-                commonItem.models.Add(new CommonModel());
-            }
-            commonModel = commonItem.models[commonItem.models.Count() - 1];
-            commonModel.modelId = -1;
-
-            // Thêm mapping
-            Mapping mapping = new Mapping();
-            mapping.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
-
-            Product product = new Product();
-            product.id = MyMySql.GetInt32(rdr, "ProductId");
-            product.name = MyMySql.GetString(rdr, "ProductName");
-            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
-            mapping.product = product;
-
-            commonModel.mapping.Add(mapping);
-        }
-
-        // Kết nối đóng mở bên ngoài
-        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm Tiki có thay đổi số lượng
-        // cần cập nhật
-        public static List<CommonItem> TikiGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
-        {
-            List<CommonItem> listCI = new List<CommonItem>();
-            try
-            {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Need_Update_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
-                {
-                    TikiReadCommonItem(listCI, rdr);
-                }
-
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-            return listCI;
-        }
-
-        // Kết nối đóng mở bên ngoài
-        // Lấy được Tiki Item mapping với sản phẩm trong kho
-        public List<CommonItem> TikiGetListMappingOfProduct(int productId, MySqlConnection conn)
-        {
-            List<CommonItem> listCI = new List<CommonItem>();
-            try
-            {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_From_Mapping_Product_Id", conn);
-                cmd.Parameters.AddWithValue("@inProductId", productId);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                
-                while (rdr.Read())
-                {
-                    TikiReadCommonItem(listCI, rdr);
-                }
-
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                listCI.Clear();
-            }
-            return listCI;
         }
 
         public List<Product> GetListProductInWarehoueChangedQuantity()

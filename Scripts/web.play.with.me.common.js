@@ -966,6 +966,7 @@ async function GetListPubliserCore() {
     }
     return list;
 }
+
 async function GetListPublisher() {
     if (document.getElementById("publisher-id") == null) {
         return;
@@ -1055,6 +1056,10 @@ function GetTMDTItemUrlFromCommonItem(commonItem) {
     // Item là shopee
     else if (commonItem.eType == eShopee) {
         itemUrl = GetShopeeItemUrl(commonItem.itemId);
+    }
+    // Item là Lazada
+    else if (commonItem.eType == eLazada) {
+        itemUrl = GetLazadaItemUrl(commonItem.itemId);
     }
     return itemUrl;
 }

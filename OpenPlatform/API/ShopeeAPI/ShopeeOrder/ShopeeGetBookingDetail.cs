@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
@@ -180,8 +181,30 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
             }
 
             rs = ShopeeOrderGetBookingDetailFromListBookingSNAll(lsBookingCode);
-            //UpdateTrackingNumber(rs, conn);
+            ShopeeGetTrackingNumber.GetBookingTrackingNumberFromDB(rs, conn);
             return rs;
+        }
+
+        public static List<ShopeeBookingDetail> ShopeeOrderGetBookingDetailToPickUp(
+            DateTime time_from,
+            DateTime time_to,
+            MySqlConnection conn)
+        {
+            List<ShopeeBookingDetail> lsShopeeShopeeFullInfo = ShopeeOrderGetBookingDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.PROCESSED],
+                conn);
+
+            lsShopeeShopeeFullInfo.AddRange(
+                ShopeeOrderGetBookingDetailAll(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.READY_TO_SHIP],
+                conn)
+                );
+
+            return lsShopeeShopeeFullInfo;
         }
     }
 }

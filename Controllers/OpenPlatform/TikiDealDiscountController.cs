@@ -450,7 +450,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 foreach (var simpleTiki in listSimpleTikiProduct)
                 {
-                    sale_price = CommonOpenPlatform.CaculateSalePriceCoreFromCommonModel(simpleTiki.models[0],
+                    sale_price = CommonOpenPlatform.CaculateSpecialPriceCoreFromCommonModel(simpleTiki.models[0],
                         listPublisher,
                         taxAndFee);
                     if (!string.IsNullOrEmpty(simpleTiki.sku) && sale_price != 0)

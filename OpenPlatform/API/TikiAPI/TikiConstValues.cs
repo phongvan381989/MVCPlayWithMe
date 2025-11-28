@@ -34,6 +34,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
         public const string inventory_type = "dropship";
 
+        // Khai báo Random dưới dạng tĩnh (static) và chỉ đọc (readonly)
+        private static readonly Random random = new Random();
+
+        // Khai báo chars tĩnh để tối ưu hóa bộ nhớ
+        private const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
         public static string GenerateRandomSKUString()
         {
             string prefix = "VBN"; // Phần bắt đầu của SKU
@@ -43,13 +49,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
             int randomLength = 5; // Độ dài phần ngẫu nhiên
 
-            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-            Random random = new Random();
             char[] result = new char[randomLength];
 
-            for (int i = 0; i < randomLength; i++)
+            // Sử dụng đối tượng Random tĩnh
+            lock (random) // KHUYẾN CÁO: Dùng lock nếu hàm này được gọi từ nhiều luồng
             {
-                result[i] = chars[random.Next(chars.Length)];
+                for (int i = 0; i < randomLength; i++)
+                {
+                    result[i] = chars[random.Next(chars.Length)];
+                }
             }
             string sku = prefix + timestamp + new string(result);
             return sku;

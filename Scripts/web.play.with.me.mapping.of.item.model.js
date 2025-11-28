@@ -336,12 +336,13 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
     }
 }
 
-async function UpdateQuantityToTMDTFromListCommonItem(listCommonItem) {
+async function UpdateQuantityToTMDTFromListCommonItem(isComboId, listCommonItem) {
     if (listCommonItem == null || listCommonItem.length == 0) {
         return;
     }
     const searchParams = new URLSearchParams();
-    searchParams.append("productId", GetValueFromUrlName("id"));
+    searchParams.append("isCombo", isComboId);
+    searchParams.append("productOrComboId", GetValueFromUrlName("id"));
     searchParams.append("listCommonItem", JSON.stringify(listCommonItem));
     let query = "/Product/UpdateQuantityToTMDTFromListCommonItem";
     ShowCircleLoader();

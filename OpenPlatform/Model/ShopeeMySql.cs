@@ -13,6 +13,7 @@ using System.Linq;
 using System.Web;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using static MVCPlayWithMe.General.Common;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
@@ -916,7 +917,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             conn.Close();
         }
 
-        public void UpdateTrackingNumberToListConnectOut(
+        public void GetTrackingNumberToListConnectOut(
             List<ShopeeOrderDetail> rs,
             MySqlConnection conn)
         {
@@ -947,6 +948,34 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
+        public void GetBookingTrackingNumberToListConnectOut(
+            List<ShopeeBookingDetail> rs,
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand(
+                "SELECT `ShipCode` FROM webplaywithme.tb_ecommerce_booking WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = 2 LIMIT 1", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", "");
+
+            // Booking ở trạng thái: READY_TO_SHIP => chưa được sàn sinh mã vận chuyển.
+            // Ở trạng thái PROCESSED: Nhà bán đã xác nhận nhưng có thể chưa được đóng nên chưa có mã vận chuyển trong db
+            // Nhiều khi đưa shipper đơn nhưng vẫn chưa cập nhật đã đóng => trạng thái SHIPPED mà vẫn chưa có mã vận chuyển
+            foreach (var e in rs)
+            {
+                if (e.booking_status != "READY_TO_SHIP")
+                {
+                    cmd.Parameters[0].Value = e.booking_sn;
+                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    {
+                        while (rdr.Read())
+                        {
+                            e.shipCode = MyMySql.GetString(rdr, "ShipCode");
+                        }
+                    }
+                }
+            }
+        }
+
         // Cập nhật mã vận chuyển theo mã đơn nếu mã đơn tồn tại trong db
         public void UpdateTrackingNumberToDBConnectOut(
             string orderSN,
@@ -957,6 +986,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 "UPDATE webplaywithme.tbecommerceorder SET `ShipCode` = @inShipCode WHERE `Code` = @inCode AND (`ShipCode` IS NULL OR `ShipCode` = '') AND `ECommmerce` = 2", conn);
             cmd.CommandType = CommandType.Text;
             cmd.Parameters.AddWithValue("@inCode", orderSN);
+            cmd.Parameters.AddWithValue("@inShipCode", shipCode);
+            cmd.ExecuteNonQuery();
+        }
+
+        // Cập nhật mã vận chuyển theo mã booking nếu mã booking tồn tại trong db
+        public void UpdateBookingTrackingNumberToDBConnectOut(
+            string booking_Sn,
+            string shipCode,
+            MySqlConnection conn)
+        {
+            MySqlCommand cmd = new MySqlCommand(
+                "UPDATE webplaywithme.tb_ecommerce_booking SET `ShipCode` = @inShipCode WHERE `Code` = @inCode AND (`ShipCode` IS NULL OR `ShipCode` = '') AND `ECommmerce` = 2", conn);
+            cmd.CommandType = CommandType.Text;
+            cmd.Parameters.AddWithValue("@inCode", booking_Sn);
             cmd.Parameters.AddWithValue("@inShipCode", shipCode);
             cmd.ExecuteNonQuery();
         }
@@ -1107,6 +1150,87 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
+        public static void ShopeeReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        {
+            CommonItem commonItem = null;
+            CommonModel commonModel = null;
+            int dbItemId = MyMySql.GetInt32(rdr, "ShopeeItemId");
+            int dbModelId = MyMySql.GetInt32(rdr, "ShopeeModelId");
+            if (list.Count() == 0)
+            {
+                commonItem = new CommonItem();
+                list.Add(commonItem);
+            }
+            else
+            {
+                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                if (list[list.Count() - 1].dbItemId != dbItemId)
+                {
+                    commonItem = new CommonItem();
+                    list.Add(commonItem);
+                }
+            }
+            if (commonItem != null)
+            {
+                commonItem.dbItemId = dbItemId;
+                commonItem.itemId = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
+                commonItem.name = MyMySql.GetString(rdr, "ShopeeItemName");
+                commonItem.imageSrc = MyMySql.GetString(rdr, "ShopeeItemImage");
+
+                int status = MyMySql.GetInt32(rdr, "ShopeeItemStatus");
+                if (status == 0)
+                    commonItem.bActive = true;
+                else
+                    commonItem.bActive = false;
+            }
+            else
+            {
+                commonItem = list[list.Count() - 1];
+            }
+
+            if (commonItem.models.Count() == 0)
+            {
+                commonModel = new CommonModel();
+                commonItem.models.Add(commonModel);
+            }
+            else
+            {
+                // Đọc sang model mới vì kết quả sql đã được order by theo itemid, modelid
+                if (commonItem.models[commonItem.models.Count() - 1].dbModelId != dbModelId)
+                {
+                    commonModel = new CommonModel();
+                    commonItem.models.Add(commonModel);
+                }
+            }
+            if (commonModel != null)
+            {
+                commonModel.dbModelId = dbModelId;
+                commonModel.modelId = MyMySql.GetInt64(rdr, "TMDTShopeeModelId");
+                commonModel.name = MyMySql.GetString(rdr, "ShopeeModelName");
+                commonModel.imageSrc = MyMySql.GetString(rdr, "ShopeeModelImage");
+                int status = MyMySql.GetInt32(rdr, "ShopeeModelStatus");
+                if (status == 0)
+                    commonModel.bActive = true;
+                else
+                    commonModel.bActive = false;
+            }
+            else
+            {
+                commonModel = commonItem.models[commonItem.models.Count() - 1];
+            }
+            // Thêm mapping
+            Mapping mapping = new Mapping();
+            mapping.quantity = MyMySql.GetInt32(rdr, "ShopeeMappingQuantity");
+
+            Product product = new Product();
+            product.id = MyMySql.GetInt32(rdr, "ProductId");
+            product.name = MyMySql.GetString(rdr, "ProductName");
+            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+            mapping.product = product;
+
+            commonModel.mapping.Add(mapping);
+        }
+
         public ShopeeBrandRequestParameter GetBrandFromName(
             string brandName,
             MySqlConnection conn)
@@ -1138,6 +1262,87 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 brand = null;
             }
             return brand;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy được Shopee Item mapping với sản phẩm trong kho thuộc 1 combo
+        public static async Task<List<CommonItem>> ShopeeGetListMappingOfCombo(int comboId, MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_Mapping_Combo_Id", conn))
+                {
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            ShopeeReadCommonItem(listCI, rdr);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listCI.Clear();
+            }
+            return listCI;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm shopee có thay đổi số lượng
+        // cần cập nhật
+        public static List<CommonItem> ShopeeGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_Need_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    ShopeeReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return listCI;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy được Shopee Item mapping với sản phẩm trong kho
+        public static List<CommonItem> ShopeeGetListMappingOfProduct(int productId, MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_Mapping_Product_Id", conn);
+                cmd.Parameters.AddWithValue("@inProductId", productId);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    ShopeeReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listCI.Clear();
+            }
+            return listCI;
         }
     }
 }

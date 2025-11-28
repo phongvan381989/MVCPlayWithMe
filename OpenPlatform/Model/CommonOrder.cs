@@ -30,8 +30,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public string code { get; set; }
 
+        public Boolean isBooking { get; set; }
+
         // Mã booking, có trên Shopee
         public string bookingCode { get; set; }
+
+        // Mã vận đơn của booking
+        public string bookingShipCode { get; set; }
 
         // Trạng thái booking
         public string bookingStatus { get; set; }
@@ -122,6 +127,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             id = order.id;
             code = order.code;
+            isBooking = false;
             status = order.status;
             messageToSeller = string.Empty;
             isExpress = false;
@@ -157,6 +163,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             id = -1;
             code = order.order_sn;
+            isBooking = false;
             bookingCode = order.booking_sn;
             // Lấy mã vận đơn
             shipCode = order.shipCode;
@@ -192,8 +199,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             ecommerceName = Common.eShopee;
 
             code = booking.order_sn;
+            isBooking = true;
             bookingCode = booking.booking_sn;
             bookingStatus = booking.booking_status;
+            bookingShipCode = booking.shipCode;
             matchStatus = booking.match_status;
 
             created_at = Common.GetDateFromTimestamp(booking.create_time);
@@ -223,6 +232,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             ecommerceName = Common.eLazada;
 
             id = order.order_id;
+            isBooking = false;
             code = order.order_id.ToString();
             shipCode = order.orderItems[0].tracking_code;
             if (order.statuses != null && order.statuses.Count != 0)
@@ -279,7 +289,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                    listModelName.Add(e.GetVariationName());
                 }
             }
-
         }
     }
 }

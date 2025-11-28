@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using MVCPlayWithMe.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -379,14 +380,14 @@ namespace MVCPlayWithMe.General
 
                     MySqlParameter paSalt = new MySqlParameter();
                     paSalt.ParameterName = @"inSalt";
-                    paSalt.Size = Common.SHA512Size;
+                    paSalt.Size = Common.SHA256Size;
                     paSalt.MySqlDbType = MySqlDbType.Binary;
                     paSalt.Value = salt;
                     cmdChange.Parameters.Add(paSalt);
 
                     MySqlParameter paHash = new MySqlParameter();
                     paHash.ParameterName = @"inHash";
-                    paHash.Size = Common.SHA512Size;
+                    paHash.Size = Common.SHA256Size;
                     paHash.MySqlDbType = MySqlDbType.Binary;
                     paHash.Value = hash;
                     cmdChange.Parameters.Add(paHash);
@@ -416,6 +417,20 @@ namespace MVCPlayWithMe.General
             }
 
             return resultState;
+        }
+
+        // Hàm bạn cần viết để kiểm tra lỗi
+        public static bool IsUniqueConstraintViolation(DbUpdateException ex)
+        {
+            // 1. Kiểm tra xem InnerException có phải là lỗi SQL/MySQL không
+            if (ex.InnerException is MySqlException mySqlEx)
+            {
+                // 2. Mã lỗi 1062 là mã tiêu chuẩn của MySQL cho UNIQUE CONSTRAINT
+                return mySqlEx.Number == 1062;
+            }
+
+            // Nếu không phải MySqlException hoặc lỗi không phải 1062, trả về false
+            return false;
         }
     }
 }

@@ -1193,21 +1193,36 @@ namespace MVCPlayWithMe.Models.Order
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inCode", "");
                 cmd.Parameters.AddWithValue("@inECommmerce", 0);
+
+                MySqlCommand cmdBooking = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn);
+                cmdBooking.CommandType = CommandType.StoredProcedure;
+                cmdBooking.Parameters.AddWithValue("@inCode", "");
+                cmdBooking.Parameters.AddWithValue("@inECommmerce", 0);
+                MySqlCommand cmdTem = null;
                 MySqlDataReader rdr;
                 foreach (var order in ls)
                 {
+                    cmdTem = cmd;
+                    if (order.isBooking)
+                    {
+                        cmdTem = cmdBooking;
+                    }
                     status = string.Empty;
-                    cmd.Parameters[0].Value = order.code;
+                    cmdTem.Parameters[0].Value = order.code;
+                    if (order.isBooking)
+                    {
+                        cmdTem.Parameters[0].Value = order.bookingCode;
+                    }
                     if (order.ecommerceName == Common.eTiki)
-                        cmd.Parameters[1].Value = (int)EECommerceType.TIKI;
+                        cmdTem.Parameters[1].Value = (int)EECommerceType.TIKI;
                     else if (order.ecommerceName == Common.eShopee)
-                        cmd.Parameters[1].Value = (int)EECommerceType.SHOPEE;
+                        cmdTem.Parameters[1].Value = (int)EECommerceType.SHOPEE;
                     else if (order.ecommerceName == Common.eLazada)
-                        cmd.Parameters[1].Value = (int)EECommerceType.LAZADA;
+                        cmdTem.Parameters[1].Value = (int)EECommerceType.LAZADA;
                     else if (order.ecommerceName == Common.ePlayWithMe)
-                        cmd.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
+                        cmdTem.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
 
-                    rdr = cmd.ExecuteReader();
+                    rdr = cmdTem.ExecuteReader();
                     while (rdr.Read())
                     {
                         status = Common.OrderStatusArray[MyMySql.GetInt32(rdr, "Status")];
