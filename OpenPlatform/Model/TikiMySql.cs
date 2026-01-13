@@ -887,91 +887,97 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 return false;
             }
 
+            // Đơn đã đóng và lại nhận được event có đơn(do server sàn hoặc mình không nhận đươc nên sàn gửi lại)
+            if (status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED)
+            {
+                return false;
+            }
+
             return true;
         }
 
-        // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking,
-        // cột số lượng của tbOutput khi có đơn sẽ cập nhật về 0 và hoàn lại về kho
-        public MySqlResultState UpdateOrderCodeOftbOutputWhenPackedWithBooking(
-            CommonOrder commonOrder,
-            EECommerceType eCommerceType,
-            MySqlConnection conn)
-        {
-            MySqlResultState resultState = new MySqlResultState();
+        //// Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking,
+        //// cột số lượng của tbOutput khi có đơn sẽ cập nhật về 0 và hoàn lại về kho
+        //public MySqlResultState UpdateOrderCodeOftbOutputWhenPackedWithBooking(
+        //    CommonOrder commonOrder,
+        //    EECommerceType eCommerceType,
+        //    MySqlConnection conn)
+        //{
+        //    MySqlResultState resultState = new MySqlResultState();
+        //    resultState.myAnything = 1; // Có thay đổi tồn kho.
 
-            try
-            {
-                // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking
-                {
-                    MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode 
-                WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+        //    try
+        //    {
+        //        // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking
+        //        {
+        //            MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode 
+        //        WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn);
+        //            cmd.CommandType = CommandType.Text;
+        //            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+        //            cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
+        //            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
 
-                    cmd.ExecuteNonQuery();
-                }
+        //            cmd.ExecuteNonQuery();
+        //        }
 
-                // cột số lượng của tbOutput khi có đơn sẽ cập nhật về 0 và hoàn lại về kho
-                // Lấy danh sách mã sản phẩm, số lượng
-                List<int> productIds = new List<int>();
-                List<int> quantities = new List<int>();
-                {
-                    MySqlCommand cmd = new MySqlCommand(@"SELECT `ProductId`, `Quantity` FROM `tboutput`
-                    WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND `BookingCode` IS NULL;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+        //        // cột số lượng của tbOutput khi có đơn sẽ cập nhật về 0 và hoàn lại về kho
+        //        // Lấy danh sách mã sản phẩm, số lượng
+        //        List<int> productIds = new List<int>();
+        //        List<int> quantities = new List<int>();
+        //        {
+        //            MySqlCommand cmd = new MySqlCommand(@"SELECT `ProductId`, `Quantity` FROM `tboutput`
+        //            WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND `BookingCode` IS NULL;", conn);
+        //            cmd.CommandType = CommandType.Text;
+        //            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+        //            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
 
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
-                    {
-                        int productIdIndex = rdr.GetOrdinal("ProductId");
-                        int quantityIndex = rdr.GetOrdinal("Quantity");
-                        while (rdr.Read())
-                        {
-                            productIds.Add(rdr.GetInt32(productIdIndex));
-                            quantities.Add(rdr.GetInt32(quantityIndex));
-                        }
-                    }
-                }
+        //            using (MySqlDataReader rdr = cmd.ExecuteReader())
+        //            {
+        //                int productIdIndex = rdr.GetOrdinal("ProductId");
+        //                int quantityIndex = rdr.GetOrdinal("Quantity");
+        //                while (rdr.Read())
+        //                {
+        //                    productIds.Add(rdr.GetInt32(productIdIndex));
+        //                    quantities.Add(rdr.GetInt32(quantityIndex));
+        //                }
+        //            }
+        //        }
 
-                // Cập nhật Quantity của tbOutput về 0
-                {
-                    MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Quantity` = 0 WHERE
-                `Code` = @inCode AND `ECommmerce` = @inECommmerce AND `BookingCode` IS NULL;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    cmd.ExecuteNonQuery();
-                }
+        //        // Cập nhật Quantity của tbOutput về 0
+        //        {
+        //            MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Quantity` = 0 WHERE
+        //        `Code` = @inCode AND `ECommmerce` = @inECommmerce AND `BookingCode` IS NULL;", conn);
+        //            cmd.CommandType = CommandType.Text;
+        //            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+        //            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+        //            cmd.ExecuteNonQuery();
+        //        }
 
-                if (productIds.Count > 0)
-                {
-                    {
-                        MySqlCommand cmd = new MySqlCommand(@"st_tbOutput_Return_Quantity", conn);
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                        cmd.Parameters.AddWithValue("@inProductId", 0);
-                        cmd.Parameters.AddWithValue("@inQuantity", 0);
+        //        if (productIds.Count > 0)
+        //        {
+        //            {
+        //                MySqlCommand cmd = new MySqlCommand(@"st_tbOutput_Return_Quantity", conn);
+        //                cmd.CommandType = CommandType.StoredProcedure;
+        //                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+        //                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+        //                cmd.Parameters.AddWithValue("@inProductId", 0);
+        //                cmd.Parameters.AddWithValue("@inQuantity", 0);
 
-                        for(int i = 0; i < productIds.Count; i++)
-                        {
-                            cmd.Parameters["@inProductId"].Value = productIds[i];
-                            cmd.Parameters["@inQuantity"].Value = quantities[i];
-                            cmd.ExecuteNonQuery();
-                        }
-                    }
-                }
-
-            }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, resultState);
-            }
-            return resultState;
-        }
+        //                for(int i = 0; i < productIds.Count; i++)
+        //                {
+        //                    cmd.Parameters["@inProductId"].Value = productIds[i];
+        //                    cmd.Parameters["@inQuantity"].Value = quantities[i];
+        //                    cmd.ExecuteNonQuery();
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Common.SetResultException(ex, resultState);
+        //    }
+        //    return resultState;
+        //}
 
         /// <summary>
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
@@ -1005,32 +1011,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.ExecuteNonQuery();
                 }
 
-                //// Nếu có mã booking, hoàn hàng khi có đã MATCHED với đơn, ta cần cập nhật bảng tb_ecommerce_booking
-                //if (status == ECommerceOrderStatus.RETURNED
-                //    && !string.IsNullOrEmpty(commonOrder.code)
-                //    && !string.IsNullOrEmpty(commonOrder.bookingCode))
-                //{
-                //    // Lưu vào bảng tbECommerceBooking
-                //    {
-                //        MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn);
-                //        cmd.CommandType = CommandType.StoredProcedure;
-                //        cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                //        cmd.Parameters.AddWithValue("@inStatus", (int)status);
-                //        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                //        cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
-
-                //        cmd.ExecuteNonQuery();
-                //    }
-                //}
-
-                // Nếu có mã booking, và đã được đóng theo mã booking thì cần hoàn lại số lượng theo BOOK, PACKED
-                // đã trừ trong kho.
-                if ((status == ECommerceOrderStatus.PACKED || status == ECommerceOrderStatus.BOOKED)
-                    && !string.IsNullOrEmpty(commonOrder.code)
-                    && !string.IsNullOrEmpty(commonOrder.bookingCode))
+                // Nếu có mã booking thì return vì số lượng đã trả lại khi khi đơn booking được MATCHED
+                if ( !string.IsNullOrEmpty(commonOrder.bookingCode))
                 {
                     // Cập nhật tbOutput cho cột Code, Quantity = 0, hoàn kho số lượng
-                    resultState = UpdateOrderCodeOftbOutputWhenPackedWithBooking(commonOrder, eCommerceType, conn);
+                    //resultState = UpdateOrderCodeOftbOutputWhenPackedWithBooking(commonOrder, eCommerceType, conn);
                     return resultState;
                 }
 
@@ -1146,7 +1131,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlResultState resultState = new MySqlResultState();
             try
             {
-                // Lưu vào bảng tbECommerceBooking
+
+                // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking
+                {
+                    MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode 
+                WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Cập nhật quantity về 0
+                {
+                    MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Quantity` = 0 
+                WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND BookingCode IS NULL; ", conn);
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    cmd.ExecuteNonQuery();
+                }
+
+                // Hoàn lại số lượng trong kho, trạng thái
                 {
                     MySqlCommand cmd = new MySqlCommand("st_tbOutput_ReturnQuantityOrderMatchedBooking", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
