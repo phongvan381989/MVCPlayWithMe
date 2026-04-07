@@ -69,24 +69,24 @@ namespace MVCPlayWithMe.Models.Dev
         public MySqlResultState ShopeeSaveLivePartnerKey(string key)
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
+            //MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            //try
+            //{
+            //    conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand(
-                    "UPDATE webplaywithme.tbshopeeauthen SET `PartnerKey` = @inPartnerKey  WHERE `Id` = 1", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inPartnerKey", key);
+            //    MySqlCommand cmd = new MySqlCommand(
+            //        "UPDATE webplaywithme.tbshopeeauthen SET `PartnerKey` = @inPartnerKey  WHERE `Id` = 1", conn);
+            //    cmd.CommandType = CommandType.Text;
+            //    cmd.Parameters.AddWithValue("@inPartnerKey", key);
 
-                cmd.ExecuteNonQuery();
-            }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, result);
-            }
+            //    cmd.ExecuteNonQuery();
+            //}
+            //catch (Exception ex)
+            //{
+            //    Common.SetResultException(ex, result);
+            //}
 
-            conn.Close();
+            //conn.Close();
             return result;
         }
     }

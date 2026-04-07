@@ -189,9 +189,19 @@
             const searchParams = new URLSearchParams();
             searchParams.append("id", GetValueFromUrlName("id"));
             let query = "/Combo/GetCombo";
+
+            let responseDB = null;
             ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            try {
+                responseDB = await RequestHttpPostPromise(searchParams, query);
+            }
+            catch (msgLoi) {
+                RemoveCircleLoader();
+                await CreateMustClickOkModal(msgLoi, null);
+                return;
+            }
             RemoveCircleLoader();
+
             if (responseDB.responseText == "null") {
                 ShowDoesntFindId();
                 return;

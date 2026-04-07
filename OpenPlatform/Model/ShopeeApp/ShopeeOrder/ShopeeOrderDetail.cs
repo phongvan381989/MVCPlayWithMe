@@ -33,6 +33,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         /// </summary>
         public float total_amount { get; set; }
 
+
+        // The list of pending terms. Applicable values:
+        //- SYSTEM_PENDING: Under Shopee internal processing.
+        //- KYC_PENDING: Under KYC checking(TW CB order only).
+        //- ARRANGE_SHIPMENT_PENDING: Temporarily held due to 3PL capacity constraints.
+        public List<string> pending_terms { get; set; }
+
+        // The value of this field is the description of pending reason corresponding with pending terms. Applicable values: 
+        //- For SYSTEM_PENDING: Order is being processed by Shopee.
+        //- For KYC_PENDING: Order is pending buyer TW KYC pre-authorization.
+        //- For ARRANGE_SHIPMENT_PENDING: Allocating delivery resources due to high order volume. Label print will be available within 4 days after buyer paid.
+        public List<string> pending_description { get; set; }
+
         /// <summary>
         /// Return by default. Enumerated type that defines the current status of the order.
         /// </summary>
@@ -76,7 +89,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         /// <summary>
         /// Return by default. The deadline to ship out the parcel
         /// </summary>
-        public int ship_by_date { get; set; }
+        public long ship_by_date { get; set; }
 
         /// <summary>
         /// The user id of buyer of this order

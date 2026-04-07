@@ -168,6 +168,30 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
              return token;
         }
 
+        public static MySqlResultState ShopeeSaveLivePartnerKey(string key)
+        {
+            MySqlResultState result = null;
+            try
+            {
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    result = shopeeMySql.ShopeeSaveLivePartnerKey(key, conn);
+                    if (result.State == EMySqlResultState.OK)
+                    {
+                        // Cập nhật lại shopee authen
+                        shopeeAuthen = ShopeeGetAuthen(conn);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
         // Lưu code mới trong Redirect URL sau khi được chủ shop ủy quyền
         public static MySqlResultState ShopeeSaveCode(string code)
         {
@@ -273,8 +297,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                     shopeeAuthen = ShopeeGetAuthen(conn);
                 }
             }
-            MyLogger.GetInstance().Info("new access_token from db: " + shopeeAuthen.shopeeToken.access_token);
-            MyLogger.GetInstance().Info("new refresh_token from db: " + shopeeAuthen.shopeeToken.refresh_token);
+            else
+            {
+                MyLogger.GetInstance().Error("ShopeeGetRefreshTokenShopLevel get null token ");
+            }
             return token;
         }
 

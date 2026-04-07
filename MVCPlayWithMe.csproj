@@ -434,6 +434,7 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeUploadImageResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetBookingTrackingNumberResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\ShopeeBookingSatusPush.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailItem.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingListResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\TaxAndFee.cs" />

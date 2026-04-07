@@ -599,7 +599,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.Parameters.AddWithValue("@inProductId", 0);
                 cmd.Parameters.AddWithValue("@inQuantity", 0);
                 int productId = 0;
-                int quantity = 0;
+                long quantity = 0;
                 for (int i = 0; i < commonOrder.listMapping.Count; i++)
                 {
                     for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
@@ -677,7 +677,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 cmd.Parameters.AddWithValue("@inProductId", 0);
                 cmd.Parameters.AddWithValue("@inQuantity", 0);
                 int productId = 0;
-                int quantity = 0;
+                long quantity = 0;
                 for (int i = 0; i < commonOrder.listMapping.Count; i++)
                 {
                     for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
@@ -1165,7 +1165,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inQuantity", 0);
 
                     int productId = 0;
-                    int quantity = 0;
+                    long quantity = 0;
                     for (int i = 0; i < commonOrder.listMapping.Count; i++)
                     {
                         for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
@@ -1809,6 +1809,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Need_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                MySqlDataReader rdr = cmd.ExecuteReader();
+
+                while (rdr.Read())
+                {
+                    TikiReadCommonItem(listCI, rdr);
+                }
+
+                rdr.Close();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return listCI;
+        }
+
+        // Kết nối đóng mở bên ngoài
+        // Lấy tất cả danh sách item của sản phẩm đang bật bán bình thường để cập nhật số lượng
+        public static List<CommonItem> TikiGetListAllUpdateQuantityConnectOut(MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_Update_Quantity", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 MySqlDataReader rdr = cmd.ExecuteReader();
 

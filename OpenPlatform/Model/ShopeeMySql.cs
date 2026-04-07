@@ -730,6 +730,25 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
+        public MySqlResultState ShopeeSaveLivePartnerKey(string key, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand(
+                    "UPDATE webplaywithme.tbshopeeauthen SET `PartnerKey` = @inPartnerKey  WHERE `Id` = 1", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inPartnerKey", key);
+
+                cmd.ExecuteNonQuery();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
         public MySqlResultState ShopeeSaveCode(string code, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();

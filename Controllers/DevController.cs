@@ -164,11 +164,11 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                LazadaMySql sqler = new LazadaMySql();
+                LazadaMySql lazadaSQLer = new LazadaMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-                    List<CommonItem> ls = sqler.LazadaGetItemOnDB(conn);
+                    List<CommonItem> ls = lazadaSQLer.LazadaGetItemOnDB(conn);
                     ProductController.LazadaUpdateQuantity_Core(ls);
 
                     // Lấy danh sách item cập nhật số lượng sai
@@ -216,11 +216,11 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                LazadaMySql sqler = new LazadaMySql();
+                LazadaMySql lazadaSQLer = new LazadaMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-                    List<CommonItem> ls = sqler.LazadaGetItemOnDB(conn);
+                    List<CommonItem> ls = lazadaSQLer.LazadaGetItemOnDB(conn);
 
                     ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
 
@@ -667,11 +667,11 @@ namespace MVCPlayWithMe.Controllers
 
         private void LazadaUpdatePrice_SalePrice()
         {
-            LazadaMySql sqler = new LazadaMySql();
+            LazadaMySql lazadaSQLer = new LazadaMySql();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 conn.Open();
-                List<CommonItem> ls = sqler.LazadaGetItemOnDB(conn);
+                List<CommonItem> ls = lazadaSQLer.LazadaGetItemOnDB(conn);
                 foreach(var item in ls)
                 {
                     if(item.itemId == 3015755086)
@@ -758,11 +758,11 @@ namespace MVCPlayWithMe.Controllers
             //{
             //    images.Add(image);
             //}
-            //LazadaMySql sqler = new LazadaMySql();
+            //LazadaMySql lazadaSQLer = new LazadaMySql();
             //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             //{
             //    conn.Open();
-            //    sqler.InserttbLazadaMediaSpace(1234, 0, 0, images, conn);
+            //    lazadaSQLer.InserttbLazadaMediaSpace(1234, 0, 0, images, conn);
             //}
             //LazadaProductAPI.LazadaCreateProductTest();
 
@@ -837,6 +837,37 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        // Khi mở địa chỉ kho mới, tắt kho cũ, tồn kho sản phẩm trên sàn về 0. Ta cần cập nhật số lượng.
+        [HttpPost]
+        [ValidateInput(false)]
+        public async Task<string> TikiChangeQuantityWhenSetupOtherWarehouse()
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    List<CommonItem> listCommonItem = TikiMySql.TikiGetListAllUpdateQuantityConnectOut(conn);
+                    foreach (var commonItem in listCommonItem)
+                    {
+                        ProductController.TikiUpdateQuantityOfOneItem(commonItem);
+                        await Task.Delay(500);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
         ///// <summary>
         //// Hàm chỉ gọi 1 lần trong đời do thư mục ảnh chưa được add logo, thêm phiên bản thu nhỏ 320
         ///// 
@@ -897,7 +928,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = sqler.ShopeeSaveLivePartnerKey(key);
+            MySqlResultState result = CommonShopeeAPI.ShopeeSaveLivePartnerKey(key);
 
             return JsonConvert.SerializeObject(result);
         }

@@ -60,7 +60,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Tin nhắn của khách
         public string messageToSeller { get; set; }
 
-        public List<int> listQuantity { get; set; }
+        public List<long> listQuantity { get; set; }
 
         // Trạng thái:
         //"Đã Đóng", "Đã Hoàn", "Giữ Chỗ", "Hủy Giữ Chỗ", hoặc trống
@@ -111,7 +111,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelId = new List<long>();
             created_at = new DateTime();
             listThumbnail = new List<string>();
-            listQuantity = new List<int>();
+            listQuantity = new List<long>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();
@@ -135,7 +135,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelId = new List<long>();
             listItemSuperId = new List<int>();
             listThumbnail = new List<string>();
-            listQuantity = new List<int>();
+            listQuantity = new List<long>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();
@@ -175,7 +175,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemId = new List<long>();
             listModelId = new List<long>();
             listThumbnail = new List<string>();
-            listQuantity = new List<int>();
+            listQuantity = new List<long>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();
@@ -209,13 +209,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemId = new List<long>();
             listModelId = new List<long>();
             listThumbnail = new List<string>();
-            listQuantity = new List<int>();
+            listQuantity = new List<long>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();
             listMapping = new List<List<Mapping>>();
 
-            foreach (ShopeeGetOrderDetailItem e in booking.item_list)
+            foreach (ShopeeGetBookingDetailItem e in booking.item_list)
             {
                 listItemId.Add(e.item_id);
                 listModelId.Add(e.model_id);
@@ -250,7 +250,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelId = new List<long>();
             listItemSuperId = new List<int>();
             listThumbnail = new List<string>();
-            listQuantity = new List<int>();
+            listQuantity = new List<long>();
 
             listItemName = new List<string>();
             listModelName = new List<string>();

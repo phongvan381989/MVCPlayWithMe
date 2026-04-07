@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
 {
-    public class ShopeeGetOrderDetailItem
+    public class ShopeeGetBookingDetailItem
     {
         /// <summary>
         /// Shopee's unique identifier for an item.
@@ -106,26 +105,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         /// <summary>
         /// The fulfilment warehouse ID(s) of the items in the booking. (Multi-Warehouse sellers only)
         /// </summary>
-        public List<string> product_location_id { get; set; }
-
-        // To indicate if this item is prescription item
-        public Boolean is_prescription_item { get; set; }
-
-        // An identifier of teleconsultation session which buyer did to order this item. Empty if item is not ordered through teleconsultation session
-        public string consultation_id { get; set; }
-
-        // determine if item is B2C_shop_item
-        //It should be `is_b2c_shop_item` but it was a bug from dev.Then now it's is_b2c_owned_item
-        public Boolean is_b2c_owned_item { get; set; }
+        public string product_location_id { get; set; }
 
         // For Indonesia bookings only. The name of the dropshipper.
         public string dropshipper { get; set; }
 
         // The phone number of dropshipper, could be empty.
         public string dropshipper_phone { get; set; }
-
-        // Cancel reason from buyer, could be empty.
-        public string buyer_cancel_reason { get; set; }
 
         // Could be one of buyer, seller, system or Ops.
         public string cancel_by { get; set; }

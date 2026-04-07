@@ -380,9 +380,18 @@
 
             let query = "/ProductECommerce/GetListOrder";
 
+            let responseDB = null;
             ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            try {
+                responseDB = await RequestHttpPostPromise(searchParams, query);
+            }
+            catch (msgLoi) {
+                RemoveCircleLoader();
+                await CreateMustClickOkModal(msgLoi, null);
+                return;
+            }
             RemoveCircleLoader();
+
             if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
                 return;
@@ -496,9 +505,18 @@
 
             let query = "/ProductECommerce/GetOrderFromOrderSN_TrackingNumber";
 
+            let responseDB = null;
             ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            try {
+                responseDB = await RequestHttpPostPromise(searchParams, query);
+            }
+            catch (msgLoi) {
+                RemoveCircleLoader();
+                await CreateMustClickOkModal(msgLoi, null);
+                return;
+            }
             RemoveCircleLoader();
+
             if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại với mã đơn thay vì mã vận chuyển, nếu không được thử lại sau.", null);
                 return;
@@ -1256,8 +1274,16 @@
 
             let query = "/ProductECommerce/ReloadOneOrder";
 
+            let responseDB = null;
             ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            try {
+                responseDB = await RequestHttpPostPromise(searchParams, query);
+            }
+            catch (msgLoi) {
+                RemoveCircleLoader();
+                await CreateMustClickOkModal(msgLoi, null);
+                return;
+            }
             RemoveCircleLoader();
             if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);

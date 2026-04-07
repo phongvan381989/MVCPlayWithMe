@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
 
     public class ShopeeBookingDetail : GeneralOrder
     {
-        public ShopeeBookingDetail() : base(EnumCommerceTypeDeTail.LAZADA_ITEM)
+        public ShopeeBookingDetail() : base(EnumCommerceTypeDeTail.SHOPEE_ITEM)
         {
         }
 
@@ -56,7 +56,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder
         public ShopeeGetOrderDetailRecipientAddress recipient_address { get; set; }
 
         // This object contains the detailed breakdown for the result of this API call.
-        public List<ShopeeGetOrderDetailItem> item_list { get; set; }
+        public List<ShopeeGetBookingDetailItem> item_list { get; set; }
 
         // For Indonesia orders only. The name of the dropshipper.
         public string dropshipper { get; set; }

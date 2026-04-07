@@ -76,6 +76,9 @@
 8938519861398,
 8938519861404,"></textarea>
                     <br>
+                    <div>
+                        <textarea id="red-code" placeholder="Chứa mã không tìm thấy / màu đỏ nếu có khi Thêm Vào Danh Sách"></textarea>
+                    </div>
                 </div>
                 <div>
                     <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
@@ -351,8 +354,8 @@
                     exist = false;
                     for (let j = 0; j < listBasicInfo.length; j++) {
                         if (listBasicInfo[j].code === data[i].code ||
-                            listBasicInfo[j].barcode === data[i].code ||
-                            listBasicInfo[j].comboCode === data[i].code) {
+                            listBasicInfo[j].barcode === data[i].code
+                            /*|| listBasicInfo[j].comboCode === data[i].code*/) {
                             if (data[i].quantity !== 0) {
                                 let existInsert = false;
                                 // Tìm xem đã tồn tại vì có thể lúc đầu đã được thêm theo mã 89/isbn sau lại được thêm theo mã combo
@@ -363,14 +366,15 @@
                                     }
                                 }
                                 if (!existInsert) {
-                                    listBasicInfo[j].quantity = data[i].quantity;
-                                    listInsertTemp.push(listBasicInfo[j]);
+                                    let productTemp = JSON.parse(JSON.stringify(listBasicInfo[j]));
+                                    productTemp.quantity = data[i].quantity;
+                                    listInsertTemp.push(productTemp);
                                 }
                             }
                             exist = true;
-                            if (listBasicInfo[j].comboCode !== data[i].code) {
-                                break;
-                            }
+                            //if (listBasicInfo[j].comboCode !== data[i].code) {
+                            //    break;
+                            //}
                         }
                     }
                     if (!exist && data[i].quantity != 0) {
@@ -510,6 +514,22 @@
 
                 // Gọi hàm sau khi dữ liệu đã được load
                 updateSTT("myTable", 1);
+
+                // Hiển thị mã không tìm thấy trong csdl
+                let redCode = "";
+                for (let i = 0; i < listInsertTemp.length; i++) {
+                    let objBasicInfo = listInsertTemp[i];
+                    // Kiểm tra sản phẩm đã xuất hiện trong danh sách hiển thị
+                    if (objBasicInfo.id === -1) {
+                        if (redCode.length == 0) {
+                            redCode = objBasicInfo.code;
+                        }
+                        else {
+                            redCode = redCode + ", " + objBasicInfo.code;
+                        }
+                    }
+                }
+                document.getElementById("red-code").value = redCode;
             }
             else {
                 CreateMustClickOkModal("Không tìm thấy sản phẩm phù hợp hoặc sản phẩm đã được thêm vào danh sách hiển thị", null);

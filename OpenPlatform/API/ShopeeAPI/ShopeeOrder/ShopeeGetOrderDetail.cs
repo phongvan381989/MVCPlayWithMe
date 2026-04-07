@@ -74,13 +74,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 conn)
                 );
 
-            lsOrderShopeeFullInfo.AddRange(
-                ShopeeOrderGetOrderDetailAll(
-                time_from,
-                time_to,
-                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.RETRY_SHIP],
-                conn)
-                );
+            //lsOrderShopeeFullInfo.AddRange(
+            //    ShopeeOrderGetOrderDetailAll(
+            //    time_from,
+            //    time_to,
+            //    ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.RETRY_SHIP],
+            //    conn)
+            //    );
 
             return lsOrderShopeeFullInfo;
         }

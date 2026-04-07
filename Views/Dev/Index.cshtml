@@ -153,41 +153,48 @@
                     title="Test chức năng nào đó với tham số text.">
                 Test chức năng nào đó với tham số
             </button>
+
+            <button type="button" onclick="TikiChangeQuantityWhenSetupOtherWarehouse()"
+                    title="Khi mở địa chỉ kho mới, tắt kho cũ, tồn kho sản phẩm trên sàn về 0. Ta cần cập nhật số lượng.">
+                Cập nhật tồn kho toàn bộ khi chuyển kho
+            </button>
         </div>
 
         <div class="xvsfx02xv">
             <div class="gmxk9381"> Ủy quyền SHOPEE</div>
             <div class="flpzni5136">
                 <input type="text" id="live_partner_key" class="config-max-width margin-vertical"
-                       title="Live Partner Key của shop, lấy từ open shopee platform. Chỉ thay đổi khi làm mới Live Partner Key" />
+                       title="Bước 1: Dán Live Partner Key của shop, lấy từ open shopee platform ->console -> App List ->PlayWithMe -> Edit -> Click Reset Live API Partner Key.
+                       Chỉ thay đổi khi làm mới Live Partner Key. Sau đó click button bên dưới để lưu vào DB" />
                 <button type="button" onclick="ShopeeSaveLivePartnerKey()"
-                        title="Cập nhật Live Partner Key từ input trên">
-                    Cập Nhật Live Partner Key
+                        title="Cập nhật Live Partner Key từ input Bước 1">
+                    Bước 1: Cập Nhật Live Partner Key
                 </button>
             </div>
 
             <div class="flpzni5136">
                 <input type="text" id="authorization_url" class="config-max-width margin-vertical"
-                       title="URL gửi chủ shop server trả về sau khi click button ngay dưới" />
+                       title="Bước 2: Click button bên dưới để sinh URL gửi chủ shop, url sẽ hiển thị ở đây" />
                 <button type="button" onclick="ShopeeGetAuthorizationURL()"
                         title="Lấy được url gửi chủ shop, chủ shop vào url xác thực ủy quyền phần mềm. Hiển thị ở input ngay trên">
-                    Sinh URL Ủy Quyền
+                    Bước 2: Sinh URL Ủy Quyền
                 </button>
             </div>
 
             <div class="flpzni5136">
                 <input type="text" id="code" class="config-max-width margin-vertical"
-                       title="Code của shope nhận được sau khi chủ shop ủy quyền. Chỉ thay đổi khi làm mới ủy quyền" />
+                       title="Bước 3: Dán Code của shop nhận được sau khi chủ shop ủy quyền (chỉ thay đổi khi làm mới ủy quyền).
+                       Sau đó click button bên dưới để lưu DB" />
                 <button type="button" onclick="ShopeeSaveCode()"
-                        title="Cập nhật code từ input trên">
-                    Cập Nhật Code
+                        title="Cập nhật code">
+                    Bước 3: Cập Nhật Code
                 </button>
             </div>
 
             <button type="button" onclick="ShopeeGetTokenShopLevelAfterAuthorization()"
-                    title="Lấy được và lưu refresh, access token ngay sau khi chủ shop ủy quyền.
-                    DB đã có live partner key, code">
-                Lấy Và Lưu Refresh Access Token Ngay Sau Ủy Quyền
+                    title="Bước 4: DB đã có live partner key, code từ các bước trên.
+                    Lấy và lưu refresh, access token vào DB.">
+                Bước 4: Lấy Và Lưu Refresh Access
             </button>
 
         </div>
@@ -371,6 +378,18 @@
             const searchParams = new URLSearchParams();
             let query = "/Dev/TikiTestSomethingWithParameter";
             searchParams.append("str", document.getElementById("tiki_something_input").value)
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            RemoveCircleLoader();
+
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+        }
+
+        //
+        async function TikiChangeQuantityWhenSetupOtherWarehouse() {
+            const searchParams = new URLSearchParams();
+            let query = "/Dev/TikiChangeQuantityWhenSetupOtherWarehouse";
+
             ShowCircleLoader();
             let responseDB = await RequestHttpPostPromise(searchParams, query);
             RemoveCircleLoader();

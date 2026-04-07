@@ -18,8 +18,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
         // limit must not be greater than 100, nhưng chỗ khác thực tế lại là 50, ảo ma canada
         public const string cstrPerPage = "50";
-        //public const int intIdKho28Ngo3TTDL = 159368; Id kho hàng 28 ngõ 3, tập thể Đo Lường. Đã tắt kho hàng này
-        public const int intIdKho28Ngo3TTDL = 387453;
+        //public const int intIdKho28Ngo3TTDL = 159368;// Id kho hàng 28 ngõ 3, tập thể Đo Lường. Đã tắt kho hàng này ngày 01/03/2023
+        //public const int intIdKho28Ngo3TTDL = 387453; // Id kho hàng 24 Việt Hà 2, Cầu Noi. Kho này tắt vì chuyển nhà ngày 01/03/2026
+         public const int intIdKho28Ngo3TTDL = 159368;// Id kho hàng 28 ngõ 3, tập thể Đo Lường được mở lại này  01/03/2026
         public const string cstrHomeAdress = "https://tiki.vn/cua-hang/play-with-me";
 
         public const string cstrPullEvent = "https://api.tiki.vn/integration/v1/queues/fe4d3d23-9a2a-4e7e-8fc3-9016e18c78f5/events/pull";

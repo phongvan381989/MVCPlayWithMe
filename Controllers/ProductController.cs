@@ -1985,6 +1985,7 @@ namespace MVCPlayWithMe.Controllers
                 //}
             }
         }
+
         private static List<CommonItem>TikiGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
         {
             // Danh sách sản phẩm Tiki
@@ -1992,7 +1993,7 @@ namespace MVCPlayWithMe.Controllers
             //TikiGetStatusImageSrcQuantitySellable(listCommonItem);
             foreach( var commonItem in listCommonItem)
             {
-                 TikiUpdateQuantityOfOneItem(commonItem, conn);
+                 TikiUpdateQuantityOfOneItem(commonItem/*, conn*/);
             }
             return listCommonItem;
         }
@@ -2321,14 +2322,14 @@ namespace MVCPlayWithMe.Controllers
             //ShopeeGetStatusImageSrcQuantitySellable(listCommonItem);
             foreach (var commonItem in listCommonItem)
             {
-                ShopeeUpdateQuantityOfOneItem(commonItem, conn);
+                ShopeeUpdateQuantityOfOneItem(commonItem/*, conn*/);
             }
 
             return listCommonItem;
         }
 
         // Cập nhật số lượng sản phẩm của tất cả model trong commonItem một lần
-        private static void ShopeeUpdateQuantityOfOneItem(CommonItem commonItem, MySqlConnection conn)
+        private static void ShopeeUpdateQuantityOfOneItem(CommonItem commonItem/*, MySqlConnection conn*/)
         {
             if (!commonItem.bActive)
             {
@@ -2382,7 +2383,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Với Tiki TikiUpdateQuantityOfOneItemModel, và TikiUpdateQuantityOfOneItem giống nhau, khác tham số truyền vào
         // TikiUpdateQuantityOfOneItem có thể check item active
-        private static void TikiUpdateQuantityOfOneItem(CommonItem commonItem, MySqlConnection conn)
+        public static void TikiUpdateQuantityOfOneItem(CommonItem commonItem/*, MySqlConnection conn*/)
         {
             if (!commonItem.bActive)
             {
@@ -2454,11 +2455,11 @@ namespace MVCPlayWithMe.Controllers
             {
                 if (commonItem.eType == Common.eTiki)
                 {
-                    TikiUpdateQuantityOfOneItem(commonItem, conn);
+                    TikiUpdateQuantityOfOneItem(commonItem/*, conn*/);
                 }
                 else if (commonItem.eType == Common.eShopee)
                 {
-                    ShopeeUpdateQuantityOfOneItem(commonItem, conn);
+                    ShopeeUpdateQuantityOfOneItem(commonItem/*, conn*/);
                 }
                 else if (commonItem.eType == Common.eLazada)
                 {

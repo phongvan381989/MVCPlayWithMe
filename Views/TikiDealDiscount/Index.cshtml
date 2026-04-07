@@ -418,9 +418,18 @@
 
             let query = "/TikiDealDiscount/GetDealDiscountOfSku";
 
+            let responseDB = null;
             ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            try {
+                responseDB = await RequestHttpPostPromise(searchParams, query);
+            }
+            catch (msgLoi) {
+                RemoveCircleLoader();
+                await CreateMustClickOkModal(msgLoi, null);
+                return;
+            }
             RemoveCircleLoader();
+
             if (responseDB.responseText == "null") {
                 await CreateMustClickOkModal("Không lấy được chương trình giảm giá. Thử lại sau.", null);
                 listDealOfSku = [];
@@ -551,9 +560,18 @@
             const searchParams = new URLSearchParams();
             let query = "/TikiDealDiscount/GetItemsNoDealDiscountRunning";
 
+            let responseDB = null;
             ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            try {
+                responseDB = await RequestHttpPostPromise(searchParams, query);
+            }
+            catch (msgLoi) {
+                RemoveCircleLoader();
+                await CreateMustClickOkModal(msgLoi, null);
+                return;
+            }
             RemoveCircleLoader();
+
             if (responseDB.responseText == "null") {
                 listItemNoDealDiscountRunning = [];
                 await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);

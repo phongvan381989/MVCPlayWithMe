@@ -348,9 +348,12 @@ function RequestHttpPostPromise(searchParams, url) {
                 }
                 resolve(this);
             }
+            else {
+                reject("Lỗi HTTP: (Status: " + this.status + ") (StatusText: " + this.statusText + ") (responseText: " + this.responseText + ")");
+            }
         };
         xhttp.onerror = function () {
-            reject(this.statusText);
+            reject("Network Error or Connection Refused (Status: " + this.status + ") (StatusText: " + this.statusText + ") ");
         }
 
         if (DEBUG) {
@@ -1285,6 +1288,9 @@ function ConvertCSVForImport(csvId) {
 
     const rows = csvText.split('\n');
     const headers = rows[0].split(',');
+    // hardcode header luôn vì có trường hợp gõ text header có ký tự Hoa
+    headers[0] = "code";
+    headers[1] = "quantity";
 
     data = rows.slice(1).map(row => {
         const values = row.split(',');
