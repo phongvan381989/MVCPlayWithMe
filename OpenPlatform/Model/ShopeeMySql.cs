@@ -120,12 +120,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 rdr = cmd.ExecuteReader();
                 while (rdr.Read())
                 {
-                    if (MyMySql.GetInt32(rdr, "ShopeeModelId") != -1 &&
-                        MyMySql.GetInt64(rdr, "TMDTShopeeModelId") != -1)
-                    {
+                    //if (MyMySql.GetInt32(rdr, "ShopeeModelId") != -1 &&
+                    //    MyMySql.GetInt64(rdr, "TMDTShopeeModelId") != -1)
+                    //{
                         lsModel.Add(Tuple.Create(MyMySql.GetInt32(rdr, "ShopeeModelId"),
                             MyMySql.GetInt64(rdr, "TMDTShopeeModelId")));
-                    }
+                    //}
                 }
                 rdr.Close();
             }

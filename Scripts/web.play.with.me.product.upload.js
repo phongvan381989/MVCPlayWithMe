@@ -6,9 +6,6 @@
         return false;
     }
 
-    //let comboName = document.getElementById("combo-id").value;
-    //searchParams.append("comboName", comboName);
-
     let categoryName = document.getElementById("category-id").value;
     let categoryId = GetDataIdFromCategoryDatalist(categoryName);
     if (categoryId == null) {
@@ -535,6 +532,7 @@ async function UpdateISBN() {
         return;
     }
 }
+
 async function UpdateDetail() {
     const searchParams = new URLSearchParams();
     searchParams.append("id", GetValueFromUrlName("id"));
@@ -782,4 +780,73 @@ function GetSomeData() {
     GetListPublisher();
     GetListPublishingCompany();
     SetListPublishingTime();
+}
+
+async function AddNewProsFromCSVPromise() {
+    const csvText = document.getElementById("create-csv-input").value.trim();
+    if (DEBUG) {
+        console.log("csvText: " + csvText);
+    }
+
+    if (isEmptyOrSpaces(csvText)) {
+        CreateMustClickOkModal("Chưa có dữ liệu csv", null);
+        return;
+    }
+
+    const lines = csvText.trim().split('\n');
+
+    const data = [];
+
+    for (let i = 0; i < lines.length; i++) {
+
+        const values = lines[i]
+            .split('##')
+            .map(x => x.trim());
+
+        const item = {
+            comboName: CapitalizeWords(values[0]),
+            productName: CapitalizeWords(values[1]),
+            quantity: parseInt(values[2]),
+            bookCoverPrice: parseInt(values[3]),
+            discount: parseFloat(values[4]),
+            code: values[5]
+        };
+
+        data.push(item);
+
+        if (DEBUG) {
+            console.log("return of convertToCSV: " + JSON.stringify(data));
+        }
+    }
+
+    const searchParams = new URLSearchParams();
+    let publisherName = document.getElementById("publisher-id").value;
+    if (isEmptyOrSpaces(publisherName)) {
+        CreateMustClickOkModal("Tên nhà phát hành trống.", null);
+        return false;
+    }
+
+    let publisherId = GetDataIdFromPublisherDatalist(publisherName);
+    if (publisherId == null) {
+        CreateMustClickOkModal("Tên nhà phát hành không chính xác. Vui lòng kiểm tra lại.", null);
+        return false;
+    }
+    else {
+        searchParams.append("publisherId", publisherId);
+    }
+    searchParams.append("listObject", JSON.stringify(data));
+
+    let urlAdd = "/Product/AddNewProsFromCSVPromise";
+
+    ShowCircleLoader();
+    try {
+        // Cập nhật vào db
+        let responseDB = await RequestHttpPostPromise(searchParams, urlAdd);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Tạo sản phẩm lỗi. " + error, null);
+    }
 }

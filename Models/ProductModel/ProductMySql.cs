@@ -1122,6 +1122,140 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        //AddNewProsFromCSVPromise
+        public async Task<MySqlResultState> AddNewProsFromCSVPromise(List<ProductFromCsv> products, int publisherId)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection connection = new MySqlConnection(MyMySql.connStr))
+                {
+                    await connection.OpenAsync();
+
+                    // cache comboName -> comboId
+                    var comboCache =
+                        new Dictionary<string, int>(
+                            StringComparer.OrdinalIgnoreCase);
+
+
+                    foreach (var item in products)
+                    {
+                        int comboId;
+
+                        if (string.IsNullOrEmpty(item.comboName))
+                        {
+                            comboId = -1;// mặc định
+                        }
+                        // đã có cache
+                        else if (comboCache.ContainsKey(item.comboName))
+                        {
+                            comboId = comboCache[item.comboName];
+                        }
+                        else
+                        {
+                            // tìm combo trong DB
+                            var getComboCmd = new MySqlCommand(
+                                @"SELECT id
+                  FROM tbCombo
+                  WHERE Name = @name
+                  LIMIT 1",
+                                connection);
+
+                            getComboCmd.Parameters.AddWithValue(
+                                "@name",
+                                item.comboName);
+
+                            var comboIdResult =
+                                await getComboCmd.ExecuteScalarAsync();
+
+                            // chưa có -> insert
+                            if (comboIdResult == null)
+                            {
+                                var insertComboCmd = new MySqlCommand(
+                                    @"INSERT INTO tbCombo(name)
+                      VALUES(@name);
+
+                      SELECT LAST_INSERT_ID();",
+                                    connection);
+
+                                insertComboCmd.Parameters.AddWithValue(
+                                    "@name",
+                                    item.comboName);
+
+                                comboId = Convert.ToInt32(
+                                    await insertComboCmd.ExecuteScalarAsync());
+                            }
+                            else
+                            {
+                                comboId = Convert.ToInt32(comboIdResult);
+                            }
+
+                            comboCache[item.comboName] = comboId;
+                        }
+
+                        // insert product
+                        var insertProductCmd = new MySqlCommand(
+                            @"INSERT INTO tbproducts
+            (
+                Code,
+                Name,
+                ComboId,
+                BookCoverPrice,
+                PublisherId,
+                Quantity,
+                Discount,
+                Date
+            )
+            VALUES
+            (
+                @code,
+                @name,
+                @comboId,
+                @bookCoverPrice,
+                @publisherId,
+                @quantity,
+                @discount,
+                CURDATE()
+            )",
+                            connection);
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@name",
+                            item.productName);
+
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@comboId",
+                            comboId);
+
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@bookCoverPrice",
+                            item.bookCoverPrice);
+
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@publisherId",
+                            publisherId);
+
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@quantity",
+                            item.quantity);
+
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@discount",
+                            item.discount);
+                        insertProductCmd.Parameters.AddWithValue(
+                            "@code",
+                            item.code);
+
+                        await insertProductCmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
         public List<Import> GetImportList(string fromDate, string toDate, string publisher)
         {
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);

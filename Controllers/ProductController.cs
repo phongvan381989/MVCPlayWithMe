@@ -278,6 +278,38 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
+        public async Task<string> AddNewProsFromCSVPromise(int publisherId, string listObject)
+        {
+            if (AuthentAdministrator() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            List<ProductFromCsv> products = null;
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                products = JsonConvert.DeserializeObject<List<ProductFromCsv>>(listObject);
+                if (products == null || products.Count == 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Danh sách cần nhập rỗng hoặc lỗi.";
+                }
+                else
+                {
+                   result = await productSqler.AddNewProsFromCSVPromise(products, publisherId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+
+        }
+
+        [HttpPost]
         public string UpdateProduct(
                 int productId,
                 int quantity,

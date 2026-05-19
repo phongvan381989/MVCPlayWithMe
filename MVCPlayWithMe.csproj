@@ -363,6 +363,7 @@
     <Compile Include="Models\Output.cs" />
     <Compile Include="Models\PriceQuantity.cs" />
     <Compile Include="Models\ProductModel\ProductCommonInfoWithCombo.cs" />
+    <Compile Include="Models\ProductModel\ProductFromCsv.cs" />
     <Compile Include="Models\ProductModel\ProductIdName.cs" />
     <Compile Include="Models\ProductModel\Product.cs" />
     <Compile Include="Models\ProductModel\ProductMySql.cs" />
@@ -680,6 +681,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\ProductECommerce\item.js" />
     <Content Include="Scripts\web.play.with.me.action.common.js" />
     <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
@@ -688,6 +690,7 @@
     <Content Include="Scripts\web.play.with.me.image.video.common.js" />
     <Content Include="Scripts\web.play.with.me.item.model.js" />
     <Content Include="Scripts\web.play.with.me.mapping.of.item.model.js" />
+    <Content Include="Scripts\web.play.with.me.oder.admin.js" />
     <Content Include="Scripts\web.play.with.me.order.js" />
     <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />

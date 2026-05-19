@@ -15,6 +15,23 @@
                 <br />
                 <button type="button" onclick="AddNewProPromise()">Thêm mới sản phẩm</button>
             </div>
+
+            <br />
+            <br />
+            <div>
+                <label title="dữ liệu tách bằng ## và không có dòng header">Thêm mới nhanh nhiều sản phẩm từ định dạng csv tách bởi ##</label>
+                    <textarea id="create-csv-input" rows="10" style="width:100%"
+                              placeholder=
+"tên combo,tên sản phẩm,số lượng,giá,chiết khấu,mã
+Kính vạn hoa (Phiên bản mới)##KÍNH VẠN HOA - 11 - Thằng thỏ đế - Bên ngoài cửa lớp - Họa mi một mình	        		##2##86000##40##8935244864342
+Kính vạn hoa (Phiên bản mới)##KÍNH VẠN HOA - 2 - Ông thầy nóng tính - Xin lỗi mày, Tai To - Người bạn lạ lùng		##2##86000##40##8935244864250
+Kính vạn hoa (Phiên bản mới)##KÍNH VẠN HOA - 3 - Bí mật kẻ trộm - Bắt đền hoa sứ - Con mả con ma	            		##2##86000##40##8935244864267
+Kính vạn hoa (Phiên bản mới)##KÍNH VẠN HOA - 5 - Khu vườn trên mái nhà - Thủ môn bị từ chối - Thi sĩ hạng ruồi		##2##86000##40##8935244864281
+Kính vạn hoa (Phiên bản mới)##KÍNH VẠN HOA - 6 - Ba lô màu xanh - Lọ thuốc tàng hình - Cuộc so tài vất vả			##2##86000##40##8935244864298">
+</textarea>
+                    <br>
+                    <button type="button" onclick="AddNewProsFromCSVPromise()">Thêm mới từ csv</button>
+            </div>
         </div>
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
