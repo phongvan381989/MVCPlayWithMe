@@ -588,7 +588,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(resultState);
         }
 
-        // Xóa model Shopee trên db
+        // Xóa model Shopee trên db => Disable
         [HttpPost]
         public string DeleteShopeeModelOnDB(string eType, string modelId)
         {

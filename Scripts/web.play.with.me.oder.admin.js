@@ -225,7 +225,7 @@ async function OrderDetailFromServer() {
     let listOrderFromSN = JSON.parse(responseDB.responseText);
 
     // Không filter
-    document.getElementById("all-order").checked = true;
+    //document.getElementById("all-order").checked = true;
     if (listOrderFromSN.length == 0) {
         currentOrder = null;
         CreateMustClickOkModal("Kiểm tra thông tin đơn hàng hoặc thử lại sau.");

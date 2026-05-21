@@ -2259,7 +2259,7 @@ namespace MVCPlayWithMe.Controllers
         //        "model_id": 232454047582
         //    }
         //]
-        // Ta xóa bỏ mọi thứ liên quan đến model_id vĩnh viễn khỏi cơ sở dữ liệu
+        // Ta xóa bỏ mọi thứ liên quan đến model_id vĩnh viễn khỏi cơ sở dữ liệu => KHÔNG ỔN, ta chỉ disable
         private static void ShopeeProductUpdateStockAndImpactDb(
             MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st,
             MySqlResultState result)
@@ -2278,7 +2278,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     if (f.failed_reason == "model ID not exist in sku")
                     {
-                        // Xóa bỏ mọi thứ liên quan đến model_id vĩnh viễn khỏi cơ sở dữ liệu
+                        // Xóa bỏ mọi thứ liên quan đến model_id vĩnh viễn khỏi cơ sở dữ liệu => Disable
                         ShopeeMySql.ShopeeDeleteModelOnDB(f.model_id);
                     }
                     else if (f.failed_reason.Contains(st.item_id.ToString() + " status is abnormal"))

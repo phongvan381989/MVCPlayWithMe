@@ -212,7 +212,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     {
                         // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
                         {
-                            MySqlCommand cmdTem = new MySqlCommand("st_tbShopeeModel_Delete_From_Id", conn);
+                            //MySqlCommand cmdTem = new MySqlCommand("st_tbShopeeModel_Delete_From_Id", conn);
+                            MySqlCommand cmdTem = new MySqlCommand("st_tbShopeeModel_Disable_From_Id", conn);
                             cmdTem.CommandType = CommandType.StoredProcedure;
                             cmdTem.Parameters.AddWithValue("@inShopeeModelId", 0);
                             foreach (var id in lsTMDTShopeeModelNeedDeleteOnDb)
@@ -518,7 +519,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Delete_From_TMDTShopeeItemId", conn);
+                //MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Delete_From_TMDTShopeeItemId", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Disable_From_TMDTShopeeItemId", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", itemId);
 
@@ -548,7 +550,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 conn.Open();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Delete_From_TMDTShopeeModeId", conn);
+                //MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Delete_From_TMDTShopeeModeId", conn);
+                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Disable_From_TMDTShopeeModeId", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inTMDTShopeeModelId", modelId);
 

@@ -258,8 +258,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                     if (lsTMDTLazadaModelNeedDeleteOnDb.Count > 0)
                     {
-                        // Xóa trên tbLazadamapping, tbpwmmappingother, tbLazadamodel
-                        using (MySqlCommand cmdTem = new MySqlCommand("st_tbLazadaModel_Delete_From_Id", conn))
+                        //// Xóa trên tbLazadamapping, tbpwmmappingother, tbLazadamodel
+                        //using (MySqlCommand cmdTem = new MySqlCommand("st_tbLazadaModel_Delete_From_Id", conn))
+                        using (MySqlCommand cmdTem = new MySqlCommand("st_tbLazadaModel_Disable_From_Id", conn))
                         {
                             cmdTem.CommandType = CommandType.StoredProcedure;
                             cmdTem.Parameters.AddWithValue("@inLazadaModelId", 0);

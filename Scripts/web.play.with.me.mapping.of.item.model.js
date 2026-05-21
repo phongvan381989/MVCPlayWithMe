@@ -188,7 +188,7 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
             ele.innerHTML = "Có lỗi không xác định. Vui lòng thử lại sau.";
         }
         else if (result.myJson.response.failure_list.length > 0) {
-            ele.innerHTML = result.myJson.failure_list[0].failed_reason;
+            ele.innerHTML = result.myJson.response.failure_list[0].failed_reason;
         }
         else {
             ele.innerHTML = "Xong";
