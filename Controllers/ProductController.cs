@@ -1051,12 +1051,12 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
-        // Lấy những sản phẩm trong kho có tên được chứa
-        // trong tên sản phẩm trên sàn thương mại điện tử, không phân biệt hoa thường
+        // Lấy những sản phẩm trong kho có tên được chứa hoàn toàn
+        // trong tên sản phẩm trên sàn thương mại điện tử hoặc ngược lại, không phân biệt hoa thường
         // Hàm này mục đích hiển thị những sản phẩm mapping tiềm năng khi mở modal mapping,
         // đỡ phải tìm kiếm mỏi tay.
         [HttpGet]
-        public string SearchProductFromTMDTNameForMapping(string tmdtName)
+        public string SearchProductFromTMDTNameForMapping(string tmdtItemName, string tmdtModelName)
         {
             List<Product> ls = null;
             try
@@ -1064,7 +1064,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     conn.Open();
-                    ls = productSqler.SearchProductFromTMDTNameForMapping(tmdtName, conn);
+                    ls = productSqler.SearchProductFromTMDTNameForMapping(tmdtItemName, tmdtModelName, conn);
                 }
             }
             catch (Exception ex)

@@ -52,7 +52,7 @@ function AddDeleteButtonForModel(container) {
 }
 
 // Thêm nút liên kết sản phẩm
-function AddMappingButtonForModel(container, name) {
+function AddMappingButtonForModel(container, tmdtItemName, tmdtModelName) {
     let btn = document.createElement("BUTTON");
     let btnContent = document.createTextNode("Liên kết sản phẩm");
     btn.onclick = function () {
@@ -61,8 +61,8 @@ function AddMappingButtonForModel(container, name) {
         let modal = document.getElementById("myModal");
         modal.style.display = "block";
         document.getElementById("product-name-id").focus();
-        if (IsValidString(name)) {
-            SearchProductFromTMDTNameForMapping(name);
+        if (IsValidString(tmdtItemName) || IsValidString(tmdtModelName)) {
+            SearchProductFromTMDTNameForMapping(tmdtItemName, tmdtModelName);
         }
     }
     btn.appendChild(btnContent);
@@ -504,7 +504,7 @@ function AddModelToScreen() {
     AddDeleteButtonForModel(modelContainer);
 
     // Thêm nút mapping
-    AddMappingButtonForModel(modelContainer, null);
+    AddMappingButtonForModel(modelContainer, null, null);
 
     //AddDistanceRows(modelContainer);
     AddDistanceRows(modelList);
@@ -1165,9 +1165,10 @@ async function SearchProductForMapping() {
     ShowResultSearchProductForMapping(listProduct, table);
 }
 
-async function SearchProductFromTMDTNameForMapping(tmdtName) {
+async function SearchProductFromTMDTNameForMapping(tmdtItemName, tmdtModelName) {
     const searchParams = new URLSearchParams();
-    searchParams.append("tmdtName", tmdtName);
+    searchParams.append("tmdtItemName", tmdtItemName);
+    searchParams.append("tmdtModelName", tmdtModelName);
     //if (DEBUG) {
     //    console.log("SearchProductFromTMDTNameForMapping Call tmdtName: " + tmdtName);
     //}

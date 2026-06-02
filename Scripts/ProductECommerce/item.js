@@ -281,11 +281,11 @@ function AddModelToScreenEEcommerce(itemObj, modelObj, modelIndex) {
     //}
 
     // Thêm nút mapping
-    let tmdtName = itemObj.name;
-    if (IsValidString(modelObj.name)) {
-        tmdtName = tmdtName + " - " + modelObj.name;
-    }
-    AddMappingButtonForModel(modelContainer, tmdtName);
+    //let tmdtName = itemObj.name;
+    //if (IsValidString(modelObj.name)) {
+    //    tmdtName = tmdtName + " - " + modelObj.name;
+    //}
+    AddMappingButtonForModel(modelContainer, itemObj.name, modelObj.name);
 
     AddDistanceRows(modelContainer);
     AddDistanceRows(modelList);

@@ -1993,7 +1993,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public List<Product> SearchProductFromTMDTNameForMapping(string tmdtName,
+        public List<Product> SearchProductFromTMDTNameForMapping(string tmdtItemName, string tmdtModelName,
             MySqlConnection conn)
         {
             List<Product> ls = new List<Product>();
@@ -2001,7 +2001,8 @@ namespace MVCPlayWithMe.Models.ProductModel
             {
                 MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_From_TMDT_Name_For_Mapping", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTName", tmdtName);
+                cmd.Parameters.AddWithValue("@inTMDTItemName", tmdtItemName);
+                cmd.Parameters.AddWithValue("@inTMDTModelName", tmdtModelName);
 
                 using (MySqlDataReader rdr = cmd.ExecuteReader())
                 {
