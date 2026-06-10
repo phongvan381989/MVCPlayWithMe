@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models
 {
@@ -46,32 +46,30 @@ namespace MVCPlayWithMe.Models
                 }
             }
         }
-        public List<AdministrativeAddress> GetListAdministrativeAddress()
+
+        public async Task<List<AdministrativeAddress>> GetListAdministrativeAddressAsync()
         {
             List<AdministrativeAddress> ls = new List<AdministrativeAddress>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbadministrativeaddress ORDER BY Province, District, SubDistrict;", conn);
-                cmd.CommandType = CommandType.Text;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                try
                 {
-                    Convert(ls, rdr);
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbadministrativeaddress ORDER BY Province, District, SubDistrict;", conn);
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            Convert(ls, rdr);
+                        }
+                    }
                 }
-                rdr.Close();
-
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-
-            conn.Close();
             return ls;
         }
     }

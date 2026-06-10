@@ -5,30 +5,25 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TikiDealDiscountMySql
     {
-        public void InsertCheckExistTikiDealDiscountOfOneSkuConnectOut(
-            List<DealCreatedResponseDetail> listDeal, // Danh sách deal của 1 sku
+        public async Task InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(
+            List<DealCreatedResponseDetail> listDeal,
             MySqlConnection conn)
         {
             try
             {
-                // Thực tế chỉ cần cập nhật trạng thái của deal mới nhất, nên ta sẽ bỏ qua deal cũ
-                // Phần tử đầu là mới nhất từ kiểm tra dữ liệu thực tế TIKI trả về
                 DealCreatedResponseDetail deal = listDeal[0];
-                //foreach (var deal in listDeal)
                 {
-                    // Nếu tồn tại thì cập nhật trạng thái Active ngược lại thêm mới
                     MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    // Thêm tham số cho Stored Procedure
                     cmd.Parameters.AddWithValue("@p_DealDiscount_Id", deal.id);
                     cmd.Parameters.AddWithValue("@p_Sku", deal.sku);
                     cmd.Parameters.AddWithValue("@p_SpecialPrice", deal.special_price);
@@ -41,7 +36,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@p_Notes", deal.notes);
                     cmd.Parameters.AddWithValue("@p_CreatedAt", deal.created_at);
 
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -50,26 +45,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void InsertCheckExistTikiDealDiscountOfSkuListConnectOut(
-            List<DealCreatedResponseDetail> listDeal, // Danh sách deal của nhiều sku
+        public async Task InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(
+            List<DealCreatedResponseDetail> listDeal,
             MySqlConnection conn)
         {
             try
             {
-                // Thực tế chỉ cần cập nhật trạng thái của deal mới nhất, nên ta sẽ bỏ qua deal cũ
-                // Phần tử đầu là mới nhất từ kiểm tra dữ liệu thực tế TIKI trả về
-
-                // Danh sách sku đã insert vào db
                 List<string> skuInsertedList = new List<string>();
                 DealCreatedResponseDetail deal = null;
                 int count = listDeal.Count();
-                //foreach (var deal in listDeal)
                 {
-                    // Nếu tồn tại thì cập nhật trạng thái Active ngược lại thêm mới
                     MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    // Thêm tham số cho Stored Procedure
                     cmd.Parameters.AddWithValue("@p_DealDiscount_Id", 0);
                     cmd.Parameters.AddWithValue("@p_Sku", "");
                     cmd.Parameters.AddWithValue("@p_SpecialPrice", 0);
@@ -82,7 +70,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@p_Notes", "");
                     cmd.Parameters.AddWithValue("@p_CreatedAt", DateTime.Now);
 
-                    for(int i = 0; i < count; i++)
+                    for (int i = 0; i < count; i++)
                     {
                         deal = listDeal[i];
                         if (skuInsertedList.Contains(deal.sku))
@@ -101,7 +89,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         cmd.Parameters[8].Value = deal.is_active;
                         cmd.Parameters[9].Value = deal.notes;
                         cmd.Parameters[10].Value = deal.created_at;
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
@@ -111,7 +99,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public List<string> GetListSkuOfActiveItemConnectOut(MySqlConnection conn)
+        public async Task<List<string>> GetListSkuOfActiveItemConnectOutAsync(MySqlConnection conn)
         {
             List<string> skuList = new List<string>();
             string query = "SELECT Sku FROM tbtikiitem WHERE Status = 0";
@@ -120,16 +108,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             skuList.Add(MyMySql.GetString(reader, "Sku"));
                         }
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
@@ -137,34 +125,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return skuList;
         }
 
-        public List<SimpleTikiProduct> GetItemsWithDealDiscount(string store, 
+        public async Task<List<SimpleTikiProduct>> GetItemsWithDealDiscountAsync(string store,
             MySqlConnection conn)
         {
             List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
             try
             {
-                // Cập nhật lại trạng thái theo thời gian bắt đầu, kết thúc deal
                 using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Update_IsActive", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
 
                 using (MySqlCommand cmd = new MySqlCommand(store, conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        // Lấy index của cột một lần duy nhất (tối ưu hơn reader["column"])
                         int idIndex = reader.GetOrdinal("TikiId");
                         int skuIndex = reader.GetOrdinal("Sku");
                         int nameIndex = reader.GetOrdinal("Name");
                         int imageSrcIndex = reader.GetOrdinal("Image");
 
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
-                            // Kiểm tra NULL trước khi đọc dữ liệu
                             SimpleTikiProduct product = new SimpleTikiProduct
                             {
                                 id = reader.GetInt32(idIndex),
@@ -183,7 +168,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     CommonItem item = new CommonItem();
                     item.models.Add(new CommonModel());
-                    tikiSqler.TikiGetItemFromIdConnectOut(simpleTiki.id, item, conn);
+                    await tikiSqler.TikiGetItemFromIdConnectOutAsync(simpleTiki.id, item, conn);
                     simpleTiki.models = item.models;
                 }
             }
@@ -195,17 +180,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return simpleTikiProducts;
         }
 
-        public List<SimpleTikiProduct> GetItemsNoDealDiscountRunning(MySqlConnection conn)
+        public async Task<List<SimpleTikiProduct>> GetItemsNoDealDiscountRunningAsync(MySqlConnection conn)
         {
-            return GetItemsWithDealDiscount("st_tbTikiDealDiscount_Get_Item_No_Deal_Running", conn);
+            return await GetItemsWithDealDiscountAsync("st_tbTikiDealDiscount_Get_Item_No_Deal_Running", conn);
         }
 
-        public List<SimpleTikiProduct> GetItemsHasDealDiscountRunning(MySqlConnection conn)
+        public async Task<List<SimpleTikiProduct>> GetItemsHasDealDiscountRunningAsync(MySqlConnection conn)
         {
-            return GetItemsWithDealDiscount("st_tbTikiDealDiscount_Get_Item_Deal_Running", conn);
+            return await GetItemsWithDealDiscountAsync("st_tbTikiDealDiscount_Get_Item_Deal_Running", conn);
         }
 
-        public TaxAndFee GetTaxAndFee(string eEcommerceName, MySqlConnection conn)
+        public async Task<TaxAndFee> GetTaxAndFeeAsync(string eEcommerceName, MySqlConnection conn)
         {
             TaxAndFee taxAndFee = null;
             try
@@ -214,9 +199,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inName", eEcommerceName);
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        // Lấy index của cột một lần duy nhất (tối ưu hơn reader["column"])
                         int nameIndex = rdr.GetOrdinal("Name");
                         int taxIndex = rdr.GetOrdinal("Tax");
                         int feeIndex = rdr.GetOrdinal("Fee");
@@ -225,7 +209,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         int expectedPercentProfitIndex = rdr.GetOrdinal("ExpectedPercentProfit");
                         int minPercentProfitIndex = rdr.GetOrdinal("MinPercentProfit");
 
-                        while (rdr.Read())
+                        while (await rdr.ReadAsync())
                         {
                             taxAndFee = new TaxAndFee();
                             taxAndFee.name = rdr.GetString(nameIndex);
@@ -246,7 +230,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return taxAndFee;
         }
 
-        public MySqlResultState UpdateIsActiveCloseFromLsDealId(List<int> lsDealId, MySqlConnection conn)
+        public async Task<MySqlResultState> UpdateIsActiveCloseFromLsDealIdAsync(List<int> lsDealId, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -255,10 +239,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inDealDiscount_Id", 0);
-                    foreach( var id in lsDealId)
+                    foreach (var id in lsDealId)
                     {
                         cmd.Parameters[0].Value = id;
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
@@ -270,8 +254,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        // Cập nhật trạng thái đang chạy của sku về close
-        public MySqlResultState UpdateIsActiveCloseFromSku(List<string> skuList, MySqlConnection conn)
+        public async Task<MySqlResultState> UpdateIsActiveCloseFromSkuAsync(List<string> skuList, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -283,7 +266,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     foreach (var sku in skuList)
                     {
                         cmd.Parameters[0].Value = sku;
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
@@ -295,21 +278,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public int GetTikiIdBySku(string sku, MySqlConnection conn)
+        public async Task<int> GetTikiIdBySkuAsync(string sku, MySqlConnection conn)
         {
-            int tikiId = 0; // Giá trị mặc định nếu không tìm thấy
+            int tikiId = 0;
             try
             {
-                // Thêm LIMIT 1 vào câu truy vấn
                 string query = "SELECT TikiId FROM tbtikiitem WHERE Sku = @p_Sku LIMIT 1";
 
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     cmd.Parameters.AddWithValue("@p_Sku", sku);
 
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        if (rdr.Read())
+                        if (await rdr.ReadAsync())
                         {
                             tikiId = rdr.GetInt32("TikiId");
                         }
@@ -318,15 +300,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error: {ex.Message}");
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             return tikiId;
         }
 
-        // Khi update tồn kho lên tiki, nếu tồn kho = 0 ta cập nhật trạng thái của deal đang chạy của sku về CLOSE
-        // vì tiki tắt khi tồn kho <=0.
-        public void UpdateIsActiveCloseFromItemId(int itemId, MySqlConnection conn)
+        public async Task UpdateIsActiveCloseFromItemIdAsync(int itemId, MySqlConnection conn)
         {
             try
             {
@@ -334,7 +314,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inItemId", itemId);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)

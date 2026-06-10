@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
@@ -24,27 +24,21 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         //}]
         //}
         // Sản phẩm không có model
-        // model_id : 0 
-        public static ShopeeUpdateStockResponseHTTP ShopeeProductUpdateStock(MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st)
+        // model_id : 0
+        public static async Task<ShopeeUpdateStockResponseHTTP> ShopeeProductUpdateStockAsync(MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st)
         {
             string path = "/api/v2/product/update_stock";
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             MyLogger.GetInstance().Info(body);
             ShopeeUpdateStockResponseHTTP objResponse = null;
-            IRestResponse response = CommonShopeeAPI.ShopeePostMethod(path, body);
+            IRestResponse response = await CommonShopeeAPI.ShopeePostMethodAsync(path, body);
             if (response.StatusCode != HttpStatusCode.OK)
             {
-                //objResponse = new ShopeeUpdateStockResponseHTTP();
-                //objResponse.error = "response.StatusCode: " + response.StatusCode.ToString();
-                //objResponse.message = response.StatusDescription;
-                //return objResponse;
                 MyLogger.GetInstance().Info("/api/v2/product/update_stock response.StatusCode: " + response.StatusCode
                      + ", response.Content" + response.Content);
                 return null;
             }
 
-            //if (response.StatusCode == HttpStatusCode.OK)
-            //{
             try
             {
                 JsonSerializerSettings settings = new JsonSerializerSettings
@@ -57,16 +51,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
-                //objResponse = new ShopeeUpdateStockResponseHTTP();
-                //objResponse.error = "Exception";
-                //objResponse.message = ex.Message;
-                //return objResponse;
                 return null;
             }
-            //}
-
-            //if (objResponse == null || objResponse.response == null)
-            //    return null;
 
             return objResponse;
         }
@@ -76,9 +62,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// </summary>
         /// <param name="shopeeItemId"></param>
         /// <returns></returns>
-        public static ShopeeUpdateStockResponseHTTP ShopeeProductUpdateStock(ShopeeItemId shopeeItemId)
+        public static async Task<ShopeeUpdateStockResponseHTTP> ShopeeProductUpdateStockAsync(ShopeeItemId shopeeItemId)
         {
-            OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock stock = 
+            OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock stock =
                 new OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
 
             stock.item_id = shopeeItemId.item_id;
@@ -87,8 +73,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             else
                 stock.stock_list.Add(new ShopeeUpdateStockStock(shopeeItemId.model_id, shopeeItemId.quantity));
 
-            ShopeeUpdateStockResponseHTTP rs = 
-                MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStock(stock);
+            ShopeeUpdateStockResponseHTTP rs =
+                await MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct.ShopeeUpdateStock.ShopeeProductUpdateStockAsync(stock);
             return rs;
         }
 

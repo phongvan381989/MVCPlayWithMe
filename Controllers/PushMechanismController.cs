@@ -30,19 +30,16 @@ namespace MVCPlayWithMe.Controllers
     public class PushMechanismController : Controller
     {
         /// <summary>
-        /// Giữ chỗ trong kho khi phát sinh đơn, nên cập nhật lại tồn kho 
+        /// Giữ chỗ trong kho khi phát sinh đơn, nên cập nhật lại tồn kho
         /// và số lượng lên các sản phẩm khác trên các nền tảng SHOPEE, TIKI, LAZADA,...
         /// </summary>
-        private void ShopeeHandleOrderStatusPush(OrderStatusPush orderStatusPush)
+        private async Task ShopeeHandleOrderStatusPushAsync(OrderStatusPush orderStatusPush)
         {
-            if (orderStatusPush == null)
-            {
-                return;
-            }
+            if (orderStatusPush == null) return;
 
             // Check status: UNPAID, READY_TO_SHIP, CANCELLED, IN_CANCEL đề phòng miss thông báo.
             // UNPAID, READY_TO_SHIP: thông báo này đến trước sự kiện đóng đơn
-            // Những trạng thái khác không xử lý. Ví dụ trạng thái SHIPPED. Khi có 100 đơn hàng, shipper lấy hàng quét liên tục 
+            // Những trạng thái khác không xử lý. Ví dụ trạng thái SHIPPED. Khi có 100 đơn hàng, shipper lấy hàng quét liên tục
             // sẽ có 100 thông báo gửi về server cùng lúc, nếu ta không return ở đây có thể gây treo server.
             // Trạng thái PROCESSED khi ta xác nhận 100 đơn cùng lúc cũng có thể gây treo server nên ta cũng không xử lý.
             if (orderStatusPush.status != "UNPAID" &&
@@ -54,115 +51,103 @@ namespace MVCPlayWithMe.Controllers
             {
                 return;
             }
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            TikiMySql tikiSqler = new TikiMySql();
 
-            TbEcommerceOrder tbEcommerceOrderLastest = tikiSqler.GetLastestStatusOfECommerceOrder(
-                orderStatusPush.ordersn,
-                EECommerceType.SHOPEE, conn);
-
-            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
-
-            ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
-            if (orderStatusPush.status == "CANCELLED" ||
-                orderStatusPush.status == "TO_RETURN"/* || orderStatusPush.status == "IN_CANCEL"*/)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                status = ECommerceOrderStatus.UNBOOKED;
-                //if (orderStatusPush.status == "CANCELLED")
-                //{
-                    // Khách hủy và đã có mã vận đơn nhưng chưa được lưu db do chưa xác nhận đã đóng,
-                    // ta sẽ lưu vào db ở đây
+                await conn.OpenAsync();
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                TikiMySql tikiSqler = new TikiMySql();
 
-                    string trackingNumber = tikiSqler.GetTrackingNumberFromSNConnectOut(
-                    orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
+                TbEcommerceOrder tbEcommerceOrderLastest = await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
+                    orderStatusPush.ordersn,
+                    EECommerceType.SHOPEE, conn);
+
+                ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
+
+                ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
+                if (orderStatusPush.status == "CANCELLED" ||
+                    orderStatusPush.status == "TO_RETURN")
+                {
+                    status = ECommerceOrderStatus.UNBOOKED;
+
+                    string trackingNumber = await tikiSqler.GetTrackingNumberFromSNConnectOutAsync(
+                        orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
 
                     if (string.IsNullOrEmpty(trackingNumber))
                     {
-                        trackingNumber = ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumber(orderStatusPush.ordersn, string.Empty);
-                        shopeeMySql.UpdateTrackingNumberToDBConnectOut(orderStatusPush.ordersn, trackingNumber, conn);
-                    }
-                //}
-            }
-
-            if (orderStatusPush.status == "READY_TO_SHIP")
-            {
-                // Nếu là hỏa tốc và đã được lưu thì cập nhật trạng thái sang ready to ship
-                tikiSqler.UpdateStatusToReadyToShipTbExpressOrder(orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
-            }
-
-            if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
-            {
-                return;
-            }
-
-            // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
-            // Hoặc UNPAID không nhân được do lỗi, nhận được READY_TO_SHIP rồi lại nhận được UNPAID
-            // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
-            if (orderStatusPush.update_time < tbEcommerceOrderLastest.updateTime)
-            {
-                return;
-            }
-
-            try
-            {
-                // Giữ chỗ nếu đơn hàng vừa sinh ra.
-                // Hủy giữ chỗ nếu đơn hàng bị khách hủy và đang ở trạng thái giữ chỗ.
-                ShopeeOrderDetail shopeeOrderDetail = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(orderStatusPush.ordersn);
-
-                if (shopeeOrderDetail != null)
-                {
-                    // Nếu đơn hàng là hỏa tốc, ta thêm vào bảng đơn hỏa tốc
-                    if(CommonOpenPlatform.IsShopeeExpress(shopeeOrderDetail.checkout_shipping_carrier))
-                    {
-                        if(orderStatusPush.status == "UNPAID")
-                        {
-                            tikiSqler.InsertTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
-                        }
-                        else if(orderStatusPush.status == "READY_TO_SHIP")
-                        {
-                            tikiSqler.InsertTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
-                            tikiSqler.UpdateStatusToReadyToShipTbExpressOrder(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
-                        }
-                    }
-
-                    CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
-                    shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOut(commonOrder, conn);
-
-                    MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                        commonOrder, status, orderStatusPush.update_time, oldStatus,
-                        EECommerceType.SHOPEE, conn);
-
-                    if (resultState != null && resultState.myAnything == 1)
-                    {
-                        // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        trackingNumber = await ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumberAsync(orderStatusPush.ordersn, string.Empty);
+                        await shopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(orderStatusPush.ordersn, trackingNumber, conn);
                     }
                 }
+
+                if (orderStatusPush.status == "READY_TO_SHIP")
+                {
+                    // Nếu là hỏa tốc và đã được lưu thì cập nhật trạng thái sang ready to ship
+                    await tikiSqler.UpdateStatusToReadyToShipTbExpressOrderAsync(orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
+                }
+
+                if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                    return;
+
+                // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
+                // Hoặc UNPAID không nhân được do lỗi, nhận được READY_TO_SHIP rồi lại nhận được UNPAID
+                // Ta cần check xem có nhận lại event cũ không bởi thời gian event được sàn ghi nhận.
+                if (orderStatusPush.update_time < tbEcommerceOrderLastest.updateTime)
+                    return;
+
+                try
+                {
+                    ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderStatusPush.ordersn);
+
+                    if (shopeeOrderDetail != null)
+                    {
+                        if (CommonOpenPlatform.IsShopeeExpress(shopeeOrderDetail.checkout_shipping_carrier))
+                        {
+                            if (orderStatusPush.status == "UNPAID")
+                            {
+                                await tikiSqler.InsertTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                            }
+                            else if (orderStatusPush.status == "READY_TO_SHIP")
+                            {
+                                await tikiSqler.InsertTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                                await tikiSqler.UpdateStatusToReadyToShipTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                            }
+                        }
+
+                        CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
+                        await shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+
+                        MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+                            commonOrder, status, orderStatusPush.update_time, oldStatus,
+                            EECommerceType.SHOPEE, conn);
+
+                        if (resultState != null && resultState.myAnything == 1)
+                        {
+                            // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                            await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-            conn.Close();
         }
 
         // Cập nhật trạng thái Item vào db khi có thay đổi
-        private void ShopeeHandleViolationItemPush(ViolationItemPush violationItemPush)
+        private async Task ShopeeHandleViolationItemPushAsync(ViolationItemPush violationItemPush)
         {
-            if (violationItemPush == null)
+            if (violationItemPush != null)
             {
-                return;
+                int status = CommonOpenPlatform.ShopeeGetEnumValueFromString(violationItemPush.item_status);
+                ShopeeMySql shopeeMySql = new ShopeeMySql();
+                await shopeeMySql.UpdateStatusOfItemFromTMDTItemIdAsync(violationItemPush.item_id, status);
             }
-            int status = CommonOpenPlatform.ShopeeGetEnumValueFromString(violationItemPush.item_status);
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.UpdateStatusOfItemFromTMDTItemId(violationItemPush.item_id, status);
         }
 
-        // Giữ chỗ trong kho, nên cập nhật tồn kho và số lượng lên các sản phẩm khác trên sàn 
-        // TMDT
-        private void ShopeeHandleBookingStatusPush(ShopeeBookingSatusPushData data)
+        // Giữ chỗ trong kho, nên cập nhật tồn kho và số lượng lên các sản phẩm khác trên sàn TMDT
+        private async Task ShopeeHandleBookingStatusPushAsync(ShopeeBookingSatusPushData data)
         {
             try
             {
@@ -175,7 +160,7 @@ namespace MVCPlayWithMe.Controllers
 
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     TikiMySql tikiSqler = new TikiMySql();
                     ShopeeMySql shopeeMySql = new ShopeeMySql();
                     ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
@@ -183,9 +168,8 @@ namespace MVCPlayWithMe.Controllers
                     if (data.booking_status == "READY_TO_SHIP"
                         || data.booking_status == "CANCELLED")
                     {
-                        TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
-                        data.booking_sn,
-                        EECommerceType.SHOPEE, conn);
+                        TbEcommerceOrder tbEcommerceBookingLastest = await tikiSqler.GetLastestStatusOfECommerceBookingAsync(
+                            data.booking_sn, EECommerceType.SHOPEE, conn);
 
                         oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
 
@@ -194,14 +178,13 @@ namespace MVCPlayWithMe.Controllers
                         {
                             status = ECommerceOrderStatus.UNBOOKED;
 
-                            string trackingNumber = tikiSqler.GetBookingTrackingNumberFromSNConnectOut(
-                            data.booking_sn, EECommerceType.SHOPEE, conn);
+                            string trackingNumber = await tikiSqler.GetBookingTrackingNumberFromSNConnectOutAsync(
+                                data.booking_sn, EECommerceType.SHOPEE, conn);
 
                             if (string.IsNullOrEmpty(trackingNumber))
                             {
-                                trackingNumber = ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumber(
-                                    data.booking_sn);
-                                shopeeMySql.UpdateBookingTrackingNumberToDBConnectOut(data.booking_sn, trackingNumber, conn);
+                                trackingNumber = await ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumberAsync(data.booking_sn);
+                                await shopeeMySql.UpdateBookingTrackingNumberToDBConnectOutAsync(data.booking_sn, trackingNumber, conn);
                             }
                         }
 
@@ -209,17 +192,13 @@ namespace MVCPlayWithMe.Controllers
                             (status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED) ||
                             (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.PACKED))
                         {
-                                return;
+                            return;
                         }
                     }
 
-                    // Lấy chi tiết booking
-                    ShopeeBookingDetail detail = 
-                        ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSN(data.booking_sn);
-                    if (detail == null)
-                    {
-                        return;
-                    }
+                    ShopeeBookingDetail detail =
+                        await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSNAsync(data.booking_sn);
+                    if (detail == null) return;
 
                     CommonOrder commonOrder = new CommonOrder(detail);
 
@@ -229,45 +208,40 @@ namespace MVCPlayWithMe.Controllers
                         // (log ở trạng thái UNPAID chưa có booking được matched)
                         // thì đã trừ kho nên giờ cần trả lại hàng về kho
 
-                        // Ngủ 120 giây vì có thể shopee vừa gửi push thay đổi trạng thái đơn hàng
-                        Thread.Sleep(120000);
-                        // HOàn lại số lượng về kho
-                        tikiSqler.ReturnQuantityOfOrderMatchedBooking(commonOrder,
-                            EECommerceType.SHOPEE, conn);
-                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        // Chờ 120 giây vì có thể shopee vừa gửi push thay đổi trạng thái đơn hàng
+                        await Task.Delay(120000);
+                        await tikiSqler.ReturnQuantityOfOrderMatchedBookingAsync(commonOrder, EECommerceType.SHOPEE, conn);
+                        await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                         return;
                     }
 
-                    shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOut(commonOrder, conn);
+                    await shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
 
-                    MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+                    MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
                         commonOrder, status, data.update_time, oldStatus,
                         EECommerceType.SHOPEE, conn);
 
                     if (resultState != null && resultState.myAnything == 1)
                     {
                         // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
         }
 
-        public void ThreadShopeeNotifications(string requestBody)
+        public async Task ThreadShopeeNotificationsAsync(string requestBody)
         {
             try
             {
                 MyLogger.GetInstance().Info("ThreadShopeeNotifications get notification");
                 MyLogger.GetInstance().Info(requestBody);
 
-                if (string.IsNullOrEmpty(requestBody))
-                {
-                    return;
-                }
+                if (string.IsNullOrEmpty(requestBody)) return;
 
                 JObject obj = JObject.Parse(requestBody);
                 int code = obj["code"] != null ? (int)obj["code"] : -1;
@@ -281,24 +255,19 @@ namespace MVCPlayWithMe.Controllers
                 if (code == 3)
                 {
                     OrderStatusPush orderStatusPush = JsonConvert.DeserializeObject<OrderStatusPush>(obj["data"].ToString());
-                    ShopeeHandleOrderStatusPush(orderStatusPush);
+                    await ShopeeHandleOrderStatusPushAsync(orderStatusPush);
                 }
                 else if (code == 16)
                 {
                     // violation_item_push
-                    // Get notified when item status becomes BANNED or SHOPEE_DELETE, or marked as deboost,
-                    // including the violation type, violation reason, suggestion and fix deadline time.
                     ViolationItemPush violationItemPush = JsonConvert.DeserializeObject<ViolationItemPush>(obj["data"].ToString());
-                    ShopeeHandleViolationItemPush(violationItemPush);
+                    await ShopeeHandleViolationItemPushAsync(violationItemPush);
                 }
-                else if(code == 23)
+                else if (code == 23)
                 {
                     // booking_status_push
-                    // Get notified immediately on all booking status updates.
-                    // This includes booking cancellations that occur before shipping,
-                    // so that you can take the necessary steps in time.
                     ShopeeBookingSatusPushData data = JsonConvert.DeserializeObject<ShopeeBookingSatusPushData>(obj["data"].ToString());
-                    ShopeeHandleBookingStatusPush(data);
+                    await ShopeeHandleBookingStatusPushAsync(data);
                 }
             }
             catch (Exception ex)
@@ -315,19 +284,14 @@ namespace MVCPlayWithMe.Controllers
         {
             try
             {
-                // Đọc request body
                 string requestBody;
                 using (var reader = new StreamReader(Request.InputStream))
                 {
                     requestBody = reader.ReadToEnd();
                 }
 
-                // Đẩy công việc vào Task.Run
-                Task.Run(() =>
-                {
-                    // Xử lý công việc dài hạn trong nền
-                    ThreadShopeeNotifications(requestBody);
-                });
+                // Đẩy công việc async vào nền, trả 200 ngay lập tức
+                Task.Run(async () => await ThreadShopeeNotificationsAsync(requestBody));
             }
             catch (Exception ex)
             {
@@ -338,99 +302,86 @@ namespace MVCPlayWithMe.Controllers
             return string.Empty;
         }
 
-        private void LazadaHandleOrderStatusPush(LazadaOrderStatusPush orderStatusPush)
+        private async Task LazadaHandleOrderStatusPushAsync(LazadaOrderStatusPush orderStatusPush)
         {
-            if (orderStatusPush == null)
-            {
-                return;
-            }
+            if (orderStatusPush == null) return;
 
-            // Possible values are unpaid, pending, canceled, ready_to_ship, 
+            // Possible values are unpaid, pending, canceled, ready_to_ship,
             // delivered, returned, shipped , failed, topack,toship,shipping and lost
             // Check status: unpaid, pending, topack, canceled đề phòng miss thông báo.
             if (orderStatusPush.order_status != "unpaid" &&
                 orderStatusPush.order_status != "pending" &&
-                orderStatusPush.order_status != "canceled") // Hủy đơn
-            {
-                return;
-            }
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            TikiMySql tikiSqler = new TikiMySql();
-            LazadaMySql lazadaMySql = new LazadaMySql();
-
-            TbEcommerceOrder tbEcommerceOrderLastest = tikiSqler.GetLastestStatusOfECommerceOrder(
-                orderStatusPush.trade_order_id,
-                EECommerceType.LAZADA, conn);
-
-            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
-
-            ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
-            if (orderStatusPush.order_status == "canceled")
-            {
-                status = ECommerceOrderStatus.UNBOOKED;
-            }
-
-            if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                orderStatusPush.order_status != "canceled")
             {
                 return;
             }
 
-            // Ta cần check xem có nhận lại event cũ, duplicate không bởi thời gian event được sàn ghi nhận.
-            if (orderStatusPush.status_update_time <= tbEcommerceOrderLastest.updateTime)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                return;
-            }
+                await conn.OpenAsync();
+                TikiMySql tikiSqler = new TikiMySql();
+                LazadaMySql lazadaMySql = new LazadaMySql();
 
-            try
-            {
-                // Giữ chỗ nếu đơn hàng vừa sinh ra.
-                // Hủy giữ chỗ nếu đơn hàng bị khách hủy và đang ở trạng thái giữ chỗ.
-                long order_id = Common.ConvertStringToInt64(orderStatusPush.trade_order_id);
-                if(order_id < 0)
+                TbEcommerceOrder tbEcommerceOrderLastest = await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
+                    orderStatusPush.trade_order_id,
+                    EECommerceType.LAZADA, conn);
+
+                ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrderLastest.status;
+
+                ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
+                if (orderStatusPush.order_status == "canceled")
                 {
-                    return;
+                    status = ECommerceOrderStatus.UNBOOKED;
                 }
 
-                List<LazadaOrderItem> orderItems = LazadaOrderAPI.LazadaGetOrderItems(order_id);
-                if (orderItems.Count != 0)
+                if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                    return;
+
+                // Ta cần check xem có nhận lại event cũ, duplicate không bởi thời gian event được sàn ghi nhận.
+                if (orderStatusPush.status_update_time <= tbEcommerceOrderLastest.updateTime)
+                    return;
+
+                try
                 {
-                    LazadaOrder order = new LazadaOrder();
-                    order.order_id = orderItems[0].order_id;
-                    order.orderItems = orderItems;
+                    long order_id = Common.ConvertStringToInt64(orderStatusPush.trade_order_id);
+                    if (order_id < 0) return;
 
-                    CommonOrder commonOrder = new CommonOrder(order);
-                    lazadaMySql.LazadaGetMappingOfCommonOrderConnectOut(commonOrder, conn);
-
-                    MySqlResultState resultState = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
-                        commonOrder, status, orderStatusPush.status_update_time, oldStatus,
-                        EECommerceType.LAZADA, conn);
-
-                    if (resultState != null && resultState.myAnything == 1)
+                    List<LazadaOrderItem> orderItems = await LazadaOrderAPI.LazadaGetOrderItemsAsync(order_id);
+                    if (orderItems.Count != 0)
                     {
-                        // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                        LazadaOrder order = new LazadaOrder();
+                        order.order_id = orderItems[0].order_id;
+                        order.orderItems = orderItems;
+
+                        CommonOrder commonOrder = new CommonOrder(order);
+                        await lazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+
+                        MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+                            commonOrder, status, orderStatusPush.status_update_time, oldStatus,
+                            EECommerceType.LAZADA, conn);
+
+                        if (resultState != null && resultState.myAnything == 1)
+                        {
+                            // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                            await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                        }
                     }
                 }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-            conn.Close();
         }
 
-        public void ThreadLazadaNotifications(string requestBody)
+        public async Task ThreadLazadaNotificationsAsync(string requestBody)
         {
             try
             {
                 MyLogger.GetInstance().Info("ThreadLazadaNotifications get notification");
                 MyLogger.GetInstance().Info(requestBody);
 
-                if (string.IsNullOrEmpty(requestBody))
-                {
-                    return;
-                }
+                if (string.IsNullOrEmpty(requestBody)) return;
 
                 JObject obj = JObject.Parse(requestBody);
                 int message_type = obj["message_type"] != null ? (int)obj["message_type"] : -1;
@@ -447,7 +398,7 @@ namespace MVCPlayWithMe.Controllers
                     // Vì cùng thời điểm nên chưa kịp lưu thông tin vào db, làm trừ kho hơn một lần
                     // Giải quyết: Ngay lập tức lấy trade_order_id id, status_update_time và so sánh với biến cũ
                     LazadaOrderStatusPush orderStatusPush = JsonConvert.DeserializeObject<LazadaOrderStatusPush>(obj["data"].ToString());
-                    LazadaHandleOrderStatusPush(orderStatusPush);
+                    await LazadaHandleOrderStatusPushAsync(orderStatusPush);
                 }
             }
             catch (Exception ex)
@@ -464,19 +415,14 @@ namespace MVCPlayWithMe.Controllers
         {
             try
             {
-                // Đọc request body
                 string requestBody;
                 using (var reader = new StreamReader(Request.InputStream))
                 {
                     requestBody = reader.ReadToEnd();
                 }
 
-                // Đẩy công việc vào Task.Run
-                Task.Run(() =>
-                {
-                    // Xử lý công việc dài hạn trong nền
-                    ThreadLazadaNotifications(requestBody);
-                });
+                // Đẩy công việc async vào nền, trả 200 ngay lập tức
+                Task.Run(async () => await ThreadLazadaNotificationsAsync(requestBody));
             }
             catch (Exception ex)
             {

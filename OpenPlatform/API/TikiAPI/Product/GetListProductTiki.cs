@@ -32,7 +32,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         };
 
         // maxPage == 0: lấy tất cả dữ liệu, ngược lại lấy đến khi currentPage == maxPage
-        public static List<TikiProduct> GetListProductsCore(
+        public static async Task< List<TikiProduct>> GetListProductsCore(
             List<DevNameValuePair> listValuePair,
             int maxPage)
         {
@@ -43,7 +43,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             {
                 listValuePair[0].value = currentPage.ToString();
                 string http = TikiConstValues.cstrProductsHTTPAddress + DevNameValuePair.GetQueryString(listValuePair);
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+                IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     break;
@@ -84,7 +84,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// </summary>
         /// <param name="configApp"></param>
         /// <returns>Danh sách sản phẩm. List rỗng nếu không lấy thành công</returns>
-        public static List<TikiProduct> GetListLatestProductsFromOneShop()
+        public static async Task< List<TikiProduct>> GetListLatestProductsFromOneShop()
         {
             List<DevNameValuePair> listValuePair = new List<DevNameValuePair>();
 
@@ -98,12 +98,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             // Add "includes=seller,categories,inventory,attributes,images"
             listValuePair.Add(new DevNameValuePair("include", "inventory,images"));
 
-            return GetListProductsCore(listValuePair, 0);
+            return await GetListProductsCore(listValuePair, 0);
         }
 
         // Lấy danh sách sản phẩm NORMAL, trong khoảng thời gian nhất định
         // Với TIKI lấy 200 sản phẩm đầu mà server trả về vì lỗi khi truy vấn theo thời gian => ta lấy 10 page
-        public static List<TikiProduct> TikiProductGetNormal_ItemList(
+        public static async Task<List<TikiProduct>> TikiProductGetNormal_ItemList(
             DateTime update_time_from, DateTime update_time_to)
         {
             List<TikiProduct> lsProduct = new List<TikiProduct>();
@@ -130,7 +130,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             //listValuePair.Add(new DevNameValuePair("created_to_date",
             //    "\"" + Common.GetTimeNowyyyyMMddHHmmss(update_time_to) + "\""));
 
-            return GetListProductsCore(listValuePair, 10);
+            return await GetListProductsCore(listValuePair, 10);
         }
 
         /// <summary>
@@ -144,14 +144,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="configApp"></param>
         /// <param name="id"></param>
         /// <returns></returns>
-        public static TikiProduct GetProductFromOneShop(int id)
+        public static async Task<TikiProduct> GetProductFromOneShop(int id)
         {
             // Thêm ?includes=seller,categories,inventory,attributes,images để lấy full thông tin
             //string http = TikiConstValues.cstrProductsHTTPAddress + "/" + code + "?includes=seller,categories,inventory,attributes,images";
 
             // Lấy 1 sản phẩm nên lấy tất cả thông tin
             string http = TikiConstValues.cstrProductsHTTPAddress + "/" + id.ToString() + "?includes=seller,categories,inventory,attributes,images";
-            IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+            IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
             if (response.StatusCode != System.Net.HttpStatusCode.OK)
             {
                 return null;

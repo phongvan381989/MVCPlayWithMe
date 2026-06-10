@@ -1,4 +1,4 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
@@ -16,7 +16,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
     public class LazadaMySql
     {
         // -2 nếu tMDTLazadaItemId đã tồn tại, -1 nếu có lỗi</returns>
-        public async Task<int> InserttbLazadaItem(CommonItem item, MySqlConnection conn)
+        public async Task<int> InserttbLazadaItemAsync(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
 
@@ -52,7 +52,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         //-2 nếu tMDTLazadaModelId đã tồn tại, -1 nếu có lỗi</returns>
-        public async Task<int> InserttbLazadaModel(int itemId, CommonModel model, MySqlConnection conn)
+        public async Task<int> InserttbLazadaModelAsync(int itemId, CommonModel model, MySqlConnection conn)
         {
             MyLogger.GetInstance().Warn("Start InserttbLazadaModel");
             MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
@@ -73,7 +73,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inImage", model.imageSrc);
                     cmd.Parameters.AddWithValue("@inSellerSku", model.sellerSku);
 
-                    using (MySqlDataReader rdr =(MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
                         while (await rdr.ReadAsync())
                         {
@@ -92,23 +92,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
-        public MySqlResultState LazadaInsertNewMappingOneOfModel(int modelId,
+        public async Task<MySqlResultState> LazadaInsertNewMappingOneOfModelAsync(int modelId,
             int productId,
             int quantity,
             MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlCommand cmd = new MySqlCommand("st_tbLazadaMapping_Insert", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.AddWithValue("@inModelId", modelId);
-            cmd.Parameters.AddWithValue("@inProductId", productId);
-            cmd.Parameters.AddWithValue("@inProductQuantity", quantity);
-
-            result = MyMySql.MyExcuteNonQuery(cmd);
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaMapping_Insert", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inModelId", modelId);
+                    cmd.Parameters.AddWithValue("@inProductId", productId);
+                    cmd.Parameters.AddWithValue("@inProductQuantity", quantity);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
             return result;
         }
 
-        public async Task LazadaUpdateStatusOfItemToDbConnectOut(
+        public async Task LazadaUpdateStatusOfItemToDbConnectOutAsync(
             CommonItem commonItem,
             MySqlConnection conn)
         {
@@ -130,7 +138,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task LazadaUpdateStatusOfModelToDbConnectOut(
+        public async Task LazadaUpdateStatusOfModelToDbConnectOutAsync(
             List<CommonModel> commonModelList,
             MySqlConnection conn)
         {
@@ -156,24 +164,25 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        // Lấy được danh sách LazadaModelId, TMDTLazadaModelId 
-        private List<Tuple<int, long>> ListModelOfItem(long tMDTLazadaItemId,
+        // Lấy được danh sách LazadaModelId, TMDTLazadaModelId
+        private async Task<List<Tuple<int, long>>> ListModelOfItemAsync(long tMDTLazadaItemId,
             MySqlConnection conn)
         {
             List<Tuple<int, long>> lsModel = new List<Tuple<int, long>>();
-            MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_Model_From_TMDTItemId", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.Parameters.AddWithValue("@inTMDTLazadaItemId", tMDTLazadaItemId);
-
             try
             {
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_Model_From_TMDTItemId", conn))
                 {
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTLazadaItemId", tMDTLazadaItemId);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        lsModel.Add(Tuple.Create(MyMySql.GetInt32(rdr, "ModelId"),
-                            MyMySql.GetInt64(rdr, "TMDTLazadaModelId")));
+                        while (await rdr.ReadAsync())
+                        {
+                            lsModel.Add(Tuple.Create(MyMySql.GetInt32(rdr, "ModelId"),
+                                MyMySql.GetInt64(rdr, "TMDTLazadaModelId")));
+                        }
                     }
                 }
             }
@@ -188,11 +197,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Check item, model đã được lưu vào bảng tương ứng item, model
         // Nếu chưa lưu ta thực hiện lưu
         // Nếu đã lưu model trong db nhưng không còn tồn tại trên sàn TMDT ta xóa trong db
-        // Ta chỉ check được với model khi chọn xem item, check item đã bị xóa trên db 
+        // Ta chỉ check được với model khi chọn xem item, check item đã bị xóa trên db
         // không thực hiện ở đây
         // Trả về true nếu item đã tồn tại và không thêm mới model nào,
         // ngược lại trả về false
-        public async Task<Boolean> LazadaInsertIfDontExistConnectOut(CommonItem item,
+        public async Task<Boolean> LazadaInsertIfDontExistConnectOutAsync(CommonItem item,
             MySqlConnection conn)
         {
             Boolean exist = false;
@@ -207,7 +216,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inTMDTLazadaItemId", item.itemId);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
                         while (await rdr.ReadAsync())
                         {
@@ -219,12 +228,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 // Lưu item, model vào db lần đầu
                 if (!exist)
                 {
-                    itemIdInserted = await InserttbLazadaItem(item, conn);
+                    itemIdInserted = await InserttbLazadaItemAsync(item, conn);
 
                     int length = item.models.Count;
                     for (int i = 0; i < length; i++)
                     {
-                        await InserttbLazadaModel(itemIdInserted, item.models[i], conn);
+                        await InserttbLazadaModelAsync(itemIdInserted, item.models[i], conn);
                     }
                 }
                 else // Model trên sàn nào chưa lưu ta lưu vào db, model nào đã xóa trên sàn ta xóa trên db
@@ -232,10 +241,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     MyLogger.GetInstance().Warn("Lazada Start xử lý model trên sàn có thay đổi so với model lưu trên db");
 
                     // Cập nhật trạng thái item vào DB
-                    await LazadaUpdateStatusOfItemToDbConnectOut(item, conn);
+                    await LazadaUpdateStatusOfItemToDbConnectOutAsync(item, conn);
 
                     // Lấy list Lazada model id đã lưu trong db
-                    List<Tuple<int, long>> lsTupleTMDTModelOnDb = ListModelOfItem(item.itemId, conn);
+                    List<Tuple<int, long>> lsTupleTMDTModelOnDb = await ListModelOfItemAsync(item.itemId, conn);
 
                     // Danh sách model đã bị xóa trên sàn
                     List<int> lsTMDTLazadaModelNeedDeleteOnDb = new List<int>();
@@ -298,18 +307,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Cập nhật trạng thái của model nếu đã tồn tại
                     if (lsTMDTModelExistOnDb.Count > 0)
                     {
-                        await LazadaUpdateStatusOfModelToDbConnectOut(lsTMDTModelExistOnDb, conn);
+                        await LazadaUpdateStatusOfModelToDbConnectOutAsync(lsTMDTModelExistOnDb, conn);
                     }
 
                     // Thêm model mới vào tbLazadamodel
+                    if (lsTMDTModelNeedSaveOnDb.Count > 0)
                     {
-                        if (lsTMDTModelNeedSaveOnDb.Count > 0)
+                        exist = false;
+                        foreach (var m in lsTMDTModelNeedSaveOnDb)
                         {
-                            exist = false;
-                            foreach (var m in lsTMDTModelNeedSaveOnDb)
-                            {
-                                await InserttbLazadaModel(itemIdInserted, m, conn);
-                            }
+                            await InserttbLazadaModelAsync(itemIdInserted, m, conn);
                         }
                     }
                 }
@@ -322,7 +329,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return exist;
         }
 
-        private async Task LazadaReadMapping(CommonItem item, MySqlDataReader rdr)
+        private async Task LazadaReadMappingAsync(CommonItem item, MySqlDataReader rdr)
         {
             long modelIdTemp;
             while (await rdr.ReadAsync())
@@ -358,25 +365,26 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void LazadaGetListCommonItemFromListItemConnectOut(
+        public async Task LazadaGetListCommonItemFromListItemConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_All_From_TMDTItem_Id", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTLazadaItemId", long.MaxValue);
-                long modelIdTemp;
-                foreach (var item in lsCommonItem)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_All_From_TMDTItem_Id", conn))
                 {
-                    cmd.Parameters[0].Value = item.itemId;
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTLazadaItemId", long.MaxValue);
+                    foreach (var item in lsCommonItem)
                     {
-                        LazadaReadMapping(item, rdr);
-                    }
+                        cmd.Parameters[0].Value = item.itemId;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            await LazadaReadMappingAsync(item, rdr);
+                        }
 
-                    lsCommonItem.Add(item);
+                        lsCommonItem.Add(item);
+                    }
                 }
             }
             catch (Exception ex)
@@ -472,7 +480,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm lazada có thay đổi số lượng
         // cần cập nhật
-        public static async Task<List<CommonItem>> LazadaGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        public static async Task<List<CommonItem>> LazadaGetListNeedUpdateQuantityConnectOutAsync(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -496,21 +504,23 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return listCI;
         }
 
-        public List<CommonItem> LazadaGetListMappingOfProduct(int productId, MySqlConnection conn)
+        public async Task<List<CommonItem>> LazadaGetListMappingOfProductAsync(int productId, MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_From_Mapping_Product_Id", conn);
-                cmd.Parameters.AddWithValue("@inProductId", productId);
-                cmd.CommandType = CommandType.StoredProcedure;
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_From_Mapping_Product_Id", conn))
                 {
-                    while (rdr.Read())
+                    cmd.Parameters.AddWithValue("@inProductId", productId);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        LazadaReadCommonItem(listCI, rdr);
+                        while (await rdr.ReadAsync())
+                        {
+                            LazadaReadCommonItem(listCI, rdr);
+                        }
                     }
-                };
+                }
             }
             catch (Exception ex)
             {
@@ -521,7 +531,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được Item mapping với sản phẩm trong kho thuộc 1 combo
-        public static async Task<List<CommonItem>> LazadaGetListMappingOfCombo(int comboId,
+        public static async Task<List<CommonItem>> LazadaGetListMappingOfComboAsync(int comboId,
             MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
@@ -549,7 +559,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được thông tin chi tiết
-        public async Task LazadaGetItemFromIdConnectOut(long id,
+        public async Task LazadaGetItemFromIdConnectOutAsync(long id,
             CommonItem item,
             MySqlConnection conn)
         {
@@ -559,9 +569,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inTMDTLazadaItemId", id);
-                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        await LazadaReadMapping(item, rdr);
+                        await LazadaReadMappingAsync(item, rdr);
                     }
                 }
             }
@@ -571,7 +581,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<MySqlResultState> LazadaUpdateMapping(List<CommonForMapping> ls)
+        public async Task<MySqlResultState> LazadaUpdateMappingAsync(List<CommonForMapping> ls)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -646,19 +656,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public List<CommonItem> LazadaGetItemOnDB(MySqlConnection conn)
+        public async Task<List<CommonItem>> LazadaGetItemOnDBAsync(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_Item_Model_All", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaItem_Get_Item_Model_All", conn))
                 {
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        LazadaReadCommonItem(lsCommonItem, rdr);
+                        while (await rdr.ReadAsync())
+                        {
+                            LazadaReadCommonItem(lsCommonItem, rdr);
+                        }
                     }
                 }
             }
@@ -671,45 +683,46 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void LazadaGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
+        public async Task LazadaGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
         {
-            string status = string.Empty;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbLazadaMapping_Get_From_Item_ModelId", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTItemId", long.MinValue);
-                cmd.Parameters.AddWithValue("@inTMDTModelId", long.MinValue);
-
-                int quantity = 0;
-                Product pro = null;
-                for (int i = 0; i < commonOrder.listItemId.Count; i++)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaMapping_Get_From_Item_ModelId", conn))
                 {
-                    cmd.Parameters[0].Value = commonOrder.listItemId[i];
-                    if (commonOrder.listModelId[i] == 0)
-                        cmd.Parameters[1].Value = -1;
-                    else
-                        cmd.Parameters[1].Value = commonOrder.listModelId[i];
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTItemId", long.MinValue);
+                    cmd.Parameters.AddWithValue("@inTMDTModelId", long.MinValue);
 
-                    commonOrder.listMapping.Add(new List<Mapping>());
-
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    int quantity = 0;
+                    Product pro = null;
+                    for (int i = 0; i < commonOrder.listItemId.Count; i++)
                     {
-                        while (rdr.Read())
+                        cmd.Parameters[0].Value = commonOrder.listItemId[i];
+                        if (commonOrder.listModelId[i] == 0)
+                            cmd.Parameters[1].Value = -1;
+                        else
+                            cmd.Parameters[1].Value = commonOrder.listModelId[i];
+
+                        commonOrder.listMapping.Add(new List<Mapping>());
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            // Đã được mapping
-                            if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                            while (await rdr.ReadAsync())
                             {
-                                quantity = MyMySql.GetInt32(rdr, "Quantity");
-                                pro = new Product();
-                                pro.id = MyMySql.GetInt32(rdr, "ProductId");
-                                pro.code = MyMySql.GetString(rdr, "ProductCode");
-                                pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
-                                pro.name = MyMySql.GetString(rdr, "ProductName");
-                                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
-                                pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
-                                pro.SetFirstSrcImage();
-                                commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
+                                // Đã được mapping
+                                if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                                {
+                                    quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                    pro = new Product();
+                                    pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                                    pro.code = MyMySql.GetString(rdr, "ProductCode");
+                                    pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+                                    pro.name = MyMySql.GetString(rdr, "ProductName");
+                                    pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                    pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+                                    pro.SetFirstSrcImage();
+                                    commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
+                                }
                             }
                         }
                     }
@@ -721,25 +734,27 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void InserttbLazadaBrand(List<LazadaBrandModule> modules, MySqlConnection conn)
+        public async Task InserttbLazadaBrandAsync(List<LazadaBrandModule> modules, MySqlConnection conn)
         {
-            MySqlCommand cmd = new MySqlCommand("st_tbLazadaBrand_Insert", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.Parameters.AddWithValue("@p_Name", "");
-            cmd.Parameters.AddWithValue("@p_GlobalIdentifier", "");
-            cmd.Parameters.AddWithValue("@p_NameEn", "");
-            cmd.Parameters.AddWithValue("@p_BrandId", 0L);
-
             try
             {
-                foreach(var module in modules)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaBrand_Insert", conn))
                 {
-                    cmd.Parameters[0].Value = module.name;
-                    cmd.Parameters[1].Value = module.global_identifier;
-                    cmd.Parameters[2].Value = module.name_en;
-                    cmd.Parameters[3].Value = module.brand_id;
-                    cmd.ExecuteNonQuery();
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@p_Name", "");
+                    cmd.Parameters.AddWithValue("@p_GlobalIdentifier", "");
+                    cmd.Parameters.AddWithValue("@p_NameEn", "");
+                    cmd.Parameters.AddWithValue("@p_BrandId", 0L);
+
+                    foreach (var module in modules)
+                    {
+                        cmd.Parameters[0].Value = module.name;
+                        cmd.Parameters[1].Value = module.global_identifier;
+                        cmd.Parameters[2].Value = module.name_en;
+                        cmd.Parameters[3].Value = module.brand_id;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -748,36 +763,38 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public MySqlResultState InserttbLazadaMediaSpace(
+        public async Task<MySqlResultState> InserttbLazadaMediaSpaceAsync(
             int productId,
             int mediaType, // 0: là ảnh, 1: video
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
             List<LazadaUploadImage> images,
             MySqlConnection conn)
         {
-            MySqlResultState result = new MySqlResultState(); 
+            MySqlResultState result = new MySqlResultState();
 
             if (images == null || images.Count == 0)
             {
                 return result;
             }
 
-            MySqlCommand cmd = new MySqlCommand("st_tbLazadaMediaSpace_Insert", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
-
-            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
-            cmd.Parameters.AddWithValue("@p_Url", "");
-            cmd.Parameters.AddWithValue("@p_ProductId", productId);
-            cmd.Parameters.AddWithValue("@p_ProductType", productType);
-            cmd.Parameters.AddWithValue("@p_HashCode", "");
-
             try
             {
-                foreach (var image in images)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaMediaSpace_Insert", conn))
                 {
-                    cmd.Parameters["@p_Url"].Value = image.url;
-                    cmd.Parameters["@p_HashCode"].Value = image.hash_code;
-                    cmd.ExecuteNonQuery();
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+                    cmd.Parameters.AddWithValue("@p_Url", "");
+                    cmd.Parameters.AddWithValue("@p_ProductId", productId);
+                    cmd.Parameters.AddWithValue("@p_ProductType", productType);
+                    cmd.Parameters.AddWithValue("@p_HashCode", "");
+
+                    foreach (var image in images)
+                    {
+                        cmd.Parameters["@p_Url"].Value = image.url;
+                        cmd.Parameters["@p_HashCode"].Value = image.hash_code;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -788,30 +805,32 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy số lượng ảnh đã up lên Lazada của sản phẩm
-        public int GetQuantityOfProductImageUploadedToLazada(
+        public async Task<int> GetQuantityOfProductImageUploadedToLazadaAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Lazada
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
             MySqlConnection conn)
         {
-            MySqlCommand cmd =
-                new MySqlCommand(@"SELECT COUNT(Id) AS Count FROM tb_lazada_media_space 
-            WHERE MediaType = @p_MediaType 
-            AND ProductId = @p_ProductId 
-            AND ProductType = @p_ProductType;", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
-            cmd.Parameters.AddWithValue("@p_ProductId", productId);
-            cmd.Parameters.AddWithValue("@p_ProductType", productType);
             int count = 0;
             try
             {
-                MySqlDataReader rdr = null;
-                using (rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand(
+                    @"SELECT COUNT(Id) AS Count FROM tb_lazada_media_space
+            WHERE MediaType = @p_MediaType
+            AND ProductId = @p_ProductId
+            AND ProductType = @p_ProductType;", conn))
                 {
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+                    cmd.Parameters.AddWithValue("@p_ProductId", productId);
+                    cmd.Parameters.AddWithValue("@p_ProductType", productType);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        count = rdr.GetInt32(rdr.GetOrdinal("Count"));
+                        while (await rdr.ReadAsync())
+                        {
+                            count = rdr.GetInt32(rdr.GetOrdinal("Count"));
+                        }
                     }
                 }
             }
@@ -825,53 +844,61 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Vì upload lại ảnh lên Lazada, xóa id ảnh cũ đã lưu trong db
-        public MySqlResultState DeleteProductImageUploadedToLazada(
+        public async Task<MySqlResultState> DeleteProductImageUploadedToLazadaAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Lazada
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
             MySqlConnection conn)
         {
-
-            MySqlCommand cmd =
-                new MySqlCommand(@"DELETE FROM tb_lazada_media_space 
-            WHERE MediaType = @p_MediaType 
-            AND ProductId = @p_ProductId 
-            AND ProductType = @p_ProductType;", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
-            cmd.Parameters.AddWithValue("@p_ProductId", productId);
-            cmd.Parameters.AddWithValue("@p_ProductType", productType);
-            MySqlResultState resultState = MyMySql.MyExcuteNonQuery(cmd);
-
+            MySqlResultState resultState = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(
+                    @"DELETE FROM tb_lazada_media_space
+            WHERE MediaType = @p_MediaType
+            AND ProductId = @p_ProductId
+            AND ProductType = @p_ProductType;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+                    cmd.Parameters.AddWithValue("@p_ProductId", productId);
+                    cmd.Parameters.AddWithValue("@p_ProductType", productType);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
             return resultState;
         }
 
-        public List<string> GetUploadedImageOfProductOnLazada(
+        public async Task<List<string>> GetUploadedImageOfProductOnLazadaAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên sàn
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
-            MySqlConnection conn
-            )
+            MySqlConnection conn)
         {
             List<string> images = new List<string>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand(
-                @"SELECT Id, Url FROM tb_lazada_media_space 
+                using (MySqlCommand cmd = new MySqlCommand(
+                    @"SELECT Id, Url FROM tb_lazada_media_space
     WHERE MediaType = @p_MediaType AND ProductId = @p_ProductId AND ProductType = @p_ProductType
-    ORDER BY Id ASC;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
-                cmd.Parameters.AddWithValue("@p_ProductId", productId);
-                cmd.Parameters.AddWithValue("@p_ProductType", productType);
-                MySqlDataReader rdr = null;
-
-                using (rdr = cmd.ExecuteReader())
+    ORDER BY Id ASC;", conn))
                 {
-                    int urlIndex = rdr.GetOrdinal("Url");
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@p_MediaType", mediaType);
+                    cmd.Parameters.AddWithValue("@p_ProductId", productId);
+                    cmd.Parameters.AddWithValue("@p_ProductType", productType);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        images.Add(rdr.GetString(urlIndex));
+                        int urlIndex = rdr.GetOrdinal("Url");
+                        while (await rdr.ReadAsync())
+                        {
+                            images.Add(rdr.GetString(urlIndex));
+                        }
                     }
                 }
             }

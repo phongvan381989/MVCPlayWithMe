@@ -1,4 +1,4 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
@@ -15,11 +15,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
 {
     class ShopeeCategory
     {
-        // Lấy tất cả category
-        public static ShopeeGetCategoryResponseHTTP ShopeeGetCategoryAll()
+        public static async Task<ShopeeGetCategoryResponseHTTP> ShopeeGetCategoryAllAsync()
         {
             string path = "/api/v2/product/get_category";
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, null);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, null);
             if (response == null)
                 return null;
 
@@ -44,14 +43,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
             return objResponse;
         }
 
-        // Lấy category theo gợi ý tên sản phẩm
-        public static ShopeeGetCategoryRecommendResponseHTTP ShopeeGetCategoryRecommend(string item_name)
+        public static async Task<ShopeeGetCategoryRecommendResponseHTTP> ShopeeGetCategoryRecommendAsync(string item_name)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
             ls.Add(new DevNameValuePair("item_name", item_name));
 
             string path = "/api/v2/product/category_recommend";
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 
@@ -76,15 +74,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
             return objResponse;
         }
 
-        // Get the attribute tree for categories
-        public static ShopeeGetAttributeTreeResponseHTTP ShopeeGetAttributeTreeOfCategory(int categoryId)
+        public static async Task<ShopeeGetAttributeTreeResponseHTTP> ShopeeGetAttributeTreeOfCategoryAsync(int categoryId)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
             ls.Add(new DevNameValuePair("category_id_list", categoryId.ToString()));
             ls.Add(new DevNameValuePair("language", "vn"));
 
             string path = "/api/v2/product/get_attribute_tree";
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 

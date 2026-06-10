@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
@@ -13,10 +14,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
     {
         public static int limitOfGetOrders = 100;
 
-        public static LazadaOrder LazadaGetOrder(long order_id)
+        public static async Task<LazadaOrder> LazadaGetOrderAsync(long order_id)
         {
             LazadaOrder order = null;
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return order;
             }
@@ -51,11 +52,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // status = null or empty để lấy tất cả trạng thái
-        public static List<LazadaOrder> LazadaGetOrders(DateTime fromDate,
+        public static async Task<List<LazadaOrder>> LazadaGetOrdersAsync(DateTime fromDate,
             string status)
         {
             List<LazadaOrder> ls = new List<LazadaOrder>();
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return ls;
             }
@@ -144,26 +145,26 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return ls;
         }
 
-        private static void LazadaGetItemsFromOrders(List<LazadaOrder> orders)
+        private static async Task LazadaGetItemsFromOrdersAsync(List<LazadaOrder> orders)
         {
             // Lấy thông tin item trong đơn hàng
             foreach (var order in orders)
             {
-                order.orderItems = LazadaGetOrderItems(order.order_id);
+                order.orderItems = await LazadaGetOrderItemsAsync(order.order_id);
             }
         }
 
-        public static LazadaOrder LazadaGetOrderDetail(long order_id)
+        public static async Task<LazadaOrder> LazadaGetOrderDetailAsync(long order_id)
         {
             LazadaOrder order = null;
             try
             {
-                order = LazadaGetOrder(order_id);
+                order = await LazadaGetOrderAsync(order_id);
                 if (order != null)
                 {
                     List<LazadaOrder> orders = new List<LazadaOrder>();
                     orders.Add(order);
-                    LazadaGetItemsFromOrders(orders);
+                    await LazadaGetItemsFromOrdersAsync(orders);
                 }
             }
             catch (Exception ex)
@@ -175,49 +176,49 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // Đơn hàng nhà bán cần gửi cho bên vận chuyển
-        public static List<LazadaOrder> LazadaGetOrdersDetailReadyToShip(DateTime fromDate)
+        public static async Task<List<LazadaOrder>> LazadaGetOrdersDetailReadyToShipAsync(DateTime fromDate)
         {
             // unpaid,
-            List<LazadaOrder> orders = LazadaGetOrders(fromDate,
+            List<LazadaOrder> orders = await LazadaGetOrdersAsync(fromDate,
                 LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.unpaid]);
 
             // pending
-            orders.AddRange(LazadaGetOrders(fromDate,
+            orders.AddRange(await LazadaGetOrdersAsync(fromDate,
                 LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.pending]));
 
             // ready_to_ship
-            orders.AddRange(LazadaGetOrders(fromDate,
+            orders.AddRange(await LazadaGetOrdersAsync(fromDate,
                 LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.ready_to_ship]));
 
-            LazadaGetItemsFromOrders(orders);
+            await LazadaGetItemsFromOrdersAsync(orders);
 
             return orders;
         }
 
         // Đơn hàng bị hủy có trạng thái cancelled
-        public static List<LazadaOrder> LazadaGetOrdersDetailCanceled(DateTime fromDate)
+        public static async Task<List<LazadaOrder>> LazadaGetOrdersDetailCanceledAsync(DateTime fromDate)
         {
             // canceled,
-            List<LazadaOrder> orders = LazadaGetOrders(fromDate,
+            List<LazadaOrder> orders = await LazadaGetOrdersAsync(fromDate,
                 LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.canceled]);
 
-            LazadaGetItemsFromOrders(orders);
+            await LazadaGetItemsFromOrdersAsync(orders);
             return orders;
         }
 
         // Tất cả đơn hàng
-        public static List<LazadaOrder> LazadaGetOrdersDetailAll(DateTime fromDate)
+        public static async Task<List<LazadaOrder>> LazadaGetOrdersDetailAllAsync(DateTime fromDate)
         {
-            List<LazadaOrder> orders = LazadaGetOrders(fromDate, null);
+            List<LazadaOrder> orders = await LazadaGetOrdersAsync(fromDate, null);
 
-            LazadaGetItemsFromOrders(orders);
+            await LazadaGetItemsFromOrdersAsync(orders);
             return orders;
         }
 
-        public static List<LazadaOrderItem> LazadaGetOrderItems(long order_id)
+        public static async Task< List<LazadaOrderItem>> LazadaGetOrderItemsAsync(long order_id)
         {
             List<LazadaOrderItem> orderItems = new List<LazadaOrderItem>();
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return orderItems;
             }
@@ -254,11 +255,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return orderItems;
         }
 
-        public static void LazadaGetDocument(
+        public static async Task LazadaGetDocumentAsync(
             List<LazadaOrder> lazadaOrders
             )
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return;
             }

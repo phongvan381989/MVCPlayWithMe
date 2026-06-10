@@ -82,7 +82,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
         /// </summary>
         /// <param name="configApp">shop</param>
         /// <returns>Danh sách đơn hàng. Trả null không lấy thành công</returns>
-        static public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> GetListOrderAShop(
+        static public async Task<List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>> GetListOrderAShop(
             EnumOrderItemFilterByDate interval, CommonOrderStatus orderStatus)
         {
 
@@ -136,7 +136,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 
                 string http = TikiConstValues.cstrOrdersHTTPAddress + DevNameValuePair.GetQueryString(listValuePair);
 
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+                IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     isOK = false;
@@ -173,7 +173,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
             return lsOrder;
         }
 
-        static public MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder TikiGetOrderFromCode(string code)
+        static public async Task<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> TikiGetOrderFromCode(string code)
         {
 
             MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder order = null;
@@ -182,7 +182,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
 
             string http = TikiConstValues.cstrOrdersHTTPAddress + "/" + code;
 
-            IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+            IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
             try
             {
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)

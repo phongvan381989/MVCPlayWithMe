@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using RestSharp;
@@ -13,11 +13,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
 {
     public class ShopeeGetModelList
     {
-        private static ShopeeGetModelListResponse ShopeeProductGetModelList(List<DevNameValuePair> ls)
+        private static async Task<ShopeeGetModelListResponse> ShopeeProductGetModelListAsync(List<DevNameValuePair> ls)
         {
             string path = "/api/v2/product/get_model_list";
 
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
             ShopeeGetModelListResponseHTTP objResponse = null;
@@ -45,13 +45,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             return objResponse.response;
         }
 
-        public static ShopeeGetModelListResponse ShopeeProductGetModelList(long productCode)
+        public static async Task<ShopeeGetModelListResponse> ShopeeProductGetModelListAsync(long productCode)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
-            // The ID of the item
             ls.Add(new DevNameValuePair("item_id", productCode.ToString()));
 
-            return ShopeeProductGetModelList(ls);
+            return await ShopeeProductGetModelListAsync(ls);
         }
     }
 }

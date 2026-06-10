@@ -40,7 +40,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
             while (true)
             {
                 ls[0].value = offset.ToString();
-                IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+                IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
                 if (response == null)
                 {
                     break;
@@ -53,7 +53,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
                         objResponse = JsonConvert.DeserializeObject<ShopeeGetBrandListResponseHTTP>(response.Content, Common.jsonSerializersettings);
 
                         //brandList.AddRange(objResponse.response.brand_list);
-                        result = shopeeSqler.InserttbShopeeBrand(categoryId, objResponse.response.brand_list, conn);
+                        result = await shopeeSqler.InserttbShopeeBrandAsync(categoryId, objResponse.response.brand_list, conn);
                         if(result.State != EMySqlResultState.OK)
                         {
                             break;

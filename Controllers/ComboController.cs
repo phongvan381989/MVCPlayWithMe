@@ -28,9 +28,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // GET: Combo
-        public ActionResult Create()
+        public async Task<ActionResult> Create()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return AuthenticationFail();
             }
@@ -38,18 +38,16 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public string CreateCombo(string name, string code)
+        public async Task<string> CreateCombo(string name, string code)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = null;
             if (string.IsNullOrWhiteSpace(name))
             {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ."));
             }
 
             //if (string.IsNullOrWhiteSpace(code))
@@ -58,45 +56,43 @@ namespace MVCPlayWithMe.Controllers
             //    return JsonConvert.SerializeObject(result);
             //}
 
-            result = sqler.CreateNewCombo(name, code);
+            MySqlResultState result = await sqler.CreateNewComboAsync(name, code);
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string DeleteCombo(int id)
+        public async Task<string> DeleteCombo(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = null;
-
-            result = sqler.DeleteCombo(id);
+            MySqlResultState result = await sqler.DeleteComboAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string UpdateCombo(int id, string name, string code)
+        public async Task<string> UpdateCombo(int id, string name, string code)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            if(code == null)
+            if (code == null)
             {
                 code = string.Empty;
             }
 
-            MySqlResultState result = sqler.UpdateCombo(id, name, code);
+            MySqlResultState result = await sqler.UpdateComboAsync(id, name, code);
             return JsonConvert.SerializeObject(result);
         }
 
-        public string LoadCombo()
+        public async Task<string> LoadCombo()
         {
             StringBuilder sb = new StringBuilder();
-            List<Combo> ls = sqler.GetListCombo();
+            List<Combo> ls = await sqler.GetListComboAsync();
             if (ls != null && ls.Count() > 0)
             {
                 sb.Append(@"<tr>
@@ -106,42 +102,39 @@ namespace MVCPlayWithMe.Controllers
                 {
                     sb.Append(@"<tr>");
                     sb.Append("<td>" + pub.name + @"</td >");
-
                     sb.Append(@"</ tr>");
                 }
             }
-
             return sb.ToString();
         }
 
         [HttpPost]
-        public string GetListCombo()
+        public async Task<string> GetListCombo()
         {
-            List<Combo> ls = new List<Combo>();
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
-                return JsonConvert.SerializeObject(ls);
+                return JsonConvert.SerializeObject(new List<Combo>());
             }
 
-            ls = sqler.GetListCombo();
+            List<Combo> ls = await sqler.GetListComboAsync();
             return JsonConvert.SerializeObject(ls);
         }
 
         [HttpPost]
-        public string GetCombo(int id)
+        public async Task<string> GetCombo(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(null);
             }
 
-            Combo combo = sqler.GetCombo(id);
+            Combo combo = await sqler.GetComboAsync(id);
             return JsonConvert.SerializeObject(combo);
         }
 
-        public ActionResult UpdateDelete(int id)
+        public async Task<ActionResult> UpdateDelete(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return AuthenticationFail();
             }
@@ -150,9 +143,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpGet]
-        public ActionResult MappingOfCombo(int id)
+        public async Task<ActionResult> MappingOfCombo(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return AuthenticationFail();
             }
@@ -168,10 +161,10 @@ namespace MVCPlayWithMe.Controllers
         //    return shopeeList;
         //}
 
-        //private List<CommonItem> TikiGetListMappingOfCombo(int id, MySqlConnection conn, ProductController productController)
+        //private List<CommonItem> TikiGetListMappingOfComboAsync(int id, MySqlConnection conn, ProductController productController)
         //{
         //    // Danh sách sản phẩm Tiki
-        //    List<CommonItem> tikiList = TikiMySql.TikiGetListMappingOfCombo(id, conn);
+        //    List<CommonItem> tikiList = TikiMySql.TikiGetListMappingOfComboAsync(id, conn);
         //    //productController.TikiGetStatusImageSrcQuantitySellable(tikiList);
         //    return tikiList;
         //}
@@ -179,7 +172,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task <string> GetListMappingOfCombo(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new List<CommonItem>());
             }
@@ -190,9 +183,9 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfCombo(id, conn);
-                    List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfCombo(id, conn);
-                    List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfCombo(id, conn);
+                    List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfComboAsync(id, conn);
+                    List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfComboAsync(id, conn);
+                    List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfComboAsync(id, conn);
 
                     ls.AddRange(tikiList);
                     ls.AddRange(shopeeList);

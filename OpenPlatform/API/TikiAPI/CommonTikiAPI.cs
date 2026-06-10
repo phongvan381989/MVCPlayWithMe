@@ -21,17 +21,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
     {
         static public TikiConfigApp tikiConfigApp;
 
-        static public TikiConfigApp GetTikiConfigApp(MySqlConnection conn)
+        static public async Task<TikiConfigApp> GetTikiConfigApp(MySqlConnection conn)
         {
             TikiConfigApp config = new TikiConfigApp();
             try
             {
-                // Lưu vào bảng tbECommerceOrder
                 MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbTikiAuthen", conn);
                 cmd.CommandType = CommandType.Text;
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    while (rdr.Read())
+                    while (await rdr.ReadAsync())
                     {
                         config.appID = MyMySql.GetString(rdr, "AppId");
                         config.homeAddress = MyMySql.GetString(rdr, "Home");
@@ -54,11 +53,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         }
 
         /// <summary>
-        /// Khi Access token phục vụ authorization hết hạn, gọi hàm này lấy access token mới và lưu và db xml
+        /// Khi Access token phục vụ authorization hết hạn, gọi hàm này lấy access token mới và lưu db
         /// </summary>
         /// <param name="appID"></param>
         /// <returns>empty nếu thành công. Ngược lại trả về string mô tả lỗi</returns>
-        static public string RefreshDataAuthorization()
+        static public async Task<string> RefreshDataAuthorization()
         {
             RestRequest request = new RestRequest("https://api.tiki.vn/sc/oauth2/token", Method.POST);
             request.AddHeader("Authorization", "Basic " + tikiConfigApp.Tiki_GetAppCredentialBase64Format());
@@ -69,7 +68,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             IRestResponse response = null;
             try
             {
-                response = Common.client.Execute(request);
+                response = await Common.client.ExecuteAsync(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
             }
             catch (Exception ex)
@@ -88,11 +87,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-                tikiMySql.TikiSaveAccessToken(accessToken, conn);
+                await conn.OpenAsync();
+                await tikiMySql.TikiSaveAccessTokenAsync(accessToken, conn);
 
                 // Cập nhật
-                tikiConfigApp = GetTikiConfigApp(conn);
+                tikiConfigApp = await GetTikiConfigApp(conn);
             }
             catch(Exception ex)
             {
@@ -110,7 +109,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <param name="request"></param>
         /// <param name="configApp"></param>
         /// <returns></returns>
-        static public IRestResponse ExcuteRequest(RestRequest request)
+        static public async Task<IRestResponse> ExcuteRequest(RestRequest request)
         {
             //if (CommonTikiAPI.tikiConfigApp == null)
             //{
@@ -127,7 +126,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
                 Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) - 600) // Trừ hao 600 giây
                 )
             {
-                string str = RefreshDataAuthorization();
+                string str = await RefreshDataAuthorization();
                 if (!string.IsNullOrEmpty(str))
                 {
                     return null;
@@ -135,7 +134,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             }
 
             request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty: tikiConfigApp.tikiAu.access_token));
-            IRestResponse response = Common.client.Execute(request);
+            IRestResponse response = await Common.client.ExecuteAsync(request);
             MyLogger.InfoRestLog(Common.client, request, response);
 
             // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
@@ -145,7 +144,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
                 MyLogger.GetInstance().Info("Expried token:" + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty : tikiConfigApp.tikiAu.access_token));
                 // Làm mới access token
                 string str;
-                str = CommonTikiAPI.RefreshDataAuthorization();
+                str = await CommonTikiAPI.RefreshDataAuthorization();
 
                 if (!string.IsNullOrEmpty(str))
                 {
@@ -162,24 +161,24 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             return response;
         }
 
-        static public IRestResponse GetExcuteRequest(string http)
+        static public async Task<IRestResponse> GetExcuteRequest(string http)
         {
             RestRequest request = new RestRequest(http, Method.GET);
-            IRestResponse response = ExcuteRequest(request);
+            IRestResponse response = await ExcuteRequest(request);
             return response;
         }
 
-        static public IRestResponse PostExcuteRequest(string http, string body)
+        static public async Task<IRestResponse> PostExcuteRequest(string http, string body)
         {
             RestRequest request = new RestRequest(http, Method.POST);
             request.AddHeader("Content-Type", "application/json");
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-            IRestResponse response = ExcuteRequest(request);
+            IRestResponse response = await ExcuteRequest(request);
             return response;
         }
 
-        static public IRestResponse PutExcuteRequest(string http, TikiUpdate st)
+        static public async Task< IRestResponse> PutExcuteRequest(string http, TikiUpdate st)
         {
             RestRequest request = new RestRequest(http, Method.PUT);
 
@@ -188,7 +187,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-            IRestResponse response = ExcuteRequest(request);
+            IRestResponse response = await ExcuteRequest(request);
             return response;
         }
     }

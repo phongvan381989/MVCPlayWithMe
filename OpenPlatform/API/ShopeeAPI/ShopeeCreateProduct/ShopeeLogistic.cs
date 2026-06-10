@@ -1,4 +1,4 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using Newtonsoft.Json;
@@ -15,7 +15,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
     class ShopeeLogistic
     {
         static public List<ShopeeLogisticInfo> logistic_info;
-        static public List<ShopeeLogisticInfo> GetLogisticInfo(Boolean isRefresh)
+        static public async Task<List<ShopeeLogisticInfo>> GetLogisticInfoAsync(Boolean isRefresh)
         {
             if(logistic_info == null ||
                 logistic_info.Count == 0 ||
@@ -25,7 +25,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
 
                 try
                 {
-                    ShopeeGetChannelListResponseHTTP obj = ShopeeLogisticGetChannelList();
+                    ShopeeGetChannelListResponseHTTP obj = await ShopeeLogisticGetChannelListAsync();
                     if (obj != null)
                     {
                         foreach (var lo in obj.response.logistics_channel_list)
@@ -49,11 +49,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
             return logistic_info;
         }
 
-        // Get the attribute tree for categories
-        public static ShopeeGetChannelListResponseHTTP ShopeeLogisticGetChannelList()
+        public static async Task<ShopeeGetChannelListResponseHTTP> ShopeeLogisticGetChannelListAsync()
         {
             string path = "/api/v2/logistics/get_channel_list";
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, null);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, null);
             if (response == null)
                 return null;
 

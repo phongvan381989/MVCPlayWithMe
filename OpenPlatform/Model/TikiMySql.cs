@@ -18,32 +18,34 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TikiMySql
     {
-        //private int TikiInsert(int supperId, int tikiId, string name,
+        //private int TikiInsertAsync(int supperId, int tikiId, string name,
         //    int status, string sku, string superSku, MySqlConnection conn)
-        private int TikiInsert(CommonItem item, MySqlConnection conn)
+        private async Task<int> TikiInsertAsync(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inSuperId", item.tikiSuperId);
-                cmd.Parameters.AddWithValue("@inTikiId", Common.ConvertLongToInt(item.itemId));
-                cmd.Parameters.AddWithValue("@inName", item.name);
-                cmd.Parameters.AddWithValue("@inStatus", item.bActive ? 0 : 1);
-                cmd.Parameters.AddWithValue("@inSku", item.sku);
-                cmd.Parameters.AddWithValue("@inSuperSku", item.superSku);
-                cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
-
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Insert", conn))
                 {
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inSuperId", item.tikiSuperId);
+                    cmd.Parameters.AddWithValue("@inTikiId", Common.ConvertLongToInt(item.itemId));
+                    cmd.Parameters.AddWithValue("@inName", item.name);
+                    cmd.Parameters.AddWithValue("@inStatus", item.bActive ? 0 : 1);
+                    cmd.Parameters.AddWithValue("@inSku", item.sku);
+                    cmd.Parameters.AddWithValue("@inSuperSku", item.superSku);
+                    cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        id = MyMySql.GetInt32(rdr, "LastId");
+                        while (await rdr.ReadAsync())
+                        {
+                            id = MyMySql.GetInt32(rdr, "LastId");
+                        }
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
@@ -51,21 +53,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Kiểm tra item đã tồn tại trong bảng tbtikiitem
-        public Boolean CheckItemExistIntbTikiItem(int itemId,
+        public async Task<Boolean> CheckItemExistIntbTikiItemAsync(int itemId,
             MySqlConnection conn)
         {
-            MySqlCommand cmd = new MySqlCommand("SELECT `Id` FROM webplaywithme.tbtikiitem WHERE `TikiId` = @inTikiId LIMIT 1;", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inTikiId", itemId);
-
-            MySqlDataReader rdr = null;
             Boolean isExist = false;
-
-            using (rdr = cmd.ExecuteReader())
+            using (MySqlCommand cmd = new MySqlCommand(
+                "SELECT `Id` FROM webplaywithme.tbtikiitem WHERE `TikiId` = @inTikiId LIMIT 1;", conn))
             {
-                while (rdr.Read())
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inTikiId", itemId);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    isExist = true;
+                    while (await rdr.ReadAsync())
+                    {
+                        isExist = true;
+                    }
                 }
             }
             return isExist;
@@ -74,10 +77,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Check item đã được lưu vào bảng tương ứng tbtikiitem, tbtikimapping
         // Nếu chưa lưu ta thực hiện lưu
         // Nếu đã lưu item trong db nhưng không còn tồn tại trên sàn TMDT ta xóa trong db
-        // Ta chỉ check chọn xem item, check item đã bị xóa trên db 
+        // Ta chỉ check chọn xem item, check item đã bị xóa trên db
         // không thực hiện ở đây
         // return true: nếu tồn tại ngược lại false
-        public Boolean TikiInsertIfDontExistConnectOut(CommonItem item, MySqlConnection conn)
+        public async Task<Boolean> TikiInsertIfDontExistConnectOutAsync(CommonItem item, MySqlConnection conn)
         {
             try
             {
@@ -88,21 +91,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
 
                 // Kiểm tra itemId đã tồn tại trong bảng tbtikiitem
-                Boolean exist = CheckItemExistIntbTikiItem((int)item.itemId, conn);
+                Boolean exist = await CheckItemExistIntbTikiItemAsync((int)item.itemId, conn);
 
-                int status = 0;
                 // Lưu item vào db lần đầu
                 if (!exist)
                 {
-                    status = item.bActive ? 0 : 1;
-                    //itemIdInserted = TikiInsert(item, conn);
-                    TikiInsert(item, conn);
+                    //itemIdInserted = await TikiInsertAsync(item, conn);
+                    await TikiInsertAsync(item, conn);
                     return false;
                 }
                 else
                 {
                     // Cập nhật trạng thái item vào DB
-                    TikiUpdateStatusOfItemToDbConnectOut((int)item.itemId, item.bActive ? 0 : 1, conn);
+                    await TikiUpdateStatusOfItemToDbConnectOutAsync((int)item.itemId, item.bActive ? 0 : 1, conn);
                 }
             }
             catch (Exception ex)
@@ -113,41 +114,43 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được thông tin mapping chi tiết
-        public void TikiGetItemFromIdConnectOut(int id, CommonItem item, MySqlConnection conn)
+        public async Task TikiGetItemFromIdConnectOutAsync(int id, CommonItem item, MySqlConnection conn)
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", id);
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn))
                 {
-                    if (MyMySql.GetInt32(rdr, "TikiMappingId") != -1)
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTTikiItemId", id);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        Mapping map = new Mapping();
-                        map.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
-
-                        Product product = new Product();
-                        product.id = MyMySql.GetInt32(rdr, "ProductId");
-                        product.name = MyMySql.GetString(rdr, "ProductName");
-                        product.bookCoverPrice = MyMySql.GetInt32(rdr, "ProductBookCoverPrice");
-                        product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-                        product.discount = rdr.IsDBNull(rdr.GetOrdinal("ProductDiscount")) ? 0 : rdr.GetFloat("ProductDiscount");
-                        product.quantity = rdr.GetInt32("ProductQuantity");
-                        product.SetFirstSrcImage();
-                        map.product = product;
-                        if(rdr.IsDBNull(rdr.GetOrdinal("ProductDiscount")))
+                        while (await rdr.ReadAsync())
                         {
-                            product.SetFirstSrcImage();
-                        }
+                            if (MyMySql.GetInt32(rdr, "TikiMappingId") != -1)
+                            {
+                                Mapping map = new Mapping();
+                                map.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
 
-                        item.models[0].mapping.Add(map);
+                                Product product = new Product();
+                                product.id = MyMySql.GetInt32(rdr, "ProductId");
+                                product.name = MyMySql.GetString(rdr, "ProductName");
+                                product.bookCoverPrice = MyMySql.GetInt32(rdr, "ProductBookCoverPrice");
+                                product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+                                product.discount = rdr.IsDBNull(rdr.GetOrdinal("ProductDiscount")) ? 0 : rdr.GetFloat("ProductDiscount");
+                                product.quantity = rdr.GetInt32("ProductQuantity");
+                                product.SetFirstSrcImage();
+                                map.product = product;
+                                if (rdr.IsDBNull(rdr.GetOrdinal("ProductDiscount")))
+                                {
+                                    product.SetFirstSrcImage();
+                                }
+
+                                item.models[0].mapping.Add(map);
+                            }
+                        }
                     }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -155,72 +158,70 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void TikiGetListCommonItemFromListTikiProductConnectOut(
+        public async Task TikiGetListCommonItemFromListTikiProductConnectOutAsync(
             List<TikiProduct> lsTikiItem,
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
-
-                int TikiMappingIdIndex = 0, 
-                    tikiMappingQuantityIndex = 0,
-                    productIdIndex = 0,
-                    productNameIndex = 0,
-                    productBookCoverPriceIndex = 0;
-                Boolean isSetIndex = false;
-                foreach (var pro in lsTikiItem)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn))
                 {
-                    cmd.Parameters[0].Value = pro.product_id;
-                    CommonItem item = new CommonItem(pro);
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
+
+                    int TikiMappingIdIndex = 0,
+                        tikiMappingQuantityIndex = 0,
+                        productIdIndex = 0,
+                        productNameIndex = 0,
+                        productBookCoverPriceIndex = 0;
+                    Boolean isSetIndex = false;
+                    foreach (var pro in lsTikiItem)
                     {
-
-                        while (rdr.Read())
+                        cmd.Parameters[0].Value = pro.product_id;
+                        CommonItem item = new CommonItem(pro);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            if (!isSetIndex)
+                            while (await rdr.ReadAsync())
                             {
-                                TikiMappingIdIndex = rdr.GetOrdinal("TikiMappingId");
+                                if (!isSetIndex)
+                                {
+                                    TikiMappingIdIndex = rdr.GetOrdinal("TikiMappingId");
+                                    tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
+                                    productIdIndex = rdr.GetOrdinal("ProductId");
+                                    productNameIndex = rdr.GetOrdinal("ProductName");
+                                    productBookCoverPriceIndex = rdr.GetOrdinal("ProductBookCoverPrice");
+                                    isSetIndex = true;
+                                }
+                                if (rdr.IsDBNull(TikiMappingIdIndex))
+                                {
+                                    continue;
+                                }
 
-                                tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
-                                productIdIndex = rdr.GetOrdinal("ProductId");
-                                productNameIndex = rdr.GetOrdinal("ProductName");
-                                productBookCoverPriceIndex = rdr.GetOrdinal("ProductBookCoverPrice");
-                                isSetIndex = true;
+                                Mapping map = new Mapping();
+
+                                map.quantity = rdr.GetInt32(tikiMappingQuantityIndex);
+
+                                Product product = new Product();
+                                product.id = rdr.GetInt32(productIdIndex);
+                                product.name = rdr.GetString(productNameIndex);
+                                product.bookCoverPrice = rdr.GetInt32(productBookCoverPriceIndex);
+                                product.SetFirstSrcImage();
+                                map.product = product;
+                                item.models[0].mapping.Add(map);
                             }
-                            if (rdr.IsDBNull(TikiMappingIdIndex))
-                            {
-                                continue;
-                            }
-
-                            Mapping map = new Mapping();
-
-                            map.quantity = rdr.GetInt32(tikiMappingQuantityIndex);
-
-                            Product product = new Product();
-                            product.id = rdr.GetInt32(productIdIndex);
-                            product.name = rdr.GetString(productNameIndex);
-                            product.bookCoverPrice = rdr.GetInt32(productBookCoverPriceIndex);
-                            product.SetFirstSrcImage();
-                            map.product = product;
-                            item.models[0].mapping.Add(map);
                         }
-
+                        lsCommonItem.Add(item);
                     }
-                    lsCommonItem.Add(item);
                 }
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
         }
 
-        public void TikiUpdateStatusOfItemListToDbConnectOut(
+        public async Task TikiUpdateStatusOfItemListToDbConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -231,16 +232,18 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             try
             {
-                // Cập nhật source của item
-                MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inStatus", 0);
-                cmd.Parameters.AddWithValue("@inTikiId", 0);
-                foreach (var commonItem in lsCommonItem)
+                using (MySqlCommand cmd = new MySqlCommand(
+                    "UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn))
                 {
-                    cmd.Parameters[0].Value = commonItem.bActive?0:1;
-                    cmd.Parameters[1].Value = (int)commonItem.itemId;
-                    cmd.ExecuteNonQuery();
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inStatus", 0);
+                    cmd.Parameters.AddWithValue("@inTikiId", 0);
+                    foreach (var commonItem in lsCommonItem)
+                    {
+                        cmd.Parameters[0].Value = commonItem.bActive ? 0 : 1;
+                        cmd.Parameters[1].Value = (int)commonItem.itemId;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -249,19 +252,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void TikiUpdateStatusOfItemToDbConnectOut(
+        public async Task TikiUpdateStatusOfItemToDbConnectOutAsync(
             int itemId,
             int status,
             MySqlConnection conn)
         {
             try
             {
-                // Cập nhật source của item
-                MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inStatus", status);
-                cmd.Parameters.AddWithValue("@inTikiId", itemId);
-                cmd.ExecuteNonQuery();
+                using (MySqlCommand cmd = new MySqlCommand(
+                    "UPDATE webplaywithme.tbtikiitem SET `Status` = @inStatus WHERE `TikiId` = @inTikiId", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inStatus", status);
+                    cmd.Parameters.AddWithValue("@inTikiId", itemId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -271,9 +276,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Hàm này được gọi 1 lần duy nhất để lấy sku, super sku vì mới thêm 2 trường này trong bảng tbTikiItem
         // Sau khi gọi ta comment lại.
-        public void TikiUpdateSku_SuperSkuOfItemToDbConnectOut(
-        List<CommonItem> lsCommonItem,
-        MySqlConnection conn)
+        public async Task TikiUpdateSku_SuperSkuOfItemToDbConnectOutAsync(
+            List<CommonItem> lsCommonItem,
+            MySqlConnection conn)
         {
             //if (lsCommonItem == null || lsCommonItem.Count == 0)
             //{
@@ -302,136 +307,138 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             //}
         }
 
-        public List<CommonItem> TikiGetItemOnDB(MySqlConnection conn)
+        public async Task<List<CommonItem>> TikiGetItemOnDBAsync(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                CommonItem commonItem = null;
-                int tikiIdIndex = rdr.GetOrdinal("TikiId");
-                int nameIndex = rdr.GetOrdinal("Name");
-                int statusIndex = rdr.GetOrdinal("Status");
-                int skuIndex = rdr.GetOrdinal("Sku");
-                int productStatusIndex = rdr.GetOrdinal("ProductStatus");
-
-                int itemId = Int32.MaxValue;
-                int itemIdTemp = Int32.MaxValue;
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All", conn))
                 {
-                    itemIdTemp = rdr.GetInt32(tikiIdIndex);
-                    if (itemId != itemIdTemp)
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        itemId = itemIdTemp;
-                        commonItem = new CommonItem(Common.eTiki);
-                        lsCommonItem.Add(commonItem);
+                        CommonItem commonItem = null;
+                        int tikiIdIndex = rdr.GetOrdinal("TikiId");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int statusIndex = rdr.GetOrdinal("Status");
+                        int skuIndex = rdr.GetOrdinal("Sku");
+                        int productStatusIndex = rdr.GetOrdinal("ProductStatus");
 
-                        commonItem.itemId = itemId;
-                        commonItem.name = rdr.GetString(nameIndex);
-                        commonItem.sku = rdr.GetString(skuIndex);
-                        commonItem.bActive = rdr.GetInt32(statusIndex) == 0 ? true : false;
-                        if (commonItem.bActive)
+                        int itemId = Int32.MaxValue;
+                        int itemIdTemp = Int32.MaxValue;
+                        while (await rdr.ReadAsync())
                         {
-                            commonItem.item_status = Common.tikiActive;
-                        }
-                        else
-                        {
-                            commonItem.item_status = Common.tikiUnactive;
-                        }
+                            itemIdTemp = rdr.GetInt32(tikiIdIndex);
+                            if (itemId != itemIdTemp)
+                            {
+                                itemId = itemIdTemp;
+                                commonItem = new CommonItem(Common.eTiki);
+                                lsCommonItem.Add(commonItem);
 
-                        CommonModel commonModel = new CommonModel();
-                        commonModel.modelId = -1;
-                        commonItem.models.Add(commonModel);
-                    }
+                                commonItem.itemId = itemId;
+                                commonItem.name = rdr.GetString(nameIndex);
+                                commonItem.sku = rdr.GetString(skuIndex);
+                                commonItem.bActive = rdr.GetInt32(statusIndex) == 0 ? true : false;
+                                if (commonItem.bActive)
+                                {
+                                    commonItem.item_status = Common.tikiActive;
+                                }
+                                else
+                                {
+                                    commonItem.item_status = Common.tikiUnactive;
+                                }
 
-                    if (!rdr.IsDBNull(productStatusIndex))
-                    {
-                        Product product = new Product();
-                        product.status = rdr.GetInt32(productStatusIndex);
-                        commonItem.models[0].mapping.Add(new Mapping(product, 1));
+                                CommonModel commonModel = new CommonModel();
+                                commonModel.modelId = -1;
+                                commonItem.models.Add(commonModel);
+                            }
+
+                            if (!rdr.IsDBNull(productStatusIndex))
+                            {
+                                Product product = new Product();
+                                product.status = rdr.GetInt32(productStatusIndex);
+                                commonItem.models[0].mapping.Add(new Mapping(product, 1));
+                            }
+                        }
                     }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {
-                
                 MyLogger.GetInstance().Warn(ex.ToString());
                 lsCommonItem = null;
             }
             return lsCommonItem;
         }
 
-        public Dictionary<int, string> TikiGetListItemDontMapping(MySqlConnection conn)
+        public async Task<Dictionary<int, string>> TikiGetListItemDontMappingAsync(MySqlConnection conn)
         {
             Dictionary<int, string> dic = new Dictionary<int, string>();
-            MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Dont_Mapping", conn);
-            cmd.CommandType = CommandType.StoredProcedure;
-
             try
             {
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Dont_Mapping", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int nameIndex = rdr.GetOrdinal("Name");
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        dic.Add(rdr.GetInt32(idIndex), rdr.GetString(nameIndex));
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        while (await rdr.ReadAsync())
+                        {
+                            dic.Add(rdr.GetInt32(idIndex), rdr.GetString(nameIndex));
+                        }
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
             return dic;
         }
 
-        public MySqlResultState TikiDeleteItemOnDB(int itemId)
+        public async Task<MySqlResultState> TikiDeleteItemOnDBAsync(int itemId)
         {
             MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
+                try
+                {
+                    await conn.OpenAsync();
 
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Delete_From_TMDTItemId", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTId", itemId);
-
-                cmd.ExecuteNonQuery();
-
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Delete_From_TMDTItemId", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inTMDTId", itemId);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, resultState);
+                }
             }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, resultState);
-            }
-
-            conn.Close();
             return resultState;
         }
 
-        public MySqlResultState TikiUpdateMappingSignle(int itemId,
+        public async Task<MySqlResultState> TikiUpdateMappingSignleAsync(int itemId,
             int productId,
             int quantity,
-            MySqlConnection conn
-            )
+            MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTikiItemId", itemId);
-                cmd.Parameters.AddWithValue("@inProductId", productId);
-                cmd.Parameters.AddWithValue("@inQuantity", quantity);
-
-                cmd.ExecuteNonQuery();
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTikiItemId", itemId);
+                    cmd.Parameters.AddWithValue("@inProductId", productId);
+                    cmd.Parameters.AddWithValue("@inQuantity", quantity);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -442,61 +449,62 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="ls">luôn có 1 phần tử</param>
         /// <returns></returns>
-        public MySqlResultState TikiUpdateMapping(List<CommonForMapping> ls)
+        public async Task<MySqlResultState> TikiUpdateMappingAsync(List<CommonForMapping> ls)
         {
             // item Tiki không có model, chỉ có 1 model tượng trưng nên ls có 1 phần tử
             CommonForMapping commonForMapping = ls[0];
             MySqlResultState result = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
-
-                int itemIdInserted = 0;
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inTMDTTikiItemId", Common.ConvertLongToInt(commonForMapping.itemId));
+                    await conn.OpenAsync();
 
-
-                    using (MySqlDataReader rdr = cmd.ExecuteReader())
+                    int itemIdInserted = 0;
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_From_TMDTTikiItem_Id", conn))
                     {
-                        while (rdr.Read())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inTMDTTikiItemId", Common.ConvertLongToInt(commonForMapping.itemId));
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            itemIdInserted = MyMySql.GetInt32(rdr, "TikiItemId");
-                            break;
+                            while (await rdr.ReadAsync())
+                            {
+                                itemIdInserted = MyMySql.GetInt32(rdr, "TikiItemId");
+                                break;
+                            }
                         }
                     }
-                }
 
-                // Xóa mapping cũ
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Delete_From_TikiItemId", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inTikiItemId", itemIdInserted);
-                    cmd.ExecuteNonQuery();
-                }
-
-                // Insert mapping mới
-                {
-                    MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inTikiItemId", itemIdInserted);
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
-
-                    for (int j = 0; j < commonForMapping.lsProductId.Count; j++)
+                    // Xóa mapping cũ
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Delete_From_TikiItemId", conn))
                     {
-                        // Nếu model chưa được mapping productId, productQuantity là: System.Int32.MinValue;
-                        if (commonForMapping.lsProductId.Count > 0)
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inTikiItemId", itemIdInserted);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Insert mapping mới
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inTikiItemId", itemIdInserted);
+                        cmd.Parameters.AddWithValue("@inProductId", 0);
+                        cmd.Parameters.AddWithValue("@inQuantity", 0);
+
+                        for (int j = 0; j < commonForMapping.lsProductId.Count; j++)
                         {
-                            cmd.Parameters[1].Value = commonForMapping.lsProductId[j];
-                            cmd.Parameters[2].Value = commonForMapping.lsProductQuantity[j];
-                            cmd.ExecuteNonQuery();
+                            // Nếu model chưa được mapping productId, productQuantity là: System.Int32.MinValue;
+                            if (commonForMapping.lsProductId.Count > 0)
+                            {
+                                cmd.Parameters[1].Value = commonForMapping.lsProductId[j];
+                                cmd.Parameters[2].Value = commonForMapping.lsProductQuantity[j];
+                                await cmd.ExecuteNonQueryAsync();
+                            }
                         }
                     }
                 }
@@ -505,48 +513,47 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 Common.SetResultException(ex, result);
             }
-            conn.Close();
             return result;
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public void TikiGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
+        public async Task TikiGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
         {
-            string status = string.Empty;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_TikiId", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
-
-                int quantity = 0;
-                Product pro = null;
-                MySqlDataReader rdr;
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Get_From_TikiId", conn))
                 {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTTikiItemId", 0);
+
+                    int quantity = 0;
+                    Product pro = null;
+
                     for (int i = 0; i < commonOrder.listItemId.Count; i++)
                     {
                         cmd.Parameters[0].Value = Common.ConvertLongToInt(commonOrder.listItemId[i]);
                         commonOrder.listMapping.Add(new List<Mapping>());
 
-                        rdr = cmd.ExecuteReader();
-                        while (rdr.Read())
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            // Đã được mapping
-                            if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                            while (await rdr.ReadAsync())
                             {
-                                quantity = MyMySql.GetInt32(rdr, "Quantity");
-                                pro = new Product();
-                                pro.id = MyMySql.GetInt32(rdr, "ProductId");
-                                pro.code = MyMySql.GetString(rdr, "ProductCode");
-                                pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
-                                pro.name = MyMySql.GetString(rdr, "ProductName");
-                                pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
-                                pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
-                                pro.SetFirstSrcImage();
-                                commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
+                                // Đã được mapping
+                                if (MyMySql.GetInt32(rdr, "ProductId") != -1)
+                                {
+                                    quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                    pro = new Product();
+                                    pro.id = MyMySql.GetInt32(rdr, "ProductId");
+                                    pro.code = MyMySql.GetString(rdr, "ProductCode");
+                                    pro.barcode = MyMySql.GetString(rdr, "ProductBarcode");
+                                    pro.name = MyMySql.GetString(rdr, "ProductName");
+                                    pro.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
+                                    pro.positionInWarehouse = MyMySql.GetString(rdr, "ProductPositionInWarehouse");
+                                    pro.SetFirstSrcImage();
+                                    commonOrder.listMapping[i].Add(new Mapping(pro, quantity));
+                                }
                             }
                         }
-                        rdr.Close();
                     }
                 }
             }
@@ -559,7 +566,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
         // storeName: st_tbOutput_Insert hoặc st_tbOutput_Insert_If_DontExist_When_Packing
-        public MySqlResultState UpdateOutputAndProductTableFromCommonOrderConnectOut_OldVersion(MySqlConnection conn,
+        public async Task<MySqlResultState> UpdateOutputAndProductTableFromCommonOrderConnectOut_OldVersionAsync(MySqlConnection conn,
             string storeName,
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
@@ -575,11 +582,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
                 {
-                    UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                    await UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
                 }
                 else
                 {
-                    InsertTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                    await InsertTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
                 }
             }
 
@@ -592,38 +599,40 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     delta = -1;
                 }
-                MySqlCommand cmd = new MySqlCommand(storeName, conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                cmd.Parameters.AddWithValue("@inProductId", 0);
-                cmd.Parameters.AddWithValue("@inQuantity", 0);
-                int productId = 0;
-                long quantity = 0;
-                for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                using (MySqlCommand cmd = new MySqlCommand(storeName, conn))
                 {
-                    for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    int productId = 0;
+                    long quantity = 0;
+                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
                     {
-                        quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
-                        if(quantity == 0)
+                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
                         {
-                            continue;
-                        }
-
-                        productId = commonOrder.listMapping[i][j].product.id;
-                        cmd.Parameters[2].Value = productId;
-                        cmd.Parameters[3].Value = quantity * delta;
-                        if (!isNeedExecuteReader)
-                        {
-                            cmd.ExecuteNonQuery();
-                        }
-                        else
-                        {
-                            using (MySqlDataReader rdr = cmd.ExecuteReader())
+                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            if (quantity == 0)
                             {
-                                while (rdr.Read())
+                                continue;
+                            }
+
+                            productId = commonOrder.listMapping[i][j].product.id;
+                            cmd.Parameters[2].Value = productId;
+                            cmd.Parameters[3].Value = quantity * delta;
+                            if (!isNeedExecuteReader)
+                            {
+                                await cmd.ExecuteNonQueryAsync();
+                            }
+                            else
+                            {
+                                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                                 {
-                                    quantity = MyMySql.GetInt32(rdr, "Result");
+                                    while (await rdr.ReadAsync())
+                                    {
+                                        quantity = MyMySql.GetInt32(rdr, "Result");
+                                    }
                                 }
                             }
                         }
@@ -641,7 +650,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi
         // giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
-        public MySqlResultState UpdateOutputAndProductTableFromOrder_BookingConnectOut(
+        public async Task<MySqlResultState> UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
             MySqlConnection conn,
             CommonOrder commonOrder,
             ECommerceOrderStatus status,
@@ -652,11 +661,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
                 {
-                    UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                    await UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
                 }
                 else
                 {
-                    InsertTbItemOfEcommerceOder(commonOrder, eCommerceType, conn);
+                    await InsertTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
                 }
             }
 
@@ -669,29 +678,31 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     delta = -1;
                 }
-                MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert_Order_Booking", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
-                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                cmd.Parameters.AddWithValue("@inProductId", 0);
-                cmd.Parameters.AddWithValue("@inQuantity", 0);
-                int productId = 0;
-                long quantity = 0;
-                for (int i = 0; i < commonOrder.listMapping.Count; i++)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert_Order_Booking", conn))
                 {
-                    for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
+                    cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    int productId = 0;
+                    long quantity = 0;
+                    for (int i = 0; i < commonOrder.listMapping.Count; i++)
                     {
-                        quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
-                        if (quantity == 0)
+                        for (int j = 0; j < commonOrder.listMapping[i].Count; j++)
                         {
-                            continue;
-                        }
+                            quantity = commonOrder.listQuantity[i] * commonOrder.listMapping[i][j].quantity;
+                            if (quantity == 0)
+                            {
+                                continue;
+                            }
 
-                        productId = commonOrder.listMapping[i][j].product.id;
-                        cmd.Parameters[3].Value = productId;
-                        cmd.Parameters[4].Value = quantity * delta;
-                        cmd.ExecuteNonQuery();
+                            productId = commonOrder.listMapping[i][j].product.id;
+                            cmd.Parameters[3].Value = productId;
+                            cmd.Parameters[4].Value = quantity * delta;
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
             }
@@ -703,7 +714,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public TbEcommerceOrder GetLastestStatusOfECommerceOrder(string code,
+        public async Task<TbEcommerceOrder> GetLastestStatusOfECommerceOrderAsync(string code,
             EECommerceType eCommerceType,
             MySqlConnection conn)
         {
@@ -713,18 +724,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 // Lấy trạng thái cuối cùng của đơn trong bảng tbECommerceOrder
-                MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", code);
-                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                MySqlDataReader rdr;
-                rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn))
                 {
-                    lastest.status = MyMySql.GetInt32(rdr, "Status");
-                    lastest.updateTime= MyMySql.GetInt64(rdr, "UpdateTime");
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            lastest.status = MyMySql.GetInt32(rdr, "Status");
+                            lastest.updateTime = MyMySql.GetInt64(rdr, "UpdateTime");
+                        }
+                    }
                 }
-                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -734,7 +748,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lastest;
         }
 
-        public TbEcommerceOrder GetLastestStatusOfECommerceBooking(string code,
+        public async Task<TbEcommerceOrder> GetLastestStatusOfECommerceBookingAsync(string code,
             EECommerceType eCommerceType,
             MySqlConnection conn)
         {
@@ -744,18 +758,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 // Lấy trạng thái cuối cùng của đơn trong bảng tbECommerceOrder
-                MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCode", code);
-                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                MySqlDataReader rdr;
-                rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn))
                 {
-                    lastest.status = MyMySql.GetInt32(rdr, "Status");
-                    lastest.updateTime = MyMySql.GetInt64(rdr, "UpdateTime");
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCode", code);
+                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            lastest.status = MyMySql.GetInt32(rdr, "Status");
+                            lastest.updateTime = MyMySql.GetInt64(rdr, "UpdateTime");
+                        }
+                    }
                 }
-                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -765,98 +782,98 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lastest;
         }
 
-        // Lấy mã đơn, mã đơn hàng từ mã đơn hoặc mã đơn hàng
-        public void GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+        public async Task<(string sn, string trackingNumber)> GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
             string sn_trackingNumber,
-            ref string sn,
-            ref string trackingNumber,
             EECommerceType type,
             MySqlConnection conn)
         {
-            sn = string.Empty;
-            trackingNumber = string.Empty;
+            string sn = string.Empty;
+            string trackingNumber = string.Empty;
             MySqlCommand cmd = new MySqlCommand(
                 "SELECT `Code`, `ShipCode` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn);
             cmd.CommandType = CommandType.Text;
             cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
             cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
             cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
-            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
             {
-                while (rdr.Read())
+                while (await rdr.ReadAsync())
                 {
                     sn = MyMySql.GetString(rdr, "Code");
                     trackingNumber = MyMySql.GetString(rdr, "ShipCode");
                 }
             }
+            return (sn, trackingNumber);
         }
 
-        // Lấy mã đơn, mã đơn hàng từ mã đơn hoặc mã đơn hàng
-        public void GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOut(
+        public async Task<(string sn, string trackingNumber)> GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
             string sn_trackingNumber,
-            ref string sn,
-            ref string trackingNumber,
             EECommerceType type,
             MySqlConnection conn)
         {
-            sn = string.Empty;
-            trackingNumber = string.Empty;
+            string sn = string.Empty;
+            string trackingNumber = string.Empty;
             MySqlCommand cmd = new MySqlCommand(
                 "SELECT `Code`, `ShipCode` FROM webplaywithme.tb_ecommerce_booking WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn);
             cmd.CommandType = CommandType.Text;
             cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
             cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
             cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
-            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
             {
-                while (rdr.Read())
+                while (await rdr.ReadAsync())
                 {
                     sn = MyMySql.GetString(rdr, "Code");
                     trackingNumber = MyMySql.GetString(rdr, "ShipCode");
                 }
             }
+            return (sn, trackingNumber);
         }
 
-        public string GetTrackingNumberFromSNConnectOut(
+        public async Task<string> GetTrackingNumberFromSNConnectOutAsync(
             string sn,
             EECommerceType type,
             MySqlConnection conn)
         {
             string trackingNumber = string.Empty;
-            MySqlCommand cmd = new MySqlCommand(
-                "SELECT `ShipCode` FROM webplaywithme.tbecommerceorder WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = @inECommmerce LIMIT 1", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inCode", sn);
-            cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
-
-            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            using (MySqlCommand cmd = new MySqlCommand(
+                "SELECT `ShipCode` FROM webplaywithme.tbecommerceorder WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = @inECommmerce LIMIT 1", conn))
             {
-                while (rdr.Read())
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inCode", sn);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    while (await rdr.ReadAsync())
+                    {
+                        trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    }
                 }
             }
 
             return trackingNumber;
         }
 
-        public string GetBookingTrackingNumberFromSNConnectOut(
+        public async Task<string> GetBookingTrackingNumberFromSNConnectOutAsync(
             string sn,
             EECommerceType type,
             MySqlConnection conn)
         {
             string trackingNumber = string.Empty;
-            MySqlCommand cmd = new MySqlCommand(
-                "SELECT `ShipCode` FROM webplaywithme.tb_ecommerce_booking WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = @inECommmerce LIMIT 1", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inCode", sn);
-            cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
-
-            using (MySqlDataReader rdr = cmd.ExecuteReader())
+            using (MySqlCommand cmd = new MySqlCommand(
+                "SELECT `ShipCode` FROM webplaywithme.tb_ecommerce_booking WHERE `Code` = @inCode AND `ShipCode` IS NOT NULL AND `ShipCode` <> '' AND `ECommmerce` = @inECommmerce LIMIT 1", conn))
             {
-                while (rdr.Read())
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inCode", sn);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    while (await rdr.ReadAsync())
+                    {
+                        trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    }
                 }
             }
 
@@ -875,8 +892,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             //if ((status == ECommerceOrderStatus.BOOKED && oldStatus == ECommerceOrderStatus.PACKED) ||
             //    (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.RETURNED)||
-                // Chuẩn bị đóng thì hủy đơn
-            if(status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
+            // Chuẩn bị đóng thì hủy đơn
+            if (status == ECommerceOrderStatus.PACKED && oldStatus == ECommerceOrderStatus.UNBOOKED)
             {
                 return false;
             }
@@ -896,89 +913,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return true;
         }
 
-        //// Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking,
-        //// cột số lượng của tbOutput khi có đơn sẽ cập nhật về 0 và hoàn lại về kho
-        //public MySqlResultState UpdateOrderCodeOftbOutputWhenPackedWithBooking(
-        //    CommonOrder commonOrder,
-        //    EECommerceType eCommerceType,
-        //    MySqlConnection conn)
-        //{
-        //    MySqlResultState resultState = new MySqlResultState();
-        //    resultState.myAnything = 1; // Có thay đổi tồn kho.
-
-        //    try
-        //    {
-        //        // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking
-        //        {
-        //            MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode 
-        //        WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn);
-        //            cmd.CommandType = CommandType.Text;
-        //            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-        //            cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
-        //            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-        //            cmd.ExecuteNonQuery();
-        //        }
-
-        //        // cột số lượng của tbOutput khi có đơn sẽ cập nhật về 0 và hoàn lại về kho
-        //        // Lấy danh sách mã sản phẩm, số lượng
-        //        List<int> productIds = new List<int>();
-        //        List<int> quantities = new List<int>();
-        //        {
-        //            MySqlCommand cmd = new MySqlCommand(@"SELECT `ProductId`, `Quantity` FROM `tboutput`
-        //            WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND `BookingCode` IS NULL;", conn);
-        //            cmd.CommandType = CommandType.Text;
-        //            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-        //            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-        //            using (MySqlDataReader rdr = cmd.ExecuteReader())
-        //            {
-        //                int productIdIndex = rdr.GetOrdinal("ProductId");
-        //                int quantityIndex = rdr.GetOrdinal("Quantity");
-        //                while (rdr.Read())
-        //                {
-        //                    productIds.Add(rdr.GetInt32(productIdIndex));
-        //                    quantities.Add(rdr.GetInt32(quantityIndex));
-        //                }
-        //            }
-        //        }
-
-        //        // Cập nhật Quantity của tbOutput về 0
-        //        {
-        //            MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Quantity` = 0 WHERE
-        //        `Code` = @inCode AND `ECommmerce` = @inECommmerce AND `BookingCode` IS NULL;", conn);
-        //            cmd.CommandType = CommandType.Text;
-        //            cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-        //            cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-        //            cmd.ExecuteNonQuery();
-        //        }
-
-        //        if (productIds.Count > 0)
-        //        {
-        //            {
-        //                MySqlCommand cmd = new MySqlCommand(@"st_tbOutput_Return_Quantity", conn);
-        //                cmd.CommandType = CommandType.StoredProcedure;
-        //                cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-        //                cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-        //                cmd.Parameters.AddWithValue("@inProductId", 0);
-        //                cmd.Parameters.AddWithValue("@inQuantity", 0);
-
-        //                for(int i = 0; i < productIds.Count; i++)
-        //                {
-        //                    cmd.Parameters["@inProductId"].Value = productIds[i];
-        //                    cmd.Parameters["@inQuantity"].Value = quantities[i];
-        //                    cmd.ExecuteNonQuery();
-        //                }
-        //            }
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, resultState);
-        //    }
-        //    return resultState;
-        //}
-
         /// <summary>
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         /// Insert thông tin trạng thái đơn hàng vào bảng tbECommerceOrder
@@ -986,7 +920,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
-        public MySqlResultState UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+        public async Task<MySqlResultState> UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
             CommonOrder commonOrder,
             ECommerceOrderStatus status,
             long update_time, // Thời gian event được sàn ghi nhận
@@ -999,23 +933,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 // Lưu vào bảng tbECommerceOrder
                 // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiếp
+                using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn))
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
                     cmd.Parameters.AddWithValue("@inStatus", (int)status);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
                     cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
-
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
 
                 // Nếu có mã booking thì return vì số lượng đã trả lại khi khi đơn booking được MATCHED
-                if ( !string.IsNullOrEmpty(commonOrder.bookingCode))
+                if (!string.IsNullOrEmpty(commonOrder.bookingCode))
                 {
                     // Cập nhật tbOutput cho cột Code, Quantity = 0, hoàn kho số lượng
-                    //resultState = UpdateOrderCodeOftbOutputWhenPackedWithBooking(commonOrder, eCommerceType, conn);
+                    //resultState = await UpdateOrderCodeOftbOutputWhenPackedWithBooking(commonOrder, eCommerceType, conn);
                     return resultState;
                 }
 
@@ -1032,7 +965,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
                     (status == ECommerceOrderStatus.RETURNED))
                 {
-                    resultState = UpdateOutputAndProductTableFromOrder_BookingConnectOut(
+                    resultState = await UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
                         conn, commonOrder, status, eCommerceType);
                     resultState.myAnything = 1; // Có thay đổi tồn kho.
                 }
@@ -1061,7 +994,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
-        public MySqlResultState UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+        public async Task<MySqlResultState> UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
             CommonOrder commonOrder,
             ECommerceOrderStatus status,
             long update_time, // Thời gian event được sàn ghi nhận
@@ -1073,17 +1006,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 // Lưu vào bảng tbECommerceBooking
-                // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiế
+                // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiếp
+                using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn))
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.bookingCode);
                     cmd.Parameters.AddWithValue("@inShipCode", commonOrder.bookingShipCode);
                     cmd.Parameters.AddWithValue("@inStatus", (int)status);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
                     cmd.Parameters.AddWithValue("@inUpdateTime", update_time);
-
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
 
                 // Kiểm tra xem cần thay đổi tồn kho không?
@@ -1099,7 +1031,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
                     (status == ECommerceOrderStatus.RETURNED))
                 {
-                    resultState = UpdateOutputAndProductTableFromOrder_BookingConnectOut(
+                    resultState = await UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
                         conn, commonOrder, status, eCommerceType);
                     resultState.myAnything = 1; // Có thay đổi tồn kho.
                 }
@@ -1122,42 +1054,39 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // HOàn lại số lượng về kho khi đơn được matched với booking, tbOutput sẽ cập nhật số lượng về 0
-        public MySqlResultState ReturnQuantityOfOrderMatchedBooking(
+        public async Task<MySqlResultState> ReturnQuantityOfOrderMatchedBookingAsync(
             CommonOrder commonOrder,
             EECommerceType eCommerceType,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("ReturnQuantityOfOrderMatchedBooking call");
+            MyLogger.GetInstance().Info("ReturnQuantityOfOrderMatchedBookingAsync call");
             MySqlResultState resultState = new MySqlResultState();
             try
             {
-
                 // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode
+                WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn))
                 {
-                    MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode 
-                WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn);
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
 
                 // Cập nhật quantity về 0
+                using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Quantity` = 0
+                WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND BookingCode IS NULL; ", conn))
                 {
-                    MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Quantity` = 0 
-                WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND BookingCode IS NULL; ", conn);
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
 
                 // Hoàn lại số lượng trong kho, trạng thái
+                using (MySqlCommand cmd = new MySqlCommand("st_tbOutput_ReturnQuantityOrderMatchedBooking", conn))
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_ReturnQuantityOrderMatchedBooking", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
@@ -1179,11 +1108,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             productId = commonOrder.listMapping[i][j].product.id;
                             cmd.Parameters[2].Value = productId;
                             cmd.Parameters[3].Value = quantity;
-                            cmd.ExecuteNonQuery();
+                            await cmd.ExecuteNonQueryAsync();
                         }
                     }
                 }
-
             }
             catch (Exception ex)
             {
@@ -1193,63 +1121,28 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        ///// <summary>
-        ///// Trừ số lượng sản phẩm trong kho khi đóng đơn
-        ///// </summary>
-        ///// <param name="commonOrder"></param>
-        ///// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho</param>
-        //public MySqlResultState EnoughProductInOrder(CommonOrder commonOrder,
-        //    ECommerceOrderStatus status,
-        //    EECommerceType eCommerceType)
-        //{
-        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
-        //}
-
-        ///// Cộng số lượng sản phẩm trong kho khi hoàn đơn
-        //public MySqlResultState ReturnedOrder (CommonOrder commonOrder,
-        //    ECommerceOrderStatus status,
-        //    EECommerceType eCommerceType)
-        //{
-        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
-        //}
-
-        //// Trừ số lượng sản phẩm trong kho khi giữ chỗ
-        //public MySqlResultState BookedOrder(CommonOrder commonOrder,
-        //    ECommerceOrderStatus status,
-        //    EECommerceType eCommerceType)
-        //{
-        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
-        //}
-
-        //// Cộng số lượng sản phẩm trong kho khi hủy giữ chỗ
-        //public MySqlResultState UnBookedOrder(CommonOrder commonOrder,
-        //    ECommerceOrderStatus status,
-        //    EECommerceType eCommerceType)
-        //{
-        //    return UpdateQuantityOfProductInOrder(commonOrder, status, eCommerceType);
-        //}
-
-        public MySqlResultState TikiSaveAccessToken(TikiAuthorization accessToken,
+        public async Task<MySqlResultState> TikiSaveAccessTokenAsync(TikiAuthorization accessToken,
             MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
             try
             {
-                MySqlCommand cmd = new MySqlCommand(
+                using (MySqlCommand cmd = new MySqlCommand(
                     "UPDATE `tbTikiAuthen` SET `AccessToken`=@AccessToken" +
                     ",`ExpiresIn`=@ExpiresIn" +
                     ",`TokenType`=@TokenType" +
                     ",`Scope`=@Scope" +
                     ",`RefreshAccessTokenTime`=@RefreshAccessTokenTime" +
-                    " WHERE `Id` = 1;", conn);
-                cmd.Parameters.AddWithValue("@AccessToken", accessToken.access_token);
-                cmd.Parameters.AddWithValue("@ExpiresIn", accessToken.expires_in);
-                cmd.Parameters.AddWithValue("@TokenType", accessToken.token_type);
-                cmd.Parameters.AddWithValue("@Scope", accessToken.scope);
-                cmd.Parameters.AddWithValue("@RefreshAccessTokenTime", DateTime.Now);
-                cmd.CommandType = CommandType.Text;
-                cmd.ExecuteNonQuery();
-
+                    " WHERE `Id` = 1;", conn))
+                {
+                    cmd.Parameters.AddWithValue("@AccessToken", accessToken.access_token);
+                    cmd.Parameters.AddWithValue("@ExpiresIn", accessToken.expires_in);
+                    cmd.Parameters.AddWithValue("@TokenType", accessToken.token_type);
+                    cmd.Parameters.AddWithValue("@Scope", accessToken.scope);
+                    cmd.Parameters.AddWithValue("@RefreshAccessTokenTime", DateTime.Now);
+                    cmd.CommandType = CommandType.Text;
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -1258,20 +1151,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public List<int> GetForSaveImageSourceConnectOut(MySqlConnection conn)
+        public async Task<List<int>> GetForSaveImageSourceConnectOutAsync(MySqlConnection conn)
         {
             List<int> lsItemId = new List<int>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_For_Save_Image_Source", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_For_Save_Image_Source", conn))
                 {
-                    int tikiIdIndex = rdr.GetOrdinal("TikiId");
-                    while (rdr.Read())
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        lsItemId.Add(rdr.GetInt32(tikiIdIndex));
+                        int tikiIdIndex = rdr.GetOrdinal("TikiId");
+                        while (await rdr.ReadAsync())
+                        {
+                            lsItemId.Add(rdr.GetInt32(tikiIdIndex));
+                        }
                     }
                 }
             }
@@ -1282,21 +1177,23 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lsItemId;
         }
 
-        public void UpdateImageSourceTotbTikiItemConnectOut(List<CommonItem> lsCommonItem, MySqlConnection conn)
+        public async Task UpdateImageSourceTotbTikiItemConnectOutAsync(List<CommonItem> lsCommonItem, MySqlConnection conn)
         {
             try
             {
-                // Cập nhật source của item
-                MySqlCommand cmdItem = new MySqlCommand("UPDATE tbTikiItem SET Image = @inUrl WHERE TikiId = @inTikiId", conn);
-                cmdItem.CommandType = CommandType.Text;
-                cmdItem.Parameters.AddWithValue("@inUrl", "");
-                cmdItem.Parameters.AddWithValue("@inTikiId", 0);
-
-                foreach (var item in lsCommonItem)
+                using (MySqlCommand cmdItem = new MySqlCommand(
+                    "UPDATE tbTikiItem SET Image = @inUrl WHERE TikiId = @inTikiId", conn))
                 {
-                    cmdItem.Parameters[0].Value = item.imageSrc;
-                    cmdItem.Parameters[1].Value = (int)item.itemId;
-                    cmdItem.ExecuteNonQuery();
+                    cmdItem.CommandType = CommandType.Text;
+                    cmdItem.Parameters.AddWithValue("@inUrl", "");
+                    cmdItem.Parameters.AddWithValue("@inTikiId", 0);
+
+                    foreach (var item in lsCommonItem)
+                    {
+                        cmdItem.Parameters[0].Value = item.imageSrc;
+                        cmdItem.Parameters[1].Value = (int)item.itemId;
+                        await cmdItem.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -1306,20 +1203,23 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy ack_id của pull event cuối cùng
-        public string GetAckIdOfLastestPullConnectOut(MySqlConnection conn)
+        public async Task<string> GetAckIdOfLastestPullConnectOutAsync(MySqlConnection conn)
         {
             string ack_id = string.Empty;
-            MySqlCommand cmd = new MySqlCommand("SELECT `Ack_Id` FROM webplaywithme.tbtikiqueue WHERE `Id` = 1; ", conn);
-            cmd.CommandType = CommandType.Text;
-            MySqlDataReader rdr;
             try
             {
-                rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand(
+                    "SELECT `Ack_Id` FROM webplaywithme.tbtikiqueue WHERE `Id` = 1; ", conn))
                 {
-                    ack_id = MyMySql.GetString(rdr, "Ack_Id");
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            ack_id = MyMySql.GetString(rdr, "Ack_Id");
+                        }
+                    }
                 }
-                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -1330,14 +1230,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Cập nhật ack_id mới nhất của pull event
-        public void UpdateAckIdOfLastestPullConnectOut(string ack_id, MySqlConnection conn)
+        public async Task UpdateAckIdOfLastestPullConnectOutAsync(string ack_id, MySqlConnection conn)
         {
-            MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbtikiqueue SET `Ack_Id` = @inAck_Id  WHERE `Id` = 1 ", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inAck_Id", ack_id);
             try
             {
-                cmd.ExecuteNonQuery();
+                using (MySqlCommand cmd = new MySqlCommand(
+                    "UPDATE webplaywithme.tbtikiqueue SET `Ack_Id` = @inAck_Id  WHERE `Id` = 1 ", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inAck_Id", ack_id);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -1347,7 +1250,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Lưu thông tin sản phẩm trên san sàn db, item id, model id của đơn hàng
         // Có check tồn tại
-        public void InsertTbItemOfEcommerceOder(CommonOrder commonOrder,
+        public async Task InsertTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
             EECommerceType type,
             MySqlConnection conn)
         {
@@ -1374,11 +1277,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                         cmd.Parameters[4].Value = commonOrder.listQuantity[i];
                         // Thực thi Stored Procedure
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MyLogger.GetInstance().Info(ex.ToString());
             }
@@ -1386,11 +1289,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Khi nhận được thông báo có đơn hỏa tốc, thêm dữ liệu vào bảng này. Khi xác nhận đã biết có đơn hỏa tốc
         // (từ mini app khởi động cùng window, khi được đóng,...) sẽ xóa khỏi bảng này
-        public void InsertTbExpressOrder(string code,
+        public async Task InsertTbExpressOrderAsync(string code,
             EECommerceType type,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("Call InsertTbExpressOrder, code: " + code);
+            MyLogger.GetInstance().Info("Call InsertTbExpressOrderAsync, code: " + code);
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Insert", conn))
@@ -1400,7 +1303,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Thêm các tham số
                     cmd.Parameters.AddWithValue("@p_Code", code);
                     cmd.Parameters.AddWithValue("@p_ECommerce", (int)type);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -1409,11 +1312,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void UpdateStatusToReadyToShipTbExpressOrder(string code,
+        public async Task UpdateStatusToReadyToShipTbExpressOrderAsync(string code,
             EECommerceType type,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("Call UpdateStatusToReadyToShipTbExpressOrder");
+            MyLogger.GetInstance().Info("Call UpdateStatusToReadyToShipTbExpressOrderAsync");
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Update_Status_To_Ready_To_Ship", conn))
@@ -1423,7 +1326,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Thêm các tham số
                     cmd.Parameters.AddWithValue("@p_Code", code);
                     cmd.Parameters.AddWithValue("@p_ECommerce", (int)type);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -1432,11 +1335,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void UpdateStatusToKnownTbExpressOrder(string code,
+        public async Task UpdateStatusToKnownTbExpressOrderAsync(string code,
             EECommerceType type,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("Call UpdateStatusToKnownTbExpressOrder");
+            MyLogger.GetInstance().Info("Call UpdateStatusToKnownTbExpressOrderAsync");
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbExpressOrder_Update_Status_To_Known", conn))
@@ -1446,7 +1349,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Thêm các tham số
                     cmd.Parameters.AddWithValue("@p_Code", code);
                     cmd.Parameters.AddWithValue("@p_ECommerce", (int)type);
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -1455,7 +1358,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public void UpdateCancelledStatusTbItemOfEcommerceOder(CommonOrder commonOrder,
+        public async Task UpdateCancelledStatusTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
              EECommerceType type,
             MySqlConnection conn)
         {
@@ -1480,7 +1383,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             cmd.Parameters[3].Value = commonOrder.listModelId[i];
 
                         // Thực thi Stored Procedure
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
@@ -1492,7 +1395,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Lấy danh sách xuất hàng theo đơn hàng của một sản phẩm
         // Dữ liệu được sắp xếp từ mới đến cũ theo thời gian
-        public List<TbEcommerceOrder> GetOrderStatistics(
+        public async Task<List<TbEcommerceOrder>> GetOrderStatisticsAsync(
             int eCommmerce, // -1 nếu lấy tất cả các sàn, web
             int intervalDay,
             MySqlConnection conn)
@@ -1505,7 +1408,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 command.Parameters.AddWithValue("@inECommmerce", eCommmerce);
                 command.Parameters.AddWithValue("@inIntervalDay", intervalDay);
 
-                using (var rdr = command.ExecuteReader())
+                using (MySqlDataReader rdr = (MySqlDataReader)await command.ExecuteReaderAsync())
                 {
                     // Lấy chỉ số cột một lần trước khi vào vòng lặp
                     //int idIndex = rdr.GetOrdinal("Id");
@@ -1517,13 +1420,13 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     int timeIndex = rdr.GetOrdinal("Time");
                     int eCommerceOrderIndex = rdr.GetOrdinal("ECommerceOrder");
 
-                    while (rdr.Read())
+                    while (await rdr.ReadAsync())
                     {
                         var output = new TbEcommerceOrder
                         {
                             //id = rdr.GetInt32(idIndex),
                             code = rdr.GetString(codeIndex),
-                            shipCode = rdr.IsDBNull(shipcodeIndex) ? string.Empty: rdr.GetString(shipcodeIndex),
+                            shipCode = rdr.IsDBNull(shipcodeIndex) ? string.Empty : rdr.GetString(shipcodeIndex),
                             eCommerce = rdr.GetInt32(eCommmerceIndex),
                             //productId = rdr.GetInt32(productIdIndex),
                             //quantity = rdr.GetInt32(quantityIndex),
@@ -1541,11 +1444,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Khi nhận được thông báo có đơn hỏa tốc, thêm dữ liệu vào bảng này. Khi xác nhận đã biết có đơn hỏa tốc
         // (từ mini app khởi động cùng window, khi được đóng,...) sẽ xóa khỏi bảng này
-        public void InsertTbTikiCategory(
+        public async Task InsertTbTikiCategoryAsync(
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls,
             MySqlConnection conn)
         {
-            MyLogger.GetInstance().Info("Call InsertTbTikiCategory");
+            MyLogger.GetInstance().Info("Call InsertTbTikiCategoryAsync");
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbTikiCategory_Insert", conn))
@@ -1559,7 +1462,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     {
                         cmd.Parameters[0].Value = category.name;
                         cmd.Parameters[1].Value = category.id;
-                        cmd.ExecuteNonQuery();
+                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }
@@ -1569,21 +1472,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public List<int> GetCatetoryIdList(MySqlConnection conn)
+        public async Task<List<int>> GetCatetoryIdListAsync(MySqlConnection conn)
         {
             List<int> CatetoryIdList = new List<int>();
             try
             {
-                using (MySqlCommand cmd = new MySqlCommand("SELECT TikiCategoryId FROM webplaywithme.tb_tiki_category;", conn))
+                using (MySqlCommand cmd = new MySqlCommand(
+                    "SELECT TikiCategoryId FROM webplaywithme.tb_tiki_category;", conn))
                 {
                     cmd.CommandType = System.Data.CommandType.Text;
 
-                    using (var reader = cmd.ExecuteReader())
+                    using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
                         // Sử dụng GetOrdinal để lấy index của cột trước khi đọc
                         int TikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
 
-                        while (reader.Read())
+                        while (await reader.ReadAsync())
                         {
                             CatetoryIdList.Add(reader.GetInt32(TikiCategoryIdOrdinal));
                         }
@@ -1598,8 +1502,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return CatetoryIdList;
         }
 
-        public List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> 
-            GetTikiAttributesOfCategory(int categoryId, MySqlConnection conn)
+        public async Task<List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>>
+            GetTikiAttributesOfCategoryAsync(int categoryId, MySqlConnection conn)
         {
             var attributes = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>();
             var query = "SELECT * FROM tb_tiki_attribute_of_category WHERE CategoryId = @in_CategoryId";
@@ -1607,7 +1511,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 command.CommandType = CommandType.Text;
                 command.Parameters.AddWithValue("@in_CategoryId", categoryId);
-                using (var reader = command.ExecuteReader())
+                using (MySqlDataReader reader = (MySqlDataReader)await command.ExecuteReaderAsync())
                 {
                     // Sử dụng GetOrdinal để lấy index của cột trước khi đọc
                     int codeOrdinal = reader.GetOrdinal("Code");
@@ -1622,7 +1526,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     int isRequiredOrdinal = reader.GetOrdinal("IsRequired");
                     int categoryIdOrdinal = reader.GetOrdinal("CategoryId");
 
-                    while (reader.Read())
+                    while (await reader.ReadAsync())
                     {
                         var attribute = new MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute
                         {
@@ -1646,10 +1550,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return attributes;
         }
 
-        public void InsertTikiAttributesOfCategory(
+        public async Task InsertTikiAttributesOfCategoryAsync(
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes,
-            MySqlConnection conn
-            )
+            MySqlConnection conn)
         {
             using (var command = new MySqlCommand("st_tbTikiAttributeOfCategory_Insert", conn))
             {
@@ -1684,12 +1587,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     command.Parameters["@p_CategoryId"].Value = attribute.category_id;
 
                     // Thực thi lệnh
-                    command.ExecuteNonQuery();
+                    await command.ExecuteNonQueryAsync();
                 }
             }
         }
 
-        public void TikiInsert_tbTikiTrackCreateProduct(string track_id,
+        public async Task TikiInsert_tbTikiTrackCreateProductAsync(string track_id,
             string state,
             string reason,
             string request_id,
@@ -1698,14 +1601,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiTrackCreateProduct_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@intrack_id", track_id);
-                cmd.Parameters.AddWithValue("@instate", state);
-                cmd.Parameters.AddWithValue("@inreason", reason);
-                cmd.Parameters.AddWithValue("@inrequest_id", request_id);
-                cmd.Parameters.AddWithValue("@inName", name);
-                cmd.ExecuteNonQuery();
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiTrackCreateProduct_Insert", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@intrack_id", track_id);
+                    cmd.Parameters.AddWithValue("@instate", state);
+                    cmd.Parameters.AddWithValue("@inreason", reason);
+                    cmd.Parameters.AddWithValue("@inrequest_id", request_id);
+                    cmd.Parameters.AddWithValue("@inName", name);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex)
             {
@@ -1715,7 +1620,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Kết nối đóng mở bên ngoài
         // Lấy được Tiki Item mapping với sản phẩm trong kho thuộc 1 combo
-        public static async Task<List<CommonItem>> TikiGetListMappingOfCombo(int comboId,
+        public static async Task<List<CommonItem>> TikiGetListMappingOfComboAsync(int comboId,
             MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
@@ -1803,21 +1708,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Kết nối đóng mở bên ngoài
         // Từ bảng tbNeedUpdateQuantity lấy được danh sách sản phẩm Tiki có thay đổi số lượng
         // cần cập nhật
-        public static List<CommonItem> TikiGetListNeedUpdateQuantityConnectOut(MySqlConnection conn)
+        public static async Task<List<CommonItem>> TikiGetListNeedUpdateQuantityConnectOutAsync(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Need_Update_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Need_Update_Quantity", conn))
                 {
-                    TikiReadCommonItem(listCI, rdr);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            TikiReadCommonItem(listCI, rdr);
+                        }
+                    }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -1828,21 +1734,22 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Kết nối đóng mở bên ngoài
         // Lấy tất cả danh sách item của sản phẩm đang bật bán bình thường để cập nhật số lượng
-        public static List<CommonItem> TikiGetListAllUpdateQuantityConnectOut(MySqlConnection conn)
+        public static async Task<List<CommonItem>> TikiGetListAllUpdateQuantityConnectOutAsync(MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_Update_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_All_Update_Quantity", conn))
                 {
-                    TikiReadCommonItem(listCI, rdr);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            TikiReadCommonItem(listCI, rdr);
+                        }
+                    }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {
@@ -1853,22 +1760,23 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Kết nối đóng mở bên ngoài
         // Lấy được Tiki Item mapping với sản phẩm trong kho
-        public static List<CommonItem> TikiGetListMappingOfProduct(int productId, MySqlConnection conn)
+        public static async Task<List<CommonItem>> TikiGetListMappingOfProductAsync(int productId, MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_From_Mapping_Product_Id", conn);
-                cmd.Parameters.AddWithValue("@inProductId", productId);
-                cmd.CommandType = CommandType.StoredProcedure;
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_From_Mapping_Product_Id", conn))
                 {
-                    TikiReadCommonItem(listCI, rdr);
+                    cmd.Parameters.AddWithValue("@inProductId", productId);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            TikiReadCommonItem(listCI, rdr);
+                        }
+                    }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {

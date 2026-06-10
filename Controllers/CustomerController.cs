@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -24,9 +25,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // GET: Customer
-        public ActionResult CreateCustomer()
+        public async Task<ActionResult> CreateCustomer()
         {
-            if (AuthentCustomer() == null)
+            if ((await AuthentCustomerAsync()) == null)
             {
                 ViewData["title"] = "Tạo tài khoản khách hàng";
                 return View();
@@ -36,15 +37,15 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string CreateCustomer_Add(string userName, string passWord)
+        public async Task<string> CreateCustomer_Add(string userName, string passWord)
         {
-            MySqlResultState result = sqler.AddNewCustomer(userName, passWord);
+            MySqlResultState result = await sqler.AddNewCustomerAsync(userName, passWord);
             return JsonConvert.SerializeObject(result);
         }
 
-        public ActionResult Login()
+        public async Task<ActionResult> Login()
         {
-            if (AuthentCustomer() == null)
+            if ((await AuthentCustomerAsync()) == null)
             {
                 ViewData["title"] = "Đăng nhập tài khoản khách hàng";
                 return View();
@@ -54,12 +55,12 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string Logout()
+        public async Task<string> Logout()
         {
             CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
             if (!string.IsNullOrEmpty(cookieResult.cookieValue))
             {
-                sqler.CustomerLogout(cookieResult.cookieValue);
+                await sqler.CustomerLogoutAsync(cookieResult.cookieValue);
                 Cookie.DeleteUserIdCookie(HttpContext);
             }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
@@ -75,22 +76,19 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="customerInforCookie"></param>
         /// <returns></returns>
         [HttpPost]
-        public string Login_Login(string userName, string passWord/*, string customerInforCookie*/)
+        public async Task<string> Login_Login(string userName, string passWord/*, string customerInforCookie*/)
         {
-            MySqlResultState result = sqler.LoginCustomer(userName, passWord);
+            MySqlResultState result = await sqler.LoginCustomerAsync(userName, passWord);
 
             do
             {
-                if (result.State != EMySqlResultState.OK)
-                {
-                    break;
-                }
+                if (result.State != EMySqlResultState.OK) break;
 
                 // Set cookie cho tài khoản
                 CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
-                // Lấy thông tin cutomer
-                Customer customer = sqler.GetCustomerFromUserName(userName);
+                // Lấy thông tin customer
+                Customer customer = await sqler.GetCustomerFromUserNameAsync(userName);
                 if (customer == null || customer.id == -1)
                 {
                     result.State = EMySqlResultState.ERROR;
@@ -99,94 +97,36 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 // Lưu cookie vào bảng tbcookie
-                MySqlResultState resultInsert = sqler.CookieCustomerLogin(cookieResult.cookieValue, customer.id);
+                MySqlResultState resultInsert = await sqler.CookieCustomerLoginAsync(cookieResult.cookieValue, customer.id);
                 if (resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);
                     result = resultInsert;
                     break;
                 }
-                // Đăng nhập thành công, không xóa cookie của khách vãng lai
-                //// Đang nhập thành công, lưu thông tin cookie khách vãng lai như: cart, customer information vào db
-                //// Lưu cart cookie
                 //List<Cart> lsCart = Cookie.GetListCartCookie(HttpContext);
-                //sqler.AddCartLogin(customer.id, lsCart);
-                //// Xóa cart cookie bên javascript
-
-                //// Lưu customer information
+                //await sqler.AddCartLoginAsync(customer.id, lsCart);
                 //List<Address> lsAddress = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
                 //sqler.AddCustomerInforAddress(customer.id, lsAddress);
-                //// Xóa customer info cookie bên javascript
             }
             while (false);
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string UpdateAddress(string address)
+        public async Task<string> UpdateAddress(string address)
         {
             MySqlResultState result = new MySqlResultState();
 
-            Customer cus = AuthentCustomer();
-            if (cus != null)
-            {
-                Address add = JsonConvert.DeserializeObject<Address>(address);
-                if(add.defaultAdd == 1)
-                {
-                    // Xóa default cũ nếu có
-                    sqler.DeleteDefaultAddress(cus.id);
-                }
-                result = sqler.UpdateAddress(add);
-            }
-            else
-            {
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-                result.Message = "Không lấy được thông tin khách hàng";
-            }
-
-            return JsonConvert.SerializeObject(result);
-        }
-
-        [HttpPost]
-        public string DeleteAddress(string address)
-        {
-            MySqlResultState result = new MySqlResultState();
-
-            Customer cus = AuthentCustomer();
-            if (cus != null)
-            {
-                Address add = JsonConvert.DeserializeObject<Address>(address);
-                // Chỉ xóa địa chỉ không phải mặc định
-                if (add.defaultAdd != 1)
-                {
-                    result = sqler.DeleteAddress(add);
-                }
-
-            }
-            else
-            {
-                result.State = EMySqlResultState.AUTHEN_FAIL;
-                result.Message = "Không lấy được thông tin khách hàng";
-            }
-
-            return JsonConvert.SerializeObject(result);
-        }
-
-        [HttpPost]
-        public string InsertAddress(string address)
-        {
-            MySqlResultState result = new MySqlResultState();
-
-            Customer cus = AuthentCustomer();
+            Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
                 Address add = JsonConvert.DeserializeObject<Address>(address);
                 if (add.defaultAdd == 1)
                 {
-                    // Xóa default cũ nếu có
-                    sqler.DeleteDefaultAddress(cus.id);
+                    await sqler.DeleteDefaultAddressAsync(cus.id);
                 }
-                result = sqler.InsertAddress(cus.id, add);
+                result = await sqler.UpdateAddressAsync(add);
             }
             else
             {
@@ -198,13 +138,60 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string UpdateInfor(string email, string sdt, string fullName,
+        public async Task<string> DeleteAddress(string address)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = await AuthentCustomerAsync();
+            if (cus != null)
+            {
+                Address add = JsonConvert.DeserializeObject<Address>(address);
+                if (add.defaultAdd != 1)
+                {
+                    result = await sqler.DeleteAddressAsync(add);
+                }
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> InsertAddress(string address)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            Customer cus = await AuthentCustomerAsync();
+            if (cus != null)
+            {
+                Address add = JsonConvert.DeserializeObject<Address>(address);
+                if (add.defaultAdd == 1)
+                {
+                    await sqler.DeleteDefaultAddressAsync(cus.id);
+                }
+                result = await sqler.InsertAddressAsync(cus.id, add);
+            }
+            else
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Không lấy được thông tin khách hàng";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> UpdateInfor(string email, string sdt, string fullName,
             int day, int month, int year,
             int sex)
         {
             MySqlResultState result = new MySqlResultState();
 
-            Customer cus = AuthentCustomer();
+            Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
                 cus.email = email;
@@ -213,7 +200,7 @@ namespace MVCPlayWithMe.Controllers
                 cus.birthday = new DateTime(year, month, day);
                 cus.sex = sex;
 
-                result = sqler.UpdateInfor(cus);
+                result = await sqler.UpdateInforAsync(cus);
             }
             else
             {
@@ -225,15 +212,15 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string ChangePassword(string oldPassWord,
+        public async Task<string> ChangePassword(string oldPassWord,
             string newPassWord, string renewPassWord)
         {
             MySqlResultState result = new MySqlResultState();
 
-            Customer cus = AuthentCustomer();
+            Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
-                result = sqler.ChangePasswordCustomer(cus.id, oldPassWord, newPassWord, renewPassWord);
+                result = await sqler.ChangePasswordCustomerAsync(cus.id, oldPassWord, newPassWord, renewPassWord);
             }
             else
             {
@@ -245,10 +232,10 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string CheckUidCookieValid()
+        public async Task<string> CheckUidCookieValid()
         {
             MySqlResultState result = new MySqlResultState();
-            if (AuthentCustomer() == null)
+            if ((await AuthentCustomerAsync()) == null)
             {
                 result.State = EMySqlResultState.AUTHEN_FAIL;
                 result.Message = "Xác thực khách hàng không thành công.";
@@ -257,19 +244,18 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string GetListAddress()
+        public async Task<string> GetListAddress()
         {
             List<Address> lsAddress = new List<Address>();
-            Customer cus = AuthentCustomer();
+            Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
-                lsAddress = sqler.GetListAddress(cus.id);
+                lsAddress = await sqler.GetListAddressAsync(cus.id);
             }
             else
             {
-                lsAddress = null; // Không lấy được customer trả về null
+                lsAddress = null;
             }
-            // Authent thất bại, trả về null
             return JsonConvert.SerializeObject(lsAddress);
         }
 
@@ -282,9 +268,9 @@ namespace MVCPlayWithMe.Controllers
         //}
 
         [HttpPost]
-        public string GetCartCount()
+        public async Task<string> GetCartCount()
         {
-            Customer cus = AuthentCustomer();
+            Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
             if (cus == null)
             {
@@ -292,28 +278,25 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = ordersqler.GetCartCount(cus.id);
+                result = await ordersqler.GetCartCountAsync(cus.id);
             }
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string GetCustomer()
+        public async Task<string> GetCustomer()
         {
-            Customer cus = AuthentCustomer();
-            if (cus == null)
+            Customer cus = await AuthentCustomerAsync();
+            if (cus != null)
             {
-            }
-            else
-            {
-                cus = sqler.GetCustomer(cus.id);
+                cus = await sqler.GetCustomerAsync(cus.id);
             }
             return JsonConvert.SerializeObject(cus);
         }
 
-        public ActionResult AccountInfor()
+        public async Task<ActionResult> AccountInfor()
         {
-            if (AuthentCustomer() == null)
+            if ((await AuthentCustomerAsync()) == null)
                 return View("~/Views/Customer/Login.cshtml");
 
             ViewData["title"] = "Thông tin tài khoản khách hàng";
@@ -342,7 +325,7 @@ namespace MVCPlayWithMe.Controllers
         //[HttpPost]
         //public string SearchOrderCount(int statusOrder)
         //{
-        //    Customer cus = AuthentCustomer();
+        //    Customer cus = await AuthentCustomerAsync();
         //    MySqlResultState result = new MySqlResultState();
         //    if (cus == null)
         //    {
@@ -359,7 +342,7 @@ namespace MVCPlayWithMe.Controllers
         //[HttpGet]
         //public string ChangePage(int statusOrder, int start, int offset)
         //{
-        //    Customer cus = AuthentCustomer();
+        //    Customer cus = await AuthentCustomerAsync();
 
         //    MySqlResultState result = new MySqlResultState();
         //    if (cus == null)
@@ -377,28 +360,25 @@ namespace MVCPlayWithMe.Controllers
 
         // Lấy tất cả đơn của khách đăng nhập hoặc vãng lai
         [HttpPost]
-        public string GetAllOrder()
+        public async Task<string> GetAllOrder()
         {
-            Customer cus = AuthentCustomer();
+            Customer cus = await AuthentCustomerAsync();
 
             MySqlResultState result = new MySqlResultState();
             if (cus == null)
             {
-                // lấy order từ cookie
                 CookieResultState cookie = Cookie.GetOrderListCookie(HttpContext);
                 List<int> lsId = new List<int>();
-
                 string[] ids = cookie.cookieValue.Split('#');
-
                 foreach (var id in ids)
                 {
                     lsId.Add(Common.ConvertStringToInt32(id));
                 }
-                result = ordersqler.GetAllOrderFromListId(lsId);
+                result = await ordersqler.GetAllOrderFromListIdAsync(lsId);
             }
             else
             {
-                result = ordersqler.GetAllOrder(cus.id);
+                result = await ordersqler.GetAllOrderAsync(cus.id);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -406,22 +386,17 @@ namespace MVCPlayWithMe.Controllers
 
         // Lấy 1 đơn
         [HttpPost]
-        public string GetOrderFromId(int id)
+        public async Task<string> GetOrderFromId(int id)
         {
-            MySqlResultState result = new MySqlResultState();
-            result = ordersqler.GetOrderFromId(id);
-
+            MySqlResultState result = await ordersqler.GetOrderFromIdAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
         // Tìm kiếm đơn theo tên hoặc 4 số cuối SDT người nhận đối với khách vãng lai
         [HttpPost]
-        public string SearchOrderForAnonymous(string sdtNameForSearch)
+        public async Task<string> SearchOrderForAnonymous(string sdtNameForSearch)
         {
-            MySqlResultState result = new MySqlResultState();
-
-            result = ordersqler.SearchOrderForAnonymous(sdtNameForSearch);
-
+            MySqlResultState result = await ordersqler.SearchOrderForAnonymousAsync(sdtNameForSearch);
             return JsonConvert.SerializeObject(result);
         }
     }

@@ -12,6 +12,7 @@ using MySql.Data.MySqlClient;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Deal;
 using MVCPlayWithMe.Controllers.OpenPlatform;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
 {
@@ -20,11 +21,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
     {
         // Tạo chương trình giảm giá
         // Nếu deal được tạo đè nên deal đang chạy, deal đang chạy sẽ bị CLOSE
-        static public DealCreatingResponse CreateDeal(CreatingRequestBody body)
+        static public async Task<DealCreatingResponse> CreateDeal(CreatingRequestBody body)
         {
             DealCreatingResponse dealCreatingResponse = null;
             string http = TikiConstValues.cstrCreateDeal;
-            IRestResponse response = CommonTikiAPI.PostExcuteRequest(http, body.GetJson());
+            IRestResponse response = await CommonTikiAPI.PostExcuteRequest(http, body.GetJson());
             if (response.StatusCode == System.Net.HttpStatusCode.Created ||
                 response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
@@ -73,11 +74,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         }
 
         // Kết thúc chương trình giảm giá
-        static public List<DealOffResponseObject> OffDeal(List<int> listDealId)
+        static public async Task<List<DealOffResponseObject>> OffDeal(List<int> listDealId)
         {
             List<DealOffResponseObject> lsDealOff = null;
             string http = TikiConstValues.cstrOffDeal;
-            IRestResponse response = CommonTikiAPI.PostExcuteRequest(http, JsonConvert.SerializeObject(listDealId));
+            IRestResponse response = await CommonTikiAPI.PostExcuteRequest(http, JsonConvert.SerializeObject(listDealId));
             //if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 string json = response.Content;
@@ -135,7 +136,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         }
 
         // maxPage == 0: lấy tất cả dữ liệu, ngược lại lấy đến khi currentPage == maxPage
-        static public List<DealCreatedResponseDetail> SearchDealCore(
+        static public async Task<List<DealCreatedResponseDetail>> SearchDealCore(
             List<DevNameValuePair> listValuePair,
             int maxPage)
         {
@@ -146,7 +147,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
             {
                 listValuePair[0].value = currentPage.ToString();
                 string http = TikiConstValues.cstrSearchDeal + DevNameValuePair.GetQueryString(listValuePair);
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+                IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     break;
@@ -202,7 +203,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         }
 
         // Từ sku lấy được các deal đã tạo cho sku
-        static public List<DealCreatedResponseDetail> SearchDealOfOneSku(string sku)
+        static public async Task<List<DealCreatedResponseDetail>> SearchDealOfOneSku(string sku)
         {
             List<DealCreatedResponseDetail> ls = new List<DealCreatedResponseDetail>();
 
@@ -235,7 +236,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
 
             try
             {
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+                IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
                     string json = response.Content;
@@ -279,7 +280,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         // Từ sku lấy được các deal đã tạo cho sku
         // is_active = -1: lấy tất cả trạng thái
         // values: INACTIVE = 0 | ACTIVE = 1 | RUNNING = 2 | EXPIRED = 3 | HOT_SALE = 4 | CLOSED = 5 | PAUSED = 6
-        static public List<DealCreatedResponseDetail> SearchDealOfSkuList(
+        static public async Task<List<DealCreatedResponseDetail>> SearchDealOfSkuList(
             List<string> skuList,
             int is_active
             )
@@ -328,7 +329,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
                 {
                     string skus = string.Join(",", skusListTemp);
                     listValuePair[5].value = skus;
-                    ls.AddRange(SearchDealCore(listValuePair, 0));
+                    ls.AddRange(await SearchDealCore(listValuePair, 0));
                     skusListTemp.Clear();
                 }
                 skusListTemp.Add(skuList[i]);
@@ -338,7 +339,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
             {
                 string skus = string.Join(",", skusListTemp);
                 listValuePair[5].value = skus;
-                ls.AddRange(SearchDealCore(listValuePair, 0));
+                ls.AddRange(await SearchDealCore(listValuePair, 0));
                 skusListTemp.Clear();
             }
             //// Lọc lại kết quả vì: khi chạy khoảng 700 sku, is_active = 2, nhưng kết quả trả về có 1 is_active = 5
@@ -359,18 +360,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount
         // Hàm được chạy tự động trong khoảng 3h->4h sáng.
         // Check DB xem sku nào đang bật bán, không tham gia chương trình giảm giá nào, tồn kho khác 0.
         // Tạo chương trình giảm giá.
-        static public void CheckAndCreateDeal_Background( Boolean isUpdateStatusFromTiki)
+        static public async Task CheckAndCreateDeal_BackgroundAsync( Boolean isUpdateStatusFromTiki)
         {
             MyLogger.GetInstance().Info("CheckAndCreateDeal_Background CALL");
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     List<SimpleTikiProduct> simpleTikiProducts =
-                        TikiDealDiscountController.GetItemsNoDealDiscountRunning_Core(conn, isUpdateStatusFromTiki);
+                        await TikiDealDiscountController.GetItemsNoDealDiscountRunning_CoreAsync(conn, isUpdateStatusFromTiki);
 
-                    TikiDealDiscountController.CreateDealForAllCore(simpleTikiProducts, conn);
+                    await TikiDealDiscountController.CreateDealForAllCoreAsync(simpleTikiProducts, conn);
                 }
             }
             catch (Exception ex)

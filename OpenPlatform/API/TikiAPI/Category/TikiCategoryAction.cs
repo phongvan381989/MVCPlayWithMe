@@ -5,6 +5,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category
@@ -12,7 +13,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category
     public class TikiCategoryAction
     {
         // Từ id của cha, lấy được những category con
-        public static List<TikiCategory> GetChildrenCategory(int parrentId)
+        public static async Task<List<TikiCategory>> GetChildrenCategory(int parrentId)
         {
             TikiCategoryData responseData = new TikiCategoryData();
             //List<TikiCategory> ls = new List<TikiCategory>();
@@ -20,7 +21,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category
             // https://api.tiki.vn/integration/v2/categories?parent=320
             string http = TikiConstValues.cstrCategory + "?parent=" + parrentId.ToString();
 
-                IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+                IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 string json = response.Content;
@@ -48,14 +49,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category
         }
 
         // Từ id của category lấy được danh sách những attribute có thể
-        public static List<TikiAttribute> GetAttributeOfCategory(int categoryId)
+        public static async Task< List<TikiAttribute>> GetAttributeOfCategory(int categoryId)
         {
             TikiAttributeData responseData = new TikiAttributeData();
 
             // https://api.tiki.vn/integration/v2/categories/852/attributes
             string http = TikiConstValues.cstrCategory + "/" + categoryId.ToString() + "/attributes";
 
-            IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+            IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 string json = response.Content;

@@ -34,12 +34,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
         // Returns the products with the status matching this parameter.
         //Possible values are all, live, inactive, deleted, pending, rejected, sold-out.
-        public static List<LazadaProduct> GetProductAllFromStatus(
+        public static async Task<List<LazadaProduct>> GetProductAllFromStatus(
             string status,
             DateTime? date)
         {
             List<LazadaProduct> ls = new List<LazadaProduct>();
-            if(!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if(!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return ls;
             }
@@ -123,20 +123,20 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return ls;
         }
 
-        public static List<LazadaProduct> GetProductAll()
+        public static async Task<List<LazadaProduct>> GetProductAll()
         {
-            return GetProductAllFromStatus("all", null);
+            return await GetProductAllFromStatus("all", null);
         }
 
-        public static List<LazadaProduct> GetProductLiveAll()
+        public static async Task<List<LazadaProduct>> GetProductLiveAll()
         {
-            return GetProductAllFromStatus("live", null);
+            return await GetProductAllFromStatus("live", null);
         }
 
-        public static LazadaProduct GetProductItem(long item_id)
+        public static async Task<LazadaProduct> GetProductItem(long item_id)
         {
             LazadaProduct pro = null;
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return pro;
             }
@@ -196,15 +196,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // Lấy sản phẩm mới đăng trong 1 tháng gần đây
-        public static List<LazadaProduct> GetNewProductOneMonth()
+        public static async Task<List<LazadaProduct>> GetNewProductOneMonth()
         {
-            return GetProductAllFromStatus("live", DateTime.Now.AddDays(-30));
+            return  await GetProductAllFromStatus("live", DateTime.Now.AddDays(-30));
         }
 
         // Hàm này điều chỉnh tăng giảm tồn kho theo tham số truyền vào. 
-        public static Boolean AdjustSellableQuantity()
+        public static async Task<Boolean> AdjustSellableQuantity()
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return false;
             }
@@ -299,12 +299,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
         // Cập nhật tồn kho, giá bìa, giá bán nếu trong tham số có tồn tại giá trị
         // tương ứng
-        public static Boolean LazadaUpdateQuantityPrice_SalePrice_Core(
+        public static async Task<Boolean> LazadaUpdateQuantityPrice_SalePrice_CoreAsync(
             List<LazadaParameterQuantity_PriceUpdate> skus)
         {
             int count = skus.Count;
 
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return false;
             }
@@ -360,15 +360,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // Cập nhật chỉ tồn kho
-        public static Boolean LazadaUpdateQuantity(List<LazadaParameterQuantity_PriceUpdate> skus)
+        public static async Task<Boolean> LazadaUpdateQuantityAsync(List<LazadaParameterQuantity_PriceUpdate> skus)
         {
-            return LazadaUpdateQuantityPrice_SalePrice_Core(skus);
+            return await LazadaUpdateQuantityPrice_SalePrice_CoreAsync(skus);
         }
 
         // Cập nhật tồn kho của 1 model.
-        public static string LazadaUpdateQuantityOfOneItemModel(LazadaParameterQuantity_PriceUpdate sku)
+        public static async Task<string> LazadaUpdateQuantityOfOneItemModelAsync(LazadaParameterQuantity_PriceUpdate sku)
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return null;
             }
@@ -395,20 +395,20 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // Cập nhật chỉ giá bìa và giá bán
-        public static Boolean LazadaUpdatePrice_SpecialPrice(List<LazadaParameterQuantity_PriceUpdate> skus)
+        public static async Task<Boolean> LazadaUpdatePrice_SpecialPriceAsync(List<LazadaParameterQuantity_PriceUpdate> skus)
         {
-            return LazadaUpdateQuantityPrice_SalePrice_Core(skus);
+            return await LazadaUpdateQuantityPrice_SalePrice_CoreAsync(skus);
         }
 
         // Cập nhật tồn kho, giá bìa và giá bán
-        public static Boolean LazadaUpdateQuantityPrice_SpecialPrice(List<LazadaParameterQuantity_PriceUpdate> skus)
+        public static async Task<Boolean> LazadaUpdateQuantityPrice_SpecialPriceAsync(List<LazadaParameterQuantity_PriceUpdate> skus)
         {
-            return LazadaUpdateQuantityPrice_SalePrice_Core(skus);
+            return await LazadaUpdateQuantityPrice_SalePrice_CoreAsync(skus);
         }
 
-        public static void LazadaGetCategoryTree()
+        public static async Task LazadaGetCategoryTreeAsync()
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return;
             }
@@ -425,9 +425,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             MyLogger.LazadaRestLog(request, response);
         }
 
-        public static void LazadaGetCategoryAttributes(int categoryId)
+        public static async Task LazadaGetCategoryAttributesAsync(int categoryId)
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return;
             }
@@ -445,9 +445,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             MyLogger.LazadaRestLog(request, response);
         }
 
-        public static Boolean LazadaGetBrandByPages(MySqlConnection conn)
+        public static async Task<Boolean> LazadaGetBrandByPagesAsync(MySqlConnection conn)
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return true;
             }
@@ -489,7 +489,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                         JsonConvert.DeserializeObject<LazadaGetBrandByPagesResponseBody>(response.Body,
                         Common.jsonSerializersettings);
 
-                    lazadaMySql.InserttbLazadaBrand(objectRes.data.module, conn);
+                    await lazadaMySql.InserttbLazadaBrandAsync(objectRes.data.module, conn);
 
                     startRow = theMaximum * objectRes.data.page_index;
                     if(startRow >= objectRes.data.total_record)
@@ -509,11 +509,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return isError;
         }
 
-        public static LazadaUploadImage LazadaUploadImage(string filePath)
+        public static async Task<LazadaUploadImage> LazadaUploadImageAsync(string filePath)
         {
             try
             {
-                if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+                if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
                 {
                     return null;
                 }
@@ -551,7 +551,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
         // Nếu video chưa đăng thì đăng, ngược lại tìm trong db. 
         // Trả về url video
-        public static async Task<MySqlResultState> LazadaUploadVideo(string videoTitle,
+        public static async Task<MySqlResultState> LazadaUploadVideoAsync(string videoTitle,
             string videoPath,
             MySqlConnection conn)
         {
@@ -602,7 +602,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                             // Lấy videoUrl của video
                             // 5 Lấy video source
                             LazadaGetVideoResponseBody getVideoResponse =
-                                LazadaGetVideo(videoId);
+                                await LazadaGetVideoAsync(videoId);
 
                             if (getVideoResponse == null || !getVideoResponse.success)
                             {
@@ -618,7 +618,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                             cmdTemp.CommandType = CommandType.Text;
                             cmdTemp.Parameters.AddWithValue("@inVideoUrl", videoUrl);
                             cmdTemp.Parameters.AddWithValue("@inVideoId", videoId);
-                            cmdTemp.ExecuteNonQuery();
+                            await cmdTemp.ExecuteNonQueryAsync();
                         }
 
                         result.Message = videoId;
@@ -652,7 +652,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
                     // Khởi tạo ban đầu để upload video
                     LazadaInitCreateVideoResponseBody initCreateVideoResponse =
-                        LazadaInitCreateVideo(fileName, fileSizeBytes);
+                       await LazadaInitCreateVideoAsync(fileName, fileSizeBytes);
                     if(initCreateVideoResponse == null || !initCreateVideoResponse.success)
                     {
                         string error = "LazadaInitCreateVideo fall: "
@@ -677,7 +677,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
                         // 3. Gửi đoạn dữ liệu lên Server
                         LazadaUploadVideoBlockResponseBody uploadVideoBlockResponse = 
-                            LazadaUploadVideoBlock(upload_id, partNumber, totalChunks, buffer);
+                            await LazadaUploadVideoBlockAsync(upload_id, partNumber, totalChunks, buffer);
                         if (uploadVideoBlockResponse == null || !uploadVideoBlockResponse.success)
                         {
                             string error = "LazadaUploadVideoBlock fall: "
@@ -695,7 +695,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                     // 4. Hoàn tất quá trình tải lên
                     // Tải ảnh đại diện video lên
                     LazadaUploadImage objResponse =
-                        LazadaProductAPI.LazadaUploadImage(coverUrl);
+                        await LazadaProductAPI.LazadaUploadImageAsync(coverUrl);
                     if(objResponse == null)
                     {
                         string error = "LazadaUploadImage fall. Tải ảnh đại diện video thất bại.";
@@ -709,7 +709,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                     string parts = JsonConvert.SerializeObject(eTags,
                             Common.jsonSerializersettings);
                     LazadaCompleteCreateVideoResponseBody completeResponse = 
-                        LazadaCompleteCreateVideo(upload_id, parts, title, coverUrl, null);
+                        await LazadaCompleteCreateVideoAsync(upload_id, parts, title, coverUrl, null);
                     if (completeResponse == null || !completeResponse.success)
                     {
                         string error = "LazadaCompleteCreateVideo fall: "
@@ -725,7 +725,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
                     // 5 Lấy video source cho nguy hiểm chứ không thực sự cần thiết
                     LazadaGetVideoResponseBody getVideoResponse =
-                        LazadaGetVideo(completeResponse.video_id);
+                        await LazadaGetVideoAsync(completeResponse.video_id);
 
                     if (getVideoResponse == null || !getVideoResponse.success)
                     {
@@ -763,11 +763,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // A seller starts to upload a video file
-        public static LazadaInitCreateVideoResponseBody LazadaInitCreateVideo(string fileName, long fileBytes)
+        public static async Task<LazadaInitCreateVideoResponseBody> LazadaInitCreateVideoAsync(string fileName, long fileBytes)
         {
             try
             {
-                if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+                if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
                 {
                     return null;
                 }
@@ -808,7 +808,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         // The video file can split into multiple files. For example, a 8MB video file can be split
         // into three blocks. 3MB, 3MB and 2MB. These three blocks can be uploaded by calling
         // UploadVideoBlock three times.
-        public static LazadaUploadVideoBlockResponseBody LazadaUploadVideoBlock(
+        public static async Task<LazadaUploadVideoBlockResponseBody> LazadaUploadVideoBlockAsync(
             string uploadId,
             int blockNo,
             int blockCount,
@@ -816,7 +816,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         {
             try
             {
-                if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+                if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
                 {
                     return null;
                 }
@@ -858,7 +858,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
         // After uploading all blocks of the video file, call CompleteCreateVideo to complete
         // the video uploading process.
-        public static LazadaCompleteCreateVideoResponseBody LazadaCompleteCreateVideo(
+        public static async Task<LazadaCompleteCreateVideoResponseBody> LazadaCompleteCreateVideoAsync(
             string uploadId,
             string parts, // "[{\"partNumber\":1,\"eTag\":\"AB693ADF0DF340F50637686D65CC062C\"},{\"partNumber\":2,\"eTag\":\"557C398778A948415C388B347509CE1C\"}]"
             string title,
@@ -867,7 +867,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         {
             try
             {
-                if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+                if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
                 {
                     return null;
                 }
@@ -914,11 +914,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // You call this action to get video info after uploading.
-        public static LazadaGetVideoResponseBody LazadaGetVideo(string videoId)
+        public static async Task<LazadaGetVideoResponseBody> LazadaGetVideoAsync(string videoId)
         {
             try
             {
-                if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+                if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
                 {
                     return null;
                 }
@@ -954,11 +954,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // You call this api to get the capacity quota of seller.
-        public static LazadaVideoQuotaResponseBody LazadaGetVideoQuota()
+        public static async Task<LazadaVideoQuotaResponseBody> LazadaGetVideoQuota()
         {
             try
             {
-                if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+                if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
                 {
                     return null;
                 }
@@ -992,10 +992,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         // Bí kíp đăng sản phẩm nhiều skus
         // https://open.lazada.com/apps/community/detail?spm=a1zq7z.27196124.0.0.10247c73Klt9Jq&id=121826
         // {"Request":{"Product":{"Images":{"Image":["https://sg-test-11.slatic.net/p/eebaf5c4c7308e8982309d22193ac144.jpg","https://sg-test-11.slatic.net/p/b64a84965f1f4f5e72862cf428a1cad1.jpg","https://sg-test-11.slatic.net/p/797421998482b57dc6142298d00a1023.jpg","https://sg-test-11.slatic.net/p/0b7cfde57b2f5ffab8dd8847f76ffe28.jpg","https://sg-test-11.slatic.net/p/53f36f5340d80336f0edb8d93612427a.jpg","https://sg-test-11.slatic.net/p/777ad4513739f2d553bbec2fab2b4b23.jpg","https://sg-test-11.slatic.net/p/3e277938104685c49b5b52693360192a.jpg","https://sg-test-11.slatic.net/p/4b7e5b08e9099aa3ff20952c9102d9c5.jpg"]},"Skus":{"Sku":[{"Images":{"Image":["https://sg-test-11.slatic.net/p/8d160004869e2adc275a847b389fe0fb.jpg"]},"SellerSku":"VBN20251008082817bWUyD","package_height":"10","package_length":"10","package_weight":"0.1","package_width":"10","price":"156000","quantity":"0","saleProp":{"TenSach":"COMBO 4 CUỐN"}},{"Images":{"Image":["https://sg-test-11.slatic.net/p/ebad379e4632a59a85e2642ee837174d.jpg"]},"SellerSku":"VBN20251008082818zMbWI","package_height":"10","package_length":"10","package_weight":"0.1","package_width":"10","price":"39000","quantity":"0","saleProp":{"TenSach":"Bữa tiệc sắc màu"}}]},"PrimaryCategory":"8666","Attributes":{"author":"Suzuki Mio","language":"Vietnamese","name":"Sách Ehon - Điều kì diệu của màu sắc ( Bộ 4 cuốn + lẻ tùy chọn) cho bé 0-6 tuổi","description":"<p>Sách Ehon - Điều kì diệu của màu sắc ( Bộ 4 cuốn + lẻ tùy chọn) cho bé 0-6 tuổi</p><p></p><p>Mô tả sản phẩm - Giới thiệu sách:</p><p>Theo các nhà nghiên cứu giáo dục, trẻ em luôn có những niềm hứng khởi bất tận với thiên nhiên, hình khối và màu sắc. Và nhiệm vụ đưa những “bài học” về hình khối, màu sắc vào giai đoạn đầu đời của bố mẹ là rất vô cùng cần thiết.</p><p></p><p>Bộ Ehon màu sắc gồm 4 cuốn: \"Bữa tiệc sắc màu của thú trắng\", \"Ơ! Tắc kè là nhà ảo thuật\", \"Một ngày của bạch tuộc\" và \"Có gì trong quả trứng?\". Cốt truyện của mỗi cuốn sách rất đơn giản, là sự lặp đi lặp lại của hành động, ví dụ như các bạn thú trắng ăn quả gì thì thân hình sẽ biến thành màu quả ấy, bạn tắc kè đi đến đâu thì màu da biến đổi theo môi trường, ... Nhờ đó, mạch câu chuyện sẽ dễ dàng thâm nhập sâu vào tiềm thức của trẻ, hình thành những khái niệm cơ bản nhất về màu sắc.</p><img src=\"https://sg-test-11.slatic.net/p/439e667e0be089e85b9ce94c210da3d3.jpg\"/><p>Sứ mệnh của bộ sách Ehon Màu sắc là phát triển chức năng thùy chẩm của trẻ - một bộ phận nằm phía sau của bộ não con người – là nơi tiếp nhận thông tin đến từ thị giác. Thùy chẩm thu nhận các hình ảnh, sắc màu, hình khối bằng mắt, giúp phát triển khả năng tổng hợp, phân tích về giác quan, cầm nắm nhận dạng vật thể, nhận diện không gian.</p><p></p><p>Cha mẹ có thể nuôi dưỡng năng khiếu nghệ thuật của con trẻ bằng phương pháp tự nhiên nhất là cho con tiếp xúc với ehon, đồng thời giúp bé có thể học tốt các môn học liên quan đến nghệ thuật như văn học, hội họa, âm nhạc...</p><img src=\"https://sg-test-11.slatic.net/p/7bfe31d91a300a9dcd21177d78073b93.jpg\"/><img src=\"https://sg-test-11.slatic.net/p/46cfb6b9a124b12821f9ab0d3697ad75.jpg\"/><img src=\"https://sg-test-11.slatic.net/p/eb9ed60f3ce198bb170edbe798678999.jpg\"/><p>#sachchobe #sachtreem #sáchchobé #sáchtrẻem #wabooks #ehon #ehonnhatban #sachnuoidaycon #sáchnuôidậycon #sáchthiếunhi #sachthieunhi</p>","brand":"Wabooks","brand_id":"184898","number_of_pages":"28","version":"Đầy đủ","isbn_issn":"9786046546900","video":"8000078826877"},"variation":{"Variation1":{"customize":true,"hasImage":true,"label":"TenSach","name":"TenSach","options":{"option":["COMBO 4 CUỐN","Bữa tiệc sắc màu"]}}}}}}
-        public static LazadaCreateProductResponseBody LazadaCreateProduct(
+        public static async Task<LazadaCreateProductResponseBody> LazadaCreateProductAsync(
             LazadaCreateProductRequest requestPara)
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return null;
             }
@@ -1051,9 +1051,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return objectRes;
         }
 
-        public static void LazadaCreateProductTest( string payload)
+        public static async Task LazadaCreateProductTest( string payload)
         {
-            if (!LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeed())
+            if (!await LazadaAuthenAPI.LazadaRefreshAccessTokenIfNeedAsync())
             {
                 return;
             }
@@ -1097,7 +1097,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             // Up ảnh của item
             foreach(var path in item.pathImages)
             {
-                LazadaUploadImage up = LazadaUploadImage(path);
+                LazadaUploadImage up = await LazadaUploadImageAsync(path);
                 if(up != null)
                 {
                     item.srcImagesTo.Add(up.url);
@@ -1115,7 +1115,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             {
                 foreach (var path in model.pathImages)
                 {
-                    LazadaUploadImage up = LazadaUploadImage(path);
+                    LazadaUploadImage up = await LazadaUploadImageAsync(path);
                     if (up != null)
                     {
                         model.srcImagesTo.Add(up.url);
@@ -1134,7 +1134,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             {
                 if (!des.isText)
                 {
-                    LazadaUploadImage up = LazadaUploadImage(des.path);
+                    LazadaUploadImage up = await LazadaUploadImageAsync(des.path);
                     if (up != null)
                     {
                         des.srcImageTo = up.url;
@@ -1151,7 +1151,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             // Up video nếu có
             if(!string.IsNullOrEmpty(item.pathVideo))
             {
-                result = await LazadaUploadVideo(item.name, item.pathVideo, conn);
+                result = await LazadaUploadVideoAsync(item.name, item.pathVideo, conn);
                 if(result.State == EMySqlResultState.OK)
                 {
                     item.idVideo = result.Message;

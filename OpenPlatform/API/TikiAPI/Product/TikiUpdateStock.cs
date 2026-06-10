@@ -17,10 +17,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
     public class TikiUpdateStock
     {
-        public static TikiUpdateQuantityResponse TikiProductUpdate(TikiUpdate st)
+        public static async Task<TikiUpdateQuantityResponse> TikiProductUpdate(TikiUpdate st)
         {
             string http = TikiConstValues.cstrProductUpdate;
-            IRestResponse response = CommonTikiAPI.PutExcuteRequest(http, st);
+            IRestResponse response = await CommonTikiAPI.PutExcuteRequest(http, st);
             try
             {
                 JsonSerializerSettings settings = new JsonSerializerSettings
@@ -38,14 +38,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             return null;
         }
 
-        public static void TikiProductUpdateQuantity(int itemId,
+        public static async Task TikiProductUpdateQuantity(int itemId,
             int quantity,
             MySqlResultState result
             )
         {
             TikiUpdateQuantity st = new TikiUpdateQuantity(itemId, TikiConstValues.intIdKho28Ngo3TTDL);
             st.UpdateQuantity(quantity);
-            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = TikiProductUpdate(st);
+            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);
             result.myJson = tikiUpdateQuantityResponse;
             if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {
@@ -120,11 +120,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="proId"></param>
         /// <param name="price"></param>
         /// <returns></returns>
-        public static void TikiProductUpdatePrice(int proId, int price, MySqlResultState result)
+        public static async Task TikiProductUpdatePrice(int proId, int price, MySqlResultState result)
         {
             TikiUpdatePrice st = new TikiUpdatePrice(proId);
             st.UpdatePrice(price);
-            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = TikiProductUpdate(st);
+            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);
             result.myJson = tikiUpdateQuantityResponse;
             if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {
@@ -138,13 +138,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="proId"></param>
         /// <param name="status">enum {1: enabled, 0: disabled}</param>
         /// <returns></returns>
-        public static void TikiProductUpdateStatus(int proId,
+        public static async Task TikiProductUpdateStatus(int proId,
             int status,
             MySqlResultState result)
         {
             TikiUpdateStatus st = new TikiUpdateStatus(proId);
             st.UpdateStatus(status);
-            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = TikiProductUpdate(st);
+            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);
             result.myJson = tikiUpdateQuantityResponse;
             if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {
@@ -158,10 +158,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <param name="time_from"></param>
         /// <param name="time_to"></param>
         /// <returns></returns>
-        static public Dictionary<string, int> TikiGetProductQuantityPairToTake(DateTime time_from, DateTime time_to, CommonOrderStatus orderStatus)
+        static public async Task<Dictionary<string, int>> TikiGetProductQuantityPairToTake(DateTime time_from, DateTime time_to, CommonOrderStatus orderStatus)
         {
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsOrderTikiFullInfo;
-            lsOrderTikiFullInfo = MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order.TikiGetListOrders.GetListOrderAShop(
+            lsOrderTikiFullInfo = await MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order.TikiGetListOrders.GetListOrderAShop(
                 MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate.EnumOrderItemFilterByDate.last7days,
                 orderStatus);
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder> lsTem = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrder>();

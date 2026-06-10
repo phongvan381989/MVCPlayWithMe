@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -31,74 +32,74 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         // GET: TikiDealDiscount
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
             return View();
         }
 
-        private static List<DealCreatedResponseDetail> SearchDealCoreOfOneSku(string sku, MySqlConnection conn)
+        private static async Task<List<DealCreatedResponseDetail>> SearchDealCoreOfOneSku(string sku, MySqlConnection conn)
         {
-            List<DealCreatedResponseDetail> listDeal = DealAction.SearchDealOfOneSku(sku);
+            List<DealCreatedResponseDetail> listDeal = await DealAction.SearchDealOfOneSku(sku);
             // Insert nếu chưa tồn tại
             if (listDeal != null && listDeal.Count > 0)
             {
-                sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOut(listDeal, conn);
+                await sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
             }
             return listDeal;
         }
 
-        private static List<DealCreatedResponseDetail> SearchDealCoreOfSkuList(
+        private static async Task<List<DealCreatedResponseDetail>> SearchDealCoreOfSkuList(
             List<string> skuList,
             int is_active,
             MySqlConnection conn)
         {
-            List<DealCreatedResponseDetail> listDeal = DealAction.SearchDealOfSkuList(skuList, is_active);
+            List<DealCreatedResponseDetail> listDeal = await DealAction.SearchDealOfSkuList(skuList, is_active);
             // Insert nếu chưa tồn tại
             if (listDeal != null && listDeal.Count > 0)
             {
-                sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOut(listDeal, conn);
+                await sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
             }
             return listDeal;
         }
 
         [HttpPost]
-        public string GetDealDiscountOfSku(string sku)
+        public async Task<string> GetDealDiscountOfSku(string sku)
         {
             List<DealCreatedResponseDetail> listDeal = new List<DealCreatedResponseDetail>();
 
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(listDeal);
             }
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            listDeal = SearchDealCoreOfOneSku(sku, conn);
-            conn.Close();
+            await conn.OpenAsync();
+            listDeal = await SearchDealCoreOfOneSku(sku, conn);
+            await conn.OpenAsync();
 
             return JsonConvert.SerializeObject(listDeal);
         }
 
         [HttpPost]
-        public string GetTikiIdBySku(string sku)
+        public async Task<string> GetTikiIdBySku(string sku)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return "0";
             }
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            int tikiId = sqler.GetTikiIdBySku(sku, conn);
-            conn.Close();
+            await conn.OpenAsync();
+            int tikiId = await sqler.GetTikiIdBySkuAsync(sku, conn);
+            await conn.OpenAsync();
 
             return tikiId.ToString();
         }
 
         [HttpPost]
-        public string SaveDealDiscountOfAllSku()
+        public async Task<string> SaveDealDiscountOfAllSku()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -107,16 +108,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
 
                     // Lấy danh sách sku đang bật bán và lấy chương trình giảm giá lần lượt
-                    List<string> skuList = sqler.GetListSkuOfActiveItemConnectOut(conn);
+                    List<string> skuList = await sqler.GetListSkuOfActiveItemConnectOutAsync(conn);
 
-                    List<DealCreatedResponseDetail> listDeal = DealAction.SearchDealOfSkuList(skuList, -1);
+                    List<DealCreatedResponseDetail> listDeal = await DealAction.SearchDealOfSkuList(skuList, -1);
                     // Insert nếu chưa tồn tại
                     if (listDeal != null && listDeal.Count > 0)
                     {
-                        sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOut(listDeal, conn);
+                        await sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
                     }
                 }
             }
@@ -128,7 +129,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(result);
         }
 
-        static public List<SimpleTikiProduct> GetItemsNoDealDiscountRunning_Core(MySqlConnection conn,
+        static public async Task<List<SimpleTikiProduct>> GetItemsNoDealDiscountRunning_CoreAsync(MySqlConnection conn,
             Boolean isUpdateStatusFromTiki)
         {
             // Lấy trạng thái từ Tiki deal đang chạy
@@ -139,7 +140,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Lấy những sản phẩm chưa gắn với deal nào
             List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
-            simpleTikiProducts = sqler.GetItemsNoDealDiscountRunning(conn);
+            simpleTikiProducts = await sqler.GetItemsNoDealDiscountRunningAsync(conn);
 
             List<SimpleTikiProduct> listSimpleTikiProductTemp = new List<SimpleTikiProduct>();
             foreach (var simpleTiki in simpleTikiProducts)
@@ -162,10 +163,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string GetItemsNoDealDiscountRunning()
+        public async Task<string> GetItemsNoDealDiscountRunning()
         {
             List<SimpleTikiProduct> listSimpleTikiProduct = new List<SimpleTikiProduct>();
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(listSimpleTikiProduct);
             }
@@ -173,8 +174,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    listSimpleTikiProduct = GetItemsNoDealDiscountRunning_Core(conn, false);
+                    await conn.OpenAsync();
+                    listSimpleTikiProduct = await GetItemsNoDealDiscountRunning_CoreAsync(conn, false);
                 }
             }
             catch (Exception ex)
@@ -187,9 +188,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string GetTaxAndFeeCore(string eEcommerceName)
+        public async Task<string> GetTaxAndFeeCore(string eEcommerceName)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(null);
             }
@@ -198,8 +199,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    taxAndFee = sqler.GetTaxAndFee(eEcommerceName, conn);
+                    await conn.OpenAsync();
+                    taxAndFee = await sqler.GetTaxAndFeeAsync(eEcommerceName, conn);
                 }
             }
             catch (Exception ex)
@@ -211,7 +212,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string CreateOneDeal(string sku,
+        public async Task<string> CreateOneDeal(string sku,
             //string special_from_date,
             //string special_to_date,
             int special_price//,
@@ -219,7 +220,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             //int qty_limit)
             )
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -230,8 +231,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    List<DealCreatedResponseDetail> listDeal = SearchDealCoreOfOneSku(sku, conn);
+                    await conn.OpenAsync();
+                    List<DealCreatedResponseDetail> listDeal = await SearchDealCoreOfOneSku(sku, conn);
 
                     Boolean dontCreateDeal = false;
                     foreach (var deal in listDeal)
@@ -249,7 +250,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         CreatingRequestBody creatingRequestBody = new CreatingRequestBody();
 
                         creatingRequestBody.ls.Add(new CreatingRequestBodyObject(sku, special_price));
-                        DealCreatingResponse dealCreatingResponse = DealAction.CreateDeal(creatingRequestBody);
+                        DealCreatingResponse dealCreatingResponse = await DealAction.CreateDeal(creatingRequestBody);
                         if (dealCreatingResponse == null)
                         {
                             result.State = EMySqlResultState.ERROR;
@@ -269,7 +270,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                                 {
                                     // Lưu chương trình tạo thành công
                                     // Insert nếu chưa tồn tại
-                                    sqler.InsertCheckExistTikiDealDiscountOfOneSkuConnectOut(dealCreatingResponse.dealList, conn);
+                                    await sqler.InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(dealCreatingResponse.dealList, conn);
                                 }
                             }
                         }
@@ -284,9 +285,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string OffDealFromId(int dealId)
+        public async Task<string> OffDealFromId(int dealId)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -295,7 +296,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             CreatingRequestBody creatingRequestBody = new CreatingRequestBody();
             List<int> ls = new List<int>();
             ls.Add(dealId);
-            List<DealOffResponseObject> lsDealOff = DealAction.OffDeal(ls);
+            List<DealOffResponseObject> lsDealOff = await DealAction.OffDeal(ls);
             if (lsDealOff == null)
             {
                 result.State = EMySqlResultState.ERROR;
@@ -313,11 +314,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     }
                 }
 
-                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                conn.Open();
-                // Insert nếu chưa tồn tại
-                result = sqler.UpdateIsActiveCloseFromLsDealId(ls, conn);
-                conn.Close();
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    // Insert nếu chưa tồn tại
+                    result = await sqler.UpdateIsActiveCloseFromLsDealIdAsync(ls, conn);
+                }
 
             }
             return JsonConvert.SerializeObject(result);
@@ -326,9 +328,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         // Hàm này mục đích cập nhật trạng thái mới nhất của những deal đang chạy
         // vì tiki có thể tắt deal mà mình không biết
         // Hàm này mất thời gian. Tính bằng 10 phút và gọi API TIKI liên tục. Hạn chế sử dụng.
-        public static void UpdateDealStatusOfRunningDealOnDB_Core(MySqlConnection conn)
+        public static async Task UpdateDealStatusOfRunningDealOnDB_Core(MySqlConnection conn)
         {
-            List<SimpleTikiProduct> simpleTikiProducts = sqler.GetItemsHasDealDiscountRunning(conn);
+            List<SimpleTikiProduct> simpleTikiProducts = await sqler.GetItemsHasDealDiscountRunningAsync(conn);
             List<string> skuList = new List<string>();
             foreach (var pro in simpleTikiProducts)
             {
@@ -336,7 +338,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Lấy deal từ TIki và thêm mới / cập nhật trạng thái của deal mới nhất
-            List<DealCreatedResponseDetail> listDeal = DealAction.SearchDealOfSkuList(skuList, 2);
+            List<DealCreatedResponseDetail> listDeal = await DealAction.SearchDealOfSkuList(skuList, 2);
             // Tìm trong skuList những sku không tồn tại trong listDeal, đó là những sku đã bị tắt
             List<string> strList1 = new List<string>();
             foreach(var deal in listDeal)
@@ -348,13 +350,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // is_active = 2 và is_active = 5
             // Tìm phần tử có trong strList2 nhưng không có trong strList1
             List<string> skuListOff = skuList.Except(strList1).ToList();
-            sqler.UpdateIsActiveCloseFromSku(skuListOff, conn);
+            await sqler.UpdateIsActiveCloseFromSkuAsync(skuListOff, conn);
         }
 
         [HttpPost]
-        public string UpdateDealStatusOfRunningDealOnDB()
+        public async Task<string> UpdateDealStatusOfRunningDealOnDB()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -363,7 +365,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     UpdateDealStatusOfRunningDealOnDB_Core(conn);
                 }
             }
@@ -376,9 +378,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string UpdatePriceToBookCoverPriceOfAll()
+        public async Task<string> UpdatePriceToBookCoverPriceOfAll()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -386,13 +388,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Lấy tất cả sản phẩm trên sàn
             ProductECommerceController productECommerceController = new ProductECommerceController();
             List<CommonItem> lsCommonItem =
-                productECommerceController.TikiGetProductAll();
+                await productECommerceController.TikiGetProductAll();
 
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     int bookCoverPrice = 0;
                     foreach (var commonItem in lsCommonItem)
                     {
@@ -429,17 +431,17 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(result);
         }
 
-        public static MySqlResultState CreateDealForAllCore(List<SimpleTikiProduct> listSimpleTikiProduct,
+        public static async Task<MySqlResultState> CreateDealForAllCoreAsync(List<SimpleTikiProduct> listSimpleTikiProduct,
             MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
 
             // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
             PublisherMySql publisherSqler = new PublisherMySql();
-            List<Publisher> listPublisher = publisherSqler.GetListPublisherConnectOut(conn);
+            List<Publisher> listPublisher = await publisherSqler.GetListPublisherConnectOutAsync(conn);
 
             // Lấy danh sách thuế phí
-            TaxAndFee taxAndFee = sqler.GetTaxAndFee(Common.eTiki, conn);
+            TaxAndFee taxAndFee = await sqler.GetTaxAndFeeAsync(Common.eTiki, conn);
 
             // Tính giá bìa, chiết khấu hợp lý theo nhà phát hành hoặc sản phẩm, thuế, phí, lợi nhuận mong muốn.
             // Từ đó tính giá bán.
@@ -474,7 +476,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<DealCreatingResponse> listFailDealCreatingResponse = new List<DealCreatingResponse>();
             foreach (var creatingRequestBody in listCreatingRequestBody)
             {
-                DealCreatingResponse dealCreatingResponse = DealAction.CreateDeal(creatingRequestBody);
+                DealCreatingResponse dealCreatingResponse = await DealAction.CreateDeal(creatingRequestBody);
                 if (dealCreatingResponse == null)
                 {
                     result.State = EMySqlResultState.ERROR;
@@ -492,7 +494,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         {
                             // Lưu chương trình tạo thành công
                             // Insert nếu chưa tồn tại
-                            sqler.InsertCheckExistTikiDealDiscountOfOneSkuConnectOut(dealCreatingResponse.dealList, conn);
+                            await sqler.InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(dealCreatingResponse.dealList, conn);
                         }
                     }
                 }
@@ -506,9 +508,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return result;
         }
         [HttpPost]
-        public string CreateDealForAllInTheTable(string listItem)
+        public async Task<string> CreateDealForAllInTheTable(string listItem)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -519,8 +521,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    result = CreateDealForAllCore(listSimpleTikiProduct, conn);
+                    await conn.OpenAsync();
+                    result = await CreateDealForAllCoreAsync(listSimpleTikiProduct, conn);
                 }
             }
             catch(Exception ex)

@@ -10,6 +10,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform
@@ -62,41 +63,41 @@ namespace MVCPlayWithMe.OpenPlatform
 
         // Hàm này lấy sản phẩm mới đăng / mới cập nhật có trạng thái NORMAL trên sàn Tiki, Shopee, Lazada,...
         // trong những ngày gần đây. Kiểm tra nếu sản phẩm chưa tồn tại thì insert vào db tương ứng
-        public static void GetNewItemAndInsertIfDontExist(int intervalDay)
+        public static async Task GetNewItemAndInsertIfDontExist(int intervalDay)
         {
             MyLogger.GetInstance().Info("START get item and insert if dont exist");
             try
             {
                 // Tiki
                 DateTime dtNow = DateTime.Now;
-                List<TikiProduct> lsTikiItem = GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(intervalDay * -1), dtNow);
+                List<TikiProduct> lsTikiItem = await GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(intervalDay * -1), dtNow);
 
                 // Shopee
                 long update_time_to = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                List<ShopeeItem> lsShopeeItem = ShopeeGetItemList.ShopeeProductGetNormal_ItemList(
+                List<ShopeeItem> lsShopeeItem = await ShopeeGetItemList.ShopeeProductGetNormal_ItemListAsync(
                     update_time_to - intervalDay * 24 * 3600,
                     update_time_to);
 
                 List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem =
-                    ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItem(lsShopeeItem);
+                    await ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItemAsync(lsShopeeItem);
 
                  ShopeeMySql shopeeSqler = new ShopeeMySql();
                 TikiMySql tikiSqler = new TikiMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     foreach (var pro in lsTikiItem)
                     {
                         CommonItem item = new CommonItem(pro);
                         // Không tồn tại ta thêm vào danh sách
-                        tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
+                        await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn);
                     }
 
                     foreach (var pro in lsShopeeBaseInfoItem)
                     {
-                        CommonItem item = new CommonItem(pro);
+                        CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
                         // Không tồn tại trong DB ta insert
-                        shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
+                        await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
                     }
                 }
             }

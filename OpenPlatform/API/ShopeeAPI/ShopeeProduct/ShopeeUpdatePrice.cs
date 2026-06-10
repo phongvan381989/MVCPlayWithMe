@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using RestSharp;
@@ -21,13 +21,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
     //      }
     public class ShopeeUpdatePrice
     {
-        public static ShopeeUpdatePrice_Response ShopeeProductUpdatePrice(ShopeeUpdatePrice_Request st)
+        public static async Task<ShopeeUpdatePrice_Response> ShopeeProductUpdatePriceAsync(ShopeeUpdatePrice_Request st)
         {
             string path = "/api/v2/product/update_price";
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             MyLogger.GetInstance().Info(body);
 
-            IRestResponse response = CommonShopeeAPI.ShopeePostMethod(path, body);
+            IRestResponse response = await CommonShopeeAPI.ShopeePostMethodAsync(path, body);
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 return null;

@@ -1,55 +1,92 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models
 {
     public class CategoryMySql
     {
-        public List<Category> GetListCategory()
+        //public List<Category> GetListCategory()
+        //{
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    List<Category> ls = new List<Category>();
+        //    try
+        //    {
+        //        conn.Open();
+
+        //        MySqlCommand cmd = new MySqlCommand("st_tbCategory_Select_All", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        int idIndex = rdr.GetOrdinal("Id");
+        //        int nameIndex = rdr.GetOrdinal("Name");
+        //        int tikiIndex = rdr.GetOrdinal("TikiCategoryId");
+        //        int shopeeIndex = rdr.GetOrdinal("ShopeeCategoryId");
+        //        int lazadaIndex = rdr.GetOrdinal("LazadaCategoryId");
+        //        while (rdr.Read())
+        //        {
+        //            Category cate = new Category(rdr.GetInt32(idIndex),
+        //                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex));
+        //            cate.tikiCategoryId = rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex);
+        //            cate.shopeeCategoryId = rdr.IsDBNull(shopeeIndex) ? -1 : rdr.GetInt64(shopeeIndex);
+        //            cate.lazadaCategoryId = rdr.IsDBNull(lazadaIndex) ? -1 : rdr.GetInt64(lazadaIndex);
+        //            ls.Add(cate);
+        //        }
+
+        //        rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //        ls.Clear();
+        //    }
+
+        //    conn.Close();
+        //    return ls;
+        //}
+
+        public async Task<List<Category>> GetListCategoryAsync()
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             List<Category> ls = new List<Category>();
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCategory_Select_All", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int idIndex = rdr.GetOrdinal("Id");
-                int nameIndex = rdr.GetOrdinal("Name");
-                int tikiIndex = rdr.GetOrdinal("TikiCategoryId");
-                int shopeeIndex = rdr.GetOrdinal("ShopeeCategoryId");
-                int lazadaIndex = rdr.GetOrdinal("LazadaCategoryId");
-                while (rdr.Read())
+                try
                 {
-                    Category cate = new Category(rdr.GetInt32(idIndex),
-                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex));
-                    cate.tikiCategoryId = rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex);
-                    cate.shopeeCategoryId = rdr.IsDBNull(shopeeIndex) ? -1 : rdr.GetInt64(shopeeIndex);
-                    cate.lazadaCategoryId = rdr.IsDBNull(lazadaIndex) ? -1 : rdr.GetInt64(lazadaIndex);
-                    ls.Add(cate);
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCategory_Select_All", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int tikiIndex = rdr.GetOrdinal("TikiCategoryId");
+                        int shopeeIndex = rdr.GetOrdinal("ShopeeCategoryId");
+                        int lazadaIndex = rdr.GetOrdinal("LazadaCategoryId");
+                        while (await rdr.ReadAsync())
+                        {
+                            Category cate = new Category(rdr.GetInt32(idIndex),
+                                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex));
+                            cate.tikiCategoryId = rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex);
+                            cate.shopeeCategoryId = rdr.IsDBNull(shopeeIndex) ? -1 : rdr.GetInt64(shopeeIndex);
+                            cate.lazadaCategoryId = rdr.IsDBNull(lazadaIndex) ? -1 : rdr.GetInt64(lazadaIndex);
+                            ls.Add(cate);
+                        }
+                    }
                 }
-
-                rdr.Close();
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    ls.Clear();
+                }
             }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                ls.Clear();
-            }
-
-            conn.Close();
             return ls;
         }
 
-        public Category GetCategory(int id, MySqlConnection conn)
+        public async Task<Category> GetCategoryAsync(int id, MySqlConnection conn)
         {
             Category category = null;
             try
@@ -58,9 +95,9 @@ namespace MVCPlayWithMe.Models
                 cmd.CommandType = CommandType.Text;
                 cmd.Parameters.AddWithValue("@inId", id);
 
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    while (rdr.Read())
+                    while (await rdr.ReadAsync())
                     {
                         category = new Category(MyMySql.GetInt32(rdr, "Id"),
                             MyMySql.GetString(rdr, "Name"));
@@ -75,89 +112,40 @@ namespace MVCPlayWithMe.Models
                 MyLogger.GetInstance().Warn(ex.ToString());
                 category = null;
             }
-
             return category;
         }
 
-        public MySqlResultState CreateNewCategory(string name)
+        public async Task<MySqlResultState> CreateNewCategoryAsync(string name)
         {
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
-
-            int parasLength = 3;
-            paras = new MySqlParameter[parasLength];
-
+            MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@categoryName", name);
             MyMySql.AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCategory_Insert", paras);
-
-            return result;
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCategory_Insert", paras);
         }
 
-        public MySqlResultState DeleteCategory(int id)
+        public async Task<MySqlResultState> DeleteCategoryAsync(int id)
         {
-
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
-
-            int parasLength = 3;
-            paras = new MySqlParameter[parasLength];
+            MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@categoryId", id);
             MyMySql.AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCategory_Delete_From_Id", paras);
-
-            return result;
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCategory_Delete_From_Id", paras);
         }
 
-        //public MySqlResultState DeleteCategory(string name)
-        //{
-        //    MySqlResultState result = null;
-        //    MySqlParameter[] paras = null;
-
-        //    int parasLength = 3;
-
-        //    paras = new MySqlParameter[parasLength];
-        //    paras[0] = new MySqlParameter("@categoryName", name);
-        //    MyMySql.AddOutParameters(paras);
-
-        //    result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCategory_Delete_From_Name", paras);
-
-        //    return result;
-        //}
-
-        /// <summary>
-        /// Từ name lấy được id. Nếu name chưa có, ta thêm vào bảng
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
-        public int GetCategoryIdFromName(string name)
+        public async Task<int> GetCategoryIdFromNameAsync(string name)
         {
-            MySqlParameter[] paras = null;
-            int parasLength = 3;
-
-            paras = new MySqlParameter[parasLength];
+            MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@categoryName", name);
             MyMySql.AddOutParameters(paras);
-            return MyMySql.ExcuteGetIdStoreProceduce("st_tbCategory_GetIdFromName", paras);
+            return await MyMySql.ExcuteGetIdStoreProcedureAsync("st_tbCategory_GetIdFromName", paras);
         }
 
-        public MySqlResultState UpdateCategory(int id, string name)
+        public async Task<MySqlResultState> UpdateCategoryAsync(int id, string name)
         {
-            MySqlResultState result = null;
-            MySqlParameter[] paras = null;
-
-            int parasLength = 4;
-            // Check publisherName exist
-            paras = new MySqlParameter[parasLength];
+            MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inId", id);
             paras[1] = new MySqlParameter("@inCategoryName", name);
             MyMySql.AddOutParameters(paras);
-
-            result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCategory_Update", paras);
-
-            return result;
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCategory_Update", paras);
         }
     }
 }

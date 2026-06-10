@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp;
@@ -24,17 +24,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
         static public ShopeeAuthen shopeeAuthen = null;
 
-        static public ShopeeAuthen ShopeeGetAuthen(MySqlConnection conn)
+        static public async Task<ShopeeAuthen> ShopeeGetAuthen(MySqlConnection conn)
         {
             ShopeeAuthen shopeeAuthen = new ShopeeAuthen();
             try
             {
-                // Lưu vào bảng tbECommerceOrder
                 MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen WHERE Id = 1", conn);
                 cmd.CommandType = CommandType.Text;
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    while (rdr.Read())
+                    while (await rdr.ReadAsync())
                     {
                         shopeeAuthen.shopId = MyMySql.GetString(rdr, "ShopId");
                         shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
@@ -57,9 +56,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         /// <summary>
         /// Generate Authorization Token
         /// </summary>
-        /// <param name="redirectURL"></param>
-        /// <param name="partnerKey"></param>
-        /// <returns></returns>
         public static string ShopeeCallToken(String redirectURL, String partnerKey)
         {
             String str = string.Empty;
@@ -71,9 +67,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         }
 
         /// <summary>
-        /// Generate fixed authorization URL:
+        /// Generate fixed authorization URL
         /// </summary>
-        /// <returns></returns>
         public static string ShopeeGenerateAuthPartnerUrl()
         {
             DateTime start = DateTime.Now;
@@ -98,8 +93,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         /// <summary>
         /// Nhận được access token sau khi được chủ shop ủy quyền
         /// </summary>
-        /// <returns></returns>
-        public static ShopeeToken ShopeeGetTokenShopLevel()
+        public static async Task<ShopeeToken> ShopeeGetTokenShopLevelAsync()
         {
             string shop_id = shopeeAuthen.shopId;
             string partner_id = shopeeAuthen.partnerId;
@@ -131,7 +125,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             @"}";
 
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = Common.client.Execute(request);
+            IRestResponse response = await Common.client.ExecuteAsync(request);
             MyLogger.InfoRestLog(Common.client, request, response);
             if (response.StatusCode != HttpStatusCode.OK)
             {
@@ -146,7 +140,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                     MissingMemberHandling = MissingMemberHandling.Ignore
                 };
                 token = JsonConvert.DeserializeObject<ShopeeToken>(response.Content, settings);
-
             }
             catch (Exception ex)
             {
@@ -158,17 +151,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    shopeeMySql.ShopeeSaveToken(token, conn);
-                    // Cập nhật lại shopee authen
-                    shopeeAuthen = ShopeeGetAuthen(conn);
+                    await conn.OpenAsync();
+                    await shopeeMySql.ShopeeSaveTokenAsync(token, conn);
+                    shopeeAuthen = await ShopeeGetAuthen(conn);
                 }
             }
 
              return token;
         }
 
-        public static MySqlResultState ShopeeSaveLivePartnerKey(string key)
+        public static async Task<MySqlResultState> ShopeeSaveLivePartnerKeyAsync(string key)
         {
             MySqlResultState result = null;
             try
@@ -176,12 +168,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    result = shopeeMySql.ShopeeSaveLivePartnerKey(key, conn);
+                    await conn.OpenAsync();
+                    result = await shopeeMySql.ShopeeSaveLivePartnerKeyAsync(key, conn);
                     if (result.State == EMySqlResultState.OK)
                     {
-                        // Cập nhật lại shopee authen
-                        shopeeAuthen = ShopeeGetAuthen(conn);
+                        shopeeAuthen = await ShopeeGetAuthen(conn);
                     }
                 }
             }
@@ -193,7 +184,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         }
 
         // Lưu code mới trong Redirect URL sau khi được chủ shop ủy quyền
-        public static MySqlResultState ShopeeSaveCode(string code)
+        public static async Task<MySqlResultState> ShopeeSaveCode(string code)
         {
             MySqlResultState result = null;
             try
@@ -201,12 +192,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    result = shopeeMySql.ShopeeSaveCode(code, conn);
+                    await conn.OpenAsync();
+                    result = await shopeeMySql.ShopeeSaveCodeAsync(code, conn);
                     if (result.State == EMySqlResultState.OK)
                     {
-                        // Cập nhật lại shopee authen
-                        shopeeAuthen = ShopeeGetAuthen(conn);
+                        shopeeAuthen = await ShopeeGetAuthen(conn);
                     }
                 }
             }
@@ -220,12 +210,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
         /// <summary>
         /// Làm mới access token khi bị hết hạn
         /// </summary>
-        /// <param name="shop_id"></param>
-        /// <param name="partner_id"></param>
-        /// <param name="partner_key"></param>
-        /// <param name="refreshToken"></param>
-        /// <returns></returns>
-        public static ShopeeToken ShopeeGetRefreshTokenShopLevel()
+        public static async Task<ShopeeToken> ShopeeGetRefreshTokenShopLevelAsync()
         {
             long timest = Common.GetTimestampNow();
 
@@ -254,16 +239,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                         @"    ""partner_id"":" + partner_id + @"
             " + "\n" +
             @"}";
-            //MyLogger.GetInstance().Info(body);
 
             request.AddParameter("application/json", body, ParameterType.RequestBody);
-            IRestResponse response = Common.client.Execute(request);
+            IRestResponse response = await Common.client.ExecuteAsync(request);
             MyLogger.InfoRestLog(Common.client, request, response);
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 return null;
             }
-            //MyLogger.GetInstance().Info(response.Content);
             ShopeeToken token = null;
             try
             {
@@ -273,14 +256,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                     MissingMemberHandling = MissingMemberHandling.Ignore
                 };
                 token = JsonConvert.DeserializeObject<ShopeeToken>(response.Content, settings);
-
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
                 return null;
             }
-            // Lưu giá trị cũ vào log
             MyLogger.GetInstance().Info("old access_token: " + shopeeAuthen.shopeeToken.access_token);
             MyLogger.GetInstance().Info("old refresh_token: " + shopeeAuthen.shopeeToken.refresh_token);
             if (token != null)
@@ -291,10 +272,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    shopeeMySql.ShopeeSaveToken(token, conn);
-                    // Cập nhật lại shopee authen
-                    shopeeAuthen = ShopeeGetAuthen(conn);
+                    await conn.OpenAsync();
+                    await shopeeMySql.ShopeeSaveTokenAsync(token, conn);
+                    shopeeAuthen = await ShopeeGetAuthen(conn);
                 }
             }
             else
@@ -304,15 +284,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             return token;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="partner_id"></param>
-        /// <param name="access_token"></param>
-        /// <param name="shop_id"></param>
-        /// <param name="partner_key"></param>
-        /// <param name="path"></param>
-        /// <returns></returns>
         public static string GenerateURLShopeeAPI(string path, List<DevNameValuePair> ls)
         {
             long timest = Common.GetTimestampNow();
@@ -333,64 +304,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             return url;
         }
 
-        public static IRestResponse ShopeeGetMethod(string path, List<DevNameValuePair> ls)
-        {
-            IRestResponse response = null;
-            try
-            {
-                // Nếu access token hết hạn, ta làm mới
-                if (DateTime.Now > shopeeAuthen.validAccessTokenTime)
-                {
-                    if (ShopeeGetRefreshTokenShopLevel() == null)
-                    {
-                        return null;
-                    }
-                }
-
-                string url = GenerateURLShopeeAPI(path, ls);
-
-                RestRequest request = new RestRequest(url, Method.GET);
-
-                response = Common.client.Execute(request);
-                MyLogger.InfoRestLog(Common.client, request, response);
-
-                // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
-                // Làm mới access token và thử lại
-                if (response.StatusCode == HttpStatusCode.Forbidden)
-                {
-                    MyLogger.GetInstance().Info("ShopeeGetMethod call because response.StatusCode == HttpStatusCode.Forbidden");
-                    if (ShopeeGetRefreshTokenShopLevel() == null)
-                    {
-                        response = null;
-                    }
-                    else
-                    {
-                        url = GenerateURLShopeeAPI(path, ls);
-
-                        request = new RestRequest(url, Method.GET);
-
-                        response = Common.client.Execute(request);
-                        MyLogger.InfoRestLog(Common.client, request, response);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.Message);
-                response = null;
-            }
-            return response;
-        }
-
         public static async Task<IRestResponse> ShopeeGetMethodAsync(string path, List<DevNameValuePair> ls)
         {
             IRestResponse response = null;
             try
             {
-                // Nếu access token hết hạn, ta làm mới
                 if (DateTime.Now > shopeeAuthen.validAccessTokenTime)
                 {
-                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    if (await ShopeeGetRefreshTokenShopLevelAsync() == null)
                     {
                         return null;
                     }
@@ -400,16 +321,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
                 RestRequest request = new RestRequest(url, Method.GET);
 
-                response = Common.client.Execute(request);
+                response = await Common.client.ExecuteAsync(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
 
-                // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
-                // Làm mới access token và thử lại
                 if (response.StatusCode == HttpStatusCode.Forbidden)
                 {
                     MyLogger.GetInstance().Info("ShopeeGetMethodAsync call because response.StatusCode == HttpStatusCode.Forbidden");
 
-                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    if (await ShopeeGetRefreshTokenShopLevelAsync() == null)
                     {
                         response = null;
                     }
@@ -419,7 +338,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
 
                         request = new RestRequest(url, Method.GET);
 
-                        response = Common.client.Execute(request);
+                        response = await Common.client.ExecuteAsync(request);
                         MyLogger.InfoRestLog(Common.client, request, response);
                     }
                 }
@@ -437,15 +356,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             return "error: " + obj.error + ", message: " + obj.message;
         }
 
-        public static IRestResponse ShopeePostMethod(string path, string body)
+        public static async Task<IRestResponse> ShopeePostMethodAsync(string path, string body)
         {
             IRestResponse response = null;
             try
             {
-                // Nếu access token hết hạn, ta làm mới
                 if (DateTime.Now > shopeeAuthen.validAccessTokenTime)
                 {
-                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    if (await ShopeeGetRefreshTokenShopLevelAsync() == null)
                     {
                         return null;
                     }
@@ -457,16 +375,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 request.AddHeader("Content-Type", "application/json");
                 request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-                response = Common.client.Execute(request);
+                response = await Common.client.ExecuteAsync(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
 
-                // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
-                // Làm mới access token và thử lại
                 if (response.StatusCode == HttpStatusCode.Forbidden)
                 {
-                    MyLogger.GetInstance().Info("ShopeePostMethod call because response.StatusCode == HttpStatusCode.Forbidden");
+                    MyLogger.GetInstance().Info("ShopeePostMethodAsync call because response.StatusCode == HttpStatusCode.Forbidden");
 
-                    if (ShopeeGetRefreshTokenShopLevel() == null)
+                    if (await ShopeeGetRefreshTokenShopLevelAsync() == null)
                     {
                         response = null;
                     }
@@ -478,7 +394,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                         request.AddHeader("Content-Type", "application/json");
                         request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-                        response = Common.client.Execute(request);
+                        response = await Common.client.ExecuteAsync(request);
                         MyLogger.InfoRestLog(Common.client, request, response);
                     }
                 }
@@ -491,12 +407,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             return response;
         }
 
-        public static string ShopeeGetShopInfo()
+        public static async Task<string> ShopeeGetShopInfoAsync()
         {
             string json = string.Empty;
             string path = "/api/v2/shop/get_shop_info";
 
-            IRestResponse response = ShopeeGetMethod(path, null);
+            IRestResponse response = await ShopeeGetMethodAsync(path, null);
             if (response == null)
                 return json;
 

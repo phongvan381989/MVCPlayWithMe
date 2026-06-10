@@ -50,18 +50,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
         #region Xử lý item
         // GET: ProductECommerce
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
                 return View("~/Views/Administrator/Login.cshtml");
 
             return View();
         }
 
         [HttpGet]
-        public ActionResult Item(string eType, string id)
+        public async Task<ActionResult> Item(string eType, string id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
                 return View("~/Views/Administrator/Login.cshtml");
 
             //ViewDataGetListProductName();
@@ -74,18 +74,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public async Task<string> GetProductAll(string eType)
         {
             List<CommonItem> lsCommonItem = null;
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(lsCommonItem);
             }
 
             if (eType == Common.eShopee)
             {
-                lsCommonItem = ShopeeGetProductAll();
+                lsCommonItem = await ShopeeGetProductAllAsync();
             }
             else if(eType == Common.eTiki)
             {
-                lsCommonItem = TikiGetProductAll();
+                lsCommonItem = await TikiGetProductAll();
             }
             else if(eType == Common.eLazada)
             {
@@ -99,18 +99,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public async Task<string> GetNewItemOneMonth(string eType)
         {
             List<CommonItem> lsCommonItem = null;
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(lsCommonItem);
             }
 
             if (eType == Common.eShopee)
             {
-                lsCommonItem = ShopeeGetNewItemOneMonth();
+                lsCommonItem = await ShopeeGetNewItemOneMonthAsync();
             }
             else if (eType == Common.eTiki)
             {
-                lsCommonItem = TikiGetNewItemOneMonth();
+                lsCommonItem = await TikiGetNewItemOneMonth();
             }
             else if(eType == Common.eLazada)
             {
@@ -124,19 +124,19 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public async Task<string> GetItemFromId(string eType, string id)
         {
             CommonItem commonItem = null;
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(commonItem);
             }
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+            await conn.OpenAsync();
             if (eType == Common.eShopee)
             {
                 long lid = Common.ConvertStringToInt64(id);
                 if (lid != Int64.MinValue)
                 {
-                    commonItem = ShopeeGetItemFromIdConnectOut(lid, conn);
+                    commonItem = await ShopeeGetItemFromIdConnectOutAsync(lid, conn);
                 }
             }
             else if (eType == Common.eTiki)
@@ -144,7 +144,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 int iid = Common.ConvertStringToInt32(id);
                 if (iid != Int32.MinValue)
                 {
-                    commonItem = TikiGetProductFromIdConnectOut(iid, conn);
+                    commonItem = await TikiGetProductFromIdConnectOut(iid, conn);
                 }
                 else
                 {
@@ -159,34 +159,33 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     commonItem = await LazadaGetItemFromIdConnectOut(lid, conn);
                 }
             }
-            conn.Close();
             return JsonConvert.SerializeObject(commonItem);
         }
 
-        List<CommonItem> ShopeeGetProductAll()
+        async Task<List<CommonItem>> ShopeeGetProductAllAsync()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem = new List<ShopeeGetItemBaseInfoItem>();
 
             // Lấy toàn bộ sản phẩm Shopee mất thời gian
-            lsShopeeBaseInfoItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAll();
+            lsShopeeBaseInfoItem = await ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoAllAsync();
 
             // Test chỉ lấy 1 page ~ 50 sản phẩm
-            //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrst();
+            //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrstAsync();
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+            await conn.OpenAsync();
 
             try
             {
                 // Không tồn tại trong DB ta insert
                 foreach (var pro in lsShopeeBaseInfoItem)
                 {
-                    CommonItem item = new CommonItem(pro);
+                    CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
                     lsCommonItem.Add(item);
-                    shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
+                    await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
                 }
 
-                shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOut(lsCommonItem, conn);
+                await shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOutAsync(lsCommonItem, conn);
 
                 //// Cập nhật trạng thái item vào DB
                 //shopeeSqler.ShopeeUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
@@ -195,7 +194,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
+            await conn.OpenAsync();
             return lsCommonItem;
         }
 
@@ -206,20 +205,20 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             try
             {
                 // Lấy toàn bộ sản phẩm Lazada mất thời gian
-                List<LazadaProduct>  lsLazadaProduct = LazadaProductAPI.GetProductAll();
+                List<LazadaProduct>  lsLazadaProduct = await LazadaProductAPI.GetProductAll();
 
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     // Không tồn tại trong DB ta insert
                     foreach (var pro in lsLazadaProduct)
                     {
                         CommonItem item = new CommonItem(pro);
                         lsCommonItem.Add(item);
-                        lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn);
+                        await lazadaSqler.LazadaInsertIfDontExistConnectOutAsync(item, conn);
                     }
 
-                    lazadaSqler.LazadaGetListCommonItemFromListItemConnectOut(lsCommonItem, conn);
+                    await lazadaSqler.LazadaGetListCommonItemFromListItemConnectOutAsync(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
@@ -229,13 +228,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return lsCommonItem;
         }
 
-        List<CommonItem> ShopeeGetNewItemOneMonth()
+        async Task<List<CommonItem>> ShopeeGetNewItemOneMonthAsync()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
 
             // Lấy danh sách item trong khoảng 1 tháng, trạng thái NORMAL
             long update_time_to = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-            List<ShopeeItem> ls = ShopeeGetItemList.ShopeeProductGetNormal_ItemList(
+            List<ShopeeItem> ls = await ShopeeGetItemList.ShopeeProductGetNormal_ItemListAsync(
                 update_time_to - 31 * 24 * 3600,
                 update_time_to);
 
@@ -243,14 +242,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem =
-                        ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItem(ls);
+                        await ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItemAsync(ls);
                     foreach (var pro in lsShopeeBaseInfoItem)
                     {
-                        CommonItem item = new CommonItem(pro);
+                        CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
                         // Không tồn tại trong DB ta insert
-                        if (!shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn))
+                        if (!await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn))
                         {
                             lsCommonItem.Add(item);
                         }
@@ -270,15 +269,15 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             try
             {
-                List<LazadaProduct> lsLazadaProduct = LazadaProductAPI.GetNewProductOneMonth();
+                List<LazadaProduct> lsLazadaProduct = await LazadaProductAPI.GetNewProductOneMonth();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     foreach (var pro in lsLazadaProduct)
                     {
                         CommonItem item = new CommonItem(pro);
                         // Không tồn tại trong DB ta insert
-                        if ( !await lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn))
+                        if ( !await lazadaSqler.LazadaInsertIfDontExistConnectOutAsync(item, conn))
                         {
                             lsCommonItem.Add(item);
                         }
@@ -292,44 +291,44 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return lsCommonItem;
         }
 
-        public List<CommonItem> TikiGetProductAll()
+        public async Task<List<CommonItem>> TikiGetProductAll()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
-            lsTikiItem = GetListProductTiki.GetListLatestProductsFromOneShop();
+            lsTikiItem = await GetListProductTiki.GetListLatestProductsFromOneShop();
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+            await conn.OpenAsync();
 
-            tikiSqler.TikiGetListCommonItemFromListTikiProductConnectOut(lsTikiItem, lsCommonItem, conn);
+            await tikiSqler.TikiGetListCommonItemFromListTikiProductConnectOutAsync(lsTikiItem, lsCommonItem, conn);
 
             // Không tồn tại trong DB ta insert
             foreach (var item in lsCommonItem)
             {
-                tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
+                await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn);
             }
             //// Cập nhật trạng thái item vào DB
             //tikiSqler.TikiUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
 
-            conn.Close();
+            await conn.OpenAsync();
             return lsCommonItem;
         }
 
-        List<CommonItem> TikiGetNewItemOneMonth()
+        private async Task<List<CommonItem>> TikiGetNewItemOneMonth()
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             DateTime dtNow = DateTime.Now;
-            List<TikiProduct> lsTikiItem = GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(-31), dtNow);
+            List<TikiProduct> lsTikiItem = await GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(-31), dtNow);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+            await conn.OpenAsync();
             try
             {
                 foreach (var pro in lsTikiItem)
                 {
                     CommonItem item = new CommonItem(pro);
                     // Không tồn tại ta thêm vào danh sách
-                    if (!tikiSqler.TikiInsertIfDontExistConnectOut(item, conn))
+                    if (!await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn))
                     {
                         lsCommonItem.Add(item);
                     }
@@ -339,25 +338,25 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            conn.Close();
+            await conn.OpenAsync();
             return lsCommonItem;
         }
 
-        private CommonItem ShopeeGetItemFromIdConnectOut(long id, MySqlConnection conn)
+        private async Task<CommonItem> ShopeeGetItemFromIdConnectOutAsync(long id, MySqlConnection conn)
         {
-            ShopeeGetItemBaseInfoItem pro = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(id);
+            ShopeeGetItemBaseInfoItem pro = await ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromIdAsync(id);
             if (pro == null)
             {
                 return null;
             }
 
-            CommonItem item = new CommonItem(pro);
+            CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
             try
             {
                 // Không tồn tại trong DB ta insert
-                shopeeSqler.ShopeeInsertIfDontExistConnectOut(item, conn);
+                await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
 
-                shopeeSqler.ShopeeGetItemFromIdConnectOut(id, item, conn);
+                await shopeeSqler.ShopeeGetItemFromIdConnectOutAsync(id, item, conn);
             }
             catch (Exception ex)
             {
@@ -368,7 +367,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         private async Task<CommonItem> LazadaGetItemFromIdConnectOut(long id, MySqlConnection conn)
         {
-            LazadaProduct pro = LazadaProductAPI.GetProductItem(id);
+            LazadaProduct pro = await LazadaProductAPI.GetProductItem(id);
             if (pro == null)
             {
                 return null;
@@ -378,9 +377,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             try
             {
                 // Không tồn tại trong DB ta insert
-                await lazadaSqler.LazadaInsertIfDontExistConnectOut(item, conn);
+                await lazadaSqler.LazadaInsertIfDontExistConnectOutAsync(item, conn);
 
-                await lazadaSqler.LazadaGetItemFromIdConnectOut(id, item, conn);
+                await lazadaSqler.LazadaGetItemFromIdConnectOutAsync(id, item, conn);
             }
             catch (Exception ex)
             {
@@ -394,24 +393,24 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             MySqlResultState result = null;
             if (eType == Common.eShopee)
             {
-                result = shopeeSqler.ShopeeUpdateMapping(ls);
+                result = await shopeeSqler.ShopeeUpdateMappingAsync(ls);
             }
             else if(eType == Common.eTiki)
             {
-                result = tikiSqler.TikiUpdateMapping(ls);
+                result = await tikiSqler.TikiUpdateMappingAsync(ls);
             }
             else if (eType == Common.eLazada)
             {
-                result = await lazadaSqler.LazadaUpdateMapping(ls);
+                result = await lazadaSqler.LazadaUpdateMappingAsync(ls);
             }
 
             return result;
         }
 
-        private CommonItem TikiGetProductFromIdConnectOut(int id, MySqlConnection conn)
+        private async Task<CommonItem> TikiGetProductFromIdConnectOut(int id, MySqlConnection conn)
         {
             TikiProduct pro = null;
-            pro = GetListProductTiki.GetProductFromOneShop(id);
+            pro = await GetListProductTiki.GetProductFromOneShop(id);
 
             if (pro == null || pro.created_by != TikiConstValues.cstrCreatedBy)
             {
@@ -422,8 +421,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if(!string.IsNullOrEmpty(item.imageSrc)) // Không có ảnh đại diện, có thể đây là sản phẩm cha ảo
             {
                 // Không tồn tại trong DB ta insert
-                tikiSqler.TikiInsertIfDontExistConnectOut(item, conn);
-                tikiSqler.TikiGetItemFromIdConnectOut(id, item, conn);
+                await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn);
+                await tikiSqler.TikiGetItemFromIdConnectOutAsync(id, item, conn);
             }
 
             return item;
@@ -441,7 +440,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         public async Task<string> UpdateMapping(string eType, string str)
         {
             MySqlResultState result;
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -478,37 +477,37 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpGet]
-        public ActionResult ItemOnDB()
+        public async Task<ActionResult> ItemOnDB()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
                 return View("~/Views/Administrator/Login.cshtml");
 
             return View();
         }
 
         [HttpPost]
-        public string GetItemOnDB(string eType)
+        public async Task<string> GetItemOnDB(string eType)
         {
             List<CommonItem> ls = new List<CommonItem>();
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(ls);
             }
 
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
+                await conn.OpenAsync();
                 if (eType == Common.eShopee)
                 {
-                    ls = shopeeSqler.ShopeeGetItemOnDB(conn);
+                    ls = await shopeeSqler.ShopeeGetItemOnDBAsync(conn);
                 }
                 else if (eType == Common.eTiki)
                 {
-                    ls = tikiSqler.TikiGetItemOnDB(conn);
+                    ls = await tikiSqler.TikiGetItemOnDBAsync(conn);
                 }
                 else if (eType == Common.eLazada)
                 {
-                    ls = lazadaSqler.LazadaGetItemOnDB(conn);
+                    ls = await lazadaSqler.LazadaGetItemOnDBAsync(conn);
                 }
             }
             return JsonConvert.SerializeObject(ls);
@@ -516,9 +515,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         // Nếu tên sản phẩm trên sàn bao gồm cả tên combo, tên sản phẩm trong kho thì mapping tương ứng
         [HttpPost]
-        public string AutoUpdateMapping(string eType)
+        public async Task<string> AutoUpdateMapping(string eType)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -527,18 +526,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             try
             {
-                conn.Open();
+                await conn.OpenAsync();
                 //// Lấy danh sách combo, sản phẩm thuộc combo trong kho
                 //ComboMySql comboMysql = new ComboMySql();
                 //List<Combo> lsCombo = comboMysql.GetListComboIncludeSimpleProducts(conn);
                 // Lấy danh sách sản phẩm trong kho đơn giản
                 ProductMySql productMySql = new ProductMySql();
-                List<Product> lsProduct = productMySql.GetSimpleComboCategoryAllConnectOut(conn);
+                List<Product> lsProduct =await productMySql.GetSimpleComboCategoryAllConnectOutAsync(conn);
                 string nameTemp = "";
                 if (eType == Common.eTiki)
                 {
                     // Lấy danh sách sản phẩm trên sàn chưa mapping
-                    Dictionary<int, string> dic = tikiSqler.TikiGetListItemDontMapping(conn);
+                    Dictionary<int, string> dic = await tikiSqler.TikiGetListItemDontMappingAsync(conn);
                     foreach(var item in dic)
                     {
                         foreach (var pro in lsProduct)
@@ -546,7 +545,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                             nameTemp = Product.GenerateName(pro);
                             if(nameTemp == item.Value)
                             {
-                                tikiSqler.TikiUpdateMappingSignle(item.Key, pro.id, 1, conn);
+                                await tikiSqler.TikiUpdateMappingSignleAsync(item.Key, pro.id, 1, conn);
                                 break;
                             }
                         }
@@ -567,9 +566,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         // Xóa item trên db
         [HttpPost]
-        public string DeleteItemOnDB(string eType, string itemId)
+        public async Task<string> DeleteItemOnDB(string eType, string itemId)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -578,21 +577,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (eType == Common.eShopee)
             {
                 long id = Common.ConvertStringToInt64(itemId);
-                resultState = shopeeSqler.ShopeeDeleteItemOnDB(id);
+                resultState = await shopeeSqler.ShopeeDeleteItemOnDBAsync(id);
             }
             else if (eType == Common.eTiki)
             {
                 int id = Common.ConvertStringToInt32(itemId);
-                resultState = tikiSqler.TikiDeleteItemOnDB(id);
+                resultState = await tikiSqler.TikiDeleteItemOnDBAsync(id);
             }
             return JsonConvert.SerializeObject(resultState);
         }
 
         // Xóa model Shopee trên db => Disable
         [HttpPost]
-        public string DeleteShopeeModelOnDB(string eType, string modelId)
+        public async Task<string> DeleteShopeeModelOnDB(string eType, string modelId)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -601,16 +600,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (eType == Common.eShopee)
             {
                 long id = Common.ConvertStringToInt64(modelId);
-                resultState = ShopeeMySql.ShopeeDeleteModelOnDB(id);
+                resultState = await ShopeeMySql.ShopeeDeleteModelOnDBAsync(id);
             }
             return JsonConvert.SerializeObject(resultState);
         }
 
         [HttpPost]
-        public string CopyImageFromTMDTToWarehouseProduct(string eType,
+        public async Task<string> CopyImageFromTMDTToWarehouseProduct(string eType,
             string imageUrl, string productId)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -703,9 +702,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         #region Xử lý đơn hàng
         [HttpGet]
-        public ActionResult Order()
+        public async Task<ActionResult> Order()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
                 return View("~/Views/Administrator/Login.cshtml");
 
             return View();
@@ -718,17 +717,17 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         /// <param name="orderStatus"> 0: tất cả, 1: Cần gửi hàng, 2: Hủy</param>
         /// <returns></returns>
         [HttpPost]
-        public string GetListOrder(int fromTo, int orderStatus)
+        public async Task<string> GetListOrder(int fromTo, int orderStatus)
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(lsCommonOrder);
             }
             CommonOrderStatus eOrderStatus = (CommonOrderStatus)orderStatus;
             // Lấy đơn hàng tiki
             List<TikiOrder> lsOrderTikiFullInfo;
-            lsOrderTikiFullInfo = TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo, eOrderStatus);
+            lsOrderTikiFullInfo = await TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo, eOrderStatus);
             if(lsOrderTikiFullInfo != null)
             {
                 foreach(var order in lsOrderTikiFullInfo)
@@ -751,61 +750,61 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 time_from = time_to.AddDays(-30);
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+            await conn.OpenAsync();
 
             // Lấy đơn hàng của shopee, lazada
             List<LazadaOrder> lsOrderLazadaFullInfo = null;
             if (eOrderStatus == CommonOrderStatus.CANCELLED)
             {
                 // Shopee
-                lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(
+                lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
                 time_from,
                 time_to,
                 ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED],
                 conn);
 
-                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+                lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAllAsync(
                     time_from,
                     time_to,
                     ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.CANCELLED],
                     conn);
 
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailCanceled(time_from);
+                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailCanceledAsync(time_from);
             }
             else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
             {
                 // Shopee
-                lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToPickUp(
+                lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToPickUpAsync(
                 time_from,
                 time_to,
                 conn);
 
-                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailToPickUp(
+                lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailToPickUpAsync(
                     time_from,
                     time_to,
                     conn);
 
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailReadyToShip(time_from);
+                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailReadyToShipAsync(time_from);
             }
             else
             {
                 // Shopee
-                lsOrderShopeeFullInfo = ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAll(
+                lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
                     time_from,
                     time_to,
                     ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.ALL],
                     conn);
 
-                lsBookingShopeeFullInfo = ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAll(
+                lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAllAsync(
                     time_from,
                     time_to,
                     ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.ALL],
                     conn);
 
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailAll(time_from);
+                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailAllAsync(time_from);
             }
 
             // Shopee
@@ -829,22 +828,22 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Lấy đơn hàng của web Play With Me
-            lsCommonOrder.AddRange(ordersqler.GetListCommonOrder(fromTo));
+            lsCommonOrder.AddRange(await ordersqler.GetListCommonOrderAsync(fromTo));
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
-            ordersqler.GetOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
-            conn.Close();
+            await ordersqler.GetOrderStatusInWarehouseToCommonOrderAsync(lsCommonOrder);
+            await conn.OpenAsync();
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
 
         // Từ tên sàn, mã đơn hoặc mã vận đơn (với sàn SHOPEE, LAZADA) hoặc mã booking lấy được thông tin CommonOrder
         [HttpPost]
-        public string GetOrderFromOrderSN_TrackingNumber(string ecommerce,
+        public async Task<string> GetOrderFromOrderSN_TrackingNumber(string ecommerce,
             string sn_trackingNumber,
             int isBookingCode) // 0: tức là false, ngược lại là true
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(lsCommonOrder);
             }
@@ -854,13 +853,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn 
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                conn.Open();
+                await conn.OpenAsync();
                 if (isBookingCode == 0)
                 {
-                    string sn = string.Empty, trackingNumber = string.Empty;
-                    tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
-                        sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.SHOPEE, conn);
-                    conn.Close();
+                    var (sn, trackingNumber) = await tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+                        sn_trackingNumber, EECommerceType.SHOPEE, conn);
 
                     if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
                     {
@@ -868,7 +865,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
                     }
                     ShopeeOrderDetail shopeeOrderDetail =
-                    ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSN(sn);
+                    await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(sn);
 
                     if (shopeeOrderDetail != null)
                     {
@@ -878,10 +875,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
                 else
                 {
-                    string sn = string.Empty, trackingNumber = string.Empty;
-                    tikiSqler.GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOut(
-                        sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.SHOPEE, conn);
-                    conn.Close();
+                    var (sn, trackingNumber) = await tikiSqler.GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+                        sn_trackingNumber, EECommerceType.SHOPEE, conn);
 
                     if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã booking
                     {
@@ -890,7 +885,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     }
                     // Lấy chi tiết booking
                     ShopeeBookingDetail detail =
-                        ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSN(sn);
+                        await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSNAsync(sn);
                     if (detail != null)
                     {
                         ShopeeMySql shopeeMySql = new ShopeeMySql();
@@ -902,11 +897,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn 
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                conn.Open();
-                string sn = string.Empty, trackingNumber = string.Empty;
-                tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOut(
-                    sn_trackingNumber, ref sn, ref trackingNumber, EECommerceType.LAZADA, conn);
-                conn.Close();
+                await conn.OpenAsync();
+                var (sn, trackingNumber) = await tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+                    sn_trackingNumber, EECommerceType.LAZADA, conn);
 
                 if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
                 {
@@ -917,7 +910,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 if (order_id > 0)
                 {
                     LazadaOrder orderDetail =
-                    LazadaOrderAPI.LazadaGetOrderDetail(order_id);
+                    await LazadaOrderAPI.LazadaGetOrderDetailAsync(order_id);
 
                     if (orderDetail != null)
                     {
@@ -927,7 +920,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             else if (ecommerce == Common.eTiki)
             {
-                TikiOrder tikiOrder = TikiGetListOrders.TikiGetOrderFromCode(sn_trackingNumber);
+                TikiOrder tikiOrder = await TikiGetListOrders.TikiGetOrderFromCode(sn_trackingNumber);
                 if (tikiOrder != null)
                 {
                     commonOrder = new CommonOrder(tikiOrder);
@@ -940,7 +933,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
-            ordersqler.GetOrderStatusInWarehouseToCommonOrder(lsCommonOrder);
+            await ordersqler.GetOrderStatusInWarehouseToCommonOrderAsync(lsCommonOrder);
 
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
@@ -950,16 +943,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         /// </summary>
         /// <returns></returns>
         [HttpPost]
-        public string ReloadOneOrder(string commonOrder)
+        public async Task<string> ReloadOneOrder(string commonOrder)
         {
             CommonOrder order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(order);
             }
 
             MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
+            await conn.OpenAsync();
             try
             {
                 // Nếu sản phẩm trên shopee, tiki,... chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
@@ -968,25 +961,25 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
                 // nhưng trạng thái cũ là tắt (Status != 0) và giờ được bật (nên mới có đơn).
                 // Ta cần cập nhật lại.
-                ordersqler.UpdateStatusNormalOfTMDTItemConnectOut(order, conn);
+                await ordersqler.UpdateStatusNormalOfTMDTItemConnectOut(order, conn);
 
                 order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
 
                 if (order.ecommerceName == eTiki)
                 {
-                    tikiSqler.TikiGetMappingOfCommonOrderConnectOut(order, conn);
+                    await tikiSqler.TikiGetMappingOfCommonOrderConnectOutAsync(order, conn);
                 }
                 else if (order.ecommerceName == eShopee)
                 {
-                    shopeeSqler.ShopeeGetMappingOfCommonOrderConnectOut(order, conn);
+                    await shopeeSqler.ShopeeGetMappingOfCommonOrderConnectOutAsync(order, conn);
                 }
                 else if (order.ecommerceName == eLazada)
                 {
-                    lazadaSqler.LazadaGetMappingOfCommonOrderConnectOut(order, conn);
+                    await lazadaSqler.LazadaGetMappingOfCommonOrderConnectOutAsync(order, conn);
                 }
                 else if (order.ecommerceName == ePlayWithMe)
                 {
-                    ordersqler.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
+                    await ordersqler.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
                 }
             }
             catch (Exception ex)
@@ -997,9 +990,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string EnoughProductInOrder(string eType, string commonOrder)
+        public async Task<string> EnoughProductInOrder(string eType, string commonOrder)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -1012,7 +1005,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     EECommerceType eECommerceType = EECommerceType.TIKI;
                     if (eType == Common.eShopee)
                     {
@@ -1036,13 +1029,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     // Là đơn booking
                     if (order.isBooking)
                     {
-                        TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
+                        TbEcommerceOrder tbEcommerceBookingLastest = await tikiSqler.GetLastestStatusOfECommerceBookingAsync(
                             order.bookingCode, eECommerceType, conn);
                         ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
 
                         ECommerceOrderStatus status = ECommerceOrderStatus.PACKED;
 
-                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+                        result = await tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
                         order, status, 0, oldStatus,
                         EECommerceType.SHOPEE, conn);
                     }
@@ -1052,10 +1045,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         // được cập nhật từ mini app viết mục đích nhắc có đơn hỏa tốc
                         if (order.isExpress)
                         {
-                            tikiSqler.UpdateStatusToKnownTbExpressOrder(order.code, eECommerceType, conn);
+                            await tikiSqler.UpdateStatusToKnownTbExpressOrderAsync(order.code, eECommerceType, conn);
                         }
 
-                        TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                        TbEcommerceOrder tbEcommerceOrder = await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
                             order.code, eECommerceType, conn);
                         ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
 
@@ -1068,7 +1061,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         }
                         else if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                         {
-                            result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                            result = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
                             order, status, 0, oldStatus, eECommerceType, conn);
                         }
                     }
@@ -1083,9 +1076,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
-        public string ReturnedOrder(string eType, string commonOrder)
+        public async Task<string> ReturnedOrder(string eType, string commonOrder)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -1112,36 +1105,36 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     // Là đơn booking
                     if (order.isBooking)
                     {
-                        TbEcommerceOrder tbEcommerceBookingLastest = tikiSqler.GetLastestStatusOfECommerceBooking(
+                        TbEcommerceOrder tbEcommerceBookingLastest = await tikiSqler.GetLastestStatusOfECommerceBookingAsync(
                             order.bookingCode, eECommerceType, conn);
                         ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
 
                         ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
 
-                        result = tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOut(
+                        result = await tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
                         order, status, 0, oldStatus,
                         EECommerceType.SHOPEE, conn);
                     }
                     else
                     {
-                        TbEcommerceOrder tbEcommerceOrder = tikiSqler.GetLastestStatusOfECommerceOrder(
+                        TbEcommerceOrder tbEcommerceOrder = await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
                             order.code, eECommerceType, conn);
                         ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
 
                         ECommerceOrderStatus status = ECommerceOrderStatus.RETURNED;
                         if (tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                         {
-                            result = tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOut(
+                            result = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
                             order, status, 0, oldStatus, eECommerceType, conn);
 
                             if (result != null && result.myAnything == 1)
                             {
                                 // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                                ProductController.GetListNeedUpdateQuantityAndUpdate_Core();
+                                await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                             }
                         }
                     }
@@ -1198,9 +1191,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         /// 0: nếu chưa tồn tại</param>
         /// <returns></returns>
         [HttpPost]
-        public string ShopeeBornModelForVoiBeNho(string strCommonItem, long shopeeModelId, int pWMMappingModelId)
+        public async Task<string> ShopeeBornModelForVoiBeNho(string strCommonItem, long shopeeModelId, int pWMMappingModelId)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -1209,7 +1202,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Check xem item đã được sinh ra trên voibenho
             int itemId = 0;
-            itemId = itemModelSqler.GetItemIdFromName(commonItem.name);
+            itemId = await itemModelSqler.GetItemIdFromNameAsync(commonItem.name);
 
             // Chưa sinh item tương ứng trên web voibenho.
             if (itemId <= 0)
@@ -1220,7 +1213,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     status = 0;
                 else
                     status = 1;
-                itemId = itemModelSqler.AddItem(commonItem.name, status, commonItem.detail);
+                itemId = await itemModelSqler.AddItemAsync(commonItem.name, status, commonItem.detail);
 
                 // Lưu ảnh vào thư mục \Media\Item\ItemId\
                 SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
@@ -1250,7 +1243,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             float discount = 100 - commonModel.price * 100/ commonModel.market_price;
             int price = (int)((100 - discount) * commonModel.market_price / 100);
             //price = price / 1000 * 1000; // Lấy đơn vị tròn 1000 vnđ
-            MySqlResultState resultState = itemModelSqler.BornModelFromShopeeModel(itemId, pWMMappingModelId,
+            MySqlResultState resultState = await itemModelSqler.BornModelFromShopeeModelAsync(itemId, pWMMappingModelId,
                 commonModel.name, 5, discount, price, commonModel.market_price, commonItem.itemId, commonModel.modelId);
 
             if(resultState.State != EMySqlResultState.OK)
@@ -1289,7 +1282,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     mappingOnlyProductId.Add(m.product.id);
                     mappingOnlyQuantity.Add(m.quantity);
                 }
-                resultState = itemModelSqler.UpdateMapping(newModelId, mappingOnlyProductId, mappingOnlyQuantity);
+                resultState = await itemModelSqler.UpdateMappingAsync(newModelId, mappingOnlyProductId, mappingOnlyQuantity);
             }
 
             return JsonConvert.SerializeObject(resultState);
@@ -1297,7 +1290,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         #endregion
 
         [HttpPost]
-        public string UpdateBookCoverPriceToEEcommerce(string strCommonItem)
+        public async Task<string> UpdateBookCoverPriceToEEcommerce(string strCommonItem)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -1305,9 +1298,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
 
-                    if (AuthentAdministratorConnectOut(conn) == null)
+                    if ((await AuthentAdministratorConnectOutAsync(conn)) == null)
                     {
                         return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
                     }
@@ -1356,9 +1349,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(result);
         }
 
-        public ActionResult OrderStatistics()
+        public async Task<ActionResult> OrderStatistics()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
                 return View("~/Views/Administrator/Login.cshtml");
 
             return View();
@@ -1366,11 +1359,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
         // Lấy lịch sử đơn hàng
         [HttpPost]
-        public string GetOrderStatistics(int eType, int intervalDay)
+        public async Task<string> GetOrderStatistics(int eType, int intervalDay)
         {
             List<TbEcommerceOrder> outputList = null;
 
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new List<TbEcommerceOrder>());
             }
@@ -1378,9 +1371,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             try
             {
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                conn.Open();
-                outputList = tikiSqler.GetOrderStatistics(eType, intervalDay, conn);
-                conn.Close();
+                await conn.OpenAsync();
+                outputList = await tikiSqler.GetOrderStatisticsAsync(eType, intervalDay, conn);
+                await conn.OpenAsync();
             }
             catch (Exception ex)
             {
@@ -1390,9 +1383,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(outputList);
         }
 
-        public string UpdateStatusItemOpposite(string eType, long itemId, string currentStatus)
+        public async Task<string> UpdateStatusItemOpposite(string eType, long itemId, string currentStatus)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -1406,9 +1399,9 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
                     // Lấy tồn kho, nếu bằng = 0 thì cho phép tắt bán sản phẩm trên sàn
                     MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                    conn.Open();
+                    await conn.OpenAsync();
                     ProductMySql productMySql = new ProductMySql();
-                    int quantity = productMySql.TikiGetQuantityOfOneItemModelConnectOut(id, conn);
+                    int quantity =await productMySql.TikiGetQuantityOfOneItemModelConnectOutAsync(id, conn);
                     if(quantity != 0 && currentStatus == Common.tikiActive)
                     {
                         result.State = EMySqlResultState.INVALID;
@@ -1420,10 +1413,10 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         if(result.State == EMySqlResultState.OK)
                         {
                             // cập nhật trạng thái item
-                            tikiSqler.TikiUpdateStatusOfItemToDbConnectOut(id, currentStatus == Common.tikiActive? 1: 0, conn);
+                            await tikiSqler.TikiUpdateStatusOfItemToDbConnectOutAsync(id, currentStatus == Common.tikiActive? 1: 0, conn);
                         }
                     }
-                    conn.Close();
+                    await conn.OpenAsync();
                 }
             }
             catch (Exception ex)
@@ -1437,7 +1430,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpGet]
         public async Task<string> UpdateQuantityPrice_SpecialPrice(string eType, long id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }

@@ -6,6 +6,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
@@ -19,7 +20,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
     }
     public class TikiCreateProduct
     {
-        public static TikiCreateProductTrackingResponse CreateProduct(TikiCreatingProduct createPro)
+        public static async Task<TikiCreateProductTrackingResponse> CreateProduct(TikiCreatingProduct createPro)
         {
             TikiCreateProductTrackingResponse trackObj = null;
             string http = TikiConstValues.cstrCreateProduct;
@@ -29,7 +30,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                 MissingMemberHandling = MissingMemberHandling.Ignore
             };
 
-            IRestResponse response = CommonTikiAPI.PostExcuteRequest(http,
+            IRestResponse response = await CommonTikiAPI.PostExcuteRequest(http,
                 JsonConvert.SerializeObject(createPro, settings));
             try
             {
@@ -51,13 +52,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         }
 
         // https://api.tiki.vn/integration/v2/tracking/db57745eb036422e92d14d656fa3187c
-        public static TikiCreateProductTrackingResponse TrackingRequestCreateProduct(string track_id)
+        public static async Task<TikiCreateProductTrackingResponse> TrackingRequestCreateProduct(string track_id)
         {
             TikiCreateProductTrackingResponse trackObj = null;
             string http = TikiConstValues.cstrTrackingRequestCreateProduct + track_id;
 
 
-            IRestResponse response = CommonTikiAPI.GetExcuteRequest(http);
+            IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
             try
             {
                 JsonSerializerSettings settings = new JsonSerializerSettings

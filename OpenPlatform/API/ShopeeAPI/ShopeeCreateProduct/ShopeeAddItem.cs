@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
@@ -332,7 +333,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
         }
 
         //
-        public static ShopeeAddItemResponseHTTP ShopeeProductAddItem(
+        public static async Task<ShopeeAddItemResponseHTTP> ShopeeProductAddItemAsync(
             ShopeeAddItem_RequestParameters requsetParameters)
         {
             string path = "/api/v2/product/add_item";
@@ -343,7 +344,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
             string body = JsonConvert.SerializeObject(requsetParameters, SerializeSettings);
             MyLogger.GetInstance().Info(body);
 
-            IRestResponse response = CommonShopeeAPI.ShopeePostMethod(path, body);
+            IRestResponse response = await CommonShopeeAPI.ShopeePostMethodAsync(path, body);
             if (response.StatusCode != HttpStatusCode.OK)
             {
                 return null;

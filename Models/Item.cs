@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models.ItemModel;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models
 {
@@ -109,12 +110,12 @@ namespace MVCPlayWithMe.Models
             //}
         }
 
-        public void SetShopeeItemId()
+        public async Task SetShopeeItemId()
         {
             ItemModelMySql sqler = new ItemModelMySql();
             if (models.Count > 0)
             {
-                MySqlResultState result = sqler.GetTMDTShopeeItemIdFromModelId(models[0].id);
+                MySqlResultState result = await sqler.GetTMDTShopeeItemIdFromModelIdAsync(models[0].id);
                 if (result.State == EMySqlResultState.OK)
                 {
                     shopeeItemId = result.myAnythingLong;

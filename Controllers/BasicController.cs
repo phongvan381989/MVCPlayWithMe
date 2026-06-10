@@ -9,6 +9,7 @@ using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.ProductModel;
 using MySql.Data.MySqlClient;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -19,68 +20,12 @@ namespace MVCPlayWithMe.Controllers
             ViewData["title"] = "Play with books";
         }
 
-        public Administrator AuthentAdministrator()
-        {
-            CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);
-            if (string.IsNullOrEmpty(cookieResult.cookieValue))
-            {
-                MyLogger.GetInstance().Warn("cookieValue is null or empty");
-                return null;
-            }
-            /// Check cookie đã được lưu trong db
-            AdministratorMySql sqler = new AdministratorMySql();
-            Administrator administrator = sqler.GetAdministratorFromCookie(cookieResult.cookieValue);
-            if (administrator == null)
-            {
-                // Lỗi ví dụ timeout,... không lấy được admin id từ cookie, nên ta không xóa cookie từ phía server nữa
-                MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
-            }
-            return administrator;
-        }
-
-        public Administrator AuthentAdministratorConnectOut(MySqlConnection conn)
-        {
-            CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);
-            if (string.IsNullOrEmpty(cookieResult.cookieValue))
-            {
-                MyLogger.GetInstance().Warn("cookieValue is null or empty");
-                return null;
-            }
-            /// Check cookie đã được lưu trong db
-            AdministratorMySql sqler = new AdministratorMySql();
-            Administrator administrator = sqler.GetAdministratorFromCookieConnectOut(
-                cookieResult.cookieValue,
-                conn);
-            if (administrator == null)
-            {
-                // Lỗi ví dụ timeout,... không lấy được admin id từ cookie, nên ta không xóa cookie từ phía server nữa
-                MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
-            }
-            return administrator;
-        }
-
         public MySqlResultState AuthentFailReturnState()
         {
             MySqlResultState result = new MySqlResultState();
             result.State = EMySqlResultState.AUTHEN_FAIL;
             result.Message = MySqlResultState.authenFailMessage;
             return result;
-        }
-
-        public Customer AuthentCustomer()
-        {
-            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
-
-            /// Check cookie đã được lưu trong db
-            CustomerMySql sqler = new CustomerMySql();
-            Customer customer = sqler.GetCustomerFromCookie(cookieResult.cookieValue);
-            if (customer == null)
-            {
-                Cookie.DeleteUserIdCookie(HttpContext);
-                MyLogger.GetInstance().Warn("Authent customer fail." + cookieResult.cookieValue);
-
-            }
-            return customer;
         }
 
         /// <summary>
@@ -91,114 +36,6 @@ namespace MVCPlayWithMe.Controllers
         {
             //return View("~/Views/Administrator/Login.cshtml");
             return Redirect("~/Administrator/Login");
-        }
-
-        public void ViewDataGetListPublisher()
-        {
-            PublisherMySql sqlPubliser = new PublisherMySql();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            List<Publisher> ls = sqlPubliser.GetListPublisherConnectOut(conn);
-            conn.Close();
-            ViewData["lsPublisher"] = ls;
-        }
-
-        public void ViewDataGetListCombo()
-        {
-            ComboMySql sqler = new ComboMySql();
-            List<Combo> ls = sqler.GetListCombo();
-            ViewData["lsCombo"] = ls;
-        }
-
-        public void ViewDataGetListCategory()
-        {
-            CategoryMySql sqler = new CategoryMySql();
-            List<Category> ls = sqler.GetListCategory();
-            ViewData["lsCategory"] = ls;
-        }
-
-        public void ViewDataGetListProductName()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<ProductIdName> ls = sqler.GetListProductName();
-            ViewData["lsProductName"] = ls;
-        }
-
-        public void ViewDataGetListPublishingCompany()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<string> ls = sqler.GetListPublishingCompany();
-            ViewData["lsPublishingCompany"] = ls;
-        }
-
-        public void ViewDataGetListAuthor()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<string> listAuthor = sqler.GetListAuthor();
-            ViewData["lsAuthor"] = listAuthor;
-        }
-
-        public void ViewDataGetListTranslator()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<string> listTranslator = sqler.GetListTranslator();
-            ViewData["lsTranslator"] = listTranslator;
-        }
-
-        public void ViewDataGetListProductLong()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsProductLong = sqler.GetListDifferenceIntValue(1);
-            ViewData["lsProductLong"] = lsProductLong;
-        }
-
-        public void ViewDataGetListProductWide()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsProductWide = sqler.GetListDifferenceIntValue(2);
-            ViewData["lsProductWide"] = lsProductWide;
-        }
-
-        public void ViewDataGetListProductHigh()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsProductHigh = sqler.GetListDifferenceIntValue(3);
-            ViewData["lsProductHigh"] = lsProductHigh;
-        }
-
-        public void ViewDataGetListProductWeight()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsProductWeight = sqler.GetListDifferenceIntValue(4);
-            ViewData["lsProductWeight"] = lsProductWeight;
-        }
-
-        public void ViewDataGetListMinAge()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsMinAge = sqler.GetListDifferenceIntValue(5);
-            ViewData["lsMinAge"] = lsMinAge;
-        }
-
-        public void ViewDataGetListMaxAge()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsMaxAge = sqler.GetListDifferenceIntValue(6);
-            ViewData["lsMaxAge"] = lsMaxAge;
-        }
-
-        public void ViewDataGetListPublishingTime()
-        {
-            ProductMySql sqler = new ProductMySql();
-            List<int> lsPublishingTime = sqler.GetListDifferenceIntValue(7);
-            ViewData["lsPublishingTime"] = lsPublishingTime;
-        }
-
-        public void ViewDataGetListItemName()
-        {
-            ItemModelMySql sqler = new ItemModelMySql();
-            List<BasicIdName> ls = sqler.GetListItemName();
-            ViewData["lsItemName"] = ls;
         }
 
         public void ViewDataGetCommonInforOfVoiBeNho()
@@ -297,10 +134,163 @@ namespace MVCPlayWithMe.Controllers
             return result;
         }
 
-        // Xóa file trong thư mục tương ứng với id
-        public string DeleteAllFileWithTypeBasic(string path, int id, string fileType)
+        public async Task<Administrator> AuthentAdministratorAsync()
         {
-            if (AuthentAdministrator() == null)
+            CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);
+            if (string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                MyLogger.GetInstance().Warn("cookieValue is null or empty");
+                return null;
+            }
+            AdministratorMySql sqler = new AdministratorMySql();
+            Administrator administrator = await sqler.GetAdministratorFromCookieAsync(cookieResult.cookieValue);
+            if (administrator == null)
+                MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
+            return administrator;
+        }
+
+        public async Task<Administrator> AuthentAdministratorConnectOutAsync(MySqlConnection conn)
+        {
+            CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);
+            if (string.IsNullOrEmpty(cookieResult.cookieValue))
+            {
+                MyLogger.GetInstance().Warn("cookieValue is null or empty");
+                return null;
+            }
+            AdministratorMySql sqler = new AdministratorMySql();
+            Administrator administrator = await sqler.GetAdministratorFromCookieConnectOutAsync(
+                cookieResult.cookieValue, conn);
+            if (administrator == null)
+                MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
+            return administrator;
+        }
+
+        public async Task<Customer> AuthentCustomerAsync()
+        {
+            CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
+            CustomerMySql sqler = new CustomerMySql();
+            Customer customer = await sqler.GetCustomerFromCookieAsync(cookieResult.cookieValue);
+            if (customer == null)
+            {
+                Cookie.DeleteUserIdCookie(HttpContext);
+                MyLogger.GetInstance().Warn("Authent customer fail." + cookieResult.cookieValue);
+            }
+            return customer;
+        }
+
+        public async Task ViewDataGetListPublisherAsync()
+        {
+            PublisherMySql sqlPubliser = new PublisherMySql();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                List<Publisher> ls = await sqlPubliser.GetListPublisherConnectOutAsync(conn);
+                ViewData["lsPublisher"] = ls;
+            }
+        }
+
+        public async Task ViewDataGetListComboAsync()
+        {
+            ComboMySql sqler = new ComboMySql();
+            List<Combo> ls = await sqler.GetListComboAsync();
+            ViewData["lsCombo"] = ls;
+        }
+
+        public async Task ViewDataGetListCategoryAsync()
+        {
+            CategoryMySql sqler = new CategoryMySql();
+            List<Category> ls = await sqler.GetListCategoryAsync();
+            ViewData["lsCategory"] = ls;
+        }
+
+        public async Task ViewDataGetListProductNameAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<ProductIdName> ls = await sqler.GetListProductNameAsync();
+            ViewData["lsProductName"] = ls;
+        }
+
+        public async Task ViewDataGetListPublishingCompanyAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<string> ls = await sqler.GetListPublishingCompanyAsync();
+            ViewData["lsPublishingCompany"] = ls;
+        }
+
+        public async Task ViewDataGetListAuthorAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<string> ls = await sqler.GetListAuthorAsync();
+            ViewData["lsAuthor"] = ls;
+        }
+
+        public async Task ViewDataGetListTranslatorAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<string> ls = await sqler.GetListTranslatorAsync();
+            ViewData["lsTranslator"] = ls;
+        }
+
+        public async Task ViewDataGetListProductLongAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(1);
+            ViewData["lsProductLong"] = ls;
+        }
+
+        public async Task ViewDataGetListProductWideAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(2);
+            ViewData["lsProductWide"] = ls;
+        }
+
+        public async Task ViewDataGetListProductHighAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(3);
+            ViewData["lsProductHigh"] = ls;
+        }
+
+        public async Task ViewDataGetListProductWeightAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(4);
+            ViewData["lsProductWeight"] = ls;
+        }
+
+        public async Task ViewDataGetListMinAgeAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(5);
+            ViewData["lsMinAge"] = ls;
+        }
+
+        public async Task ViewDataGetListMaxAgeAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(6);
+            ViewData["lsMaxAge"] = ls;
+        }
+
+        public async Task ViewDataGetListPublishingTimeAsync()
+        {
+            ProductMySql sqler = new ProductMySql();
+            List<int> ls = await sqler.GetListDifferenceIntValueAsync(7);
+            ViewData["lsPublishingTime"] = ls;
+        }
+
+        public async Task ViewDataGetListItemNameAsync()
+        {
+            ItemModelMySql sqler = new ItemModelMySql();
+            List<BasicIdName> ls = await sqler.GetListItemNameAsync();
+            ViewData["lsItemName"] = ls;
+        }
+
+        // Xóa file trong thư mục tương ứng với id
+        public async Task<string> DeleteAllFileWithTypeBasicAsync(string path, int id, string fileType)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }

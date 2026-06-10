@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
@@ -20,49 +21,43 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string CreatePublisher(string name, float discount, string detail, string tikiCertificate)
+        public async Task<string> CreatePublisher(string name, float discount, string detail, string tikiCertificate)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = null;
             if (string.IsNullOrWhiteSpace(name))
             {
-                result = new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ.");
-                return JsonConvert.SerializeObject(result);
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ."));
             }
 
-            result = sqler.CreateNewPublisher(name, discount, detail);
+            MySqlResultState result = await sqler.CreateNewPublisherAsync(name, discount, detail);
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string DeletePublisher(int id)
+        public async Task<string> DeletePublisher(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = null;
-
-            result = sqler.DeletePublisher(id);
+            MySqlResultState result = await sqler.DeletePublisherAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string UpdatePublisher(int id, string name, float discount, string detail)
+        public async Task<string> UpdatePublisher(int id, string name, float discount, string detail)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = null;
-
-            result = sqler.UpdatePublisher(id, name, discount, detail);
+            MySqlResultState result = await sqler.UpdatePublisherAsync(id, name, discount, detail);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -88,9 +83,9 @@ namespace MVCPlayWithMe.Controllers
         //    return sb.ToString();
         //}
 
-        public ActionResult Create()
+        public async Task<ActionResult> Create()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return AuthenticationFail();
             }
@@ -98,34 +93,35 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public ActionResult UpdateDelete(int id)
+        public async Task<ActionResult> UpdateDelete(int id)
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return AuthenticationFail();
             }
-            Publisher publisher = sqler.GetPublisher(id);
+            Publisher publisher = await sqler.GetPublisherAsync(id);
             if (publisher != null)
             {
                 ViewData["publisherName"] = publisher.name;
                 ViewData["publisherDiscount"] = publisher.discount;
                 ViewData["publisherDetail"] = publisher.detail;
-            } 
+            }
             return View();
         }
 
         [HttpPost]
-        public string GetListPublisher()
+        public async Task<string> GetListPublisher()
         {
-            if (AuthentAdministrator() == null)
+            if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new List<Publisher>());
             }
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            conn.Open();
-            List<Publisher> ls = sqler.GetListPublisherConnectOut(conn);
-            conn.Close();
-            return JsonConvert.SerializeObject(ls);
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                List<Publisher> ls = await sqler.GetListPublisherConnectOutAsync(conn);
+                return JsonConvert.SerializeObject(ls);
+            }
         }
     }
 }

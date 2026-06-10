@@ -47,9 +47,9 @@ namespace MVCPlayWithMe
             Common.srcCertificateFolderPath = @"https://voibenho.com/Media/Certificate/";
             Common.absoluteForCreateMediaFolderPath = System.Web.HttpContext.Current.Server.MapPath(Common.MediaFolderPath + "Temporary/ForCreate/");
 
-            Common.TemporaryImageShopeeMediaFolderPath = 
+            Common.TemporaryImageShopeeMediaFolderPath =
                 ConfigurationManager.AppSettings["TemporaryImageShopeeMediaFolderPath"];
-            Common.TemporaryImageTikiMediaFolderPath = 
+            Common.TemporaryImageTikiMediaFolderPath =
                 ConfigurationManager.AppSettings["TemporaryImageTikiMediaFolderPath"];
 
             Common.client.Timeout = 120000; //120 giây
@@ -57,19 +57,27 @@ namespace MVCPlayWithMe
             MyMySql.connStr = ConfigurationManager.AppSettings["AdminConectMysql"];
             MyMySql.customerConnStr = ConfigurationManager.AppSettings["CustomerVBNConectMysql"];
 
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            try
             {
-                conn.Open();
-                CommonTikiAPI.tikiConfigApp = CommonTikiAPI.GetTikiConfigApp(conn);
-                CommonShopeeAPI.shopeeAuthen = CommonShopeeAPI.ShopeeGetAuthen(conn);
-                LazadaAuthenAPI.lazadaAuthen = LazadaAuthenAPI.LazadaGetAuthFromDB(conn);
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    conn.Open();
+                    CommonTikiAPI.tikiConfigApp = CommonTikiAPI.GetTikiConfigApp(conn).GetAwaiter().GetResult();
+                    CommonShopeeAPI.shopeeAuthen = CommonShopeeAPI.ShopeeGetAuthen(conn).GetAwaiter().GetResult();
+                    LazadaAuthenAPI.lazadaAuthen = LazadaAuthenAPI.LazadaGetAuthFromDBAsync(conn).GetAwaiter().GetResult();
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Fatal($"Error initializing application: {ex.Message}");
+                throw; // Ném lại lỗi để ứng dụng không khởi động nếu có lỗi nghiêm trọng
             }
 
             // Khởi tạo cờ kiểm soát
             _isRunning = true;
 
             // Tạo thread sống lâu dài
-            _backgroundThread = new Thread(() =>
+            _backgroundThread = new Thread(async () =>
             {
                 // Vòng lặp chính của thread
                 while (_isRunning)
@@ -78,11 +86,11 @@ namespace MVCPlayWithMe
                     {
                         using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                         {
-                            conn.Open();
+                            await conn.OpenAsync();
                             // Công việc chạy nền
                             //MyLogger.GetInstance().Info($"Background thread running at {DateTime.Now}");
                             TikiPullEventService tikiPullEventService = new TikiPullEventService();
-                            tikiPullEventService.DoWork(conn);
+                            await tikiPullEventService.DoWork(conn);
                         }
                         // Hiện tại là 3h-4h, gọi 1 lần duy nhất mỗi ngày
                         DateTime dateNow = DateTime.Now;
@@ -91,7 +99,7 @@ namespace MVCPlayWithMe
                             //if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
                             //{
                             //    // Hàm này mất thời gian nên không chạy hàng ngày.
-                              DealAction.CheckAndCreateDeal_Background(true);
+                              DealAction.CheckAndCreateDeal_BackgroundAsync(true).GetAwaiter().GetResult();
                             //}
                             //else
                             //{
@@ -100,7 +108,7 @@ namespace MVCPlayWithMe
                             Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
 
                             // Lấy sản phẩm mới / mới cập nhật trên sàn và lưu db
-                            CommonOpenPlatform.GetNewItemAndInsertIfDontExist(3);
+                            CommonOpenPlatform.GetNewItemAndInsertIfDontExist(3).GetAwaiter().GetResult();
                         }
                     }
                     catch (Exception ex)

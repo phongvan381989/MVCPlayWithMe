@@ -1,12 +1,11 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models.Customer
 {
@@ -15,12 +14,8 @@ namespace MVCPlayWithMe.Models.Customer
     /// </summary>
     public class CustomerMySql
     {
-        /// <summary>
-        /// Chỉ lấy Id của customer
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <returns></returns>
-        public Customer GetCustomerFromCookie(string userCookieIdentify)
+        // Giữ sync vì dùng bởi BasicController.AuthentCustomer()
+        public async Task<Customer> GetCustomerFromCookie(string userCookieIdentify)
         {
             if(string.IsNullOrEmpty(userCookieIdentify))
             {
@@ -38,7 +33,7 @@ namespace MVCPlayWithMe.Models.Customer
 
             MyMySql.AddOutParameters(paras);
 
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Get_CustomerId", paras);
+            MySqlResultState result = await MyMySql.ExcuteNonQueryAsync("st_tbCookie_Get_CustomerId", paras);
 
             if (result.State != EMySqlResultState.OK)
                 return null;
@@ -48,96 +43,9 @@ namespace MVCPlayWithMe.Models.Customer
             return customer;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="userName">SDT</param>
-        /// <param name="passWord"></param>
-        /// <returns></returns>
-        public MySqlResultState AddNewCustomer(string userName, string passWord)
+        private async Task GetCustomerFromDataReaderAsync(MySqlDataReader rdr, Customer customer)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-
-            byte[] salt = Common.CreateSalt();
-            byte[] hash = Common.GenerateSaltedHash(passWord, salt);
-            MySqlResultState result = new MySqlResultState();
-            result.Message = "Tạo tài khoản thành công.";
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inEmail", "");
-
-                MySqlParameter paSalt = new MySqlParameter();
-                paSalt.ParameterName = @"inSalt";
-                paSalt.Size = Common.SHA256Size;
-                paSalt.MySqlDbType = MySqlDbType.Binary;
-                paSalt.Value = salt;
-                cmd.Parameters.Add(paSalt);
-
-                MySqlParameter paHash = new MySqlParameter();
-                paHash.ParameterName = @"inHash";
-                paHash.Size = Common.SHA256Size;
-                paHash.MySqlDbType = MySqlDbType.Binary;
-                paHash.Value = hash;
-                cmd.Parameters.Add(paHash);
-
-                cmd.Parameters.AddWithValue("@inSDT", "");
-
-                cmd.Parameters.AddWithValue("@inUserName", userName);
-
-                cmd.Parameters.AddWithValue("@inFullName", "");
-
-                cmd.Parameters.AddWithValue("@inBirthday", "2020-01-01"); // Mặc định
-
-                cmd.Parameters.AddWithValue("@inSex", 4); // Mặc định
-
-                MyMySql.AddOutParameters(cmd.Parameters);
-
-                int lengthPara = cmd.Parameters.Count;
-                cmd.ExecuteNonQuery();
-                if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
-                {
-                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
-                }
-                //}
-            }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, result);
-            }
-            conn.Close();
-            return result;
-        }
-
-        /// <summary>
-        /// Customer logout tài khoản ở tất cả các thiết bị đã đăng nhập
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <returns></returns>
-        public MySqlResultState CustomerLogout(string userCookieIdentify)
-        {
-            MySqlParameter[] paras = new MySqlParameter[3];
-
-            paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
-
-            MyMySql.AddOutParameters(paras);
-
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Logout", paras);
-            return result;
-        }
-
-        public MySqlResultState LoginCustomer(string userName, string password)
-        {
-            return MyMySql.Login(userName, password, "st_tbCustomer_Get_Salt_Hash");
-        }
-
-        private void GetCustomerFromDataReader(MySqlDataReader rdr, Customer customer)
-        {
-            while (rdr.Read())
+            while (await rdr.ReadAsync())
             {
                 if (customer.id == -1)
                 {
@@ -149,7 +57,6 @@ namespace MVCPlayWithMe.Models.Customer
                     customer.birthday = MyMySql.GetDateTime(rdr, "Birthday");
                     customer.sex = MyMySql.GetInt32(rdr, "Sex");
                 }
-                // Thêm address
                 if (!Convert.IsDBNull(rdr["AddressId"]))
                 {
                     Address add = new Address();
@@ -165,213 +72,222 @@ namespace MVCPlayWithMe.Models.Customer
                 }
             }
         }
-        /// <summary>
-        /// Lấy customer
-        /// </summary>
-        /// <param name="userName"></param>
-        /// <returns></returns>
-        public Customer GetCustomerFromUserName(string userName)
+
+        public async Task<Customer> GetCustomerFromCookieAsync(string userCookieIdentify)
         {
-            Customer customer = new Customer();
+            if (string.IsNullOrEmpty(userCookieIdentify)) return null;
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer_From_UserName", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inUserName", userName);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                GetCustomerFromDataReader(rdr, customer);
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-                customer = null;
-            }
-
-            conn.Close();
-            return customer;
-        }
-
-        public Customer GetCustomer(int id)
-        {
-            Customer customer = new Customer();
-
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inId", id);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                GetCustomerFromDataReader(rdr, customer);
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-                customer = null;
-            }
-
-            conn.Close();
-            return customer;
-        }
-        /// <summary>
-        /// Customer login, update customerId
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <returns></returns>
-        public MySqlResultState CookieCustomerLogin(string userCookieIdentify, int customerId)
-        {
-            return AddNewCookie(userCookieIdentify, customerId);
-        }
-
-        /// <summary>
-        /// Thêm vào bảng tbCookie
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <param name="customerId"></param>
-        /// <returns></returns>
-        public MySqlResultState AddNewCookie(string userCookieIdentify, int customerId)
-        {
             MySqlParameter[] paras = new MySqlParameter[4];
-
             paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
-            paras[1] = new MySqlParameter("@inCustomerId", customerId);
+
+            MySqlParameter paraoutId = new MySqlParameter();
+            paraoutId.ParameterName = @"outId";
+            paraoutId.Value = -1;
+            paraoutId.Direction = ParameterDirection.Output;
+            paras[1] = paraoutId;
 
             MyMySql.AddOutParameters(paras);
 
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Insert", paras);
+            MySqlResultState result = await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Get_CustomerId", paras);
+            if (result.State != EMySqlResultState.OK) return null;
+
+            Customer customer = new Customer();
+            customer.id = (int)paras[1].Value;
+            return customer;
+        }
+
+        public async Task<MySqlResultState> AddNewCustomerAsync(string userName, string passWord)
+        {
+            byte[] salt = Common.CreateSalt();
+            byte[] hash = Common.GenerateSaltedHash(passWord, salt);
+            MySqlResultState result = new MySqlResultState();
+            result.Message = "Tạo tài khoản thành công.";
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inEmail", "");
+
+                    MySqlParameter paSalt = new MySqlParameter();
+                    paSalt.ParameterName = @"inSalt";
+                    paSalt.Size = Common.SHA256Size;
+                    paSalt.MySqlDbType = MySqlDbType.Binary;
+                    paSalt.Value = salt;
+                    cmd.Parameters.Add(paSalt);
+
+                    MySqlParameter paHash = new MySqlParameter();
+                    paHash.ParameterName = @"inHash";
+                    paHash.Size = Common.SHA256Size;
+                    paHash.MySqlDbType = MySqlDbType.Binary;
+                    paHash.Value = hash;
+                    cmd.Parameters.Add(paHash);
+
+                    cmd.Parameters.AddWithValue("@inSDT", "");
+                    cmd.Parameters.AddWithValue("@inUserName", userName);
+                    cmd.Parameters.AddWithValue("@inFullName", "");
+                    cmd.Parameters.AddWithValue("@inBirthday", "2020-01-01");
+                    cmd.Parameters.AddWithValue("@inSex", 4);
+                    MyMySql.AddOutParameters(cmd.Parameters);
+
+                    int lengthPara = cmd.Parameters.Count;
+                    await cmd.ExecuteNonQueryAsync();
+                    if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                    {
+                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
             return result;
         }
 
-        // Khi đăng nhập, cần mere cart cookie với db
-        // Check trong db cart đã tồn tại, nếu đã tồn tại chỉ cần cập nhật trạng thái.
-        // Ta không theo dõi chi tiết. Thực hiện trên store proceduce
-        // Với số lượng ta không cộng dồn trong cart và db, ta lấy chỉ số lượng cho cart
-        public void AddCartLogin(int customerId, List<Cart> ls)
+        public async Task<MySqlResultState> CustomerLogoutAsync(string userCookieIdentify)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update_Login", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                cmd.Parameters.AddWithValue("@inModelId", 0);
-                cmd.Parameters.AddWithValue("@inQuantity", 0);
-                cmd.Parameters.AddWithValue("@inReal", 0);
-
-                foreach (var cart in ls)
-                {
-                    cmd.Parameters[1].Value = cart.id;
-                    cmd.Parameters[2].Value = cart.q;
-                    cmd.Parameters[3].Value = cart.real;
-                    cmd.ExecuteNonQuery();
-                }
-            }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-            conn.Close();
+            MySqlParameter[] paras = new MySqlParameter[3];
+            paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
+            MyMySql.AddOutParameters(paras);
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Logout", paras);
         }
 
-        // Check trong db cart đã tồn tại, nếu đã tồn tại chỉ cần cập nhật trạng thái.
-        // Ta không theo dõi chi tiết. Thực hiện trên store proceduce
-        // Với số lượng ta không cộng dồn trong cart và db, ta lấy chỉ số lượng cho cart
-        public MySqlResultState AddCart(int customerId, Cart cart, int maxQuantity)
+        public async Task<MySqlResultState> LoginCustomerAsync(string userName, string password)
+        {
+            return await MyMySql.LoginAsync(userName, password, "st_tbCustomer_Get_Salt_Hash");
+        }
+
+        public async Task<Customer> GetCustomerFromUserNameAsync(string userName)
+        {
+            Customer customer = new Customer();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer_From_UserName", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inUserName", userName);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        await GetCustomerFromDataReaderAsync(rdr, customer);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    customer = null;
+                }
+            }
+            return customer;
+        }
+
+        public async Task<Customer> GetCustomerAsync(int id)
+        {
+            Customer customer = new Customer();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inId", id);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        await GetCustomerFromDataReaderAsync(rdr, customer);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    customer = null;
+                }
+            }
+            return customer;
+        }
+
+        public async Task<MySqlResultState> AddNewCookieAsync(string userCookieIdentify, int customerId)
+        {
+            MySqlParameter[] paras = new MySqlParameter[4];
+            paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
+            paras[1] = new MySqlParameter("@inCustomerId", customerId);
+            MyMySql.AddOutParameters(paras);
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Insert", paras);
+        }
+
+        public async Task<MySqlResultState> CookieCustomerLoginAsync(string userCookieIdentify, int customerId)
+        {
+            return await AddNewCookieAsync(userCookieIdentify, customerId);
+        }
+
+        public async Task AddCartLoginAsync(int customerId, List<Cart> ls)
+        {
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update_Login", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    cmd.Parameters.AddWithValue("@inModelId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    cmd.Parameters.AddWithValue("@inReal", 0);
+                    foreach (var cart in ls)
+                    {
+                        cmd.Parameters[1].Value = cart.id;
+                        cmd.Parameters[2].Value = cart.q;
+                        cmd.Parameters[3].Value = cart.real;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
+            }
+        }
+
+        public async Task<MySqlResultState> AddCartAsync(int customerId, Cart cart, int maxQuantity)
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                cmd.Parameters.AddWithValue("@inModelId", cart.id);
-                cmd.Parameters.AddWithValue("@inQuantity", cart.q);
-                cmd.Parameters.AddWithValue("@inReal", cart.real);
-                cmd.Parameters.AddWithValue("@inMaxQuantity", maxQuantity);
-                cmd.Parameters.AddWithValue("@outResult", 0);
-                cmd.Parameters.AddWithValue("@outMessage", "");
-                cmd.Parameters[5].Direction = ParameterDirection.Output;
-                cmd.Parameters[6].Direction = ParameterDirection.Output;
-
-                cmd.ExecuteNonQuery();
-                int lengthPara = cmd.Parameters.Count;
-                //if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                try
                 {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    cmd.Parameters.AddWithValue("@inModelId", cart.id);
+                    cmd.Parameters.AddWithValue("@inQuantity", cart.q);
+                    cmd.Parameters.AddWithValue("@inReal", cart.real);
+                    cmd.Parameters.AddWithValue("@inMaxQuantity", maxQuantity);
+                    cmd.Parameters.AddWithValue("@outResult", 0);
+                    cmd.Parameters.AddWithValue("@outMessage", "");
+                    cmd.Parameters[5].Direction = ParameterDirection.Output;
+                    cmd.Parameters[6].Direction = ParameterDirection.Output;
+                    await cmd.ExecuteNonQueryAsync();
+                    int lengthPara = cmd.Parameters.Count;
                     result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
                     result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
                 }
-
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-            conn.Close();
             return result;
         }
 
-        //public void AddCustomerInforAddress(int customerId, List<Address> ls)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert_And_Update", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-        //        cmd.Parameters.AddWithValue("@inName", "");
-        //        cmd.Parameters.AddWithValue("@inPhone", "");
-        //        cmd.Parameters.AddWithValue("@inProvince", "");
-        //        cmd.Parameters.AddWithValue("@inDistrict", "");
-        //        cmd.Parameters.AddWithValue("@inSubDistrict", "");
-        //        cmd.Parameters.AddWithValue("@inDetail", "");
-        //        cmd.Parameters.AddWithValue("@inDefaultAdd", 0);
-
-        //        foreach (var cus in ls)
-        //        {
-        //            cmd.Parameters[1].Value = cus.name;
-        //            cmd.Parameters[2].Value = cus.phone;
-        //            cmd.Parameters[3].Value = cus.province;
-        //            cmd.Parameters[4].Value = cus.district;
-        //            cmd.Parameters[5].Value = cus.subdistrict;
-        //            cmd.Parameters[6].Value = cus.detail;
-        //            cmd.Parameters[7].Value = cus.defaultAdd;
-        //            cmd.ExecuteNonQuery();
-        //        }
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-        //    conn.Close();
-        //}
-
-        public MySqlResultState UpdateAddress(Address add)
+        public async Task<MySqlResultState> UpdateAddressAsync(Address add)
         {
             MySqlParameter[] paras = new MySqlParameter[8];
-
             paras[0] = new MySqlParameter("@inId", add.id);
             paras[1] = new MySqlParameter("@inName", add.name);
             paras[2] = new MySqlParameter("@inPhone", add.phone);
@@ -380,30 +296,20 @@ namespace MVCPlayWithMe.Models.Customer
             paras[5] = new MySqlParameter("@inSubDistrict", add.subdistrict);
             paras[6] = new MySqlParameter("@inDetail", add.detail);
             paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
-
-            return MyMySql.ExcuteNonQuery("st_tbAddress_Update", paras);
+            return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Update", paras);
         }
 
-        public MySqlResultState DeleteAddress(Address add)
+        public async Task<MySqlResultState> DeleteAddressAsync(Address add)
         {
             MySqlParameter[] paras = new MySqlParameter[1];
-
             paras[0] = new MySqlParameter("@inId", add.id);
-
-            return MyMySql.ExcuteNonQuery("st_tbAddress_Delete", paras);
+            return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Delete", paras);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="customerId"></param>
-        /// <param name="add"></param>
-        /// <returns>Trả về id của row vừa insert</returns>
-        public MySqlResultState InsertAddress(int customerId, Address add)
+        public async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add)
         {
             MySqlResultState result = new MySqlResultState();
             MySqlParameter[] paras = new MySqlParameter[8];
-
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
             paras[1] = new MySqlParameter("@inName", add.name);
             paras[2] = new MySqlParameter("@inPhone", add.phone);
@@ -412,150 +318,113 @@ namespace MVCPlayWithMe.Models.Customer
             paras[5] = new MySqlParameter("@inSubDistrict", add.subdistrict);
             paras[6] = new MySqlParameter("@inDetail", add.detail);
             paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
-
-            //return MyMySql.ExcuteNonQuery("st_tbAddress_Insert_And_Update", paras);
-
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddRange(paras);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                while (rdr.Read())
+                try
                 {
-                    result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddRange(paras);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                        }
+                    }
                 }
-
-                rdr.Close();
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
             }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, result);
-            }
-            conn.Close();
-
             return result;
         }
 
-        public MySqlResultState UpdateInfor(Customer cus)
+        public async Task<MySqlResultState> UpdateInforAsync(Customer cus)
         {
             MySqlResultState result = new MySqlResultState();
-
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Update", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inId", cus.id);
-                cmd.Parameters.AddWithValue("@inEmail", cus.email);
-                cmd.Parameters.AddWithValue("@inSDT", cus.sdt);
-                cmd.Parameters.AddWithValue("@inFullName", cus.fullName);
-                cmd.Parameters.AddWithValue("@inBirthday", cus.birthday);
-                cmd.Parameters.AddWithValue("@inSex", cus.sex);
-
-                MyMySql.AddOutParameters(cmd.Parameters);
-
-                int lengthPara = cmd.Parameters.Count;
-                cmd.ExecuteNonQuery();
-                if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                try
                 {
-                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Update", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inId", cus.id);
+                    cmd.Parameters.AddWithValue("@inEmail", cus.email);
+                    cmd.Parameters.AddWithValue("@inSDT", cus.sdt);
+                    cmd.Parameters.AddWithValue("@inFullName", cus.fullName);
+                    cmd.Parameters.AddWithValue("@inBirthday", cus.birthday);
+                    cmd.Parameters.AddWithValue("@inSex", cus.sex);
+                    MyMySql.AddOutParameters(cmd.Parameters);
+                    int lengthPara = cmd.Parameters.Count;
+                    await cmd.ExecuteNonQueryAsync();
+                    if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                    {
+                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
                 }
             }
-            catch (Exception ex)
-            {
-                Common.SetResultException(ex, result);
-            }
-            conn.Close();
-
             return result;
         }
 
-        public MySqlResultState ChangePasswordCustomer(int id, string oldPassWord, 
+        public async Task<MySqlResultState> ChangePasswordCustomerAsync(int id, string oldPassWord,
             string newPassWord, string renewPassWord)
         {
-            return MyMySql.ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
+            return await MyMySql.ChangePasswordAsync(id, oldPassWord, newPassWord, renewPassWord,
                 "st_tbCustomer_Get_Salt_Hash_From_Id",
                 "st_tbCustomer_ChangePassword");
         }
 
-        // Set default = 0
-        public MySqlResultState DeleteDefaultAddress(int customerId)
+        public async Task<MySqlResultState> DeleteDefaultAddressAsync(int customerId)
         {
             MySqlParameter[] paras = new MySqlParameter[1];
-
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
-
-            return MyMySql.ExcuteNonQuery("st_tbAddress_Delete_Default", paras);
+            return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Delete_Default", paras);
         }
 
-        /// <summary>
-        /// Từ customerId lấy danh sách địa chỉ nhận hàng
-        /// </summary>
-        /// <param name="customerId"></param>
-        /// <returns></returns>
-        public List<Address> GetListAddress(int customerId)
+        public async Task<List<Address>> GetListAddressAsync(int customerId)
         {
             List<Address> lsAddress = new List<Address>();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-
-                while (rdr.Read())
+                try
                 {
-                    Address add = new Address();
-                    add.id = MyMySql.GetInt32(rdr, "Id");
-                    add.name = MyMySql.GetString(rdr, "Name");
-                    add.phone = MyMySql.GetString(rdr, "Phone");
-                    add.province = MyMySql.GetString(rdr, "Province");
-                    add.district = MyMySql.GetString(rdr, "District");
-                    add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
-                    add.detail = MyMySql.GetString(rdr, "Detail");
-                    add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
-                    lsAddress.Add(add);
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            Address add = new Address();
+                            add.id = MyMySql.GetInt32(rdr, "Id");
+                            add.name = MyMySql.GetString(rdr, "Name");
+                            add.phone = MyMySql.GetString(rdr, "Phone");
+                            add.province = MyMySql.GetString(rdr, "Province");
+                            add.district = MyMySql.GetString(rdr, "District");
+                            add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                            add.detail = MyMySql.GetString(rdr, "Detail");
+                            add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
+                            lsAddress.Add(add);
+                        }
+                    }
                 }
-
-                rdr.Close();
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    lsAddress.Clear();
+                }
             }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                lsAddress.Clear();
-            }
-
-            conn.Close();
             return lsAddress;
         }
-
-        ///// <summary>
-        ///// Check userName, SDT hoặc email đã tồn tại hay chưa?
-        ///// </summary>
-        ///// <param name="userName"></param>
-        ///// <returns></returns>
-        //public MySqlResultState CheckValidUserName(string userName)
-        //{
-        //    MySqlParameter[] paras = new MySqlParameter[4];
-
-        //    paras[0] = new MySqlParameter("@inId", -1);
-        //    paras[1] = new MySqlParameter("@inValue", userName);
-        //    MyMySql.AddOutParameters(paras);
-        //    MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCustomer_CheckExist", paras);
-
-        //    return result;
-        //}
     }
 }

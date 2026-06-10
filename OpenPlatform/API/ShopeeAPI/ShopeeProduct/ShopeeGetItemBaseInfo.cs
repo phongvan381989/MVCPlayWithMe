@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
@@ -19,11 +19,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// </summary>
         /// <param name="ls"> Chứa id item cần lấy base info</param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static ShopeeGetItemBaseInfoResponseHTTP ShopeeProductGetItemBaseInfo(List<DevNameValuePair> ls)
+        public static async Task<ShopeeGetItemBaseInfoResponseHTTP> ShopeeProductGetItemBaseInfoAsync(List<DevNameValuePair> ls)
         {
             string path = "/api/v2/product/get_item_base_info";
 
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
             {
                 return null;
@@ -51,10 +51,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             return objResponse;
         }
 
-        public static List<ShopeeGetItemBaseInfoItem> ShopeeProductGetListItemBaseInforFromListShopeeItem(
+        public static async Task<List<ShopeeGetItemBaseInfoItem>> ShopeeProductGetListItemBaseInforFromListShopeeItemAsync(
             List<ShopeeItem> shopeeItems)
         {
-            // Lấy danh sách id của item
             List<ShopeeGetItemBaseInfoItem> rs = new List<ShopeeGetItemBaseInfoItem>();
 
             if (shopeeItems == null || shopeeItems.Count() == 0)
@@ -69,14 +68,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             int i;
 
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
-            // need_tax_info  If true, will return tax info in response.
             ls.Add(new DevNameValuePair("need_tax_info", "false"));
-
-            // need_complaint_policy If true, will return complaint_policy in response.
             ls.Add(new DevNameValuePair("need_complaint_policy", "false"));
-
-            // item_id_list Required item_id  limit [0,50]
-            // Add cuối cùng để cập nhật
             ls.Add(new DevNameValuePair("item_id_list", strListItemId.ToString()));
             while (indexItemID < countItemID)
             {
@@ -86,15 +79,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                     strListItemId.Append(shopeeItems[i].item_id.ToString() + ",");
                 }
                 indexItemID = i;
-                // xóa bỏ , cuối cùng
                 strListItemId.Remove(strListItemId.Length - 1, 1);
 
                 ls.RemoveAt(ls.Count() - 1);
-
-                // item_id_list Required item_id  limit [0,50]
                 ls.Add(new DevNameValuePair("item_id_list", strListItemId.ToString()));
 
-                ShopeeGetItemBaseInfoResponseHTTP objResponse = ShopeeProductGetItemBaseInfo(ls);
+                ShopeeGetItemBaseInfoResponseHTTP objResponse = await ShopeeProductGetItemBaseInfoAsync(ls);
 
                 if (objResponse == null ||
                     objResponse.response == null ||
@@ -113,23 +103,20 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// Lấy base info của tất cả item
         /// </summary>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeGetItemBaseInfoItem> ShopeeProductGetItemBaseInfoAll()
+        public static async Task<List<ShopeeGetItemBaseInfoItem>> ShopeeProductGetItemBaseInfoAllAsync()
         {
-            // Lấy danh sách id của item
-            List<ShopeeItem> shopeeItems = ShopeeGetItemList.ShopeeProductGetItemListAll();
-
-            return ShopeeProductGetListItemBaseInforFromListShopeeItem(shopeeItems);
+            List<ShopeeItem> shopeeItems = await ShopeeGetItemList.ShopeeProductGetItemListAllAsync();
+            return await ShopeeProductGetListItemBaseInforFromListShopeeItemAsync(shopeeItems);
         }
 
         /// <summary>
         /// Lấy base info của page đầu, mục đích test
         /// </summary>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeGetItemBaseInfoItem> ShopeeProductGetItemBaseInfo_PageFisrst()
+        public static async Task<List<ShopeeGetItemBaseInfoItem>> ShopeeProductGetItemBaseInfo_PageFisrstAsync()
         {
-            // Lấy danh sách id của item
             List<ShopeeGetItemBaseInfoItem> rs = new List<ShopeeGetItemBaseInfoItem>();
-            List<ShopeeItem> shopeeItems = ShopeeGetItemList.ShopeeProductGetItemListAll();
+            List<ShopeeItem> shopeeItems = await ShopeeGetItemList.ShopeeProductGetItemListAllAsync();
             if (shopeeItems == null || shopeeItems.Count() == 0)
                 return rs;
 
@@ -141,13 +128,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             int i;
 
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
-            // need_tax_info  If true, will return tax info in response.
             ls.Add(new DevNameValuePair("need_tax_info", "false"));
-
-            // need_complaint_policy If true, will return complaint_policy in response.
             ls.Add(new DevNameValuePair("need_complaint_policy", "false"));
-
-            // item_id_list Required item_id  limit [0,50]
             ls.Add(new DevNameValuePair("item_id_list", strListItemId.ToString())); // Add cuối cùng để cập nhật
             while (indexItemID < countItemID)
             {
@@ -157,15 +139,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                     strListItemId.Append(shopeeItems[i].item_id.ToString() + ",");
                 }
                 indexItemID = i;
-                // xóa bỏ , cuối cùng
                 strListItemId.Remove(strListItemId.Length - 1, 1);
 
                 ls.RemoveAt(ls.Count() - 1);
-
-                // item_id_list Required item_id  limit [0,50]
                 ls.Add(new DevNameValuePair("item_id_list", strListItemId.ToString()));
 
-                ShopeeGetItemBaseInfoResponseHTTP objResponse = ShopeeProductGetItemBaseInfo(ls);
+                ShopeeGetItemBaseInfoResponseHTTP objResponse = await ShopeeProductGetItemBaseInfoAsync(ls);
 
                 if (objResponse == null || objResponse.response == null || objResponse.response.item_list == null)
                 {
@@ -186,19 +165,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// Lấy base info của 1 item
         /// </summary>
         /// <returns>null nếu không lấy thành công</returns>
-        public static ShopeeGetItemBaseInfoItem ShopeeProductGetItemBaseInfoFromId(long id)
+        public static async Task<ShopeeGetItemBaseInfoItem> ShopeeProductGetItemBaseInfoFromIdAsync(long id)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
-            // need_tax_info  If true, will return tax info in response.
             ls.Add(new DevNameValuePair("need_tax_info", "false"));
-
-            // need_complaint_policy If true, will return complaint_policy in response.
             ls.Add(new DevNameValuePair("need_complaint_policy", "false"));
-
-            // item_id_list Required item_id  limit [0,50]
             ls.Add(new DevNameValuePair("item_id_list", id.ToString()));
 
-            ShopeeGetItemBaseInfoResponseHTTP objResponse = ShopeeProductGetItemBaseInfo(ls);
+            ShopeeGetItemBaseInfoResponseHTTP objResponse = await ShopeeProductGetItemBaseInfoAsync(ls);
             if (objResponse == null || objResponse.response == null || objResponse.response.item_list == null)
             {
                 return null;

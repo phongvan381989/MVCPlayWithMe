@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
         // Sau khi shopee ủy quyền, ta có được code từ url call back.
         // Từ code ta lấy được access, refresh token lần đầu và lưu vào db
-        public static Boolean LazadaAuthTokenCreateAndSaveDB(string code)
+        public static async Task<Boolean> LazadaAuthTokenCreateAndSaveDBAsync(string code)
         {
             try
             {
@@ -44,8 +44,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    LazadaSaveToken(token, conn);
+                    await conn.OpenAsync();
+                    await LazadaSaveTokenAsync(token, conn);
                 }
             }
             catch (Exception ex)
@@ -57,7 +57,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         }
 
         // Khi access token hết hạn, ta làm mới
-        public static Boolean LazadaAuthTokenRefresh()
+        public static async Task<Boolean> LazadaAuthTokenRefreshAsync()
         {
             try
             {
@@ -81,8 +81,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                     JsonConvert.DeserializeObject<LazadaAuthTokenCreateResponseBody>(response.Body, settings);
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    LazadaSaveToken(token, conn);
+                    await conn.OpenAsync();
+                    await LazadaSaveTokenAsync(token, conn);
                 }
             }
             catch (Exception ex)
@@ -93,7 +93,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return true;
         }
 
-        public static Boolean LazadaSaveToken(LazadaAuthTokenCreateResponseBody lazadaToken,
+        public static async Task<Boolean> LazadaSaveTokenAsync(LazadaAuthTokenCreateResponseBody lazadaToken,
     MySqlConnection conn)
         {
             if(!lazadaToken.IsValid())
@@ -116,9 +116,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                 cmd.Parameters.AddWithValue("@RefreshToken", lazadaToken.refresh_token);
                 cmd.Parameters.AddWithValue("@RefreshExpiresIn", lazadaToken.refresh_expires_in);
                 cmd.CommandType = CommandType.Text;
-                cmd.ExecuteNonQuery();
+                await cmd.ExecuteNonQueryAsync();
 
-                lazadaAuthen = LazadaGetAuthFromDB(conn);
+                lazadaAuthen = await LazadaGetAuthFromDBAsync(conn);
             }
             catch (Exception ex)
             {
@@ -128,7 +128,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return true;
         }
 
-        public static LazadaAuth LazadaGetAuthFromDB(MySqlConnection conn)
+        public static async Task<LazadaAuth> LazadaGetAuthFromDBAsync(MySqlConnection conn)
         {
             LazadaAuth lazadaAuth = new LazadaAuth();
             try
@@ -137,9 +137,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                     new MySqlCommand(@"SELECT * FROM tb_lazada_authen
                     WHERE `Id` = 1", conn);
                 cmd.CommandType = CommandType.Text;
-                using (MySqlDataReader rdr = cmd.ExecuteReader())
+                using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
                 {
-                    while (rdr.Read())
+                    while (await rdr.ReadAsync())
                     {
                         lazadaAuth.appKey = MyMySql.GetString(rdr, "AppKey");
                         lazadaAuth.appSecret = MyMySql.GetString(rdr, "AppSecret");
@@ -162,14 +162,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return lazadaAuth;
         }
 
-        public static Boolean LazadaRefreshAccessTokenIfNeed()
+        public static async Task<Boolean> LazadaRefreshAccessTokenIfNeedAsync()
         {
             try
             {
                 if (lazadaAuthen.refreshDatetime.AddSeconds(lazadaAuthen.expiresIn - 300)
                     < DateTime.Now)
                 {
-                    return LazadaAuthTokenRefresh();
+                    return await LazadaAuthTokenRefreshAsync();
                 }
             }
             catch(Exception ex)

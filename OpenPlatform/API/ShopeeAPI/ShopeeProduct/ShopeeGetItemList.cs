@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using RestSharp;
@@ -22,7 +22,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// <param name="page_size"></param>
         /// <param name="lsShopeeItemStatus"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static ShopeeGetItemListResponseHTTP ShopeeProductGetItemListOld(long update_time_from, long update_time_to,
+        public static async Task<ShopeeGetItemListResponseHTTP> ShopeeProductGetItemListOldAsync(long update_time_from, long update_time_to,
             int offset, int page_size,
             List<ShopeeItemStatus> lsShopeeItemStatus)
         {
@@ -41,7 +41,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                 ls.Add(new DevNameValuePair("item_status", item.GetString()));
             }
 
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 
@@ -66,11 +66,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
             return objResponse;
         }
 
-        public static ShopeeGetItemListResponseHTTP ShopeeProductGetItemList(List<DevNameValuePair> ls)
+        public static async Task<ShopeeGetItemListResponseHTTP> ShopeeProductGetItemListAsync(List<DevNameValuePair> ls)
         {
             string path = "/api/v2/product/get_item_list";
 
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 
@@ -99,7 +99,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         /// Lấy tất cả item. Item này chứa dữ liệu vô cùng base
         /// </summary>
         /// <returns>Không phần tử nếu không lấy thành công</returns>
-        public static List<ShopeeItem> ShopeeProductGetItemListAll()
+        public static async Task<List<ShopeeItem>> ShopeeProductGetItemListAllAsync()
         {
             List<ShopeeItem> rs = new List<ShopeeItem>();
             int offset = 0;
@@ -126,7 +126,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                 ls.RemoveAt(ls.Count() - 1);
                 ls.Add(new DevNameValuePair("offset", offset.ToString())); // Add cuối cùng để cập nhật
 
-                ShopeeGetItemListResponseHTTP objResponse = ShopeeProductGetItemList(ls);
+                ShopeeGetItemListResponseHTTP objResponse = await ShopeeProductGetItemListAsync(ls);
                 if (objResponse == null)
                 {
                     break;
@@ -145,7 +145,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
         }
 
         // Lấy danh sách sản phẩm NORMAL, trong khoảng thời gian nhất định
-        public static List<ShopeeItem> ShopeeProductGetNormal_ItemList(
+        public static async Task<List<ShopeeItem>> ShopeeProductGetNormal_ItemListAsync(
             long update_time_from, long update_time_to)
         {
             List<ShopeeItem> rs = new List<ShopeeItem>();
@@ -165,7 +165,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct
                 ls.RemoveAt(ls.Count() - 1);
                 ls.Add(new DevNameValuePair("offset", offset.ToString())); // Add cuối cùng để cập nhật
 
-                ShopeeGetItemListResponseHTTP objResponse = ShopeeProductGetItemList(ls);
+                ShopeeGetItemListResponseHTTP objResponse = await ShopeeProductGetItemListAsync(ls);
                 if (objResponse == null)
                 {
                     break;

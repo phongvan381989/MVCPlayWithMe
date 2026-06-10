@@ -46,15 +46,16 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // GET: Dev
-        public ActionResult Index()
+        public async Task<ActionResult> Index()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return AuthenticationFail();
             }
 
             return View();
         }
+
         [HttpPost]
         public string CopyShopeeProductImageToProduct()
         {
@@ -63,9 +64,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string ShopeeSaveImageSourceOfItemAndModel()
+        public async Task<string> ShopeeSaveImageSourceOfItemAndModel()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -79,19 +80,19 @@ namespace MVCPlayWithMe.Controllers
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    List<long> lsItem = shopeeSqler.GetForSaveImageSourceConnectOut(conn);
+                    await conn.OpenAsync();
+                    List<long> lsItem = await shopeeSqler.GetForSaveImageSourceConnectOutAsync(conn);
                     foreach (var itemId in lsItem)
                     {
                         ShopeeGetItemBaseInfoItem pro =
-                            ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromId(itemId);
+                            await ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfoFromIdAsync(itemId);
                         if (pro != null)
                         {
-                            lsCommonItem.Add(new CommonItem(pro));
+                            lsCommonItem.Add(await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro));
                         }
                     }
 
-                    shopeeSqler.UpdateImageSourceTotbShopeeItem_ModelConnectOut(lsCommonItem, conn);
+                    await shopeeSqler.UpdateImageSourceTotbShopeeItem_ModelConnectOutAsync(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
@@ -104,7 +105,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> ShopeeGetBrandList(long categoryId)
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -115,8 +116,7 @@ namespace MVCPlayWithMe.Controllers
                 ShopeeMySql shopeeSqler = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    //List<ShoppeBrandObject> brandList = 
+                    await conn.OpenAsync();
                     result = await ShopeeBrand.ShopeeGetBrandList(categoryId, shopeeSqler, conn);
                 }
             }
@@ -127,11 +127,10 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        //
         [HttpPost]
         public async Task<string> ShopeeGetChannelList()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -139,8 +138,8 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                List<ShopeeLogisticInfo> ls = ShopeeLogistic.GetLogisticInfo(true);
-                if(ls.Count == 0)
+                List<ShopeeLogisticInfo> ls = await ShopeeLogistic.GetLogisticInfoAsync(true);
+                if (ls.Count == 0)
                 {
                     result.State = EMySqlResultState.INVALID;
                     result.Message = "Không lấy được kênh vận chuyển.";
@@ -156,7 +155,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> LazadaUpdateQuantityAll()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -167,29 +166,29 @@ namespace MVCPlayWithMe.Controllers
                 LazadaMySql lazadaSQLer = new LazadaMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    List<CommonItem> ls = lazadaSQLer.LazadaGetItemOnDB(conn);
-                    ProductController.LazadaUpdateQuantity_Core(ls);
+                    await conn.OpenAsync();
+                    List<CommonItem> ls = await lazadaSQLer.LazadaGetItemOnDBAsync(conn);
+                    await ProductController.LazadaUpdateQuantity_CoreAsync(ls);
 
                     // Lấy danh sách item cập nhật số lượng sai
                     List<CommonItem> failLs = new List<CommonItem>();
                     foreach (var item in ls)
                     {
-                        foreach(var model in item.models)
+                        foreach (var model in item.models)
                         {
-                            if(!string.IsNullOrEmpty(model.whyUpdateFail))
+                            if (!string.IsNullOrEmpty(model.whyUpdateFail))
                             {
                                 failLs.Add(item);
                                 break;
                             }
                         }
-                        if(failLs.Count > 0 && failLs.Last().itemId == item.itemId)
+                        if (failLs.Count > 0 && failLs.Last().itemId == item.itemId)
                         {
                             break;
                         }
                     }
 
-                    if(failLs.Count > 0)
+                    if (failLs.Count > 0)
                     {
                         result.State = EMySqlResultState.ERROR;
                         result.Message = "Có item cập nhật lỗi";
@@ -208,7 +207,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> LazadaUpdatePrice_SpecialPriceAll()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -219,8 +218,8 @@ namespace MVCPlayWithMe.Controllers
                 LazadaMySql lazadaSQLer = new LazadaMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    List<CommonItem> ls = lazadaSQLer.LazadaGetItemOnDB(conn);
+                    await conn.OpenAsync();
+                    List<CommonItem> ls = await lazadaSQLer.LazadaGetItemOnDBAsync(conn);
 
                     ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
 
@@ -260,7 +259,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> LazadaGetCategoryTree()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -268,7 +267,7 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                LazadaProductAPI.LazadaGetCategoryTree();
+                await LazadaProductAPI.LazadaGetCategoryTreeAsync();
             }
             catch (Exception ex)
             {
@@ -280,7 +279,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> LazadaGetCategoryAttributes(int categoryId)
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -288,7 +287,7 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                LazadaProductAPI.LazadaGetCategoryAttributes(categoryId);
+                await LazadaProductAPI.LazadaGetCategoryAttributesAsync(categoryId);
             }
             catch (Exception ex)
             {
@@ -300,7 +299,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> LazadaGetBrandByPages()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -311,10 +310,10 @@ namespace MVCPlayWithMe.Controllers
                 Boolean isError = false;
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
-                    isError = LazadaProductAPI.LazadaGetBrandByPages(conn);
+                    await conn.OpenAsync();
+                    isError = await LazadaProductAPI.LazadaGetBrandByPagesAsync(conn);
                 }
-                if(isError)
+                if (isError)
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Có lỗi";
@@ -328,9 +327,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string TikiSaveImageSourceOfItemAndModel()
+        public async Task<string> TikiSaveImageSourceOfItemAndModel()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -341,13 +340,13 @@ namespace MVCPlayWithMe.Controllers
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     TikiMySql tikiSqler = new TikiMySql();
-                    List<int> lsItemId = tikiSqler.GetForSaveImageSourceConnectOut(conn);
+                    List<int> lsItemId = await tikiSqler.GetForSaveImageSourceConnectOutAsync(conn);
 
                     foreach (var itemId in lsItemId)
                     {
-                        TikiProduct pro = GetListProductTiki.GetProductFromOneShop(itemId);
+                        TikiProduct pro = await GetListProductTiki.GetProductFromOneShop(itemId);
                         if (pro == null)
                         {
                             continue;
@@ -355,7 +354,7 @@ namespace MVCPlayWithMe.Controllers
 
                         lsCommonItem.Add(new CommonItem(pro));
                     }
-                    tikiSqler.UpdateImageSourceTotbTikiItemConnectOut(lsCommonItem, conn);
+                    await tikiSqler.UpdateImageSourceTotbTikiItemConnectOutAsync(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
@@ -366,9 +365,9 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string TikiTestPullEvent()
+        public async Task<string> TikiTestPullEvent()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -397,30 +396,30 @@ namespace MVCPlayWithMe.Controllers
             //commonOrder.listQuantity.Add(1);
 
             //TikiMySql tikiSqler = new TikiMySql();
-            //tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+            //tikiSqler.InsertTbItemOfEcommerceOderAsync(commonOrder, EECommerceType.TIKI, conn);
 
-            //tikiSqler.InsertTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+            //tikiSqler.InsertTbItemOfEcommerceOderAsync(commonOrder, EECommerceType.SHOPEE, conn);
 
-            //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.TIKI, conn);
+            //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, EECommerceType.TIKI, conn);
 
-            //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOder(commonOrder, EECommerceType.SHOPEE, conn);
+            //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, EECommerceType.SHOPEE, conn);
             //conn.Close();
         }
 
-        private void RecursionGetCategoryOfTiki(int id,
+        private async Task RecursionGetCategoryOfTiki(int id,
             string parrentName,
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls)
         {
-            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> lsTem = TikiCategoryAction.GetChildrenCategory(id);
-            if(lsTem == null || lsTem.Count == 0)
+            List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> lsTem = await TikiCategoryAction.GetChildrenCategory(id);
+            if (lsTem == null || lsTem.Count == 0)
             {
                 return;
             }
 
             Thread.Sleep(1000);
-            foreach ( var category in lsTem)
+            foreach (var category in lsTem)
             {
-                if(category.is_primary == false)
+                if (category.is_primary == false)
                 {
                     if (!string.IsNullOrWhiteSpace(parrentName))
                     {
@@ -438,7 +437,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Lấy category của Tiki phục vụ đăng sản phẩm tự động cho sàn Tiki
         // NOTE: Gọi 1 lần DUY NHẤT TRONG ĐỜI, gọi lần sau dữ liệu sẽ bị duplicate
-        private void GetCategoryOfTiki()
+        private async Task GetCategoryOfTiki()
         {
             // id: 8322 - Tương ứng Category cụ tổ : Nhà Sách Tiki
             // Ta đi lấy đến đời thấp nhất: is_primary = true;
@@ -455,9 +454,9 @@ namespace MVCPlayWithMe.Controllers
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     TikiMySql tikiSqler = new TikiMySql();
-                    tikiSqler.InsertTbTikiCategory(ls, conn);
+                    await tikiSqler.InsertTbTikiCategoryAsync(ls, conn);
                 }
             }
             catch (Exception ex)
@@ -467,7 +466,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // NOTE: Gọi 1 lần DUY NHẤT TRONG ĐỜI, gọi lần sau dữ liệu sẽ bị duplicate
-        private void InsertData_AttributeOfCategory()
+        private async Task InsertData_AttributeOfCategory()
         {
             // Lấy danh sách category id
             List<int> categoryIdList = new List<int>();
@@ -475,9 +474,9 @@ namespace MVCPlayWithMe.Controllers
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     TikiMySql tikiSqler = new TikiMySql();
-                    categoryIdList = tikiSqler.GetCatetoryIdList(conn);
+                    categoryIdList = await tikiSqler.GetCatetoryIdListAsync(conn);
 
                     List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributeListGeneral =
     new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>();
@@ -485,13 +484,13 @@ namespace MVCPlayWithMe.Controllers
                     {
                         // Lấy attribute mà category có thể có
                         List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributeList =
-                            TikiCategoryAction.GetAttributeOfCategory(categoryId);
+                            await TikiCategoryAction.GetAttributeOfCategory(categoryId);
 
                         Thread.Sleep(1000);
-                        foreach (var attr in  attributeList)
+                        foreach (var attr in attributeList)
                         {
                             // Lấy những attribute thỏa mãn "is_required": true
-                            if( attr.is_required )
+                            if (attr.is_required)
                             {
                                 attr.category_id = categoryId;
                                 attributeListGeneral.Add(attr);
@@ -500,7 +499,7 @@ namespace MVCPlayWithMe.Controllers
                     }
 
                     // Lưu vào db
-                    tikiSqler.InsertTikiAttributesOfCategory(attributeListGeneral, conn);
+                    await tikiSqler.InsertTikiAttributesOfCategoryAsync(attributeListGeneral, conn);
                 }
             }
             catch (Exception ex)
@@ -511,13 +510,13 @@ namespace MVCPlayWithMe.Controllers
 
         // Từ category sản phẩm trên tiki đã mapping với sản phẩm trong kho,
         // ta cập nhật category Id sản phẩm trong kho
-        private void UpdateCategoryIdOfProduct()
+        private async Task UpdateCategoryIdOfProductAsync()
         {
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     List<int> listProId = new List<int>();
                     // Lấy id sản phẩm trong kho chưa có category Id (-1), trạng thái bình thường
                     {
@@ -525,10 +524,10 @@ namespace MVCPlayWithMe.Controllers
                         @"SELECT Id FROM webplaywithme.tbproducts WHERE CategoryId = -1 AND Status <> 2 ORDER BY Id;",
                     conn);
                         cmd.CommandType = CommandType.Text;
-                        using (var reader = cmd.ExecuteReader())
+                        using (MySqlDataReader reader = (MySqlDataReader) await cmd.ExecuteReaderAsync())
                         {
                             int idOrdinal = reader.GetOrdinal("Id");
-                            while (reader.Read())
+                            while (await reader.ReadAsync())
                             {
                                 listProId.Add(reader.GetInt32(idOrdinal));
                             }
@@ -542,10 +541,10 @@ namespace MVCPlayWithMe.Controllers
                         @"SELECT TikiCategoryId FROM webplaywithme.tbcategory;",
                     conn);
                         cmd.CommandType = CommandType.Text;
-                        using (var reader = cmd.ExecuteReader())
+                        using (MySqlDataReader reader =(MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
                             int tikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
-                            while (reader.Read())
+                            while (await reader.ReadAsync())
                             {
                                 listTikiCategoryId.Add(reader.GetInt32(tikiCategoryIdOrdinal));
                             }
@@ -564,7 +563,7 @@ namespace MVCPlayWithMe.Controllers
                             MySqlCommand cmd = new MySqlCommand(
                             @"SELECT tbtikiitem.TikiId, tbtikimapping.ProductId
                             FROM  tbtikiitem LEFT JOIN tbtikimapping ON tbtikiitem.Id = tbtikimapping.TikiItemId
-                            WHERE tbtikiitem.Id = 
+                            WHERE tbtikiitem.Id =
                             (
 	                            SELECT tbtikiitem.Id
 	                            FROM tbtikimapping LEFT JOIN tbtikiitem ON tbtikimapping.TikiItemId = tbtikiitem.Id
@@ -573,13 +572,13 @@ namespace MVCPlayWithMe.Controllers
                         conn);
                             cmd.CommandType = CommandType.Text;
                             cmd.Parameters.AddWithValue("@inProductId", listProId[0]);
-                            using (var reader = cmd.ExecuteReader())
+                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
                                 int tikiIdOrdinal = reader.GetOrdinal("TikiId");
                                 int productIdOrdinal = reader.GetOrdinal("ProductId");
-                                while (reader.Read())
+                                while (await reader.ReadAsync())
                                 {
-                                    if(tikiId == 0)
+                                    if (tikiId == 0)
                                     {
                                         tikiId = reader.GetInt32(tikiIdOrdinal);
                                     }
@@ -589,9 +588,9 @@ namespace MVCPlayWithMe.Controllers
                         }
 
                         // Từ tikiId lấy được category id của sản phẩm trên sàn tiki trong chi tiết sản phẩm
-                        TikiProduct pro = GetListProductTiki.GetProductFromOneShop(tikiId);
+                        TikiProduct pro = await GetListProductTiki.GetProductFromOneShop(tikiId);
                         int tikiCategoryIdTemp = 0;
-                        if(pro == null)
+                        if (pro == null)
                         {
                             listProId.RemoveAt(0);
                         }
@@ -599,7 +598,7 @@ namespace MVCPlayWithMe.Controllers
                         {
                             foreach (var cat in pro.categories)
                             {
-                                if(listTikiCategoryId.Contains(cat.id))
+                                if (listTikiCategoryId.Contains(cat.id))
                                 {
                                     tikiCategoryIdTemp = cat.id;
                                     break;
@@ -617,7 +616,7 @@ namespace MVCPlayWithMe.Controllers
                             foreach (var proId in listProIdMapping)
                             {
                                 cmd.Parameters["@in_productId"].Value = proId;
-                                cmd.ExecuteNonQuery();
+                                await cmd.ExecuteNonQueryAsync();
                                 // Loại bỏ sản phẩm ra khỏi list chờ cập nhật
                                 listProId.Remove(proId);
                             }
@@ -632,15 +631,15 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Thêm mới SellerSku sản phẩm của Lazada
-        private string LazadaInsertSellerSku()
+        private async Task<string> LazadaInsertSellerSkuAsync()
         {
             MySqlResultState result = new MySqlResultState();
-            List<LazadaProduct> ls = LazadaProductAPI.GetProductAll();
+            List<LazadaProduct> ls = await LazadaProductAPI.GetProductAll();
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    conn.Open();
+                    await conn.OpenAsync();
                     MySqlCommand cmd = new MySqlCommand(
                         @"UPDATE tb_lazada_model SET SellerSku = @inSellerSku WHERE TMDTLazadaModelId = @inTMDTLazadaModelId;",
                     conn);
@@ -649,32 +648,32 @@ namespace MVCPlayWithMe.Controllers
                     cmd.Parameters.AddWithValue("@inTMDTLazadaModelId", 0L);
                     foreach (var pro in ls)
                     {
-                        foreach(var sku in pro.skus)
+                        foreach (var sku in pro.skus)
                         {
                             cmd.Parameters[0].Value = sku.SellerSku;
                             cmd.Parameters[1].Value = sku.SkuId;
-                            cmd.ExecuteNonQuery();
+                            await cmd.ExecuteNonQueryAsync();
                         }
                     }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Common.SetResultException(ex, result);
             }
             return JsonConvert.SerializeObject(result);
         }
 
-        private void LazadaUpdatePrice_SalePrice()
+        private async Task LazadaUpdatePrice_SalePrice()
         {
             LazadaMySql lazadaSQLer = new LazadaMySql();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-                List<CommonItem> ls = lazadaSQLer.LazadaGetItemOnDB(conn);
-                foreach(var item in ls)
+                await conn.OpenAsync();
+                List<CommonItem> ls = await lazadaSQLer.LazadaGetItemOnDBAsync(conn);
+                foreach (var item in ls)
                 {
-                    if(item.itemId == 3015755086)
+                    if (item.itemId == 3015755086)
                     {
                         List<CommonItem> lsTemp = new List<CommonItem>();
                         lsTemp.Add(item);
@@ -684,14 +683,10 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
-        //private List<LazadaOrder> LazadaGetOrders(DateTime fromDate)
-        //{
-
-        //}
-        public string GetListOrderLazada(int fromTo, int orderStatus)
+        public async Task<string> GetListOrderLazada(int fromTo, int orderStatus)
         {
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(lsCommonOrder);
             }
@@ -713,17 +708,17 @@ namespace MVCPlayWithMe.Controllers
             if (eOrderStatus == CommonOrderStatus.CANCELLED)
             {
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailCanceled(time_from);
+                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailCanceledAsync(time_from);
             }
             else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
             {
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailReadyToShip(time_from);
+                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailReadyToShipAsync(time_from);
             }
             else
             {
                 // Lazada
-                lsOrderLazadaFullInfo = LazadaOrderAPI.LazadaGetOrdersDetailAll(time_from);
+                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailAllAsync(time_from);
             }
 
             // Lazada
@@ -737,7 +732,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> TikiTestSomething()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -798,7 +793,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await LazadaProductAPI.LazadaUploadVideo(
+                result = await LazadaProductAPI.LazadaUploadVideoAsync(
                     "Ehon Buồn ngủ", @"C:\Users\phong\TUNM\Works\WebPlayWithMe\MVCPlayWithMe\MVCPlayWithMe\Media\Temporary\ForCreate\0.mp4",
                     conn);
             }
@@ -810,7 +805,7 @@ namespace MVCPlayWithMe.Controllers
         [ValidateInput(false)]
         public async Task<string> TikiTestSomethingWithParameter(string str)
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -842,7 +837,7 @@ namespace MVCPlayWithMe.Controllers
         [ValidateInput(false)]
         public async Task<string> TikiChangeQuantityWhenSetupOtherWarehouse()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -853,7 +848,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    List<CommonItem> listCommonItem = TikiMySql.TikiGetListAllUpdateQuantityConnectOut(conn);
+                    List<CommonItem> listCommonItem = await TikiMySql.TikiGetListAllUpdateQuantityConnectOutAsync(conn);
                     foreach (var commonItem in listCommonItem)
                     {
                         ProductController.TikiUpdateQuantityOfOneItem(commonItem);
@@ -870,7 +865,7 @@ namespace MVCPlayWithMe.Controllers
 
         ///// <summary>
         //// Hàm chỉ gọi 1 lần trong đời do thư mục ảnh chưa được add logo, thêm phiên bản thu nhỏ 320
-        ///// 
+        /////
         ///// </summary>
         ///// <returns></returns>
         //[HttpPost]
@@ -896,9 +891,9 @@ namespace MVCPlayWithMe.Controllers
         //}
 
         [HttpPost]
-        public string DeleteDuplicateDataOftbShopeeModel()
+        public async Task<string> DeleteDuplicateDataOftbShopeeModel()
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -907,10 +902,10 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string ShopeeGetAuthorizationURL()
+        public async Task<string> ShopeeGetAuthorizationURL()
         {
             MySqlResultState result = new MySqlResultState();
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
@@ -921,42 +916,42 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string ShopeeSaveLivePartnerKey(string key)
+        public async Task<string> ShopeeSaveLivePartnerKey(string key)
         {
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = CommonShopeeAPI.ShopeeSaveLivePartnerKey(key);
+            MySqlResultState result = await CommonShopeeAPI.ShopeeSaveLivePartnerKeyAsync(key);
 
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string ShopeeSaveCode(string code)
+        public async Task<string> ShopeeSaveCode(string code)
         {
             MySqlResultState result = new MySqlResultState();
 
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-            result = CommonShopeeAPI.ShopeeSaveCode(code);
+            result = await CommonShopeeAPI.ShopeeSaveCode(code);
 
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public string ShopeeGetTokenShopLevelAfterAuthorization()
+        public async Task<string> ShopeeGetTokenShopLevelAfterAuthorization()
         {
             MySqlResultState result = new MySqlResultState();
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            if(CommonShopeeAPI.ShopeeGetTokenShopLevel() == null)
+            if (await CommonShopeeAPI.ShopeeGetTokenShopLevelAsync() == null)
             {
                 result.State = EMySqlResultState.ERROR;
             }
@@ -965,15 +960,15 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string LazadaGetAccessTokenFromCodeForFirst(string code)
+        public async Task<string> LazadaGetAccessTokenFromCodeForFirst(string code)
         {
             MySqlResultState result = new MySqlResultState();
 
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-            Boolean isOk = LazadaAuthenAPI.LazadaAuthTokenCreateAndSaveDB(code);
+            Boolean isOk =await LazadaAuthenAPI.LazadaAuthTokenCreateAndSaveDBAsync(code);
             if (!isOk)
             {
                 result.State = EMySqlResultState.ERROR;
@@ -983,17 +978,17 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public string LazadaRefreshAccessToken()
+        public async Task<string> LazadaRefreshAccessToken()
         {
             MySqlResultState result = new MySqlResultState();
-            if (AuthentAdministrator() == null)
+            if (await AuthentAdministratorAsync() == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            Boolean isOk = LazadaAuthenAPI.LazadaAuthTokenRefresh();
+            Boolean isOk = await LazadaAuthenAPI.LazadaAuthTokenRefreshAsync();
             if (!isOk)
-            { 
+            {
                 result.State = EMySqlResultState.ERROR;
             }
 

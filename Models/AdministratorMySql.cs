@@ -1,275 +1,267 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Web;
+using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models
 {
     public class AdministratorMySql
     {
-        /// <summary>
-        ///  Chỉ lấy Id của administrator
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <returns></returns>
-        public Administrator GetAdministratorFromCookie(string userCookieIdentify)
+        //// Giữ sync vì dùng bởi BasicController.AuthentAdministrator()
+        //public Administrator GetAdministratorFromCookie(string userCookieIdentify)
+        //{
+        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+        //    int id = -1;
+        //    try
+        //    {
+        //        conn.Open();
+
+        //        MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
+
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        int idIndex = rdr.GetOrdinal("AdministratorId");
+        //        while (rdr.Read())
+        //        {
+        //            id = rdr.GetInt32(idIndex);
+        //        }
+
+        //        rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //        id = -1;
+        //    }
+
+        //    conn.Close();
+        //    if (id == -1)
+        //        return null;
+
+        //    Administrator administrator = new Administrator();
+        //    administrator.id = id;
+        //    return administrator;
+        //}
+
+        //// Giữ sync vì dùng bởi BasicController.AuthentAdministrator() overload có connection
+        //public Administrator GetAdministratorFromCookieConnectOut(string userCookieIdentify,
+        //    MySqlConnection conn)
+        //{
+        //    int id = -1;
+        //    try
+        //    {
+        //        MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+        //        cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
+
+        //        MySqlDataReader rdr = cmd.ExecuteReader();
+        //        int idIndex = rdr.GetOrdinal("AdministratorId");
+        //        while (rdr.Read())
+        //        {
+        //            id = rdr.GetInt32(idIndex);
+        //        }
+
+        //        rdr.Close();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //        id = -1;
+        //    }
+
+        //    if (id == -1)
+        //    {
+        //        return null;
+        //    }
+
+        //    Administrator administrator = new Administrator();
+        //    administrator.id = id;
+        //    return administrator;
+        //}
+
+        public async Task<Administrator> GetAdministratorFromCookieConnectOutAsync(string userCookieIdentify, MySqlConnection conn)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             int id = -1;
             try
             {
-                conn.Open();
-
                 MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
 
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int idIndex = rdr.GetOrdinal("AdministratorId");
-                while (rdr.Read())
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    id = rdr.GetInt32(idIndex);
+                    int idIndex = rdr.GetOrdinal("AdministratorId");
+                    while (await rdr.ReadAsync())
+                    {
+                        id = rdr.GetInt32(idIndex);
+                    }
                 }
-
-                rdr.Close();
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
                 id = -1;
             }
-
-            conn.Close();
-            if (id == -1)
-                return null;
-
+            if (id == -1) return null;
             Administrator administrator = new Administrator();
             administrator.id = id;
             return administrator;
         }
 
-        /// <summary>
-        ///  Chỉ lấy Id của administrator
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <returns></returns>
-        public Administrator GetAdministratorFromCookieConnectOut(string userCookieIdentify,
-            MySqlConnection conn)
+        public async Task<Administrator> GetAdministratorFromCookieAsync(string userCookieIdentify)
         {
             int id = -1;
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int idIndex = rdr.GetOrdinal("AdministratorId");
-                while (rdr.Read())
+                try
                 {
-                    id = rdr.GetInt32(idIndex);
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int idIndex = rdr.GetOrdinal("AdministratorId");
+                        while (await rdr.ReadAsync())
+                        {
+                            id = rdr.GetInt32(idIndex);
+                        }
+                    }
                 }
-
-                rdr.Close();
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    id = -1;
+                }
             }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                id = -1;
-            }
-
-            if (id == -1)
-            {
-                return null;
-            }
-
+            if (id == -1) return null;
             Administrator administrator = new Administrator();
             administrator.id = id;
             return administrator;
         }
 
-        /// <summary>
-        /// Insert.new user to db.
-        /// </summary>
-        /// <param name="userName">Email / SDT/ UserName.</param>
-        /// <param name="passWord">Password of user.</param>
-        /// <param name="userNameType">1: email, 2: SDT, 3: user name</param>
-        /// <param name="privilege">1: full quyền, tạo mới/ cập nhật sản phẩm, nhà phát hành</param>
-        /// <returns>A result state.</returns>
-        public MySqlResultState AddNewAdministrator(string userName, int userNameType, string passWord, int privilege)
+        public async Task<Administrator> GetAdministratorFromUserNameAsync(string userName)
         {
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
+            Administrator administrator = new Administrator();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Get_Admin_From_UserName", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inUserName", userName);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int emailIndex = rdr.GetOrdinal("Email");
+                        int sdtIndex = rdr.GetOrdinal("SDT");
+                        int privilegeIndex = rdr.GetOrdinal("Privilege");
+
+                        while (await rdr.ReadAsync())
+                        {
+                            administrator.id = rdr.GetInt32(idIndex);
+                            administrator.email = rdr.IsDBNull(emailIndex) ? string.Empty : rdr.GetString(emailIndex);
+                            administrator.sdt = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
+                            administrator.userName = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
+                            administrator.privilege = rdr.IsDBNull(privilegeIndex) ? -1 : rdr.GetInt32(privilegeIndex);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
+            }
+            return administrator;
+        }
+
+        public async Task<MySqlResultState> AddNewAdministratorAsync(string userName, int userNameType, string passWord, int privilege)
+        {
             byte[] salt = Common.CreateSalt();
             byte[] hash = Common.GenerateSaltedHash(passWord, salt);
             MySqlResultState result = new MySqlResultState();
             result.Message = "Thêm mới thành công.";
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Insert", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                if (userNameType == 1)
-                    cmd.Parameters.AddWithValue("@inEmail", userName);
-                else
-                    cmd.Parameters.AddWithValue("@inEmail", "");
-
-                MySqlParameter paSalt = new MySqlParameter();
-                paSalt.ParameterName = @"inSalt";
-                paSalt.Size = Common.SHA256Size;
-                paSalt.MySqlDbType = MySqlDbType.Binary;
-                paSalt.Value = salt;
-                cmd.Parameters.Add(paSalt);
-
-                MySqlParameter paHash = new MySqlParameter();
-                paHash.ParameterName = @"inHash";
-                paHash.Size = Common.SHA256Size;
-                paHash.MySqlDbType = MySqlDbType.Binary;
-                paHash.Value = hash;
-                cmd.Parameters.Add(paHash);
-
-                if (userNameType == 2)
-                    cmd.Parameters.AddWithValue("@inSDT", userName);
-                else
-                    cmd.Parameters.AddWithValue("@inSDT", "");
-
-                if (userNameType == 3)
-                    cmd.Parameters.AddWithValue("@inUserName", userName);
-                else
-                    cmd.Parameters.AddWithValue("@inUserName", "");
-
-                cmd.Parameters.AddWithValue("@inPrivilege", privilege);
-
-                //MySqlParameter paraoutResult = new MySqlParameter();
-                //paraoutResult.ParameterName = @"outResult";
-                //paraoutResult.Value = -1;
-                //paraoutResult.Direction = ParameterDirection.Output;
-                //cmd.Parameters.Add(paraoutResult);
-
-                //MySqlParameter paraoutMessage = new MySqlParameter();
-                //paraoutMessage.ParameterName = @"outMessage";
-                //paraoutMessage.Value = "";
-                //paraoutMessage.Direction = ParameterDirection.Output;
-                //cmd.Parameters.Add(paraoutMessage);
-                MyMySql.AddOutParameters(cmd.Parameters);
-
-                int lengthPara = cmd.Parameters.Count;
-                cmd.ExecuteNonQuery();
-                if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                try
                 {
-                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Insert", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@inEmail", userNameType == 1 ? userName : "");
+
+                    MySqlParameter paSalt = new MySqlParameter();
+                    paSalt.ParameterName = @"inSalt";
+                    paSalt.Size = Common.SHA256Size;
+                    paSalt.MySqlDbType = MySqlDbType.Binary;
+                    paSalt.Value = salt;
+                    cmd.Parameters.Add(paSalt);
+
+                    MySqlParameter paHash = new MySqlParameter();
+                    paHash.ParameterName = @"inHash";
+                    paHash.Size = Common.SHA256Size;
+                    paHash.MySqlDbType = MySqlDbType.Binary;
+                    paHash.Value = hash;
+                    cmd.Parameters.Add(paHash);
+
+                    cmd.Parameters.AddWithValue("@inSDT", userNameType == 2 ? userName : "");
+                    cmd.Parameters.AddWithValue("@inUserName", userNameType == 3 ? userName : "");
+                    cmd.Parameters.AddWithValue("@inPrivilege", privilege);
+
+                    MyMySql.AddOutParameters(cmd.Parameters);
+
+                    int lengthPara = cmd.Parameters.Count;
+                    await cmd.ExecuteNonQueryAsync();
+                    if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                    {
+                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    string err = ex.ToString();
+                    MyLogger.GetInstance().Warn(err);
+                    result.State = EMySqlResultState.EXCEPTION;
+                    result.Message = err;
                 }
             }
-            catch (Exception ex)
-            {
-                string err = ex.ToString();
-                MyLogger.GetInstance().Warn(err);
-                result.State = EMySqlResultState.EXCEPTION;
-                result.Message = err;
-            }
-
             return result;
         }
 
-        /// <summary>
-        /// Cập nhật thời gian khi logout tài khoản
-        /// </summary>
-        /// <param name="administratorCookieIdentify"></param>
-        /// <returns></returns>
-        public MySqlResultState AdministratorLogout(string administratorCookieIdentify)
+        public async Task<MySqlResultState> AdministratorLogoutAsync(string administratorCookieIdentify)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
-
             paras[0] = new MySqlParameter("@inAdministratorCookieIdentify", administratorCookieIdentify);
-
             MyMySql.AddOutParameters(paras);
-
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Administrator_Logout", paras);
-            return result;
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Administrator_Logout", paras);
         }
 
-        /// <summary>
-        /// Login.
-        /// </summary>
-        /// <param name="email">Email address as user name.</param>
-        /// <param name="password">Password.</param>
-        /// <returns>A result state.</returns>
-        public MySqlResultState LoginAdministrator(string userName, string password)
+        public async Task<MySqlResultState> LoginAdministratorAsync(string userName, string password)
         {
-            return MyMySql.Login(userName, password, "st_tbAdministrator_Get_Salt_Hash");
+            return await MyMySql.LoginAsync(userName, password, "st_tbAdministrator_Get_Salt_Hash");
         }
 
-        /// <summary>
-        /// Lấy administrator
-        /// </summary>
-        /// <param name="userName"></param>
-        /// <returns></returns>
-        public Administrator GetAdministratorFromUserName(string userName)
-        {
-            Administrator administrator = new Administrator();
-
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
-            {
-                conn.Open();
-
-                MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Get_Admin_From_UserName", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inUserName", userName);
-
-                MySqlDataReader rdr = cmd.ExecuteReader();
-                int idIndex = rdr.GetOrdinal("Id");
-                int emailIndex = rdr.GetOrdinal("Email");
-                int sdtIndex = rdr.GetOrdinal("SDT");
-                int privilegeIndex = rdr.GetOrdinal("Privilege");
-
-                while (rdr.Read())
-                {
-                    administrator.id = rdr.GetInt32(idIndex); ;
-                    administrator.email = rdr.IsDBNull(emailIndex) ? string.Empty: rdr.GetString(emailIndex);
-                    administrator.sdt = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
-                    administrator.userName = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
-                    administrator.privilege = rdr.IsDBNull(privilegeIndex) ? -1 : rdr.GetInt32(privilegeIndex);
-                }
-                rdr.Close();
-            }
-            catch (Exception ex)
-            {
-                
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-
-            conn.Close();
-            return administrator;
-        }
-
-        /// <summary>
-        /// Thêm vào bảng tbCookie_Administrator khi đăng nhập tài khoản quản trị
-        /// </summary>
-        /// <param name="userCookieIdentify"></param>
-        /// <param name="customerId"></param>
-        /// <returns></returns>
-        public MySqlResultState AddNewCookieAdministrator(string administratorCookieIdentify, int administratorId)
+        public async Task<MySqlResultState> AddNewCookieAdministratorAsync(string administratorCookieIdentify, int administratorId)
         {
             MySqlParameter[] paras = new MySqlParameter[4];
-
             paras[0] = new MySqlParameter("@inAdministratorCookieIdentify", administratorCookieIdentify);
             paras[1] = new MySqlParameter("@inAdministratorId", administratorId);
-
             MyMySql.AddOutParameters(paras);
-
-            MySqlResultState result = MyMySql.ExcuteNonQueryStoreProceduce("st_tbCookie_Administrator_Login", paras);
-            return result;
+            return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Administrator_Login", paras);
         }
 
-        public MySqlResultState ChangePasswordAdministrator(int id, string oldPassWord,
+        public async Task<MySqlResultState> ChangePasswordAdministratorAsync(int id, string oldPassWord,
             string newPassWord, string renewPassWord)
         {
-            return MyMySql.ChangePassword(id, oldPassWord, newPassWord, renewPassWord,
+            return await MyMySql.ChangePasswordAsync(id, oldPassWord, newPassWord, renewPassWord,
                 "st_tbAdministrator_Get_Salt_Hash_From_Id",
                 "st_tbAdministrator_ChangePassword");
         }

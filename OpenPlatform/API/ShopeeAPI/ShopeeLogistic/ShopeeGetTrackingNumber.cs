@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeLogistic;
 using RestSharp;
@@ -22,10 +22,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         /// </summary>
         /// <param name="ls"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static ShopeeGetTrackingNumberResponseHTTP ShopeeGetTrackingNumberBase(List<DevNameValuePair> ls)
+        public static async Task<ShopeeGetTrackingNumberResponseHTTP> ShopeeGetTrackingNumberBaseAsync(List<DevNameValuePair> ls)
         {
             string path = "/api/v2/logistics/get_tracking_number";
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 
@@ -54,26 +54,17 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         /// Lấy được tracking_number tức mã vận đơn của đơn hàng
         /// </summary>
         /// <returns></returns>
-        public static string ShopeeOrderGetTrackingNumber(string order_sn, string package_number)
+        public static async Task<string> ShopeeOrderGetTrackingNumberAsync(string order_sn, string package_number)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
-            // Required
-            // Shopee's unique identifier for an order.
             ls.Add(new DevNameValuePair("order_sn", order_sn));
 
-            // Shopee's unique identifier for the package under an order.
-            // You should't fill the field with empty string when there isn't a package number.
             if (!string.IsNullOrEmpty(package_number))
                 ls.Add(new DevNameValuePair("package_number", package_number));
 
-            // Indicate response fields you want to get. Please select from the below response parameters. 
-            // If you input an object field, all the params under it will be included automatically in the response.
-            // If there are multiple response fields you want to get, you need to use English comma to connect them.
-            // Available values: plp_number, first_mile_tracking_number,last_mile_tracking_number
-
             ls.Add(new DevNameValuePair("response_optional_fields", "plp_number, first_mile_tracking_number,last_mile_tracking_number"));
 
-            ShopeeGetTrackingNumberResponseHTTP res = ShopeeGetTrackingNumberBase(ls);
+            ShopeeGetTrackingNumberResponseHTTP res = await ShopeeGetTrackingNumberBaseAsync(ls);
             if(res == null || res.response == null || string.IsNullOrEmpty(res.response.tracking_number))
                 return string.Empty;
 
@@ -85,10 +76,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         /// </summary>
         /// <param name="ls"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static ShopeeGetBookingTrackingNumberResponseHTTP ShopeeGetBookingTrackingNumberBase(List<DevNameValuePair> ls)
+        public static async Task<ShopeeGetBookingTrackingNumberResponseHTTP> ShopeeGetBookingTrackingNumberBaseAsync(List<DevNameValuePair> ls)
         {
             string path = "/api/v2/logistics/get_booking_tracking_number";
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 
@@ -113,14 +104,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         /// Lấy được tracking_number tức mã vận đơn của đơn hàng
         /// </summary>
         /// <returns></returns>
-        public static string ShopeeGetBookingTrackingNumber(string booking_sn)
+        public static async Task<string> ShopeeGetBookingTrackingNumberAsync(string booking_sn)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
-            // Required
-            // Shopee's unique identifier for a booking.
             ls.Add(new DevNameValuePair("booking_sn", booking_sn));
 
-            ShopeeGetBookingTrackingNumberResponseHTTP res = ShopeeGetBookingTrackingNumberBase(ls);
+            ShopeeGetBookingTrackingNumberResponseHTTP res = await ShopeeGetBookingTrackingNumberBaseAsync(ls);
             if (res == null ||
                 res.response == null ||
                 string.IsNullOrEmpty(res.response.tracking_number))
@@ -130,56 +119,38 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         }
 
         // Lấy mã vận đơn / ship code / tracking number
-        public static void GetTrackingNumberFromDB(List<ShopeeOrderDetail> rs, MySqlConnection conn)
+        public static async Task GetTrackingNumberFromDBAsync(List<ShopeeOrderDetail> rs, MySqlConnection conn)
         {
-            // Ta lấy từ tbecommerceorder nếu tồn tại, ngược lại lấy từ API shopee
             ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.GetTrackingNumberToListConnectOut(rs, conn);
+            await shopeeMySql.GetTrackingNumberToListConnectOutAsync(rs, conn);
 
-            // Đơn ở trạng thái: UNPAID, READY_TO_SHIP => chưa được sàn sinh mã vận chuyển.
-            // Nhà bán chưa xác nhận đơn, khách hủy (trạng thái sẽ là CANCELLED) => chưa được sinh mã vận chuyển
-            // Ngược lại đã được sinh mã đơn.
-            // Ở trạng thái PROCESSED: Nhà bán đã xác nhận nhưng có thể chưa được đóng nên chưa
-            // có mã vận chuyển trong db. Ta lưu vào db khi lấy được mã vận đơn
-
-            // Nhiều khi đưa shipper đơn nhưng vẫn chưa cập nhật đã đóng => 
-            // trạng thái SHIPPED, COMPLETE mà vẫn chưa có mã vận chuyển trong db
             foreach (var e in rs)
             {
-                // Mã vận chuyển đã được sinh nhưng chưa được lưu ở db
                 if (string.IsNullOrEmpty(e.shipCode) &&
                     e.order_status != "UNPAID" &&
                     e.order_status != "READY_TO_SHIP" &&
-                    e.order_status != "CANCELLED") // Mã vận chuyển được lấy ở xử lý event
+                    e.order_status != "CANCELLED")
                 {
-                    e.shipCode = ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumber(e.order_sn, string.Empty);
-                    shopeeMySql.UpdateTrackingNumberToDBConnectOut(e.order_sn, e.shipCode, conn);
+                    e.shipCode = await ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumberAsync(e.order_sn, string.Empty);
+                    await shopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(e.order_sn, e.shipCode, conn);
                 }
             }
         }
 
         // Lấy mã vận đơn / ship code / tracking number
-        public static void GetBookingTrackingNumberFromDB(List<ShopeeBookingDetail> rs, MySqlConnection conn)
+        public static async Task GetBookingTrackingNumberFromDBAsync(List<ShopeeBookingDetail> rs, MySqlConnection conn)
         {
-            // Ta lấy từ tbecommerceorder nếu tồn tại, ngược lại lấy từ API shopee
             ShopeeMySql shopeeMySql = new ShopeeMySql();
-            shopeeMySql.GetBookingTrackingNumberToListConnectOut(rs, conn);
+            await shopeeMySql.GetBookingTrackingNumberToListConnectOutAsync(rs, conn);
 
-            // Booking ở trạng thái:  READY_TO_SHIP => chưa được sàn sinh mã vận chuyển.
-            // Ở trạng thái PROCESSED: Nhà bán đã xác nhận nhưng có thể chưa được đóng nên chưa
-            // có mã vận chuyển trong db. Ta lưu vào db khi lấy được mã vận đơn
-
-            // Nhiều khi đưa shipper đơn nhưng vẫn chưa cập nhật đã đóng => 
-            // trạng thái SHIPPED mà vẫn chưa có mã vận chuyển trong db
             foreach (var e in rs)
             {
-                // Mã vận chuyển đã được sinh nhưng chưa được lưu ở db
                 if (string.IsNullOrEmpty(e.shipCode) &&
                     e.booking_status != "READY_TO_SHIP" &&
-                    e.booking_status != "CANCELLED") // Mã vận chuyển được lấy ở xử lý event
+                    e.booking_status != "CANCELLED")
                 {
-                    e.shipCode = ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumber(e.booking_sn);
-                    shopeeMySql.UpdateTrackingNumberToDBConnectOut(e.order_sn, e.shipCode, conn);
+                    e.shipCode = await ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumberAsync(e.booking_sn);
+                    await shopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(e.order_sn, e.shipCode, conn);
                 }
             }
         }

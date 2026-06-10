@@ -1,4 +1,4 @@
-﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MySql.Data.MySqlClient;
@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
@@ -20,11 +21,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// </summary>
         /// <param name="ls"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeBookingDetail> ShopeeOrderGetBookingDetail(List<DevNameValuePair> ls)
+        public static async Task<List<ShopeeBookingDetail>> ShopeeOrderGetBookingDetailAsync(List<DevNameValuePair> ls)
         {
             string path = "/api/v2/order/get_booking_detail";
 
-            IRestResponse response = CommonShopeeAPI.ShopeeGetMethod(path, ls);
+            IRestResponse response = await CommonShopeeAPI.ShopeeGetMethodAsync(path, ls);
             if (response == null)
                 return null;
 
@@ -54,7 +55,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// </summary>
         /// <param name="booking_sn_list">booking_sn_list số phần tử phải nhỏ hơn hoặc bằng 50</param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeBookingDetail> ShopeeOrderGetBookingDetailFromListBookingSN(
+        public static async Task<List<ShopeeBookingDetail>> ShopeeOrderGetBookingDetailFromListBookingSNAsync(
             List<string> booking_sn_list)
         {
             if (booking_sn_list == null)
@@ -68,48 +69,29 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 strBooking_sn_list.Append(s);
                 strBooking_sn_list.Append(",");
             }
-            // Xóa "," cuối cùng
             strBooking_sn_list.Remove(strBooking_sn_list.Length - 1, 1);
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
 
-            // Required
-            // The set of booking_sn. If there are multiple booking_sn,
-            // you need to use English comma to connect them. limit [1,50]
             ls.Add(new DevNameValuePair("booking_sn_list", strBooking_sn_list.ToString()));
-
-            // The response fields you want to get. Please select from the below response parameters.
-            // If you input an object field, all the params under it will be included automatically in the response.
-            // If there are multiple response fields you want to get, you need to use English comma to connect them.
-            //Available values: item_list,cancel_by,cancel_reason,fulfillment_flag,pickup_done_time,shipping_carrier, recipient_address, dropshipper, dropshipper_phone
             ls.Add(new DevNameValuePair("response_optional_fields",
                 "item_list,cancel_by,cancel_reason,fulfillment_flag,pickup_done_time,shipping_carrier"));
 
-            return ShopeeOrderGetBookingDetail(ls);
+            return await ShopeeOrderGetBookingDetailAsync(ls);
         }
 
         /// <summary>
-        /// Lấy thông tin chi tiết danh sách booking từ danh sách mã booking
+        /// Lấy thông tin chi tiết booking từ mã booking
         /// </summary>
-        /// <param name="booking_sn_list">booking_sn_list số phần tử phải nhỏ hơn hoặc bằng 50</param>
-        /// <returns>null nếu không lấy thành công</returns>
-        public static ShopeeBookingDetail ShopeeOrderGetBookingDetailFromBookingSN(
+        public static async Task<ShopeeBookingDetail> ShopeeOrderGetBookingDetailFromBookingSNAsync(
             string booking_sn)
         {
             List<DevNameValuePair> ls = new List<DevNameValuePair>();
 
-            // Required
-            // The set of booking_sn. If there are multiple booking_sn,
-            // you need to use English comma to connect them. limit [1,50]
             ls.Add(new DevNameValuePair("booking_sn_list", booking_sn));
-
-            // The response fields you want to get. Please select from the below response parameters.
-            // If you input an object field, all the params under it will be included automatically in the response.
-            // If there are multiple response fields you want to get, you need to use English comma to connect them.
-            //Available values: item_list,cancel_by,cancel_reason,fulfillment_flag,pickup_done_time,shipping_carrier, recipient_address, dropshipper, dropshipper_phone
             ls.Add(new DevNameValuePair("response_optional_fields",
                 "item_list,cancel_by,cancel_reason,fulfillment_flag,pickup_done_time,shipping_carrier"));
 
-            List<ShopeeBookingDetail> bookings = ShopeeOrderGetBookingDetail(ls);
+            List<ShopeeBookingDetail> bookings = await ShopeeOrderGetBookingDetailAsync(ls);
             if (bookings != null && bookings.Count > 0)
                 return bookings[0];
 
@@ -121,7 +103,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// </summary>
         /// <param name="booking_sn_list"></param>
         /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeBookingDetail> ShopeeOrderGetBookingDetailFromListBookingSNAll(
+        public static async Task<List<ShopeeBookingDetail>> ShopeeOrderGetBookingDetailFromListBookingSNAllAsync(
             List<string> booking_sn_list)
         {
             List<ShopeeBookingDetail> rs = new List<ShopeeBookingDetail>();
@@ -141,7 +123,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                     booking_sn_listTemp = booking_sn_list.GetRange(index, range);
                 else
                     booking_sn_listTemp = booking_sn_list.GetRange(index, indexMax - index + 1);
-                List<ShopeeBookingDetail> rsTemp = ShopeeOrderGetBookingDetailFromListBookingSN(booking_sn_listTemp);
+                List<ShopeeBookingDetail> rsTemp = await ShopeeOrderGetBookingDetailFromListBookingSNAsync(booking_sn_listTemp);
                 if (rsTemp == null)
                 {
                     break;
@@ -156,11 +138,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         /// <summary>
         /// Lấy thông tin chi tiết danh sách booking theo thời gian và trạng thái booking
         /// </summary>
-        /// <param name="time_from"></param>
-        /// <param name="time_to"></param>
-        /// <param name="status">Theo từng trại thái hoặc tất cả trạng thái</param>
-        /// <returns>null nếu không lấy thành công</returns>
-        public static List<ShopeeBookingDetail> ShopeeOrderGetBookingDetailAll(
+        public static async Task<List<ShopeeBookingDetail>> ShopeeOrderGetBookingDetailAllAsync(
             DateTime time_from,
             DateTime time_to,
             string status,
@@ -168,11 +146,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
         {
             List<ShopeeBookingDetail> rs = new List<ShopeeBookingDetail>();
             List<ShopeeGetBookingListBaseInfo> lsBaseInfo =
-                ShopeeGetBookingList.ShopeeOrderGetBookingListBaseFromTo(time_from, time_to, status);
+                await ShopeeGetBookingList.ShopeeOrderGetBookingListBaseFromToAsync(time_from, time_to, status);
             if (lsBaseInfo.Count() == 0)
                 return rs;
 
-            // Tạo list mã booking
             List<string> lsBookingCode = new List<string>();
 
             foreach (var e in lsBaseInfo)
@@ -180,24 +157,24 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
                 lsBookingCode.Add(e.booking_sn);
             }
 
-            rs = ShopeeOrderGetBookingDetailFromListBookingSNAll(lsBookingCode);
-            ShopeeGetTrackingNumber.GetBookingTrackingNumberFromDB(rs, conn);
+            rs = await ShopeeOrderGetBookingDetailFromListBookingSNAllAsync(lsBookingCode);
+            await ShopeeGetTrackingNumber.GetBookingTrackingNumberFromDBAsync(rs, conn);
             return rs;
         }
 
-        public static List<ShopeeBookingDetail> ShopeeOrderGetBookingDetailToPickUp(
+        public static async Task<List<ShopeeBookingDetail>> ShopeeOrderGetBookingDetailToPickUpAsync(
             DateTime time_from,
             DateTime time_to,
             MySqlConnection conn)
         {
-            List<ShopeeBookingDetail> lsShopeeShopeeFullInfo = ShopeeOrderGetBookingDetailAll(
+            List<ShopeeBookingDetail> lsShopeeShopeeFullInfo = await ShopeeOrderGetBookingDetailAllAsync(
                 time_from,
                 time_to,
                 ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.PROCESSED],
                 conn);
 
             lsShopeeShopeeFullInfo.AddRange(
-                ShopeeOrderGetBookingDetailAll(
+                await ShopeeOrderGetBookingDetailAllAsync(
                 time_from,
                 time_to,
                 ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.READY_TO_SHIP],
