@@ -72,10 +72,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return JsonConvert.SerializeObject(listDeal);
             }
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-            listDeal = await SearchDealCoreOfOneSku(sku, conn);
-            await conn.OpenAsync();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                listDeal = await SearchDealCoreOfOneSku(sku, conn);
+            }
 
             return JsonConvert.SerializeObject(listDeal);
         }
@@ -88,10 +89,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return "0";
             }
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-            int tikiId = await sqler.GetTikiIdBySkuAsync(sku, conn);
-            await conn.OpenAsync();
+            int tikiId;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                tikiId = await sqler.GetTikiIdBySkuAsync(sku, conn);
+            }
 
             return tikiId.ToString();
         }

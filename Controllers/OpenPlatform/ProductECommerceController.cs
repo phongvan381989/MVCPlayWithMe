@@ -194,7 +194,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            await conn.OpenAsync();
             return lsCommonItem;
         }
 
@@ -309,8 +308,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             //// Cập nhật trạng thái item vào DB
             //tikiSqler.TikiUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
-
-            await conn.OpenAsync();
             return lsCommonItem;
         }
 
@@ -338,7 +335,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
-            await conn.OpenAsync();
             return lsCommonItem;
         }
 
@@ -832,7 +828,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
             await ordersqler.GetOrderStatusInWarehouseToCommonOrderAsync(lsCommonOrder);
-            await conn.OpenAsync();
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
 
@@ -1373,7 +1368,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
                 await conn.OpenAsync();
                 outputList = await tikiSqler.GetOrderStatisticsAsync(eType, intervalDay, conn);
-                await conn.OpenAsync();
             }
             catch (Exception ex)
             {
@@ -1416,7 +1410,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                             await tikiSqler.TikiUpdateStatusOfItemToDbConnectOutAsync(id, currentStatus == Common.tikiActive? 1: 0, conn);
                         }
                     }
-                    await conn.OpenAsync();
                 }
             }
             catch (Exception ex)
