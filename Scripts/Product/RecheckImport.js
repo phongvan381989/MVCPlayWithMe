@@ -1,235 +1,232 @@
-        // mảng đối tượng product
-        let listBasicInfo = [];
+// mảng đối tượng product
+let listBasicInfo = [];
 
-        let listInsertTemp = [];
+let listInsertTemp = [];
 
-        GetListPublisher();
+GetListPublisher();
 
-        let inputProductCode = document.getElementById("product-code-isbn");
+let inputProductCode = document.getElementById("product-code-isbn");
 
-        inputProductCode.addEventListener("keypress", function (event) {
-            if (event.key === "Enter" && document.activeElement === inputProductCode) {
-                if (DEBUG) {
-                    console.log("inputProductCode CALL");
-                }
-                event.preventDefault();
-                document.getElementsByClassName("btn-check-product-quatity")[0].click();
-            }
-        });
-
-        function EmptyAndFocusProductCodeElement() {
-            let code = document.getElementById("product-code-isbn");
-            code.value = "";
-            code.focus({
-                preventScroll: true
-            });
+inputProductCode.addEventListener("keypress", function (event) {
+    if (event.key === "Enter" && document.activeElement === inputProductCode) {
+        if (DEBUG) {
+            console.log("inputProductCode CALL");
         }
+        event.preventDefault();
+        document.getElementsByClassName("btn-check-product-quatity")[0].click();
+    }
+});
 
-        async function GetBasicInfoProduct() {
-            let publisherId =
-                GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
-            if (publisherId === null) {
-                CreateMustClickOkModal("Không lấy được thông tin nhà phát hành", null);
-                return;
-            }
+function EmptyAndFocusProductCodeElement() {
+    let code = document.getElementById("product-code-isbn");
+    code.value = "";
+    code.focus({
+        preventScroll: true
+    });
+}
 
-            const searchParams = new URLSearchParams();
-            searchParams.append("publisherId", publisherId);
-            let query = "/Product/GetProductIdCodeBarcodeNameBooCoverkPrice";
-            ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            RemoveCircleLoader();
-            if (responseDB.responseText != "null") {
-                listBasicInfo = JSON.parse(responseDB.responseText);
+async function GetBasicInfoProduct() {
+    let publisherId =
+        GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);
+    if (publisherId === null) {
+        CreateMustClickOkModal("Không lấy được thông tin nhà phát hành", null);
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("publisherId", publisherId);
+    let query = "/Product/GetProductIdCodeBarcodeNameBooCoverkPrice";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+    if (responseDB.responseText != "null") {
+        listBasicInfo = JSON.parse(responseDB.responseText);
+    }
+    else {
+        listBasicInfo = [];
+    }
+}
+
+// Nếu đã tồn tại cộng thêm số lượng
+function AddQuantityIfExistInTable(obj, table) {
+    let length = table.rows.length;
+    let exist = false;
+    for (let i = 1; i < length; i++) {
+        if (table.rows[i].cells[0].innerHTML == obj.id) {
+            if (DEBUG) {
+                console.log("value: " + Number(table.rows[i].cells[7].childNodes[0].value));
+                console.log("typeof " + typeof Number(table.rows[i].cells[7].childNodes[0].value));
+                console.log("typeof obj.quantity" + typeof obj.quantity);
             }
-            else {
-                listBasicInfo = [];
-            }
+            table.rows[i].cells[7].childNodes[0].value =
+                Number(table.rows[i].cells[7].childNodes[0].value) + obj.quantity;
+            exist = true;
+            break;
         }
+    }
+    return exist;
+}
 
-        // Nếu đã tồn tại cộng thêm số lượng
-        function AddQuantityIfExistInTable(obj, table) {
-            let length = table.rows.length;
-            let exist = false;
-            for (let i = 1; i < length; i++) {
-                if (table.rows[i].cells[0].innerHTML == obj.id) {
-                    if (DEBUG) {
-                        console.log("value: " + Number(table.rows[i].cells[7].childNodes[0].value));
-                        console.log("typeof " + typeof Number(table.rows[i].cells[7].childNodes[0].value));
-                        console.log("typeof obj.quantity" + typeof obj.quantity);
+function AddHeadList() {
+    // Xóa dữ liệu cũ
+    DeleteRowsExcludeHead(document.getElementById("myTable"));
+    listInsertTemp = [];
+    let length = listBasicInfo.length;
+    if (length == 0) {
+        CreateMustClickOkModal("Danh sách sản phẩm chưa được tải về. Vui lòng chọn nhà phát hành, để tải danh sách sản phẩm tương ứng. Hoặc thử lại sau nếu đã chọn nhà phát hành", null);
+        return;
+    }
+        // Lấy dữ liệu nhập từ csv
+    let data = ConvertCSVForImport("csvInput");
+    // Lấy dữ liệu từ cuối file csv, để khi show ra table, dữ liệu hiển thị giống thứ tự với file csv
+    let exist = false;
+    for (let i = data.length - 1; i >= 0; i--) {
+        exist = false;
+        for (let j = 0; j < listBasicInfo.length; j++) {
+            if (listBasicInfo[j].code === data[i].code ||
+                listBasicInfo[j].barcode === data[i].code ||
+                listBasicInfo[j].comboCode === data[i].code) {
+                if (data[i].quantity !== 0) {
+                    let existInsert = false;
+                    // Tìm xem đã tồn tại vì có thể lúc đầu đã được thêm theo mã 89/isbn sau lại được thêm theo mã combo
+                    for (let k = 0; k < listInsertTemp.length; k++) {
+                        if (listInsertTemp[k].id === listBasicInfo[j].id) {
+                            existInsert = true;
+                            listInsertTemp[k].quantity = listInsertTemp[k].quantity + data[i].quantity;
+                        }
                     }
-                    table.rows[i].cells[7].childNodes[0].value =
-                        Number(table.rows[i].cells[7].childNodes[0].value) + obj.quantity;
-                    exist = true;
+                    if (!existInsert) {
+                        listBasicInfo[j].quantity = data[i].quantity;
+                        listInsertTemp.push(listBasicInfo[j]);
+                    }
+                }
+                exist = true;
+                if (listBasicInfo[j].comboCode !== data[i].code) {
                     break;
                 }
             }
-            return exist;
         }
+        if (!exist && data[i].quantity != 0) {
+            let productTemp = {
+                id: -1,
+                code: data[i].code
+            };
+            listInsertTemp.push(productTemp);
+        }
+    }
 
-        function AddHeadList() {
-            // Xóa dữ liệu cũ
-            DeleteRowsExcludeHead(document.getElementById("myTable"));
-            listInsertTemp = [];
-            let length = listBasicInfo.length;
-            if (length == 0) {
-                CreateMustClickOkModal("Danh sách sản phẩm chưa được tải về. Vui lòng chọn nhà phát hành, để tải danh sách sản phẩm tương ứng. Hoặc thử lại sau nếu đã chọn nhà phát hành", null);
-                return;
-            }
-             // Lấy dữ liệu nhập từ csv
-            let data = ConvertCSVForImport("csvInput");
-            // Lấy dữ liệu từ cuối file csv, để khi show ra table, dữ liệu hiển thị giống thứ tự với file csv
-            let exist = false;
-            for (let i = data.length - 1; i >= 0; i--) {
-                exist = false;
-                for (let j = 0; j < listBasicInfo.length; j++) {
-                    if (listBasicInfo[j].code === data[i].code ||
-                        listBasicInfo[j].barcode === data[i].code ||
-                        listBasicInfo[j].comboCode === data[i].code) {
-                        if (data[i].quantity !== 0) {
-                            let existInsert = false;
-                            // Tìm xem đã tồn tại vì có thể lúc đầu đã được thêm theo mã 89/isbn sau lại được thêm theo mã combo
-                            for (let k = 0; k < listInsertTemp.length; k++) {
-                                if (listInsertTemp[k].id === listBasicInfo[j].id) {
-                                    existInsert = true;
-                                    listInsertTemp[k].quantity = listInsertTemp[k].quantity + data[i].quantity;
-                                }
-                            }
-                            if (!existInsert) {
-                                listBasicInfo[j].quantity = data[i].quantity;
-                                listInsertTemp.push(listBasicInfo[j]);
-                            }
-                        }
-                        exist = true;
-                        if (listBasicInfo[j].comboCode !== data[i].code) {
-                            break;
-                        }
-                    }
-                }
-                if (!exist && data[i].quantity != 0) {
-                    let productTemp = {
-                        id: -1,
-                        code: data[i].code
-                    };
-                    listInsertTemp.push(productTemp);
-                }
+    //if (DEBUG) {
+    //    console.log("listInsertTemp: " + JSON.stringify(listInsertTemp));
+    //}
+
+    if (listInsertTemp.length > 0) {
+        // Find a <table> element with id="myTable":
+        let table = document.getElementById("myTable");
+
+        for (let i = 0; i < listInsertTemp.length; i++) { // Thêm vào hàng đầu tiên của table
+            let objBasicInfo = listInsertTemp[i];
+            // Kiểm tra sản phẩm đã xuất hiện trong danh sách hiển thị
+            if (objBasicInfo.id !== -1 && AddQuantityIfExistInTable(objBasicInfo, table)) {
+                continue;
             }
 
-            //if (DEBUG) {
-            //    console.log("listInsertTemp: " + JSON.stringify(listInsertTemp));
-            //}
+            // Create an empty <tr> element and add it to the 1st position of the table:
+            let row = table.insertRow(1);
 
-            if (listInsertTemp.length > 0) {
-                // Find a <table> element with id="myTable":
-                let table = document.getElementById("myTable");
+            // Insert new cells (<td> elements)
+            let cell1 = row.insertCell(0);
+            let cell2 = row.insertCell(1);
+            let cell3 = row.insertCell(2);
+            let cell4 = row.insertCell(3);
+            let cell5 = row.insertCell(4);
+            let cell6 = row.insertCell(5);
+            let cell7 = row.insertCell(6);
 
-                for (let i = 0; i < listInsertTemp.length; i++) { // Thêm vào hàng đầu tiên của table
-                    let objBasicInfo = listInsertTemp[i];
-                    // Kiểm tra sản phẩm đã xuất hiện trong danh sách hiển thị
-                    if (objBasicInfo.id !== -1 && AddQuantityIfExistInTable(objBasicInfo, table)) {
-                        continue;
-                    }
+            if (objBasicInfo.id !== -1) {
 
-                    // Create an empty <tr> element and add it to the 1st position of the table:
-                    let row = table.insertRow(1);
+                // Id
+                cell1.innerHTML = objBasicInfo.id;
+                cell1.style.display = "none";
 
-                    // Insert new cells (<td> elements)
-                    let cell1 = row.insertCell(0);
-                    let cell2 = row.insertCell(1);
-                    let cell3 = row.insertCell(2);
-                    let cell4 = row.insertCell(3);
-                    let cell5 = row.insertCell(4);
-                    let cell6 = row.insertCell(5);
-                    let cell7 = row.insertCell(6);
-
-                    if (objBasicInfo.id !== -1) {
-
-                        // Id
-                        cell1.innerHTML = objBasicInfo.id;
-                        cell1.style.display = "none";
-
-                        // Checkbox khi đủ hàng
-                        let checkbox = document.createElement("INPUT");
-                        checkbox.setAttribute("type", "checkbox");
-                        checkbox.name = "checkbox-" + i.toString();
-                        checkbox.style.width = "20px";
-                        checkbox.style.height = "20px";
-                        checkbox.style.marginRight = "5px";
-                        checkbox.className = "item-checked-enough";
-                        checkbox.onclick = function () {
-                            ClickItemCheckBox(this);
-                        }
-                        cell2.append(checkbox);
-
-                        // STT
-
-                        // Image
-                        let img = document.createElement("img");
-                        if (objBasicInfo.imageSrc.length > 0) {
-                            img.setAttribute("src", Get320VersionOfImageSrc(objBasicInfo.imageSrc[0]));
-                        } else {
-                            img.setAttribute("src", srcNoImageThumbnail);
-                        }
-                        img.height = thumbnailHeight;
-                        img.width = thumbnailWidth;
-                        img.className = "go-to-detail-product";
-                        img.onclick = function () {
-                            window.open("UpdateDelete?id=" + objBasicInfo.id);
-                        };
-                        cell4.append(img);
-
-                        // Mã
-                        cell5.innerHTML = objBasicInfo.code + " - " + objBasicInfo.barcode;
-
-                        // Tên
-                        cell6.innerHTML = objBasicInfo.name;
-
-                        // Số lượng nhập
-                        cell7.innerHTML = objBasicInfo.quantity;
-                    }
-                    else {
-                        // Id
-                        cell1.innerHTML = -1;
-                        cell1.style.display = "none";
-
-                        // STT
-
-                        // Mã, trong trường hợp này là code, mã này không được tìm thấy
-                        let p = document.createElement("p");
-                        p.innerHTML = objBasicInfo.code;
-                        p.title = "Không tìm thấy mã này."
-                        p.style.cursor = "pointer";
-                        p.style.color = "red";
-                        cell5.append(p);
-                    }
-
-                    //alert(JSON.stringify(objBasicInfo));
+                // Checkbox khi đủ hàng
+                let checkbox = document.createElement("INPUT");
+                checkbox.setAttribute("type", "checkbox");
+                checkbox.name = "checkbox-" + i.toString();
+                checkbox.style.width = "20px";
+                checkbox.style.height = "20px";
+                checkbox.style.marginRight = "5px";
+                checkbox.className = "item-checked-enough";
+                checkbox.onclick = function () {
+                    ClickItemCheckBox(this);
                 }
+                cell2.append(checkbox);
 
-                // Gọi hàm sau khi dữ liệu đã được load
-                updateSTT("myTable", 2);
+                // STT
+
+                // Image
+                let img = document.createElement("img");
+                if (objBasicInfo.imageSrc.length > 0) {
+                    img.setAttribute("src", Get320VersionOfImageSrc(objBasicInfo.imageSrc[0]));
+                } else {
+                    img.setAttribute("src", srcNoImageThumbnail);
+                }
+                img.height = thumbnailHeight;
+                img.width = thumbnailWidth;
+                img.className = "go-to-detail-product";
+                img.onclick = function () {
+                    window.open("UpdateDelete?id=" + objBasicInfo.id);
+                };
+                cell4.append(img);
+
+                // Mã
+                cell5.innerHTML = objBasicInfo.code + " - " + objBasicInfo.barcode;
+
+                // Tên
+                cell6.innerHTML = objBasicInfo.name;
+
+                // Số lượng nhập
+                cell7.innerHTML = objBasicInfo.quantity;
             }
             else {
-                CreateMustClickOkModal("Không tìm thấy sản phẩm phù hợp hoặc sản phẩm đã được thêm vào danh sách hiển thị", null);
+                // Id
+                cell1.innerHTML = -1;
+                cell1.style.display = "none";
+
+                // STT
+
+                // Mã, trong trường hợp này là code, mã này không được tìm thấy
+                let p = document.createElement("p");
+                p.innerHTML = objBasicInfo.code;
+                p.title = "Không tìm thấy mã này."
+                p.style.cursor = "pointer";
+                p.style.color = "red";
+                cell5.append(p);
             }
+
+            //alert(JSON.stringify(objBasicInfo));
         }
 
-        function CheckProductQuantity() {
-            const searchValue = document.getElementById('product-code-isbn').value.trim();
-            const table = document.getElementById('myTable');
-            const rows = table.getElementsByTagName('tr');
+        // Gọi hàm sau khi dữ liệu đã được load
+        updateSTT("myTable", 2);
+    }
+    else {
+        CreateMustClickOkModal("Không tìm thấy sản phẩm phù hợp hoặc sản phẩm đã được thêm vào danh sách hiển thị", null);
+    }
+}
 
-            for (let i = 1; i < rows.length; i++) { // Bỏ qua hàng tiêu đề
-                const codeCell = rows[i].getElementsByTagName('td')[4]; // Cột Mã
-                if (codeCell && codeCell.textContent.includes(searchValue)) {
-                    rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    rows[i].style.backgroundColor = 'green'; // Tô màu để dễ nhìn
-                    setTimeout(() => { rows[i].style.backgroundColor = ''; }, 2000); // Xóa màu sau 2 giây
-                    return;
-                }
-            }
-            alert('Không tìm thấy mã sản phẩm!');
+function CheckProductQuantity() {
+    const searchValue = document.getElementById('product-code-isbn').value.trim();
+    const table = document.getElementById('myTable');
+    const rows = table.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) { // Bỏ qua hàng tiêu đề
+        const codeCell = rows[i].getElementsByTagName('td')[4]; // Cột Mã
+        if (codeCell && codeCell.textContent.includes(searchValue)) {
+            rows[i].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            rows[i].style.backgroundColor = 'green'; // Tô màu để dễ nhìn
+            setTimeout(() => { rows[i].style.backgroundColor = ''; }, 2000); // Xóa màu sau 2 giây
+            return;
         }
-    </script>
-</body>
-</html>
+    }
+    alert('Không tìm thấy mã sản phẩm!');
+}

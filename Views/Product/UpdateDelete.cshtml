@@ -1,13 +1,57 @@
-﻿@{
-    Layout = null;
-}
-
-<!DOCTYPE html>
-<html lang="en">
+﻿<html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20260610">
     <link rel="stylesheet" href="~/Content/Product/UpdateDelete.css?v=20260610">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container" id="result-find-id">
+            @Html.Partial("~/Views/Shared/ProductInput.cshtml")
+            <div class="config-max-width">
+                <br />
+                <button type="button" onclick="MappingOfProduct()"
+                        title="Xem sản phẩm liên kết trên sàn Tiki, Shopee, Lazada">
+                    Sản Phẩm Liên Kết Trên Sàn
+                </button>
+                <button type="button" style="margin-left: 30px;" onclick="UpdateProductPromise()">Cập Nhật</button>
+                <button type="button" style="margin-left: 30px;"
+                        title="Sản phẩm chỉ có thế xóa khi đang không liên kết với sản phẩm nào trên
+                        Shopee, Tiki, Lazada, web voibenho, trong đơn hàng đã được bán, thông tin nhập xuất thực tế,..."
+                        onclick="DeleteProduct()">
+                    Xóa
+                </button>
+            </div>
+            <br />
+            <div style="margin-bottom: 100px;">
+                @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+                <div>
+                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical"
+                           title="Tên khi tạo sản phẩm trên sàn thương mại:Tiki, Shopee, Lazada,...
+                           Tên này bằng: Sách + tên combo - tên sản phẩm. Sửa tên combo, tên sản phẩm nếu muốn thay đổi tên trên sàn">
+                    <button type="button" style="margin-left: 30px;"
+                            title="Tạo sản phẩm trên sàn thương mại điện tử với tên như trên"
+                            onclick="CreateProductOnECommerce()">
+                        Tạo Sản Phẩm Trên Sàn TMDT Với Tên Trên
+                    </button>
+
+                    <button type="button" style="margin-left: 30px; display:none;"
+                            title="Tải ảnh lên sàn. Hiện tại hỗ trợ SHOPEE, Lazada"
+                            onclick="UploadImageOnECommerce()">
+                        Tải Ảnh Lên Sàn
+                    </button>
+                </div>
+                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+                <div id="count-result"></div>
+                <table id="myTable">
+                    <tr>
+                        <th style="display:none"></th>
+                        <th>Sàn</th>
+                        <th>Mã Đơn Hàng</th>
+                        <th>Số Lượng</th>
+                        <th>Thời Gian</th>
+                    </tr>
                 </table>
             </div>
         </div>
@@ -19,4 +63,5 @@
     <script src="~/Scripts/web.play.with.me.product.upload.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
     <script src="~/Scripts/Product/UpdateDelete.js?v=20260610"></script>
-
+</body>
+</html>

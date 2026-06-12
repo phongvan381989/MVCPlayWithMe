@@ -8,6 +8,45 @@
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20260610">
     <link rel="stylesheet" href="~/Content/Product/RecheckImport.css?v=20260610">
+</head>
+<body @*onload="GetBasicInfoProduct()"*@>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container">
+            <div>
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input list="list-Publisher" class="config-max-width margin-vertical"
+                       id="publisher-id" onchange="GetBasicInfoProduct()">
+                <datalist id="list-Publisher"></datalist>
+            </div>
+            <br>
+
+            <div class="config-max-width">
+                <div id="div-csv-textarea">
+                    <textarea id="csvInput" placeholder="code,quantity
+8938532871558,10
+8938519861398,
+8938519861404,"></textarea>
+                    <br>
+                </div>
+                <div>
+                    <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
+                            title="Từ csv, tạo bảng trực quan sản phẩm đã nhập"
+                            id="add-head-list">
+                        Thêm Vào Danh Sách
+                    </button>
+                </div>
+                <div>
+                    <input type="text" id="product-code-isbn" placeholder="Nhập mã sản phẩm" />
+                    <button type="button" class="btn-check-product-quatity" onclick="CheckProductQuantity()">Kiểm Tra Số Lượng</button>
+                </div>
+            </div>
+            <br />
+            <table id="myTable">
+                <tr>
+                    <th style="display:none"></th>
+                    <th>Đủ Hàng</th>
+                    <th>STT</th>
+                    <th style="width:200px">Ảnh</th>
                     <th>Mã</th>
                     <th>Tên</th>
                     <th>Số Lượng</th>
@@ -15,8 +54,9 @@
             </table>
         </div>
     </div>
-    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
+    <    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
     <script src="~/Scripts/Product/RecheckImport.js?v=20260610"></script>
-
+</body>
+</html>
