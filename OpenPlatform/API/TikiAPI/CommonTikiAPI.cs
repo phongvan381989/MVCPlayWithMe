@@ -134,8 +134,18 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             }
 
             request.AddHeader("Authorization", "Bearer " + (string.IsNullOrEmpty(tikiConfigApp.tikiAu.access_token) ? string.Empty: tikiConfigApp.tikiAu.access_token));
-            IRestResponse response = await Common.client.ExecuteAsync(request);
-            MyLogger.InfoRestLog(Common.client, request, response);
+            IRestResponse response = null;
+            try
+            {
+                 response = Common.client.Execute(request);
+                MyLogger.InfoRestLog(Common.client, request, response);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                return null;
+            }
+
 
             // Phần code này dự là không bao giờ chạy vì đã được làm mới bên trên
             if (response.StatusCode == HttpStatusCode.Unauthorized)

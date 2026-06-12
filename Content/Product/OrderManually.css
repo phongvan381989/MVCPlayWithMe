@@ -1,0 +1,88 @@
+        .akfhz95nzk {
+            margin: 5px 25px 5px 5px;
+        }
+
+        .sfxvsg90svx {
+            display: flex;
+        }
+
+        .adasdxjnf98 {
+            display: flex;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container">
+            <div>
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input list="list-Publisher" class="config-max-width margin-vertical"
+                       id="publisher-id" onchange="GetBasicInfoProduct()">
+                <datalist id="list-Publisher"></datalist>
+            </div>
+            <br>
+
+            <label for="code-or-isbn">Mã sản phẩm hoặc ISBN:</label><br>
+            <input class="config-max-width margin-vertical" type="text" id="code-or-isbn" value="">
+            <br>
+            @Html.Partial("~/Views/Shared/ProductNameSelect.cshtml")
+            <br />
+            <div>
+                <label for="combo-id">Combo:</label>
+                <input list="list-combo" class="config-max-width margin-vertical" id="combo-id">
+
+                <datalist id="list-combo"></datalist>
+            </div>
+            <div class="adasdxjnf98">
+                <div title="Chiết khấu 100% mang ý nghĩa cập nhật số lượng lại đúng thực tế do không
+                 rõ sai sót ở đâu. Số lượng có thể là số âm" style="margin-right:20px;">
+                    <label for="discount">Chiết khấu(%):</label>
+                    <div>
+                        <input type="number" min="0" max="100" step="5" class="margin-vertical" id="discount" value="0">
+                    </div>
+                </div>
+
+                <div title="Số lượng nhập kho" style="margin-right:20px;">
+                    <label for="quantity_import">Số lượng:</label>
+                    <div>
+                        <input type="number" class="margin-vertical" id="quantity_import" value="0">
+                    </div>
+                </div>
+
+                <div title="Tổng thanh toán">
+                    <label for="sum_pay">Thanh toán:</label>
+                    <div>
+                        <input type="number" class="margin-vertical" id="sum_pay" value="0">
+                    </div>
+                </div>
+            </div>
+            <br />
+
+            <div class="config-max-width sfxvsg90svx">
+                <button type="button" onclick="AddHeadList()" class="akfhz95nzk"
+                        title="Thêm sản phẩm vào danh sách nhập kho bên dưới" id="add-head-list">
+                    Thêm vào danh sách
+                </button>
+            </div>
+            <br />
+            <br />
+            <table id="myTable">
+                <tr>
+                    <th style="display:none"></th>
+                    <th style="width:200px">Ảnh</th>
+                    <th>Tên</th>
+                    <th>Giá Bìa</th>
+                    <th>Chiết Khấu</th>
+                    <th>Giá Nhập</th>
+                    <th>Số Lượng</th>
+                    <th></th>
+                </tr>
+                @*<tr>
+                        <td>Maria Anders</td>
+                        <td><input type="number"></td>
+                        <td><input type="number"></td>
+                        <td>Giá bìa</td>
+                        <td><button onclick="this.parentElement.parentElement.remove()">Xóa</button></td>
+                    </tr>*@
+            </table>
+

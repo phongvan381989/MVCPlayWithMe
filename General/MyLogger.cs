@@ -40,6 +40,9 @@ namespace MVCPlayWithMe.General
 
             if (request != null)
             {
+                sb.Append("Method: " + request.Method);
+                sb.Append('\n');
+
                 foreach (Parameter e in request.Parameters)
                 {
                     sb.Append(e.ToString());

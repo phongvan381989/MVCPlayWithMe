@@ -1,0 +1,267 @@
+        let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
+
+        InitializeSomething();
+        function InitializeSomething() {
+            // Xóa lựa chọn tất cả
+            document.getElementById("container-all-e-ecommonerce-type").remove();
+            // Xóa lựa chọn play with me
+            document.getElementById("container-play-with-me-e-ecommonerce-type").remove();
+            // Chọn Shopee
+            document.getElementById("shopee-e-ecommonerce-type").checked = true;
+        }
+
+        function ECommerceTypeChange() {
+            listItem = [];
+            DeleteRowsExcludeHead(document.getElementById("myTable"));
+            document.getElementById("count-common-item-result").innerHTML = "";
+            document.getElementById("find-non-mapping").checked = false;
+        }
+
+        async function GetItemOnDB() {
+            document.getElementById("find-non-mapping").checked = false;
+
+            // Lấy tất cả sản phẩm của sàn, mất thời gian
+            if (listItem.length == 0) {
+                const searchParams = new URLSearchParams();
+                searchParams.append("eType", GetECommerceType());
+
+                let query = "/ProductECommerce/GetItemOnDB";
+
+                ShowCircleLoader();
+                let responseDB = await RequestHttpPostPromise(searchParams, query);
+                if (responseDB.responseText != "null") {
+                    listItem = JSON.parse(responseDB.responseText);
+                }
+                else {
+                    listItem = [];
+                }
+                RemoveCircleLoader();
+
+                let table = document.getElementById("myTable");
+                ShowListCommonItemOnDB(listItem, table);
+            }
+        }
+
+        async function AutoUpdateMapping() {
+            const searchParams = new URLSearchParams();
+            searchParams.append("eType", GetECommerceType());
+
+            let query = "/ProductECommerce/AutoUpdateMapping";
+            ShowCircleLoader();
+            let responseDB = await RequestHttpPostPromise(searchParams, query);
+            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+            RemoveCircleLoader();
+        }
+
+        function ShowListCommonItemOnDB(list, table) {
+            // Show
+            DeleteRowsExcludeHead(table);
+            document.getElementById("count-common-item-result").innerHTML = "Tổng " + list.length + " item sản phẩm";
+
+            let length = list.length;
+            if (length == 0) {
+                return;
+            }
+
+            // enum {
+            //    PLAYWITHME  0,
+            //    TIKI  1,
+            //    SHOPEE  2,
+            //    LAZADA  3
+            //}
+            let modelLength = 0;
+
+            // Nút cập nhật
+            // Nếu trong danh sách mapping của item có ít nhất 1 sản phẩm trong kho ngừng kinh doanh,
+            // sản phẩm trên sàn ở trạng thái bình thường thì cân nhắc việc ẩn/tắt kinh doanh.
+            let isHide = false;
+            let isMapping = false;
+
+            for (let i = 0; i < length; i++) {
+                isHide = false;
+                isMapping = true;
+                let item = list[i];
+
+                modelLength = item.models.length;
+                if (item.bActive) {
+                    for (let j = 0; j < modelLength; j++) {
+                        let model = item.models[j];
+                        for (let k = 0; k < model.mapping.length; k++) {
+                            if (model.mapping[k].product.status != 0) {
+                                isHide = true;
+                                break;
+                            }
+                        }
+                        if (isHide) {
+                            break;
+                        }
+                    }
+                    // Kiểm tra item đã được mapping
+                    for (let j = 0; j < modelLength; j++) {
+                        let model = item.models[j];
+                        if (model.mapping.length == 0) {
+                            isMapping = false;
+                            break;
+                        }
+                    }
+
+                }
+
+                for (let j = 0; j < modelLength; j++) {
+
+                    let row = table.insertRow(-1);
+                    row.isMapping = isMapping;
+                    let model = item.models[j];
+                    // Insert new cells (<td> elements)
+                    let cell1 = row.insertCell(0);
+                    let cell2 = row.insertCell(1);
+                    let cell3 = row.insertCell(2);
+                    let cell4 = row.insertCell(3);
+                    let cell5 = row.insertCell(4);
+                    let cell6 = row.insertCell(5);
+                    let cell7 = row.insertCell(6);
+
+                    //// STT
+                    //cell1.innerHTML = i+1;
+
+                    if (j == 0) {
+                        // item Id
+                        cell1.innerHTML = item.itemId;
+                        cell1.className = "go-to-detail-item";
+                        cell1.eType = item.eType;
+                        cell1.onclick = function () {
+                            let url = "";
+                            if (this.eType == eTiki) {
+                                url = "/ProductECommerce/Item?eType=TIKI&id=" + item.itemId;
+                            }
+                            else if (this.eType == eShopee) {
+                                url = "/ProductECommerce/Item?eType=SHOPEE&id=" + item.itemId;
+                            }
+                            else if (this.eType == eLazada) {
+                                url = "/ProductECommerce/Item?eType=LAZADA&id=" + item.itemId;
+                            }
+                            if (url !== "") {
+                                window.open(url);
+                            }
+                        };
+                        //cell1.title = "Xóa item khỏi cơ sở dữ liệu";
+                        //cell1.onclick = async function () {
+                        //    if (confirm("Chỉ xóa khi item không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA item và thông tin liên quan?") == false) {
+                        //        return;
+                        //    }
+                        //    // Lấy id
+                        //    let id = Number(this.innerHTML);
+                        //    const searchParams = new URLSearchParams();
+                        //    searchParams.append("eType", GetECommerceType());
+                        //    searchParams.append("itemId", id);
+                        //    let query = "/ProductECommerce/DeleteItemOnDB";
+                        //    ShowCircleLoader();
+                        //    let responseDB = await RequestHttpPostPromise(searchParams, query);
+                        //    RemoveCircleLoader();
+
+                        //    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
+                        //};
+
+                        // Tên Item
+                        cell2.innerHTML = item.name;
+                    }
+
+                    // Model Id
+                    if (model.modelId != -1) {
+                        cell3.innerHTML = model.modelId;
+                        cell3.className = "go-to-detail-item";
+                        //cell3.title = "Xóa model khỏi cơ sở dữ liệu";
+                        //cell3.onclick = async function () {
+                        //    if (confirm("Chỉ xóa khi model không tồn tại trên sàn. Click vào tên để kiểm tra. Bạn CHẮC CHẮN muốn XÓA model và thông tin liên quan?") == false) {
+                        //        return;
+                        //    }
+                        //    // Lấy id
+                        //    let id = Number(this.innerHTML);
+                        //    const searchParams = new URLSearchParams();
+                        //    searchParams.append("eType", GetECommerceType());
+                        //    searchParams.append("modelId", id);
+                        //    let query = "/ProductECommerce/DeleteShopeeModelOnDB";
+                        //    ShowCircleLoader();
+                        //    let responseDB = await RequestHttpPostPromise(searchParams, query);
+                        //    RemoveCircleLoader();
+
+                        //    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
+                        //};
+                    }
+
+                    // Tên model
+                    cell4.innerHTML = model.name;
+                    cell4.className = "go-to-detail-item";
+                    cell4.title = "Xem sản phẩm trên sàn thương mại";
+                    cell4.itemUrl = GetTMDTItemUrlFromCommonItem(item);
+                    cell4.onclick = function () {
+                        // Lấy id
+                        let id = Number(this.parentElement.parentElement.children[0].innerHTML);
+                        window.open(this.itemUrl);
+                    };
+
+                    if (j == 0) {
+                        // Trạng thái
+                        const p = document.createElement("p");
+                        p.textContent = item.item_status;
+                        if (!item.bActive) {
+                            p.style.color = "red";
+                        }
+                        p.itemId = item.itemId;
+                        p.currentStatus = item.item_status;
+                        p.title = "Click để thay đổi trạng thái từ ACTIVE/NORMAL tới UNACTIVE/UNNORMAL, và ngược lại."
+                        p.style.cursor = "pointer";
+                        p.onclick = async function () {
+                            if (confirm("Bạn CHẮC CHẮN muốn thay đổi trạng thái ngược lại?") == false) {
+                                return;
+                            }
+                            // Lấy id
+                            const searchParams = new URLSearchParams();
+                            searchParams.append("eType", GetECommerceType());
+                            searchParams.append("itemId", this.itemId);
+                            searchParams.append("currentStatus", this.currentStatus);
+
+                            let query = "/ProductECommerce/UpdateStatusItemOpposite";
+                            ShowCircleLoader();
+                            let responseDB = await RequestHttpPostPromise(searchParams, query);
+                            RemoveCircleLoader();
+
+                            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+                        };
+                        cell5.append(p);
+
+                        if (isHide) {
+                            const pHide = document.createElement("p");
+                            pHide.textContent = "Cân Nhắc Ẩn/Tắt.";
+                            pHide.style.color = "red";
+
+                            cell6.append(pHide);
+                        }
+                    }
+
+                    cell7.innerHTML = item.sku;
+                }
+            }
+        }
+
+        function FindNonMapping() {
+            var checkBox = document.getElementById("find-non-mapping");
+
+            const table = document.getElementById("myTable");
+            const rows = table.querySelectorAll("tr"); // Lấy tất cả các hàng trong bảng
+
+            if (checkBox.checked == true) {
+                rows.forEach((row) => {
+                    if (row.isMapping) {
+                        row.style.display = "none"; // Ẩn nếu ismapping=true, hiện nếu ismapping=false
+                    }
+                });
+                document.getElementById("count-common-item-result").style.display = "none";
+            } else {
+                rows.forEach((row) => {
+                    row.style.display = ""; // Ẩn nếu ismapping=true, hiện nếu ismapping=false
+                });
+                document.getElementById("count-common-item-result").style.display = "block";
+            }
+        }
+

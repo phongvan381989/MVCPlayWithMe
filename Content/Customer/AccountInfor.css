@@ -1,0 +1,255 @@
+table {
+    max-width: 600px;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    display: table;
+    box-sizing: border-box;
+    text-indent: initial;
+    border-color: gray;
+}
+
+tr {
+    vertical-align: middle;
+    display: table-row;
+}
+
+td {
+    display: table-cell;
+    vertical-align: inherit;
+}
+
+.espR83 {
+    text-align: right;
+    color: rgba(85,85,85,.8);
+    overflow: hidden;
+    padding-bottom: 15px;
+    padding-top: 15px;
+    white-space: nowrap;
+    min-width: 20%;
+}
+
+.uxYEXm {
+    color: #333;
+}
+
+.Tmj5Z6 {
+    box-sizing: border-box;
+    padding-left: 20px;
+    padding-bottom: 15px;
+    padding-top: 15px;
+}
+
+.profile-save {
+    color: #fff;
+    position: relative;
+    overflow: visible;
+    outline: 0;
+    background: #ee4d2d;
+    height: 40px;
+    padding: 0 20px;
+    min-width: 70px;
+    max-width: 220px;
+    display: inline-flex;
+    text-overflow: ellipsis;
+    -webkit-line-clamp: 1;
+    flex-direction: column;
+    font-size: 14px;
+    box-sizing: border-box;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+    border-radius: 2px;
+    border: 0;
+    align-items: center;
+    justify-content: center;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+.create-address {
+    color: #fff;
+    position: relative;
+    overflow: visible;
+    outline: 0;
+    background: #ee4d2d;
+    height: 40px;
+    padding: 0 20px;
+    min-width: 70px;
+    max-width: 220px;
+    display: flex;
+    text-overflow: ellipsis;
+    font-size: 14px;
+    box-sizing: border-box;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+    border-radius: 2px;
+    border: 0;
+    align-items: center;
+    justify-content: center;
+    text-transform: capitalize;
+    cursor: pointer;
+}
+
+.mblfAtcf {
+    width: 16px;
+    height: 16px;
+    fill: rgba(255,255,255,1);
+    margin-right: 8px;
+}
+
+.W50dp5 {
+    align-items: center;
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 40px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,.14);
+    border-radius: 2px;
+    box-shadow: inset 0 2px 0 rgba(0,0,0,.02);
+}
+
+.CMyrTJ {
+    background: none;
+    padding: 12px;
+    outline: none;
+    border: 0;
+    flex: 1;
+    flex-shrink: 0;
+    filter: none;
+}
+
+.SbCTde {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 500;
+    line-height: 1.5rem;
+    text-transform: capitalize;
+    color: #333;
+}
+
+.account-header-container {
+    border-bottom: 0.0625rem solid #efefef;
+    padding: 1.125rem;
+    display: flex;
+    align-items: center;
+}
+
+.lpxAGdgh {
+    width: 100%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.radio-sex {
+    width: 20px;
+    height: 20px;
+    margin-right: 5px;
+}
+
+.s4eg4A {
+    display: flex;
+}
+
+.radio-sex-div {
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+}
+
+.birthday-time {
+    padding: 12px;
+    align-items: center;
+    display: flex;
+    box-sizing: border-box;
+    width: 100%;
+    height: 40px;
+    overflow: hidden;
+    border: 1px solid rgba(0,0,0,.14);
+    border-radius: 2px;
+    box-shadow: inset 0 2px 0 rgba(0,0,0,.02);
+    background: none;
+}
+
+.account-infor-container {
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+    background: #fff;
+    border-radius: 3px;
+}
+
+.sample-address-container {
+    display: none;
+}
+
+.sample-address-container input {
+    margin-top: 15px;
+    width: 20px;
+    height: 20px;
+}
+
+.sample-address-container .address {
+    padding: 10px;
+    margin-bottom: 15px;
+    margin-top: 15px;
+    border-bottom: 1px solid rgba(0,0,0,.14);
+    width: 100%;
+}
+
+.sample-address-container .address div {
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.sample-address-container .address span {
+    margin-right: 10px;
+}
+
+.sample-address-container .default-address {
+    color: #ee4d2d;
+    border-color: #ee4d2d;
+    margin: 0 4px 4px 0;
+    border-radius: 1px;
+    padding: 2px 4px;
+    border: 0.5px solid;
+}
+
+.sample-address-container .htlhtxbv {
+    display: flex;
+}
+
+    .sample-address-container .htlhtxbv button {
+        margin-top: 15px;
+        margin-bottom: 15px;
+        border: 0;
+        background: none;
+        outline: none;
+        padding: 4px 10px;
+        color: #08f;
+        white-space: nowrap;
+    }
+
+.sample-address-container .mgW0lg {
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    padding: 4px 12px;
+    height: 28px;
+    min-width: 0px;
+    color: rgba(0, 0, 0, 0.87);
+    border: 1px solid rgba(0, 0, 0, 0.26);
+    box-shadow: rgba(0, 0, 0, 0.03) 0px 1px 1px;
+    white-space: nowrap;
+    background-color: rgb(255, 255, 255);
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    outline: none;
+    background: none;
+    border-radius: 2px;
+}
+
+    .sample-address-container .mgW0lg:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+
+    .sample-address-container .mgW0lg:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }

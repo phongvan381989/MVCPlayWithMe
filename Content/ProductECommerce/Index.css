@@ -1,0 +1,77 @@
+
+        .display-flex-margin-right20-align-items-center {
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .item-image-ACvv {
+            width: 100px;
+            height: 100px;
+            border-radius: 3px 4px;
+        }
+
+        .one-item-container {
+            display: flex;
+            padding: 10px;
+            align-items: center;
+        }
+
+        .item-name-vsfc {
+            padding-left: 10px;
+        }
+
+        .item-name-vsfc:link {
+            text-decoration: none;
+            color: black;
+        }
+
+        .item-name-vsfc:visited {
+            color: black;
+        }
+
+        .paging-container {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .axMLP902 {
+            width: 36px;
+            height: 32px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            padding-top: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            font-weight: 600;
+            font-size: 15px;
+            line-height: 20px;
+            border-radius: 8px;
+            color: #004370;
+            cursor: pointer;
+            user-select: none;
+            text-align: center;
+        }
+
+        .axMLP902-active {
+            background: #E3ECFF;
+        }
+
+        .fcnal986j {
+            margin-right: 40px;
+            border: 1px solid #e9ecef;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 3px 4px;
+            padding: 5px;
+            margin: 5px;
+        }
+
+        .lk09Jbvrd {
+            display: inline;
+            margin-right: 20px;
+        }
+        .fzmg093rvz8{
+            margin-right:10px;
+        }
+    </style>

@@ -1,0 +1,142 @@
+let listImportObj = [];
+
+// Danh sách đối tượng lưu về db
+let listSave = [];
+
+GetListPublisher();
+
+async function GetListImport() {
+    let publisher = GetValueInputById("publisher-id", "");
+    let fromDate = document.getElementById("from-date").value;
+    let toDate = document.getElementById("to-date").value;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("fromDate", fromDate);
+    searchParams.append("toDate", toDate);
+    searchParams.append("publisher", publisher);
+    let query = "/Product/GetListImport";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpGetPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    if (responseDB.responseText != "null") {
+        listImportObj = JSON.parse(responseDB.responseText);
+    }
+    else {
+        listImportObj = [];
+    }
+
+    ShowListImport(listImportObj);
+}
+
+function ShowListImport(list) {
+    // Xóa dữ liệu trước đó nếu có
+    DeleteRowsExcludeHead(document.getElementById("myTable"));
+
+    let length = list.length;
+    if (length == 0)
+        return;
+
+    for (let i = 0; i < length; i++) {
+        let obj = list[i];
+
+        // Find a <table> element with id="myTable":
+        let table = document.getElementById("myTable");
+
+        // Create an empty <tr> element
+        let row = table.insertRow(i + 1);
+
+        // Insert new cells (<td> elements) at the 1st and 2nd position of the "new" <tr> element:
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        let cell4 = row.insertCell(3);
+        let cell5 = row.insertCell(4);
+        let cell6 = row.insertCell(5);
+        let cell7 = row.insertCell(6);
+
+        // Id
+        cell1.innerHTML = obj.id;
+        cell1.style.display = "none";
+
+        // Tên
+        cell2.innerHTML = obj.productName;
+
+        // Giá bìa
+        cell3.innerHTML = obj.bookCoverPrice;
+
+        // Chiết khấu
+        let input4 = document.createElement("input");
+        input4.type = "number";
+        input4.value = obj.discount;
+        cell4.appendChild(input4);
+        input4.addEventListener("change", function (event) {
+            //if (DEBUG) {
+            //    console.log("discount onchange");
+            //}
+            this.isChange = true; // Cần cập nhật
+            let bookCoverPrice = this.parentElement.previousSibling.innerHTML;
+            this.parentElement.nextSibling.innerHTML =
+                (100 - this.value) * bookCoverPrice / 100;
+        });
+
+        // Giá nhập
+        cell5.innerHTML = obj.price;
+
+        // Số lượng nhập
+        cell6.innerHTML = obj.quantity;
+
+        // Ngày
+        cell7.innerHTML = obj.dateImport;
+    }
+}
+
+// Constructor function for objects
+function objImport(id, price, discount) {
+    this.id = id;
+    this.price = price;
+    this.discount = discount;
+}
+
+// Lưu db
+async function Update() {
+    listSave = [];
+    let rows = document.getElementById("myTable").rows;
+    let length = rows.length;
+    for (let i = 1; i < length; i++) {
+        if (rows[i].cells[3].childNodes[0].isChange == true) {
+            let obj = new objImport(
+                Number(rows[i].cells[0].innerHTML),
+                Number(rows[i].cells[4].innerHTML),
+                Number(rows[i].cells[3].childNodes[0].value));
+            listSave.push(obj);
+        }
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("listObject", JSON.stringify(listSave));
+    let query = "/Product/UpdateImport";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+    if (responseDB.responseText != "null") {
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    else {
+        CreateMustClickOkModal("Cập nhật thất bại.", null);
+    }
+}
+
+function Delete() {
+    let text = "Bạn chắc chắn muốn XÓA dữ liệu đang hiển thị?";
+    if (confirm(text) == false)
+        return;
+
+    let rows = document.getElementById("myTable").rows;
+    let length = rows.length;
+    for (let i = length - 1; i > 0; i--) {
+        document.getElementById("myTable").deleteRow(i);
+    }
+}

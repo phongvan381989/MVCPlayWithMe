@@ -1,0 +1,147 @@
+.status-container {
+    display: flex;
+    padding: 10px;
+    background-color: white;
+    flex-wrap: wrap;
+    border-radius: 3px;
+    position: sticky;
+    top: 0;
+}
+
+.sample-order {
+    display: none;
+    margin-top: 20px;
+    border-radius: 3px;
+    background-color: white;
+    width: 100%;
+}
+
+.nvsflAB87 {
+    border: none;
+    flex-grow: 1;
+    background-color: white;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+    .nvsflAB87:hover {
+        color: #ee4d2d !important;
+    }
+
+.order-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.fxASnxvd {
+    line-height: 24px;
+    color: #ee4d2d;
+    text-align: right;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin: 10px;
+}
+
+.sample-item-container {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 10px;
+    width: 100%;
+}
+
+.sample-payment {
+    display: none;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 15px;
+}
+
+.name-quantity {
+    width: 100%;
+    padding: 5px 20px;
+}
+
+.model-icon {
+    width: 80px;
+    height: 80px;
+    flex-shrink: 0;
+    border: 1px solid #e1e1e1;
+    background: #e1e1e1;
+}
+
+.item-money {
+    /*white-space: nowrap;*/
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.j2En5csA {
+    margin: 0 4px 0 0;
+    text-decoration-line: line-through;
+    color: #000;
+    opacity: .26;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ffZM87hf {
+    word-break: break-all;
+}
+
+.result-container {
+    width: 100%;
+}
+
+.payment-infor-container {
+    background: #fffefb;
+    /*box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);*/
+    /*border-top: 1px solid #f1f0ed;*/
+    border-style: solid;
+    border-width: 0px;
+    /*padding-top: 15px;*/
+}
+
+.money-title {
+    width: 120px;
+}
+
+.money-padding {
+    min-width: 130px;
+    text-align: end;
+}
+
+.money-sum {
+    height: 30px;
+    font-size: 20px;
+    font-weight: 500;
+    color: #ee4d2d;
+}
+
+#note_anonymous, #xvbxw3636 {
+    padding: 5px;
+}
+
+#input_sdt_name_for_search {
+    min-width:300px;
+    max-width:100%;
+    margin-bottom:5px;
+}
+
+.sample-address-container {
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+    background: #fff;
+    border-radius: 3px;
+    display:none;
+}
+.address-name-phone {
+    font-weight: 700;
+    color: #222;
+    margin: 5px;
+}
+.address-address, .address-date {
+    margin: 5px;
+    word-break: break-word;
+}

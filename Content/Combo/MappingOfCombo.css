@@ -1,0 +1,14 @@
+.fmx09gx8 {
+    background-color: white;
+    padding: 10px;
+    margin: 10px 0px 10px 0px;
+    border-radius: 2px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+button {
+    padding: 10px;
+    margin: 10px 10px 10px 10px;
+    border-radius: 5px;
+}

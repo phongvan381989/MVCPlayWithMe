@@ -7,37 +7,8 @@
 <html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
-    <style>
-        .fmx09gx8 {
-            background-color: white;
-            padding: 10px;
-            margin: 10px 0px 10px 0px;
-            border-radius: 2px;
-            display: flex;
-            flex-wrap: wrap;
-        }
-
-        button {
-            padding: 10px;
-            margin: 10px 10px 10px 10px;
-            border-radius: 5px;
-        }
-
-        .fcnal986j {
-            margin-right: 40px;
-            border: 1px solid #e9ecef;
-            background-color: rgba(0, 0, 0, 0.1);
-            border-radius: 3px 4px;
-            padding: 5px;
-            margin: 5px;
-        }
-
-        .lk09Jbvrd {
-            display: inline;
-            margin-right: 20px;
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/Product/MappingOfProduct.css?v=20260610">
 </head>
 <body onload="GetListCommonItemMappingFromProductId()">
     <div id="biggestContainer">
@@ -87,63 +58,10 @@
 
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
     </div>
-    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.common.js"></script>
-    <script src="~/Scripts/web.play.with.me.mapping.of.item.model.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
-    <script>
-        // mảng sản phẩm cần cập nhật
-        let listCommonItem = [];
-
-        async function GetListCommonItemMappingFromProductId() {
-            listCommonItem = [];
-            let id = GetValueFromUrlName("id");
-            const searchParams = new URLSearchParams();
-            searchParams.append("id", id);
-            let query = "/Product/GetListMappingOfProduct";
-            ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            RemoveCircleLoader();
-
-            if (responseDB.responseText != "null") {
-                listCommonItem = JSON.parse(responseDB.responseText);
-            }
-            else {
-                listCommonItem = [];
-            }
-            if (listCommonItem.length == 0) {
-                ShowDoesntFindId();
-                return;
-            }
-
-            ShowResultWithFilter();
-        }
-
-        function ShowResultWithFilter() {
-            let table = document.getElementById("myTable");
-            let obj = document.querySelector('input[name="status-radio"]:checked');
-            let listCommonItemTem = [];
-            if (obj.value == "All") {
-                listCommonItemTem = listCommonItem;
-            }
-            else if (obj.value == "On") { // Hiển thị những item đang bán
-                for (let i = 0; i < listCommonItem.length; i++) {
-                    if (listCommonItem[i].bActive) {
-                        listCommonItemTem.push(listCommonItem[i]);
-                    }
-                }
-            }
-            else { // Item dừng bán
-                for (let i = 0; i < listCommonItem.length; i++) {
-                    if (!listCommonItem[i].bActive) {
-                        listCommonItemTem.push(listCommonItem[i]);
-                    }
-                }
-            }
-
-            // Show table
-            ShowListCommonItem(listCommonItemTem, table, false);
-        }
-    </script>
+    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.mapping.of.item.model.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
+    <script src="~/Scripts/Product/MappingOfProduct.js?v=20260610"></script>
 </body>
 </html>

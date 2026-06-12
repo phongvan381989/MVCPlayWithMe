@@ -1,0 +1,301 @@
+let inputSearch = document.getElementById("search-input-text-id");
+inputSearch.addEventListener("keypress", function (event) {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        document.getElementById("search-input-button-id").click();
+    }
+});
+
+window.addEventListener("popstate", (e) => {
+    //if (DEBUG) {
+    //    console.log("popstate CALL");
+    //}
+    if (e.state) {
+        ShowSearchingResult(e.state.listItem);
+        currentPage = e.state.page;
+        maxPage = e.state.maxPage;
+        //if (DEBUG) {
+        //    console.log("maxPage: " + maxPage);
+        //}
+        RefreshPaging("/Home/SearchPage", SearchPage);
+        document.getElementById("search-input-text-id").value = e.state.parameter.keyword;
+    }
+});
+
+function ParameterOfSearchPage(keyword) {
+    this.keyword = keyword;
+}
+
+function ParameterOfSearchPage() {
+    this.keyword = "";
+}
+
+function ParameterOfSearchPageEqual(par1, par2) {
+    if (par1 == null || par2 == null) {
+        return false;
+    }
+
+    if (par1.keyword == par2.keyword) {
+        return true;
+    }
+
+    return false;
+}
+
+function StateOfItemSearchPage(page, listItem, maxpage, parameter) {
+    this.page = page;
+    this.listItem = listItem;
+    this.maxPage = maxpage;
+    this.parameter = parameter;
+}
+
+let parameter = null;
+
+// Đảm bảo item trên 1 page chia hết số item trên 1 row
+itemOnPage = itemOnRow * rowOnPage;
+function SetMaxPage(countResult) {
+    maxPage = Math.floor(countResult / itemOnPage);
+    if (countResult % itemOnPage != 0)
+        maxPage = maxPage + 1;
+    //if (DEBUG) {
+    //    console.log("maxPage: " + maxPage);
+    //}
+}
+// Khi load trang
+async function Search() {
+    let itemWraper = document.getElementById("biggestContainer_body_wraper_item");
+    // Lấy số lượng sản phẩm trong kết quả trả về
+    let countResult = parseInt(itemWraper.dataset.countResult);
+    //if (DEBUG) {
+    //    console.log("document.getElementById(list-item-data).innerHTML: " +
+    //        document.getElementById("list-item-data").innerHTML);
+    //}
+    let listItem = JSON.parse(document.getElementById("list-item-data").innerHTML);
+    if (countResult == null || countResult == 0 ||
+        listItem == null || listItem.length == 0) {
+        EmptySomethingV1();
+        return;
+    }
+    // Lần đầu trình duyệt truy cập chưa có thông tin itemOnRow
+    // nên server trả về với mặc định itemOnRow = 6
+    if (itemOnRow < 6) {
+        listItem.splice(itemOnPage, listItem.length - itemOnPage);
+    }
+
+    document.getElementById("empty-result").style.display = "none";
+    document.getElementById("search-result").style.display = "block";
+
+    SetMaxPage(parseInt(countResult));
+
+    let page = GetValueFromUrlName("page");
+    if (page == null) {
+        page = 1;
+    }
+
+    SetInputTagOfParameterFromUrl();
+
+    // Làm mới hiển thị phân trang
+    currentPage = parseInt(page);
+    //if (DEBUG) {
+    //    console.log("currentPage: " + currentPage);
+    //}
+
+    RefreshPaging("/Home/SearchPage", SearchPage);
+
+    ShowSearchingResult(listItem);
+
+    parameter = new ParameterOfSearchPage();
+    SetItemSearchParameterFromUrl(parameter);
+    //if (DEBUG) {
+    //    console.log("Search CALL parameter: " + JSON.stringify(parameter));
+    //}
+    let obj = new StateOfItemSearchPage(1, listItem, maxPage, parameter);
+    window.history.replaceState(obj, "");
+}
+
+function SetSearchParameter(searchParams) {
+    let keyword = inputSearch.value;
+    searchParams.append("keyword", keyword);
+    //if (DEBUG) {
+    //    console.log("SetSearchParameter CALL");
+    //    console.log("keyword: " + keyword);
+    //}
+}
+
+function SetSearchParameterOfUrl(searchParams) {
+    let keyword = inputSearch.value;
+    searchParams.append("keyword", keyword);
+}
+
+function SetInputTagOfParameterFromUrl() {
+    inputSearch.value = GetValueFromUrlName("keyword");
+}
+
+function SetItemSearchParameterFromUrl(parameter) {
+    let keyword = GetValueFromUrlName("keyword");
+    if (keyword == null) {
+        keyword = "";
+    }
+
+    //if (DEBUG) {
+    //    console.log("SetItemSearchParameterFromUrl CALL");
+    //    console.log("keyword: " + keyword);
+    //}
+    parameter.keyword = keyword;
+    //if (DEBUG) {
+    //    console.log("SetItemSearchParameterFromUrl CALL parameter: " + JSON.stringify(parameter));
+    //}
+}
+
+function SetItemSearchParameterFromTag(parameter) {
+    let keyword = inputSearch.value;
+    if (keyword == null) {
+        keyword = "";
+    }
+
+    parameter.keyword = keyword;
+}
+
+// Từ danh sách model tính được tổng số lượng model đã bán, model rẻ nhất, model đắt nhất
+function SetPriceAndQuantity(item) {
+    let cheapest = 100000000;
+    //let mostExpensive = 0;
+    let cheapestBookCoverPrice = 100000000;
+    let sumSoldQuantity = 0;
+    for (let i = 0; i < item.models.length; i++) {
+        let model = item.models[i];
+        sumSoldQuantity = sumSoldQuantity + model.soldQuantity;
+        // giá bìa rẻ nhất
+        if (cheapest > model.price) {
+            cheapest = model.price;
+            cheapestBookCoverPrice = model.bookCoverPrice;
+        }
+
+        //// giá bìa đắt nhất
+        //if (mostExpensive < model.price) {
+        //    mostExpensive = model.price;
+        //}
+    }
+    item.cheapest = cheapest;
+    item.cheapestBookCoverPrice = cheapestBookCoverPrice;
+    item.discount = 100 - Math.floor((cheapest / cheapestBookCoverPrice) * 100);
+    //item.mostExpensive = mostExpensive;
+    item.sumSoldQuantity = sumSoldQuantity;
+}
+
+function ShowSearchingResult(listItem) {
+    // Làm trống
+    document.getElementById("biggestContainer_body_wraper_item").innerHTML = "";
+
+    // Show
+    let table = document.getElementById("biggestContainer_body_wraper_item");
+    let length = listItem.length;
+    // Lấy mẫu
+    let sample = document.getElementsByClassName("product-for-selector-sample")[0];
+
+    for (let i = 0; i < length; i++) {
+        let item = listItem[i];
+        let itemElement = sample.cloneNode(true);
+
+        // Set link chi tiết sản phẩm
+        itemElement.getElementsByClassName("product-item")[0].href = "/Home/Item?id=" + item.id;
+        // Hiển thị vì sample đang ẩn
+        itemElement.style.display = "block";
+        if (item.imageSrc.length > 0) {
+            itemElement.getElementsByClassName("card-img-top")[0].src = Get320VersionOfImageSrc(item.imageSrc[0]);
+        } else {
+            itemElement.getElementsByClassName("card-img-top")[0].src = srcNoImageThumbnail;
+        }
+
+        itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.name;
+        SetPriceAndQuantity(item);
+        //itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumSoldQuantity + " bộ";
+        itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML =
+            ConvertMoneyToTextWithIcon(item.cheapest);
+        itemElement.getElementsByClassName("price-original-detail")[0].innerHTML =
+            ConvertMoneyToTextWithIcon(item.cheapestBookCoverPrice);
+
+        itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML = "-" + item.discount + "%";
+
+        table.appendChild(itemElement);
+    }
+}
+
+// Khi click button tìm kiếm
+async function HomeSearch() {
+    let parameterTemp = new ParameterOfSearchPage();
+    SetItemSearchParameterFromTag(parameterTemp);
+    //if (DEBUG) {
+    //    console.log("parameter: " + JSON.stringify(parameter));
+    //    console.log("parameterTemp: " + JSON.stringify(parameterTemp));
+    //}
+    if (ParameterOfSearchPageEqual(parameter, parameterTemp)) {
+        return;
+    }
+
+    parameter = parameterTemp;
+
+    // Làm mới hiển thị phân trang
+    currentPage = 1;
+
+    const searchParams = new URLSearchParams();
+
+    SetSearchParameterOfUrl(searchParams);
+    searchParams.append("page", 1);
+
+    RefreshPaging("/Home/SearchPage", SearchPage);
+    //if (DEBUG) {
+    //    console.log("HomeSearch CALL");
+    //}
+
+    ShowCircleLoader();
+    let resObj = await RequestHttpGetPromise(searchParams, "/Home/HomeSearch");
+    RemoveCircleLoader();
+
+    let obj = JSON.parse(resObj.responseText);
+    let countResult = obj.countResult;
+    SetMaxPage(countResult);
+
+    let listItem = obj.listItem;
+    TopFunction();
+
+    ShowSearchingResult(listItem);
+    RefreshPaging("/Home/SearchPage", SearchPage);
+
+    let stateObj = new StateOfItemSearchPage(1, listItem, maxPage, parameter);
+    window.history.pushState(stateObj, "", "/Home/Search" + "?" + searchParams.toString());
+}
+
+async function SearchPage(page, url) {
+    //if (DEBUG) {
+    //    console.log("SearchPage CALL");
+    //    console.log("page: " + page);
+    //    console.log("url: " + url);
+    //}
+    if (currentPage == page) {
+        return;
+    }
+
+    // Làm mới hiển thị phân trang
+    currentPage = page;
+
+    const searchParams = new URLSearchParams();
+
+    SetSearchParameterOfUrl(searchParams);
+    searchParams.append("page", page);
+
+    RefreshPaging(url, SearchPage);
+    //if (DEBUG) {
+    //    console.log("SearchPage CALL: " + url + "?" + searchParams.toString());
+    //}
+
+    ShowCircleLoader();
+    let resObj = await RequestHttpGetPromise(searchParams, url);
+    RemoveCircleLoader();
+    let listItem = JSON.parse(resObj.responseText);
+    TopFunction();
+    ShowSearchingResult(listItem);
+
+    let obj = new StateOfItemSearchPage(page, listItem, maxPage, parameter);
+    window.history.pushState(obj, "", "/Home/Search" + "?" + searchParams.toString());
+}

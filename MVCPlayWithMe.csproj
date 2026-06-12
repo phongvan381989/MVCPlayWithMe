@@ -334,6 +334,7 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Helpers\UrlHelperExtensions.cs" />
     <Compile Include="Models\Customer\AdministrativeAddress.cs" />
     <Compile Include="Models\Customer\AdministrativeAddressMySql.cs" />
     <Compile Include="Models\Administrator.cs" />
@@ -617,6 +618,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Content\Administrator\Index.css" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-grid.rtl.css" />
@@ -633,6 +635,27 @@
     <Content Include="Content\bootstrap.min.css" />
     <Content Include="Content\bootstrap.rtl.css" />
     <Content Include="Content\bootstrap.rtl.min.css" />
+    <Content Include="Content\Combo\MappingOfCombo.css" />
+    <Content Include="Content\Combo\UpdateDelete.css" />
+    <Content Include="Content\Customer\AccountInfor.css" />
+    <Content Include="Content\Customer\Order.css" />
+    <Content Include="Content\Dev\Index.css" />
+    <Content Include="Content\Home\Cart.css" />
+    <Content Include="Content\Home\Checkout.css" />
+    <Content Include="Content\Home\Error.css" />
+    <Content Include="Content\Home\Item.css" />
+    <Content Include="Content\Home\Search.css" />
+    <Content Include="Content\ItemModel\Search.css" />
+    <Content Include="Content\ProductECommerce\Index.css" />
+    <Content Include="Content\ProductECommerce\Item.css" />
+    <Content Include="Content\ProductECommerce\Order.css" />
+    <Content Include="Content\Product\Import.css" />
+    <Content Include="Content\Product\MappingOfProduct.css" />
+    <Content Include="Content\Product\NeedUpdateQuatity.css" />
+    <Content Include="Content\Product\OrderManually.css" />
+    <Content Include="Content\Product\RecheckImport.css" />
+    <Content Include="Content\Product\Search.css" />
+    <Content Include="Content\Product\UpdateDelete.css" />
     <Content Include="Content\web.play.with.me.common.css" />
     <Content Include="Content\web.play.with.me.modal.common.css" />
     <Content Include="Content\web.play.with.me.table.show.data.css" />
@@ -658,6 +681,12 @@
     <Content Include="Content\web.play.with.me.modal.input.css" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Properties\PublishProfiles\CustomProfile1.pubxml" />
+    <Content Include="robots.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Scripts\Administrator\Index.js" />
+    <Content Include="Scripts\Administrator\Login.js" />
+    <Content Include="Scripts\Administrator\New.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -671,6 +700,23 @@
     <Content Include="Scripts\bootstrap.bundle.min.js.map" />
     <Content Include="Scripts\bootstrap.bundle.js.map" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
+    <Content Include="Scripts\Category\Create.js" />
+    <Content Include="Scripts\Category\UpdateDelete.js" />
+    <Content Include="Scripts\Combo\Create.js" />
+    <Content Include="Scripts\Combo\MappingOfCombo.js" />
+    <Content Include="Scripts\Combo\UpdateDelete.js" />
+    <Content Include="Scripts\Customer\AccountInfor.js" />
+    <Content Include="Scripts\Customer\CreateCustomer.js" />
+    <Content Include="Scripts\Customer\Login.js" />
+    <Content Include="Scripts\Customer\Order.js" />
+    <Content Include="Scripts\Dev\Index.js" />
+    <Content Include="Scripts\Home\Cart.js" />
+    <Content Include="Scripts\Home\Checkout.js" />
+    <Content Include="Scripts\Home\Item.js" />
+    <Content Include="Scripts\Home\Search.js" />
+    <Content Include="Scripts\ItemModel\Create.js" />
+    <Content Include="Scripts\ItemModel\Search.js" />
+    <Content Include="Scripts\ItemModel\UpdateDelete.js" />
     <Content Include="Scripts\jquery-3.3.1.js" />
     <Content Include="Scripts\jquery-3.3.1.min.js" />
     <Content Include="Scripts\jquery-3.3.1.slim.js" />
@@ -681,7 +727,23 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\ProductECommerce\Index.js" />
     <Content Include="Scripts\ProductECommerce\item.js" />
+    <Content Include="Scripts\ProductECommerce\ItemOnDB.js" />
+    <Content Include="Scripts\ProductECommerce\OrderStatistics.js" />
+    <Content Include="Scripts\Product\ChangeImport.js" />
+    <Content Include="Scripts\Product\Create.js" />
+    <Content Include="Scripts\Product\HintQuantityFromPublisher.js" />
+    <Content Include="Scripts\Product\Import.js" />
+    <Content Include="Scripts\Product\MappingOfProduct.js" />
+    <Content Include="Scripts\Product\NeedUpdateQuatity.js" />
+    <Content Include="Scripts\Product\OrderManually.js" />
+    <Content Include="Scripts\Product\RecheckImport.js" />
+    <Content Include="Scripts\Product\Search.js" />
+    <Content Include="Scripts\Product\SellingStatistics.js" />
+    <Content Include="Scripts\Product\UpdateDelete.js" />
+    <Content Include="Scripts\Publisher\Create.js" />
+    <Content Include="Scripts\Publisher\UpdateDelete.js" />
     <Content Include="Scripts\web.play.with.me.action.common.js" />
     <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
@@ -791,6 +853,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
+    <Folder Include="Content\Category\" />
     <Folder Include="Media\" />
     <Folder Include="Views\GetMechanism\" />
   </ItemGroup>

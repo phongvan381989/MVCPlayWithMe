@@ -994,5 +994,86 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(result);
         }
+
+        /// <summary>
+        /// Sinh file sitemap.xml tĩnh từ danh sách sản phẩm trong DB
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GenerateSitemap()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    // Lấy danh sách item active
+                    MVCPlayWithMe.Models.ItemModel.ItemModelMySql itemModelsqler = new MVCPlayWithMe.Models.ItemModel.ItemModelMySql();
+                    List<MVCPlayWithMe.Models.Item> items = new List<Models.Item>();// await itemModelsqler.GetListItemActiveAsync(); // temporary comment
+
+                    // Tạo XML sitemap
+                    string baseUrl = "https://voibenho.com";
+                    StringBuilder xml = new StringBuilder();
+                    xml.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+                    xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+
+                    // Trang chủ
+                    xml.AppendLine("  <url>");
+                    xml.AppendLine("    <loc>" + baseUrl + "/</loc>");
+                    xml.AppendLine("    <lastmod>" + DateTime.Now.ToString("yyyy-MM-dd") + "</lastmod>");
+                    xml.AppendLine("    <changefreq>daily</changefreq>");
+                    xml.AppendLine("    <priority>1.0</priority>");
+                    xml.AppendLine("  </url>");
+
+                    // Trang chính sách
+                    xml.AppendLine("  <url>");
+                    xml.AppendLine("    <loc>" + baseUrl + "/Policy/Index</loc>");
+                    xml.AppendLine("    <lastmod>" + DateTime.Now.ToString("yyyy-MM-dd") + "</lastmod>");
+                    xml.AppendLine("    <changefreq>monthly</changefreq>");
+                    xml.AppendLine("    <priority>0.6</priority>");
+                    xml.AppendLine("  </url>");
+
+                    // Chi tiết từng sản phẩm
+                    foreach (var item in items)
+                    {
+                        if (item != null && item.id > 0 && !string.IsNullOrWhiteSpace(item.name))
+                        {
+                            string slug = Common.GenerateSlug(item.name);
+                            string slugId = slug + "-" + item.id;
+
+                            xml.AppendLine("  <url>");
+                            xml.AppendLine("    <loc>" + baseUrl + "/item/" + System.Web.HttpUtility.UrlPathEncode(slugId) + "</loc>");
+                            xml.AppendLine("    <lastmod>" + DateTime.Now.ToString("yyyy-MM-dd") + "</lastmod>");
+                            xml.AppendLine("    <changefreq>weekly</changefreq>");
+                            xml.AppendLine("    <priority>0.8</priority>");
+                            xml.AppendLine("  </url>");
+                        }
+                    }
+
+                    xml.AppendLine("</urlset>");
+
+                    // Lưu file vào root folder
+                    string sitemapPath = Server.MapPath("~/sitemap.xml");
+                    System.IO.File.WriteAllText(sitemapPath, xml.ToString(), Encoding.UTF8);
+
+                    result.Message = "Đã sinh sitemap.xml với " + items.Count + " sản phẩm";
+                    MyLogger.GetInstance().Info("Generated sitemap.xml with " + items.Count + " items");
+                }
+            }
+            catch (Exception ex)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Lỗi: " + ex.Message;
+                MyLogger.GetInstance().Error("Error generating sitemap: " + ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
     }
 }

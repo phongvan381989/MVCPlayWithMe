@@ -2286,5 +2286,31 @@ namespace MVCPlayWithMe.General
 
             return ReplaceMoreNewLineCharacterByOne(noNbsp); // bỏ khoảng trắng đầu/cuối nếu có
         }
+
+        /// <summary>
+        /// Tạo slug SEO-friendly từ tên sản phẩm (giữ nguyên tiếng Việt + chữ hoa/thường, chỉ thay space)
+        /// VD: "Sách Doraemon Tập 1 - Bìa Mềm" -> "Sách-Doraemon-Tập-1-Bìa-Mềm"
+        /// Giống Shopee: giữ nguyên dấu tiếng Việt, chữ hoa
+        /// </summary>
+        public static string GenerateSlug(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            // Thay khoảng trắng thành -
+            text = Regex.Replace(text, @"\s+", "-");
+
+            // Bỏ các ký tự đặc biệt không an toàn cho URL (giữ chữ, số, dấu tiếng Việt, dấu ngoặc, dấu gạch ngang)
+            // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , .
+            text = Regex.Replace(text, @"[/\?#&=<>""'%[]{}|^`@!$*;:,.]", "");
+
+            // Bỏ dấu - thừa (nếu có nhiều dấu - liên tiếp)
+            text = Regex.Replace(text, @"-+", "-");
+
+            // Trim dấu - ở đầu/cuối
+            text = text.Trim('-');
+
+            return text;
+        }
     }
 }

@@ -19,6 +19,20 @@ namespace MVCPlayWithMe
             //   defaults: new { controller = "Home", action = "Index" }
             //);
 
+            // Route cho trang chi tiết sản phẩm: /item/{slug}-{id}
+            routes.MapRoute(
+                name: "ItemDetail",
+                url: "item/{slugId}",
+                defaults: new { controller = "Home", action = "Item" }
+            );
+
+            // Redirect URL cũ /Home/Item/{id} sang URL mới /item/{slug}-{id}
+            routes.MapRoute(
+                name: "ItemDetailOld",
+                url: "Home/Item/{id}",
+                defaults: new { controller = "Home", action = "ItemRedirect" }
+            );
+
             routes.MapRoute(
                 name: "Default",
                 url: "{controller}/{action}/{keyword}",

@@ -1,0 +1,2 @@
+InitializeModal();
+ShowItemFromItemObject();

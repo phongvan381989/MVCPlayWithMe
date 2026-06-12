@@ -245,9 +245,11 @@
     flex-direction: column;*/
     padding: 10px;
 }
-    .remove-underline-container:hover {
-        background: #e1e1e1;
-    }
+
+.remove-underline-container:hover {
+    background: #e1e1e1;
+}
+
 .config-max-width{
     width: 100%;
 }

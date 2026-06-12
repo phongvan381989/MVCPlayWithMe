@@ -1,0 +1,36 @@
+.fmx09gx8 {
+    background-color: white;
+    padding: 10px;
+    margin: 10px 0px 10px 0px;
+    border-radius: 2px;
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.gmxk9381 {
+    margin: 10px 5px 10px 5px;
+    width: 100%;
+}
+
+.fg90mxkn {
+    padding: 10px;
+    margin: 10px 10px 10px 10px;
+    border-radius: 5px;
+}
+
+a:link, a:visited {
+    background-color: #f44336;
+    color: white;
+    padding: 14px 25px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-family: Verdana, sans-serif;
+    line-height: 1.5;
+    margin: 10px 10px 10px 10px;
+    border-radius: 5px;
+}
+
+a:hover, a:active {
+    background-color: red;
+}

@@ -7,7 +7,7 @@
 <html lang="en">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20260610">
 </head>
 <body>
     <div id="biggestContainer">
@@ -29,88 +29,9 @@
             </tr>
         </table>
     </div>
-    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
-    <script src="~/Scripts/web.play.with.me.common.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
-    <script>
-
-        let listCategory = [];
-
-        async function ShowListCategory() {
-            // Lấy dữ liệu danh sách thể loại
-            {
-                const searchParams = new URLSearchParams();
-                let query = "/Category/GetListCategory";
-                ShowCircleLoader();
-                let responseDB = await RequestHttpPostPromise(searchParams, query);
-                RemoveCircleLoader();
-                if (responseDB.responseText != "null") {
-                    listCategory = JSON.parse(responseDB.responseText);
-                }
-                else {
-                    listCategory = [];
-                }
-            }
-
-            let table = document.getElementById("category-table");
-
-            let length = listCategory.length;
-            if (length == 0) {
-                table.style.display = "none";
-                return;
-            }
-            table.style.display = "initial";
-            DeleteRowsExcludeHead(table);
-
-            for (let i = 0; i < length; i++) {
-                let category = listCategory[i];
-
-                let row = table.insertRow(-1);
-                // Insert new cells (<td> elements)
-                let cell1 = row.insertCell(0);
-                let cell2 = row.insertCell(1);
-                let cell3 = row.insertCell(2);
-
-                // Id
-                cell1.innerHTML = category.id;
-                cell1.style.display = "none";
-
-                // STT
-                cell2.innerHTML = i + 1;
-
-                // Name
-                let name = document.createElement("p");
-                name.innerHTML = category.name;
-                name.className = "go-to-detail-item";
-                name.title = "Xem chi tiết thể loại";
-                name.onclick = function () {
-                    // Lấy id
-                    let id = Number(this.parentElement.parentElement.children[0].innerHTML);
-                    window.open("/Category/UpdateDelete?id=" + id);
-                };
-                cell3.append(name);
-            }
-        }
-
-        async function CreateCategory() {
-            let categoryName = document.getElementById("category-id").value;
-            if (CheckIsEmptyOrSpacesAndShowResult(categoryName, "Tên thể loại không hợp lệ.")) {
-                document.getElementById("category-id").focus();
-                return;
-            }
-
-
-            const searchParams = new URLSearchParams();
-            searchParams.append("name", categoryName);
-            let query = "/Category/CreateCategory";
-
-            ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            RemoveCircleLoader();
-
-            CheckStatusResponseAndShowPrompt(responseDB.responseText, "Tạo thành công.", "Có lỗi xảy ra.");
-        }
-
-    </script>
+    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
+    <script src="~/Scripts/Category/Create.js?v=20260610"></script>
 </body>
 </html>
