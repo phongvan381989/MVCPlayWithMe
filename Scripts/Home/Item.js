@@ -81,7 +81,11 @@
 
         async function HomePageShowItem() {
             ShowCircleLoader();
-            let responseDB = await GetItemFromId(GetValueFromUrlName("id"));
+            if (DEBUG) {
+                console.log("current url: " + window.location.href);
+                console.log("current id on url: " + GetIdFromCurrentSlugIdUrl());
+            }
+            let responseDB = await GetItemFromId(GetIdFromCurrentSlugIdUrl());
             RemoveCircleLoader();
             if (responseDB.responseText != "null") {
                 itemObject = JSON.parse(responseDB.responseText);
@@ -933,3 +937,5 @@
             clientYTouchStart = Math.floor(event.touches[0].clientY);
             statusNextPreviousNone = 2;
         }
+
+        HomePageShowItem()

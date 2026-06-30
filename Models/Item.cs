@@ -24,7 +24,7 @@ namespace MVCPlayWithMe.Models
 
         public int quota { get; set; }
 
-        public DateTime date { get; set; }
+        public DateTime? date { get; set; }
 
         /// <summary>
         /// mặc định là 0, chưa xét thể loại

@@ -43,6 +43,10 @@ namespace MVCPlayWithMe
             Common.absoluteItemMediaFolderPath =
                 System.Web.HttpContext.Current.Server.MapPath(Common.ItemMediaFolderPath);
 
+            Common.SanPhamMediaFolderPath = ConfigurationManager.AppSettings["SanPhamMediaFolderPath"];
+            Common.absoluteSanPhamMediaFolderPath =
+                System.Web.HttpContext.Current.Server.MapPath(Common.SanPhamMediaFolderPath);
+
             Common.MediaFolderPath = ConfigurationManager.AppSettings["MediaFolderPath"];
             Common.srcCertificateFolderPath = @"https://voibenho.com/Media/Certificate/";
             Common.absoluteForCreateMediaFolderPath = System.Web.HttpContext.Current.Server.MapPath(Common.MediaFolderPath + "Temporary/ForCreate/");

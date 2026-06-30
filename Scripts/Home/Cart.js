@@ -60,10 +60,10 @@ function CreateSelectedModel() {
 
         let listA = clone.getElementsByClassName("item-url");
         listA[0].title = obj.itemName;
-        listA[0].href = "/Home/Item?id=" + obj.itemId;
+        listA[0].href = "/Item/" + GenerateSlug(obj.itemName) + "-" + obj.itemId;
 
         listA[1].title = obj.itemName;
-        listA[1].href = "/Home/Item?id=" + obj.itemId;
+        listA[1].href = "/Item/" + GenerateSlug(obj.itemName) + "-" + obj.itemId;
 
         clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.itemName;
         clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;

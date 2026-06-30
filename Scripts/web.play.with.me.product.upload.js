@@ -774,12 +774,14 @@ async function GetProductFromId(id) {
     return RequestHttpPostPromise(searchParams, query);
 }
 
-function GetSomeData() {
-    GetListCombo();
-    GetListCategory();
-    GetListPublisher();
-    GetListPublishingCompany();
-    SetListPublishingTime();
+async function GetSomeData() {
+    await GetListCombo();
+    await GetListCategory();
+    await GetListPublisher();
+    await GetListPublishingCompany();
+    await SetListPublishingTime();
+    await GetListAuthor();
+    await GetListTranslator();
 }
 
 async function AddNewProsFromCSVPromise() {

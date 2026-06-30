@@ -166,7 +166,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
         {
             try
             {
-                if (lazadaAuthen.refreshDatetime.AddSeconds(lazadaAuthen.expiresIn - 300)
+                if (lazadaAuthen.refreshDatetime != null &&
+                    lazadaAuthen.refreshDatetime?.AddSeconds(lazadaAuthen.expiresIn - 300)
                     < DateTime.Now)
                 {
                     return await LazadaAuthTokenRefreshAsync();

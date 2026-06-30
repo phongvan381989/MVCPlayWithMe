@@ -121,9 +121,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
 
             // Nếu access token hết hạn, ta làm mới
             if (Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) == System.Int32.MinValue ||
-                DateTime.Now > 
-                tikiConfigApp.tikiAu.refreshAccessTokenTime.AddSeconds(
-                Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) - 600) // Trừ hao 600 giây
+                    (
+                        tikiConfigApp.tikiAu.refreshAccessTokenTime != null &&
+                        (DateTime.Now > tikiConfigApp.tikiAu.refreshAccessTokenTime.Value.AddSeconds(Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) - 600)) // Trừ hao 600 giây
+                    )
                 )
             {
                 string str = await RefreshDataAuthorization();

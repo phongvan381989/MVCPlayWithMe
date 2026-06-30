@@ -25,7 +25,7 @@ namespace MVCPlayWithMe.Models.Order
 
         public string note { get; set; }
 
-        public DateTime time { get; set; }
+        public DateTime? time { get; set; }
 
 
         public Order()

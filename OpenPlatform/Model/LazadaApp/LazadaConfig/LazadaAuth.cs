@@ -26,6 +26,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaConfig
         public int refreshExpiresIn { get; set; }
 
         // Thời điểm làm mới access token
-        public DateTime refreshDatetime { get; set; }
+        public DateTime? refreshDatetime { get; set; }
     }
 }

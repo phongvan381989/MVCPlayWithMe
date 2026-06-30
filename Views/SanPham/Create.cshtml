@@ -1,0 +1,309 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <style>
+        #biggestContainer > div {
+            margin-bottom: 20px;
+        }
+        .media-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .media-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            width: 250px;
+        }
+        .media-item img, .media-item video {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin-bottom: 10px;
+        }
+        .media-item input {
+            width: 100%;
+            margin-bottom: 5px;
+        }
+        .media-item button {
+            margin-top: 5px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="biggestContainer">
+        <h2>Thêm Mới Sản Phẩm</h2>
+
+        <div>
+            <label for="sp-name">Tên sản phẩm: <span style="color:red">*</span></label>
+            <input class="config-max-width margin-vertical" id="sp-name" required />
+        </div>
+
+        <div>
+            <label for="sp-short-name">Tên ngắn:</label>
+            <input class="config-max-width margin-vertical" id="sp-short-name" />
+        </div>
+
+        <div>
+            <label for="sp-book-cover-price">Giá bìa: <span style="color:red">*</span></label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-book-cover-price" value="0" required />
+        </div>
+
+        <div>
+            <label for="sp-discount">Chiết khấu (0-100):</label>
+            <input type="number" step="1" class="config-max-width margin-vertical" id="sp-discount" placeholder="Để trống hoặc 0 nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-quantity">Số lượng tồn kho: <span style="color:red">*</span></label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-quantity" value="0" required />
+        </div>
+
+        <div>
+            <label for="sp-code">Mã sản phẩm:</label>
+            <input class="config-max-width margin-vertical" id="sp-code" />
+        </div>
+
+        <div>
+            <label for="sp-barcode">Barcode (ISBN):</label>
+            <input class="config-max-width margin-vertical" id="sp-barcode" />
+        </div>
+
+        <div>
+            <label for="combo-id">Combo:</label>
+            <input list="list-combo" class="config-max-width margin-vertical" id="combo-id" placeholder="Chọn hoặc nhập tên combo" />
+            <datalist id="list-combo"></datalist>
+        </div>
+
+        <div>
+            <label for="category-id">Category:</label>
+            <input list="list-category" class="config-max-width margin-vertical" id="category-id" placeholder="Chọn hoặc nhập tên category" />
+            <datalist id="list-category"></datalist>
+        </div>
+
+        <div>
+            <label for="author-id" title="Cách nhau dấu ',' nếu có nhiều tác giả">Tác giả:</label>
+            <input type="text" list="list-author" class="config-max-width margin-vertical" id="author-id">
+
+            <datalist id="list-author"></datalist>
+        </div>
+
+        <div>
+            <label for="translator-id" title="Cách nhau dấu ',' nếu có nhiều người dịch">Người dịch:</label>
+            <input type="text" list="list-translator" class="config-max-width margin-vertical" id="translator-id">
+
+            <datalist id="list-translator"></datalist>
+        </div>
+
+        <div>
+            <label for="publisher-id">Nhà phát hành:</label>
+            <input list="list-Publisher" class="config-max-width margin-vertical" id="publisher-id" placeholder="Chọn hoặc nhập tên nhà xuất bản" />
+            <datalist id="list-Publisher"></datalist>
+        </div>
+
+        <div>
+            <label for="publishing-company-id">Công ty xuất bản:</label>
+            <input list="list-publishing-company" class="config-max-width margin-vertical" id="publishing-company-id" placeholder="Chọn hoặc nhập tên công ty xuất bản" />
+            <datalist id="list-publishing-company"></datalist>
+        </div>
+
+        <div>
+            <label for="sp-publishing-time">Năm phát hành:</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-publishing-time" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-product-long">Chiều dài (mm):</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-product-long" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-product-wide">Chiều rộng (mm):</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-product-wide" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-product-high">Chiều cao (mm):</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-product-high" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-product-weight">Trọng lượng (gram):</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-product-weight" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-position-warehouse">Vị trí trong kho:</label>
+            <input class="config-max-width margin-vertical" id="sp-position-warehouse" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-hard-cover">Bìa:</label>
+            <select class="config-max-width margin-vertical" id="sp-hard-cover">
+                <option value="0">Bìa mềm</option>
+                <option value="1">Bìa cứng</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="sp-min-age">Tuổi nhỏ nhất (tháng):</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-min-age" placeholder="Để trống nếu không giới hạn" />
+        </div>
+
+        <div>
+            <label for="sp-max-age">Tuổi lớn nhất (tháng):</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-max-age" placeholder="Để trống nếu không giới hạn" />
+        </div>
+
+        <div>
+            <label for="sp-parent-id">Parent ID:</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-parent-id" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-republish">Tái bản lần thứ:</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-republish" placeholder="Để trống nếu không xác định" />
+        </div>
+
+        <div>
+            <label for="sp-detail">Chi tiết:</label>
+            <textarea class="config-max-width margin-vertical" id="sp-detail" rows="25" placeholder="Để trống nếu không có"></textarea>
+        </div>
+
+        <div>
+            <label for="sp-status">Trạng thái:</label>
+            <select class="config-max-width margin-vertical" id="sp-status">
+                <option value="0">Đang kinh doanh</option>
+                <option value="1">Nhà phát hành tạm thời hết hàng</option>
+                <option value="2">Ngừng kinh doanh</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="sp-page-number">Số trang:</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-page-number" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-language">Ngôn ngữ:</label><br>
+            <select class="config-max-width margin-vertical" id="sp-language">
+                <option value="Tiếng Việt">Tiếng Việt</option>
+                <option value="Song ngữ">Song ngữ</option>
+                <option value="Tiếng Anh">Tiếng Anh</option>
+                <option value="Đa ngữ">Đa ngữ</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="sp-date">Ngày thêm sản phẩm:</label>
+            <input type="date" class="config-max-width margin-vertical" id="sp-date" />
+        </div>
+
+        <div>
+            <label for="sp-sold-quantity">Số lượng đã bán:</label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-sold-quantity" placeholder="Để trống nếu không có" />
+        </div>
+
+        <div>
+            <label for="sp-url">URL sản phẩm:</label>
+            <input class="config-max-width margin-vertical" id="sp-url" />
+        </div>
+
+        <div>
+            <label for="sp-seo-keyword">SEO Keyword:</label>
+            <input class="config-max-width margin-vertical" id="sp-seo-keyword" />
+        </div>
+
+        <br />
+        <div>
+            <button type="button" onclick="CreateSanPham()">Thêm Mới Sản Phẩm</button>
+        </div>
+
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260625"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260625"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260625"></script>
+    <script>
+        // Load datalists khi trang load
+        window.addEventListener('DOMContentLoaded', async function() {
+            await GetListCombo();
+            await GetListCategory();
+            await GetListPublisher();
+            await GetListPublishingCompany();
+            await GetListAuthor();
+            await GetListTranslator();
+        });
+
+        async function CreateSanPham() {
+            const name = document.getElementById('sp-name').value.trim();
+            if (!name) {
+                alert('Tên sản phẩm không được để trống!');
+                return;
+            }
+
+            // Lấy ID từ datalist, chuyển -1 → null
+            const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+            const categoryId = GetDataIdFromCategoryDatalist(document.getElementById('category-id').value) || -1;
+            const publisherId = GetDataIdFromPublisherDatalist(document.getElementById('publisher-id').value) || -1;
+
+            const data = {
+                Code: document.getElementById('sp-code').value || null,
+                Barcode: document.getElementById('sp-barcode').value || null,
+                Name: CapitalizeWords(name),
+                ShortName: CapitalizeWords(document.getElementById('sp-short-name').value || null),
+                ComboId: comboId !== -1 ? comboId : null,
+                CategoryId: categoryId !== -1 ? categoryId : null,
+                BookCoverPrice: parseInt(document.getElementById('sp-book-cover-price').value) || 0,
+                Author: CapitalizeWords(document.getElementById('author-id').value || null),
+                Translator: document.getElementById('translator-id').value || null,
+                PublisherId: publisherId !== -1 ? publisherId : null,
+                PublishingCompany: document.getElementById('publishing-company-id').value || null,
+                PublishingTime: parseIntOrNull(document.getElementById('sp-publishing-time').value),
+                ProductLong: parseIntOrDefault(document.getElementById('sp-product-long').value, 0),
+                ProductWide: parseIntOrDefault(document.getElementById('sp-product-wide').value, 0),
+                ProductHigh: parseIntOrDefault(document.getElementById('sp-product-high').value, 0),
+                ProductWeight: parseIntOrDefault(document.getElementById('sp-product-weight').value, 0),
+                PositionInWarehouse: document.getElementById('sp-position-warehouse').value || null,
+                HardCover: parseIntOrNull(document.getElementById('sp-hard-cover').value),
+                MinAge: parseIntOrNull(document.getElementById('sp-min-age').value),
+                MaxAge: parseIntOrNull(document.getElementById('sp-max-age').value),
+                ParentId: parseIntOrNull(document.getElementById('sp-parent-id').value),
+                Republish: parseIntOrNull(document.getElementById('sp-republish').value),
+                Detail: document.getElementById('sp-detail').value || null,
+                Status: parseInt(document.getElementById('sp-status').value) || 0,
+                Quantity: parseInt(document.getElementById('sp-quantity').value) || 0,
+                PageNumber: parseIntOrNull(document.getElementById('sp-page-number').value),
+                Discount: parseFloatOrDefault(document.getElementById('sp-discount').value),
+                Language: document.getElementById('sp-language').value || null,
+                Date: document.getElementById('sp-date').value || null,
+                SoldQuantity: parseIntOrNull(document.getElementById('sp-sold-quantity').value),
+                URL: document.getElementById('sp-url').value || null,
+                SEOKeyword: document.getElementById('sp-seo-keyword').value || null
+            };
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/AddNewSanPham', data);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+            } catch (error) {
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

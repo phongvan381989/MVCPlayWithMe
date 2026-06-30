@@ -281,10 +281,10 @@ namespace MVCPlayWithMe.General
             }
         }
 
-        public static DateTime GetDateTime(MySqlDataReader rdr, string columnName)
+        public static DateTime? GetDateTime(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))
-                return DateTime.MinValue;
+                return null;
 
             try
             {

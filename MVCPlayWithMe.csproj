@@ -324,6 +324,7 @@
     <Compile Include="Controllers\PolicyController.cs" />
     <Compile Include="Controllers\ProductController.cs" />
     <Compile Include="Controllers\PublisherController.cs" />
+    <Compile Include="Controllers\SanPhamController.cs" />
     <Compile Include="General\Common.cs" />
     <Compile Include="General\Cookie.cs" />
     <Compile Include="General\CookieResultState.cs" />
@@ -372,6 +373,12 @@
     <Compile Include="Models\ProductModel\ProductSellingStatistics.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
+    <Compile Include="Models\SanPhamModel\SanPham.cs" />
+    <Compile Include="Models\SanPhamModel\SanPhamMapping.cs" />
+    <Compile Include="Models\SanPhamModel\SanPhamMappingMySql.cs" />
+    <Compile Include="Models\SanPhamModel\SanPhamMedia.cs" />
+    <Compile Include="Models\SanPhamModel\SanPhamMediaMySql.cs" />
+    <Compile Include="Models\SanPhamModel\SanPhamMySql.cs" />
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\CommonLazadaAPI.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\LazadaAuthenAPI.cs" />
@@ -850,6 +857,9 @@
     <Content Include="Views\Product\HintQuantityFromPublisher.cshtml" />
     <Content Include="Views\ProductECommerce\OrderStatistics.cshtml" />
     <Content Include="Views\Product\RecheckImport.cshtml" />
+    <Content Include="Views\SanPham\Create.cshtml" />
+    <Content Include="Views\SanPham\UpdateDelete.cshtml" />
+    <Content Include="Views\SanPham\Search.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

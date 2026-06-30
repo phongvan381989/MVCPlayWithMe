@@ -134,6 +134,41 @@ namespace MVCPlayWithMe.Controllers
             return result;
         }
 
+        // Nhận và lưu image/video khi upload cho sản phẩm
+        // SanPhamControler. Không sinh ảnh 320, để sinh sau khi convert sang webp
+        public MySqlResultState SaveImageVideoForSanPham(string path)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                var length = Request.ContentLength;
+                var bytes = new byte[length];
+                Request.InputStream.Read(bytes, 0, length);
+
+                var fileName = Request.Headers["fileName"];
+                var id = Request.Headers["productId"];
+
+                if (length > 0)
+                {
+                    // Tên ảnh lưu có định dạng: name VD:0.jpg, 1.png, 3.gif,...Đây là thứ tự của ảnh hiển thị trên web khi chọn ảnh/video
+                    var saveToFileLoc = string.Format("{0}{1}",
+                                                    path,
+                                                    fileName);
+
+                    // save the file.
+                    var fileStream = new FileStream(saveToFileLoc, FileMode.Create, FileAccess.ReadWrite);
+                    fileStream.Write(bytes, 0, length);
+                    fileStream.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
         public async Task<Administrator> AuthentAdministratorAsync()
         {
             CookieResultState cookieResult = Cookie.GetVisitorTypeCookie(HttpContext);

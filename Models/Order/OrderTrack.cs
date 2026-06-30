@@ -32,7 +32,7 @@ namespace MVCPlayWithMe.Models.Order
 
         public string strStatus { get; set; }
 
-        public DateTime time { get; set; }
+        public DateTime? time { get; set; }
 
         public void SetStrStatus()
         {

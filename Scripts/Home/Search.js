@@ -198,7 +198,7 @@ function ShowSearchingResult(listItem) {
         let itemElement = sample.cloneNode(true);
 
         // Set link chi tiết sản phẩm
-        itemElement.getElementsByClassName("product-item")[0].href = "/Home/Item?id=" + item.id;
+        itemElement.getElementsByClassName("product-item")[0].href = "/Item/" + GenerateSlugIdFromItem(item);
         // Hiển thị vì sample đang ẩn
         itemElement.style.display = "block";
         if (item.imageSrc.length > 0) {

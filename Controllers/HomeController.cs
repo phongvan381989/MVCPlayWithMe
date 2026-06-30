@@ -112,59 +112,59 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public async Task<ActionResult> Item(string slugId)
         {
-            // Parse ID từ slugId (format: slug-123)
-            int id = ParseIdFromSlugId(slugId);
-            if (id <= 0)
-            {
-                return RedirectToAction("Error");
-            }
+            //// Parse ID từ slugId (format: slug-123)
+            //int id = ParseIdFromSlugId(slugId);
+            //if (id <= 0)
+            //{
+            //    return RedirectToAction("Error");
+            //}
 
-            // Lấy item để kiểm tra tồn tại
-            Item item = await itemModelsqler.GetItemFromIdAsync(id);
-            if (item == null)
-            {
-                return RedirectToAction("Error");
-            }
+            //// Lấy item để kiểm tra tồn tại
+            //Item item = await itemModelsqler.GetItemFromIdAsync(id);
+            //if (item == null)
+            //{
+            //    return RedirectToAction("Error");
+            //}
 
-            // Tạo slug chuẩn từ tên item
-            string correctSlug = Common.GenerateSlug(item.name);
-            string correctSlugId = correctSlug + "-" + id;
+            //// Tạo slug chuẩn từ tên item
+            //string correctSlug = Common.GenerateSlug(item.name);
+            //string correctSlugId = correctSlug + "-" + id;
 
-            // Nếu slug không đúng, redirect về URL chuẩn (SEO 301)
-            if (!string.Equals(slugId, correctSlugId, StringComparison.OrdinalIgnoreCase))
-            {
-                return RedirectToActionPermanent("Item", new { slugId = correctSlugId });
-            }
+            //// Nếu slug không đúng, redirect về URL chuẩn (SEO 301)
+            //if (!string.Equals(slugId, correctSlugId, StringComparison.OrdinalIgnoreCase))
+            //{
+            //    return RedirectToActionPermanent("Item", new { slugId = correctSlugId });
+            //}
 
             // Cập nhật title bên javascript
-            ViewBag.ItemId = id;
+            //ViewBag.ItemId = id;
             return View();
         }
 
         /// <summary>
         /// Redirect từ URL cũ /Home/Item/123 sang URL mới /item/slug-123
         /// </summary>
-        [HttpGet]
-        public async Task<ActionResult> ItemRedirect(int id)
-        {
-            try
-            {
-                Item item = await itemModelsqler.GetItemFromIdAsync(id);
-                if (item == null)
-                {
-                    return RedirectToAction("Error");
-                }
+        //[HttpGet]
+        //public async Task<ActionResult> ItemRedirect(int id)
+        //{
+        //    try
+        //    {
+        //        Item item = await itemModelsqler.GetItemFromIdAsync(id);
+        //        if (item == null)
+        //        {
+        //            return RedirectToAction("Error");
+        //        }
 
-                string slug = Common.GenerateSlug(item.name);
-                string slugId = slug + "-" + id;
+        //        string slug = Common.GenerateSlug(item.name);
+        //        string slugId = slug + "-" + id;
 
-                return RedirectToActionPermanent("Item", new { slugId = slugId });
-            }
-            catch
-            {
-                return RedirectToAction("Error");
-            }
-        }
+        //        return RedirectToActionPermanent("Item", new { slugId = slugId });
+        //    }
+        //    catch
+        //    {
+        //        return RedirectToAction("Error");
+        //    }
+        //}
 
         /// <summary>
         /// Parse ID từ slugId
@@ -175,15 +175,20 @@ namespace MVCPlayWithMe.Controllers
             if (string.IsNullOrWhiteSpace(slugId))
                 return -1;
 
+            int id;
             // Tìm dấu - cuối cùng
             int lastDashIndex = slugId.LastIndexOf('-');
-            if (lastDashIndex < 0 || lastDashIndex == slugId.Length - 1)
+            if (lastDashIndex < 0 || lastDashIndex == slugId.Length - 1) {
+                if (int.TryParse(slugId, out id))
+                    return id;
                 return -1;
+            }
+
 
             // Lấy phần sau dấu - cuối
             string idString = slugId.Substring(lastDashIndex + 1);
 
-            int id;
+
             if (int.TryParse(idString, out id))
                 return id;
 

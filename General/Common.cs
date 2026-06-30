@@ -30,7 +30,7 @@ namespace MVCPlayWithMe.General
 {
     public class Common
     {
-        public static readonly List<string> ImageExtensions = new List<string> { ".jpg", ".jpeg", ".jfif", ".png", ".svg"};
+        public static readonly List<string> ImageExtensions = new List<string> { ".jpg", ".jpeg", ".jfif", ".png", ".svg",".webp"};
         public static readonly List<string> VideoExtensions = new List<string> { ".mp4" };
         public static readonly string dateFormat = "yyyy-MM-dd";
         public static readonly int quota = 5;
@@ -179,6 +179,9 @@ namespace MVCPlayWithMe.General
         public static string ItemMediaFolderPath;
         public static string absoluteItemMediaFolderPath;
 
+        public static string SanPhamMediaFolderPath;
+        public static string absoluteSanPhamMediaFolderPath;
+
         public static string MediaFolderPath;
         public static string TemporaryImageShopeeMediaFolderPath;
         public static string TemporaryImageTikiMediaFolderPath;
@@ -260,6 +263,31 @@ namespace MVCPlayWithMe.General
             return path;
         }
 
+        /// <summary>
+        /// Lấy đường dẫn tuyệt đối thư mục chứa media của sản phẩm (tb_san_pham) hoặc null nếu không có
+        /// </summary>
+        public static string GetAbsoluteSanPhamMediaFolderPath(string sanPhamId)
+        {
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + @"/";
+            if (!Directory.Exists(path))
+            {
+                path = null;
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Tạo thư mục media cho sản phẩm (tb_san_pham)
+        /// </summary>
+        public static string CreateAbsoluteSanPhamMediaFolderPath(string sanPhamId)
+        {
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + @"/";
+            Directory.CreateDirectory(path);
+            // Tạo thư mục 320
+            Directory.CreateDirectory(absoluteSanPhamMediaFolderPath + sanPhamId + @"_320");
+            return path;
+        }
+
         ///// </summary>
         ///// <param name="productId"></param>
         ///// <summary>
@@ -296,10 +324,10 @@ namespace MVCPlayWithMe.General
             }
             if (mediaType == 0 || mediaType == 2)
             {
-                    foreach (string str in VideoExtensions)
-                    {
-                        listMediaFiles.AddRange(Directory.GetFiles(folderPath, str, SearchOption.AllDirectories).ToList());
-                    }
+                foreach (string str in VideoExtensions)
+                {
+                    listMediaFiles.AddRange(Directory.GetFiles(folderPath, "*" + str, SearchOption.AllDirectories).ToList());
+                }
             }
         }
 
@@ -598,8 +626,9 @@ namespace MVCPlayWithMe.General
 
             // Lấy chỉ tên file
             string onlyName = Path.GetFileNameWithoutExtension(path);
+            string directory = Path.GetDirectoryName(path);
 
-            string[] files = Directory.GetFiles(Path.GetDirectoryName(path), onlyName + ".*");//Nếu có mảng có 1 phần tử
+            string[] files = Directory.GetFiles(directory, onlyName + ".*");//Nếu có mảng có 1 phần tử
             List<string> src = new List<string>();
             foreach (var f in files)
             {
@@ -608,8 +637,16 @@ namespace MVCPlayWithMe.General
                     if (ImageExtensions.Contains(Path.GetExtension(f).ToLower()))
                     {
                         System.IO.File.Delete(f);
-                        //DeleteNormalAnd320Image(f);
                         //MyLogger.GetInstance().Info("Delete: " + f);
+
+                        // Xóa WebP tương ứng
+                        string webpPath = Path.ChangeExtension(f, ".webp");
+                        if (File.Exists(webpPath))
+                        {
+                            System.IO.File.Delete(webpPath);
+                            //MyLogger.GetInstance().Info("Delete WebP: " + webpPath);
+                        }
+
                         break;
                     }
                 }
@@ -621,6 +658,31 @@ namespace MVCPlayWithMe.General
                         //MyLogger.GetInstance().Info("Delete: " + f);
                         break;
                     }
+                }
+            }
+
+            // Xóa WebP thumbnail trong thư mục _320
+            if (isImage)
+            {
+                try
+                {
+                    string parentDir = Directory.GetParent(directory).FullName;
+                    string folderName = new DirectoryInfo(directory).Name;
+                    string thumbFolder = Path.Combine(parentDir, folderName + "_320");
+
+                    if (Directory.Exists(thumbFolder))
+                    {
+                        string webpThumb = Path.Combine(thumbFolder, onlyName + ".webp");
+                        if (File.Exists(webpThumb))
+                        {
+                            System.IO.File.Delete(webpThumb);
+                            //MyLogger.GetInstance().Info("Delete WebP thumb: " + webpThumb);
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignore thumbnail deletion errors
                 }
             }
         }
@@ -657,6 +719,7 @@ namespace MVCPlayWithMe.General
 
         // Xóa file trong thư mục, không xóa thư mục con
         // Xóa ảnh ở phiên bản _320
+        // path: đường dẫn thư mục chứa ảnh normal
         public static void DeleteAllMediaFileInclude320(string path)
         {
             string[] files = Directory.GetFiles(path);
@@ -774,6 +837,7 @@ namespace MVCPlayWithMe.General
 
         /// <summary>
         /// Xóa ảnh, video trong thư mục
+        /// Xóa cả ảnh phiên bản 320
         /// </summary>
         /// <param name="path">Thư mục ảnh/video</param>
         /// <returns></returns>
@@ -1950,7 +2014,7 @@ namespace MVCPlayWithMe.General
         /// <summary>
         /// Giảm kích thước ảnh về 320 và lưu vào thư mục tương ứng có thêm _320 VD: 570_320
         /// </summary>
-        /// <param name="path">Đường dẫn và tên file</param>
+        /// <param name="path">Đường dẫn và tên file gốc</param>
         public static Boolean ReduceImageSizeTo320AndSave(string path)
         {
             try
@@ -2301,8 +2365,8 @@ namespace MVCPlayWithMe.General
             text = Regex.Replace(text, @"\s+", "-");
 
             // Bỏ các ký tự đặc biệt không an toàn cho URL (giữ chữ, số, dấu tiếng Việt, dấu ngoặc, dấu gạch ngang)
-            // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , .
-            text = Regex.Replace(text, @"[/\?#&=<>""'%[]{}|^`@!$*;:,.]", "");
+            // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , . +
+            text = Regex.Replace(text, @"[/\?#&=<>""'%[]{}|^`@!$*;:,.+]", "");
 
             // Bỏ dấu - thừa (nếu có nhiều dấu - liên tiếp)
             text = Regex.Replace(text, @"-+", "-");
@@ -2311,6 +2375,176 @@ namespace MVCPlayWithMe.General
             text = text.Trim('-');
 
             return text;
+        }
+
+        /// <summary>
+        /// Convert ảnh sang WebP, resize và nén với chất lượng chỉ định
+        /// </summary>
+        /// <param name="sourcePath">Đường dẫn ảnh gốc</param>
+        /// <param name="destPath">Đường dẫn lưu WebP</param>
+        /// <param name="maxSize">Kích thước max (width hoặc height), giữ tỷ lệ</param>
+        /// <param name="quality">Chất lượng 0-100</param>
+        public static void ConvertToWebP(string sourcePath, string destPath, int maxSize, int quality)
+        {
+            try
+            {
+                using (MagickImage image = new MagickImage(sourcePath))
+                {
+                    // Resize giữ tỷ lệ nếu ảnh lớn hơn maxSize
+                    if (image.Width > maxSize || image.Height > maxSize)
+                    {
+                        MagickGeometry geometry = new MagickGeometry(maxSize, maxSize);
+                        geometry.IgnoreAspectRatio = false; // Giữ tỷ lệ
+                        image.Resize(geometry);
+                    }
+
+                    // Set quality và format
+                    image.Quality = quality;
+                    image.Format = MagickFormat.WebP;
+
+                    // Save
+                    image.Write(destPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"ConvertToWebP failed: {sourcePath} -> {destPath}. Error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Convert ảnh SanPham sang WebP: 1000x1000 (80%) + thumbnail 320x320 (80%), tạo thư mục thumbnail nếu chưa có
+        /// Sau khi convert thành công sẽ xóa ảnh gốc
+        /// </summary>
+        /// <param name="originalImagePath">Đường dẫn ảnh gốc (JPG/PNG)</param>
+        /// return: Tên ảnh mới 0.jpg => 0.webp, 1.jpg => 1.webp
+        public static string ConvertSanPhamImageToWebP(string originalImagePath)
+        {
+            try
+            {
+                string directory = Path.GetDirectoryName(originalImagePath);
+                string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalImagePath);
+                string ext = Path.GetExtension(originalImagePath).ToLower();
+
+                //// Chỉ convert ảnh, bỏ qua video
+                //if (!ImageExtensions.Contains(ext))
+                //    return;
+
+                // Path cho WebP full size (1000x1000, 80%)
+                string webpFullPath = Path.Combine(directory, fileNameWithoutExt + ".webp");
+                ConvertToWebP(originalImagePath, webpFullPath, 1000, 80);
+
+                // Xóa ảnh gốc sau khi convert thành công
+                if (File.Exists(originalImagePath))
+                {
+                    File.Delete(originalImagePath);
+                    MyLogger.GetInstance().Info($"Deleted original image: {originalImagePath}");
+                }
+
+                // Path cho WebP thumbnail (320x320, 80%)
+                // Tìm hoặc tạo thư mục _320 ngang hàng với thư mục gốc
+                string parentDir = Directory.GetParent(directory).FullName;
+                string folderName = new DirectoryInfo(directory).Name;
+                string thumbFolder = Path.Combine(parentDir, folderName + "_320");
+
+                if (!Directory.Exists(thumbFolder))
+                    Directory.CreateDirectory(thumbFolder);
+
+                string webpThumbPath = Path.Combine(thumbFolder, fileNameWithoutExt + ".webp");
+
+                // Convert từ WebP full size → WebP thumbnail (không dùng ảnh gốc)
+                ConvertToWebP(webpFullPath, webpThumbPath, 320, 80);
+
+                MyLogger.GetInstance().Info($"Converted to WebP: {originalImagePath} -> {webpFullPath}");
+                return fileNameWithoutExt + ".webp";
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP failed: {originalImagePath}. Error: {ex.Message}");
+            }
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Convert tên sản phẩm tiếng Việt thành slug URL-friendly
+        /// VD: "Harry Potter và Hòn Đá Phù Thủy" -> "harry-potter-va-hon-da-phu-thuy"
+        /// </summary>
+        /// <param name="text">Text cần convert</param>
+        /// <param name="maxLength">Độ dài tối đa (mặc định 80 chars - phù hợp với hầu hết tên sách)</param>
+        public static string ConvertToSlug(string text, int maxLength = 80)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            // Lowercase
+            text = text.ToLower().Trim();
+
+            // Bỏ dấu tiếng Việt
+            text = text.Replace("á", "a").Replace("à", "a").Replace("ả", "a").Replace("ã", "a").Replace("ạ", "a")
+                       .Replace("ă", "a").Replace("ắ", "a").Replace("ằ", "a").Replace("ẳ", "a").Replace("ẵ", "a").Replace("ặ", "a")
+                       .Replace("â", "a").Replace("ấ", "a").Replace("ầ", "a").Replace("ẩ", "a").Replace("ẫ", "a").Replace("ậ", "a")
+                       .Replace("é", "e").Replace("è", "e").Replace("ẻ", "e").Replace("ẽ", "e").Replace("ẹ", "e")
+                       .Replace("ê", "e").Replace("ế", "e").Replace("ề", "e").Replace("ể", "e").Replace("ễ", "e").Replace("ệ", "e")
+                       .Replace("í", "i").Replace("ì", "i").Replace("ỉ", "i").Replace("ĩ", "i").Replace("ị", "i")
+                       .Replace("ó", "o").Replace("ò", "o").Replace("ỏ", "o").Replace("õ", "o").Replace("ọ", "o")
+                       .Replace("ô", "o").Replace("ố", "o").Replace("ồ", "o").Replace("ổ", "o").Replace("ỗ", "o").Replace("ộ", "o")
+                       .Replace("ơ", "o").Replace("ớ", "o").Replace("ờ", "o").Replace("ở", "o").Replace("ỡ", "o").Replace("ợ", "o")
+                       .Replace("ú", "u").Replace("ù", "u").Replace("ủ", "u").Replace("ũ", "u").Replace("ụ", "u")
+                       .Replace("ư", "u").Replace("ứ", "u").Replace("ừ", "u").Replace("ử", "u").Replace("ữ", "u").Replace("ự", "u")
+                       .Replace("ý", "y").Replace("ỳ", "y").Replace("ỷ", "y").Replace("ỹ", "y").Replace("ỵ", "y")
+                       .Replace("đ", "d");
+
+            // Bỏ ký tự đặc biệt, chỉ giữ chữ, số, khoảng trắng
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"[^a-z0-9\s-]", "");
+
+            // Thay nhiều khoảng trắng liên tiếp = 1 khoảng trắng
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+
+            // Thay khoảng trắng = dấu gạch ngang
+            text = text.Replace(" ", "-");
+
+            // Thay nhiều dấu gạch ngang liên tiếp = 1 dấu
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"-+", "-");
+
+            // Giới hạn độ dài
+            if (text.Length > maxLength)
+            {
+                text = text.Substring(0, maxLength);
+                // Cắt ở dấu gạch ngang cuối để tránh chữ bị cắt nửa
+                int lastDash = text.LastIndexOf('-');
+                if (lastDash > 0)
+                    text = text.Substring(0, lastDash);
+            }
+
+            return text;
+        }
+
+        /// <summary>
+        /// Tạo tên file có ý nghĩa từ tên sản phẩm + tên file gốc
+        /// VD: "Harry Potter" + "Ảnh Bìa.jpg" -> "harry-potter-anh-bia.jpg"
+        /// Nếu trùng tên (không kể extension) thì file cũ sẽ bị xóa và thay thế
+        /// </summary>
+        /// <param name="productName">Tên sản phẩm</param>
+        /// <param name="originalFileName">Tên file gốc (có extension)</param>
+        /// <returns>Filename: {slug-san-pham}-{slug-ten-file}{extension}</returns>
+        public static string GenerateImageFileName(string productName, string originalFileName)
+        {
+            // Slug tên sản phẩm (max 50 chars để còn chỗ cho tên file)
+            string productSlug = ConvertToSlug(productName, 50);
+            if (string.IsNullOrWhiteSpace(productSlug))
+                productSlug = "san-pham";
+
+            // Tách extension và tên file gốc
+            string extension = Path.GetExtension(originalFileName);
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalFileName);
+
+            // Slug tên file gốc (max 30 chars)
+            string fileSlug = ConvertToSlug(fileNameWithoutExt, 30);
+            if (string.IsNullOrWhiteSpace(fileSlug))
+                fileSlug = "image";
+
+            // Ghép: {product-slug}-{file-slug}{extension}
+            return $"{productSlug}-{fileSlug}{extension}";
         }
     }
 }

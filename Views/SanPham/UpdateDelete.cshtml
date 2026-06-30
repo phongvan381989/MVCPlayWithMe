@@ -1,0 +1,1479 @@
+﻿@{
+    Layout = null;
+    int sanPhamId = ViewBag.SanPhamId;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20260625">
+    <style>
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .section > div {
+            margin-bottom: 20px;
+        }
+        .media-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .media-item {
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        .media-item img, .media-item video {
+            max-width: 100%;
+            height: 200px;
+            object-fit: contain;
+            display: block;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+        .media-item input[type="text"],
+        .media-item input[type="number"],
+        .media-item textarea {
+            width: 100%;
+            margin-bottom: 5px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            font-size: 13px;
+        }
+        .media-item .media-alt {
+            border-color: #4CAF50;
+            background: #f1f8f4;
+        }
+        .media-item .media-title {
+            border-color: #2196F3;
+            background: #f0f7ff;
+        }
+        .media-item .media-description {
+            border-color: #FF9800;
+            background: #fff8f0;
+            font-family: inherit;
+        }
+        .media-item .media-order {
+            display: inline-block;
+            width: 80px;
+        }
+        .media-item button {
+            margin-top: 5px;
+            padding: 5px 10px;
+            border: none;
+            color: white;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .media-item button:hover {
+            opacity: 0.9;
+        }
+        .upload-section {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f4f8;
+            border-radius: 5px;
+        }
+        #file-upload {
+            margin-top: 10px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        /* Layout cho input + nút cập nhật cùng dòng */
+        .field-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .field-wrapper input,
+        .field-wrapper select,
+        .field-wrapper textarea {
+            flex: 1;
+        }
+        .field-wrapper .update-btn {
+            flex-shrink: 0;
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .field-wrapper .update-btn:hover {
+            background-color: #45a049;
+        }
+        .field-wrapper .update-btn:active {
+            transform: scale(0.98);
+        }
+        /* Style cho button disabled */
+        #copy-data-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #999 !important;
+        }
+        #copy-data-btn:not(:disabled):hover {
+            background: #1976D2;
+        }
+        #copy-images-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #999 !important;
+        }
+        #copy-images-btn:not(:disabled):hover {
+            background: #45a049;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="biggestContainer">
+        <h2>Cập Nhật / Xóa Sản Phẩm (ID: @sanPhamId)</h2>
+
+        <div class="section">
+            <h3>Thông Tin Sản Phẩm</h3>
+            <input type="hidden" id="sp-id" value="@sanPhamId" />
+
+            <div>
+                <label for="sp-name">Tên sản phẩm: <span style="color:red">*</span></label>
+                <input class="config-max-width margin-vertical" id="sp-name" required />
+            </div>
+
+            <div>
+                <label for="sp-short-name">Tên ngắn:</label>
+                <input class="config-max-width margin-vertical" id="sp-short-name" />
+            </div>
+
+            <div>
+                <label for="sp-book-cover-price">Giá bìa: <span style="color:red">*</span></label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-book-cover-price" value="0" required />
+            </div>
+
+            <div>
+                <label for="sp-discount">Chiết khấu (0-100):</label>
+                <input type="number" step="1" class="config-max-width margin-vertical" id="sp-discount" placeholder="Để trống hoặc 0 nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-quantity">Số lượng tồn kho: <span style="color:red">*</span></label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-quantity" required />
+            </div>
+
+            <div>
+                <label for="sp-code">Mã sản phẩm:</label>
+                <input class="config-max-width margin-vertical" id="sp-code" />
+            </div>
+
+            <div>
+                <label for="sp-barcode">Barcode (ISBN):</label>
+                <input class="config-max-width margin-vertical" id="sp-barcode" />
+            </div>
+
+            <div>
+                <label for="combo-id">Combo:</label>
+                <input list="list-combo" class="config-max-width margin-vertical" id="combo-id" placeholder="Chọn hoặc nhập tên combo" />
+                <datalist id="list-combo"></datalist>
+            </div>
+
+            <div>
+                <label for="category-id">Category:</label>
+                <input list="list-category" class="config-max-width margin-vertical" id="category-id" placeholder="Chọn hoặc nhập tên category" />
+                <datalist id="list-category"></datalist>
+            </div>
+
+            <div>
+                <label for="author-id" title="Cách nhau dấu ',' nếu có nhiều tác giả">Tác giả:</label>
+                <input type="text" list="list-author" class="config-max-width margin-vertical" id="author-id">
+
+                <datalist id="list-author"></datalist>
+            </div>
+
+            <div>
+                <label for="translator-id" title="Cách nhau dấu ',' nếu có nhiều người dịch">Người dịch:</label>
+                <input type="text" list="list-translator" class="config-max-width margin-vertical" id="translator-id">
+
+                <datalist id="list-translator"></datalist>
+            </div>
+
+            <div>
+                <label for="publisher-id">Nhà phát hành:</label>
+                <input list="list-Publisher" class="config-max-width margin-vertical" id="publisher-id" placeholder="Chọn hoặc nhập tên nhà xuất bản" />
+                <datalist id="list-Publisher"></datalist>
+            </div>
+
+            <div>
+                <label for="publishing-company-id">Công ty xuất bản:</label>
+                <input list="list-publishing-company" class="config-max-width margin-vertical" id="publishing-company-id" placeholder="Chọn hoặc nhập tên công ty xuất bản" />
+                <datalist id="list-publishing-company"></datalist>
+            </div>
+
+            <div>
+                <label for="sp-publishing-time">Năm phát hành:</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-publishing-time" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-product-long">Chiều dài (mm):</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-product-long" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-product-wide">Chiều rộng (mm):</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-product-wide" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-product-high">Chiều cao (mm):</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-product-high" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-product-weight">Trọng lượng (gram):</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-product-weight" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-position-warehouse">Vị trí trong kho:</label>
+                <input class="config-max-width margin-vertical" id="sp-position-warehouse" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-hard-cover">Bìa:</label>
+                <select class="config-max-width margin-vertical" id="sp-hard-cover">
+                    <option value="0">Bìa mềm</option>
+                    <option value="1">Bìa cứng</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="sp-min-age">Tuổi nhỏ nhất (tháng):</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-min-age" placeholder="Để trống nếu không giới hạn" />
+            </div>
+
+            <div>
+                <label for="sp-max-age">Tuổi lớn nhất (tháng):</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-max-age" placeholder="Để trống nếu không giới hạn" />
+            </div>
+
+            <div>
+                <label for="sp-parent-id">Parent ID:</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-parent-id" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-republish">Tái bản lần thứ:</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-republish" placeholder="Để trống nếu không xác định" />
+            </div>
+
+            <div>
+                <label for="sp-detail">Chi tiết:</label>
+                <textarea class="config-max-width margin-vertical" id="sp-detail" rows="25" placeholder="Để trống nếu không có"></textarea>
+            </div>
+
+            <div>
+                <label for="sp-status">Trạng thái:</label>
+                <select class="config-max-width margin-vertical" id="sp-status">
+                    <option value="0">Đang kinh doanh</option>
+                    <option value="1">Nhà phát hành tạm thời hết hàng</option>
+                    <option value="2">Ngừng kinh doanh</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="sp-page-number">Số trang:</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-page-number" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-language">Ngôn ngữ:</label><br>
+                <select class="config-max-width margin-vertical" id="sp-language">
+                    <option value="Tiếng Việt">Tiếng Việt</option>
+                    <option value="Song ngữ">Song ngữ</option>
+                    <option value="Tiếng Anh">Tiếng Anh</option>
+                    <option value="Đa ngữ">Đa ngữ</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="sp-date">Ngày thêm sản phẩm:</label>
+                <input type="date" class="config-max-width margin-vertical" id="sp-date" />
+            </div>
+
+            <div>
+                <label for="sp-sold-quantity">Số lượng đã bán:</label>
+                <input type="number" class="config-max-width margin-vertical" id="sp-sold-quantity" placeholder="Để trống nếu không có" />
+            </div>
+
+            <div>
+                <label for="sp-url">URL sản phẩm:</label>
+                <input class="config-max-width margin-vertical" id="sp-url" />
+            </div>
+
+            <div>
+                <label for="sp-seo-keyword">SEO Keyword:</label>
+                <input class="config-max-width margin-vertical" id="sp-seo-keyword" />
+            </div>
+
+            <br />
+            <div>
+                <button type="button" onclick="UpdateSanPham()">Cập Nhật Sản Phẩm</button>
+                <button type="button" onclick="DeleteSanPham()" style="margin-left: 20px; background-color: #d9534f;">Xóa Sản Phẩm</button>
+            </div>
+
+            <div id="result-message" style="margin-top: 20px; color: green;"></div>
+        </div>
+
+        <div class="section">
+            <h3>📦 Mapping Sản Phẩm Kho</h3>
+            <p style="color: #666; font-size: 14px;">Map sản phẩm bán này với các sản phẩm thực tế trong kho (tbproducts)</p>
+
+            <div class="mapping-add-section" style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 5px;">
+                <h4 style="margin-top: 0;">Chọn Sản Phẩm Kho Để Mapping</h4>
+
+                <!-- Filters -->
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;">
+
+                    <div>
+                        <input list="list-product-name" class="config-max-width margin-vertical" id="product-name-id" placeholder="Chọn hoặc nhập tên">
+                        <datalist id="list-product-name">
+                        </datalist>
+                    </div>
+
+                    <div>
+                        <input list="list-combo-2" class="config-max-width margin-vertical" id="combo-id-2" placeholder="Chọn hoặc nhập tên combo" />
+                        <datalist id="list-combo-2"></datalist>
+                    </div>
+
+                    <button type="button" onclick="SearchTbProductsForMapping()"
+                            style="padding: 8px 16px; background: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        🔍 Tìm Kiếm
+                    </button>
+                </div>
+
+                <!-- Selection Actions -->
+                <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center;">
+                    <button type="button" onclick="AddSelectedKhoMapping()"
+                            style="padding: 8px 20px; background: #5cb85c; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        + Thêm Đã Chọn (<span id="selected-count">0</span>)
+                    </button>
+                    <label style="font-size: 14px; color: #666;">
+                        <input type="checkbox" id="select-all-checkbox" onchange="ToggleSelectAll()" />
+                        Chọn tất cả
+                    </label>
+                    <span style="margin-left: auto; font-size: 14px; color: #666;">
+                        Tổng: <span id="tbproducts-total">0</span> sản phẩm
+                    </span>
+                </div>
+
+                <!-- Table sản phẩm kho -->
+                <div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 4px;">
+                    <table id="tbproducts-table" style="width: 100%; border-collapse: collapse; background: white;">
+                        <thead style="position: sticky; top: 0; background: #f5f5f5; z-index: 1;">
+                            <tr>
+                                <th style="padding: 8px; border: 1px solid #ddd; width: 40px; text-align: center;">☑</th>
+                                <th style="padding: 8px; border: 1px solid #ddd; width: 50px;">STT</th>
+                                <th style="padding: 8px; border: 1px solid #ddd; width: 60px;">Ảnh</th>
+                                <th style="padding: 8px; border: 1px solid #ddd; width: 100px;">Mã</th>
+                                <th style="padding: 8px; border: 1px solid #ddd;">Tên</th>
+                                <th style="padding: 8px; border: 1px solid #ddd; width: 80px;">Tồn Kho</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbproducts-tbody">
+                            <tr>
+                                <td colspan="6" style="padding: 20px; text-align: center; color: #999;">
+                                    Đang đợi dữ liệu...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mapping-list-section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                    <h4 style="margin: 0;">Danh Sách Đã Map (<span id="mapping-count">0</span>)</h4>
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" id="copy-data-btn" onclick="CopyDataFromKhoProduct()" disabled
+                                title="Chép dữ liệu từ sản phẩm kho sang sản phẩm bán"
+                                style="padding: 8px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; transition: opacity 0.3s;">
+                            📋 Chép Dữ Liệu
+                        </button>
+                        <button type="button" id="copy-images-btn" onclick="CopyImagesFromKhoProduct()" disabled
+                                title="Chép toàn bộ ảnh từ sản phẩm kho sang sản phẩm bán (xóa ảnh cũ và sinh phiên bản 320), không chép video"
+                                style="padding: 8px 16px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; transition: opacity 0.3s;">
+                            🖼️ Chép Ảnh
+                        </button>
+                    </div>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table id="mapping-table" style="width: 100%; border-collapse: collapse; background: white;">
+                        <thead>
+                            <tr style="background: #f5f5f5;">
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left; width: 50px;">STT</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 80px;">Ảnh</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left; width: 120px;">Mã Kho</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Tên Sản Phẩm Kho</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 100px;">SL Kho</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 100px;">SL Cần</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 80px;">Thao Tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mapping-tbody">
+                            <tr>
+                                <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                                    Chưa có mapping nào. Thêm sản phẩm kho ở phía trên.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>Quản Lý Media (Ảnh / Video)</h3>
+
+            <div class="upload-section">
+                <h4>Upload Media Mới</h4>
+                <p><strong>Lưu ý:</strong> Tên file phải là số (ví dụ: 0.jpg, 1.png, 2.mp4...). File tên 0.* sẽ là thumbnail.</p>
+                <input type="file" id="file-upload" multiple accept="image/*,video/*" />
+                <button type="button" onclick="UploadFiles()" style="margin-top: 10px;">Upload</button>
+            </div>
+
+            <div id="media-container" class="media-container">
+                <!-- Media items will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260625"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260625"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260625"></script>
+    <script>
+        const sanPhamId = '@sanPhamId';
+
+        // Mapping column name → element ID
+        const fieldMapping = {
+            'Code': 'sp-code',
+            'Barcode': 'sp-barcode',
+            'Name': 'sp-name',
+            'ShortName': 'sp-short-name',
+            'ComboId': 'combo-id',
+            'CategoryId': 'category-id',
+            'BookCoverPrice': 'sp-book-cover-price',
+            'Author': 'author-id',
+            'Translator': 'translator-id',
+            'PublisherId': 'publisher-id',
+            'PublishingCompany': 'publishing-company-id',
+            'PublishingTime': 'sp-publishing-time',
+            'ProductLong': 'sp-product-long',
+            'ProductWide': 'sp-product-wide',
+            'ProductHigh': 'sp-product-high',
+            'ProductWeight': 'sp-product-weight',
+            'PositionInWarehouse': 'sp-position-warehouse',
+            'HardCover': 'sp-hard-cover',
+            'MinAge': 'sp-min-age',
+            'MaxAge': 'sp-max-age',
+            'ParentId': 'sp-parent-id',
+            'Republish': 'sp-republish',
+            'Detail': 'sp-detail',
+            'Status': 'sp-status',
+            'Quantity': 'sp-quantity',
+            'PageNumber': 'sp-page-number',
+            'Discount': 'sp-discount',
+            'Language': 'sp-language',
+            'Date': 'sp-date',
+            'SoldQuantity': 'sp-sold-quantity',
+            'URL': 'sp-url',
+            'SEOKeyword': 'sp-seo-keyword'
+        };
+
+        // Load dữ liệu sản phẩm khi trang load
+        window.onload = async function() {
+            // Thêm nút "Cập nhật" vào tất cả các input chưa có
+            AddUpdateButtonsToAllFields();
+
+            await GetListCombo();
+            await GetListCategory();
+            await GetListPublisher();
+            await GetListPublishingCompany();
+            await GetListProductName();
+            await GetListAuthor();
+            await GetListTranslator();
+            await LoadSanPhamData();
+            await LoadMediaList();
+            document.getElementById("list-combo-2").innerHTML = document.getElementById("list-combo").innerHTML;
+        };
+
+        // Tự động thêm nút "Cập nhật" vào tất cả input/select/textarea
+        function AddUpdateButtonsToAllFields() {
+            const section = document.querySelector('.section');
+            const allInputs = section.querySelectorAll('input:not([type="hidden"]), select, textarea');
+
+            allInputs.forEach(element => {
+                // Bỏ qua nếu đã có wrapper rồi
+                if (element.parentElement.classList.contains('field-wrapper')) {
+                    return;
+                }
+
+                const elementId = element.id;
+                if (!elementId) return;
+
+                // Tìm fieldName từ mapping
+                let fieldName = null;
+                for (const [key, value] of Object.entries(fieldMapping)) {
+                    if (value === elementId) {
+                        fieldName = key;
+                        break;
+                    }
+                }
+
+                if (!fieldName) return;
+
+                // Tạo wrapper
+                const wrapper = document.createElement('div');
+                wrapper.className = 'field-wrapper';
+
+                // Tạo nút
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'update-btn';
+                button.textContent = 'Cập nhật';
+                button.onclick = () => UpdateField(fieldName, elementId);
+
+                // Thay thế: input -> wrapper > input + button
+                element.parentNode.insertBefore(wrapper, element);
+                wrapper.appendChild(element);
+                wrapper.appendChild(button);
+            });
+        }
+
+        // Hàm cập nhật 1 field riêng lẻ
+        async function UpdateField(fieldName, elementId) {
+            const element = document.getElementById(elementId);
+            let fieldValue = element.value;
+
+            // Xử lý đặc biệt cho datalist (lấy ID thay vì name)
+            if (fieldName === 'ComboId') {
+                fieldValue = GetDataIdFromComboDatalist(fieldValue) || '-1';
+            } else if (fieldName === 'CategoryId') {
+                fieldValue = GetDataIdFromCategoryDatalist(fieldValue) || '-1';
+            } else if (fieldName === 'PublisherId') {
+                fieldValue = GetDataIdFromPublisherDatalist(fieldValue) || '-1';
+            }
+
+            // Viết hoa chữ cái đầu
+            if (fieldName === 'Name' || fieldName === 'ShortName' || fieldName === 'Author') {
+                fieldValue = CapitalizeWords(fieldValue);
+            }
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/UpdateSanPhamField', {
+                    sanPhamId: sanPhamId,
+                    fieldName: fieldName,
+                    fieldValue: fieldValue
+                });
+                RemoveCircleLoader();
+
+                CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false)
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('❌ Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        // Helper: Lấy name từ ID trong datalist
+        function GetNameFromDatalistById(datalistId, id) {
+            const datalist = document.getElementById(datalistId);
+            if (!datalist || !id || id === -1) return '';
+
+            const options = datalist.querySelectorAll('option');
+            for (let option of options) {
+                if (parseInt(option.getAttribute('data-id')) === id) {
+                    return option.value;
+                }
+            }
+            return '';
+        }
+
+        async function LoadSanPhamData() {
+            try {
+                const resultText = await PostJSON('/SanPham/GetSanPhamFromId', { id: sanPhamId });
+                const sanPham = JSON.parse(resultText);
+
+                if (sanPham) {
+                    document.getElementById('sp-code').value = sanPham.Code || '';
+                    document.getElementById('sp-barcode').value = sanPham.Barcode || '';
+                    document.getElementById('sp-name').value = sanPham.Name || '';
+                    document.getElementById('sp-short-name').value = sanPham.ShortName || '';
+
+                    // Set datalist values từ ID
+                    document.getElementById('combo-id').value = GetNameFromDatalistById('list-combo', sanPham.ComboId);
+                    document.getElementById('category-id').value = GetNameFromDatalistById('list-category', sanPham.CategoryId);
+
+                    document.getElementById('sp-book-cover-price').value = sanPham.BookCoverPrice || 0;
+                    document.getElementById('author-id').value = sanPham.Author || '';
+                    document.getElementById('translator-id').value = sanPham.Translator || '';
+
+                    // Set publisher datalist value từ ID
+                    document.getElementById('publisher-id').value = GetNameFromDatalistById('list-Publisher', sanPham.PublisherId);
+                    document.getElementById('publishing-company-id').value = sanPham.PublishingCompany || '';
+                    document.getElementById('sp-publishing-time').value = (sanPham.PublishingTime && sanPham.PublishingTime !== -1) ? sanPham.PublishingTime : '';
+                    document.getElementById('sp-product-long').value = sanPham.ProductLong || '';
+                    document.getElementById('sp-product-wide').value = sanPham.ProductWide || '';
+                    document.getElementById('sp-product-high').value = sanPham.ProductHigh || '';
+                    document.getElementById('sp-product-weight').value = sanPham.ProductWeight || '';
+                    document.getElementById('sp-position-warehouse').value = sanPham.PositionInWarehouse || '';
+                    document.getElementById('sp-hard-cover').value = (sanPham.HardCover !== null && sanPham.HardCover !== -1) ? sanPham.HardCover : '';
+                    document.getElementById('sp-min-age').value = (sanPham.MinAge !== null && sanPham.MinAge !== -1) ? sanPham.MinAge : '';
+                    document.getElementById('sp-max-age').value = (sanPham.MaxAge !== null && sanPham.MaxAge !== -1) ? sanPham.MaxAge : '';
+                    document.getElementById('sp-parent-id').value = (sanPham.ParentId && sanPham.ParentId !== -1) ? sanPham.ParentId : '';
+                    document.getElementById('sp-republish').value = (sanPham.Republish && sanPham.Republish !== -1) ? sanPham.Republish : '';
+                    document.getElementById('sp-detail').value = sanPham.Detail || '';
+                    document.getElementById('sp-status').value = sanPham.Status ?? 0;
+                    document.getElementById('sp-quantity').value = sanPham.Quantity ?? 0;
+                    document.getElementById('sp-page-number').value = (sanPham.PageNumber && sanPham.PageNumber !== -1) ? sanPham.PageNumber : '';
+                    document.getElementById('sp-discount').value = sanPham.Discount || '';
+                    document.getElementById('sp-language').value = sanPham.Language || '';
+                    if (sanPham.Date) {
+                        const date = new Date(sanPham.Date);
+                        document.getElementById('sp-date').value = date.toISOString().split('T')[0];
+                    }
+                    document.getElementById('sp-sold-quantity').value = (sanPham.SoldQuantity && sanPham.SoldQuantity !== -1) ? sanPham.SoldQuantity : '';
+                    document.getElementById('sp-url').value = sanPham.URL || '';
+                    document.getElementById('sp-seo-keyword').value = sanPham.SEOKeyword || '';
+                }
+            } catch (error) {
+                alert('Lỗi load dữ liệu: ' + error.message);
+            }
+        }
+
+        async function UpdateSanPham() {
+            const name = document.getElementById('sp-name').value.trim();
+            if (!name) {
+                alert('Tên sản phẩm không được để trống!');
+                return;
+            }
+
+            // Lấy ID từ datalist, chuyển -1 → null
+            const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+            const categoryId = GetDataIdFromCategoryDatalist(document.getElementById('category-id').value) || -1;
+            const publisherId = GetDataIdFromPublisherDatalist(document.getElementById('publisher-id').value) || -1;
+
+            const data = {
+                Id: sanPhamId,
+                Code: document.getElementById('sp-code').value || null,
+                Barcode: document.getElementById('sp-barcode').value || null,
+                Name: CapitalizeWords(name),
+                ShortName: CapitalizeWords(document.getElementById('sp-short-name').value || null),
+                ComboId: comboId !== -1 ? comboId : null,
+                CategoryId: categoryId !== -1 ? categoryId : null,
+                BookCoverPrice: parseInt(document.getElementById('sp-book-cover-price').value) || 0,
+                Author: CapitalizeWords(document.getElementById('author-id').value || null),
+                Translator: document.getElementById('translator-id').value || null,
+                PublisherId: publisherId !== -1 ? publisherId : null,
+                PublishingCompany: document.getElementById('publishing-company-id').value || null,
+                PublishingTime: parseIntOrNull(document.getElementById('sp-publishing-time').value),
+                ProductLong: parseIntOrDefault(document.getElementById('sp-product-long').value, 0),
+                ProductWide: parseIntOrDefault(document.getElementById('sp-product-wide').value, 0),
+                ProductHigh: parseIntOrDefault(document.getElementById('sp-product-high').value, 0),
+                ProductWeight: parseIntOrDefault(document.getElementById('sp-product-weight').value, 0),
+                PositionInWarehouse: document.getElementById('sp-position-warehouse').value || null,
+                HardCover: parseIntOrNull(document.getElementById('sp-hard-cover').value),
+                MinAge: parseIntOrNull(document.getElementById('sp-min-age').value),
+                MaxAge: parseIntOrNull(document.getElementById('sp-max-age').value),
+                ParentId: parseIntOrNull(document.getElementById('sp-parent-id').value),
+                Republish: parseIntOrNull(document.getElementById('sp-republish').value),
+                Detail: document.getElementById('sp-detail').value || null,
+                Status: parseInt(document.getElementById('sp-status').value) || 0,
+                Quantity: parseInt(document.getElementById('sp-quantity').value) || 0,
+                PageNumber: parseIntOrNull(document.getElementById('sp-page-number').value),
+                Discount: parseFloatOrDefault(document.getElementById('sp-discount').value),
+                Language: document.getElementById('sp-language').value || null,
+                Date: document.getElementById('sp-date').value || null,
+                SoldQuantity: parseIntOrNull(document.getElementById('sp-sold-quantity').value),
+                URL: document.getElementById('sp-url').value || null,
+                SEOKeyword: document.getElementById('sp-seo-keyword').value || null
+            };
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/UpdateSanPham', data);
+                RemoveCircleLoader();
+                CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+            } catch (error) {
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        async function DeleteSanPham() {
+            if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Thao tác này không thể hoàn tác!')) {
+                return;
+            }
+
+            try {
+                const resultText = await PostJSON('/SanPham/DeleteSanPham', { id: sanPhamId });
+                const result = JSON.parse(resultText);
+
+                if (result.State === 0) {
+                    //alert(result.Message);
+                    window.location.href = '/SanPham/Create';
+                } else {
+                    alert('Lỗi: ' + result.Message);
+                }
+            } catch (error) {
+                alert('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        async function LoadMediaList() {
+            try {
+                // Load file list từ disk
+                const fileResultText = await PostJSON('/SanPham/GetMediaList', { sanPhamId: sanPhamId.toString() });
+                const fileList = JSON.parse(fileResultText);
+
+                // Load metadata từ database
+                const metadataResultText = await PostJSON('/SanPham/GetAllMediaMetadata', { sanPhamId: sanPhamId });
+                const metadataList = JSON.parse(metadataResultText);
+
+                const container = document.getElementById('media-container');
+                container.innerHTML = '';
+
+                if (fileList && fileList.length > 0) {
+                    fileList.forEach((file, index) => {
+                        // Tìm metadata cho file này
+                        const metadata = metadataList.find(m => m.FileName === file.FileName);
+
+                        const mediaItem = document.createElement('div');
+                        mediaItem.className = 'media-item';
+                        mediaItem.dataset.fileName = file.FileName;
+                        mediaItem.dataset.mediaId = metadata ? metadata.Id : '';
+
+                        // Tạo path WebP từ JPG/PNG path
+                        const webpPath = file.FilePath.replace(/\.(jpg|jpeg|png|jfif)$/i, '.webp');
+
+                        let mediaElement;
+                        if (file.IsImage) {
+                            mediaElement = `
+                                <picture>
+                                    <source srcset="${webpPath}" type="image/webp">
+                                    <img src="${file.FilePath}" alt="${metadata?.AltText || file.FileName}" />
+                                </picture>
+                            `;
+                        } else {
+                            mediaElement = `<video src="${file.FilePath}" controls></video>`;
+                        }
+
+                        mediaItem.innerHTML = `
+                            ${mediaElement}
+                            <input type="text" value="${file.FileName}" readonly placeholder="Tên file"
+                                   onclick="RenameMediaFile('${file.FileName}')"
+                                   style="background: #eee; cursor: pointer;"
+                                   title="Click để đổi tên file" />
+                            ${file.IsImage ? `
+                                <input type="text" class="media-alt" placeholder="Alt text (SEO - bắt buộc cho ảnh)"
+                                       value="${metadata?.AltText || ''}"
+                                       title="Alt text (SEO - bắt buộc cho ảnh):nội dung ngắn gọn, có giá trị, có keyword + tác giả nếu tác giả nổi tiếng, giới hạn 125 ký tự VD: Sách eho moi moi trang bìa" />
+                                <input type="text" class="media-title" placeholder="Caption (tùy chọn)"
+                                       value="${metadata?.Title || ''}"
+                                       title="Text hiển thị dưới ảnh (nếu cần)" />
+                            ` : `
+                                <input type="text" class="media-title" placeholder="Title video (bắt buộc)"
+                                       value="${metadata?.Title || ''}"
+                                       title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán" />
+                                <textarea class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
+                                          title="Mô tả chi tiết nội dung video">${metadata?.Description || ''}</textarea>
+                            `}
+                            <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự ảnh"
+                                   value="${metadata?.DisplayOrder ?? index}"
+                                   style="width: 80px;" min="0" />
+                            <div style="margin-top: 5px;">
+                                <button onclick="SaveMediaMetadata('${file.FileName}')"
+                                        style="background-color: #4CAF50;">💾 Lưu metadata</button>
+                                <button onclick="RenameMediaFile('${file.FileName}')"
+                                        style="background-color: #2196F3;">Đổi tên</button>
+                                ${file.IsImage ? `
+                                    <button onclick="PinImageToDetail('${file.FileName}')"
+                                            style="background-color: #FF9800;"
+                                            title="Chèn {{image:${file.FileName}}} vào vị trí con trỏ">
+                                        Ghim ảnh
+                                    </button>
+                                ` : ''}
+                                <button onclick="DeleteMediaFile('${file.FileName}')"
+                                        style="background-color: #f44336;">Xóa</button>
+                            </div>
+                        `;
+
+                        container.appendChild(mediaItem);
+                    });
+                } else {
+                    container.innerHTML = '<p>Chưa có media nào.</p>';
+                }
+            } catch (error) {
+                console.error('Lỗi load media:', error);
+                alert('Lỗi load media: ' + error.message);
+            }
+        }
+
+        // Ghim ảnh vào chi tiết (insert {{image:filename}} tại vị trí con trỏ)
+        function PinImageToDetail(fileName) {
+            const detailTextarea = document.getElementById('sp-detail');
+            const imageTag = `{{image:${fileName}}}`;
+
+            // Lấy vị trí con trỏ hiện tại
+            const cursorPos = detailTextarea.selectionStart;
+            const textBefore = detailTextarea.value.substring(0, cursorPos);
+            const textAfter = detailTextarea.value.substring(cursorPos);
+
+            // Thêm newlines nếu cần để imageTag ở dòng riêng
+            let prefix = '';
+            let suffix = '';
+
+            // Nếu có text trước và không kết thúc bằng newline → thêm newline
+            if (textBefore.length > 0 && !textBefore.endsWith('\n')) {
+                prefix = '\n';
+            }
+
+            // Nếu có text sau và không bắt đầu bằng newline → thêm newline
+            if (textAfter.length > 0 && !textAfter.startsWith('\n')) {
+                suffix = '\n';
+            }
+
+            // Insert imageTag với newlines
+            const insertText = prefix + imageTag + suffix;
+            detailTextarea.value = textBefore + insertText + textAfter;
+
+            // Đặt con trỏ ngay sau imageTag (trước suffix newline nếu có)
+            const newCursorPos = cursorPos + prefix.length + imageTag.length;
+            detailTextarea.setSelectionRange(newCursorPos, newCursorPos);
+
+            // Focus lại textarea
+            detailTextarea.focus();
+
+            // Flash effect để user biết đã thêm
+            detailTextarea.style.backgroundColor = '#ffffcc';
+            setTimeout(() => {
+                detailTextarea.style.backgroundColor = '';
+            }, 300);
+        }
+
+        // Lưu metadata (Alt text, Title, Description, DisplayOrder) vào database
+        async function SaveMediaMetadata(fileName) {
+            try {
+                // Tìm media item có fileName này
+                const mediaItem = document.querySelector(`.media-item[data-file-name="${fileName}"]`);
+                if (!mediaItem) {
+                    alert('Không tìm thấy media item!');
+                    return;
+                }
+
+                // Lấy giá trị từ input fields
+                const altText = mediaItem.querySelector('.media-alt')?.value.trim() || null;
+                const title = mediaItem.querySelector('.media-title')?.value.trim() || null;
+                const description = mediaItem.querySelector('.media-description')?.value.trim() || null;
+                const displayOrder = parseInt(mediaItem.querySelector('.media-order')?.value) || 0;
+
+                // Xác định MediaType
+                const isImage = mediaItem.querySelector('img') !== null;
+                const mediaType = isImage ? 'image' : 'video';
+
+                // Kiểm tra required fields
+                if (isImage && !altText) {
+                    alert('Alt text là bắt buộc cho ảnh!');
+                    return;
+                }
+                if (!isImage && !title) {
+                    alert('Title là bắt buộc cho video!');
+                    return;
+                }
+
+                // Tạo data object
+                const mediaId = mediaItem.dataset.mediaId;
+                const data = {
+                    Id: mediaId ? parseInt(mediaId) : 0,
+                    SanPhamId: sanPhamId,
+                    MediaType: mediaType,
+                    FileName: fileName,
+                    Title: title,
+                    AltText: altText,
+                    Description: description,
+                    PosterImage: null, // TODO: implement nếu cần
+                    DisplayOrder: displayOrder
+                };
+
+                // Gọi API Insert hoặc Update
+                const endpoint = mediaId ? '/SanPham/UpdateMediaMetadata' : '/SanPham/AddMediaMetadata';
+                ShowCircleLoader();
+                const resultText = await PostJSON(endpoint, data);
+                RemoveCircleLoader();
+
+                CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message, null);
+            }
+        }
+
+        // Helper: Check xem file đã tồn tại trong danh sách media chưa
+        function checkFileExists(fileName) {
+            const mediaItems = document.querySelectorAll('.media-item');
+            for (let item of mediaItems) {
+                if (item.dataset.mediaName === fileName) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        async function UploadFiles() {
+            const fileInput = document.getElementById('file-upload');
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert('Vui lòng chọn file để upload!');
+                return;
+            }
+
+            // Lấy tên sản phẩm để tạo slug
+            const sanPhamName = document.getElementById('sp-name').value.trim() || 'san-pham';
+
+            // Bỏ check duplicate vì giờ server tự động tạo tên mới (slug-0, slug-1...)
+            // Không còn lo trùng tên nữa
+
+            ShowCircleLoader();
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const fileName = file.name;
+
+                try {
+                    const arrayBuffer = await file.arrayBuffer();
+                    const byteArray = new Uint8Array(arrayBuffer);
+
+                    await fetch('/SanPham/UploadMedia?sanPhamId=' + sanPhamId, {
+                        method: 'POST',
+                        headers: {
+                            'fileName': fileName,
+                            'productId': sanPhamId,
+                            'sanPhamName': sanPhamName  // Gửi tên sản phẩm để tạo slug
+                        },
+                        body: byteArray
+                    });
+
+                } catch (error) {
+                    RemoveCircleLoader();
+                    CreateMustClickOkModal('Lỗi upload file ' + fileName + ': ' + error.message, null);
+                    return;
+                }
+            }
+            RemoveCircleLoader();
+            alert('Upload thành công!');
+            fileInput.value = '';
+            await LoadMediaList();
+        }
+
+        async function RenameMediaFile(oldFileName) {
+            // Lấy tên file không có extension để làm giá trị mặc định
+            const oldNameWithoutExt = oldFileName.substring(0, oldFileName.lastIndexOf('.')) || oldFileName;
+
+            // Prompt nhập tên mới (chỉ tên, không cần extension)
+            const newName = prompt('Nhập tên mới cho file (không cần đuôi file):', oldNameWithoutExt);
+
+            if (!newName || newName.trim() === '') {
+                return; // User cancel hoặc để trống
+            }
+
+            if (newName.trim() === oldNameWithoutExt) {
+                alert('Tên mới giống tên cũ!');
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/RenameMedia', {
+                    sanPhamId: sanPhamId,
+                    oldFileName: oldFileName,
+                    newFileName: newName.trim()
+                });
+                RemoveCircleLoader();
+
+                CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+                await LoadMediaList();
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        async function DeleteMediaFile(fileName) {
+            if (!confirm('Bạn có chắc chắn muốn xóa file này?')) {
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/DeleteMedia', { sanPhamId: sanPhamId, fileName: fileName });
+                RemoveCircleLoader();
+
+                CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+                await LoadMediaList();
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        // ============================================
+        // Mapping Sản Phẩm Kho Functions
+        // ============================================
+
+        let currentTbProducts = []; // Kết quả search hiện tại
+        let currentMappingList = [];
+
+        // Load mapping list và datalist options khi page load
+        window.addEventListener('DOMContentLoaded', async function() {
+            await Promise.all([
+                LoadKhoMappingList(),
+                LoadProductNameList(),
+                LoadComboList()
+            ]);
+
+            // Clear input kia khi focus vào một input
+            const nameInput = document.getElementById('product-name-id');
+            const comboInput = document.getElementById('combo-id-2');
+
+            nameInput?.addEventListener('focus', function() {
+                comboInput.value = '';
+            });
+
+            comboInput?.addEventListener('focus', function() {
+                nameInput.value = '';
+            });
+        });
+
+        // Load danh sách tên sản phẩm cho datalist
+        async function LoadProductNameList() {
+            try {
+                const resultText = await PostJSON('/Product/GetListProductName', {});
+                const products = JSON.parse(resultText);
+                const datalist = document.getElementById('list-product-name');
+                datalist.innerHTML = products.map(p => `<option value="${p.Name}">`).join('');
+            } catch (error) {
+                console.error('Error loading product names:', error);
+            }
+        }
+
+        // Load danh sách combo cho datalist
+        async function LoadComboList() {
+            try {
+                const resultText = await PostJSON('/Combo/GetListCombo', {});
+                const combos = JSON.parse(resultText);
+                const datalist = document.getElementById('list-combo-2');
+                datalist.innerHTML = combos.map(c => `<option value="${c.name}">`).join('');
+            } catch (error) {
+                console.error('Error loading combos:', error);
+            }
+        }
+
+        // Search sản phẩm kho với filters (gọi khi user click button Tìm Kiếm)
+        async function SearchTbProductsForMapping() {
+            const nameInput = document.getElementById('product-name-id').value.trim();
+            const comboInput = document.getElementById('combo-id-2').value.trim();
+
+            // Nếu cả 2 filter đều trống → không search
+            if (!nameInput && !comboInput) {
+                CreateMustClickOkModal('Vui lòng nhập tên hoặc combo để tìm kiếm');
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+                // Gọi GET endpoint SearchProductForMapping
+                const url = `/Product/SearchProductForMapping?codeOrBarcode=&name=${encodeURIComponent(nameInput)}&combo=${encodeURIComponent(comboInput)}`;
+                const response = await fetch(url);
+                const resultText = await response.text();
+                currentTbProducts = JSON.parse(resultText);
+
+                RenderTbProductsTable();
+                RemoveCircleLoader();
+
+                if (currentTbProducts.length === 0) {
+                    CreateMustClickOkModal('Không tìm thấy sản phẩm nào');
+                }
+            } catch (error) {
+                RemoveCircleLoader();
+                console.error('Error searching products:', error);
+                CreateMustClickOkModal('Lỗi tìm kiếm: ' + error.message);
+            }
+        }
+
+        // Render table sản phẩm kho với checkboxes
+        function RenderTbProductsTable() {
+            const tbody = document.getElementById('tbproducts-tbody');
+
+            if (!currentTbProducts || currentTbProducts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding: 20px; text-align: center; color: #999;">Nhập tên hoặc combo để tìm kiếm sản phẩm</td></tr>';
+                document.getElementById('tbproducts-total').textContent = '0';
+                return;
+            }
+
+            // Get mapped IDs để disable checkbox
+            const mappedIds = new Set(currentMappingList.map(m => m.SanPhamKhoId));
+
+            // Check nếu chỉ có 1 kết quả và chưa bị map → auto-check
+            const autoCheckFirstItem = currentTbProducts.length === 1 && !mappedIds.has(currentTbProducts[0].id);
+
+            // Render table rows
+            tbody.innerHTML = currentTbProducts.map((p, index) => {
+                const isAlreadyMapped = mappedIds.has(p.id);
+                const shouldAutoCheck = autoCheckFirstItem && index === 0;
+                const thumbnailUrl = GetKhoThumbnailUrl(p.id);
+                const imgHtml = `<a href="/Product/UpdateDelete?id=${p.id}" target="_blank" title="Mở sản phẩm ${p.name || ''} trong tab mới">
+                                     <img src="${thumbnailUrl}"
+                                          alt="${p.name || ''}"
+                                          onerror="this.src='/Media/placeholder.png'; this.onerror=null;"
+                                          style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; cursor: pointer;" />
+                                 </a>`;
+
+                return `
+                    <tr style="${isAlreadyMapped ? 'background: #f0f0f0; opacity: 0.6;' : ''}">
+                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">
+                            <input type="checkbox"
+                                   class="kho-checkbox"
+                                   value="${p.id}"
+                                   ${isAlreadyMapped ? 'disabled' : ''}
+                                   ${shouldAutoCheck ? 'checked' : ''}
+                                   onchange="UpdateSelectedCount()" />
+                        </td>
+                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${imgHtml}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd;">${p.code || 'N/A'}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd;">${p.name || 'N/A'}${isAlreadyMapped ? ' <span style="color: #d9534f; font-size: 11px;">(Đã map)</span>' : ''}</td>
+                        <td style="padding: 6px; border: 1px solid #ddd; text-align: center;">${p.quantity || 0}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('tbproducts-total').textContent = currentTbProducts.length;
+
+            // Reset select all checkbox
+            const selectAllCheckbox = document.getElementById('select-all-checkbox');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.checked = false;
+            }
+            UpdateSelectedCount();
+        }
+
+        // Toggle select all checkboxes
+        function ToggleSelectAll() {
+            const selectAll = document.getElementById('select-all-checkbox').checked;
+            const checkboxes = document.querySelectorAll('.kho-checkbox:not([disabled])');
+            checkboxes.forEach(cb => cb.checked = selectAll);
+            UpdateSelectedCount();
+        }
+
+        // Update selected count
+        function UpdateSelectedCount() {
+            const checkedCount = document.querySelectorAll('.kho-checkbox:checked').length;
+            document.getElementById('selected-count').textContent = checkedCount;
+        }
+
+        // Thêm multiple mappings (bulk add)
+        async function AddSelectedKhoMapping() {
+            const checkedCheckboxes = Array.from(document.querySelectorAll('.kho-checkbox:checked'));
+
+            if (checkedCheckboxes.length === 0) {
+                CreateMustClickOkModal('Vui lòng chọn ít nhất 1 sản phẩm kho');
+                return;
+            }
+
+            const selectedIds = checkedCheckboxes.map(cb => parseInt(cb.value));
+
+            try {
+                ShowCircleLoader();
+
+                // Add all mappings in parallel
+                const addPromises = selectedIds.map(khoId =>
+                    PostJSON('/SanPham/AddKhoMapping', {
+                        SanPhamBanId: parseInt(sanPhamId),
+                        SanPhamKhoId: khoId,
+                        Quantity: 1
+                    })
+                );
+
+                const results = await Promise.all(addPromises);
+
+                // Parse results
+                const parsedResults = results.map(r => JSON.parse(r));
+                const successCount = parsedResults.filter(r => r.State === 0).length;
+                const failCount = parsedResults.length - successCount;
+
+                RemoveCircleLoader();
+
+                // Reload mapping list
+                await LoadKhoMappingList();
+
+                // Show result
+                if (failCount === 0) {
+                    //CreateMustClickOkModal(`✓ Đã thêm ${successCount} mapping thành công`);
+                } else {
+                    CreateMustClickOkModal(`Thêm ${successCount} thành công, ${failCount} thất bại`);
+                }
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        // Load danh sách mapping
+        async function LoadKhoMappingList() {
+            try {
+                const resultText = await PostJSON('/SanPham/GetKhoMappingList', { sanPhamBanId: sanPhamId });
+                currentMappingList = JSON.parse(resultText);
+
+                RenderKhoMappingTable();
+
+                // Re-render tbproducts table để update disabled checkboxes
+                if (currentTbProducts.length > 0) {
+                    RenderTbProductsTable();
+                }
+            } catch (error) {
+                console.error('Error loading mapping list:', error);
+            }
+        }
+
+        // Helper: Lấy URL ảnh thumbnail sản phẩm kho (với fallback)
+        function GetKhoThumbnailUrl(sanPhamKhoId) {
+            // Path pattern: /Media/Product/{Id}_320/0.{ext}
+            // Try: 0.jpg, 0.png, 0.webp
+            const basePath = `/Media/Product/${sanPhamKhoId}_320/`;
+            const extensions = ['jpg', 'png', 'webp'];
+
+            // Return first one (browser will try to load, show broken if not exists)
+            // We could use onerror to fallback, but simpler to just use jpg as default
+            return basePath + '0.jpg';
+        }
+
+        // Render bảng mapping
+        function RenderKhoMappingTable() {
+            const tbody = document.getElementById('mapping-tbody');
+            document.getElementById('mapping-count').textContent = currentMappingList.length;
+
+            // Enable/disable "Chép Dữ Liệu" button - chỉ enable khi có đúng 1 mapping
+            const copyBtn = document.getElementById('copy-data-btn');
+            if (copyBtn) {
+                copyBtn.disabled = currentMappingList.length !== 1;
+                // Update tooltip
+                copyBtn.title = currentMappingList.length === 1
+                    ? 'Chép dữ liệu từ sản phẩm kho sang sản phẩm bán'
+                    : 'Chỉ có thể chép khi có đúng 1 mapping';
+            }
+
+            // Enable/disable "Chép Ảnh" button - chỉ enable khi có đúng 1 mapping
+            const copyImagesBtn = document.getElementById('copy-images-btn');
+            if (copyImagesBtn) {
+                copyImagesBtn.disabled = currentMappingList.length !== 1;
+                // Update tooltip
+                copyImagesBtn.title = currentMappingList.length === 1
+                    ? 'Chép toàn bộ ảnh từ sản phẩm kho sang sản phẩm bán (xóa ảnh cũ và sinh phiên bản 320)'
+                    : 'Chỉ có thể chép khi có đúng 1 mapping';
+            }
+
+            if (currentMappingList.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                            Chưa có mapping nào. Thêm sản phẩm kho ở phía trên.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = currentMappingList.map((mapping, index) => {
+                const thumbnailUrl = GetKhoThumbnailUrl(mapping.SanPhamKhoId);
+                const imgHtml = `<a href="/Product/UpdateDelete?id=${mapping.SanPhamKhoId}" target="_blank" title="Mở sản phẩm ${mapping.SanPhamKhoName || ''} trong tab mới">
+                                     <img src="${thumbnailUrl}"
+                                          alt="${mapping.SanPhamKhoName || ''}"
+                                          onerror="this.src='/Media/placeholder.png'; this.onerror=null;"
+                                          style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; cursor: pointer;" />
+                                 </a>`;
+
+                return `
+                    <tr>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${imgHtml}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${mapping.SanPhamKhoCode || 'N/A'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd;">${mapping.SanPhamKhoName || 'N/A'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${mapping.SanPhamKhoQuantity}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                            <input type="number" value="${mapping.Quantity}" min="1"
+                                   title="tăng giảm số lượng sẽ được cập nhật"
+                                   onchange="UpdateKhoMappingQuantity(${mapping.Id}, this.value)"
+                                   style="width: 60px; padding: 4px; border: 1px solid #ddd; border-radius: 4px; text-align: center;" />
+                        </td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
+                            <button type="button" onclick="DeleteKhoMapping(${mapping.Id})"
+                                    style="padding: 4px 12px; background: #d9534f; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                🗑 Xóa
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Update số lượng mapping
+        async function UpdateKhoMappingQuantity(mappingId, newQuantity) {
+            const quantity = parseInt(newQuantity);
+            if (isNaN(quantity) || quantity < 1) {
+                CreateMustClickOkModal('Số lượng phải >= 1');
+                await LoadKhoMappingList();
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/UpdateKhoMappingQuantity', {
+                    mappingId: mappingId,
+                    quantity: quantity
+                });
+
+                RemoveCircleLoader();
+
+                const result = JSON.parse(resultText);
+                if (result.State === 0) {
+                    // Success - silent update, no modal
+                    //console.log('Quantity updated successfully');
+                } else {
+                    CreateMustClickOkModal('Lỗi: ' + result.Message);
+                    await LoadKhoMappingList();
+                }
+            } catch (error) {
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+                await LoadKhoMappingList();
+            }
+        }
+
+        // Xóa mapping
+        async function DeleteKhoMapping(mappingId) {
+            if (!confirm('Xóa mapping này?')) {
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/DeleteKhoMapping', { mappingId: mappingId });
+                RemoveCircleLoader();
+
+                const result = JSON.parse(resultText);
+                if (result.State === 0) {
+                    // Reload list FIRST (user sees updated table immediately)
+                    await LoadKhoMappingList();
+
+                    // Then show success
+                    //CreateMustClickOkModal('✓ Xóa mapping thành công');
+                } else {
+                    CreateMustClickOkModal('Lỗi: ' + result.Message);
+                }
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        // Chép dữ liệu từ sản phẩm kho sang sản phẩm bán (khi chỉ có 1 mapping)
+        async function CopyDataFromKhoProduct() {
+            if (currentMappingList.length !== 1) {
+                CreateMustClickOkModal('Chỉ có thể chép dữ liệu khi có đúng 1 mapping');
+                return;
+            }
+
+            const mapping = currentMappingList[0];
+            const sanPhamKhoName = mapping.SanPhamKhoName || 'sản phẩm kho này';
+
+            if (!confirm(`Chép tất cả dữ liệu từ "${sanPhamKhoName}" sang sản phẩm hiện tại?\n\nLưu ý: Dữ liệu hiện tại sẽ bị ghi đè (trừ Số lượng đã bán, URL, SEO).`)) {
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/CopyDataFromKhoProduct', {
+                    sanPhamBanId: parseInt(sanPhamId),
+                    sanPhamKhoId: mapping.SanPhamKhoId
+                });
+                RemoveCircleLoader();
+
+                const result = JSON.parse(resultText);
+                if (result.State === 0) {
+                    CreateMustClickOkModal('✓ Chép dữ liệu thành công! Đang tải lại trang...');
+
+                    // Reload page để hiển thị dữ liệu mới
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    CreateMustClickOkModal('Lỗi: ' + result.Message);
+                }
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        // Chép ảnh từ sản phẩm kho sang sản phẩm bán (khi chỉ có 1 mapping)
+        async function CopyImagesFromKhoProduct() {
+            if (currentMappingList.length !== 1) {
+                CreateMustClickOkModal('Chỉ có thể chép ảnh khi có đúng 1 mapping');
+                return;
+            }
+
+            const mapping = currentMappingList[0];
+            const sanPhamKhoName = mapping.SanPhamKhoName || 'sản phẩm kho này';
+
+            if (!confirm(`Chép toàn bộ ảnh từ "${sanPhamKhoName}" sang sản phẩm hiện tại?\n\nCảnh báo:\n• Ảnh/Video cũ sẽ bị XÓA hoàn toàn\n• Ảnh mới sẽ được convert và sinh phiên bản 320\n• Quá trình có thể mất vài giây`)) {
+                return;
+            }
+
+            try {
+                // Lấy tên sản phẩm để tạo slug
+                const sanPhamName = document.getElementById('sp-name').value.trim() || 'san-pham';
+                ShowCircleLoader();
+                const resultText = await PostJSON('/SanPham/CopyImagesFromKhoProduct', {
+                    sanPhamName: sanPhamName,
+                    sanPhamBanId: parseInt(sanPhamId),
+                    sanPhamKhoId: mapping.SanPhamKhoId
+                });
+                RemoveCircleLoader();
+
+                const result = JSON.parse(resultText);
+                if (result.State === 0) {
+                    //CreateMustClickOkModal('✓ Chép ảnh thành công! Đang tải lại trang...');
+
+                    // Reload page để hiển thị ảnh mới
+                    setTimeout(() => {
+                        location.reload();
+                    }, 1000);
+                } else {
+                    CreateMustClickOkModal('Lỗi: ' + result.Message);
+                }
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

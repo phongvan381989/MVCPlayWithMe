@@ -121,6 +121,38 @@ function IsValidString(str) {
     return typeof str === 'string' && str.trim() !== '';
 }
 
+// Parse integer hoặc trả về default value nếu empty/null
+function parseIntOrDefault(val, defaultValue = 0) {
+    const trimmed = val?.trim();
+    return trimmed ? parseInt(trimmed) : defaultValue;
+}
+
+// Parse float hoặc trả về default value nếu empty/null
+function parseFloatOrDefault(val, defaultValue = 0) {
+    const trimmed = val?.trim();
+    return trimmed ? parseFloat(trimmed) : defaultValue;
+}
+
+// Parse integer hoặc trả về null nếu empty/null
+function parseIntOrNull(val) {
+    const trimmed = val?.trim();
+    return trimmed ? parseInt(trimmed) : null;
+}
+
+// POST request với JSON data, trả về response text
+async function PostJSON(url, data) {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    });
+    let responseText = await response.text();
+    if (DEBUG) {
+        console.log("PostJSON responseText: " + responseText);
+    }
+    return responseText;
+}
+
 // Check mã sản phẩm hợp lệ bắt đầu 89, dài 13
 // 89..., VD: 8938519861794
 function CheckValidProductCode(code) {
@@ -234,7 +266,8 @@ function CheckStatusResponse(responseText) {
 
 // responseText là 1 đối tượng result
 // Thành công thông báo alert, lỗi thông báo modal
-function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError) {
+// isShowAlert: false/null thì không cần click vào aleart
+function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError, isShowAlert) {
     const obj = JSON.parse(responseText);
 
     let isOk = true;
@@ -247,7 +280,9 @@ function CheckStatusResponseAndShowPrompt(responseText, messageOk, messageError)
         }
     }
     if (isOk) {
-        alert(messageOk);
+        if (isShowAlert === null || isShowAlert === true) {
+            alert(messageOk);
+        }
     }
     else {
         if (obj == null) {
@@ -292,7 +327,7 @@ function GetDataFromDatalist(datalistId, dataIdAttributeName, str)
             if (DEBUG) {
                 console.log(option.item(i).getAttribute(dataIdAttributeName));
             }
-            return option.item(i).getAttribute(dataIdAttributeName);
+            return parseInt(option.item(i).getAttribute(dataIdAttributeName));
         }
     }
     return null;
@@ -782,6 +817,17 @@ function CreateImageElement(/*width, height, */src, className) {
 function GetValueFromUrlName(name) {
     const urlParams = new URLSearchParams(window.location.search);
     return urlParams.get(name);
+}
+
+// Từ url có ..../... -id hoặc ..../id code javascript lấy id
+function GetIdFromCurrentSlugIdUrl() {
+    // 1. Tách chuỗi theo dấu gạch chéo '/' và lấy phần tử cuối cùng
+    const lastPart = window.location.href.split('/').pop();
+
+    // 2. Tách tiếp theo dấu gạch nối '-' và lấy phần tử cuối cùng (chứa ID)
+    const id = lastPart.split('-').pop();
+
+    return id;
 }
 
 // Về trang chính
@@ -1333,6 +1379,10 @@ function UpdateSTT(table, indexColumn, isHeader) {
 
 // Viết hoa chữ cái đầu của từ
 function CapitalizeWords(input) {
+    if (input === null) {
+        return null;
+    }
+
     return input
         .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
         .split(' ')    // Tách chuỗi thành mảng các từ
@@ -1383,4 +1433,32 @@ function RemoveVietnameseDiacritics(str) {
         .replace(/[\u0300-\u036f]/g, '')     // Xóa dấu
         .replace(/đ/g, 'd')                  // thay đ
         .replace(/Đ/g, 'D');                 // thay Đ
+}
+
+// Tạo slug SEO-friendly từ tên sản phẩm (giữ nguyên tiếng Việt + chữ hoa/thường, chỉ thay space)
+// VD: "Sách Doraemon Tập 1 - Bìa Mềm" -> "Sách-Doraemon-Tập-1-Bìa-Mềm"
+// Giống Shopee: giữ nguyên dấu tiếng Việt, chữ hoa
+function GenerateSlug(text) {
+    if (!text || typeof text !== 'string' || text.trim() === '') {
+        return '';
+    }
+
+    // Thay khoảng trắng thành -
+    text = text.replace(/\s+/g, '-');
+
+    // Bỏ các ký tự đặc biệt không an toàn cho URL (giữ chữ, số, dấu tiếng Việt, dấu ngoặc, dấu gạch ngang)
+    // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , . +
+    text = text.replace(/[/\\?#&=<>"'%\[\]{}|^`@!$*;:,.+]/g, '');
+
+    // Bỏ dấu - thừa (nếu có nhiều dấu - liên tiếp)
+    text = text.replace(/-+/g, '-');
+
+    // Trim dấu - ở đầu/cuối
+    text = text.replace(/^-+|-+$/g, '');
+
+    return text;
+}
+
+function GenerateSlugIdFromItem(item) {
+    return GenerateSlug(item.name) + "-" + item.id;
 }

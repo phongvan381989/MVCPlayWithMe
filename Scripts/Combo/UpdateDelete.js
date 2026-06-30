@@ -1,4 +1,7 @@
-GetSomeData();
+﻿// Load dữ liệu sản phẩm khi trang load
+window.onload = async function () {
+    await GetSomeData();
+};
 
 let combo = null;
 document.getElementById("adjxn90snkx").remove();

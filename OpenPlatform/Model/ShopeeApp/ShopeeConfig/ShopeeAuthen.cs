@@ -15,7 +15,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeConfig
 
         // Trước thời điểm này thì Access Token có giá trị.
         // Bằng thời điểm làm mới access token + thời gian giá trị theo giấy shopee trả về
-        public DateTime validAccessTokenTime { get; set; }
+        public DateTime? validAccessTokenTime { get; set; }
 
         public ShopeeAuthen()
         {

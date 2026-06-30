@@ -14,7 +14,7 @@ namespace MVCPlayWithMe.Models.Customer
         public string sdt { get; set; }
         public string userName { get; set; }
         public string fullName { get; set; }
-        public DateTime birthday { get; set; }
+        public DateTime? birthday { get; set; }
 
         /// <summary>
         /// 1: Nam, 2: Nu, 3: Khac

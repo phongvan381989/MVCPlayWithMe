@@ -1,4 +1,4 @@
-        // mảng đối tượng product
+﻿        // mảng đối tượng product
         let listBasicInfo = [];
 
         let listInsertTemp = [];
