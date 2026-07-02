@@ -1,4 +1,6 @@
-GetListProductName();
-GetListCombo();
-GetListCategory();
-InitializeModal();
+﻿window.onload = async function () {
+    await GetListProductName();
+    await GetListCombo();
+    await GetListCategory();
+    await InitializeModal();
+};

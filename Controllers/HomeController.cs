@@ -1,8 +1,9 @@
-using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.SanPhamModel;
 using MySql.Data.MySqlClient;
 using Newtonsoft.Json;
 using System;
@@ -204,6 +205,119 @@ namespace MVCPlayWithMe.Controllers
                 item.SetShopeeItemId();
             }
             return JsonConvert.SerializeObject(item);
+        }
+
+        /// <summary>
+        /// Trang chi tiết sản phẩm cho người mua (tb_san_pham)
+        /// URL format: /Home/SanPham/ten-sach-123
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult> SanPham(string slugId)
+        {
+            // Parse ID từ slugId (format: slug-123)
+            int id = ParseIdFromSlugId(slugId);
+            if (id <= 0)
+            {
+                return RedirectToAction("Error");
+            }
+
+            //// Lấy sản phẩm để kiểm tra tồn tại
+            //SanPham sanPham = await SanPhamMySql.GetByIdAsync(id);
+            //if (sanPham == null)
+            //{
+            //    return RedirectToAction("Error");
+            //}
+
+            //// Tạo slug chuẩn từ tên sản phẩm
+            //string correctSlug = Common.GenerateSlug(sanPham.Name);
+            //string correctSlugId = correctSlug + "-" + id;
+
+            //// Nếu slug không đúng, redirect về URL chuẩn (SEO 301)
+            //if (!string.Equals(slugId, correctSlugId, StringComparison.OrdinalIgnoreCase))
+            //{
+            //    return RedirectToActionPermanent("SanPham", new { slugId = correctSlugId });
+            //}
+
+            return View();
+        }
+
+        /// <summary>
+        /// API lấy danh sách sản phẩm cùng ComboId (bao gồm cả sản phẩm với ID được query)
+        /// Tối ưu: Chỉ 1 stored procedure call, return list
+        /// JavaScript sẽ tự tìm sản phẩm chính theo ID
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GetSanPhamFromId(int id)
+        {
+            // Gọi 1 stored procedure duy nhất để lấy danh sách variants (bao gồm sản phẩm chính)
+            List<SanPham> variants = await SanPhamMySql.GetSanPhamWithVariantsAsync(id);
+
+            if (variants == null || variants.Count == 0)
+            {
+                return "null";
+            }
+
+            // Return list, JavaScript sẽ tự tìm sản phẩm chính
+            return JsonConvert.SerializeObject(variants);
+        }
+
+        /// <summary>
+        /// API lấy danh sách media files (ảnh/video) của sản phẩm
+        /// </summary>
+        [HttpPost]
+        public string GetSanPhamMediaList(int sanPhamId)
+        {
+            try
+            {
+                string folderPath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.ToString());
+                if (string.IsNullOrEmpty(folderPath) || !System.IO.Directory.Exists(folderPath))
+                {
+                    return JsonConvert.SerializeObject(new List<string>());
+                }
+
+                // Lấy tất cả files trong folder
+                string[] allFiles = System.IO.Directory.GetFiles(folderPath);
+
+                // Filter chỉ lấy ảnh và video (không lấy từ folder _320)
+                List<string> mediaFiles = new List<string>();
+                foreach (string file in allFiles)
+                {
+                    string fileName = System.IO.Path.GetFileName(file);
+                    string extension = System.IO.Path.GetExtension(file).ToLower();
+
+                    // Check nếu là ảnh hoặc video
+                    if (Common.ImageExtensions.Contains(extension) || Common.VideoExtensions.Contains(extension))
+                    {
+                        // Tạo relative path cho client
+                        string relativePath = "/Media/Product/" + sanPhamId + "/" + fileName;
+                        mediaFiles.Add(relativePath);
+                    }
+                }
+
+                // Sort theo tên file (0.jpg, 1.png, 2.webp,...)
+                mediaFiles.Sort((a, b) =>
+                {
+                    string fileNameA = System.IO.Path.GetFileNameWithoutExtension(a);
+                    string fileNameB = System.IO.Path.GetFileNameWithoutExtension(b);
+
+                    int numA, numB;
+                    bool isNumA = int.TryParse(fileNameA, out numA);
+                    bool isNumB = int.TryParse(fileNameB, out numB);
+
+                    if (isNumA && isNumB)
+                    {
+                        return numA.CompareTo(numB);
+                    }
+                    return string.Compare(fileNameA, fileNameB, StringComparison.Ordinal);
+                });
+
+                return JsonConvert.SerializeObject(mediaFiles);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                return JsonConvert.SerializeObject(new List<string>());
+            }
         }
 
         [HttpPost]

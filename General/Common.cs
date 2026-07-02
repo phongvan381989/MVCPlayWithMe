@@ -2539,6 +2539,10 @@ namespace MVCPlayWithMe.General
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalFileName);
 
             // Slug tên file gốc (max 30 chars)
+            if(fileNameWithoutExt == "0")
+            {
+                fileNameWithoutExt = "anh-bia";
+            }
             string fileSlug = ConvertToSlug(fileNameWithoutExt, 30);
             if (string.IsNullOrWhiteSpace(fileSlug))
                 fileSlug = "image";

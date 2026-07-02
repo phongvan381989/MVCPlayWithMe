@@ -1,391 +1,390 @@
-        let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
-        let listItemAfterFilter = []; // Danh sách common item sau khi lọc
-        let sizePage = 50; // số lượng common Item trên mỗi page hiển thị.
-        let currentFunction = -1; // Chức năng hiện tại vừa thực hiện 0: Lọc Sản Phẩm, 1: Lấy Sản Phẩm Mới Đăng 1 Tháng Gần Đây
+﻿let listItem = []; // Danh sách tất cả common item của 1 sàn TMDT
+let listItemAfterFilter = []; // Danh sách common item sau khi lọc
+let sizePage = 50; // số lượng common Item trên mỗi page hiển thị.
+let currentFunction = -1; // Chức năng hiện tại vừa thực hiện 0: Lọc Sản Phẩm, 1: Lấy Sản Phẩm Mới Đăng 1 Tháng Gần Đây
 
-        InitializeSomething();
-        function InitializeSomething() {
-            // Xóa lựa chọn tất cả
-            document.getElementById("container-all-e-ecommonerce-type").remove();
-            // Xóa lựa chọn play with me
-            document.getElementById("container-play-with-me-e-ecommonerce-type").remove();
-            // Chọn Shopee
-            document.getElementById("shopee-e-ecommonerce-type").checked = true;
+InitializeSomething();
+function InitializeSomething() {
+    // Xóa lựa chọn tất cả
+    document.getElementById("container-all-e-ecommonerce-type").remove();
+    // Xóa lựa chọn play with me
+    document.getElementById("container-play-with-me-e-ecommonerce-type").remove();
+    // Chọn Shopee
+    document.getElementById("shopee-e-ecommonerce-type").checked = true;
+}
+
+function RefreshRadioFilter() {
+    let obj = document.querySelector('input[name="status-radio"]:checked');
+    if (obj != null) {
+        obj.checked = false;
+    }
+
+    obj = document.querySelector('input[name="mapping-radio"]:checked');
+    if (obj != null) {
+        obj.checked = false;
+    }
+
+    obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
+    if (obj != null) {
+        obj.checked = false;
+    }
+
+    obj = document.querySelector('input[name="shopee-born-voibenho"]:checked');
+    if (obj != null) {
+        obj.checked = false;
+    }
+
+    document.querySelector('input[id="product-name"]').value = "";
+}
+
+function ECommerceTypeChange() {
+    listItem = [];
+    document.getElementsByClassName("paging-container")[0].innerHTML = "";
+    document.getElementsByClassName("product-container")[0].innerHTML = "";
+
+    // Bỏ chọn radio filter
+    RefreshRadioFilter();
+
+    // Hiển / không hiện radio filter Sản phẩm SHOPEE sinh sản phẩm voibenho tùy theo sàn TMDT
+    if (document.getElementById("shopee-e-ecommonerce-type").checked) {
+        document.getElementById("avszg947scb").style.display = "block";
+    }
+    else {
+        document.getElementById("avszg947scb").style.display = "none";
+    }
+}
+
+// Hiện thị phân trang
+function ShowPaging() {
+    let container = document.getElementsByClassName("paging-container")[0];
+    container.innerHTML = "";
+
+    let length = listItemAfterFilter.length;
+
+    let maxPage = Math.floor(length / sizePage);
+    if (length % sizePage != 0)
+        maxPage = maxPage + 1;
+
+    for (let i = 0; i < maxPage; i++) {
+        let div = document.createElement("div");
+        div.className = "axMLP902";
+        div.setAttribute("data-index-id", i);
+        div.onclick = function () {
+            ShowPageListItemFilter(i + 1);
         }
 
-        function RefreshRadioFilter() {
-            let obj = document.querySelector('input[name="status-radio"]:checked');
-            if (obj != null) {
-                obj.checked = false;
-            }
+        let p = document.createElement("p");
+        //if (i < maxPage - 1) {
+        //    p.title = sizePage + " sản phẩm ở trang này";
+        //}
+        //else {
+        //    p.title = length % sizePage + " sản phẩm ở trang này. Có tất cả " + length + " sản phẩm.";
+        //}
+        p.innerHTML = i + 1;
 
-            obj = document.querySelector('input[name="mapping-radio"]:checked');
-            if (obj != null) {
-                obj.checked = false;
-            }
+        div.appendChild(p);
 
-            obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
-            if (obj != null) {
-                obj.checked = false;
-            }
+        container.appendChild(div);
+    }
 
-            obj = document.querySelector('input[name="shopee-born-voibenho"]:checked');
-            if (obj != null) {
-                obj.checked = false;
-            }
+    // Tổng sản phẩm kết quả trả về
+    {
+        let p = document.createElement("p");
+        p.innerHTML = "Tổng " + length + " sản phẩm. " + sizePage + " sản phẩm / trang.";
+        container.appendChild(p);
+    }
+}
 
-            document.querySelector('input[id="product-name"]').value = "";
-        }
+async function GetProductAll(eType) {
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", eType);
 
-        function ECommerceTypeChange() {
-            listItem = [];
-            document.getElementsByClassName("paging-container")[0].innerHTML = "";
-            document.getElementsByClassName("product-container")[0].innerHTML = "";
+    let query = "/ProductECommerce/GetProductAll";
 
-            // Bỏ chọn radio filter
-            RefreshRadioFilter();
+    return await RequestHttpPostPromise(searchParams, query);
+}
 
-            // Hiển / không hiện radio filter Sản phẩm SHOPEE sinh sản phẩm voibenho tùy theo sàn TMDT
-            if (document.getElementById("shopee-e-ecommonerce-type").checked) {
-                document.getElementById("avszg947scb").style.display = "block";
+function ShowPageListItemFilter(page) {
+    // Hiển thị nổi bật phần tử paging trang tương ứng
+    {
+        let lsPaging = document.getElementsByClassName("axMLP902");
+        for (let i = 0; i < lsPaging.length; i++) {
+            let e = lsPaging[i];
+            if (i + 1 == page) {
+                e.className = "axMLP902 axMLP902-active";
             }
             else {
-                document.getElementById("avszg947scb").style.display = "none";
+                e.className = "axMLP902";
             }
         }
+    }
 
-        // Hiện thị phân trang
-        function ShowPaging() {
-            let container = document.getElementsByClassName("paging-container")[0];
-            container.innerHTML = "";
+    let container = document.getElementsByClassName("product-container")[0];
+    container.innerHTML = "";
+    let length = listItemAfterFilter.length;
+    for (let i = (page - 1) * sizePage; i < length && i < page * sizePage; i++) {
+        let item = listItemAfterFilter[i];
+        // Tạo div chứa 1 item
+        let itemDiv = document.createElement("div");
+        itemDiv.className = "one-item-container";
+        itemDiv.setAttribute("data-item-id", item.itemId);
 
-            let length = listItemAfterFilter.length;
+        itemDiv.appendChild(CreateImageElement(item.imageSrc, "item-image-ACvv"))
 
-            let maxPage = Math.floor(length / sizePage);
-            if (length % sizePage != 0)
-                maxPage = maxPage + 1;
+        let itemName = document.createElement("a");
+        itemName.className = "item-name-vsfc";
+        let linkText = document.createTextNode(item.name);
+        itemName.appendChild(linkText);
+        itemName.title = item.name;
+        itemName.href = "/ProductECommerce/Item?eType=" + GetECommerceType() + "&id=" + item.itemId;
+        itemName.setAttribute("target", "_blank");
 
-            for (let i = 0; i < maxPage; i++) {
-                let div = document.createElement("div");
-                div.className = "axMLP902";
-                div.setAttribute("data-index-id", i);
-                div.onclick = function () {
-                    ShowPageListItemFilter(i + 1);
-                }
+        itemDiv.appendChild(itemName);
 
-                let p = document.createElement("p");
-                //if (i < maxPage - 1) {
-                //    p.title = sizePage + " sản phẩm ở trang này";
-                //}
-                //else {
-                //    p.title = length % sizePage + " sản phẩm ở trang này. Có tất cả " + length + " sản phẩm.";
-                //}
-                p.innerHTML = i + 1;
+        container.appendChild(itemDiv);
+    }
+}
 
-                div.appendChild(p);
-
-                container.appendChild(div);
-            }
-
-            // Tổng sản phẩm kết quả trả về
-            {
-                let p = document.createElement("p");
-                p.innerHTML = "Tổng " + length + " sản phẩm. " + sizePage + " sản phẩm / trang.";
-                container.appendChild(p);
-            }
+// Lọc theo trạng thái
+function FilterStatus() {
+    let obj = document.querySelector('input[name="status-radio"]:checked');
+    if (obj == null) {
+        //if (DEBUG) {
+        //    console.log("FilterStatus radio dont checked.");
+        //}
+        return;
+    }
+    let value = obj.value;
+    let listItemTemp = [];
+    let length = listItemAfterFilter.length;
+    let bAc = true;
+    if (value == "Off") {
+        bAc = false;
+    }
+    for (let i = 0; i < length; i++) {
+        if (listItemAfterFilter[i].bActive === bAc) {
+            listItemTemp.push(listItemAfterFilter[i]);
         }
+    }
+    listItemAfterFilter = listItemTemp;
+}
 
-        async function GetProductAll(eType) {
-            const searchParams = new URLSearchParams();
-            searchParams.append("eType", eType);
-
-            let query = "/ProductECommerce/GetProductAll";
-
-            return await RequestHttpPostPromise(searchParams, query);
-        }
-
-        function ShowPageListItemFilter(page) {
-            // Hiển thị nổi bật phần tử paging trang tương ứng
-            {
-                let lsPaging = document.getElementsByClassName("axMLP902");
-                for (let i = 0; i < lsPaging.length; i++) {
-                    let e = lsPaging[i];
-                    if (i + 1 == page) {
-                        e.className = "axMLP902 axMLP902-active";
-                    }
-                    else {
-                        e.className = "axMLP902";
-                    }
-                }
-            }
-
-            let container = document.getElementsByClassName("product-container")[0];
-            container.innerHTML = "";
-            let length = listItemAfterFilter.length;
-            for (let i = (page - 1) * sizePage; i < length && i < page * sizePage; i++) {
-                let item = listItemAfterFilter[i];
-                // Tạo div chứa 1 item
-                let itemDiv = document.createElement("div");
-                itemDiv.className = "one-item-container";
-                itemDiv.setAttribute("data-item-id", item.itemId);
-
-                itemDiv.appendChild(CreateImageElement(item.imageSrc, "item-image-ACvv"))
-
-                let itemName = document.createElement("a");
-                itemName.className = "item-name-vsfc";
-                let linkText = document.createTextNode(item.name);
-                itemName.appendChild(linkText);
-                itemName.title = item.name;
-                itemName.href = "/ProductECommerce/Item?eType=" + GetECommerceType() + "&id=" + item.itemId;
-                itemName.setAttribute("target", "_blank");
-
-                itemDiv.appendChild(itemName);
-
-                container.appendChild(itemDiv);
-            }
-        }
-
-        // Lọc theo trạng thái
-        function FilterStatus() {
-            let obj = document.querySelector('input[name="status-radio"]:checked');
-            if (obj == null) {
-                //if (DEBUG) {
-                //    console.log("FilterStatus radio dont checked.");
-                //}
-                return;
-            }
-            let value = obj.value;
-            let listItemTemp = [];
-            let length = listItemAfterFilter.length;
-            let bAc = true;
-            if (value == "Off") {
-                bAc = false;
-            }
-            for (let i = 0; i < length; i++) {
-                if (listItemAfterFilter[i].bActive === bAc) {
-                    listItemTemp.push(listItemAfterFilter[i]);
-                }
-            }
-            listItemAfterFilter = listItemTemp;
-        }
-
-        // Kiểm tra item đã có mapping hay chưa?
-        // Trả về: true nếu đã mapping, ngược lại false
-        function CheckItemHasMapping(commonItemObj) {
-            let length = commonItemObj.models.length;
-            for (let i = 0; i < length; i++) {
-                if (commonItemObj.models[i].mapping.length == 0) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        // Lọc theo liên kết
-        function FilterMapping() {
-            let obj = document.querySelector('input[name="mapping-radio"]:checked');
-            if (obj == null) {
-                return;
-            }
-            let value = obj.value;
-            let listItemTemp = [];
-            let length = listItemAfterFilter.length;
-            let bMapping = true;
-            if (value == "Off") {
-                bMapping = false;
-            }
-            for (let i = 0; i < length; i++) {
-                if (CheckItemHasMapping(listItemAfterFilter[i]) === bMapping) {
-                    listItemTemp.push(listItemAfterFilter[i]);
-                }
-            }
-
-            listItemAfterFilter = listItemTemp;
-        }
-
-        // Kiểm tra item có model đã sinh ra sản phẩm trên voibenho
-        // Trả về: true nếu đã sinh, ngược lại false
-        function CheckItemHasBornVoibenho(commonItemObj) {
-            let length = commonItemObj.models.length;
-            for (let i = 0; i < length; i++) {
-                if (commonItemObj.models[i].pWMMappingModelId === -1 ||
-                    commonItemObj.models[i].pWMMappingModelId === 0) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        // Lọc sản phẩm SHOPEE đã sinh / chưa sinh sản phẩm voibenho
-        function FilterShopeeBornVoibenho() {
-            let obj = document.querySelector('input[name="shopee-born-voibenho"]:checked');
-            if (obj == null) {
-                return;
-            }
-            let value = obj.value;
-            let listItemTemp = [];
-            let length = listItemAfterFilter.length;
-            let bAc = true;
-            if (value == "Off") {
-                bAc = false;
-            }
-            for (let i = 0; i < length; i++) {
-                if (CheckItemHasBornVoibenho(listItemAfterFilter[i]) === bAc) {
-                    listItemTemp.push(listItemAfterFilter[i]);
-                }
-            }
-            listItemAfterFilter = listItemTemp;
-        }
-
-        // Check item hết hàng trên sàn
-        // Trả về true nếu hết hàng, ngược lại false
-        function CheckOutOfStock(commonItemObj) {
-            let length = commonItemObj.models.length;
-            for (let i = 0; i < length; i++) {
-                if (commonItemObj.models[i].quantity_sellable == 0) {
-                    return true;
-                }
-            }
-
+// Kiểm tra item đã có mapping hay chưa?
+// Trả về: true nếu đã mapping, ngược lại false
+function CheckItemHasMapping(commonItemObj) {
+    let length = commonItemObj.models.length;
+    for (let i = 0; i < length; i++) {
+        if (commonItemObj.models[i].mapping.length == 0) {
             return false;
         }
+    }
 
-        // Lọc hết hàng
-        function FilterOutOfStock() {
-            let obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
+    return true;
+}
 
-            if (obj == null) {
-                return;
-            }
-
-            let value = obj.value;
-
-            let bAc = true;
-            if (value == "On") {
-                bAc = false;
-            }
-
-            let listItemTemp = [];
-            let length = listItemAfterFilter.length;
-
-            for (let i = 0; i < length; i++) {
-                if (CheckOutOfStock(listItemAfterFilter[i]) == bAc) {
-                    listItemTemp.push(listItemAfterFilter[i]);
-                }
-            }
-
-            listItemAfterFilter = listItemTemp;
+// Lọc theo liên kết
+function FilterMapping() {
+    let obj = document.querySelector('input[name="mapping-radio"]:checked');
+    if (obj == null) {
+        return;
+    }
+    let value = obj.value;
+    let listItemTemp = [];
+    let length = listItemAfterFilter.length;
+    let bMapping = true;
+    if (value == "Off") {
+        bMapping = false;
+    }
+    for (let i = 0; i < length; i++) {
+        if (CheckItemHasMapping(listItemAfterFilter[i]) === bMapping) {
+            listItemTemp.push(listItemAfterFilter[i]);
         }
+    }
 
-        // Check item có tên chứa tham số
-        // Trả về true nếu đúng, ngược lại false
-        function CheckName(commonItemObj, para) {
+    listItemAfterFilter = listItemTemp;
+}
 
-            let re = new RegExp(para, "i");
-            if (commonItemObj.name.search(re) != -1) {
-                return true;
-            }
-
-            let length = commonItemObj.models.length;
-            for (let i = 0; i < length; i++) {
-                if (commonItemObj.models[i].name != null && commonItemObj.models[i].name.search(re) != -1) {
-                    return true;
-                }
-            }
-
+// Kiểm tra item có model đã sinh ra sản phẩm trên voibenho
+// Trả về: true nếu đã sinh, ngược lại false
+function CheckItemHasBornVoibenho(commonItemObj) {
+    let length = commonItemObj.models.length;
+    for (let i = 0; i < length; i++) {
+        if (commonItemObj.models[i].pWMMappingModelId === -1 ||
+            commonItemObj.models[i].pWMMappingModelId === 0) {
             return false;
         }
+    }
 
-        function FilterName() {
-            let value = document.querySelector('input[id="product-name"]').value;
-            if (isEmptyOrSpaces(value)) {
-                return;
-            }
+    return true;
+}
 
-            let listItemTemp = [];
-            let length = listItemAfterFilter.length;
-
-            for (let i = 0; i < length; i++) {
-                if (CheckName(listItemAfterFilter[i], value)) {
-                    listItemTemp.push(listItemAfterFilter[i]);
-                }
-            }
-
-            listItemAfterFilter = listItemTemp;
+// Lọc sản phẩm SHOPEE đã sinh / chưa sinh sản phẩm voibenho
+function FilterShopeeBornVoibenho() {
+    let obj = document.querySelector('input[name="shopee-born-voibenho"]:checked');
+    if (obj == null) {
+        return;
+    }
+    let value = obj.value;
+    let listItemTemp = [];
+    let length = listItemAfterFilter.length;
+    let bAc = true;
+    if (value == "Off") {
+        bAc = false;
+    }
+    for (let i = 0; i < length; i++) {
+        if (CheckItemHasBornVoibenho(listItemAfterFilter[i]) === bAc) {
+            listItemTemp.push(listItemAfterFilter[i]);
         }
+    }
+    listItemAfterFilter = listItemTemp;
+}
 
-        function FilterGroup() {
-            FilterStatus();
-
-            FilterMapping();
-
-            FilterOutOfStock();
-
-            FilterName();
-
-            if (GetECommerceType() == eShopee) {
-                FilterShopeeBornVoibenho();
-            }
+// Check item hết hàng trên sàn
+// Trả về true nếu hết hàng, ngược lại false
+function CheckOutOfStock(commonItemObj) {
+    let length = commonItemObj.models.length;
+    for (let i = 0; i < length; i++) {
+        if (commonItemObj.models[i].quantity_sellable == 0) {
+            return true;
         }
+    }
 
-        function FilterCoreAndShow() {
-            // Lọc
-            listItemAfterFilter = listItem;
-            FilterGroup();
+    return false;
+}
 
-            ShowPaging();
+// Lọc hết hàng
+function FilterOutOfStock() {
+    let obj = document.querySelector('input[name="out-of-stock-radio"]:checked');
 
-            // Hiển thị trang đầu tiên
-            ShowPageListItemFilter(1);
+    if (obj == null) {
+        return;
+    }
+
+    let value = obj.value;
+
+    let bAc = true;
+    if (value == "On") {
+        bAc = false;
+    }
+
+    let listItemTemp = [];
+    let length = listItemAfterFilter.length;
+
+    for (let i = 0; i < length; i++) {
+        if (CheckOutOfStock(listItemAfterFilter[i]) == bAc) {
+            listItemTemp.push(listItemAfterFilter[i]);
         }
+    }
 
-        // Từ tham số lọc
-        async function Filter() {
-            // Lấy tất cả sản phẩm của sàn, mất thời gian
-            if (listItem.length == 0 || currentFunction != 0) {
-                listItem = [];
-                ShowCircleLoader();
-                let responseDB = await GetProductAll(GetECommerceType());
-                if (responseDB.responseText != "null") {
-                    listItem = JSON.parse(responseDB.responseText);
-                }
-                RemoveCircleLoader();
-            }
+    listItemAfterFilter = listItemTemp;
+}
 
-            FilterCoreAndShow();
-            currentFunction = 0;
+// Check item có tên chứa tham số
+// Trả về true nếu đúng, ngược lại false
+function CheckName(commonItemObj, para) {
+
+    let re = new RegExp(para, "i");
+    if (commonItemObj.name.search(re) != -1) {
+        return true;
+    }
+
+    let length = commonItemObj.models.length;
+    for (let i = 0; i < length; i++) {
+        if (commonItemObj.models[i].name != null && commonItemObj.models[i].name.search(re) != -1) {
+            return true;
         }
+    }
 
-        async function GetNewItemOneMonth() {
+    return false;
+}
 
-            ShowCircleLoader();
+function FilterName() {
+    let value = document.querySelector('input[id="product-name"]').value;
+    if (isEmptyOrSpaces(value)) {
+        return;
+    }
 
-            const searchParams = new URLSearchParams();
-            searchParams.append("eType", GetECommerceType());
+    let listItemTemp = [];
+    let length = listItemAfterFilter.length;
 
-            let query = "/ProductECommerce/GetNewItemOneMonth";
-
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            if (responseDB.responseText != "null") {
-                listItem = JSON.parse(responseDB.responseText);
-            }
-            else {
-                listItem = [];
-            }
-            RemoveCircleLoader();
-
-            FilterCoreAndShow();
-            currentFunction = 1;
+    for (let i = 0; i < length; i++) {
+        if (CheckName(listItemAfterFilter[i], value)) {
+            listItemTemp.push(listItemAfterFilter[i]);
         }
+    }
 
-        function GoProductEcomercePageItem() {
-            const searchParams = new URLSearchParams();
-            searchParams.append("eType", GetECommerceType());
-            searchParams.append("id", document.getElementById("TMDT-product-id").value);
+    listItemAfterFilter = listItemTemp;
+}
 
-            let url = "/ProductECommerce/Item?" + searchParams.toString();
-            window.open(url);
+function FilterGroup() {
+    FilterStatus();
+
+    FilterMapping();
+
+    FilterOutOfStock();
+
+    FilterName();
+
+    if (GetECommerceType() == eShopee) {
+        FilterShopeeBornVoibenho();
+    }
+}
+
+function FilterCoreAndShow() {
+    // Lọc
+    listItemAfterFilter = listItem;
+    FilterGroup();
+
+    ShowPaging();
+
+    // Hiển thị trang đầu tiên
+    ShowPageListItemFilter(1);
+}
+
+// Từ tham số lọc
+async function Filter() {
+    // Lấy tất cả sản phẩm của sàn, mất thời gian
+    if (listItem.length == 0 || currentFunction != 0) {
+        listItem = [];
+        ShowCircleLoader();
+        let responseDB = await GetProductAll(GetECommerceType());
+        if (responseDB.responseText != "null") {
+            listItem = JSON.parse(responseDB.responseText);
         }
-    </script>
+        RemoveCircleLoader();
+    }
+
+    FilterCoreAndShow();
+    currentFunction = 0;
+}
+
+async function GetNewItemOneMonth() {
+
+    ShowCircleLoader();
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", GetECommerceType());
+
+    let query = "/ProductECommerce/GetNewItemOneMonth";
+
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    if (responseDB.responseText != "null") {
+        listItem = JSON.parse(responseDB.responseText);
+    }
+    else {
+        listItem = [];
+    }
+    RemoveCircleLoader();
+
+    FilterCoreAndShow();
+    currentFunction = 1;
+}
+
+function GoProductEcomercePageItem() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", GetECommerceType());
+    searchParams.append("id", document.getElementById("TMDT-product-id").value);
+
+    let url = "/ProductECommerce/Item?" + searchParams.toString();
+    window.open(url);
+}

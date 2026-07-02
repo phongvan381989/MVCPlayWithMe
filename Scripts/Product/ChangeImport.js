@@ -1,9 +1,10 @@
-let listImportObj = [];
+﻿let listImportObj = [];
 
 // Danh sách đối tượng lưu về db
 let listSave = [];
-
-GetListPublisher();
+window.onload = async function () {
+    await GetListPublisher();
+};
 
 async function GetListImport() {
     let publisher = GetValueInputById("publisher-id", "");

@@ -1,7 +1,9 @@
-let listItem; // Danh sách item kết quả tìm kiếm
+﻿let listItem; // Danh sách item kết quả tìm kiếm
 let listItemTemp; // Danh sách item hiển thị ra màn hình
 // Tham số tìm kiếm
-GetListPublisher();
+window.onload = async function () {
+    await GetListPublisher();
+};
 // Mục đích lấy số lượng trong kết quả trả về phục vụ phân trang
 async function Search() {
     const searchParams = new URLSearchParams();

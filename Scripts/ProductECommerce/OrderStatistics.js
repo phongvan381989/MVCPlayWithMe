@@ -1,102 +1,102 @@
-        // mảng đối tượng product
-        let listBasicInfo = [];
-        let intervalDay = 30;
+﻿// mảng đối tượng product
+let listBasicInfo = [];
+let intervalDay = 30;
 
-        // Chọn Tất cả
-        document.getElementById("all-e-ecommonerce-type").checked = true;
+// Chọn Tất cả
+document.getElementById("all-e-ecommonerce-type").checked = true;
 
-        function ECommerceTypeChange() {
-            listBasicInfo = [];
-            DeleteRowsExcludeHead(document.getElementById("myTableStatistics"));
-            document.getElementById("container-statistics").style.display = "none";
-            document.getElementById("count-result").innerHTML = "";
+function ECommerceTypeChange() {
+    listBasicInfo = [];
+    DeleteRowsExcludeHead(document.getElementById("myTableStatistics"));
+    document.getElementById("container-statistics").style.display = "none";
+    document.getElementById("count-result").innerHTML = "";
+}
+
+async function OrderStatistics() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", GetIntECommerceType());
+
+    intervalDay = GetValueInputById("selling-statistics-interval", 30);
+    if (intervalDay < 30) {
+        document.getElementById("selling-statistics-interval").value = 30;
+        intervalDay = 30;
+    }
+
+    searchParams.append("intervalDay", intervalDay);
+
+    let query = "/ProductECommerce/GetOrderStatistics";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+    if (responseDB.responseText != "null") {
+        listBasicInfo = JSON.parse(responseDB.responseText);
+    }
+    else {
+        listBasicInfo = [];
+    }
+
+    ShowListOutput(listBasicInfo, document.getElementById("myTableStatistics"));
+}
+
+function ShowListOutput(list, table) {
+    document.getElementById("container-statistics").style.display = "block";
+    DeleteRowsExcludeHead(table);
+
+    let length = list.length;
+    // Số lượng sản phẩm thực tế bán.
+    let normalOrderCount = 0;
+    let cancelOrderCount = 0;
+
+    if (length == 0) {
+        document.getElementById("count-result").innerHTML =
+            "Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount;
+        return;
+    }
+
+    for (let i = 0; i < length; i++) {
+        let obj = list[i];
+
+        if (obj.status !== 0)// đơn hoàn / hủy
+        {
+            cancelOrderCount++;
+        }
+        else {
+            normalOrderCount++;
         }
 
-        async function OrderStatistics() {
-            const searchParams = new URLSearchParams();
-            searchParams.append("eType", GetIntECommerceType());
+        let row = table.insertRow(-1);
+        // Insert new cells (<td> elements)
+        let cell1 = row.insertCell(0);
+        let cell2 = row.insertCell(1);
+        let cell3 = row.insertCell(2);
+        let cell4 = row.insertCell(3);
 
-            intervalDay = GetValueInputById("selling-statistics-interval", 30);
-            if (intervalDay < 30) {
-                document.getElementById("selling-statistics-interval").value = 30;
-                intervalDay = 30;
-            }
+        // Sàn
+        cell1.innerHTML = GetEEcomnerceNameFromIntType(obj.eCommerce);
 
-            searchParams.append("intervalDay", intervalDay);
-
-            let query = "/ProductECommerce/GetOrderStatistics";
-            ShowCircleLoader();
-            let responseDB = await RequestHttpPostPromise(searchParams, query);
-            RemoveCircleLoader();
-            if (responseDB.responseText != "null") {
-                listBasicInfo = JSON.parse(responseDB.responseText);
-            }
-            else {
-                listBasicInfo = [];
-            }
-
-            ShowListOutput(listBasicInfo, document.getElementById("myTableStatistics"));
+        // Mã đơn hàng
+        let p = document.createElement("p");
+        p.innerHTML = obj.code;
+        if (obj.status !== 0)// đơn hoàn / hủy
+        {
+            p.style.color = "red";
+            p.title = "Đơn hoàn / hủy";
         }
+        //p.style.cursor = "pointer";
+        //p.onclick = function () {
+        //    let url = "/Product/UpdateDelete?id=" + obj.id.toString();
+        //    window.open(url);
+        //}
+        cell2.append(p);
 
-        function ShowListOutput(list, table) {
-            document.getElementById("container-statistics").style.display = "block";
-            DeleteRowsExcludeHead(table);
+        // Mã vận chuyển
+        cell3.innerHTML = obj.shipCode;
 
-            let length = list.length;
-            // Số lượng sản phẩm thực tế bán.
-            let normalOrderCount = 0;
-            let cancelOrderCount = 0;
+        // Thời gian
+        cell4.innerHTML = obj.time;
+    }
 
-            if (length == 0) {
-                document.getElementById("count-result").innerHTML =
-                    "Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount;
-                return;
-            }
-
-            for (let i = 0; i < length; i++) {
-                let obj = list[i];
-
-                if (obj.status !== 0)// đơn hoàn / hủy
-                {
-                    cancelOrderCount++;
-                }
-                else {
-                    normalOrderCount++;
-                }
-
-                let row = table.insertRow(-1);
-                // Insert new cells (<td> elements)
-                let cell1 = row.insertCell(0);
-                let cell2 = row.insertCell(1);
-                let cell3 = row.insertCell(2);
-                let cell4 = row.insertCell(3);
-
-                // Sàn
-                cell1.innerHTML = GetEEcomnerceNameFromIntType(obj.eCommerce);
-
-                // Mã đơn hàng
-                let p = document.createElement("p");
-                p.innerHTML = obj.code;
-                if (obj.status !== 0)// đơn hoàn / hủy
-                {
-                    p.style.color = "red";
-                    p.title = "Đơn hoàn / hủy";
-                }
-                //p.style.cursor = "pointer";
-                //p.onclick = function () {
-                //    let url = "/Product/UpdateDelete?id=" + obj.id.toString();
-                //    window.open(url);
-                //}
-                cell2.append(p);
-
-                // Mã vận chuyển
-                cell3.innerHTML = obj.shipCode;
-
-                // Thời gian
-                cell4.innerHTML = obj.time;
-            }
-
-            document.getElementById("count-result").innerHTML =
-              "Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount;
-        }
+    document.getElementById("count-result").innerHTML =
+        "Đơn hoàn thành: " + normalOrderCount + ", đơn hủy: " + cancelOrderCount;
+}
 

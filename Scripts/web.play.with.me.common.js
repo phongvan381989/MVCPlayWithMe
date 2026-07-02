@@ -27,6 +27,8 @@ var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
 var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
+var MediaFolderPath = "/Media"
+var sanPhamMediaFolderPath = MediaFolderPath + "/SanPham/";
 
 var tikiConstDiscount = 5;
 

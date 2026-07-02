@@ -1,4 +1,4 @@
-using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.General;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -425,6 +425,87 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             };
 
             return sanPham;
+        }
+
+        /// <summary>
+        /// Lấy danh sách sản phẩm cùng ComboId (dùng làm variants/phân loại)
+        /// </summary>
+        /// <param name="comboId">ComboId</param>
+        /// <returns>Danh sách sản phẩm cùng combo, sắp xếp theo Id ASC</returns>
+        public static async Task<List<SanPham>> GetListByComboIdAsync(int comboId)
+        {
+            List<SanPham> list = new List<SanPham>();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT * FROM tb_san_pham WHERE ComboId = @inComboId AND Status = 0 ORDER BY Id ASC", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inComboId", comboId);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync())
+                            {
+                                list.Add(ConvertRowFromDataReader(rdr));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                list.Clear();
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Lấy danh sách sản phẩm cùng ComboId (variants) trong 1 query
+        /// Tối ưu performance bằng cách gọi stored procedure
+        /// Sản phẩm chính (với id truyền vào) sẽ nằm trong list variants
+        /// </summary>
+        /// <param name="id">ID sản phẩm</param>
+        /// <returns>
+        /// Danh sách sản phẩm cùng combo (bao gồm cả sản phẩm chính).
+        /// Trả về list rỗng nếu không tìm thấy.
+        /// </returns>
+        public static async Task<List<SanPham>> GetSanPhamWithVariantsAsync(int id)
+        {
+            List<SanPham> variants = new List<SanPham>();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("sp_tbSanPham_GetSanPhamWithVariants", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync())
+                            {
+                                variants.Add(ConvertRowFromDataReader(rdr));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return variants;
         }
     }
 }

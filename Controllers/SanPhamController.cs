@@ -321,8 +321,9 @@ namespace MVCPlayWithMe.Controllers
                 var bytes = new byte[length];
                 Request.InputStream.Read(bytes, 0, length);
 
-                var originalFileName = Request.Headers["fileName"];
-                var sanPhamName = Request.Headers["sanPhamName"];
+                // Decode headers (vì client encode để hỗ trợ tiếng Việt)
+                var originalFileName = HttpUtility.UrlDecode(Request.Headers["fileName"]);
+                var sanPhamName = HttpUtility.UrlDecode(Request.Headers["sanPhamName"]);
 
                 if (length > 0)
                 {
@@ -342,14 +343,39 @@ namespace MVCPlayWithMe.Controllers
 
                     // Convert ảnh sang WebP (sẽ xóa file gốc JPG/PNG)
                     string ext = Path.GetExtension(saveToFileLoc).ToLower();
+                    string finalFileName = newFileName;
+                    string mediaType = "video";
+
                     if (Common.ImageExtensions.Contains(ext))
                     {
-                        Common.ConvertSanPhamImageToWebP(saveToFileLoc);
+                        finalFileName = Common.ConvertSanPhamImageToWebP(saveToFileLoc);
+                        mediaType = "image";
+                    }
+
+                    // Insert metadata vào tb_san_pham_media
+                    if (int.TryParse(sanPhamId, out int sanPhamIdInt))
+                    {
+                        MySqlResultState insertResult = await SanPhamMediaMySql.InsertAsync(new SanPhamMedia
+                        {
+                            SanPhamId = sanPhamIdInt,
+                            MediaType = mediaType,
+                            FileName = finalFileName,
+                            Title = "",
+                            AltText = "",
+                            Description = "",
+                            PosterImage = "",
+                            DisplayOrder = 38 //  hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery
+                        });
+
+                        if (insertResult.State != EMySqlResultState.OK)
+                        {
+                            MyLogger.GetInstance().Warn($"Failed to insert media metadata: {insertResult.Message}");
+                        }
                     }
 
                     result.State = EMySqlResultState.OK;
-                    result.Message = "Upload thành công: " + newFileName;
-                    MyLogger.GetInstance().Info($"Uploaded: {originalFileName} -> {newFileName}");
+                    result.Message = "Upload thành công: " + finalFileName;
+                    MyLogger.GetInstance().Info($"Uploaded: {originalFileName} -> {finalFileName}");
                 }
             }
             catch (Exception ex)

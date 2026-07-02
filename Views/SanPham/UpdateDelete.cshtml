@@ -279,7 +279,7 @@
 
             <div>
                 <label for="sp-detail">Chi tiết:</label>
-                <textarea class="config-max-width margin-vertical" id="sp-detail" rows="25" placeholder="Để trống nếu không có"></textarea>
+                <textarea spellcheck="false" class="config-max-width margin-vertical" id="sp-detail" rows="25" placeholder="Để trống nếu không có"></textarea>
             </div>
 
             <div>
@@ -741,78 +741,76 @@
 
         async function LoadMediaList() {
             try {
-                // Load file list từ disk
-                const fileResultText = await PostJSON('/SanPham/GetMediaList', { sanPhamId: sanPhamId.toString() });
-                const fileList = JSON.parse(fileResultText);
-
-                // Load metadata từ database
+                // Load metadata từ database (single source of truth)
                 const metadataResultText = await PostJSON('/SanPham/GetAllMediaMetadata', { sanPhamId: sanPhamId });
                 const metadataList = JSON.parse(metadataResultText);
 
                 const container = document.getElementById('media-container');
                 container.innerHTML = '';
 
-                if (fileList && fileList.length > 0) {
-                    fileList.forEach((file, index) => {
-                        // Tìm metadata cho file này
-                        const metadata = metadataList.find(m => m.FileName === file.FileName);
+                if (metadataList && metadataList.length > 0) {
+                    metadataList.forEach((metadata, index) => {
+                        const isImage = metadata.MediaType === 'image';
+
+                        // Tự sinh URL phiên bản 320 từ FileName
+                        const filePath = Get320VersionOfImageSrc(sanPhamMediaFolderPath + `${sanPhamId}/${metadata.FileName}`);
 
                         const mediaItem = document.createElement('div');
                         mediaItem.className = 'media-item';
-                        mediaItem.dataset.fileName = file.FileName;
-                        mediaItem.dataset.mediaId = metadata ? metadata.Id : '';
+                        mediaItem.dataset.fileName = metadata.FileName;
+                        mediaItem.dataset.mediaId = metadata.Id;
 
-                        // Tạo path WebP từ JPG/PNG path
-                        const webpPath = file.FilePath.replace(/\.(jpg|jpeg|png|jfif)$/i, '.webp');
-
+                        // Media element (ảnh hoặc video)
                         let mediaElement;
-                        if (file.IsImage) {
+                        if (isImage) {
+                            // WebP path (ảnh đã được convert sang WebP)
+                            const webpPath = filePath.replace(/\.(jpg|jpeg|png|jfif)$/i, '.webp');
                             mediaElement = `
                                 <picture>
                                     <source srcset="${webpPath}" type="image/webp">
-                                    <img src="${file.FilePath}" alt="${metadata?.AltText || file.FileName}" />
+                                    <img src="${filePath}" alt="${metadata.AltText || metadata.FileName}" />
                                 </picture>
                             `;
                         } else {
-                            mediaElement = `<video src="${file.FilePath}" controls></video>`;
+                            mediaElement = `<video src="${filePath}" controls></video>`;
                         }
 
                         mediaItem.innerHTML = `
                             ${mediaElement}
-                            <input type="text" value="${file.FileName}" readonly placeholder="Tên file"
-                                   onclick="RenameMediaFile('${file.FileName}')"
+                            <input type="text" value="${metadata.FileName}" readonly placeholder="Tên file"
+                                   onclick="RenameMediaFile('${metadata.FileName}')"
                                    style="background: #eee; cursor: pointer;"
                                    title="Click để đổi tên file" />
-                            ${file.IsImage ? `
+                            ${isImage ? `
                                 <input type="text" class="media-alt" placeholder="Alt text (SEO - bắt buộc cho ảnh)"
-                                       value="${metadata?.AltText || ''}"
+                                       value="${metadata.AltText || ''}"
                                        title="Alt text (SEO - bắt buộc cho ảnh):nội dung ngắn gọn, có giá trị, có keyword + tác giả nếu tác giả nổi tiếng, giới hạn 125 ký tự VD: Sách eho moi moi trang bìa" />
                                 <input type="text" class="media-title" placeholder="Caption (tùy chọn)"
-                                       value="${metadata?.Title || ''}"
+                                       value="${metadata.Title || ''}"
                                        title="Text hiển thị dưới ảnh (nếu cần)" />
                             ` : `
                                 <input type="text" class="media-title" placeholder="Title video (bắt buộc)"
-                                       value="${metadata?.Title || ''}"
+                                       value="${metadata.Title || ''}"
                                        title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán" />
-                                <textarea class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
-                                          title="Mô tả chi tiết nội dung video">${metadata?.Description || ''}</textarea>
+                                <textarea spellcheck="false" class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
+                                          title="Mô tả chi tiết nội dung video">${metadata.Description || ''}</textarea>
                             `}
                             <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự ảnh"
-                                   value="${metadata?.DisplayOrder ?? index}"
+                                   value="${metadata.DisplayOrder ?? index}"
                                    style="width: 80px;" min="0" />
                             <div style="margin-top: 5px;">
-                                <button onclick="SaveMediaMetadata('${file.FileName}')"
+                                <button onclick="SaveMediaMetadata('${metadata.FileName}')"
                                         style="background-color: #4CAF50;">💾 Lưu metadata</button>
-                                <button onclick="RenameMediaFile('${file.FileName}')"
+                                <button onclick="RenameMediaFile('${metadata.FileName}')"
                                         style="background-color: #2196F3;">Đổi tên</button>
-                                ${file.IsImage ? `
-                                    <button onclick="PinImageToDetail('${file.FileName}')"
+                                ${isImage ? `
+                                    <button onclick="PinImageToDetail('${metadata.FileName}')"
                                             style="background-color: #FF9800;"
-                                            title="Chèn {{image:${file.FileName}}} vào vị trí con trỏ">
+                                            title="Chèn {{image:${metadata.FileName}}} vào vị trí con trỏ">
                                         Ghim ảnh
                                     </button>
                                 ` : ''}
-                                <button onclick="DeleteMediaFile('${file.FileName}')"
+                                <button onclick="DeleteMediaFile('${metadata.FileName}')"
                                         style="background-color: #f44336;">Xóa</button>
                             </div>
                         `;
@@ -965,9 +963,9 @@
                     await fetch('/SanPham/UploadMedia?sanPhamId=' + sanPhamId, {
                         method: 'POST',
                         headers: {
-                            'fileName': fileName,
+                            'fileName': encodeURIComponent(fileName),
                             'productId': sanPhamId,
-                            'sanPhamName': sanPhamName  // Gửi tên sản phẩm để tạo slug
+                            'sanPhamName': encodeURIComponent(sanPhamName)  // Encode để hỗ trợ tiếng Việt
                         },
                         body: byteArray
                     });

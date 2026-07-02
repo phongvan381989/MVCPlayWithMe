@@ -720,6 +720,7 @@
     <Content Include="Scripts\Home\Cart.js" />
     <Content Include="Scripts\Home\Checkout.js" />
     <Content Include="Scripts\Home\Item.js" />
+    <Content Include="Scripts\Home\SanPham.js" />
     <Content Include="Scripts\Home\Search.js" />
     <Content Include="Scripts\ItemModel\Create.js" />
     <Content Include="Scripts\ItemModel\Search.js" />
@@ -751,6 +752,7 @@
     <Content Include="Scripts\Product\UpdateDelete.js" />
     <Content Include="Scripts\Publisher\Create.js" />
     <Content Include="Scripts\Publisher\UpdateDelete.js" />
+    <Content Include="Scripts\SanPham\SanPhamCommon.js" />
     <Content Include="Scripts\web.play.with.me.action.common.js" />
     <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
@@ -860,6 +862,7 @@
     <Content Include="Views\SanPham\Create.cshtml" />
     <Content Include="Views\SanPham\UpdateDelete.cshtml" />
     <Content Include="Views\SanPham\Search.cshtml" />
+    <Content Include="Views\Home\SanPham.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
