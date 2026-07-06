@@ -1,4 +1,4 @@
-namespace MVCPlayWithMe.Models.SanPhamModel
+﻿namespace MVCPlayWithMe.Models.SanPhamModel
 {
     /// <summary>
     /// Model cho mapping giữa sản phẩm bán (tb_san_pham) và sản phẩm kho (tbproducts)
@@ -14,6 +14,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public string SanPhamKhoCode { get; set; }
         public string SanPhamKhoName { get; set; }
         public int SanPhamKhoQuantity { get; set; }
+        public int SanPhamKhoBookCoverPrice { get; set; }
+        public float SanPhamKhoDiscount { get; set; }
     }
 
     /// <summary>

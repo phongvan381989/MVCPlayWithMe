@@ -7,10 +7,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TaxAndFee
     {
-        // Tên sàn: SHOPEE, TIKI, LAZADA,...
+        public int Id { get; set; }
+
+        // Tên sàn: SHOPEE, TIKI, LAZADA, web bán hàng chính chủ...
         public string name { get; set; }
 
+        // thuế
         public float tax { get; set; }
+
+        // phí sàn
         public float fee { get; set; }
 
         // Là lợi nhuận tuyệt đối tối thiểu trên một sản phẩm mà có thể tăng thêm mức 
@@ -20,7 +25,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Chi phí đóng gói 1 đơn hàng trung bình. Mặc định là 2000
         public int packingCost { get; set; }
 
-        // Lợi nhuận phần trăm mong muốn so với giá nhập
+        // Lợi nhuận phần trăm mong muốn so với GIÁ BÁN (doanh thu)
         public float expectedPercentProfit { get; set; }
 
         // Lợi nhuận phần trăm nhỏ nhất có thể chấp nhận. Phục vụ những chương trình kiểu: rẻ vô địch,

@@ -20,36 +20,56 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
-                        "SELECT * FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId ORDER BY DisplayOrder",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            list.Add(new SanPhamMedia
-                            {
-                                Id = MyMySql.GetInt32(rdr, "Id"),
-                                SanPhamId = MyMySql.GetInt32(rdr, "SanPhamId"),
-                                MediaType = MyMySql.GetString(rdr, "MediaType"),
-                                FileName = MyMySql.GetString(rdr, "FileName"),
-                                Title = MyMySql.GetString(rdr, "Title"),
-                                AltText = MyMySql.GetString(rdr, "AltText"),
-                                Description = MyMySql.GetString(rdr, "Description"),
-                                PosterImage = MyMySql.GetString(rdr, "PosterImage"),
-                                DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
-                            });
-                        }
-                    }
+                    list = await GetListBySanPhamId_ConnectOutAsync(sanPhamId, conn);
                 }
                 catch (Exception ex)
                 {
                     MyLogger.GetInstance().Warn(ex.ToString());
                     list.Clear();
                 }
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Lấy danh sách media của 1 sản phẩm, sắp xếp theo DisplayOrder
+        /// </summary>
+        public static async Task<List<SanPhamMedia>> GetListBySanPhamId_ConnectOutAsync(int sanPhamId, MySqlConnection conn)
+        {
+            List<SanPhamMedia> list = new List<SanPhamMedia>();
+
+            try
+            {
+                // ORDER BY MediaType DESC để đảm bảo rằng media type "video" sẽ được ưu tiên hiển thị trước media type "image" trong danh sách.
+                MySqlCommand cmd = new MySqlCommand(
+                    "SELECT * FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId ORDER BY MediaType DESC, DisplayOrder ASC",
+                    conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                {
+                    while (await rdr.ReadAsync())
+                    {
+                        list.Add(new SanPhamMedia
+                        {
+                            Id = MyMySql.GetInt32(rdr, "Id"),
+                            SanPhamId = MyMySql.GetInt32(rdr, "SanPhamId"),
+                            MediaType = MyMySql.GetString(rdr, "MediaType"),
+                            FileName = MyMySql.GetString(rdr, "FileName"),
+                            Title = MyMySql.GetString(rdr, "Title"),
+                            AltText = MyMySql.GetString(rdr, "AltText"),
+                            Description = MyMySql.GetString(rdr, "Description"),
+                            PosterImage = MyMySql.GetString(rdr, "PosterImage"),
+                            DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                list.Clear();
             }
             return list;
         }

@@ -1,4 +1,4 @@
-img, video {
+﻿img, video {
     max-width: 100%;
     max-height: 100%;
     /*display: block;
@@ -21,6 +21,10 @@ img, video {
     /*position:relative;*/
     justify-content: center;
     align-items: center;
+    user-select: none;  /* Ngăn text selection (màu xanh) */
+    -webkit-user-select: none;  /* Safari */
+    -moz-user-select: none;  /* Firefox */
+    -ms-user-select: none;  /* IE/Edge */
     /*display: block;*/
     /*width: 100%;*/
     /*margin-left: auto;
@@ -32,13 +36,26 @@ img, video {
     /*border: 1px solid rgb(255, 0, 0);*/
 }
 
-#medium_image, #medium_video {
-    display: none;
-    position: relative;
-    /*border: 1px solid red;*/
-    object-fit: contain;
+#medium_picture {
+    display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 100%;
+}
+
+#medium_picture img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+#medium_video {
+    display: none;
+    /*border: 1px solid red;*/
+    object-fit: contain;
+    max-width: 100%;
+    max-height: 100%;
 }
 
 #class_medium_video{
@@ -57,7 +74,31 @@ img, video {
     position: relative;
 }
 
-#item-variation-container, #item-order {
+#item-variation-container {
+    display: flex;
+    width: 100%;
+    padding: 10px;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.variation-title {
+    flex-shrink: 0;
+    min-width: 80px;
+    padding-top: 8px;
+    color: rgba(0, 0, 0, 0.87);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.variation-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    flex: 1;
+}
+
+#item-order {
     display: flex;
     width: 100%;
     padding: 5px;
@@ -68,16 +109,15 @@ img, video {
     height: 1000px;
 }*/
 .small-media {
-    display: inline-block;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    vertical-align: top;
     margin: 4px 5px 4px 5px;
     border: 1px solid rgb(228, 228, 222);
     box-sizing: border-box;
     width: 100px;
     height: 100px;
-    /**/
-    /*justify-content: center;*/
-    /*align-items: center;*/
-    /*padding: 1px;*/
 }
 
 .small-media:hover {
@@ -94,6 +134,10 @@ img, video {
     display: flex;
     align-items: center;
     z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 #right_arrow {
     position: absolute;
@@ -104,11 +148,22 @@ img, video {
     display: flex;
     align-items: center;
     z-index: 1;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
-#left_arrow:hover, #right_arrow:hover {
+/* Bỏ hover effect của div, chỉ áp dụng cho SVG */
+#left_arrow svg,
+#right_arrow svg {
     cursor: pointer;
-    background-color: rgba(0,0,0,.05);
+    transition: fill-opacity 0.2s ease;
+}
+
+#left_arrow svg:hover,
+#right_arrow svg:hover {
+    fill-opacity: 0.8 !important; /* Sáng lên khi hover vào mũi tên */
 }
 
 h1 {
@@ -121,6 +176,14 @@ h1 {
     font-weight: normal;
 }
 
+#item-name-h1 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    line-height: 1.4;
+    margin: 0.75rem;
+    color: #333;
+}
+
 #item-price {
     display: flex;
     align-content: center;
@@ -128,6 +191,8 @@ h1 {
     width: 100%;
     /*flex-basis: 625px;*/
     min-height: 1.875rem;
+    gap: 8px; /* Dãn ra khoảng cách giữa các phần tử */
+    padding: 5px 0; /* Thêm padding trên dưới */
 }
 
 .items-center {
@@ -136,9 +201,10 @@ h1 {
 }
 
 #book-cover-price {
-    font-size: 0.8rem;
+    font-size: 1rem; /* Tăng từ 0.8rem lên 1rem */
+    font-weight: 600; /* Đậm hơn */
     text-decoration: line-through;
-    color: #929292;
+    color: #b8b8b8; /* Mờ hơn (từ #929292 lên #b8b8b8) */
     margin-left: 10px;
     margin-right: 10px;
     display: flex;
@@ -148,19 +214,19 @@ h1 {
 }
 
 #price {
-    font-size: 1.2rem;
+    font-size: 1.5rem; /* Tăng từ 1.2rem lên 1.5rem */
     font-weight: 500;
     color: #ee4d2d;
 }
 
 #discount {
     margin-left: 15px;
-    font-size: .75rem;
+    font-size: 0.875rem; /* Tăng từ 0.75rem lên 0.875rem */
     color: #fff;
     text-transform: uppercase;
     background: #ee4d2d;
     border-radius: 2px;
-    padding: 2px 4px;
+    padding: 3px 6px; /* Tăng padding từ 2px 4px lên 3px 6px */
     font-weight: 600;
     line-height: 1;
     white-space: nowrap;
@@ -467,4 +533,128 @@ h2 {
     width: 97px;
     fill: #fff;
     background-color: #ee4d2d;
+}
+
+/* Style cho ảnh trong mô tả sản phẩm */
+.product-detail-image {
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.product-detail-image img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.product-detail-image figcaption {
+    margin-top: 0.5rem;
+    font-size: 0.875rem;
+    color: rgba(0, 0, 0, 0.6);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .product-detail-image img {
+        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
+    }
+
+    .product-detail-image figcaption {
+        color: rgba(255, 255, 255, 0.6);
+    }
+}
+
+/* ========== Thông Tin Chi Tiết ========== */
+.product-specifications {
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+    border-radius: 0.125rem;
+    overflow: hidden;
+    background: #fff;
+    margin-top: 0.9375rem;
+    padding-top: 0.625rem;
+    display: block;
+}
+
+.specifications-table {
+    margin: 0rem 0.9375rem 0.9375rem;
+    display: block;
+}
+
+.spec-row {
+    display: flex;
+    border-bottom: 1px solid rgba(0,0,0,.05);
+    padding: 0.75rem 0;
+}
+
+.spec-row:last-child {
+    border-bottom: none;
+}
+
+.spec-label {
+    color: rgba(0,0,0,.4);
+    font-size: .875rem;
+    box-sizing: border-box;
+    width: 10rem;
+    padding-right: 0.75rem;
+    flex-shrink: 0;
+    font-weight: 500;
+}
+
+.spec-value {
+    color: rgba(0,0,0,.8);
+    font-size: .875rem;
+    line-height: 1.6;
+    flex: 1;
+    word-break: break-word;
+}
+
+.spec-link {
+    color: #05a;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.spec-link:hover {
+    color: #ee4d2d;
+    text-decoration: underline;
+}
+
+/* Zebra striping - alternating row colors */
+.spec-row:nth-child(even) {
+    background-color: rgba(0,0,0,.01);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .product-specifications {
+        background: #1a1a1a;
+        box-shadow: 0 1px 1px 0 rgba(255, 255, 255, 0.05);
+    }
+
+    .spec-row {
+        border-bottom: 1px solid rgba(255,255,255,.05);
+    }
+
+    .spec-label {
+        color: rgba(255,255,255,.5);
+    }
+
+    .spec-value {
+        color: rgba(255,255,255,.87);
+    }
+
+    .spec-row:nth-child(even) {
+        background-color: rgba(255,255,255,.02);
+    }
+
+    .spec-link {
+        color: #66b3ff;
+    }
+
+    .spec-link:hover {
+        color: #ff6b6b;
+    }
 }

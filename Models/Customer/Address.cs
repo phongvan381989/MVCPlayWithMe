@@ -25,7 +25,7 @@ namespace MVCPlayWithMe.Models.Customer
         // Cổ Nhuế 2
         public string subdistrict { get; set; }
 
-        // Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh
+        // Số 28, Ngõ 3, Khu Tập Thể Đo Lường, Tổ Dân Phố 3A, phường Đông Ngạc, Hà Nội
         public string detail { get; set; }
 
         // defaultAdd:1 địa chỉ nhận hàng mặc định, ngược lại là 0

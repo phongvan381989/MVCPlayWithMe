@@ -1,10 +1,7 @@
 ﻿// Global variables
-let countOfSmallMedia; // Số lượng media gồm video + image
-let selectedIndex; // selected index media đang chọn hiện tại from listItemData
-let listItemData; // Mảng media, phần tử đầu tiên là video nếu có, sau là ảnh
-let sanPhamObject; // object sản phẩm server trả về
+let selectedIndex; // selected index media đang chọn hiện tại
+let sanPhamObject; // object sản phẩm đang hiển thị
 let variantsList; // Danh sách variants (sản phẩm cùng ComboId)
-let selectedSanPhamId; // Id sản phẩm đang chọn hiện tại
 let quantityInput; // Input số lượng
 
 quantityInput = 1;
@@ -40,11 +37,11 @@ function objMediaSrc(itemSrc, itemIsVideo) {
     this.isVideo = itemIsVideo;
 }
 
-async function GetSanPhamFromId(id) {
+async function GetSanPhamWithVariants(id) {
     const searchParams = new URLSearchParams();
     searchParams.append("id", id);
 
-    let query = "/Home/GetSanPhamFromId";
+    let query = "/Home/GetSanPhamWithVariants";
 
     return RequestHttpPostPromise(searchParams, query);
 }
@@ -56,23 +53,10 @@ function GetMediaFolderPath(sanPhamId) {
 
 // Lấy danh sách ảnh/video từ server folder
 async function LoadMediaList(sanPhamId) {
-    const searchParams = new URLSearchParams();
-    searchParams.append("sanPhamId", sanPhamId);
-
-    let query = "/Home/GetSanPhamMediaList";
-
     try {
-        let response = await RequestHttpPostPromise(searchParams, query);
-        let mediaFiles = JSON.parse(response.responseText);
-
-        let mediaList = [];
-        for (let filePath of mediaFiles) {
-            let extension = filePath.substring(filePath.lastIndexOf('.')).toLowerCase();
-            let isVideo = (extension === '.mp4' || extension === '.avi' || extension === '.webm' || extension === '.mov');
-            mediaList.push(new objMediaSrc(filePath, isVideo));
-        }
-
-        return mediaList;
+        const metadataResultText = await PostJSON('/SanPham/GetAllMediaMetadata', { sanPhamId: sanPhamId });
+        const metadataList = JSON.parse(metadataResultText);
+        return metadataList;
     }
     catch (ex) {
         console.error("Error loading media list:", ex);
@@ -91,7 +75,7 @@ async function HomePageShowSanPham() {
     if (DEBUG) {
         console.log("currentId: " + currentId);
     }
-    let responseDB = await GetSanPhamFromId(currentId);
+    let responseDB = await GetSanPhamWithVariants(currentId);
     RemoveCircleLoader();
 
     if (responseDB.responseText != "null") {
@@ -112,8 +96,6 @@ async function HomePageShowSanPham() {
             ShowDoesntFindId();
             return;
         }
-
-        selectedSanPhamId = sanPhamObject.Id;
     }
     else {
         ShowDoesntFindId();
@@ -128,40 +110,38 @@ async function HomePageShowSanPham() {
         document.getElementById("item-medium-media").style.height = scrWidth + "px";
     }
 
-    // Load media list từ server
-    listItemData = await LoadMediaList(sanPhamObject.Id);
-
-    // Nếu không có ảnh nào, thêm placeholder
-    if (listItemData.length === 0) {
-        listItemData.push(new objMediaSrc("/Media/NoImageThumbnail.webp", false));
-    }
-
-    countOfSmallMedia = listItemData.length;
-
     document.title = sanPhamObject.Name;
 
     ShowSmallItem();
     ShowRightLeftArrow();
 
     // Chọn item đầu tiên
-    if (listItemData.length > 0) {
+    if (sanPhamObject.MediaList.length > 0) {
         ShowMediumMediaFromSelectedSmallItem(document.getElementById("item-small-media-container").children[0]);
     }
 
+    // Hiển thị phân loại (variants) nếu có
+    ShowVariations();
+
     ShowItemSomething();
+
+    // Hiển thị thông tin chi tiết (specs table)
+    ShowProductSpecifications();
 
     // Hiển thị mô tả chi tiết sản phẩm
     ShowProductDescription();
 }
 
-function CreateContainerSmallItem(ItemData, i) {
+// Nếu sản phẩm có video thì hasVideo = true, nếu không thì hasVideo = false
+function CreateContainerSmallItem(media, i, hasVideo) {
     const container = document.createElement("div");
     container.className = "small-media";
     container.setAttribute("data-index", i);
 
-    if (ItemData.isVideo) {
+    // Vì nếu có video thì nó sẽ ở vị trí đầu tiên
+    if (i == 0 && hasVideo) {
         const video = document.createElement("video");
-        video.src = ItemData.src;
+        video.src = GetSanPhamMediaUrl(sanPhamObject.Id, media.FileName);
         video.controls = false;
         video.style.objectFit = "contain";
         video.style.width = "100%";
@@ -182,14 +162,31 @@ function CreateContainerSmallItem(ItemData, i) {
         container.appendChild(videoIcon);
     }
     else {
+        // Tạo picture element để hỗ trợ WebP
+        const picture = document.createElement("picture");
+        picture.style.display = "flex";
+        picture.style.justifyContent = "center";
+        picture.style.alignItems = "center";
+        picture.style.width = "100%";
+        picture.style.height = "100%";
+
+        // WebP source (ưu tiên WebP nếu browser hỗ trợ)
+        const sourceWebp = document.createElement("source");
+        const thumbnail320 = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamObject.Id, media.FileName));
+        sourceWebp.srcset = thumbnail320;
+        sourceWebp.type = "image/webp";
+
+        // Fallback img (srcNoImageThumbnail.png nếu browser không hỗ trợ WebP)
         const img = document.createElement("img");
-        img.src = Get320VersionOfImageSrc(ItemData.src);
-        img.style.verticalAlign = "baseline";
-        img.onerror = function() {
-            // Nếu không load được ảnh 320, dùng ảnh gốc
-            this.src = ItemData.src;
-        };
-        container.appendChild(img);
+        img.src = srcNoImageThumbnail;  // Fallback về NoImageThumbnail.png
+        img.alt = (media.AltText || media.FileName) + " - Ảnh " + hasVideo? i: (i + 1);  // Thumbnail có số thứ tự
+        img.style.objectFit = "contain";
+        img.style.maxWidth = "100%";
+        img.style.maxHeight = "100%";
+
+        picture.appendChild(sourceWebp);
+        picture.appendChild(img);
+        container.appendChild(picture);
     }
 
     container.addEventListener("mouseenter", function (event) {
@@ -206,19 +203,38 @@ function ShowSmallItem() {
     let itemSmallMediaContainer = document.getElementById("item-small-media-container");
     // Xóa item cũ nếu có
     itemSmallMediaContainer.innerHTML = "";
+    if (sanPhamObject.MediaList.length == 0) {
+        return;
+    }
 
-    for (let i = 0; i < listItemData.length; i++) {
-        itemSmallMediaContainer.appendChild(CreateContainerSmallItem(listItemData[i], i));
+    // Kiểm tra xem có video hay không, nếu có thì video sẽ được đặt ở vị trí đầu tiên
+    let hasVideo = sanPhamObject.MediaList[0].MediaType != "image"? true:false;
+    for (let i = 0; i < sanPhamObject.MediaList.length; i++) {
+        itemSmallMediaContainer.appendChild(CreateContainerSmallItem(sanPhamObject.MediaList[i], i, hasVideo));
     }
 }
 
 function ShowRightLeftArrow() {
+    // if (sanPhamObject.MediaList.length <= 1) {
+    //     document.getElementById("left_arrow").innerHTML = "";
+    //     document.getElementById("right_arrow").innerHTML = "";
+    //     return;
+    // }
+
     // Add mũi tên di chuyển sang trái
     let leftArrow = document.getElementById("left_arrow");
-    leftArrow.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,50 30,30 30,70" style="fill:lime;" /></svg>';
-    leftArrow.addEventListener("click", function () {
+    leftArrow.innerHTML = '<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,50 30,30 30,70" style="fill:lime;" /></svg>';
+
+    // Attach click event vào SVG chứ không phải div
+    let leftArrowSvg = leftArrow.querySelector("svg");
+    leftArrowSvg.addEventListener("click", function (event) {
+        event.preventDefault(); // Ngăn scroll jump
+        if (sanPhamObject.MediaList.length == 0 || sanPhamObject.MediaList.length == 1) {
+            return;
+        }
+
         if (selectedIndex == 0) {
-            selectedIndex = listItemData.length - 1;
+            selectedIndex = sanPhamObject.MediaList.length - 1;
         }
         else {
             selectedIndex--;
@@ -229,9 +245,16 @@ function ShowRightLeftArrow() {
 
     // Add mũi tên di chuyển sang phải
     let rightArrow = document.getElementById("right_arrow");
-    rightArrow.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,30 30,50 10,70" style="fill:lime;" /></svg>';
-    rightArrow.addEventListener("click", function () {
-        if (selectedIndex == listItemData.length - 1) {
+    rightArrow.innerHTML = '<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,30 30,50 10,70" style="fill:lime;" /></svg>';
+
+    // Attach click event vào SVG chứ không phải div
+    let rightArrowSvg = rightArrow.querySelector("svg");
+    rightArrowSvg.addEventListener("click", function (event) {
+        event.preventDefault(); // Ngăn scroll jump
+        if (sanPhamObject.MediaList.length == 0 || sanPhamObject.MediaList.length == 1) {
+            return;
+        }
+        if (selectedIndex == sanPhamObject.MediaList.length - 1) {
             selectedIndex = 0;
         }
         else {
@@ -245,58 +268,194 @@ function ShowRightLeftArrow() {
 
 // Show medium item từ index
 function ShowMediumItemFromIndex(i) {
-    let mediumImage = document.getElementById("medium_image");
+    let mediumPicture = document.getElementById("medium_picture");
     let mediumVideo = document.getElementById("medium_video");
 
-    if (listItemData[i].isVideo) {
+    if (sanPhamObject.MediaList[i].MediaType != "image") {
         if (isEmptyOrSpaces(mediumVideo.src)) {
-            mediumVideo.src = listItemData[i].src;
+            mediumVideo.src = GetSanPhamMediaUrl(sanPhamObject.Id, sanPhamObject.MediaList[i].FileName);
         }
 
         mediumVideo.play();
         mediumVideo.style.display = "block";
-        mediumVideo.style.left = "0px";
 
-        mediumImage.style.display = "none";
+        mediumPicture.style.display = "none";
     }
     else {
-        mediumImage.src = listItemData[i].src;
+        // Get image URL và WebP URL
+        const imageUrl = GetSanPhamMediaUrl(sanPhamObject.Id, sanPhamObject.MediaList[i].FileName);
+
+        // Set WebP source (browser hỗ trợ WebP sẽ dùng này)
+        const mediumImageSource = document.getElementById("medium_image_source");
+        mediumImageSource.srcset = imageUrl;
+
+        // Set alt text cho medium image (SEO + Accessibility)
+        const mediumImage = document.getElementById("medium_image");
+        mediumImage.alt = sanPhamObject.MediaList[i].AltText || sanPhamObject.MediaList[i].FileName;
+
         if (mediumVideo.src != null) {
             mediumVideo.pause();
         }
-        mediumImage.style.display = "block";
-        mediumImage.style.left = "0px";
 
+        mediumPicture.style.display = "flex";
         mediumVideo.style.display = "none";
     }
 
     ChangeBorderColorOfSelectedSmallItem();
-    document.getElementById("item-medium-media").isCanSwipe = true;
-    ShowHideRightLeftArrow();
-}
-
-function ShowHideRightLeftArrow() {
-    if (document.getElementById("item-medium-media").isCanSwipe) {
-        document.getElementById("left_arrow").style.display = "flex";
-        document.getElementById("right_arrow").style.display = "flex";
-    }
-    else {
-        document.getElementById("left_arrow").style.display = "none";
-        document.getElementById("right_arrow").style.display = "none";
-    }
 }
 
 function ShowProductDescription() {
+    let detailContainer = document.getElementsByClassName("f7AU53")[0];
+    let productDetailSection = document.getElementsByClassName("product-detail")[0];
+
     if (sanPhamObject.Detail == null) {
         // Ẩn mô tả sản phẩm
-        document.getElementsByClassName("product-detail")[0].style.display = "none";
+        productDetailSection.style.display = "none";
         return;
     }
 
+    // Hiển thị lại section nếu đã ẩn
+    productDetailSection.style.display = "block";
+
+    // Clear nội dung cũ
+    detailContainer.innerHTML = "";
+
+    // Parse Detail để replace {{image:filename}} bằng HTML
+    let detailHtml = sanPhamObject.Detail;
+
+    // Regex pattern: {{image:filename.ext}}
+    detailHtml = detailHtml.replace(/\{\{image:([^}]+)\}\}/g, function(match, filename) {
+        // Tìm metadata của image này trong MediaList
+        let media = null;
+        if (sanPhamObject.MediaList && sanPhamObject.MediaList.length > 0) {
+            media = sanPhamObject.MediaList.find(m => m.FileName === filename);
+        }
+
+        // Build image URL
+        let imgSrc = GetSanPhamMediaUrl(sanPhamObject.Id, filename);
+        let alt = media ? (media.AltText || media.FileName) : filename;
+        let caption = media ? (media.Title || "") : "";
+        if (DEBUG) {
+            console.log("ShowProductDescription media: " + JSON.stringify(media));
+        }
+
+        // Build HTML với figure + figcaption
+        let html = '<figure class="product-detail-image">';
+        html += `<img src="${imgSrc}" alt="${alt}" loading="lazy">`;
+        if (caption) {
+            html += `<figcaption>${caption}</figcaption>`;
+        }
+        html += '</figure>';
+
+        return html;
+    });
+
+    // Thêm mô tả mới
     let p = document.createElement("p");
     p.className = "irIKAp";
-    p.innerHTML = sanPhamObject.Detail;
-    document.getElementsByClassName("f7AU53")[0].appendChild(p);
+    p.innerHTML = detailHtml;
+    detailContainer.appendChild(p);
+}
+
+function ShowProductSpecifications() {
+    let specificationsTable = document.querySelector(".specifications-table");
+    let specificationsSection = document.querySelector(".product-specifications");
+
+    if (!sanPhamObject) {
+        specificationsSection.style.display = "none";
+        return;
+    }
+
+    // Hiển thị section
+    specificationsSection.style.display = "block";
+
+    // Clear nội dung cũ
+    specificationsTable.innerHTML = "";
+
+    // Helper function để thêm spec row
+    function AddSpecRow(label, value, url) {
+        if (!value || value === "" || value === null || value === undefined) {
+            return; // Skip nếu không có giá trị
+        }
+
+        let row = document.createElement("div");
+        row.className = "spec-row";
+
+        let labelDiv = document.createElement("div");
+        labelDiv.className = "spec-label";
+        labelDiv.textContent = label;
+
+        let valueDiv = document.createElement("div");
+        valueDiv.className = "spec-value";
+
+        // Nếu có URL → tạo link, nếu không → text thường
+        if (url) {
+            let link = document.createElement("a");
+            link.href = url;
+            link.textContent = value;
+            link.className = "spec-link";
+            valueDiv.appendChild(link);
+        } else {
+            valueDiv.textContent = value;
+        }
+
+        row.appendChild(labelDiv);
+        row.appendChild(valueDiv);
+        specificationsTable.appendChild(row);
+    }
+
+    // Thêm các thông tin chi tiết (với links)
+    if (sanPhamObject.Author) {
+        AddSpecRow("Tác giả", sanPhamObject.Author, `/Search?author=${encodeURIComponent(sanPhamObject.Author)}`);
+    }
+    if (sanPhamObject.Translator) {
+        AddSpecRow("Người dịch", sanPhamObject.Translator, `/Search?translator=${encodeURIComponent(sanPhamObject.Translator)}`);
+    }
+    if (sanPhamObject.CategoryName && sanPhamObject.CategoryId) {
+        AddSpecRow("Danh mục", sanPhamObject.CategoryName, `/Search?categoryId=${sanPhamObject.CategoryId}`);
+    }
+    if (sanPhamObject.PublishingCompany) {
+        AddSpecRow("Nhà xuất bản", sanPhamObject.PublishingCompany, `/Search?publishingCompany=${encodeURIComponent(sanPhamObject.PublishingCompany)}`);
+    }
+    if (sanPhamObject.PublisherName && sanPhamObject.PublisherId) {
+        AddSpecRow("Nhà phát hành", sanPhamObject.PublisherName, `/Search?publisherId=${sanPhamObject.PublisherId}`);
+    }
+
+    if (sanPhamObject.PublishingTime) {
+        AddSpecRow("Năm xuất bản", sanPhamObject.PublishingTime.toString());
+    }
+
+    AddSpecRow("Ngôn ngữ", sanPhamObject.Language);
+
+    // Kích thước (chỉ hiển thị nếu có ít nhất 1 giá trị > 0)
+    if (sanPhamObject.ProductLong > 0 || sanPhamObject.ProductWide > 0 || sanPhamObject.ProductHigh > 0) {
+        let dimensions = `${sanPhamObject.ProductLong} × ${sanPhamObject.ProductWide} × ${sanPhamObject.ProductHigh} mm`;
+        AddSpecRow("Kích thước", dimensions);
+    }
+
+    // Trọng lượng
+    if (sanPhamObject.ProductWeight > 0) {
+        AddSpecRow("Trọng lượng", sanPhamObject.ProductWeight + " gram");
+    }
+
+    // Số trang
+    if (sanPhamObject.PageNumber) {
+        AddSpecRow("Số trang", sanPhamObject.PageNumber.toString());
+    }
+
+    // Hình thức (Bìa cứng/mềm)
+    if (sanPhamObject.HardCover !== null && sanPhamObject.HardCover !== undefined) {
+        let coverType = sanPhamObject.HardCover === 1 ? "Bìa cứng" : "Bìa mềm";
+        AddSpecRow("Hình thức", coverType);
+    }
+
+    // ISBN (từ Barcode)
+    AddSpecRow("Mã", sanPhamObject.Code || sanPhamObject.Barcode);
+
+    // Nếu không có thông tin nào → ẩn section
+    if (specificationsTable.children.length === 0) {
+        specificationsSection.style.display = "none";
+    }
 }
 
 // Thay đổi medium media khi di chuyển bên trên small item
@@ -351,36 +510,91 @@ function ShowItemSomething() {
 
     // Hiển thị giá
     ShowPriceAndReadyMaxQuantity();
-
-    // Hiển thị phân loại (variants) nếu có
-    ShowVariations();
 }
 
 // Hiển thị giá bìa, giá bán và % chiết khấu
 function ShowPriceAndReadyMaxQuantity() {
-    let selectedSanPham = sanPhamObject;
-
-    // Nếu đã chọn variant khác, lấy variant đó
-    if (selectedSanPhamId != sanPhamObject.Id && variantsList.length > 0) {
-        selectedSanPham = variantsList.find(v => v.Id === selectedSanPhamId) || sanPhamObject;
-    }
-
     // Giá bìa
     document.getElementById("book-cover-price").innerHTML =
-        ConvertMoneyToTextWithIcon(selectedSanPham.BookCoverPrice);
+        ConvertMoneyToTextWithIcon(sanPhamObject.BookCoverPrice);
 
-    // Giá bán thực tế (giá bìa - discount)
-    let sellingPrice = selectedSanPham.BookCoverPrice * (1 - selectedSanPham.Discount);
+    // Giá bán thực tế
     document.getElementById("price").innerHTML =
-        ConvertMoneyToTextWithIcon(Math.round(sellingPrice));
+        ConvertMoneyToTextWithIcon(sanPhamObject.SalePrice);
 
     // % Chiết khấu
-    let discountPercent = Math.round(selectedSanPham.Discount * 100);
-    document.getElementById("discount").innerHTML = discountPercent + "% GIẢM";
+    let discountPercent = Math.round(100 * (sanPhamObject.BookCoverPrice - sanPhamObject.SalePrice) / sanPhamObject.BookCoverPrice);
+
+    // Ẩn/hiện giá bìa và % giảm dựa vào discount
+    if (discountPercent == 0) {
+        // Không có giảm giá → ẩn giá bìa và % giảm
+        document.getElementById("book-cover-price").style.display = "none";
+        document.getElementById("discount").style.display = "none";
+    }
+    else {
+        // Có giảm giá → hiển thị giá bìa và % giảm
+        document.getElementById("book-cover-price").style.display = "";
+        document.getElementById("discount").style.display = "";
+        document.getElementById("discount").innerHTML = discountPercent + "% GIẢM";
+    }
 
     // Hiển thị số lượng tồn kho
     document.getElementById("max-quatity").textContent =
-        selectedSanPham.Quantity + " sản phẩm có sẵn";
+        sanPhamObject.Quantity + " sản phẩm có sẵn";
+}
+
+// Apply highlight style và dấu tick cho variant button
+function ApplyVariantHighlight(button) {
+    button.style.borderColor = "rgb(255, 0, 0)";
+    button.style.color = "rgb(255, 0, 0)";
+
+    // Thêm dấu tick góc dưới phải
+    let checkContainer = document.createElement("div");
+    checkContainer.id = "check-container";
+
+    let tickIcon = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    tickIcon.setAttribute("viewBox", "0 0 12 12");
+    tickIcon.setAttribute("class", "icon-tick-bold");
+
+    let polyline = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+    polyline.setAttribute("fill", "none");
+    polyline.setAttribute("points", "1.5 6 4.5 9 10.5 3");
+    polyline.setAttribute("stroke-width", "2");
+    polyline.setAttribute("stroke", "currentColor");
+
+    tickIcon.appendChild(polyline);
+    checkContainer.appendChild(tickIcon);
+    button.appendChild(checkContainer);
+}
+
+// Remove highlight style và dấu tick khỏi variant button
+function RemoveVariantHighlight(button) {
+    button.style.borderColor = "";
+    button.style.color = "";
+
+    // Xóa dấu tick nếu có
+    let checkContainer = button.querySelector("#check-container");
+    if (checkContainer) {
+        checkContainer.remove();
+    }
+}
+
+// Update highlight variant đang chọn (không re-render toàn bộ)
+function HighlightSelectedVariant(variantId) {
+    // Tìm tất cả variant buttons
+    let allButtons = document.querySelectorAll(".variation-button");
+
+    allButtons.forEach(button => {
+        let buttonVariantId = parseInt(button.getAttribute("data-variant-id"));
+
+        if (buttonVariantId === variantId) {
+            // Highlight button được chọn
+            ApplyVariantHighlight(button);
+        } else {
+            // Remove highlight các button khác
+            RemoveVariantHighlight(button);
+        }
+    });
 }
 
 // Hiển thị phân loại (variants - các sản phẩm cùng ComboId)
@@ -403,27 +617,16 @@ function ShowVariations() {
     // Container chứa các button variant
     let variantButtonsContainer = document.createElement("div");
     variantButtonsContainer.className = "variation-buttons-container";
-    variantButtonsContainer.style.display = "flex";
-    variantButtonsContainer.style.flexWrap = "wrap";
-    variantButtonsContainer.style.gap = "10px";
-    variantButtonsContainer.style.marginTop = "10px";
 
     variantsList.forEach(variant => {
         let variantBtn = document.createElement("button");
-        variantBtn.className = "variant-button";
+        variantBtn.className = "variation-button";
         variantBtn.setAttribute("data-variant-id", variant.Id);
         variantBtn.textContent = variant.ShortName || variant.Name;
-        variantBtn.style.padding = "8px 16px";
-        variantBtn.style.border = "1px solid rgba(0, 0, 0, .09)";
-        variantBtn.style.borderRadius = "4px";
-        variantBtn.style.cursor = "pointer";
-        variantBtn.style.background = "white";
-        variantBtn.style.transition = "all 0.3s";
 
         // Highlight variant đang chọn
-        if (variant.Id === selectedSanPhamId) {
-            variantBtn.style.borderColor = "rgb(255, 0, 0)";
-            variantBtn.style.color = "rgb(255, 0, 0)";
+        if (variant.Id === sanPhamObject.Id) {
+            ApplyVariantHighlight(variantBtn);
         }
 
         variantBtn.addEventListener("click", function() {
@@ -431,13 +634,15 @@ function ShowVariations() {
         });
 
         variantBtn.addEventListener("mouseenter", function() {
-            if (variant.Id !== selectedSanPhamId) {
+            let currentVariantId = parseInt(this.getAttribute("data-variant-id"));
+            if (currentVariantId !== sanPhamObject.Id) {
                 this.style.borderColor = "rgba(255, 0, 0, 0.5)";
             }
         });
 
         variantBtn.addEventListener("mouseleave", function() {
-            if (variant.Id !== selectedSanPhamId) {
+            let currentVariantId = parseInt(this.getAttribute("data-variant-id"));
+            if (currentVariantId !== sanPhamObject.Id) {
                 this.style.borderColor = "rgba(0, 0, 0, .09)";
             }
         });
@@ -448,89 +653,56 @@ function ShowVariations() {
     variationContainer.appendChild(variantButtonsContainer);
 }
 
-// // Xử lý khi click chọn variant
-// async function VariantClick(variantId) {
-//     if (selectedSanPhamId === variantId) {
-//         return; // Đã chọn rồi, không làm gì
-//     }
+// Xử lý khi click chọn variant
+async function VariantClick(variantId) {
+    if (sanPhamObject.Id === variantId) {
+        return; // Đã chọn rồi, không làm gì
+    }
 
-//     selectedSanPhamId = variantId;
+    // Tìm variant object
+    sanPhamObject = variantsList.find(v => v.Id === variantId);
+    if (!sanPhamObject) return;
 
-//     // Tìm variant object
-//     let selectedVariant = variantsList.find(v => v.Id === variantId);
-//     if (!selectedVariant) return;
+    // Cập nhật URL không reload page (dùng replaceState để không tạo history mới)
+    let newSlug = GenerateSlug(sanPhamObject.Name) + "-" + variantId;
+    let newUrl = "/San-Pham/" + newSlug;
+    window.history.replaceState({ sanPhamId: variantId }, sanPhamObject.Name, newUrl);
+    document.title = sanPhamObject.Name;
 
-//     // Cập nhật URL không reload page
-//     let newSlug = GenerateSlug(selectedVariant.Name) + "-" + variantId;
-//     let newUrl = "/Home/SanPham/" + newSlug;
-//     window.history.pushState({sanPhamId: variantId}, selectedVariant.Name, newUrl);
-//     document.title = selectedVariant.Name;
+    // Cập nhật tên sản phẩm
+    document.getElementById("item-name-h1").textContent = sanPhamObject.Name;
 
-//     // Cập nhật tên sản phẩm
-//     document.getElementById("item-name-h1").textContent = selectedVariant.Name;
+    // Cập nhật giá và tồn kho
+    ShowPriceAndReadyMaxQuantity();
 
-//     // Cập nhật giá
-//     ShowPriceAndReadyMaxQuantity();
+    // Cập nhật thông tin chi tiết (specs table)
+    ShowProductSpecifications();
 
-//     // Re-render variants để update highlight
-//     ShowVariations();
+    // Cập nhật mô tả sản phẩm
+    ShowProductDescription();
 
-//     // Load ảnh của variant mới
-//     ShowCircleLoader();
-//     listItemData = await LoadMediaList(variantId);
-//     if (listItemData.length === 0) {
-//         listItemData.push(new objMediaSrc("/Media/NoImageThumbnail.webp", false));
-//     }
-//     RemoveCircleLoader();
+    // Update highlight variant đang chọn (không re-render toàn bộ)
+    HighlightSelectedVariant(variantId);
 
-//     // Re-render media gallery
-//     selectedIndex = 0;
-//     ShowSmallItem();
-//     if (listItemData.length > 0) {
-//         ShowMediumItemFromIndex(0);
-//     }
-// }
+    if (sanPhamObject.MediaList == null || sanPhamObject.MediaList.length == 0) {
+        // Load ảnh của variant mới
+        ShowCircleLoader();
+        sanPhamObject.MediaList = await LoadMediaList(variantId);
+        RemoveCircleLoader();
+    }
 
-// Helper function tạo slug từ tên
-function GenerateSlug(name) {
-    if (!name) return "";
-
-    // Convert Vietnamese to ASCII
-    let slug = name.toLowerCase();
-    slug = slug.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-    slug = slug.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-    slug = slug.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-    slug = slug.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-    slug = slug.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-    slug = slug.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-    slug = slug.replace(/đ/g, "d");
-
-    // Remove special characters
-    slug = slug.replace(/[^a-z0-9\s-]/g, "");
-
-    // Replace spaces with hyphens
-    slug = slug.replace(/\s+/g, "-");
-
-    // Remove consecutive hyphens
-    slug = slug.replace(/-+/g, "-");
-
-    // Trim hyphens
-    slug = slug.replace(/^-+|-+$/g, "");
-
-    return slug;
+    // Re-render media gallery
+    if (sanPhamObject.MediaList.length > 0) {
+        selectedIndex = 0;
+        ShowMediumItemFromIndex(selectedIndex);
+    }
+    ShowSmallItem();
 }
 
 // Tăng số lượng
 function Increase() {
-    let maxQuantity = sanPhamObject.Quantity;
-    if (selectedSanPhamId !== sanPhamObject.Id) {
-        let selectedVariant = variantsList.find(v => v.Id === selectedSanPhamId);
-        if (selectedVariant) {
-            maxQuantity = selectedVariant.Quantity;
-        }
-    }
 
-    if (quantityInput < maxQuantity) {
+    if (quantityInput < sanPhamObject.Quantity) {
         quantityInput++;
         document.getElementById("quantity-input").value = quantityInput;
     }
@@ -554,15 +726,7 @@ function ValidateInput(event) {
         event.target.value = 1;
     }
     else {
-        let maxQuantity = sanPhamObject.Quantity;
-        if (selectedSanPhamId !== sanPhamObject.Id) {
-            let selectedVariant = variantsList.find(v => v.Id === selectedSanPhamId);
-            if (selectedVariant) {
-                maxQuantity = selectedVariant.Quantity;
-            }
-        }
-
-        if (numValue > maxQuantity) {
+        if (numValue > sanPhamObject.Quantity) {
             quantityInput = maxQuantity;
             event.target.value = maxQuantity;
         }
@@ -583,14 +747,6 @@ function BuyNow() {
     // TODO: Implement buy now logic
     alert("Mua ngay: " + sanPhamObject.Name + " x " + quantityInput);
 }
-
-// Xử lý sự kiện popstate (khi user click back/forward)
-window.addEventListener("popstate", function(event) {
-    if (event.state && event.state.sanPhamId) {
-        // User click back/forward, reload page
-        location.reload();
-    }
-});
 
 // Load sản phẩm khi page load
 window.addEventListener('DOMContentLoaded', function() {

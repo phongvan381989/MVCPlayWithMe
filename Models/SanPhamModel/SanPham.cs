@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace MVCPlayWithMe.Models.SanPhamModel
 {
@@ -30,6 +31,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public int? CategoryId { get; set; }
 
+        public string CategoryName { get; set; }
+
         public int BookCoverPrice { get; set; }
 
         public string Author { get; set; }
@@ -40,6 +43,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// Không xác định lấy giá trị mặc định -1
         /// </summary>
         public int? PublisherId { get; set; }
+        public string PublisherName { get; set; }
 
         /// <summary>
         /// Cột này hợp lý hơn phải là cột Id nhà xuất bản, maping với cột Id trong bảng tb_publishing_company.
@@ -122,6 +126,11 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public float Discount { get; set; }
 
+        /// <summary>
+        /// Giá bán thực tế đã được tính toán từ giá bìa, chiết khấu, chi phí và lợi nhuận mong muốn
+        /// </summary>
+        public int SalePrice { get; set; }
+
         public string Language { get; set; }
 
         /// <summary>
@@ -152,6 +161,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             Status = 0;
             Quantity = 0;
             Discount = 0;
+            SalePrice = 0;
         }
 
         // Constructor đầy đủ
@@ -164,7 +174,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             string positionInWarehouse, int? hardCover,
             int? minAge, int? maxAge, int? parentId, int? republish,
             string detail, int status, int quantity, int? pageNumber,
-            float discount, string language, DateTime? date,
+            float discount, int salePrice, string language, DateTime? date,
             int? soldQuantity, string url, string seoKeyword)
         {
             Code = code;
@@ -194,6 +204,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             Quantity = quantity;
             PageNumber = pageNumber;
             Discount = discount;
+            SalePrice = salePrice;
             Language = language;
             Date = date;
             SoldQuantity = soldQuantity;
@@ -288,5 +299,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
             return $"{minYears}-{maxYears} tuổi";
         }
+
+        public List<SanPhamMedia> MediaList { get; set; } = new List<SanPhamMedia>();
+
+        public List<SanPhamMapping> Mappings { get; set; } = new List<SanPhamMapping>();
     }
 }

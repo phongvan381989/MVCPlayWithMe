@@ -636,6 +636,10 @@ function ConvertIntToPixel(value) {
     return value.toString() + "px";
 }
 
+function GetSanPhamMediaUrl(sanPhamId, fileName) {
+    return sanPhamMediaFolderPath + `${sanPhamId}/${fileName}`;
+}
+
 // Từ src ảnh lấy được src phiên bản 320
 // /Media/Item/578/2.jpg =>/Media/Item/578_320/2.jpg
 function Get320VersionOfImageSrc(src) {
@@ -652,11 +656,12 @@ function Get320VersionOfImageSrc(src) {
 
 
     let lastIndex = src.lastIndexOf(filename);
-    // Nếu đuôi file khác .png, .jpg thì mặc định là .jpeg
+    // Nếu đuôi file khác .png, .jpg,.webp thì mặc định là .jpeg
     let newFileName = filename;
     const myArray = filename.split(".");
     if (myArray[1].toLowerCase() != "png" &&
-        myArray[1].toLowerCase() != "jpg") {
+        myArray[1].toLowerCase() != "jpg" &&
+        myArray[1].toLowerCase() != "webp") {
         newFileName = myArray[0] + ".jpg";
     }
     let newSrc = src.substring(0, lastIndex - 1) + "_320/" + newFileName;

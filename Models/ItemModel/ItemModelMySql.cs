@@ -814,43 +814,128 @@ namespace MVCPlayWithMe.Models.ItemModel
             List<Item> ls = new List<Item>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbItemModel_Search", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
-                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
-                cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                // Check nếu có filters mới (author, translator, categoryId, publishingCompany)
+                bool hasNewFilters = !string.IsNullOrEmpty(searchParameter.author) ||
+                                     !string.IsNullOrEmpty(searchParameter.translator) ||
+                                     searchParameter.categoryId.HasValue ||
+                                     !string.IsNullOrEmpty(searchParameter.publishingCompany);
+
+                if (hasNewFilters)
                 {
-                    int itemIdIndex = rdr.GetOrdinal("ItemId");
-                    int itemNameIndex = rdr.GetOrdinal("ItemName");
-                    int modelIdIndex = rdr.GetOrdinal("ModelId");
-                    int modelNameIndex = rdr.GetOrdinal("ModelName");
-                    int modelPriceIndex = rdr.GetOrdinal("ModelPrice");
-                    int modelBookCoverPriceIndex = rdr.GetOrdinal("ModelBookCoverPrice");
-                    int modelSoldQuantityIndex = rdr.GetOrdinal("ModelSoldQuantity");
-                    int modelDiscountIndex = rdr.GetOrdinal("ModelDiscount");
-                    while (await rdr.ReadAsync())
+                    // Dùng dynamic SQL query để support filters mới
+                    // Query trả về sản phẩm (tb_san_pham) thay vì Item/Model
+                    string sql = @"
+                        SELECT sp.Id, sp.Name, sp.SalePrice, sp.BookCoverPrice, sp.SoldQuantity, sp.Discount
+                        FROM webplaywithme.tb_san_pham sp
+                        WHERE sp.Status = 0";
+
+                    MySqlCommand cmd = new MySqlCommand();
+                    cmd.Connection = conn;
+                    cmd.CommandType = CommandType.Text;
+
+                    // Add filters
+                    if (!string.IsNullOrEmpty(searchParameter.name))
                     {
-                        int itemId = rdr.GetInt32(itemIdIndex);
-                        if (ls.Count == 0 || ls[ls.Count - 1].id != itemId)
+                        sql += " AND sp.Name LIKE @inNamePara";
+                        cmd.Parameters.AddWithValue("@inNamePara", "%" + searchParameter.name + "%");
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.author))
+                    {
+                        sql += " AND sp.Author = @inAuthor";
+                        cmd.Parameters.AddWithValue("@inAuthor", searchParameter.author);
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.translator))
+                    {
+                        sql += " AND sp.Translator = @inTranslator";
+                        cmd.Parameters.AddWithValue("@inTranslator", searchParameter.translator);
+                    }
+                    if (searchParameter.categoryId.HasValue)
+                    {
+                        sql += " AND sp.CategoryId = @inCategoryId";
+                        cmd.Parameters.AddWithValue("@inCategoryId", searchParameter.categoryId.Value);
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.publishingCompany))
+                    {
+                        sql += " AND sp.PublishingCompany = @inPublishingCompany";
+                        cmd.Parameters.AddWithValue("@inPublishingCompany", searchParameter.publishingCompany);
+                    }
+                    if (searchParameter.publisherId > 0)
+                    {
+                        sql += " AND sp.PublisherId = @inPublisherId";
+                        cmd.Parameters.AddWithValue("@inPublisherId", searchParameter.publisherId);
+                    }
+
+                    sql += " ORDER BY sp.Id DESC LIMIT @inStart, @inOffset";
+                    cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                    cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
+
+                    cmd.CommandText = sql;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
                         {
+                            // Convert sang Item với 1 Model duy nhất
                             Item item = new Item();
-                            item.id = itemId;
-                            item.name = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex);
+                            item.id = MyMySql.GetInt32(rdr, "Id");
+                            item.name = MyMySql.GetString(rdr, "Name");
                             item.SetFirstSrcImage();
+
+                            Model model = new Model();
+                            model.id = item.id;
+                            model.itemId = item.id;
+                            model.name = item.name;
+                            model.price = MyMySql.GetInt32(rdr, "SalePrice");
+                            model.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                            model.soldQuantity = MyMySql.GetInt32(rdr, "SoldQuantity");
+                            model.discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat(rdr.GetOrdinal("Discount"));
+
+                            item.models.Add(model);
                             ls.Add(item);
                         }
-                        Item itemTemp = ls[ls.Count - 1];
-                        Model model = new Model();
-                        model.id = rdr.GetInt32(modelIdIndex);
-                        model.itemId = itemTemp.id;
-                        model.name = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
-                        model.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
-                        model.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ? 0 : rdr.GetInt32(modelBookCoverPriceIndex);
-                        model.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
-                        model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetFloat(modelDiscountIndex);
-                        itemTemp.models.Add(model);
+                    }
+                }
+                else
+                {
+                    // Dùng stored procedure cũ (backward compatible)
+                    MySqlCommand cmd = new MySqlCommand("st_tbItemModel_Search", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
+                    cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+                    cmd.Parameters.AddWithValue("@inStart", searchParameter.start);
+                    cmd.Parameters.AddWithValue("@inOffset", searchParameter.offset);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int itemIdIndex = rdr.GetOrdinal("ItemId");
+                        int itemNameIndex = rdr.GetOrdinal("ItemName");
+                        int modelIdIndex = rdr.GetOrdinal("ModelId");
+                        int modelNameIndex = rdr.GetOrdinal("ModelName");
+                        int modelPriceIndex = rdr.GetOrdinal("ModelPrice");
+                        int modelBookCoverPriceIndex = rdr.GetOrdinal("ModelBookCoverPrice");
+                        int modelSoldQuantityIndex = rdr.GetOrdinal("ModelSoldQuantity");
+                        int modelDiscountIndex = rdr.GetOrdinal("ModelDiscount");
+                        while (await rdr.ReadAsync())
+                        {
+                            int itemId = rdr.GetInt32(itemIdIndex);
+                            if (ls.Count == 0 || ls[ls.Count - 1].id != itemId)
+                            {
+                                Item item = new Item();
+                                item.id = itemId;
+                                item.name = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex);
+                                item.SetFirstSrcImage();
+                                ls.Add(item);
+                            }
+                            Item itemTemp = ls[ls.Count - 1];
+                            Model model = new Model();
+                            model.id = rdr.GetInt32(modelIdIndex);
+                            model.itemId = itemTemp.id;
+                            model.name = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
+                            model.price = rdr.IsDBNull(modelPriceIndex) ? 0 : rdr.GetInt32(modelPriceIndex);
+                            model.bookCoverPrice = rdr.IsDBNull(modelBookCoverPriceIndex) ? 0 : rdr.GetInt32(modelBookCoverPriceIndex);
+                            model.soldQuantity = rdr.IsDBNull(modelSoldQuantityIndex) ? 0 : rdr.GetInt32(modelSoldQuantityIndex);
+                            model.discount = rdr.IsDBNull(modelDiscountIndex) ? 0 : rdr.GetFloat(modelDiscountIndex);
+                            itemTemp.models.Add(model);
+                        }
                     }
                 }
             }
@@ -885,13 +970,75 @@ namespace MVCPlayWithMe.Models.ItemModel
             int count = 0;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
-                cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                // Check nếu có filters mới (author, translator, categoryId, publishingCompany)
+                bool hasNewFilters = !string.IsNullOrEmpty(searchParameter.author) ||
+                                     !string.IsNullOrEmpty(searchParameter.translator) ||
+                                     searchParameter.categoryId.HasValue ||
+                                     searchParameter.publisherId.HasValue ||
+                                     !string.IsNullOrEmpty(searchParameter.publishingCompany);
+
+                if (hasNewFilters)
                 {
-                    while (await rdr.ReadAsync()) count = MyMySql.GetInt32(rdr, "CountRecord");
+                    // Dùng dynamic SQL query để support filters mới
+                    string sql = @"
+                        SELECT COUNT(DISTINCT sp.Id) as CountRecord
+                        FROM webplaywithme.tb_san_pham sp
+                        WHERE sp.Status = 0";
+
+                    MySqlCommand cmd = new MySqlCommand();
+                    cmd.Connection = conn;
+                    cmd.CommandType = CommandType.Text;
+
+                    // Add filters
+                    if (!string.IsNullOrEmpty(searchParameter.name))
+                    {
+                        sql += " AND sp.Name LIKE @inNamePara";
+                        cmd.Parameters.AddWithValue("@inNamePara", "%" + searchParameter.name + "%");
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.author))
+                    {
+                        sql += " AND sp.Author = @inAuthor";
+                        cmd.Parameters.AddWithValue("@inAuthor", searchParameter.author);
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.translator))
+                    {
+                        sql += " AND sp.Translator = @inTranslator";
+                        cmd.Parameters.AddWithValue("@inTranslator", searchParameter.translator);
+                    }
+                    if (searchParameter.categoryId.HasValue)
+                    {
+                        sql += " AND sp.CategoryId = @inCategoryId";
+                        cmd.Parameters.AddWithValue("@inCategoryId", searchParameter.categoryId.Value);
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.publishingCompany))
+                    {
+                        sql += " AND sp.PublishingCompany = @inPublishingCompany";
+                        cmd.Parameters.AddWithValue("@inPublishingCompany", searchParameter.publishingCompany);
+                    }
+                    if (searchParameter.publisherId > 0)
+                    {
+                        sql += " AND sp.PublisherId = @inPublisherId";
+                        cmd.Parameters.AddWithValue("@inPublisherId", searchParameter.publisherId);
+                    }
+
+                    cmd.CommandText = sql;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync()) count = MyMySql.GetInt32(rdr, "CountRecord");
+                    }
+                }
+                else
+                {
+                    // Dùng stored procedure cũ (backward compatible)
+                    MySqlCommand cmd = new MySqlCommand("st_tbItem_Search_Count_Record", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inPublisherIdPara", searchParameter.publisherId);
+                    cmd.Parameters.AddWithValue("@inNamePara", searchParameter.name);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync()) count = MyMySql.GetInt32(rdr, "CountRecord");
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }

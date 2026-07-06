@@ -68,6 +68,11 @@
         </div>
 
         <div>
+            <label for="sp-sale-price">Giá bán thực tế: <span style="color:red">*</span></label>
+            <input type="number" class="config-max-width margin-vertical" id="sp-sale-price" value="0" required />
+        </div>
+
+        <div>
             <label for="sp-quantity">Số lượng tồn kho: <span style="color:red">*</span></label>
             <input type="number" class="config-max-width margin-vertical" id="sp-quantity" value="0" required />
         </div>
@@ -288,6 +293,7 @@
                 Quantity: parseInt(document.getElementById('sp-quantity').value) || 0,
                 PageNumber: parseIntOrNull(document.getElementById('sp-page-number').value),
                 Discount: parseFloatOrDefault(document.getElementById('sp-discount').value),
+                SalePrice: parseInt(document.getElementById('sp-sale-price').value) || 0,
                 Language: document.getElementById('sp-language').value || null,
                 Date: document.getElementById('sp-date').value || null,
                 SoldQuantity: parseIntOrNull(document.getElementById('sp-sold-quantity').value),

@@ -32,7 +32,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult> Search(string keyword, int? page)
+        public async Task<ActionResult> Search(string keyword, int? page, string author, string translator, int? categoryId, string publishingCompany, int? publisherId)
         {
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -40,6 +40,11 @@ namespace MVCPlayWithMe.Controllers
 
                 ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
                 searchParameter.name = keyword;
+                searchParameter.author = author;
+                searchParameter.translator = translator;
+                searchParameter.categoryId = categoryId;
+                searchParameter.publishingCompany = publishingCompany;
+                searchParameter.publisherId = publisherId ?? 0;
                 int count = await itemModelsqler.SearchItemCountConnectOutAsync(searchParameter, conn);
                 ViewData["dataCountResult"] = count.ToString();
 
@@ -247,7 +252,7 @@ namespace MVCPlayWithMe.Controllers
         /// JavaScript sẽ tự tìm sản phẩm chính theo ID
         /// </summary>
         [HttpPost]
-        public async Task<string> GetSanPhamFromId(int id)
+        public async Task<string> GetSanPhamWithVariants(int id)
         {
             // Gọi 1 stored procedure duy nhất để lấy danh sách variants (bao gồm sản phẩm chính)
             List<SanPham> variants = await SanPhamMySql.GetSanPhamWithVariantsAsync(id);
@@ -259,65 +264,6 @@ namespace MVCPlayWithMe.Controllers
 
             // Return list, JavaScript sẽ tự tìm sản phẩm chính
             return JsonConvert.SerializeObject(variants);
-        }
-
-        /// <summary>
-        /// API lấy danh sách media files (ảnh/video) của sản phẩm
-        /// </summary>
-        [HttpPost]
-        public string GetSanPhamMediaList(int sanPhamId)
-        {
-            try
-            {
-                string folderPath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.ToString());
-                if (string.IsNullOrEmpty(folderPath) || !System.IO.Directory.Exists(folderPath))
-                {
-                    return JsonConvert.SerializeObject(new List<string>());
-                }
-
-                // Lấy tất cả files trong folder
-                string[] allFiles = System.IO.Directory.GetFiles(folderPath);
-
-                // Filter chỉ lấy ảnh và video (không lấy từ folder _320)
-                List<string> mediaFiles = new List<string>();
-                foreach (string file in allFiles)
-                {
-                    string fileName = System.IO.Path.GetFileName(file);
-                    string extension = System.IO.Path.GetExtension(file).ToLower();
-
-                    // Check nếu là ảnh hoặc video
-                    if (Common.ImageExtensions.Contains(extension) || Common.VideoExtensions.Contains(extension))
-                    {
-                        // Tạo relative path cho client
-                        string relativePath = "/Media/Product/" + sanPhamId + "/" + fileName;
-                        mediaFiles.Add(relativePath);
-                    }
-                }
-
-                // Sort theo tên file (0.jpg, 1.png, 2.webp,...)
-                mediaFiles.Sort((a, b) =>
-                {
-                    string fileNameA = System.IO.Path.GetFileNameWithoutExtension(a);
-                    string fileNameB = System.IO.Path.GetFileNameWithoutExtension(b);
-
-                    int numA, numB;
-                    bool isNumA = int.TryParse(fileNameA, out numA);
-                    bool isNumB = int.TryParse(fileNameB, out numB);
-
-                    if (isNumA && isNumB)
-                    {
-                        return numA.CompareTo(numB);
-                    }
-                    return string.Compare(fileNameA, fileNameB, StringComparison.Ordinal);
-                });
-
-                return JsonConvert.SerializeObject(mediaFiles);
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                return JsonConvert.SerializeObject(new List<string>());
-            }
         }
 
         [HttpPost]

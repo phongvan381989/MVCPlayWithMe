@@ -8,9 +8,29 @@ namespace MVCPlayWithMe.Models.ItemModel
 {
     public class ItemModelSearchParameter
     {
-        public int publisherId { get; set; }
+        public int? publisherId { get; set; }
 
         public string name { get; set; }
+
+        /// <summary>
+        /// Lọc theo tác giả (tìm kiếm chính xác)
+        /// </summary>
+        public string author { get; set; }
+
+        /// <summary>
+        /// Lọc theo người dịch (tìm kiếm chính xác)
+        /// </summary>
+        public string translator { get; set; }
+
+        /// <summary>
+        /// Lọc theo danh mục (CategoryId)
+        /// </summary>
+        public int? categoryId { get; set; }
+
+        /// <summary>
+        /// Lọc theo nhà xuất bản (tìm kiếm chính xác)
+        /// </summary>
+        public string publishingCompany { get; set; }
 
         // Index record trả về từ câu truy vấn
         // mặc định = -1; Lấy tất cả record
@@ -23,6 +43,9 @@ namespace MVCPlayWithMe.Models.ItemModel
         public ItemModelSearchParameter()
         {
             name = string.Empty;
+            author = string.Empty;
+            translator = string.Empty;
+            publishingCompany = string.Empty;
             start = 0;
             offset = Common.offset;
         }

@@ -16,24 +16,27 @@
             <div id="item-media-wrapper">
                 <div id="item_media_arrow_wrapper">
                     <div id="item-medium-media" title="Giữ kéo chuột để xem ảnh khác">
-                        <img id="medium_image" alt="No Image"
-                             onmouseup="MouseUpMediumMedia(event)"
-                             onmousedown="MouseDownMediumMedia(event)"
-                             onmouseenter="MouseEnterMediumMedia(event)"
-                             onmousemove="MouseMoveMediumMedia(event)"
-                             onmouseout="MouseOutMediumMedia(event)"
-                             ontouchmove="TouchMoveMediumMedia(event)"
-                             ontouchstart="TouchStartMediumMedia(event)"
-                             ontouchend="TouchEndMediumMedia(event)">
+                        <picture id="medium_picture">
+                            <source id="medium_image_source" type="image/webp">
+                            <img id="medium_image" src="/Media/NoImageThumbnail.png" alt="No Image"
+                                 @*onmouseup="MouseUpMediumMedia(event)"
+                                 onmousedown="MouseDownMediumMedia(event)"
+                                 onmouseenter="MouseEnterMediumMedia(event)"
+                                 onmousemove="MouseMoveMediumMedia(event)"
+                                 onmouseout="MouseOutMediumMedia(event)"
+                                 ontouchmove="TouchMoveMediumMedia(event)"
+                                 ontouchstart="TouchStartMediumMedia(event)"
+                                 ontouchend="TouchEndMediumMedia(event)"*@>
+                        </picture>
                         <video id="medium_video" class="class_medium_video" controls autoplay muted="muted"
-                               onmouseup="MouseUpMediumMedia(event)"
+                               @*onmouseup="MouseUpMediumMedia(event)"
                                onmousedown="MouseDownMediumMedia(event)"
                                onmouseenter="MouseEnterMediumMedia(event)"
                                onmousemove="MouseMoveMediumMedia(event)"
                                onmouseout="MouseOutMediumMedia(event)"
                                ontouchmove="TouchMoveMediumMedia(event)"
                                ontouchstart="TouchStartMediumMedia(event)"
-                               ontouchend="TouchEndMediumMedia(event)"></video>
+                               ontouchend="TouchEndMediumMedia(event)"*@></video>
                     </div>
                     <div id="left_arrow" title="Ảnh trước"></div>
                     <div id="right_arrow" title="Ảnh sau"></div>
@@ -128,6 +131,14 @@
                         <img src="/Media/lazadaLogo.png" />
                     </a>
                 </div>
+            </div>
+            <div class="product-specifications">
+                <section class="U9rGd1">
+                    <h2 class="Iv7FJp">THÔNG TIN CHI TIẾT</h2>
+                    <div class="specifications-table">
+                        <!-- JavaScript sẽ populate data vào đây -->
+                    </div>
+                </section>
             </div>
             <div class="product-detail">
                 <section class="U9rGd1">

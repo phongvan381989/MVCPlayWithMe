@@ -1,6 +1,8 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.SanPhamModel;
+using MVCPlayWithMe.OpenPlatform.Model;
 using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Utilities;
 using System;
@@ -568,47 +570,47 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        /// <summary>
-        /// Lấy danh sách media của sản phẩm
-        /// </summary>
-        [HttpPost]
-        public async Task<string> GetMediaList(string sanPhamId)
-        {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new List<MediaFileInfo>());
-            }
+        ///// <summary>
+        ///// Lấy danh sách media của sản phẩm
+        ///// </summary>
+        //[HttpPost]
+        //public async Task<string> GetMediaList(string sanPhamId)
+        //{
+        //    if ((await AuthentAdministratorAsync()) == null)
+        //    {
+        //        return JsonConvert.SerializeObject(new List<MediaFileInfo>());
+        //    }
 
-            List<MediaFileInfo> mediaList = new List<MediaFileInfo>();
+        //    List<MediaFileInfo> mediaList = new List<MediaFileInfo>();
 
-            try
-            {
-                string path = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId);
-                if (path != null)
-                {
-                    List<SanPhamMedia> listMedia = await SanPhamMediaMySql.GetListBySanPhamIdAsync(int.Parse(sanPhamId));
-                    string relativePathPrefix = Common.SanPhamMediaFolderPath + sanPhamId + "/";
-                    foreach (var obj in listMedia)
-                    {
-                        string relativePath = Common.SanPhamMediaFolderPath + sanPhamId + "/" + obj.FileName;
+        //    try
+        //    {
+        //        string path = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId);
+        //        if (path != null)
+        //        {
+        //            List<SanPhamMedia> listMedia = await SanPhamMediaMySql.GetListBySanPhamIdAsync(int.Parse(sanPhamId));
+        //            string relativePathPrefix = Common.SanPhamMediaFolderPath + sanPhamId + "/";
+        //            foreach (var obj in listMedia)
+        //            {
+        //                string relativePath = Common.SanPhamMediaFolderPath + sanPhamId + "/" + obj.FileName;
 
-                        mediaList.Add(new MediaFileInfo
-                        {
-                            FileName = obj.FileName,
-                            FilePath = relativePathPrefix + obj.FileName,
-                            IsImage = obj.MediaType== "image" ? true : false
-                        });
-                    }
-                }
+        //                mediaList.Add(new MediaFileInfo
+        //                {
+        //                    FileName = obj.FileName,
+        //                    FilePath = relativePathPrefix + obj.FileName,
+        //                    IsImage = obj.MediaType== "image" ? true : false
+        //                });
+        //            }
+        //        }
 
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //    }
 
-            return JsonConvert.SerializeObject(mediaList);
-        }
+        //    return JsonConvert.SerializeObject(mediaList);
+        //}
 
         #region SanPhamMedia API Methods
 
@@ -894,15 +896,164 @@ namespace MVCPlayWithMe.Controllers
         }
 
         #endregion
+
+        #region Price Calculation API Methods
+
+        /// <summary>
+        /// Tính giá bán thực tế từ mapping sản phẩm kho + TaxAndFee
+        /// </summary>
+        /// <param name="sanPhamId">ID sản phẩm bán (tb_san_pham)</param>
+        /// <param name="platform">Tên sàn: PLAYWITHME, SHOPEE, TIKI, LAZADA</param>
+        [HttpPost]
+        public async Task<string> CalculateAndUpdateSalePrice(int sanPhamId, string platform = "PLAYWITHME")
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                // 1. Load mappings với sản phẩm kho
+                var mappings = await SanPhamMappingMySql.GetListBySanPhamBanIdAsync(sanPhamId);
+
+                if (mappings == null || mappings.Count == 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Chưa có mapping sản phẩm kho. Vui lòng mapping trước khi tính giá.";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // 2. Load sản phẩm hiện tại
+                var sanPham = await SanPhamMySql.GetByIdAsync(sanPhamId);
+                if (sanPham == null)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không tìm thấy sản phẩm";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // 3. Tính tổng giá bìa và tổng giá nhập từ mapping
+                int tongGiaBia = 0;
+                decimal tongGiaNhap = 0;
+
+                foreach (var mapping in mappings)
+                {
+                    tongGiaBia += mapping.SanPhamKhoBookCoverPrice * mapping.Quantity;
+                    decimal giaNhap = mapping.SanPhamKhoBookCoverPrice * (100 - (decimal)mapping.SanPhamKhoDiscount) / 100;
+                    tongGiaNhap += giaNhap * mapping.Quantity;
+                }
+
+                // 4. Tính chiết khấu thực tế từ mapping
+                float chietKhauThucTe = 0;
+                if (tongGiaBia > 0)
+                {
+                    chietKhauThucTe = (float)((tongGiaBia - tongGiaNhap) / tongGiaBia * 100);
+                }
+
+                // 5. Kiểm tra và update BookCoverPrice và Discount nếu khác
+                bool needUpdate = false;
+                bool bookCoverPriceChanged = (sanPham.BookCoverPrice != tongGiaBia);
+                bool discountChanged = (Math.Abs(sanPham.Discount - chietKhauThucTe) > 0.1f);
+
+                if (bookCoverPriceChanged || discountChanged)
+                {
+                    needUpdate = true;
+                    await SanPhamMySql.UpdateBookCoverPriceAndDiscountAsync(sanPhamId, tongGiaBia, chietKhauThucTe);
+                }
+
+                // 8. Load TaxAndFee của sàn
+                var taxAndFee = await TaxAndFeeMySql.GetByNameAsync(platform);
+
+                if (taxAndFee == null)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = $"Không tìm thấy TaxAndFee cho sàn {platform}";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // 9. Tính giá bán
+                int salePrice = PriceCalculator.CalculateSalePrice(mappings, taxAndFee);
+
+                if (salePrice <= 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Giá bán tính được <= 0. Kiểm tra lại dữ liệu.";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // 10. Update SalePrice vào tb_san_pham
+                result = await SanPhamMySql.UpdateSalePriceAsync(sanPhamId, salePrice);
+
+                if (result.State == EMySqlResultState.OK)
+                {
+                    // 11. Trả về breakdown để hiển thị
+                    var breakdown = PriceCalculator.GetPriceBreakdown(mappings, taxAndFee);
+
+                    string updateInfo = "";
+                    if (needUpdate)
+                    {
+                        updateInfo = $" (Đã cập nhật: Giá bìa = {tongGiaBia:N0} đ, Chiết khấu = {chietKhauThucTe:F1}%)";
+                    }
+
+                    result.State = EMySqlResultState.OK;
+                    result.Message = $"Tính giá thành công! Giá bán: {salePrice:N0} đ{updateInfo}";
+
+                    // Return thêm chi tiết
+                    return JsonConvert.SerializeObject(new
+                    {
+                        State = (int)result.State,
+                        Message = result.Message,
+                        SalePrice = salePrice,
+                        BookCoverPrice = tongGiaBia,
+                        Discount = chietKhauThucTe,
+                        Breakdown = breakdown
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Lấy danh sách TaxAndFee (cho dropdown chọn sàn)
+        /// </summary>
+        [HttpGet]
+        public async Task<string> GetTaxAndFeeList()
+        {
+            try
+            {
+                var list = await TaxAndFeeMySql.GetAllAsync();
+                return JsonConvert.SerializeObject(new
+                {
+                    state = (int)EMySqlResultState.OK,
+                    data = list
+                });
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                return JsonConvert.SerializeObject(new
+                {
+                    state = (int)EMySqlResultState.EXCEPTION,
+                    message = ex.Message
+                });
+            }
+        }
+
+        #endregion
     }
 
-    /// <summary>
-    /// Class chứa thông tin file media
-    /// </summary>
-    public class MediaFileInfo
-    {
-        public string FileName { get; set; }
-        public string FilePath { get; set; }
-        public bool IsImage { get; set; }
-    }
+    ///// <summary>
+    ///// Class chứa thông tin file media
+    ///// </summary>
+    //public class MediaFileInfo
+    //{
+    //    public string FileName { get; set; }
+    //    public string FilePath { get; set; }
+    //    public bool IsImage { get; set; }
+    //}
 }

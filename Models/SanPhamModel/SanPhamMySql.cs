@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 
 namespace MVCPlayWithMe.Models.SanPhamModel
 {
@@ -55,6 +56,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.AddWithValue("@inQuantity", sanPham.Quantity);
                         cmd.Parameters.AddWithValue("@inPageNumber", sanPham.PageNumber ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inDiscount", sanPham.Discount);
+                        cmd.Parameters.AddWithValue("@inSalePrice", sanPham.SalePrice);
                         cmd.Parameters.AddWithValue("@inLanguage", sanPham.Language ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inDate", sanPham.Date ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inSoldQuantity", sanPham.SoldQuantity ?? (object)DBNull.Value);
@@ -144,6 +146,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.AddWithValue("@inQuantity", sanPham.Quantity);
                         cmd.Parameters.AddWithValue("@inPageNumber", sanPham.PageNumber ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inDiscount", sanPham.Discount);
+                        cmd.Parameters.AddWithValue("@inSalePrice", sanPham.SalePrice);
                         cmd.Parameters.AddWithValue("@inLanguage", sanPham.Language ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inDate", sanPham.Date ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inSoldQuantity", sanPham.SoldQuantity ?? (object)DBNull.Value);
@@ -308,6 +311,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.AddWithValue("@inQuantity", sanPham.Quantity);
                         cmd.Parameters.AddWithValue("@inPageNumber", sanPham.PageNumber ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inDiscount", sanPham.Discount);
+                        cmd.Parameters.AddWithValue("@inSalePrice", sanPham.SalePrice);
                         cmd.Parameters.AddWithValue("@inLanguage", sanPham.Language ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inDate", sanPham.Date ?? (object)DBNull.Value);
                         cmd.Parameters.AddWithValue("@inSoldQuantity", sanPham.SoldQuantity ?? (object)DBNull.Value);
@@ -318,6 +322,117 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                         result.State = EMySqlResultState.OK;
                         result.Message = $"Cập nhật sản phẩm thành công. ID: {sanPham.Id}";
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Cập nhật chỉ SalePrice của sản phẩm (không update các trường khác)
+        /// </summary>
+        /// <param name="sanPhamId">ID sản phẩm</param>
+        /// <param name="salePrice">Giá bán thực tế mới</param>
+        /// <returns>MySqlResultState</returns>
+        public static async Task<MySqlResultState> UpdateSalePriceAsync(int sanPhamId, int salePrice)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    string query = "UPDATE tb_san_pham SET SalePrice = @salePrice WHERE Id = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@salePrice", salePrice);
+                        cmd.Parameters.AddWithValue("@id", sanPhamId);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            result.State = EMySqlResultState.OK;
+                            result.Message = $"Cập nhật SalePrice thành công. ID: {sanPhamId}, SalePrice: {salePrice:N0} đ";
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.EXCEPTION;
+                            result.Message = $"Không tìm thấy sản phẩm với ID: {sanPhamId}";
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Cập nhật chỉ BookCoverPrice và Discount của sản phẩm (không update các trường khác)
+        /// Dùng khi tính giá tự động từ mapping sản phẩm kho
+        /// </summary>
+        /// <param name="sanPhamId">ID sản phẩm</param>
+        /// <param name="bookCoverPrice">Giá bìa mới</param>
+        /// <param name="discount">Chiết khấu mới (0-100)</param>
+        /// <returns>MySqlResultState</returns>
+        public static async Task<MySqlResultState> UpdateBookCoverPriceAndDiscountAsync(int sanPhamId, int bookCoverPrice, float discount)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    string query = "UPDATE tb_san_pham SET BookCoverPrice = @bookCoverPrice, Discount = @discount WHERE Id = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@bookCoverPrice", bookCoverPrice);
+                        cmd.Parameters.AddWithValue("@discount", discount);
+                        cmd.Parameters.AddWithValue("@id", sanPhamId);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            result.State = EMySqlResultState.OK;
+                            result.Message = $"Cập nhật BookCoverPrice và Discount thành công. ID: {sanPhamId}, BookCoverPrice: {bookCoverPrice:N0} đ, Discount: {discount:F1}%";
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.EXCEPTION;
+                            result.Message = $"Không tìm thấy sản phẩm với ID: {sanPhamId}";
+                        }
                     }
                 }
             }
@@ -417,6 +532,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 Quantity = MyMySql.GetInt32(rdr, "Quantity"),
                 PageNumber = MyMySql.GetInt32(rdr, "PageNumber"),
                 Discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat(rdr.GetOrdinal("Discount")),
+                SalePrice = MyMySql.GetInt32(rdr, "SalePrice"),
                 Language = MyMySql.GetString(rdr, "Language"),
                 Date = MyMySql.GetDateTime(rdr, "Date"),
                 SoldQuantity = MyMySql.GetInt32(rdr, "SoldQuantity"),
@@ -470,6 +586,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// Lấy danh sách sản phẩm cùng ComboId (variants) trong 1 query
         /// Tối ưu performance bằng cách gọi stored procedure
         /// Sản phẩm chính (với id truyền vào) sẽ nằm trong list variants
+        /// Sản phẩm chính sẽ có Mappings và MediaList được load đầy đủ, các sản phẩm khác chỉ load thông tin cơ bản
         /// </summary>
         /// <param name="id">ID sản phẩm</param>
         /// <returns>
@@ -495,6 +612,69 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             while (await rdr.ReadAsync())
                             {
                                 variants.Add(ConvertRowFromDataReader(rdr));
+                            }
+                        }
+                    }
+                    if(variants.Count == 0)
+                    {
+                        return variants;
+                    }
+
+                    if (variants[0].CategoryId > 0)
+                    {
+                        // Lấy tên của các category và publisher cho tất cả sản phẩm trong variants
+                        // Chỉ cần lấy của 1 sản phẩm trong variants, vì tất cả sản phẩm cùng combo sẽ có cùng category
+                        string categoryName = string.Empty;
+                        string publisherName = string.Empty;
+
+
+                        using (MySqlCommand cmd = new MySqlCommand(
+                            "SELECT Name FROM webplaywithme.tbcategory WHERE Id = @inId;", conn))
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@inId", variants[0].CategoryId);
+
+                            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            {
+                                while (await rdr.ReadAsync())
+                                {
+                                    categoryName = MyMySql.GetString(rdr, "Name");
+                                }
+                            }
+                        }
+
+                        using (MySqlCommand cmd = new MySqlCommand(
+                            "SELECT Name FROM webplaywithme.tbpublisher WHERE Id = @inId;", conn))
+                        {
+                            cmd.CommandType = CommandType.Text;
+                            cmd.Parameters.AddWithValue("@inId", variants[0].PublisherId);
+
+                            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            {
+                                while (await rdr.ReadAsync())
+                                {
+                                    publisherName = MyMySql.GetString(rdr, "Name");
+                                }
+                            }
+                        }
+
+                        // Gán tên category và publisher cho tất cả sản phẩm trong variants
+                        foreach (var sanPham in variants)
+                        {
+                            sanPham.CategoryName = categoryName;
+                            sanPham.PublisherName = publisherName;
+                        }
+                    }
+
+                    // Lấy metadata
+                    if (variants.Count > 0)
+                    {
+                        foreach (var sanPham in variants)
+                        {
+                            if (sanPham.Id == id)
+                            {
+                                sanPham.MediaList = await SanPhamMediaMySql.GetListBySanPhamId_ConnectOutAsync(sanPham.Id, conn);
+                                break;
                             }
                         }
                     }

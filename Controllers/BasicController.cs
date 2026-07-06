@@ -43,7 +43,7 @@ namespace MVCPlayWithMe.Controllers
             ViewData["webAddress"] = "voibenho.com";
             ViewData["httpsWebAddress"] = Common.httpsVoiBeNho;
             ViewData["hotline"] = "083 577 4489";
-            ViewData["postAddress"] = "Số 24, Ngõ Việt Hà 2, TDP Phú Minh, Phường Cổ Nhuế 2, Quận Bắc Từ Liêm, Thành Phố Hà Nội";
+            ViewData["postAddress"] = "Số 28, Ngõ 3, Khu Tập Thể Đo Lường, Tổ Dân Phố 3A, phường Đông Ngạc, Hà Nội";
             ViewData["emailAddress"] = "playwithmebook@gmail.com";
             ViewData["ceoName"] = "HOÀNG THỊ HUỆ";
             ViewData["businessId"] = "01D-8014432";

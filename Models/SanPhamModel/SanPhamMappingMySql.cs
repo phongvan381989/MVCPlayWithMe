@@ -20,33 +20,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
-                        SELECT m.Id, m.SanPhamBanId, m.SanPhamKhoId, m.Quantity,
-                               p.Code AS SanPhamKhoCode, p.Name AS SanPhamKhoName,
-                               p.Quantity AS SanPhamKhoQuantity
-                        FROM tb_san_pham_mapping m
-                        LEFT JOIN tbproducts p ON m.SanPhamKhoId = p.Id
-                        WHERE m.SanPhamBanId = @sanPhamBanId
-                        ORDER BY m.Id", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            list.Add(new SanPhamMapping
-                            {
-                                Id = MyMySql.GetInt32(rdr, "Id"),
-                                SanPhamBanId = MyMySql.GetInt32(rdr, "SanPhamBanId"),
-                                SanPhamKhoId = MyMySql.GetInt32(rdr, "SanPhamKhoId"),
-                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
-                                SanPhamKhoCode = MyMySql.GetString(rdr, "SanPhamKhoCode"),
-                                SanPhamKhoName = MyMySql.GetString(rdr, "SanPhamKhoName"),
-                                SanPhamKhoQuantity = MyMySql.GetInt32(rdr, "SanPhamKhoQuantity")
-                            });
-                        }
-                    }
+                    list = await GetListBySanPhamBanId_ConnectOutAsync(sanPhamBanId, conn);
                 }
                 catch (Exception ex)
                 {
@@ -54,6 +28,54 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     list.Clear();
                 }
             }
+            return list;
+        }
+
+        /// <summary>
+        /// Lấy danh sách mapping của 1 sản phẩm bán (có JOIN với tbproducts)
+        /// </summary>
+        public static async Task<List<SanPhamMapping>> GetListBySanPhamBanId_ConnectOutAsync(int sanPhamBanId, MySqlConnection conn)
+        {
+            List<SanPhamMapping> list = new List<SanPhamMapping>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand(@"
+                    SELECT m.Id, m.SanPhamBanId, m.SanPhamKhoId, m.Quantity,
+                            p.Code AS SanPhamKhoCode, p.Name AS SanPhamKhoName,
+                            p.Quantity AS SanPhamKhoQuantity, p.BookCoverPrice AS SanPhamKhoBookCoverPrice,
+                            p.Discount AS SanPhamKhoDiscount
+                    FROM tb_san_pham_mapping m
+                    LEFT JOIN tbproducts p ON m.SanPhamKhoId = p.Id
+                    WHERE m.SanPhamBanId = @sanPhamBanId
+                    ORDER BY m.Id", conn);
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                {
+                    while (await rdr.ReadAsync())
+                    {
+                        list.Add(new SanPhamMapping
+                        {
+                            Id = MyMySql.GetInt32(rdr, "Id"),
+                            SanPhamBanId = MyMySql.GetInt32(rdr, "SanPhamBanId"),
+                            SanPhamKhoId = MyMySql.GetInt32(rdr, "SanPhamKhoId"),
+                            Quantity = MyMySql.GetInt32(rdr, "Quantity"),
+                            SanPhamKhoCode = MyMySql.GetString(rdr, "SanPhamKhoCode"),
+                            SanPhamKhoName = MyMySql.GetString(rdr, "SanPhamKhoName"),
+                            SanPhamKhoQuantity = MyMySql.GetInt32(rdr, "SanPhamKhoQuantity"),
+                            SanPhamKhoBookCoverPrice = MyMySql.GetInt32(rdr, "SanPhamKhoBookCoverPrice"),
+                            SanPhamKhoDiscount = (float)rdr.GetDouble(rdr.GetOrdinal("SanPhamKhoDiscount"))
+                        });
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                list.Clear();
+            }
+
             return list;
         }
 

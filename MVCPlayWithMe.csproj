@@ -332,6 +332,7 @@
     <Compile Include="General\MyMySql.cs" />
     <Compile Include="General\MySqlResultState.cs" />
     <Compile Include="General\OrderStatus.cs" />
+    <Compile Include="General\PriceCalculator.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -447,6 +448,7 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingListResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\TaxAndFee.cs" />
+    <Compile Include="OpenPlatform\Model\TaxAndFeeMySql.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttribute.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttributeData.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Category\TikiAttributeValue.cs" />
@@ -651,6 +653,7 @@
     <Content Include="Content\Home\Checkout.css" />
     <Content Include="Content\Home\Error.css" />
     <Content Include="Content\Home\Item.css" />
+    <Content Include="Content\Home\SanPham.css" />
     <Content Include="Content\Home\Search.css" />
     <Content Include="Content\ItemModel\Search.css" />
     <Content Include="Content\ProductECommerce\Index.css" />

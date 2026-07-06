@@ -167,6 +167,26 @@
             </div>
 
             <div>
+                <label for="sp-sale-price">Giá bán thực tế: <span style="color:red">*</span></label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="number" class="config-max-width margin-vertical" id="sp-sale-price" value="0" required style="flex: 1;" />
+                    <select id="platform-select" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="PLAYWITHME" selected>PLAY WITH ME</option>
+                        <option value="SHOPEE">SHOPEE</option>
+                        <option value="TIKI">TIKI</option>
+                        <option value="LAZADA">LAZADA</option>
+                    </select>
+                    <button type="button" onclick="CalculateSalePriceAuto()" title="Tính giá tự động từ mapping, cập nhật giá bìa, chiết khấu nhập hàng nếu cần"
+                            style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">
+                        🧮 Tính Giá Tự Động
+                    </button>
+                </div>
+                <div id="price-breakdown" style="margin-top: 10px; padding: 10px; background: #f0f7ff; border-left: 4px solid #2196F3; display: none; font-size: 13px;">
+                    <!-- Breakdown sẽ hiển thị ở đây -->
+                </div>
+            </div>
+
+            <div>
                 <label for="sp-quantity">Số lượng tồn kho: <span style="color:red">*</span></label>
                 <input type="number" class="config-max-width margin-vertical" id="sp-quantity" required />
             </div>
@@ -425,6 +445,8 @@
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 80px;">Ảnh</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left; width: 120px;">Mã Kho</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: left;">Tên Sản Phẩm Kho</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: right; width: 100px;">Giá Bìa</th>
+                                <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 80px;">Chiết Khấu</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 100px;">SL Kho</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 100px;">SL Cần</th>
                                 <th style="padding: 10px; border: 1px solid #ddd; text-align: center; width: 80px;">Thao Tác</th>
@@ -432,7 +454,7 @@
                         </thead>
                         <tbody id="mapping-tbody">
                             <tr>
-                                <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                                <td colspan="9" style="padding: 20px; text-align: center; color: #999;">
                                     Chưa có mapping nào. Thêm sản phẩm kho ở phía trên.
                                 </td>
                             </tr>
@@ -493,6 +515,7 @@
             'Quantity': 'sp-quantity',
             'PageNumber': 'sp-page-number',
             'Discount': 'sp-discount',
+            'SalePrice': 'sp-sale-price',
             'Language': 'sp-language',
             'Date': 'sp-date',
             'SoldQuantity': 'sp-sold-quantity',
@@ -647,6 +670,7 @@
                     document.getElementById('sp-quantity').value = sanPham.Quantity ?? 0;
                     document.getElementById('sp-page-number').value = (sanPham.PageNumber && sanPham.PageNumber !== -1) ? sanPham.PageNumber : '';
                     document.getElementById('sp-discount').value = sanPham.Discount || '';
+                    document.getElementById('sp-sale-price').value = sanPham.SalePrice || 0;
                     document.getElementById('sp-language').value = sanPham.Language || '';
                     if (sanPham.Date) {
                         const date = new Date(sanPham.Date);
@@ -702,6 +726,7 @@
                 Quantity: parseInt(document.getElementById('sp-quantity').value) || 0,
                 PageNumber: parseIntOrNull(document.getElementById('sp-page-number').value),
                 Discount: parseFloatOrDefault(document.getElementById('sp-discount').value),
+                SalePrice: parseInt(document.getElementById('sp-sale-price').value) || 0,
                 Language: document.getElementById('sp-language').value || null,
                 Date: document.getElementById('sp-date').value || null,
                 SoldQuantity: parseIntOrNull(document.getElementById('sp-sold-quantity').value),
@@ -753,7 +778,7 @@
                         const isImage = metadata.MediaType === 'image';
 
                         // Tự sinh URL phiên bản 320 từ FileName
-                        const filePath = Get320VersionOfImageSrc(sanPhamMediaFolderPath + `${sanPhamId}/${metadata.FileName}`);
+                        const filePath = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamId, metadata.FileName));
 
                         const mediaItem = document.createElement('div');
                         mediaItem.className = 'media-item';
@@ -1220,6 +1245,9 @@
 
                 RemoveCircleLoader();
 
+                // Tính lại giá bán, giá bìa, chiết khấu
+                await CalculateSalePriceAuto();
+
                 // Reload mapping list
                 await LoadKhoMappingList();
 
@@ -1292,7 +1320,7 @@
             if (currentMappingList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="7" style="padding: 20px; text-align: center; color: #999;">
+                        <td colspan="9" style="padding: 20px; text-align: center; color: #999;">
                             Chưa có mapping nào. Thêm sản phẩm kho ở phía trên.
                         </td>
                     </tr>
@@ -1309,12 +1337,18 @@
                                           style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; cursor: pointer;" />
                                  </a>`;
 
+                // Format giá bìa và chiết khấu
+                const giaBia = (mapping.SanPhamKhoBookCoverPrice || 0).toLocaleString('vi-VN');
+                const chietKhau = mapping.SanPhamKhoDiscount || 0;
+
                 return `
                     <tr>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${index + 1}</td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${imgHtml}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">${mapping.SanPhamKhoCode || 'N/A'}</td>
                         <td style="padding: 8px; border: 1px solid #ddd;">${mapping.SanPhamKhoName || 'N/A'}</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: right; font-weight: 500;">${giaBia} đ</td>
+                        <td style="padding: 8px; border: 1px solid #ddd; text-align: center; color: #FF5722; font-weight: 500;">${chietKhau}%</td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${mapping.SanPhamKhoQuantity}</td>
                         <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">
                             <input type="number" value="${mapping.Quantity}" min="1"
@@ -1380,6 +1414,9 @@
                 if (result.State === 0) {
                     // Reload list FIRST (user sees updated table immediately)
                     await LoadKhoMappingList();
+
+                    // Tính lại giá bán, giá bìa, chiết khấu
+                    await CalculateSalePriceAuto();
 
                     // Then show success
                     //CreateMustClickOkModal('✓ Xóa mapping thành công');
@@ -1470,6 +1507,94 @@
             } catch (error) {
                 RemoveCircleLoader();
                 CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+            }
+        }
+
+        // ========================================
+        // 🧮 Tính Giá Bán Tự Động
+        // ========================================
+
+        async function CalculateSalePriceAuto() {
+            const sanPhamId = parseInt(document.getElementById('sp-id').value);
+            const platform = document.getElementById('platform-select').value;
+
+            if (!sanPhamId) {
+                CreateMustClickOkModal('Không xác định được ID sản phẩm');
+                return;
+            }
+
+            try {
+                ShowCircleLoader();
+
+                const resultText = await PostJSON('/SanPham/CalculateAndUpdateSalePrice', {
+                    sanPhamId: sanPhamId,
+                    platform: platform
+                });
+
+                RemoveCircleLoader();
+
+                const result = JSON.parse(resultText);
+
+                if (result.State === 0) {
+                    // Success - update SalePrice, BookCoverPrice, Discount
+                    document.getElementById('sp-sale-price').value = result.SalePrice;
+
+                    if (result.BookCoverPrice !== undefined) {
+                        document.getElementById('sp-book-cover-price').value = result.BookCoverPrice;
+                    }
+
+                    if (result.Discount !== undefined) {
+                        document.getElementById('sp-discount').value = result.Discount.toFixed(1);
+                    }
+
+                    // Show breakdown
+                    const breakdown = result.Breakdown;
+                    const breakdownDiv = document.getElementById('price-breakdown');
+
+                    if (breakdown) {
+                        breakdownDiv.innerHTML = `
+                            <div style="font-weight: 600; margin-bottom: 8px; color: #1976D2;">
+                                ✓ ${result.Message}
+                            </div>
+                            <div style="display: grid; grid-template-columns: auto 1fr; gap: 5px 15px;">
+                                <span>Tổng giá nhập:</span>
+                                <span style="text-align: right; font-weight: 500;">${Math.round(breakdown.TongGiaNhap).toLocaleString('vi-VN')} đ</span>
+
+                                <span>Chi phí đóng gói:</span>
+                                <span style="text-align: right; font-weight: 500;">${Math.round(breakdown.ChiPhiDongGoi).toLocaleString('vi-VN')} đ</span>
+
+                                <span style="border-top: 1px solid #ddd; padding-top: 5px;">Tổng chi phí:</span>
+                                <span style="text-align: right; font-weight: 600; border-top: 1px solid #ddd; padding-top: 5px;">${Math.round(breakdown.TongChiPhi).toLocaleString('vi-VN')} đ</span>
+
+                                <span>Lợi nhuận mong muốn:</span>
+                                <span style="text-align: right; font-weight: 500; color: #4CAF50;">+${Math.round(breakdown.LoiNhuanMongMuon).toLocaleString('vi-VN')} đ</span>
+
+                                <span>Giá trước thuế phí:</span>
+                                <span style="text-align: right; font-weight: 500;">${Math.round(breakdown.GiaTruocThuePhi).toLocaleString('vi-VN')} đ</span>
+
+                                <span>Thuế:</span>
+                                <span style="text-align: right; font-weight: 500; color: #FF5722;">+${Math.round(breakdown.Thue).toLocaleString('vi-VN')} đ</span>
+
+                                <span>Phí sàn:</span>
+                                <span style="text-align: right; font-weight: 500; color: #FF5722;">+${Math.round(breakdown.PhiSan).toLocaleString('vi-VN')} đ</span>
+
+                                <span style="border-top: 2px solid #1976D2; padding-top: 5px; font-weight: 600;">💰 Giá bán thực tế:</span>
+                                <span style="text-align: right; font-weight: 700; color: #1976D2; border-top: 2px solid #1976D2; padding-top: 5px; font-size: 16px;">${breakdown.GiaBanThucTe.toLocaleString('vi-VN')} đ</span>
+                            </div>
+                        `;
+                        breakdownDiv.style.display = 'block';
+                    } else {
+                        breakdownDiv.style.display = 'none';
+                    }
+
+                    CreateMustClickOkModal(result.Message);
+                } else {
+                    document.getElementById('price-breakdown').style.display = 'none';
+                    CreateMustClickOkModal('❌ ' + result.Message);
+                }
+            } catch (error) {
+                RemoveCircleLoader();
+                CreateMustClickOkModal('Lỗi kết nối: ' + error.Message);
             }
         }
     </script>

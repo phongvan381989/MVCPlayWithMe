@@ -166,8 +166,8 @@ namespace MVCPlayWithMe.OpenPlatform
 
         // Xây dựng công thức tính giá bán
         // p: giá bìa, 
-        // dI: chiết khấu nhập, VD: 0.4
-        // dO: chiết khấu bán,
+        // dI: chiết khấu nhập so với giá Bìa, VD: 0.4
+        // dO: chiết khấu bán so với giá Bìa,
         // x: % lợi nhuận mong muốn so với GIÁ BÁN
         // t: phần trăm phí trả sản + thuế nộp nhà nước so với giá bán trên sàn
         // c: chi phí đóng gói cố đinh
@@ -181,11 +181,6 @@ namespace MVCPlayWithMe.OpenPlatform
         // Làm tròn xuống thành số nguyên
         private static int CaculateSalePriceCore_Ver2(int p, float dI, float x, float t, int c, int m)
         {
-            //if (p * (1 - dO) * x > m)
-            //{
-            //    x = m / (p * (1 - dI));
-            //}
-
             int salePrice = 0;
             if (p == 0)
             {
@@ -194,22 +189,15 @@ namespace MVCPlayWithMe.OpenPlatform
 
             salePrice = (int)Math.Floor((p * (1 - dI) + c) / (1 - t - x));
 
-            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
-            // Ta tính lại giá bán, bán dưới điểm hòa vốn => Chấp nhận lỗ
-            if (salePrice >= p)
-            {
-                salePrice = p * (100 - constDiscount) / 100;
-                // Làm tròn salePrice là bội của 100 VND
-                if (salePrice % 100 != 0)
-                {
-                    salePrice = salePrice - salePrice % 100;
-                }
-            }
-
             // Làm tròn salePrice là bội của 100 VND
             if (salePrice % 100 != 0)
             {
-                salePrice = salePrice - salePrice % 100;
+                salePrice =  (salePrice % 100 + 1) * 100;
+            }
+            // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
+            if (salePrice > p)
+            {
+                salePrice = p;
             }
 
             return salePrice;
