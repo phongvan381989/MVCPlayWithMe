@@ -5,9 +5,12 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    @Html.Partial("~/Views/Shared/Head.cshtml")
+    @Html.Partial("~/Views/Shared/Head_GA.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260701">
-    <link rel="stylesheet" href="~/Content/Home/SanPham.css?v=20260701">
+    <link rel="stylesheet" href="~/Content/Home/SanPham.css?v=20260710d">
+
+    <!-- PhotoSwipe CSS (local v5.3.8) -->
+    <link rel="stylesheet" href="~/Content/photoswipe.css?v=538">
 </head>
 <body>
     <div id="biggestContainer">
@@ -18,25 +21,9 @@
                     <div id="item-medium-media" title="Giữ kéo chuột để xem ảnh khác">
                         <picture id="medium_picture">
                             <source id="medium_image_source" type="image/webp">
-                            <img id="medium_image" src="/Media/NoImageThumbnail.png" alt="No Image"
-                                 @*onmouseup="MouseUpMediumMedia(event)"
-                                 onmousedown="MouseDownMediumMedia(event)"
-                                 onmouseenter="MouseEnterMediumMedia(event)"
-                                 onmousemove="MouseMoveMediumMedia(event)"
-                                 onmouseout="MouseOutMediumMedia(event)"
-                                 ontouchmove="TouchMoveMediumMedia(event)"
-                                 ontouchstart="TouchStartMediumMedia(event)"
-                                 ontouchend="TouchEndMediumMedia(event)"*@>
+                            <img id="medium_image" src="/Media/NoImageThumbnail.png" alt="No Image">
                         </picture>
-                        <video id="medium_video" class="class_medium_video" controls autoplay muted="muted"
-                               @*onmouseup="MouseUpMediumMedia(event)"
-                               onmousedown="MouseDownMediumMedia(event)"
-                               onmouseenter="MouseEnterMediumMedia(event)"
-                               onmousemove="MouseMoveMediumMedia(event)"
-                               onmouseout="MouseOutMediumMedia(event)"
-                               ontouchmove="TouchMoveMediumMedia(event)"
-                               ontouchstart="TouchStartMediumMedia(event)"
-                               ontouchend="TouchEndMediumMedia(event)"*@></video>
+                        <video id="medium_video" class="class_medium_video" controls autoplay muted="muted"></video>
                     </div>
                     <div id="left_arrow" title="Ảnh trước"></div>
                     <div id="right_arrow" title="Ảnh sau"></div>
@@ -102,14 +89,14 @@
                                 </line>
                             </g>
                         </svg>
-                        <span>thêm vào giỏ hàng</span>
+                        <span>Thêm Vào Giỏ Hàng</span>
                     </button>
-                    <button type="button" class="btn-buy-now" onclick="BuyNow()">
+                    <button type="button" class="btn-buy-now" onclick="GoToCartNow()">
                         Mua ngay
                     </button>
                 </div>
                 <div class="psinpachgwl90">
-                    <a href="/" class="fcak09va86" target="_blank" title="Mua sản phẩm trên Shopee">
+                    <a href="https://shopee.vn/voibenhobooks" class="fcak09va86" target="_blank" title="Mua sản phẩm trên Shopee">
                         <div>
                             <svg viewBox="0 0 192 65" class="shopee-svg-icon-sfxb">
                                 <g>
@@ -122,13 +109,13 @@
                     <a href="https://tiki.vn/cua-hang/play-with-me" class="" target="_blank"
                        style="width:70px; height:30px; margin-left:10px;"
                        title="Mua sản phẩm trên Tiki">
-                        <img src="/Media/tikiLogo.png" />
+                        <img class="logo-ecommerce-tl" src="/Media/tikiLogo.png" />
                     </a>
 
-                    <a href="https://www.lazada.vn/shop/play-with-me" class="" target="_blank"
+                    <a href="https://www.lazada.vn/shop/tiem-sach-voi-be-nho" class="" target="_blank"
                        style="width:100px; height:30px; margin-left:10px;"
                        title="Mua sản phẩm trên Lazada">
-                        <img src="/Media/lazadaLogo.png" />
+                        <img class="logo-ecommerce-tl" src="/Media/lazadaLogo.png" />
                     </a>
                 </div>
             </div>
@@ -153,7 +140,7 @@
             </div>
 
             @Html.Partial("~/Views/Shared/Home/SelectedModal.cshtml")
-            @Html.Partial("~/Views/Shared/Home/OverMaxModal.cshtml")
+            @*@Html.Partial("~/Views/Shared/Home/OverMaxModal.cshtml")*@
         </div>
 
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
@@ -163,6 +150,11 @@
     <script src="~/Scripts/web.play.with.me.common.js?v=20260701"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js?v=20260701"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260701"></script>
-    <script src="~/Scripts/Home/SanPham.js?v=20260701"></script>
+    <script src="~/Scripts/cart-manager.js"></script>
+    <!-- PhotoSwipe JS (local v5.3.8) -->
+    <script src="~/Scripts/photoswipe.umd.min.js?v=538"></script>
+    <script src="~/Scripts/photoswipe-lightbox.umd.min.js?v=538"></script>
+
+    <script src="~/Scripts/Home/SanPham.js?v=20260710b"></script>
 </body>
 </html>

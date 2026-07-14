@@ -1,7 +1,9 @@
-using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.SanPhamModel;
 using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -225,35 +227,7 @@ namespace MVCPlayWithMe.Models.Customer
             return await AddNewCookieAsync(userCookieIdentify, customerId);
         }
 
-        public async Task AddCartLoginAsync(int customerId, List<Cart> ls)
-        {
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-            {
-                try
-                {
-                    await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update_Login", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                    cmd.Parameters.AddWithValue("@inModelId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
-                    cmd.Parameters.AddWithValue("@inReal", 0);
-                    foreach (var cart in ls)
-                    {
-                        cmd.Parameters[1].Value = cart.id;
-                        cmd.Parameters[2].Value = cart.q;
-                        cmd.Parameters[3].Value = cart.real;
-                        await cmd.ExecuteNonQueryAsync();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.ToString());
-                }
-            }
-        }
-
-        public async Task<MySqlResultState> AddCartAsync(int customerId, Cart cart, int maxQuantity)
+        public async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -264,22 +238,59 @@ namespace MVCPlayWithMe.Models.Customer
                     MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                    cmd.Parameters.AddWithValue("@inModelId", cart.id);
-                    cmd.Parameters.AddWithValue("@inQuantity", cart.q);
-                    cmd.Parameters.AddWithValue("@inReal", cart.real);
-                    cmd.Parameters.AddWithValue("@inMaxQuantity", maxQuantity);
-                    cmd.Parameters.AddWithValue("@outResult", 0);
-                    cmd.Parameters.AddWithValue("@outMessage", "");
-                    cmd.Parameters[5].Direction = ParameterDirection.Output;
-                    cmd.Parameters[6].Direction = ParameterDirection.Output;
-                    await cmd.ExecuteNonQueryAsync();
-                    int lengthPara = cmd.Parameters.Count;
-                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    cmd.Parameters.AddWithValue("@inSanPhamId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    cmd.Parameters.AddWithValue("@inReal", 0);
+                    cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
+                    foreach (var cart in ls)
+                    {
+                        cmd.Parameters[1].Value = cart.sanPhamId;
+                        cmd.Parameters[2].Value = cart.quantity;
+                        cmd.Parameters[3].Value = cart.real;
+                        if (cart.time.HasValue)
+                        {
+                            cmd.Parameters[4].Value = cart.time;
+                        }
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex)
                 {
-                    MyLogger.GetInstance().Warn(ex.ToString());
+                    Common.SetResultException(ex, result);
+                }
+            }
+
+            return result;
+        }
+
+        public async Task<MySqlResultState> AddCartAsync(int customerId, Cart cart)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    cmd.Parameters.AddWithValue("@inSanPhamId", cart.sanPhamId);
+                    cmd.Parameters.AddWithValue("@inQuantity", cart.quantity);
+                    cmd.Parameters.AddWithValue("@inReal", cart.real);
+                    cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                    if (rowsAffected > 0)
+                    {
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.EXCEPTION;
+                        result.Message = $"Không thêm sản phẩm vào giỏ hàng thành công";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
                 }
             }
             return result;

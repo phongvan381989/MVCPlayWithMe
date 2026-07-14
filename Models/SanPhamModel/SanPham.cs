@@ -304,4 +304,18 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
         public List<SanPhamMapping> Mappings { get; set; } = new List<SanPhamMapping>();
     }
+
+    /// <summary>
+    /// DTO lightweight cho thông tin cơ bản sản phẩm (dùng cho cart, checkout)
+    /// </summary>
+    public class SanPhamBasicInfo
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string ShortName { get; set; }
+        public int BookCoverPrice { get; set; }
+        public int SalePrice { get; set; }
+        public int Quantity { get; set; }
+        public string CoverImageFileName { get; set; } // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
+    }
 }

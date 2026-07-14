@@ -76,7 +76,9 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="customerInforCookie"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<string> Login_Login(string userName, string passWord/*, string customerInforCookie*/)
+        public async Task<string> Login_Login(string userName,
+            string passWord,
+            string guestCartJson = null)
         {
             MySqlResultState result = await sqler.LoginCustomerAsync(userName, passWord);
 
@@ -104,10 +106,23 @@ namespace MVCPlayWithMe.Controllers
                     result = resultInsert;
                     break;
                 }
-                //List<Cart> lsCart = Cookie.GetListCartCookie(HttpContext);
-                //await sqler.AddCartLoginAsync(customer.id, lsCart);
-                //List<Address> lsAddress = Cookie.GetListCustomerInforCookieFromCookieValue(customerInforCookie);
-                //sqler.AddCustomerInforAddress(customer.id, lsAddress);
+
+                // Merge guest cart từ localStorage vào DB
+                if (!string.IsNullOrEmpty(guestCartJson))
+                {
+                    try
+                    {
+                        List<Cart> lsCart = JsonConvert.DeserializeObject<List<Cart>>(guestCartJson);
+                        if (lsCart != null && lsCart.Count > 0)
+                        {
+                            await sqler.AddCartLoginAsync(customer.id, lsCart);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MyLogger.GetInstance().Warn($"Failed to merge guest cart on login: {ex.Message}");
+                    }
+                }
             }
             while (false);
             return JsonConvert.SerializeObject(result);

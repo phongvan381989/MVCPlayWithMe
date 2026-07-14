@@ -2417,8 +2417,8 @@ namespace MVCPlayWithMe.General
         /// Sau khi convert thành công sẽ xóa ảnh gốc
         /// </summary>
         /// <param name="originalImagePath">Đường dẫn ảnh gốc (JPG/PNG)</param>
-        /// return: Tên ảnh mới 0.jpg => 0.webp, 1.jpg => 1.webp
-        public static string ConvertSanPhamImageToWebP(string originalImagePath)
+        /// <returns>Tuple (width, height, fileName) - kích thước và tên file WebP, hoặc (0, 0, "") nếu fail</returns>
+        public static (int width, int height, string fileName) ConvertSanPhamImageToWebP(string originalImagePath)
         {
             try
             {
@@ -2455,14 +2455,91 @@ namespace MVCPlayWithMe.General
                 // Convert từ WebP full size → WebP thumbnail (không dùng ảnh gốc)
                 ConvertToWebP(webpFullPath, webpThumbPath, 320, 80);
 
-                MyLogger.GetInstance().Info($"Converted to WebP: {originalImagePath} -> {webpFullPath}");
-                return fileNameWithoutExt + ".webp";
+                // Đọc kích thước ảnh WebP full size
+                int width = 0, height = 0;
+                using (var image = new ImageMagick.MagickImage(webpFullPath))
+                {
+                    width = image.Width;
+                    height = image.Height;
+                }
+
+                MyLogger.GetInstance().Info($"Converted to WebP: {originalImagePath} -> {webpFullPath} ({width}x{height})");
+                return (width, height, fileNameWithoutExt + ".webp");
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP failed: {originalImagePath}. Error: {ex.Message}");
             }
-            return string.Empty;
+            return (0, 0, string.Empty);
+        }
+
+        /// <summary>
+        /// Extract poster thumbnail từ video và convert sang WebP 320px
+        /// Tên file poster hardcode: video_poster.webp (chỉ lưu phiên bản 320 trong thư mục _320)
+        /// </summary>
+        /// <param name="videoFilePath">Đường dẫn đầy đủ đến video file</param>
+        /// <param name="videoPosterName">Tên file poster (VD: video_poster.webp)</param>
+        /// <returns>Tuple (width, height) - kích thước video gốc hoặc (1920, 1080) nếu fail</returns>
+        public static (int width, int height) ExtractVideoPoster(string videoFilePath, string videoPosterName)
+        {
+            try
+            {
+                string directory = Path.GetDirectoryName(videoFilePath);
+                string tempJpgPath = Path.Combine(directory, "temp_poster.jpg");
+
+                // Extract frame từ video tại giây thứ 1 + lấy metadata
+                var inputFile = new MediaToolkit.Model.MediaFile { Filename = videoFilePath };
+                int videoWidth = 0, videoHeight = 0;
+
+                using (var engine = new MediaToolkit.Engine())
+                {
+                    // Lấy metadata video để biết kích thước thực tế
+                    engine.GetMetadata(inputFile);
+                    // Giả sử frameSize trả về chuỗi "1920x1080"
+                    string frameSize = inputFile.Metadata.VideoData.FrameSize;
+                    MyLogger.GetInstance().Info($"frameSize of video: {frameSize}");
+
+                    // Tìm các nhóm chữ số trong chuỗi
+                    var match = Regex.Match(frameSize, @"(\d+)x(\d+)");
+
+                    if (match.Success)
+                    {
+                        videoWidth = int.Parse(match.Groups[1].Value);  // 1920
+                        videoHeight = int.Parse(match.Groups[2].Value); // 1080
+                    }
+
+                    // Extract frame tại giây thứ 1
+                    var options = new MediaToolkit.Options.ConversionOptions { Seek = TimeSpan.FromSeconds(1) };
+                    var outputFile = new MediaToolkit.Model.MediaFile { Filename = tempJpgPath };
+                    engine.GetThumbnail(inputFile, outputFile, options);
+                }
+
+                // Tạo thư mục _320 nếu chưa có (ngang hàng với thư mục gốc)
+                string parentDir = Directory.GetParent(directory).FullName;
+                string folderName = new DirectoryInfo(directory).Name;
+                string thumbFolder = Path.Combine(parentDir, folderName + "_320");
+
+                if (!Directory.Exists(thumbFolder))
+                    Directory.CreateDirectory(thumbFolder);
+
+                // Convert JPG → WebP 320px trong thư mục _320
+                string webpThumbPath = Path.Combine(thumbFolder, videoPosterName);
+                ConvertToWebP(tempJpgPath, webpThumbPath, 320, 80);
+
+                // Xóa temp JPG
+                if (File.Exists(tempJpgPath))
+                {
+                    File.Delete(tempJpgPath);
+                }
+
+                MyLogger.GetInstance().Info($"Generated video poster: {videoPosterName} ({videoWidth}x{videoHeight})");
+                return (videoWidth, videoHeight);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"ExtractVideoPoster failed: {videoFilePath}. Error: {ex.Message}");
+            }
+            return (1920, 1080);
         }
 
         /// <summary>
@@ -2529,8 +2606,8 @@ namespace MVCPlayWithMe.General
         /// <returns>Filename: {slug-san-pham}-{slug-ten-file}{extension}</returns>
         public static string GenerateImageFileName(string productName, string originalFileName)
         {
-            // Slug tên sản phẩm (max 50 chars để còn chỗ cho tên file)
-            string productSlug = ConvertToSlug(productName, 50);
+            // Slug tên sản phẩm (max 60 chars để còn chỗ cho tên file)
+            string productSlug = ConvertToSlug(productName, 60);
             if (string.IsNullOrWhiteSpace(productSlug))
                 productSlug = "san-pham";
 
@@ -2538,17 +2615,69 @@ namespace MVCPlayWithMe.General
             string extension = Path.GetExtension(originalFileName);
             string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalFileName);
 
-            // Slug tên file gốc (max 30 chars)
+            // Slug tên file gốc (max 20 chars)
             if(fileNameWithoutExt == "0")
             {
                 fileNameWithoutExt = "anh-bia";
             }
-            string fileSlug = ConvertToSlug(fileNameWithoutExt, 30);
+            string fileSlug = ConvertToSlug(fileNameWithoutExt, 20);
             if (string.IsNullOrWhiteSpace(fileSlug))
                 fileSlug = "image";
 
             // Ghép: {product-slug}-{file-slug}{extension}
             return $"{productSlug}-{fileSlug}{extension}";
+        }
+
+        /// <summary>
+        /// Tạo tên file có ý nghĩa từ tên sản phẩm
+        /// VD: "Harry Potter" -> "harry-potte.mp4"
+        /// Nếu trùng tên (không kể extension) thì file cũ sẽ bị xóa và thay thế
+        /// </summary>
+        /// <param name="productName">Tên sản phẩm</param>
+        /// <returns>Filename: {slug-san-pham}-{slug-ten-file}{extension}</returns>
+        public static string GenerateVideoFileName(string productName, string originalFileName)
+        {
+            // Slug tên sản phẩm (max 80 chars để còn chỗ cho tên file)
+            string productSlug = ConvertToSlug(productName, 80);
+
+            // Tách extension và tên file gốc
+            string extension = Path.GetExtension(originalFileName);
+
+            return $"{productSlug}{extension}";
+        }
+
+        /// <summary>
+        /// Đọc JSON từ Request body và deserialize thành object
+        /// (MVC 5 không hỗ trợ [FromBody] attribute)
+        /// </summary>
+        /// <typeparam name="T">Kiểu object cần deserialize</typeparam>
+        /// <param name="request">HttpRequestBase từ controller</param>
+        /// <returns>Deserialized object hoặc null nếu lỗi/không có data</returns>
+        public static async Task<T> ReadJsonFromRequestBody<T>(HttpRequestBase request) where T : class
+        {
+            if (request.ContentLength <= 0)
+            {
+                return null;
+            }
+
+            try
+            {
+                request.InputStream.Position = 0; // Reset stream position
+                using (var reader = new System.IO.StreamReader(request.InputStream))
+                {
+                    string json = await reader.ReadToEndAsync();
+                    if (!string.IsNullOrEmpty(json))
+                    {
+                        return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"Error reading JSON from request body: {ex.Message}");
+            }
+
+            return null;
         }
     }
 }

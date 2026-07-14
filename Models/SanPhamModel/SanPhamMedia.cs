@@ -39,6 +39,16 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public string PosterImage { get; set; }
 
         /// <summary>
+        /// Chiều rộng ảnh/video (px) - dùng cho PhotoSwipe
+        /// </summary>
+        public int Width { get; set; }
+
+        /// <summary>
+        /// Chiều cao ảnh/video (px) - dùng cho PhotoSwipe
+        /// </summary>
+        public int Height { get; set; }
+
+        /// <summary>
         /// Thứ tự hiển thị
         /// </summary>
         public int DisplayOrder { get; set; }

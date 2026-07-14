@@ -12,9 +12,21 @@ async function Login_Login() {
         passWord.focus();
         return;
     }
+
+    // Lấy guest cart từ localStorage (nếu có)
+    let guestCart = null;
+    if (typeof CartManager !== 'undefined') {
+        guestCart = CartManager.getCart();
+    }
+
     const searchParams = new URLSearchParams();
     searchParams.append("userName", userName);
     searchParams.append("passWord", passWord);
+
+    // Gửi cart data để merge vào DB
+    if (guestCart && guestCart.length > 0) {
+        searchParams.append("guestCartJson", JSON.stringify(guestCart));
+    }
 
     let query = "/Customer/Login_Login";
 
@@ -26,24 +38,13 @@ async function Login_Login() {
 
     if (resObj.State != 0) {
         await CreateMustClickOkModal(resObj.Message, null);
-
         return;
     }
-    //// Xóa cart cookie bên javascript
-    //DeleteAllCartCookie();
-    //// Xóa customer info cookie bên javascript
-    //DeleteAllCustomerInforCookie();
 
-    //if (window.history.length > 2) {
-    //    // Quay về trang trước đó
-    //    alert("pasueeee");
-    //    window.history.back();
-    //    // Refresh lại page với thông tin đã đăng nhập
-    //    window.location.reload();
-    //}
-    //else {
-    //    window.location.href = "/Home";
-    //}
+    // Xóa guest cart sau khi login thành công (đã merge vào DB)
+    if (typeof CartManager !== 'undefined') {
+        CartManager.clearCart();
+    }
 
     window.location.href = "/Home";
 }

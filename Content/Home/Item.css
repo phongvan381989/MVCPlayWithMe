@@ -10,6 +10,10 @@ img, video {
     flex-direction: column;
     flex-wrap: wrap;
     width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
 }
 
 #item_media_arrow_wrapper{
@@ -18,18 +22,13 @@ img, video {
 
 #item-medium-media {
     display: flex;
-    /*position:relative;*/
+    position: relative;
     justify-content: center;
     align-items: center;
-    /*display: block;*/
-    /*width: 100%;*/
-    /*margin-left: auto;
-    margin-right: auto;
-    margin-top: auto;
-    margin-bottom: auto;*/
-    /*padding: 5px;*/
-    /*height: 800px;*/
-    /*border: 1px solid rgb(255, 0, 0);*/
+    width: 100%;
+    overflow: hidden;  /* Ngăn nội dung tràn ra ngoài */
+    border: 2px solid red;  /* Debug border */
+    /* Height được set bằng JavaScript (600px hoặc scrWidth) */
 }
 
 #medium_image, #medium_video {
@@ -385,10 +384,10 @@ h1 {
 
 .product-detail {
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-    border-radius: 0.125rem;
+    border-radius: 8px;
     overflow: hidden;
     background: #fff;
-    margin-top: 0.9375rem;
+    margin-bottom: 10px;
     padding-top: 0.625rem;
     display: block;
 }

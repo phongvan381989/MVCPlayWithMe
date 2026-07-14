@@ -4,6 +4,7 @@ using MVCPlayWithMe.OpenPlatform.Model;
 using MySql.Data.MySqlClient;
 using MySqlX.XDevAPI.Common;
 using Newtonsoft.Json;
+using Org.BouncyCastle.Math.Field;
 using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
@@ -326,11 +327,17 @@ namespace MVCPlayWithMe.Controllers
                 // Decode headers (vì client encode để hỗ trợ tiếng Việt)
                 var originalFileName = HttpUtility.UrlDecode(Request.Headers["fileName"]);
                 var sanPhamName = HttpUtility.UrlDecode(Request.Headers["sanPhamName"]);
+                string ext = Path.GetExtension(originalFileName).ToLower();
+
 
                 if (length > 0)
                 {
                     // Tạo tên file mới: {slug-san-pham}-{slug-ten-file-goc}.ext
                     string newFileName = Common.GenerateImageFileName(sanPhamName, originalFileName);
+                    if (!Common.ImageExtensions.Contains(ext))
+                    {
+                        newFileName = Common.GenerateVideoFileName(sanPhamName, originalFileName);
+                    }
 
                     // XÓA tất cả file cùng tên (không kể extension) nếu có
                     // VD: Xóa harry-potter-anh-bia.jpg, harry-potter-anh-bia.webp
@@ -344,14 +351,28 @@ namespace MVCPlayWithMe.Controllers
                     }
 
                     // Convert ảnh sang WebP (sẽ xóa file gốc JPG/PNG)
-                    string ext = Path.GetExtension(saveToFileLoc).ToLower();
                     string finalFileName = newFileName;
                     string mediaType = "video";
+                    string videoPosterName = "";
+                    int mediaWidth = 0;
+                    int mediaHeight = 0;
 
                     if (Common.ImageExtensions.Contains(ext))
                     {
-                        finalFileName = Common.ConvertSanPhamImageToWebP(saveToFileLoc);
+                        // Image: Convert sang WebP + lấy kích thước
+                        var (width, height, fileName) = Common.ConvertSanPhamImageToWebP(saveToFileLoc);
+                        finalFileName = fileName;
+                        mediaWidth = width;
+                        mediaHeight = height;
                         mediaType = "image";
+                    }
+                    else
+                    {
+                        // Video: extract poster thumbnail + lấy kích thước video
+                        videoPosterName = Path.GetFileNameWithoutExtension(finalFileName) + "-video-poster.webp";
+                        var (width, height) = Common.ExtractVideoPoster(saveToFileLoc, videoPosterName);
+                        mediaWidth = width;
+                        mediaHeight = height;
                     }
 
                     // Insert metadata vào tb_san_pham_media
@@ -365,7 +386,9 @@ namespace MVCPlayWithMe.Controllers
                             Title = "",
                             AltText = "",
                             Description = "",
-                            PosterImage = "",
+                            PosterImage = videoPosterName,
+                            Width = mediaWidth,
+                            Height = mediaHeight,
                             DisplayOrder = 38 //  hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery
                         });
 
@@ -394,7 +417,7 @@ namespace MVCPlayWithMe.Controllers
         /// Rename tất cả versions: file gốc (nếu còn), WebP full size, WebP thumbnail
         /// </summary>
         [HttpPost]
-        public async Task<string> RenameMedia(string sanPhamId, string oldFileName, string newFileName)
+        public async Task<string> RenameMedia(string sanPhamId, string oldFileName, string newFileNameWithoutExt)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -414,7 +437,7 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 // Validate tên mới
-                if (string.IsNullOrWhiteSpace(newFileName))
+                if (string.IsNullOrWhiteSpace(newFileNameWithoutExt))
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Tên file mới không được để trống.";
@@ -423,14 +446,14 @@ namespace MVCPlayWithMe.Controllers
 
                 // Lấy extension từ file cũ
                 string extension = Path.GetExtension(oldFileName);
-                string oldFileNameWithoutExt = Path.GetFileNameWithoutExtension(oldFileName);
+                //string oldFileNameWithoutExt = Path.GetFileNameWithoutExtension(oldFileName);
 
                 //// Tạo slug cho tên mới
                 //string newFileSlug = Common.ConvertToSlug(newFileName, 80);
                 //if (string.IsNullOrWhiteSpace(newFileSlug))
                 //    newFileSlug = "renamed";
 
-                string newFileNameWithExt = newFileName + extension;
+                string newFileNameWithExt = newFileNameWithoutExt + extension;
 
                 // Kiểm tra tên mới có trùng với file khác không
                 string newFullPath = Path.Combine(path, newFileNameWithExt);
@@ -462,8 +485,13 @@ namespace MVCPlayWithMe.Controllers
                 //string thumbFolder = Path.Combine(parentDir, folderName + "_320");
                 string thumbFolder = Path.GetDirectoryName(path) + "_320";
 
-                string oldThumbPath = Path.Combine(thumbFolder, Path.ChangeExtension(oldFileNameWithoutExt, ".webp"));
-                string newThumbPath = Path.Combine(thumbFolder, Path.ChangeExtension(newFileName, ".webp"));
+                string oldThumbPath = Path.Combine(thumbFolder, oldFileName);
+                string newThumbPath = Path.Combine(thumbFolder, newFileNameWithExt);
+                if(!Common.ImageExtensions.Contains(extension))
+                {
+                    oldThumbPath = Path.Combine(thumbFolder, Path.GetFileNameWithoutExtension(oldFileName) + "-video-poster.webp");
+                    newThumbPath = Path.Combine(thumbFolder, newFileNameWithoutExt + "-video-poster.webp");
+                }
 
                 if (System.IO.File.Exists(oldThumbPath))
                 {
@@ -636,11 +664,6 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> GetAllMediaMetadata(int sanPhamId)
         {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new List<SanPhamMedia>());
-            }
-
             List<SanPhamMedia> list = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sanPhamId);
             return JsonConvert.SerializeObject(list);
         }
@@ -859,16 +882,23 @@ namespace MVCPlayWithMe.Controllers
                         string destFile = Path.Combine(destFolder, newFileName);
                         System.IO.File.Copy(sourceFile, destFile, overwrite: true);
 
-                        string webpImage = Common.ConvertSanPhamImageToWebP(destFile);
+                        //string webpImage = Common.ConvertSanPhamImageToWebP(destFile);
+                        var (width, height, webpImage) = Common.ConvertSanPhamImageToWebP(destFile);
+
+                        int mediaWidth = width;
+                        int mediaHeight = height;
 
                         await SanPhamMediaMySql.InsertAsync(new SanPhamMedia
                         {
                             SanPhamId = sanPhamBanId,
+                            //MediaType = "image", db sinh gia tri mac dinh la "image" nen khong can set
                             FileName = webpImage,
                             Title = "",
                             AltText = "",
                             Description = "",
                             PosterImage = "",
+                            Width = mediaWidth,
+                            Height = mediaHeight,
                             DisplayOrder = copiedCount
                         });
 

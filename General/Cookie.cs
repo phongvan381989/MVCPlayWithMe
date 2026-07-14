@@ -168,7 +168,7 @@ namespace MVCPlayWithMe.General
             string[] myArray = cartCookie.Split('$');
             for (int i = 0; i < myArray.Length; i++)
             {
-                listCartCookie.Add(new Cart(myArray[i]));
+                //listCartCookie.Add(new Cart(myArray[i]));
             }
 
             return listCartCookie;

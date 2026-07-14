@@ -1,6 +1,16 @@
 ﻿<meta charset="utf-8">
 <title>@ViewData["title"]</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+@{
+    var isDebug = false;
+    #if DEBUG
+        isDebug = true;
+    #endif
+}
+@if (!isDebug)
+{
+    @Html.Partial("_GoogleAnalytics")
+}
 <link rel="icon" type="image/x-icon" href="~/Media/favico.png">
 <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
 <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">

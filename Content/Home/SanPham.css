@@ -1,6 +1,6 @@
 ﻿img, video {
-    max-width: 100%;
-    max-height: 100%;
+    /*max-width: 100%;*/
+    /*max-height: 100%;*/
     /*display: block;
     margin: auto;*/
 }
@@ -10,36 +10,34 @@
     flex-direction: column;
     flex-wrap: wrap;
     width: 100%;
+    background-color: white;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
 }
 
-#item_media_arrow_wrapper{
-    position:relative;
+#item_media_arrow_wrapper {
+    position: relative;
 }
 
 #item-medium-media {
     display: flex;
-    /*position:relative;*/
+/*    position: relative;*/
     justify-content: center;
     align-items: center;
     user-select: none;  /* Ngăn text selection (màu xanh) */
     -webkit-user-select: none;  /* Safari */
     -moz-user-select: none;  /* Firefox */
     -ms-user-select: none;  /* IE/Edge */
-    /*display: block;*/
-    /*width: 100%;*/
-    /*margin-left: auto;
-    margin-right: auto;
-    margin-top: auto;
-    margin-bottom: auto;*/
-    /*padding: 5px;*/
-    /*height: 800px;*/
-    /*border: 1px solid rgb(255, 0, 0);*/
+    width: 100%;
+    overflow: hidden;  /* Ngăn nội dung tràn ra ngoài */
+    /* Height được set bằng JavaScript (600px hoặc scrWidth) */
 }
 
 #medium_picture {
     display: flex;
     justify-content: center;
-    align-items: center;
+    /*align-items: center;*/
     width: 100%;
     height: 100%;
 }
@@ -48,6 +46,7 @@
     max-width: 100%;
     max-height: 100%;
     object-fit: contain;
+    object-position: center;
 }
 
 #medium_video {
@@ -77,9 +76,9 @@
 #item-variation-container {
     display: flex;
     width: 100%;
-    padding: 10px;
+    padding: 5px;
     align-items: flex-start;
-    gap: 15px;
+    gap: 5px;
 }
 
 .variation-title {
@@ -94,7 +93,7 @@
 .variation-buttons-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 5px;
     flex: 1;
 }
 
@@ -239,7 +238,7 @@ h1 {
     min-height: 2.5rem;
     box-sizing: border-box;
     padding: 0.5rem;
-    padding-left: 2.5rem;
+/*    padding-left: 2.5rem;*/
     margin: 8px 8px 0 0;
     color: rgba(0,0,0,.8);
     text-align: left;
@@ -451,10 +450,10 @@ h1 {
 
 .product-detail {
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-    border-radius: 0.125rem;
+    border-radius: 8px;
     overflow: hidden;
     background: #fff;
-    margin-top: 0.9375rem;
+    margin-bottom: 10px;
     padding-top: 0.625rem;
     display: block;
 }
@@ -465,8 +464,8 @@ h1 {
 }
 
 .Iv7FJp {
-    background: rgba(0,0,0,.02);
-    color: rgba(0,0,0,.87);
+/*    background: rgba(0,0,0,.02);
+    color: rgba(0,0,0,.87);*/
     font-size: 1.125rem;
     font-weight: 400;
     margin: 0;
@@ -556,24 +555,13 @@ h2 {
     line-height: 1.4;
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .product-detail-image img {
-        box-shadow: 0 2px 8px rgba(255, 255, 255, 0.1);
-    }
-
-    .product-detail-image figcaption {
-        color: rgba(255, 255, 255, 0.6);
-    }
-}
-
 /* ========== Thông Tin Chi Tiết ========== */
 .product-specifications {
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-    border-radius: 0.125rem;
+    border-radius: 8px;
     overflow: hidden;
     background: #fff;
-    margin-top: 0.9375rem;
+    margin-bottom: 10px;
     padding-top: 0.625rem;
     display: block;
 }
@@ -627,34 +615,24 @@ h2 {
     background-color: rgba(0,0,0,.01);
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-    .product-specifications {
-        background: #1a1a1a;
-        box-shadow: 0 1px 1px 0 rgba(255, 255, 255, 0.05);
-    }
-
-    .spec-row {
-        border-bottom: 1px solid rgba(255,255,255,.05);
-    }
-
-    .spec-label {
-        color: rgba(255,255,255,.5);
-    }
-
-    .spec-value {
-        color: rgba(255,255,255,.87);
-    }
-
-    .spec-row:nth-child(even) {
-        background-color: rgba(255,255,255,.02);
-    }
-
-    .spec-link {
-        color: #66b3ff;
-    }
-
-    .spec-link:hover {
-        color: #ff6b6b;
-    }
+/* ========== Other Products ========== */
+.other-product {
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    margin-bottom: 10px;
+    padding: 0.9375rem;
+    display: none;
 }
+
+/* PhotoSwipe customization */
+.pswp__button--zoom {
+    display: none !important;
+}
+
+img.logo-ecommerce-tl {
+    max-width: 100%;
+    max-height: 100%;
+}
+

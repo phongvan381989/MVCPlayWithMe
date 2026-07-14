@@ -267,7 +267,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> Item_AddModelToCart(string cartObj, int maxQuantity)
+        public async Task<string> AddSanPhamToCart(int sanPhamId, int quantity, int real)
         {
             MySqlResultState result = new MySqlResultState();
             Customer customer = await AuthentCustomerAsync();
@@ -277,8 +277,15 @@ namespace MVCPlayWithMe.Controllers
                 result.Message = "Không lấy được thông tin khách hàng.";
                 return JsonConvert.SerializeObject(result);
             }
-            Cart cart = JsonConvert.DeserializeObject<Cart>(cartObj);
-            result = await customersqler.AddCartAsync(customer.id, cart, maxQuantity);
+
+            // Làm mới dữ liệu trước đó real = 0
+            await ordersqler.RefreshRealOfCartAsync(customer.id);
+
+            Cart cart = new Cart();
+            cart.sanPhamId = sanPhamId;
+            cart.quantity = quantity;
+            cart.real = real;
+            result = await customersqler.AddCartAsync(customer.id, cart);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -287,20 +294,19 @@ namespace MVCPlayWithMe.Controllers
         {
             Customer cus = await AuthentCustomerAsync();
             List<Cart> ls = null;
-            if (cus == null)
+
+            if(cus == null)
             {
-                // Khách vãng lai
-                ls = Cookie.GetListCartCookie(HttpContext);
-                await ordersqler.GetCartAsync(ls);
+                // Đọc cart từ request body (JSON)
+                ls = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
             }
             else
             {
-                // Khách đăng nhập
+                // Khách đăng nhập - đọc từ DB
                 ls = await ordersqler.GetListCartAsync(cus.id);
-                await ordersqler.GetCartAsync(ls);
-                // Làm mới real = 0
-                await ordersqler.RefreshRealOfCartAsync(cus.id);
             }
+            await ordersqler.GetCartsSanPhamBasicInfoAsync(ls);
+
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -322,7 +328,7 @@ namespace MVCPlayWithMe.Controllers
                 var base64EncodedBytes = System.Convert.FromBase64String(cart);
                 string decodeCart = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
                 lsRealCartCookie = Cookie.GetListCartCookieFromCookieValue(decodeCart);
-                await ordersqler.GetCartAsync(lsRealCartCookie);
+                await ordersqler.GetCartsSanPhamBasicInfoAsync(lsRealCartCookie);
             }
             return JsonConvert.SerializeObject(lsRealCartCookie);
         }
@@ -360,46 +366,46 @@ namespace MVCPlayWithMe.Controllers
             for (int i = 0; i < length; i++)
             {
                 var cart = ls[i];
-                lsTemp.Add(new Cart(cart.id, cart.q, cart.real));
+                //lsTemp.Add(new Cart(cart.id, cart.q, cart.real));
             }
 
             // Lấy dữ liệu mới nhất
-            await ordersqler.GetCartAsync(lsTemp);
+            await ordersqler.GetCartsSanPhamBasicInfoAsync(lsTemp);
             int indexWarning = 0;
             for (int i = 0; i < length; i++)
             {
                 var cart = ls[i];
                 var cartTemp = lsTemp[i];
 
-                // Check id model đúng
-                if (cartTemp.itemId == 0)
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
-                        " không lấy được thông tin. Vui lòng tải lại trang và kiểm tra";
-                    indexWarning = i;
-                    break;
-                }
+                //// Check id model đúng
+                //if (cartTemp.itemId == 0)
+                //{
+                //    result.State = EMySqlResultState.ERROR;
+                //    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
+                //        " không lấy được thông tin. Vui lòng tải lại trang và kiểm tra";
+                //    indexWarning = i;
+                //    break;
+                //}
 
-                // Check số lượng cần mua có đủ
-                if (cartTemp.q < cart.q)
-                {
-                    result.State = EMySqlResultState.OVER_MAX;
-                    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
-                        " số lượng tồn kho không đủ. Vui lòng chọn lại";
-                    indexWarning = i;
-                    break;
-                }
+                //// Check số lượng cần mua có đủ
+                //if (cartTemp.q < cart.q)
+                //{
+                //    result.State = EMySqlResultState.OVER_MAX;
+                //    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
+                //        " số lượng tồn kho không đủ. Vui lòng chọn lại";
+                //    indexWarning = i;
+                //    break;
+                //}
 
-                // Check giá thực tế có đúng
-                if (cartTemp.price != cart.price)
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
-                        " giá không đúng. Vui lòng tải lại trang và kiểm tra";
-                    indexWarning = i;
-                    break;
-                }
+                //// Check giá thực tế có đúng
+                //if (cartTemp.price != cart.price)
+                //{
+                //    result.State = EMySqlResultState.ERROR;
+                //    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
+                //        " giá không đúng. Vui lòng tải lại trang và kiểm tra";
+                //    indexWarning = i;
+                //    break;
+                //}
             }
 
             if (result.State != EMySqlResultState.OK)
@@ -474,7 +480,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> DeleteOneCart(int modelId)
+        public async Task<string> DeleteSanPhamOnCart(int sanPhamId)
         {
             Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
@@ -484,13 +490,13 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = await ordersqler.DeleteOneCartAsync(cus.id, modelId);
+                result = await ordersqler.DeleteSanPhamOnCartAsync(cus.id, sanPhamId);
             }
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public async Task<string> UpdateCartQuantity(int modelId, int quantity)
+        public async Task<string> UpdateSanPhamQuantityOnCart(int sanPhamId, int quantity)
         {
             Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
@@ -500,7 +506,7 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = await ordersqler.UpdateCartQuantityAsync(cus.id, modelId, quantity);
+                result = await ordersqler.UpdateSanPhamQuantityOnCartAsync(cus.id, sanPhamId, quantity);
             }
             return JsonConvert.SerializeObject(result);
         }

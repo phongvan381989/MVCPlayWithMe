@@ -1,46 +1,7 @@
-// Khi tích/bỏ tích chọn mua sẽ không được cập nhật vào real cart cookie,
+﻿// Khi tích/bỏ tích chọn mua sẽ không được cập nhật vào real cart cookie,
 // chỉ xóa sản phẩm, thay đổi số lượng chọn là được cập nhật nếu cookie có đối ứng
 // listCartCookieObje: dùng xác định sản phẩm được mua khi click mua hàng
 let listCartCookieObject; // list cart cookie object server trả về
-
-ChangeLayoutForSmallScreen();
-
-LoadCart();
-
-// Thay đổi hiển thị khi hiển thị trên màn hình điện thoại
-function ChangeLayoutForSmallScreen() {
-    if (scrWidth >= 800)
-        return;
-
-    // Bỏ padding
-    document.getElementsByClassName("main-container")[0].style.padding = "0px";
-    document.getElementsByClassName("BjIo5w")[0].style.padding = "0px";
-    document.getElementsByClassName("BjIo5w")[0].style.marginRight = "0px";
-    document.getElementsByClassName("BjIo5w")[0].style.marginLeft = "0px";
-
-    document.getElementsByClassName("contianer-selected-model")[0].style.padding = "0px";
-    document.getElementsByClassName("contianer-selected-model")[0].style.marginRight = "0px";
-    document.getElementsByClassName("contianer-selected-model")[0].style.marginLeft = "0px";
-
-
-    document.getElementsByClassName("s1Gxkq")[0].style.paddingRight = "0px";
-    document.getElementsByClassName("s1Gxkq")[0].style.paddingLeft = "0px";
-    document.getElementsByClassName("s1Gxkq")[0].style.marginRight = "0px";
-    document.getElementsByClassName("s1Gxkq")[0].style.marginLeft = "0px";
-
-    // Ẩn cột sản phẩm hàng tiêu đề
-    document.getElementsByClassName("checkbox-name-header")[0].style.display = "none";
-    document.getElementsByClassName("price-quantity-sum-delete-header")[0].style.width = "100%";
-
-    // Chia row thành 2 hàng
-    document.getElementsByClassName("zoXdNN")[0].style.display = "block";
-    document.getElementsByClassName("checkbox-name")[0].style.width = "100%";
-    document.getElementsByClassName("price-quantity-sum-delete")[0].style.width = "100%";
-    document.getElementsByClassName("price-quantity-sum-delete")[0].style.marginTop = "10px";
-
-    // Set chiều rộng nút mua hàng về auto
-    document.getElementsByClassName("shopee-button-solid")[0].style.width = "auto";
-}
 
 function CreateSelectedModel() {
     // Lấy mẫu
@@ -53,32 +14,39 @@ function CreateSelectedModel() {
     for (let i = 0; i < length; i++) {
         let obj = listCartCookieObject[i];
         let clone = sample.cloneNode(true);
-        clone.setAttribute("data-model-id", obj.id.toString());
+        clone.setAttribute("data-model-id", obj.sanPhamId.toString());
         // Cập nhật dữ liệu bản sao
         clone.getElementsByClassName("model-checkbox-input")[0].checked = Boolean(obj.real);
-        clone.getElementsByClassName("WanNdG")[0].src = Get320VersionOfImageSrc(obj.imageSrc);
+        clone.getElementsByClassName("WanNdG")[0].src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(obj.sanPhamBasicInfo.Id, obj.sanPhamBasicInfo.CoverImageFileName));
+        clone.getElementsByClassName("WanNdG")[0].alt = obj.sanPhamBasicInfo.Name;
 
         let listA = clone.getElementsByClassName("item-url");
-        listA[0].title = obj.itemName;
-        listA[0].href = "/Item/" + GenerateSlug(obj.itemName) + "-" + obj.itemId;
+        listA[0].title = obj.sanPhamBasicInfo.Name;
+        listA[0].href = "/san-pham/" + GenerateSlug(obj.sanPhamBasicInfo.Name) + "-" + obj.sanPhamId;
 
-        listA[1].title = obj.itemName;
-        listA[1].href = "/Item/" + GenerateSlug(obj.itemName) + "-" + obj.itemId;
+        listA[1].title = obj.sanPhamBasicInfo.Name;
+        listA[1].href = "/san-pham/" + GenerateSlug(obj.sanPhamBasicInfo.Name) + "-" + obj.sanPhamId;
 
-        clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.itemName;
-        clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;
+        clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.sanPhamBasicInfo.Name;
+        //clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;
 
-        clone.getElementsByClassName("vWt6ZL")[0].innerHTML =
-            ConvertMoneyToTextWithIcon(obj.bookCoverPrice);
-        clone.getElementsByClassName("M-AAFK")[1].innerHTML =
-            ConvertMoneyToTextWithIcon(obj.price);
+        if (obj.sanPhamBasicInfo.BookCoverPrice > obj.sanPhamBasicInfo.SalePrice) {
+            clone.getElementsByClassName("vWt6ZL")[0].style.display = "";
+            clone.getElementsByClassName("vWt6ZL")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.BookCoverPrice);
+        }
+        else {
+            clone.getElementsByClassName("vWt6ZL")[0].style.display = "none";
+        }
+        clone.getElementsByClassName("M-AAFK")[0].innerHTML =
+            ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.SalePrice);
 
-        clone.getElementsByClassName("v3H4Zf")[0].value = obj.q;
+        clone.getElementsByClassName("v3H4Zf")[0].value = obj.quantity;
 
-        clone.getElementsByClassName("max-quantity")[0].innerHTML = obj.quantity + " sản phẩm có sẵn";
+        clone.getElementsByClassName("max-quantity")[0].innerHTML = obj.sanPhamBasicInfo.Quantity + " sản phẩm có sẵn";
 
         clone.getElementsByClassName("ofQLuG")[0].innerHTML =
-            ConvertMoneyToTextWithIcon(obj.q * obj.price);
+            ConvertMoneyToTextWithIcon(obj.quantity * obj.sanPhamBasicInfo.SalePrice);
 
         containerModel.appendChild(clone);
     }
@@ -88,9 +56,9 @@ function CreateSelectedModel() {
 }
 
 async function LoadCart() {
-    let responseDB = await CartPageLoadCart();
-    if (responseDB.responseText != "null") {
-        listCartCookieObject = JSON.parse(responseDB.responseText);
+    let responseText = await CartPageLoadCart();
+    if (responseText != "null") {
+        listCartCookieObject = JSON.parse(responseText);
     }
     else {
         listCartCookieObject = null;
@@ -106,8 +74,8 @@ async function LoadCart() {
 
     for (let i = 0; i < length; i++) {
         let obj = listCartCookieObject[i];
-        if (obj.q > obj.quantity) {
-            obj.q = obj.quantity;
+        if (obj.quantity > obj.sanPhamBasicInfo.Quantity) {
+            obj.quantity = obj.sanPhamBasicInfo.Quantity;
         }
     }
 
@@ -121,11 +89,11 @@ function ShowSumMoney() {
     let sumMoney = 0;
     for (let i = 0; i < length; i++) {
         if (listCartCookieObject[i].real == 1) {
-            sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+            sumMoney = sumMoney + listCartCookieObject[i].quantity * listCartCookieObject[i].sanPhamBasicInfo.SalePrice;
             count++;
         }
     }
-    document.getElementsByClassName("A-CcKC")[0].innerHTML = "Tổng thanh toán (" + count + " Sản phẩm):"
+    document.getElementsByClassName("A-CcKC-SanPham")[0].innerHTML = "(" + count + " sản phẩm):"
     document.getElementsByClassName("WC0us-")[0].innerHTML =
         ConvertMoneyToTextWithIcon(sumMoney);
 }
@@ -133,9 +101,9 @@ function ShowSumMoney() {
 // Hiển thị tiền thanh toán 1 sản phẩm
 function ShowMoney(model) {
     let id = parseInt(model.getAttribute("data-model-id"));
-    let obj = GetObjFromListAndId(id, listCartCookieObject);
+    let obj = listCartCookieObject.find(item => item.sanPhamId === id);
     model.getElementsByClassName("ofQLuG")[0].innerHTML =
-        ConvertMoneyToTextWithIcon(obj.q * obj.price);
+        ConvertMoneyToTextWithIcon(obj.quantity * obj.sanPhamBasicInfo.SalePrice);
 }
 
 // Hiển thị checkbox tất cả
@@ -154,15 +122,13 @@ function ShowCheckboxAll() {
     document.getElementsByClassName("all-model-checkbox-input")[0].checked = isAll;
 }
 
-function ClickModelCheckBox(element) {
-    let model = element.parentElement.parentElement.parentElement;
-    UpdateModelCheckbox(model, element.checked)
-}
-
 // Khi click check box model, cập nhật vào listCartCookieObject
-function UpdateModelCheckbox(model, isChecked) {
+function ClickModelCheckBox(element) {
+    let model = element.closest('.selected-model');
+    isChecked = element.checked;
+
     let id = parseInt(model.getAttribute("data-model-id"));
-    let obj = GetObjFromListAndId(id, listCartCookieObject);
+    let obj = listCartCookieObject.find(item => item.sanPhamId === id);
     if (isChecked) {
         obj.real = 1;
     } else {
@@ -171,6 +137,7 @@ function UpdateModelCheckbox(model, isChecked) {
 
     ShowCheckboxAll();
     ShowSumMoney();
+
 }
 
 function ClickAllModelCheckBox(element) {
@@ -193,41 +160,46 @@ function ClickAllModelCheckBox(element) {
 // Lấy số lượng max khách hàng có thể chọn
 function GetMaxQuantityInputInCartPage(model) {
     let id = parseInt(model.getAttribute("data-model-id"));
-    let obj = GetObjFromListAndId(id, listCartCookieObject);
-    return obj.quantity;
+    let obj = listCartCookieObject.find(item => item.sanPhamId === id);
+    return obj.sanPhamBasicInfo.Quantity;
 }
 
-async function UpdateCartQuantity(modelId, quantity) {
+async function UpdateSanPhamQuantityOnCart(sanPhamId, quantity) {
+    if (DEBUG) {
+        console.log("UpdateSanPhamQuantityOnCart call");
+    }
     const searchParams = new URLSearchParams();
-    searchParams.append("modelId", modelId);
+    searchParams.append("sanPhamId", sanPhamId);
     searchParams.append("quantity", quantity);
-    let query = "/Home/UpdateCartQuantity";
+    let query = "/Home/UpdateSanPhamQuantityOnCart";
 
     return await RequestHttpPostPromise(searchParams, query);
 }
 
 // Cập nhật listCartCookieObject, cart cookie khi thay đổi số lượng muốn mua
 // element là input tag
-async function UpdateWhenChangeInputQuantity(model, element) {
+async function UpdateWhenChangeInputQuantity(model, quan) {
     let id = parseInt(model.getAttribute("data-model-id"));
-    let obj = GetObjFromListAndId(id, listCartCookieObject);
-    obj.q = ConvertToInt(element.value);
+    let obj = listCartCookieObject.find(item => item.sanPhamId === id);
+    obj.quantity = quan;
 
     // Là khách vãng lai
     if (CheckAnonymousCustomer()) {
-        UpdateQuantityOfCookie(obj);
+        if (typeof CartManager !== 'undefined') {
+            guestCart = CartManager.updateQuantity(id, quan);
+        }
         // Trả về định dạng giống truy vấn httpPost
         return GetEasyPromise();
     }
     else {// Khách đăng nhập
-        return await UpdateCartQuantity(id, ConvertToInt(element.value));
+        return await UpdateSanPhamQuantityOnCart(id, quan);
     }
 }
 
 async function ValidateInput(element) {
-    let model = element.parentElement.parentElement.parentElement.parentElement;
+    let model = element.closest('.selected-model');
     let newInput = element.value;
-    let iInput = 0;
+    let iInput = 1;
     if (IsNumeric(newInput)) {
         iInput = ConvertToInt(newInput);
         let maxQuantity = GetMaxQuantityInputInCartPage(model);
@@ -245,7 +217,7 @@ async function ValidateInput(element) {
     }
     element.value = iInput.toString();
 
-    let res = await UpdateWhenChangeInputQuantity(model, element);
+    let res = await UpdateWhenChangeInputQuantity(model, iInput);
 
     let resObj = JSON.parse(res.responseText);
     if (resObj.State != 0) {
@@ -257,7 +229,7 @@ async function ValidateInput(element) {
     ShowMoney(model);
 }
 
-// element là button giảm 1 số lượng đặt hàng
+// element là button tăng / giảm 1 số lượng đặt hàng
 async function Decrease(element) {
     let eInput = element.nextElementSibling;
     let iInput = ConvertToInt(eInput.value);
@@ -266,9 +238,9 @@ async function Decrease(element) {
         eInput.value = iInput.toString();
     }
 
-    let model = element.parentElement.parentElement.parentElement.parentElement;
+    let model = element.closest('.selected-model');
 
-    let res = await UpdateWhenChangeInputQuantity(model, eInput);
+    let res = await UpdateWhenChangeInputQuantity(model, iInput);
     let resObj = JSON.parse(res.responseText);
     if (resObj.State != 0) {
         await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
@@ -279,12 +251,12 @@ async function Decrease(element) {
     ShowMoney(model);
 }
 
-// element là button giảm 1 số lượng đặt hàng
+// element là button tăng / giảm 1 số lượng đặt hàng
 async function Increase(element) {
     let eInput = element.previousElementSibling;
     let iInput = ConvertToInt(eInput.value);
 
-    let model = element.parentElement.parentElement.parentElement.parentElement;
+    let model = element.closest('.selected-model');
     let maxQuantity = GetMaxQuantityInputInCartPage(model);
 
     if (iInput < maxQuantity) {
@@ -295,7 +267,7 @@ async function Increase(element) {
         await CreateMustClickOkModal("Cửa hàng chỉ còn " + maxQuantity + " sản phẩm.", null);
     }
 
-    let res = await UpdateWhenChangeInputQuantity(model, eInput);
+    let res = await UpdateWhenChangeInputQuantity(model, iInput);
     let resObj = JSON.parse(res.responseText);
     if (resObj.State != 0) {
         await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
@@ -306,27 +278,29 @@ async function Increase(element) {
     ShowMoney(model);
 }
 
-async function DeleteOneCart(modelId) {
+async function DeleteSanPhamOnCart(sanPhamId) {
     const searchParams = new URLSearchParams();
-    searchParams.append("modelId", modelId);
-    let query = "/Home/DeleteOneCart";
+    searchParams.append("sanPhamId", sanPhamId);
+    let query = "/Home/DeleteSanPhamOnCart";
 
     return await RequestHttpPostPromise(searchParams, query);
 }
 
 // element là button xóa
-async function DeleteModel(element) {
-    let model = element.parentElement.parentElement.parentElement;
+async function DeleteSanPhamOnCartElement(element) {
+    let model = element.closest('.selected-model');
     let id = parseInt(model.getAttribute("data-model-id"));
     let length = listCartCookieObject.length;
     for (let i = 0; i < length; i++) {
-        if (listCartCookieObject[i].id == id) {
+        if (listCartCookieObject[i].sanPhamId == id) {
             // Là khách vãng lai
             if (CheckAnonymousCustomer()) {
-                DeleteOneCartCookie(listCartCookieObject[i]);
+                if (typeof CartManager !== 'undefined') {
+                    guestCart = CartManager.removeFromCart(id);
+                }
             }
             else {// Khách đăng nhập
-                let res = await DeleteOneCart(id);
+                let res = await DeleteSanPhamOnCart(id);
                 let resObj = JSON.parse(res.responseText);
                 if (resObj.State != 0) {
                     await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
@@ -379,3 +353,10 @@ async function BuyNow() {
     let cookieBase64 = window.btoa(cookie);
     location.href = "/Home/Checkout?cart=" + cookieBase64;
 }
+
+window.addEventListener('DOMContentLoaded',async function () {
+    if (DEBUG) {
+        console.log("window.innerWidth: " + window.innerWidth)
+    }
+    await LoadCart();
+})

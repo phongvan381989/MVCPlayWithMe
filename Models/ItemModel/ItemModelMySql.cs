@@ -214,21 +214,21 @@ namespace MVCPlayWithMe.Models.ItemModel
             if (item == null || cart == null)
                 return;
 
-            cart.itemId = item.id;
-            cart.itemName = item.name;
-            cart.modelName = item.models[0].name;
+            //cart.itemId = item.id;
+            //cart.itemName = item.name;
+            //cart.modelName = item.models[0].name;
             // Nếu item chỉ có 1 model và model không có ảnh đại diện.
             // Ta lấy ảnh đại diện, tên của item thay
-            if (item.models[0].imageSrc != Common.srcNoImageThumbnail)
-            {
-                cart.imageSrc = item.models[0].imageSrc;
-            }
-            else
-            {
-                cart.imageSrc = item.imageSrc[0];
-            }
-            cart.Copy((PriceQuantity)item.models[0]);
-            cart.UpdateQ();
+            //if (item.models[0].imageSrc != Common.srcNoImageThumbnail)
+            //{
+            //    cart.imageSrc = item.models[0].imageSrc;
+            //}
+            //else
+            //{
+            //    cart.imageSrc = item.imageSrc[0];
+            //}
+            //cart.Copy((PriceQuantity)item.models[0]);
+            //cart.UpdateQ();
         }
 
         //public async Task<MySqlResultState> UpdateMapping(int modelId,

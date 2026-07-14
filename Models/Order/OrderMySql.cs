@@ -11,6 +11,7 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using static MVCPlayWithMe.General.Common;
+using MVCPlayWithMe.Models.SanPhamModel;
 
 namespace MVCPlayWithMe.Models.Order
 {
@@ -461,14 +462,14 @@ namespace MVCPlayWithMe.Models.Order
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        int modelIdIndex = rdr.GetOrdinal("ModelId");
+                        int sanPhamIdIndex = rdr.GetOrdinal("SanPhamId");
                         int quantityIndex = rdr.GetOrdinal("Quantity");
                         int realIndex = rdr.GetOrdinal("Real");
                         while (await rdr.ReadAsync())
                         {
                             Cart cart = new Cart();
-                            cart.id = rdr.GetInt32(modelIdIndex);
-                            cart.q = rdr.GetInt32(quantityIndex);
+                            cart.sanPhamId = rdr.GetInt32(sanPhamIdIndex);
+                            cart.quantity = rdr.GetInt32(quantityIndex);
                             cart.real = rdr.GetInt32(realIndex);
                             ls.Add(cart);
                         }
@@ -561,9 +562,9 @@ namespace MVCPlayWithMe.Models.Order
                     {
                         paras[0].Value = orderId;
                         paras[1].Value = cart.id;
-                        paras[2].Value = cart.q;
-                        paras[3].Value = cart.bookCoverPrice;
-                        paras[4].Value = cart.price;
+                        paras[2].Value = cart.quantity;
+                        //paras[3].Value = cart.bookCoverPrice;
+                        //paras[4].Value = cart.price;
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
@@ -611,12 +612,12 @@ namespace MVCPlayWithMe.Models.Order
             return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Refresh_Real_From_CustormerId", paras);
         }
 
-        public async Task<MySqlResultState> DeleteOneCartAsync(int customerId, int modelId)
+        public async Task<MySqlResultState> DeleteSanPhamOnCartAsync(int customerId, int sanPhamId)
         {
             MySqlParameter[] paras = new MySqlParameter[2];
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
-            paras[1] = new MySqlParameter("@inModelId", modelId);
-            return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Delete_From_Customer_ModelId", paras);
+            paras[1] = new MySqlParameter("@inSanPhamId", sanPhamId);
+            return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Delete_From_Customer_SanPhamId", paras);
         }
 
         public async Task<MySqlResultState> DeleteListCartAsync(int customerId, List<Cart> ls)
@@ -645,11 +646,11 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateCartQuantityAsync(int customerId, int modelId, int quantity)
+        public async Task<MySqlResultState> UpdateSanPhamQuantityOnCartAsync(int customerId, int sanPhamId, int quantity)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
-            paras[1] = new MySqlParameter("@inModelId", modelId);
+            paras[1] = new MySqlParameter("@inSanPhamId", sanPhamId);
             paras[2] = new MySqlParameter("@inQuantity", quantity);
             return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Update_Quantity", paras);
         }
@@ -993,7 +994,8 @@ namespace MVCPlayWithMe.Models.Order
             return ls;
         }
 
-        public async Task GetCartAsync(List<Cart> ls)
+        // Lấy cart với các thông tin chi tiết của sản phẩm từ DB và cập nhật vào List<Cart>
+        public async Task GetCartsSanPhamBasicInfoAsync(List<Cart> ls)
         {
             if (ls == null || ls.Count() == 0)
                 return;
@@ -1005,9 +1007,7 @@ namespace MVCPlayWithMe.Models.Order
                     await conn.OpenAsync();
                     foreach (var cart in ls)
                     {
-                        Item item = await itemModelsqler.GetItemFromModelIdConnectOutAsync(cart.id, conn);
-                        if (item != null)
-                            itemModelsqler.ConvertItemToCartCookie(item, cart);
+                        cart.sanPhamBasicInfo = await SanPhamMySql.GetSanPhamBasicInfo_ConnectOutAsync(cart.sanPhamId, conn);
                     }
                 }
                 catch (Exception ex)

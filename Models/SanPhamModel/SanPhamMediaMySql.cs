@@ -61,6 +61,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             AltText = MyMySql.GetString(rdr, "AltText"),
                             Description = MyMySql.GetString(rdr, "Description"),
                             PosterImage = MyMySql.GetString(rdr, "PosterImage"),
+                            Width = MyMySql.GetInt32(rdr, "Width"),
+                            Height = MyMySql.GetInt32(rdr, "Height"),
                             DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
                         });
                     }
@@ -105,6 +107,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                 AltText = MyMySql.GetString(rdr, "AltText"),
                                 Description = MyMySql.GetString(rdr, "Description"),
                                 PosterImage = MyMySql.GetString(rdr, "PosterImage"),
+                                Width = MyMySql.GetInt32(rdr, "Width"),
+                                Height = MyMySql.GetInt32(rdr, "Height"),
                                 DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
                             };
                         }
@@ -130,9 +134,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     await conn.OpenAsync();
                     MySqlCommand cmd = new MySqlCommand(@"
                         INSERT INTO tb_san_pham_media
-                        (SanPhamId, MediaType, FileName, Title, AltText, Description, PosterImage, DisplayOrder)
+                        (SanPhamId, MediaType, FileName, Title, AltText, Description, PosterImage, Width, Height, DisplayOrder)
                         VALUES
-                        (@sanPhamId, @mediaType, @fileName, @title, @altText, @description, @posterImage, @displayOrder)",
+                        (@sanPhamId, @mediaType, @fileName, @title, @altText, @description, @posterImage, @width, @height, @displayOrder)",
                         conn);
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@sanPhamId", media.SanPhamId);
@@ -142,6 +146,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("@width", media.Width);
+                    cmd.Parameters.AddWithValue("@height", media.Height);
                     cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
 
                     int rowsAffected = await cmd.ExecuteNonQueryAsync();

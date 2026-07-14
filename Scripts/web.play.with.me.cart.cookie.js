@@ -128,9 +128,19 @@ function RefreshRealOfCartCookieAndGet() {
 }
 
 async function CartPageLoadCart() {
-    const searchParams = new URLSearchParams();
-    let query = "/Home/CartPageLoadCart";
-    return RequestHttpPostPromise(searchParams, query);
+    // Lấy guest cart từ localStorage (nếu có)
+    let guestCart = [];
+    if (CheckAnonymousCustomer()) {
+        if (typeof CartManager !== 'undefined') {
+            guestCart = CartManager.getCart();
+            if (DEBUG) {
+                console.log("CartPageLoadCart guestCart: " + JSON.stringify(guestCart));
+            }
+        }
+    }
+
+    // Gửi cart data dưới dạng JSON body
+    return await PostJSON('/Home/CartPageLoadCart', guestCart);
 }
 
 // cart được mã hóa 

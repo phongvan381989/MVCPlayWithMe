@@ -229,6 +229,66 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         }
 
         /// <summary>
+        /// Lấy thông tin cơ bản sản phẩm kèm ảnh bìa (lightweight DTO)
+        /// Dùng cho cart, checkout để tối ưu performance
+        /// </summary>
+        /// <param name="id">Id sản phẩm</param>
+        /// <returns>SanPhamBasicInfo hoặc null nếu không tìm thấy</returns>
+        public static async Task<SanPhamBasicInfo> GetSanPhamBasicInfo_ConnectOutAsync(int id, MySqlConnection conn)
+        {
+            SanPhamBasicInfo info = null;
+
+            try
+            {
+                string query = @"
+                    SELECT
+                        sp.Id,
+                        sp.Name,
+                        sp.ShortName,
+                        sp.BookCoverPrice,
+                        sp.SalePrice,
+                        sp.Quantity,
+                        (SELECT FileName
+                            FROM tb_san_pham_media
+                            WHERE SanPhamId = sp.Id
+                            AND MediaType = 'image'
+                            ORDER BY DisplayOrder ASC
+                            LIMIT 1) AS CoverImageFileName
+                    FROM tb_san_pham sp
+                    WHERE sp.Id = @inId";
+
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inId", id);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        if (await rdr.ReadAsync())
+                        {
+                            info = new SanPhamBasicInfo
+                            {
+                                Id = rdr.GetInt32("Id"),
+                                Name = MyMySql.GetString(rdr, "Name"),
+                                ShortName = MyMySql.GetString(rdr, "ShortName"),
+                                BookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice"),
+                                SalePrice = MyMySql.GetInt32(rdr, "SalePrice"),
+                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
+                                CoverImageFileName = MyMySql.GetString(rdr, "CoverImageFileName")
+                            };
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetSanPhamBasicInfoAsync error: {ex.Message}");
+            }
+
+            return info;
+        }
+
+        /// <summary>
         /// Lấy danh sách tất cả sản phẩm
         /// </summary>
         /// <returns>Danh sách sản phẩm</returns>

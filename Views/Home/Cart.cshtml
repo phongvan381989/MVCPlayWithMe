@@ -10,17 +10,17 @@
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
     <link rel="stylesheet" href="~/Content/Home/Cart.css?v=20260610">
 </head>
-<body onload="RefreshRealOfCartCookieAndGet()">
+<body>
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
         <div class="sample-selected-model">
-            <div class="zoXdNN" data-model-id="">
-                <div class="checkbox-name">
+            <div class="zoXdNN selected-model" data-model-id="">
+                <div class="checkbox-name-header">
                     <div class="mcsiKT">
                         <input class="stardust-checkbox__input model-checkbox-input" type="checkbox" onclick="ClickModelCheckBox(this)">
                     </div>
                     <div class="eUrDQm">
-                        <div class="LAQKxn">
+                        @*<div class="LAQKxn">*@
                             <a class="item-url" title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
                                 <img class="WanNdG" src="https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lkkyikcwkaui58" alt="product image">
                             </a>
@@ -28,15 +28,15 @@
                                 <a class="JB57cn item-url" title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
                                     Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn
                                 </a>
-                                <div style="margin-top:10px;" class="dcPz7Y">ĐỪNGTHỨCKHUYA.Songng</div>
+                                @*<div style="margin-top:10px;" class="dcPz7Y">ĐỪNGTHỨCKHUYA.Songng</div>*@
                             </div>
-                        </div>
+                        @*</div>*@
                     </div>
                 </div>
-                <div class="price-quantity-sum-delete">
+                <div class="price-quantity-sum-delete-header">
                     <div class="G7E4B7">
                         <div style="text-align:center;">
-                            <span class="M-AAFK vWt6ZL">₫39.000</span>
+                            <span class="vWt6ZL">₫39.000</span>
                             <span class="M-AAFK">₫29.800</span>
                         </div>
                     </div>
@@ -63,7 +63,7 @@
                         <span>₫119.200</span>
                     </div>
                     <div class="mhcjog">
-                        <button type="button" class="fX1Y2g" onclick="DeleteModel(this)">Xóa</button>
+                        <button type="button" class="fX1Y2g" onclick="DeleteSanPhamOnCartElement(this)">Xóa</button>
                     </div>
                 </div>
             </div>
@@ -73,7 +73,7 @@
             <p>Quay về <a href="/" title="">trang chọn sản phẩm</a></p>
         </div>
         <div class="main-container">
-            <div class="BjIo5w">
+            @*<div class="BjIo5w">
                 <div class="checkbox-name-header">
                     <div class="mcsiKT mcsiKT-header">
                         <input class="stardust-checkbox__input" type="checkbox">
@@ -86,7 +86,7 @@
                     <div class="_5f317z">Số Tiền</div>
                     <div class="_4E7yJ">Thao Tác</div>
                 </div>
-            </div>
+            </div>*@
             <div class="contianer-selected-model">
             </div>
             <div class="s1Gxkq">
@@ -99,22 +99,24 @@
                 <div class="pay-container">
                     <div class="aiyQAr">
                         <div class="A-CcKC">
-                            Tổng thanh toán (0 Sản phẩm):
+                            Tổng thanh toán
+                        </div>
+                        <div class="A-CcKC A-CcKC-SanPham">(0 Sản phẩm):
                         </div>
                         <div class="WC0us-"><sup>₫</sup>417.200</div>
                     </div>
-                    <button type="button" class="shopee-button-solid" onclick="BuyNow()"><span class="TTXpRG">Mua hàng</span></button>
+                    <button type="button" class="shopee-button-solid" onclick="BuyNow()"><span class="TTXpRG">Mua Hàng</span></button>
                 </div>
             </div>
         </div>
         @*@Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")*@
     </div>
 
-    <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.cart.cookie.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
+    <script src="~/Scripts/cart-manager.js"></script>
     <script src="~/Scripts/Home/Cart.js?v=20260610"></script>
 </body>
 </html>

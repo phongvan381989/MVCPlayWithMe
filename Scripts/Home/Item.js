@@ -939,3 +939,90 @@ function TouchStartMediumMedia(event) {
 }
 
 HomePageShowItem()
+
+// Keyboard navigation cho ảnh sản phẩm
+document.addEventListener('keydown', function(event) {
+    // Bỏ qua khi đang focus vào input/textarea
+    if (document.activeElement.tagName === 'INPUT' ||
+        document.activeElement.tagName === 'TEXTAREA') {
+        return;
+    }
+
+    // Bỏ qua nếu chưa có item hoặc chỉ có 1 ảnh
+    if (!itemObject || !itemObject.MediaList ||
+        itemObject.MediaList.length <= 1) {
+        return;
+    }
+
+    if (event.key === 'ArrowLeft') {
+        event.preventDefault(); // Ngăn scroll page
+        // Logic giống left arrow click
+        if (selectedIndex == 0) {
+            selectedIndex = itemObject.MediaList.length - 1;
+        } else {
+            selectedIndex--;
+        }
+        ShowMediumItemFromIndex(selectedIndex);
+        ScrollToSelectedSmallItem();
+    }
+    else if (event.key === 'ArrowRight') {
+        event.preventDefault(); // Ngăn scroll page
+        // Logic giống right arrow click
+        if (selectedIndex == itemObject.MediaList.length - 1) {
+            selectedIndex = 0;
+        } else {
+            selectedIndex++;
+        }
+        ShowMediumItemFromIndex(selectedIndex);
+        ScrollToSelectedSmallItem();
+    }
+});
+
+// Touch/swipe navigation cho mobile
+let touchStartX = 0;
+let touchStartY = 0;
+const swipeThreshold = 50; // Minimum swipe distance in pixels
+
+const mediumImageContainer = document.getElementById('item-medium-media');
+if (mediumImageContainer) {
+    mediumImageContainer.addEventListener('touchstart', function(event) {
+        touchStartX = event.changedTouches[0].screenX;
+        touchStartY = event.changedTouches[0].screenY;
+    }, { passive: true });
+
+    mediumImageContainer.addEventListener('touchend', function(event) {
+        // Bỏ qua nếu chưa có item hoặc chỉ có 1 ảnh
+        if (!itemObject || !itemObject.MediaList ||
+            itemObject.MediaList.length <= 1) {
+            return;
+        }
+
+        const touchEndX = event.changedTouches[0].screenX;
+        const touchEndY = event.changedTouches[0].screenY;
+        const deltaX = touchEndX - touchStartX;
+        const deltaY = touchEndY - touchStartY;
+
+        // Chỉ xử lý swipe ngang (horizontal), bỏ qua swipe dọc (vertical scroll)
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > swipeThreshold) {
+            if (deltaX > 0) {
+                // Swipe right → previous image (giống ArrowLeft)
+                if (selectedIndex == 0) {
+                    selectedIndex = itemObject.MediaList.length - 1;
+                } else {
+                    selectedIndex--;
+                }
+                ShowMediumItemFromIndex(selectedIndex);
+                ScrollToSelectedSmallItem();
+            } else {
+                // Swipe left → next image (giống ArrowRight)
+                if (selectedIndex == itemObject.MediaList.length - 1) {
+                    selectedIndex = 0;
+                } else {
+                    selectedIndex++;
+                }
+                ShowMediumItemFromIndex(selectedIndex);
+                ScrollToSelectedSmallItem();
+            }
+        }
+    }, { passive: true });
+}

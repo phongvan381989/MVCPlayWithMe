@@ -1,5 +1,6 @@
 ﻿// Load dữ liệu sản phẩm khi trang load
 window.onload = async function () {
+    await GetCombo();
     await GetSomeData();
 };
 

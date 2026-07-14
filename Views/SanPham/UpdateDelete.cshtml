@@ -469,7 +469,7 @@
 
             <div class="upload-section">
                 <h4>Upload Media Mới</h4>
-                <p><strong>Lưu ý:</strong> Tên file phải là số (ví dụ: 0.jpg, 1.png, 2.mp4...). File tên 0.* sẽ là thumbnail.</p>
+                <p><strong>Lưu ý:</strong> Cần cập nhật lại thứ tự sau khi upload.video là 0, ảnh là 1,2,3... Không video thì thứ tự ảnh là 0,1,2....</p>
                 <input type="file" id="file-upload" multiple accept="image/*,video/*" />
                 <button type="button" onclick="UploadFiles()" style="margin-top: 10px;">Upload</button>
             </div>
@@ -789,15 +789,14 @@
                         let mediaElement;
                         if (isImage) {
                             // WebP path (ảnh đã được convert sang WebP)
-                            const webpPath = filePath.replace(/\.(jpg|jpeg|png|jfif)$/i, '.webp');
                             mediaElement = `
                                 <picture>
-                                    <source srcset="${webpPath}" type="image/webp">
+                                    <source srcset="${filePath}" type="image/webp">
                                     <img src="${filePath}" alt="${metadata.AltText || metadata.FileName}" />
                                 </picture>
                             `;
                         } else {
-                            mediaElement = `<video src="${filePath}" controls></video>`;
+                            mediaElement = `<video src="${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}" controls></video>`;
                         }
 
                         mediaItem.innerHTML = `
@@ -806,6 +805,10 @@
                                    onclick="RenameMediaFile('${metadata.FileName}')"
                                    style="background: #eee; cursor: pointer;"
                                    title="Click để đổi tên file" />
+                            <div style="font-size: 12px; color: #666; margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px;">
+                                📐 Kích thước: <strong>${metadata.Width || 0} × ${metadata.Height || 0} px</strong>
+                                ${(metadata.Width === 0 || metadata.Height === 0) ? ' <span style="color: #ff9800;">(chưa có - upload lại để lấy kích thước)</span>' : ''}
+                            </div>
                             ${isImage ? `
                                 <input type="text" class="media-alt" placeholder="Alt text (SEO - bắt buộc cho ảnh)"
                                        value="${metadata.AltText || ''}"
@@ -1028,7 +1031,7 @@
                 const resultText = await PostJSON('/SanPham/RenameMedia', {
                     sanPhamId: sanPhamId,
                     oldFileName: oldFileName,
-                    newFileName: newName.trim()
+                    newFileNameWithoutExt: newName.trim()
                 });
                 RemoveCircleLoader();
 
@@ -1303,7 +1306,7 @@
                 copyBtn.disabled = currentMappingList.length !== 1;
                 // Update tooltip
                 copyBtn.title = currentMappingList.length === 1
-                    ? 'Chép dữ liệu từ sản phẩm kho sang sản phẩm bán'
+                    ? 'Chép dữ liệu từ sản phẩm kho sang sản phẩm bán không bao gồm ảnh'
                     : 'Chỉ có thể chép khi có đúng 1 mapping';
             }
 

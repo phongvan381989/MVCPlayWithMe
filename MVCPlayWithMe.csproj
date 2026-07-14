@@ -333,6 +333,7 @@
     <Compile Include="General\MySqlResultState.cs" />
     <Compile Include="General\OrderStatus.cs" />
     <Compile Include="General\PriceCalculator.cs" />
+    <Compile Include="General\UnixTimestampConverter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -656,6 +657,7 @@
     <Content Include="Content\Home\SanPham.css" />
     <Content Include="Content\Home\Search.css" />
     <Content Include="Content\ItemModel\Search.css" />
+    <Content Include="Content\photoswipe.css" />
     <Content Include="Content\ProductECommerce\Index.css" />
     <Content Include="Content\ProductECommerce\Item.css" />
     <Content Include="Content\ProductECommerce\Order.css" />
@@ -710,6 +712,7 @@
     <Content Include="Scripts\bootstrap.bundle.min.js.map" />
     <Content Include="Scripts\bootstrap.bundle.js.map" />
     <None Include="Scripts\jquery-3.3.1.intellisense.js" />
+    <Content Include="Scripts\cart-manager.js" />
     <Content Include="Scripts\Category\Create.js" />
     <Content Include="Scripts\Category\UpdateDelete.js" />
     <Content Include="Scripts\Combo\Create.js" />
@@ -738,6 +741,8 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\photoswipe-lightbox.umd.min.js" />
+    <Content Include="Scripts\photoswipe.umd.min.js" />
     <Content Include="Scripts\ProductECommerce\Index.js" />
     <Content Include="Scripts\ProductECommerce\item.js" />
     <Content Include="Scripts\ProductECommerce\ItemOnDB.js" />
@@ -866,6 +871,8 @@
     <Content Include="Views\SanPham\UpdateDelete.cshtml" />
     <Content Include="Views\SanPham\Search.cshtml" />
     <Content Include="Views\Home\SanPham.cshtml" />
+    <Content Include="Views\Shared\_GoogleAnalytics.cshtml" />
+    <Content Include="Views\Shared\Head_GA.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

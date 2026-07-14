@@ -143,6 +143,10 @@ function parseIntOrNull(val) {
 
 // POST request với JSON data, trả về response text
 async function PostJSON(url, data) {
+    if (DEBUG) {
+        let jsonData = JSON.stringify(data);
+        console.log("PostJSON request:", { url, jsonData });
+    }
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
