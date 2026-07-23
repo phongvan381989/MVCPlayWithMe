@@ -1,6 +1,6 @@
-﻿let listCartCookieObject; // list cart cookie object server trả về, đã check real == 1 trên server
+﻿let listCartObject;
 
-let listCustomerInforCookieObject; // list customer cookie object server trả về
+let listCustomerInforObject; // list customer object server trả về
 
 let currentIndexInforObject = -1; // index địa chỉ nhận hàng hiện tại. Chưa chọn địa chỉ nhận hàng thì dùng thông tin mặc định khi load trang
 
@@ -8,14 +8,9 @@ let currentIndexInforUpdateObject = -1; // index địa chỉ nhận hàng cập
 
 let funcOfChangeAddress = null; // Hàm xử lý sự kiện click nút change-address-btn
 
-LoadSomething();
-
-// Sau khi load page, cần thêm thông tin
-async function LoadSomething() {
-
-    await LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship
-
-    LoadCart();
+// Mark rằng user đã vào checkout page (để Cart page detect back navigation)
+if (sessionStorage.getItem('fromCheckout') === 'pending') {
+    sessionStorage.setItem('fromCheckout', 'visited');
 }
 
 function CreateSelectedModel() {
@@ -23,24 +18,34 @@ function CreateSelectedModel() {
     let sample = document.getElementsByClassName("sample-model")[0].firstElementChild;
     let containerModel = document.getElementsByClassName("model-container")[0];
 
-    let length = listCartCookieObject.length;
+    let length = listCartObject.length;
 
     // Sinh bản sao
     for (let i = 0; i < length; i++) {
-        let obj = listCartCookieObject[i];
+        let obj = listCartObject[i];
 
         let clone = sample.cloneNode(true);
         clone.setAttribute("data-model-id", obj.id.toString());
 
         // Cập nhật dữ liệu bản sao
-        clone.getElementsByClassName("rTOisL")[0].src = Get320VersionOfImageSrc(obj.imageSrc);
-        clone.getElementsByClassName("item-name")[0].innerHTML = obj.itemName;
-        clone.getElementsByClassName("model-name")[0].innerHTML = obj.modelName;
-        clone.getElementsByClassName("price-model")[0].innerHTML =
-            ConvertMoneyToTextWithIcon(obj.price);
-        clone.getElementsByClassName("quantity-model")[0].innerHTML = obj.q;
-        clone.getElementsByClassName("money-model")[0].innerHTML =
-            ConvertMoneyToTextWithIcon(obj.q * obj.price);
+        clone.getElementsByClassName("rTOisL")[0].src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(obj.sanPhamBasicInfo.Id, obj.sanPhamBasicInfo.CoverImageFileName));
+        clone.getElementsByClassName("rTOisL")[0].alt = obj.sanPhamBasicInfo.Name;
+        clone.getElementsByClassName("item-name")[0].innerHTML = obj.sanPhamBasicInfo.Name;
+
+        if (obj.sanPhamBasicInfo.BookCoverPrice > obj.sanPhamBasicInfo.SalePrice) {
+            clone.getElementsByClassName("vWt6ZL")[0].style.display = "";
+            clone.getElementsByClassName("vWt6ZL")[0].innerHTML =
+                ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.BookCoverPrice);
+        }
+        else {
+            clone.getElementsByClassName("vWt6ZL")[0].style.display = "none";
+        }
+        clone.getElementsByClassName("M-AAFK")[0].innerHTML =
+            ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.SalePrice);
+
+        clone.getElementsByClassName("quantity-model")[0].innerHTML = obj.quantity;
+        // clone.getElementsByClassName("money-model")[0].innerHTML =
+        //     ConvertMoneyToTextWithIcon(obj.quantity * obj.sanPhamBasicInfo.SalePrice);
 
         containerModel.appendChild(clone);
     }
@@ -48,16 +53,21 @@ function CreateSelectedModel() {
     ShowSumMoney();
 }
 
-async function LoadCart() {
-    let responseDB = await CheckoutPageLoadCart(GetValueFromUrlName("cart"));
-    if (responseDB.responseText != "null") {
-        listCartCookieObject = JSON.parse(responseDB.responseText);
-    }
-    else {
-        listCartCookieObject = null;
-    }
+function ShowErrorWhenLoadCart(error) {
+    console.error('❌ Error in Checkout:', error);
 
-    if (listCartCookieObject == null || listCartCookieObject.length == 0) {
+    // Hiển thị lỗi cho user
+    document.getElementsByClassName("cart-empty")[0].style.display = "block";
+    document.getElementsByClassName("main-container")[0].style.display = "none";
+
+    CreateMustClickOkModal('Có lỗi khi tải giỏ hàng. Vui lòng thử lại sau.', null);
+}
+
+function ShowCartList() {
+    // Làm mới nội dung
+    document.getElementsByClassName("model-container")[0].innerHTML = "";
+
+    if (listCartObject == null || listCartObject.length == 0) {
         document.getElementsByClassName("cart-empty")[0].style.display = "block";
         document.getElementsByClassName("main-container")[0].style.display = "none";
         return;
@@ -66,14 +76,42 @@ async function LoadCart() {
     // nhưng được tính lại phía server
 
     CreateSelectedModel();
+    document.getElementsByClassName("cart-empty")[0].style.display = "none";
+    document.getElementsByClassName("main-container")[0].style.display = "block";
+}
+
+async function LoadCart() {
+    // let responseDB = await CheckoutPageLoadCart();
+    // if (responseDB.responseText != "null") {
+    //     listCartObject = JSON.parse(responseDB.responseText);
+    // }
+    // else {
+    //     listCartObject = null;
+    // }
+
+
+    try {
+        let responseText = await CartPageLoadCart();
+
+        // Sau khi load cart với dữ liệu đầy đủ, set real = 0 với khách vãng lai và xóa cart với khách đăng nhập
+        if (typeof CartManager !== 'undefined') {
+            CartManager.setRealZeroOrClear();
+        }
+
+        listCartObject = JSON.parse(responseText);
+        ShowCartList();
+    } catch (error) {
+        ShowErrorWhenLoadCart(error);
+    } finally {
+    }
 }
 
 // Hiển thị tổng tiền thanh toán
 function ShowSumMoney() {
-    let length = listCartCookieObject.length;
+    let length = listCartObject.length;
     let sumMoney = 0;
     for (let i = 0; i < length; i++) {
-        sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+        sumMoney = sumMoney + listCartObject[i].q * listCartObject[i].price;
     }
 
     document.getElementsByClassName("model-money-sum")[0].innerHTML =
@@ -90,7 +128,7 @@ function ShowSumMoney() {
 function GetShipFee() {
     let fee = 0;
     if (currentIndexInforObject != -1) {
-        let obj = listCustomerInforCookieObject[currentIndexInforObject];
+        let obj = listCustomerInforObject[currentIndexInforObject];
         if (obj.province == HaNoiCity) {
             fee = standardShipFeeInHaNoi;
         }
@@ -101,12 +139,6 @@ function GetShipFee() {
     return fee;
 }
 
-async function GetListAddress() {
-    const searchParams = new URLSearchParams();
-    let query = "/Customer/GetListAddress";
-
-    return await RequestHttpPostPromise(searchParams, query);
-}
 // Chưa địa chỉ nào được chọn (lần đầu vào page chưa tạo địa chỉ, chưa chọn địa chỉ mặc định)
 function ShowAddressDontSelected() {
 
@@ -124,8 +156,8 @@ function ChangeAddressClickEvent(element) {
 async function LoadCustomerInfor() {
 
     if (CheckAnonymousCustomer()) {// Khách vãng lai
-        // Lấy từ cookie
-        listCustomerInforCookieObject = GetListCustomerInforCookieFromCookie();
+        // Lấy từ localStorage
+        listCustomerInforObject = GetListCustomerInforFromLocalStorage();
     }
     else {
         let res = await GetListAddress();
@@ -135,14 +167,14 @@ async function LoadCustomerInfor() {
             return GetEasyPromise();
         }
         else {
-            listCustomerInforCookieObject = JSON.parse(res.responseText);
+            listCustomerInforObject = JSON.parse(res.responseText);
         }
     }
 
     let isDefaultAdd = false;
     // Tìm địa chỉ mặc định
-    for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
-        let obj = listCustomerInforCookieObject[i];
+    for (let i = listCustomerInforObject.length - 1; i >= 0; i--) {
+        let obj = listCustomerInforObject[i];
         if (obj.defaultAdd == 1) {
             currentIndexInforObject = i;
             ShowCustomerInforFromObj(obj);
@@ -165,7 +197,7 @@ async function LoadCustomerInfor() {
             changeAddressBtnEle.removeEventListener("click", funcOfChangeAddress);
         }
 
-        if (listCustomerInforCookieObject.length > 0) {
+        if (listCustomerInforObject.length > 0) {
             funcOfChangeAddress = function () { ShowListCustomerInforModal(); };
         }
         else {
@@ -189,7 +221,7 @@ function ShowCustomerInforFromObj(obj) {
 
     document.getElementsByClassName("address-name-phone")[0].innerHTML = obj.name + ", " + obj.phone;
     document.getElementsByClassName("address-address")[0].innerHTML =
-        obj.detail + ", " + obj.province + ", " + obj.district + ", " + obj.subdistrict;
+        obj.detail + ", " + obj.province + ", " + ", " + obj.subdistrict;
     if (obj.defaultAdd) {
         document.getElementsByClassName("address-default")[0].style.display = "block";
     }
@@ -213,10 +245,10 @@ function ShowListCustomerInforModal() {
     let sample = document.getElementsByClassName("sample-customer-infor-container")[0];
     let container = document.getElementsByClassName("list-customer-infor-container")[0];
 
-    let length = listCustomerInforCookieObject.length;
+    let length = listCustomerInforObject.length;
 
     for (let i = 0; i < length; i++) {
-        let obj = listCustomerInforCookieObject[i];
+        let obj = listCustomerInforObject[i];
         let clone = sample.cloneNode(true);
         clone.style.display = "flex";
         clone.setAttribute("data-index", i.toString());
@@ -230,7 +262,7 @@ function ShowListCustomerInforModal() {
 
         clone.getElementsByClassName("detail")[0].innerHTML = obj.detail;
         clone.getElementsByClassName("province-district-subdistrict")[0].innerHTML =
-            obj.subdistrict + ", " + obj.district + ", " + obj.province;
+            obj.subdistrict + ", " + ", " + obj.province;
 
         if (!obj.defaultAdd) {
             clone.getElementsByClassName("default-address")[0].style.display = "none";
@@ -249,17 +281,17 @@ async function FinishCustomerInforModal() {
         return;
     }
 
-    let obj = CreateCookieValueFromInput();
+    let obj = CreateAddressObjFromInput();
     if (currentIndexInforUpdateObject != -1) {// Cập nhật thông tin vào object
-        obj.id = listCustomerInforCookieObject[currentIndexInforUpdateObject].id;
-        listCustomerInforCookieObject[currentIndexInforUpdateObject] = obj;
+        obj.id = listCustomerInforObject[currentIndexInforUpdateObject].id;
+        listCustomerInforObject[currentIndexInforUpdateObject] = obj;
         //Kiểm tra có đặt mặc định
         if (obj.defaultAdd) {
             // Bỏ mặc định cũ nếu có
-            for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
-                if (listCustomerInforCookieObject[i].defaultAdd
+            for (let i = listCustomerInforObject.length - 1; i >= 0; i--) {
+                if (listCustomerInforObject[i].defaultAdd
                     && i != currentIndexInforUpdateObject) {
-                    listCustomerInforCookieObject[i].defaultAdd = 0;
+                    listCustomerInforObject[i].defaultAdd = 0;
                 }
             }
         }
@@ -271,19 +303,19 @@ async function FinishCustomerInforModal() {
         //Kiểm tra có đặt mặc đinh
         if (obj.defaultAdd) {
             // Bỏ mặc định cũ nếu có
-            for (let i = listCustomerInforCookieObject.length - 1; i >= 0; i--) {
-                if (listCustomerInforCookieObject[i].defaultAdd) {
-                    listCustomerInforCookieObject[i].defaultAdd = 0;
+            for (let i = listCustomerInforObject.length - 1; i >= 0; i--) {
+                if (listCustomerInforObject[i].defaultAdd) {
+                    listCustomerInforObject[i].defaultAdd = 0;
                 }
             }
         }
-        listCustomerInforCookieObject.push(obj);
+        listCustomerInforObject.push(obj);
         // Chọn địa chỉ vừa thêm mới làm địa chỉ nhận hàng
-        currentIndexInforObject = listCustomerInforCookieObject.length - 1;
+        currentIndexInforObject = listCustomerInforObject.length - 1;
     }
 
     if (CheckAnonymousCustomer()) {// Khách vãng lai
-        SetCartCookieFromListCustomerInforCookieObject(listCustomerInforCookieObject);
+        SaveListCustomerInforToLocalStorage(listCustomerInforObject);
     }
     else { // Khách đăng nhập
         if (currentIndexInforUpdateObject != -1) {// Cập nhật thông tin
@@ -303,7 +335,7 @@ async function FinishCustomerInforModal() {
             }
 
             // Cập nhật lại id cho obj vừa thêm vào list
-            listCustomerInforCookieObject[listCustomerInforCookieObject.length - 1].id = resObj.myAnything;
+            listCustomerInforObject[listCustomerInforObject.length - 1].id = resObj.myAnything;
         }
     }
 
@@ -329,7 +361,7 @@ function DontConfirmListCustomerInforModal() {
     DestroyListCustomerInforModal();
 
     // Cập nhật thông tin lựa chọn cũ
-    ShowCustomerInforFromObj(listCustomerInforCookieObject[currentIndexInforObject]);
+    ShowCustomerInforFromObj(listCustomerInforObject[currentIndexInforObject]);
 
     // Tính lại tiền
     ShowSumMoney();
@@ -344,7 +376,7 @@ function ConfirmListCustomerInforModal() {
 
         if (ele.getElementsByClassName("address-radio")[0].checked) {
             currentIndexInforObject = parseInt(ele.getAttribute("data-index"));
-            ShowCustomerInforFromObj(listCustomerInforCookieObject[currentIndexInforObject]);
+            ShowCustomerInforFromObj(listCustomerInforObject[currentIndexInforObject]);
             break;
         }
     }
@@ -356,7 +388,7 @@ function ConfirmListCustomerInforModal() {
 
 function UpdateCustomerInfor(ele) {
     currentIndexInforUpdateObject = parseInt(ele.parentElement.parentElement.getAttribute("data-index"));
-    ShowCustomerInforModal(false, true, listCustomerInforCookieObject[currentIndexInforUpdateObject]);
+    ShowCustomerInforModal(false, true, listCustomerInforObject[currentIndexInforUpdateObject]);
 }
 
 function objOrderPay(type, value) {
@@ -370,10 +402,10 @@ function objOrderPay(type, value) {
 /// 2: Khuyến mại khác
 /// 3: Tổng thanh toán = Tổng tiền hàng + Phí ship - Khuyến mại khác
 function GetListOrderPay() {
-    let length = listCartCookieObject.length;
+    let length = listCartObject.length;
     let sumMoney = 0;
     for (let i = 0; i < length; i++) {
-        sumMoney = sumMoney + listCartCookieObject[i].q * listCartCookieObject[i].price;
+        sumMoney = sumMoney + listCartObject[i].q * listCartObject[i].price;
     }
     let listOrderPay = [];
     listOrderPay.push(new objOrderPay(0, sumMoney));
@@ -392,8 +424,8 @@ function GetListOrderPay() {
 // Đồng thời gửi thông tin địa chỉ, lời nhắn shop
 async function CheckOrderOnSever() {
     const searchParams = new URLSearchParams();
-    searchParams.append("cart", JSON.stringify(listCartCookieObject));
-    searchParams.append("customerInfor", JSON.stringify(listCustomerInforCookieObject[currentIndexInforObject]));
+    searchParams.append("cart", JSON.stringify(listCartObject));
+    searchParams.append("customerInfor", JSON.stringify(listCustomerInforObject[currentIndexInforObject]));
     let listOrderPay = GetListOrderPay();
     searchParams.append("listOrderPay", JSON.stringify(listOrderPay));
     searchParams.append("noteToShop", document.getElementsByClassName("gQuJxM")[0].value);
@@ -424,10 +456,20 @@ async function Order() {
     }
     // Với khách vãng lai
     // Cập nhật lại cart cookie, xóa những sản phẩm đặt hàng thành công
-    let length = listCartCookieObject.length;
+    let length = listCartObject.length;
     for (let i = length - 1; i >= 0; i--) {
-        DeleteOneCartCookie(listCartCookieObject[i]);
+        DeleteOneCartCookie(listCartObject[i]);
     }
 
     await CreateMustClickOkModal("Đặt hàng thành công. Cảm ơn bạn đã mua hàng tại shop.", function () { location.replace("/"); });
 }
+
+// Initial load
+window.addEventListener('DOMContentLoaded', async function () {
+    if (DEBUG) {
+        console.log("DOMContentLoaded - Initial load");
+    }
+    await LoadCustomerInfor(); // Load địa chỉ khách trước để tính phí ship
+
+    await LoadCart();
+});

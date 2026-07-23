@@ -66,11 +66,21 @@
     height: 120px;
 }*/
 #item-small-media-container {
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     white-space: nowrap;
     width: 100%;
     /*border: 1px solid rgb(255, 0, 0);*/
     position: relative;
+
+    /* Ẩn scrollbar nhưng vẫn scroll được - FIX UI JUMPING */
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Ẩn scrollbar cho Webkit browsers (Chrome, Safari, Edge Chromium) */
+#item-small-media-container::-webkit-scrollbar {
+    display: none;
 }
 
 #item-variation-container {
@@ -252,6 +262,27 @@ h1 {
     align-items: center;
     justify-content: center;
 }
+
+/* Out-of-stock state - sản phẩm hết hàng (vẫn click được để xem thông tin) */
+.variation-button.out-of-stock {
+    opacity: 0.4;
+    background-color: #f5f5f5;
+    color: rgba(0,0,0,.3);
+    position: relative;
+}
+
+/* Gạch chéo cho variation hết hàng (giống Shopee) */
+.variation-button.out-of-stock::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: rgba(0,0,0,.3);
+    transform: translateY(-50%);
+}
+
 /*.variation-button:hover {
     border: 1px solid rgb(255, 0, 0);
 }*/
@@ -305,6 +336,24 @@ h1 {
     background: #fff;
     display: flex;
     align-items: center;
+}
+
+/* Disabled state khi sản phẩm hết hàng */
+.shopee-input-quantity.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.shopee-input-quantity .xNxl-t:disabled {
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+    color: rgba(0,0,0,.26);
+}
+
+.shopee-input-quantity .VWjjde:disabled {
+    cursor: not-allowed;
+    background-color: #f5f5f5;
+    color: rgba(0,0,0,.4);
 }
 
 .xNxl-t {
@@ -408,6 +457,18 @@ h1 {
         background: rgba(208,1,27,.05);
     }
 
+    .btn-add-to-cart:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #f5f5f5;
+        color: rgba(0,0,0,.4);
+        border-color: rgba(0,0,0,.09);
+    }
+
+    .btn-add-to-cart:disabled:hover {
+        background-color: #f5f5f5;
+    }
+
 .btn-buy-now {
     position: relative;
     overflow: visible;
@@ -434,6 +495,17 @@ h1 {
 
     .btn-buy-now:hover {
         background: #ff424f;
+    }
+
+    .btn-buy-now:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #ccc;
+        color: rgba(0,0,0,.4);
+    }
+
+    .btn-buy-now:disabled:hover {
+        background-color: #ccc;
     }
 
 .icon-add-to-cart {

@@ -826,6 +826,7 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(ls);
         }
 
+        // đã check số lượng khác 0 ở frontend
         [HttpPost]
         public async Task<string> AddImport(string listObject)
         {

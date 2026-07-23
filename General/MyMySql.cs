@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MVCPlayWithMe.Models;
+﻿using MVCPlayWithMe.Models;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
@@ -221,6 +220,27 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        /// <summary>
+        /// Overload: Đọc Int32 từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        /// <param name="rdr">MySqlDataReader</param>
+        /// <param name="indexColumn">Column index (lấy từ rdr.GetOrdinal(columnName))</param>
+        /// <returns>Int32 value, hoặc -1 nếu NULL/error</returns>
+        public static int GetInt32(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return -1;
+
+            try
+            {
+                return rdr.GetInt32(indexColumn);
+            }
+            catch(Exception)
+            {
+                return -1;
+            }
+        }
+
         public static float GetFloat(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))
@@ -229,6 +249,24 @@ namespace MVCPlayWithMe.General
             try
             {
                 return rdr.GetFloat(columnName);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Overload: Đọc Float từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        public static float GetFloat(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return -1;
+
+            try
+            {
+                return rdr.GetFloat(indexColumn);
             }
             catch (Exception)
             {
@@ -251,6 +289,24 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        /// <summary>
+        /// Overload: Đọc byte[] từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        public static byte[] GetByteArray(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return null;
+
+            try
+            {
+                return (byte[])rdr[indexColumn];
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+
         public static long GetInt64(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))
@@ -266,6 +322,24 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        /// <summary>
+        /// Overload: Đọc Int64 từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        public static long GetInt64(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return -1;
+
+            try
+            {
+                return rdr.GetInt64(indexColumn);
+            }
+            catch (Exception)
+            {
+                return -1;
+            }
+        }
+
         public static string GetString(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))
@@ -274,6 +348,24 @@ namespace MVCPlayWithMe.General
             try
             {
                 return rdr.GetString(columnName);
+            }
+            catch (Exception)
+            {
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Overload: Đọc String từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        public static string GetString(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return string.Empty;
+
+            try
+            {
+                return rdr.GetString(indexColumn);
             }
             catch (Exception)
             {

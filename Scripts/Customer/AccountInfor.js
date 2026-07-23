@@ -1,4 +1,4 @@
-let customerObj = null; // Đối tượng khách hàng server trả về
+﻿let customerObj = null; // Đối tượng khách hàng server trả về
 let listCustomerAddressObj;
 let currentIndexAddressUpdateObject = -1; // index cần cập nhật
 LoadSomething();
@@ -77,7 +77,6 @@ function ShowAddress() {
         }
         container.appendChild(clone);
     }
-
 }
 
 function UpdateCustomerAddress(ele) {
@@ -157,7 +156,7 @@ async function FinishCustomerInforModal() {
         return;
     }
 
-    let obj = CreateCookieValueFromInput();
+    let obj = CreateAddressObjFromInput();
     if (currentIndexAddressUpdateObject != -1) {// Cập nhật thông tin vào object
         obj.id = listCustomerAddressObj[currentIndexAddressUpdateObject].id;
         listCustomerAddressObj[currentIndexAddressUpdateObject] = obj;

@@ -24,12 +24,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 {
     public class TikiDealDiscountController : BasicController
     {
-        public static TikiDealDiscountMySql sqler;
+        public static TikiDealDiscountMySql sqler = new TikiDealDiscountMySql();
 
-        public TikiDealDiscountController()
-        {
-            sqler = new TikiDealDiscountMySql();
-        }
+        //public TikiDealDiscountController()
+        //{
+        //    sqler = new TikiDealDiscountMySql();
+        //}
 
         // GET: TikiDealDiscount
         public async Task<ActionResult> Index()

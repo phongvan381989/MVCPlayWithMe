@@ -85,7 +85,7 @@ const CartManager = {
         try {
             const cartJson = localStorage.getItem(this.STORAGE_KEY);
             const cart = cartJson ? JSON.parse(cartJson) : [];
-
+            return cart;
             // Sắp xếp theo time DESC (mới nhất lên đầu)
             return cart.sort((a, b) => (b.time || 0) - (a.time || 0));
         } catch (e) {
@@ -131,7 +131,7 @@ const CartManager = {
     },
 
     /**
-     * Thêm sản phẩm vào giỏ hàng
+     * Thêm sản phẩm vào giỏ hàng, tăng số lượng nếu tồn tại
      * @param {Number} sanPhamId - Sản Phẩm ID
      * @param {Number} quantity - Số lượng
      * @param {Number} real - 1=mua ngay, 0=mua sau (default: 1)
@@ -141,13 +141,13 @@ const CartManager = {
         const cart = this.getCart();
 
         // Giới hạn 1000 items
-        if (cart.length >= 1000) {
-            alert('Giỏ hàng tối đa 100 sản phẩm!');
+        if (cart.length >= 500) {
+            alert('Giỏ hàng tối đa 500 sản phẩm!');
             return false;
         }
 
-        // Làm mới dữ liệu trước đó real = 0
-        cart.forEach(item => { item.real = 0; });
+        // // Làm mới dữ liệu trước đó real = 0
+        // cart.forEach(item => { item.real = 0; });
 
         // Tìm item đã tồn tại
         const existingItem = cart.find(item => item.sanPhamId === sanPhamId);
@@ -156,7 +156,6 @@ const CartManager = {
             // Tăng số lượng và cập nhật time
             existingItem.quantity += quantity;
             existingItem.real = real;
-            existingItem.time = Date.now();
         } else {
             // Thêm mới với timestamp
             cart.push({
@@ -173,6 +172,24 @@ const CartManager = {
         return true;
     },
 
+    // Xóa cart nếu có và tạo mới với real = 1, phục vụ cho khách đã đăng nhập để biết chọn mua sản phẩm nào
+    clearAndCreateCartFromList(listCartObject) {
+        let cart = this.getCart();
+        //xóa cũ
+        cart = [];
+        listCartObject.forEach(item => {
+            cart.push({
+                sanPhamId: item.sanPhamId,
+                quantity: item.quantity,
+                real: 1,
+                time: Date.now()
+            });
+        });
+
+        this.saveCart(cart);
+        this.updateCartBadge();
+    },
+
     /**
      * Xóa sản phẩm khỏi giỏ hàng
      * @param {Number} sanPhamId
@@ -185,11 +202,11 @@ const CartManager = {
         console.log('🗑️ Removed from cart:', sanPhamId);
     },
 
-    /**
-     * Cập nhật số lượng sản phẩm
-     * @param {Number} sanPhamId - ID
-     * @param {Number} quantity - Số lượng mới
-     */
+    // /**
+    //  * Cập nhật số lượng sản phẩm
+    //  * @param {Number} sanPhamId - ID
+    //  * @param {Number} quantity - Số lượng mới
+    //  */
     updateQuantity(sanPhamId, quantity) {
         const cart = this.getCart();
         const item = cart.find(item => item.sanPhamId === sanPhamId);
@@ -199,11 +216,50 @@ const CartManager = {
                 this.removeFromCart(sanPhamId);
             } else {
                 item.quantity = quantity;
-                item.time = Date.now(); // Cập nhật timestamp
-                this.saveCart(cart);
-                this.updateCartBadge();
             }
         }
+        else {
+            // Thêm mới với timestamp
+            cart.push({
+                sanPhamId: sanPhamId,
+                quantity: quantity,
+                real: 0,
+                time: Date.now()
+            });
+        }
+        this.saveCart(cart);
+        this.updateCartBadge();
+    },
+
+
+
+    updateReal(sanPhamId, real) {
+        const cart = this.getCart();
+        const item = cart.find(item => item.sanPhamId === sanPhamId);
+
+        if (item) {
+            item.real = real;
+        }
+        else {
+            // Thêm mới với timestamp
+            cart.push({
+                sanPhamId: sanPhamId,
+                quantity: 0,
+                real: real,
+                time: Date.now()
+            });
+        }
+        this.saveCart(cart);
+        this.updateCartBadge();
+    },
+
+    setRealAll(real) {
+        const cart = this.getCart();
+        for (let c of cart) {
+            c.real = real;
+        }
+        this.saveCart(cart);
+        this.updateCartBadge();
     },
 
     /**
@@ -216,6 +272,22 @@ const CartManager = {
         console.log('🗑️ Cart cleared');
     },
 
+    // Set tất cả real = 0 với khách vãng lai hoặc xóa cart với khách đăng nhập
+    setRealZeroOrClear() {
+        const cart = this.getCart();
+        if (CheckAnonymousCustomer()) {
+            for (let c of cart) {
+                c.real = 0;
+            }
+            this.saveCart(cart);
+        }
+        else {
+            localStorage.removeItem(this.STORAGE_KEY);
+            localStorage.removeItem(this.METADATA_KEY);
+        }
+        this.updateCartBadge();
+    }
+    ,
     /**
      * Đếm tổng số items trong giỏ hàng
      * @returns {Number}
@@ -229,13 +301,13 @@ const CartManager = {
      * Cập nhật badge số lượng giỏ hàng (header icon)
      */
     updateCartBadge() {
-        const count = this.getItemCount();
-        const badge = document.getElementById('cart-badge');
+        // const count = this.getItemCount();
+        // const badge = document.getElementById('cart-badge');
 
-        if (badge) {
-            badge.textContent = count;
-            badge.style.display = count > 0 ? 'inline-block' : 'none';
-        }
+        // if (badge) {
+        //     badge.textContent = count;
+        //     badge.style.display = count > 0 ? 'inline-block' : 'none';
+        // }
     },
 
     /**
@@ -253,8 +325,8 @@ const CartManager = {
     }
 };
 
-// Auto-init khi page load
-document.addEventListener('DOMContentLoaded', () => {
-    CartManager.init();
-    CartManager.updateCartBadge();
-});
+// // Auto-init khi page load
+// document.addEventListener('DOMContentLoaded', () => {
+//     CartManager.init();
+//     CartManager.updateCartBadge();
+// });

@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.ProductModel;

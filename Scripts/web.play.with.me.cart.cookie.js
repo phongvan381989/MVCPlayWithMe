@@ -130,12 +130,10 @@ function RefreshRealOfCartCookieAndGet() {
 async function CartPageLoadCart() {
     // Lấy guest cart từ localStorage (nếu có)
     let guestCart = [];
-    if (CheckAnonymousCustomer()) {
-        if (typeof CartManager !== 'undefined') {
-            guestCart = CartManager.getCart();
-            if (DEBUG) {
-                console.log("CartPageLoadCart guestCart: " + JSON.stringify(guestCart));
-            }
+    if (typeof CartManager !== 'undefined') {
+        guestCart = CartManager.getCart();
+        if (DEBUG) {
+            console.log("CartPageLoadCart guestCart: " + JSON.stringify(guestCart));
         }
     }
 
@@ -143,12 +141,18 @@ async function CartPageLoadCart() {
     return await PostJSON('/Home/CartPageLoadCart', guestCart);
 }
 
-// cart được mã hóa 
-async function CheckoutPageLoadCart(cart) {
-    const searchParams = new URLSearchParams();
-    let query = "/Home/CheckoutPageLoadCart";
-    searchParams.append("cart", cart);
-    return RequestHttpPostPromise(searchParams, query);
+async function CheckoutPageLoadCart() {
+    // Lấy guest cart từ localStorage
+    let guestCart = [];
+    if (typeof CartManager !== 'undefined') {
+        guestCart = CartManager.getCart();
+        if (DEBUG) {
+            console.log("CheckoutPageLoadCart guestCart: " + JSON.stringify(guestCart));
+        }
+    }
+
+    // Gửi cart data dưới dạng JSON body
+    return await PostJSON('/Home/CheckoutPageLoadCart', guestCart);
 }
 
 function DeleteAllCartCookie() {

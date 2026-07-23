@@ -78,56 +78,11 @@
     box-sizing: border-box;
 }
 
-@media (min-width: 800px) {
-    .main-container {
-        padding: 5px;
-        width: 100%;
-    }
-
-    .contianer-selected-model {
-        box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-        /*border-radius: 0.125rem;*/
-        overflow: hidden;
-        border-radius: 3px;
-        font-size: 14px;
-        background: #fff;
-        margin-bottom: 20px;
-        margin-right: 5px;
-        margin-left: 5px;
-        color: #888;
-        padding: 0 5px;
-    }
-
-    .mcsiKT {
-        padding: 0 10px 0 10px;
-/*        display: flex;
-        flex-direction: row-reverse;*/
-/*        min-width: 40px;*/
-        box-sizing: border-box;
-    }
-
-    .TyNN8t {
-        line-height: 16px;
-        overflow: hidden;
-        display: flex;
-        flex: 1;
-        flex-direction: column;
-        padding: 5px 20px 0 10px;
-        /*font-size: 14px;*/
-    }
-
-    .s1Gxkq {
-        box-shadow: 0 -10px 10px 0 rgba(0,0,0,.09);
-        border-radius: 3px;
-        border: 1px solid rgba(0,0,0,.09);
-        background: #fff;
-        padding: 30px 5px;
-        margin: 5px 5px 20px 5px;
-        z-index: 2;
-        position: -webkit-sticky; /* Safari */
-        position: sticky;
-        bottom: 0px;
-    }
+/* ✅ MOBILE-FIRST: Base style (mobile) ĐẶT TRƯỚC media query */
+.WanNdG {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
 }
 
 .mcsiKT-header {
@@ -187,11 +142,7 @@ a {
     cursor: pointer;
 }
 
-.WanNdG {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-}
+/* ❌ XÓA duplicate này - đã có ở line 80-84 */
 
 .TyNN8t {
     line-height: 16px;
@@ -218,6 +169,7 @@ a {
 }
 
 .contianer-selected-model {
+/*    display:none;*/
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
     /*border-radius: 0.125rem;*/
     overflow: hidden;
@@ -263,6 +215,17 @@ a {
 ._8Xhu5_ {
     display: flex;
     align-items: center;
+}
+
+/* Disabled state khi sản phẩm hết hàng */
+.shopee-input-quantity.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.mcsiKT.disabled {
+    opacity: 0.5;
+    pointer-events: none;
 }
 
 .EOdsa-:first-child {
@@ -426,6 +389,7 @@ a {
 .main-container {
 /*    padding: 5px;*/
     width:100%;
+    display:none;
 }
 
 .cart-empty {
@@ -435,4 +399,63 @@ a {
 
 .sample-selected-model {
     display: none;
+}
+
+@media (min-width: 800px) {
+    .main-container {
+        display: none;
+        padding: 5px;
+        width: 100%;
+    }
+
+    .contianer-selected-model {
+        box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+        /*border-radius: 0.125rem;*/
+        overflow: hidden;
+        border-radius: 3px;
+        font-size: 14px;
+        background: #fff;
+        margin-bottom: 20px;
+        margin-right: 5px;
+        margin-left: 5px;
+        color: #888;
+        padding: 0 5px;
+    }
+
+    .mcsiKT {
+        padding: 0 10px 0 10px;
+        /*        display: flex;
+        flex-direction: row-reverse;*/
+        /*        min-width: 40px;*/
+        box-sizing: border-box;
+    }
+
+    .TyNN8t {
+        line-height: 16px;
+        overflow: hidden;
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+        padding: 5px 20px 0 10px;
+        /*font-size: 14px;*/
+    }
+
+    .s1Gxkq {
+        box-shadow: 0 -10px 10px 0 rgba(0,0,0,.09);
+        border-radius: 3px;
+        border: 1px solid rgba(0,0,0,.09);
+        background: #fff;
+        padding: 30px 5px;
+        margin: 5px 5px 20px 5px;
+        z-index: 2;
+        position: -webkit-sticky; /* Safari */
+        position: sticky;
+        bottom: 0px;
+    }
+
+    .WanNdG {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+    }
 }

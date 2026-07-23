@@ -76,9 +76,7 @@ namespace MVCPlayWithMe.Controllers
         /// <param name="customerInforCookie"></param>
         /// <returns></returns>
         [HttpPost]
-        public async Task<string> Login_Login(string userName,
-            string passWord,
-            string guestCartJson = null)
+        public async Task<string> Login_Login(string userName, string passWord)
         {
             MySqlResultState result = await sqler.LoginCustomerAsync(userName, passWord);
 
@@ -107,24 +105,56 @@ namespace MVCPlayWithMe.Controllers
                     break;
                 }
 
-                // Merge guest cart từ localStorage vào DB
-                if (!string.IsNullOrEmpty(guestCartJson))
-                {
-                    try
-                    {
-                        List<Cart> lsCart = JsonConvert.DeserializeObject<List<Cart>>(guestCartJson);
-                        if (lsCart != null && lsCart.Count > 0)
-                        {
-                            await sqler.AddCartLoginAsync(customer.id, lsCart);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MyLogger.GetInstance().Warn($"Failed to merge guest cart on login: {ex.Message}");
-                    }
-                }
+                // ✅ Guest cart + addresses sẽ được sync riêng qua API /Customer/SyncGuestData
             }
             while (false);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Sync guest cart + addresses từ localStorage lên DB sau khi login
+        /// Sử dụng 1 connection + transaction để đảm bảo all-or-nothing
+        /// Nếu 1 phần fail → rollback toàn bộ → giữ localStorage để user retry
+        /// </summary>
+        [HttpPost]
+        public async Task<string> SyncGuestData(string guestCartJson = null, string guestAddressesJson = null)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                // 1. Authenticate customer (đã login)
+                Customer cus = await AuthentCustomerAsync();
+                if (cus == null)
+                {
+                    result.State = EMySqlResultState.AUTHEN_FAIL;
+                    result.Message = "Chưa đăng nhập";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // 2. Parse JSON
+                List<Cart> guestCarts = null;
+                if (!string.IsNullOrEmpty(guestCartJson))
+                {
+                    guestCarts = JsonConvert.DeserializeObject<List<Cart>>(guestCartJson);
+                }
+
+                List<Address> guestAddresses = null;
+                if (!string.IsNullOrEmpty(guestAddressesJson))
+                {
+                    guestAddresses = JsonConvert.DeserializeObject<List<Address>>(guestAddressesJson);
+                }
+
+                // 3. ✅ Sync trong 1 transaction (1 connection, all-or-nothing)
+                result = await sqler.SyncGuestDataInTransactionAsync(cus.id, guestCarts, guestAddresses);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error($"SyncGuestData error: {ex.Message}");
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Lỗi sync dữ liệu";
+            }
+
             return JsonConvert.SerializeObject(result);
         }
 

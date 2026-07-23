@@ -130,11 +130,11 @@ function AddQuantityIfExistInTable(obj, table) {
     let exist = false;
     for (let i = 1; i < length; i++) {
         if (table.rows[i].cells[0].innerHTML == obj.id) {
-            if (DEBUG) {
-                console.log("value: " + Number(table.rows[i].cells[8].childNodes[0].value));
-                console.log("typeof " + typeof Number(table.rows[i].cells[8].childNodes[0].value));
-                console.log("typeof obj.quantity" + typeof obj.quantity);
-            }
+            // if (DEBUG) {
+            //     console.log("value: " + Number(table.rows[i].cells[8].childNodes[0].value));
+            //     console.log("typeof " + typeof Number(table.rows[i].cells[8].childNodes[0].value));
+            //     console.log("typeof obj.quantity" + typeof obj.quantity);
+            // }
             table.rows[i].cells[8].childNodes[0].value =
                 Number(table.rows[i].cells[8].childNodes[0].value) + obj.quantity;
             exist = true;
@@ -420,8 +420,11 @@ async function Save() {
     let rows = document.getElementById("myTable").rows;
     let length = rows.length;
     for (let i = 1; i < length; i++) {
+        if (DEBUG) {
+            console.log("Import Save: " + rows[i].cells[6].childNodes[0].value);
+        }
         if (Number(rows[i].cells[0].innerHTML) !== -1 &&
-            rows[i].cells[6].childNodes[0].value != 0) {
+            rows[i].cells[8].childNodes[0].value != 0) { // Chỉ lưu những sản phẩm có id khác -1 và số lượng nhập khác 0
             let obj = new objImport(
                 Number(rows[i].cells[0].innerHTML),
                 Number(rows[i].cells[7].innerHTML),
@@ -433,6 +436,9 @@ async function Save() {
         }
     }
 
+    if (DEBUG) {
+        console.log("Import  listSaveInfo: " + JSON.stringify(listSaveInfo));
+    }
     if (listSaveInfo.length == 0) {
         CreateMustClickOkModal("Danh sách trống, hoặc số lượng bằng 0.", null);
         return;

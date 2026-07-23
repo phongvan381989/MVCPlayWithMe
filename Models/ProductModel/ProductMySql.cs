@@ -956,7 +956,6 @@ namespace MVCPlayWithMe.Models.ProductModel
                         new Dictionary<string, int>(
                             StringComparer.OrdinalIgnoreCase);
 
-
                     foreach (var item in products)
                     {
                         int comboId;
@@ -975,9 +974,9 @@ namespace MVCPlayWithMe.Models.ProductModel
                             // tìm combo trong DB
                             var getComboCmd = new MySqlCommand(
                                 @"SELECT id
-                  FROM tbCombo
-                  WHERE Name = @name
-                  LIMIT 1",
+                                FROM tbCombo
+                                WHERE Name = @name
+                                LIMIT 1",
                                 connection);
 
                             getComboCmd.Parameters.AddWithValue(
@@ -992,9 +991,8 @@ namespace MVCPlayWithMe.Models.ProductModel
                             {
                                 var insertComboCmd = new MySqlCommand(
                                     @"INSERT INTO tbCombo(name)
-                      VALUES(@name);
-
-                      SELECT LAST_INSERT_ID();",
+                                    VALUES(@name);
+                                    SELECT LAST_INSERT_ID();",
                                     connection);
 
                                 insertComboCmd.Parameters.AddWithValue(
@@ -1015,27 +1013,28 @@ namespace MVCPlayWithMe.Models.ProductModel
                         // insert product
                         var insertProductCmd = new MySqlCommand(
                             @"INSERT INTO tbproducts
-            (
-                Code,
-                Name,
-                ComboId,
-                BookCoverPrice,
-                PublisherId,
-                Quantity,
-                Discount,
-                Date
-            )
-            VALUES
-            (
-                @code,
-                @name,
-                @comboId,
-                @bookCoverPrice,
-                @publisherId,
-                @quantity,
-                @discount,
-                CURDATE()
-            )",
+                            (
+                                Code,
+                                Name,
+                                ComboId,
+                                BookCoverPrice,
+                                PublisherId,
+                                Quantity,
+                                Discount,
+                                Date
+                            )
+                            VALUES
+                            (
+                                @code,
+                                @name,
+                                @comboId,
+                                @bookCoverPrice,
+                                @publisherId,
+                                @quantity,
+                                @discount,
+                                CURDATE()
+                            );
+                            SELECT LAST_INSERT_ID();",
                             connection);
                         insertProductCmd.Parameters.AddWithValue(
                             "@name",
@@ -1064,7 +1063,25 @@ namespace MVCPlayWithMe.Models.ProductModel
                             "@code",
                             item.code);
 
-                        await insertProductCmd.ExecuteNonQueryAsync();
+                        int productId = Convert.ToInt32(await insertProductCmd.ExecuteScalarAsync());
+
+                        // Insert vào tbNeedUpdateQuantity
+                        var inserttbNeedUQCmd = new MySqlCommand(
+                            @"INSERT INTO tbNeedUpdateQuantity
+                            (
+                                ProductId,
+                                Status
+                            )
+                            VALUES
+                            (
+                                @productId,
+                                1
+                            );",
+                            connection);
+                        inserttbNeedUQCmd.Parameters.AddWithValue(
+                            "@productId",
+                            productId);
+                        await inserttbNeedUQCmd.ExecuteNonQueryAsync();
                     }
                 }
             }
@@ -3044,15 +3061,20 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             MySqlResultState result = new MySqlResultState();
             bool isOK = true;
+            MySqlParameter[] paras = new MySqlParameter[7];
+            paras[0] = new MySqlParameter("@inProductId", 0);
+            paras[1] = new MySqlParameter("@inPrice", 0);
+            paras[2] = new MySqlParameter("@inQuantity", 0);
+            paras[3] = new MySqlParameter("@inBookCoverPrice", 0);
+            paras[4] = new MySqlParameter("@inDiscount", 0f);
+            MyMySql.AddOutParameters(paras);
             foreach (var obj in ls)
             {
-                MySqlParameter[] paras = new MySqlParameter[7];
-                paras[0] = new MySqlParameter("@inProductId", obj.productId);
-                paras[1] = new MySqlParameter("@inPrice", obj.price);
-                paras[2] = new MySqlParameter("@inQuantity", obj.quantity);
-                paras[3] = new MySqlParameter("@inBookCoverPrice", obj.bookCoverPrice);
-                paras[4] = new MySqlParameter("@inDiscount", obj.discount);
-                MyMySql.AddOutParameters(paras);
+                paras[0].Value = obj.productId;
+                paras[1].Value = obj.price;
+                paras[2].Value = obj.quantity;
+                paras[3].Value = obj.bookCoverPrice;
+                paras[4].Value = obj.discount;
                 result = await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbImport_Insert", paras);
                 if (result.State != EMySqlResultState.OK) isOK = false;
             }
@@ -3284,6 +3306,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbProducts_Update_Code", paras);
         }
 
+        // Cập nhật cả ở tbNeedUpdateQuantity nếu có thay đổi tồn kho
         public async Task<MySqlResultState> UpdateQuantityAsync(int id, int quantity)
         {
             MySqlResultState result = new MySqlResultState();
@@ -3303,6 +3326,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        // // Cập nhật cả ở tbNeedUpdateQuantity nếu có thay đổi tồn kho
         public async Task<MySqlResultState> UpdateQuantityFromListAsync(List<int> lsId, List<int> lsQuantity)
         {
             MySqlResultState result = new MySqlResultState();

@@ -7,6 +7,7 @@ using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models.Customer
@@ -61,12 +62,11 @@ namespace MVCPlayWithMe.Models.Customer
                 }
                 if (!Convert.IsDBNull(rdr["AddressId"]))
                 {
-                    Address add = new Address();
+                    Address add = new Address(customer.id);
                     add.id = MyMySql.GetInt32(rdr, "AddressId");
                     add.name = MyMySql.GetString(rdr, "Name");
                     add.phone = MyMySql.GetString(rdr, "Phone");
                     add.province = MyMySql.GetString(rdr, "Province");
-                    add.district = MyMySql.GetString(rdr, "District");
                     add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
                     add.detail = MyMySql.GetString(rdr, "Detail");
                     add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
@@ -227,37 +227,47 @@ namespace MVCPlayWithMe.Models.Customer
             return await AddNewCookieAsync(userCookieIdentify, customerId);
         }
 
+        /// <summary>
+        /// Overload 1: Tự mở connection mới (backward compatible)
+        /// </summary>
         public async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls)
         {
-            MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                try
+                await conn.OpenAsync();
+                return await AddCartLoginAsync(customerId, ls, conn, null);
+            }
+        }
+
+        /// <summary>
+        /// Overload 2: Dùng connection từ bên ngoài (transaction support)
+        /// </summary>
+        public async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls, MySqlConnection conn, MySqlTransaction transaction = null)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn, transaction);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inSanPhamId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+                cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
+
+                foreach (var cart in ls)
                 {
-                    await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                    cmd.Parameters.AddWithValue("@inSanPhamId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
-                    cmd.Parameters.AddWithValue("@inReal", 0);
-                    cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
-                    foreach (var cart in ls)
+                    cmd.Parameters[1].Value = cart.sanPhamId;
+                    cmd.Parameters[2].Value = cart.quantity;
+                    if (cart.time.HasValue)
                     {
-                        cmd.Parameters[1].Value = cart.sanPhamId;
-                        cmd.Parameters[2].Value = cart.quantity;
-                        cmd.Parameters[3].Value = cart.real;
-                        if (cart.time.HasValue)
-                        {
-                            cmd.Parameters[4].Value = cart.time;
-                        }
-                        await cmd.ExecuteNonQueryAsync();
+                        cmd.Parameters[3].Value = cart.time;
                     }
+                    await cmd.ExecuteNonQueryAsync();
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
 
             return result;
@@ -276,7 +286,7 @@ namespace MVCPlayWithMe.Models.Customer
                     cmd.Parameters.AddWithValue("@inCustomerId", customerId);
                     cmd.Parameters.AddWithValue("@inSanPhamId", cart.sanPhamId);
                     cmd.Parameters.AddWithValue("@inQuantity", cart.quantity);
-                    cmd.Parameters.AddWithValue("@inReal", cart.real);
+                    //cmd.Parameters.AddWithValue("@inReal", cart.real);
                     cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
                     int rowsAffected = await cmd.ExecuteNonQueryAsync();
                     if (rowsAffected > 0)
@@ -298,15 +308,14 @@ namespace MVCPlayWithMe.Models.Customer
 
         public async Task<MySqlResultState> UpdateAddressAsync(Address add)
         {
-            MySqlParameter[] paras = new MySqlParameter[8];
+            MySqlParameter[] paras = new MySqlParameter[7];
             paras[0] = new MySqlParameter("@inId", add.id);
             paras[1] = new MySqlParameter("@inName", add.name);
             paras[2] = new MySqlParameter("@inPhone", add.phone);
             paras[3] = new MySqlParameter("@inProvince", add.province);
-            paras[4] = new MySqlParameter("@inDistrict", add.district);
-            paras[5] = new MySqlParameter("@inSubDistrict", add.subdistrict);
-            paras[6] = new MySqlParameter("@inDetail", add.detail);
-            paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
+            paras[4] = new MySqlParameter("@inSubDistrict", add.subdistrict);
+            paras[5] = new MySqlParameter("@inDetail", add.detail);
+            paras[6] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
             return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Update", paras);
         }
 
@@ -317,39 +326,49 @@ namespace MVCPlayWithMe.Models.Customer
             return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Delete", paras);
         }
 
+        /// <summary>
+        /// Overload 1: Tự mở connection mới (backward compatible)
+        /// </summary>
         public async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add)
         {
-            MySqlResultState result = new MySqlResultState();
-            MySqlParameter[] paras = new MySqlParameter[8];
-            paras[0] = new MySqlParameter("@inCustomerId", customerId);
-            paras[1] = new MySqlParameter("@inName", add.name);
-            paras[2] = new MySqlParameter("@inPhone", add.phone);
-            paras[3] = new MySqlParameter("@inProvince", add.province);
-            paras[4] = new MySqlParameter("@inDistrict", add.district);
-            paras[5] = new MySqlParameter("@inSubDistrict", add.subdistrict);
-            paras[6] = new MySqlParameter("@inDetail", add.detail);
-            paras[7] = new MySqlParameter("@inDefaultAdd", add.defaultAdd);
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                try
+                await conn.OpenAsync();
+                return await InsertAddressAsync(customerId, add, conn, null);
+            }
+        }
+
+        /// <summary>
+        /// Overload 2: Dùng connection từ bên ngoài (transaction support)
+        /// </summary>
+        public async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add, MySqlConnection conn, MySqlTransaction transaction = null)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn, transaction);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inName", add.name);
+                cmd.Parameters.AddWithValue("@inPhone", add.phone);
+                cmd.Parameters.AddWithValue("@inProvince", add.province);
+                cmd.Parameters.AddWithValue("@inSubDistrict", add.subdistrict);
+                cmd.Parameters.AddWithValue("@inDetail", add.detail);
+                cmd.Parameters.AddWithValue("@inDefaultAdd", add.defaultAdd);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    while (await rdr.ReadAsync())
                     {
-                        while (await rdr.ReadAsync())
-                        {
-                            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                        }
+                        result.myAnything = MyMySql.GetInt32(rdr, "LastId");
                     }
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
             }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
             return result;
         }
 
@@ -401,41 +420,156 @@ namespace MVCPlayWithMe.Models.Customer
             return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Delete_Default", paras);
         }
 
+        /// <summary>
+        /// Overload 1: Tự mở connection mới (backward compatible)
+        /// </summary>
         public async Task<List<Address>> GetListAddressAsync(int customerId)
         {
-            List<Address> lsAddress = new List<Address>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                try
+                await conn.OpenAsync();
+                return await GetListAddressAsync(customerId, conn, null);
+            }
+        }
+
+        /// <summary>
+        /// Overload 2: Dùng connection từ bên ngoài (transaction support)
+        /// </summary>
+        public async Task<List<Address>> GetListAddressAsync(int customerId, MySqlConnection conn, MySqlTransaction transaction = null)
+        {
+            List<Address> lsAddress = new List<Address>();
+            try
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn, transaction);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    while (await rdr.ReadAsync())
                     {
-                        while (await rdr.ReadAsync())
-                        {
-                            Address add = new Address();
-                            add.id = MyMySql.GetInt32(rdr, "Id");
-                            add.name = MyMySql.GetString(rdr, "Name");
-                            add.phone = MyMySql.GetString(rdr, "Phone");
-                            add.province = MyMySql.GetString(rdr, "Province");
-                            add.district = MyMySql.GetString(rdr, "District");
-                            add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
-                            add.detail = MyMySql.GetString(rdr, "Detail");
-                            add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
-                            lsAddress.Add(add);
-                        }
+                        Address add = new Address(customerId);
+                        add.id = MyMySql.GetInt32(rdr, "Id");
+                        add.name = MyMySql.GetString(rdr, "Name");
+                        add.phone = MyMySql.GetString(rdr, "Phone");
+                        add.province = MyMySql.GetString(rdr, "Province");
+                        add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                        add.detail = MyMySql.GetString(rdr, "Detail");
+                        add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
+                        lsAddress.Add(add);
                     }
                 }
-                catch (Exception ex)
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                lsAddress.Clear();
+            }
+
+            return lsAddress;
+        }
+
+        /// <summary>
+        /// Sync guest cart + addresses từ localStorage lên DB trong 1 transaction
+        /// All-or-nothing: nếu 1 phần fail → rollback toàn bộ
+        /// Ưu điểm: 1 connection, có transaction, reuse existing methods
+        /// </summary>
+        public async Task<MySqlResultState> SyncGuestDataInTransactionAsync(
+            int customerId,
+            List<Cart> guestCarts,
+            List<Address> guestAddresses)
+        {
+            MySqlResultState result = new MySqlResultState();
+            int syncedItems = 0;
+
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+
+                using (MySqlTransaction transaction = await conn.BeginTransactionAsync())
                 {
-                    MyLogger.GetInstance().Warn(ex.ToString());
-                    lsAddress.Clear();
+                    try
+                    {
+                        // 1. ✅ Sync cart - reuse existing method
+                        if (guestCarts != null && guestCarts.Count > 0)
+                        {
+                            MySqlResultState cartResult = await AddCartLoginAsync(customerId, guestCarts, conn, transaction);
+                            if (cartResult.State != EMySqlResultState.OK)
+                            {
+                                throw new Exception($"Cart sync failed: {cartResult.Message}");
+                            }
+
+                            syncedItems += guestCarts.Count;
+                            MyLogger.GetInstance().Info($"✅ Synced {guestCarts.Count} cart item(s) for customer {customerId} in transaction");
+                        }
+
+                        // 2. ✅ Get existing addresses - reuse existing method
+                        List<Address> existingAddresses = await GetListAddressAsync(customerId, conn, transaction);
+
+                        // 3. ✅ Sync addresses - reuse existing method
+                        if (guestAddresses != null && guestAddresses.Count > 0)
+                        {
+                            // Check xem DB đã có default address chưa
+                            bool hasDefaultAddress = existingAddresses.Any(a => a.defaultAdd == 1);
+                            int addressSyncCount = 0;
+
+                            foreach (var addr in guestAddresses)
+                            {
+                                // Validate
+                                if (string.IsNullOrWhiteSpace(addr.name) || string.IsNullOrWhiteSpace(addr.phone))
+                                {
+                                    continue;
+                                }
+
+                                // Check duplicate (name + phone)
+                                bool isDuplicate = existingAddresses.Any(a =>
+                                    a.name == addr.name && a.phone == addr.phone
+                                );
+
+                                if (!isDuplicate)
+                                {
+                                    // Nếu DB đã có default address → set tất cả guest addresses = 0
+                                    // Nếu DB chưa có default → bỏ qua, lấy theo địa chỉ mặc định trong db
+                                    if (hasDefaultAddress)
+                                    {
+                                        addr.defaultAdd = 0;
+                                    }
+
+                                    // Insert address - reuse existing method
+                                    MySqlResultState insertResult = await InsertAddressAsync(customerId, addr, conn, transaction);
+                                    if (insertResult.State == EMySqlResultState.OK)
+                                    {
+                                        addressSyncCount++;
+                                        existingAddresses.Add(addr);
+                                    }
+                                }
+                            }
+
+                            syncedItems += addressSyncCount;
+                            MyLogger.GetInstance().Info($"✅ Synced {addressSyncCount} address(es) for customer {customerId} in transaction");
+                        }
+
+                        // ✅ Commit transaction
+                        transaction.Commit();
+
+                        result.State = EMySqlResultState.OK;
+                        result.Message = $"Sync thành công {syncedItems} item(s)";
+
+                        MyLogger.GetInstance().Info($"✅ Transaction committed: {syncedItems} items synced for customer {customerId}");
+                    }
+                    catch (Exception ex)
+                    {
+                        // ❌ Rollback nếu có lỗi
+                        transaction.Rollback();
+
+                        MyLogger.GetInstance().Error($"❌ SyncGuestDataInTransaction error (rolled back): {ex.Message}");
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Lỗi sync dữ liệu";
+                    }
                 }
             }
-            return lsAddress;
+
+            return result;
         }
     }
 }

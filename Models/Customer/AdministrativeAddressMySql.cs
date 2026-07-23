@@ -10,43 +10,6 @@ namespace MVCPlayWithMe.Models
 {
     public class AdministrativeAddressMySql
     {
-        private string pro;
-        private string dis;
-        private string subdis;
-
-        private void Convert(List<AdministrativeAddress> ls, MySqlDataReader rdr)
-        {
-            pro = MyMySql.GetString(rdr, "Province");
-            dis = MyMySql.GetString(rdr, "District");
-            subdis = MyMySql.GetString(rdr, "SubDistrict");
-            if(ls.Count() == 0)
-            {
-                ls.Add(new AdministrativeAddress(pro, dis, subdis));
-            }
-            else
-            {
-                AdministrativeAddress obj = ls[ls.Count() - 1];
-                if(obj.province != pro) // Check có phải tỉnh mới
-                {
-                    ls.Add(new AdministrativeAddress(pro, dis, subdis));
-                }
-                else
-                {
-                    if(obj.districts[obj.districts.Count() - 1] != dis)// Check có phải huyện mới
-                    {
-                        obj.districts.Add(dis);
-
-                        List<string> lsubdis = new List<string>();
-                        lsubdis.Add(subdis);
-                        obj.subdistricts.Add(lsubdis);
-                    }
-                    else{
-                        obj.subdistricts[obj.subdistricts.Count() - 1].Add(subdis);
-                    }
-                }
-            }
-        }
-
         public async Task<List<AdministrativeAddress>> GetListAdministrativeAddressAsync()
         {
             List<AdministrativeAddress> ls = new List<AdministrativeAddress>();
@@ -55,13 +18,29 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbadministrativeaddress ORDER BY Province, District, SubDistrict;", conn);
+                    MySqlCommand cmd = new MySqlCommand(
+                        @"SELECT a.ProvinceId, p.Name, a.SubDistrict FROM tbadministrativeaddress AS a 
+                        LEFT JOIN tbaddressprovince AS p ON a.ProvinceId = p.Id ORDER BY a.ProvinceId;", conn);
                     cmd.CommandType = CommandType.Text;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
+                        int ProvinceIdIndex = rdr.GetOrdinal("ProvinceId");
+                        int NameIndex = rdr.GetOrdinal("Name");
+                        int SubDistrictIndex = rdr.GetOrdinal("SubDistrict");
+                        AdministrativeAddress lastObj = null;
+                        int provinceId = -1;
                         while (await rdr.ReadAsync())
                         {
-                            Convert(ls, rdr);
+                            provinceId = rdr.GetInt32(ProvinceIdIndex);
+                            if (lastObj == null || lastObj.provinceId != provinceId) // Check có phải tỉnh mới
+                            {
+                                lastObj = new AdministrativeAddress(provinceId, rdr.GetString(NameIndex), rdr.GetString(SubDistrictIndex));
+                                ls.Add(lastObj);
+                            }
+                            else
+                            {
+                                lastObj.subdistricts.Add(rdr.GetString(SubDistrictIndex));
+                            }
                         }
                     }
                 }

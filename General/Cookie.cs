@@ -148,15 +148,15 @@ namespace MVCPlayWithMe.General
             return cookie;
         }
 
-        public static CookieResultState GetCustomerInforCookie(HttpContextBase httpContext)
-        {
-            CookieResultState cookie = new CookieResultState();
-            if (httpContext.Request.Cookies[Common.customerInforKey] != null)
-            {
-                cookie.cookieValue = httpContext.Request.Cookies[Common.customerInforKey].Value;
-            }
-            return cookie;
-        }
+        //public static CookieResultState GetCustomerInforCookie(HttpContextBase httpContext)
+        //{
+        //    CookieResultState cookie = new CookieResultState();
+        //    if (httpContext.Request.Cookies[Common.customerInforKey] != null)
+        //    {
+        //        cookie.cookieValue = httpContext.Request.Cookies[Common.customerInforKey].Value;
+        //    }
+        //    return cookie;
+        //}
 
         // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
         public static List<Cart> GetListCartCookieFromCookieValue(string cartCookie)
@@ -180,26 +180,26 @@ namespace MVCPlayWithMe.General
             return GetListCartCookieFromCookieValue(cookie.cookieValue);
         }
 
-        // cookie có dạng: name=Hoàng Huệ#phone=0359127226#province=Hà Nội#district=Bắc Từ Liêm#subdistrict=Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
-        public static List<Address> GetListCustomerInforCookieFromCookieValue(string customerInforCookie)
-        {
-            List<Address> listCustomerInforCookie = new List<Address>();
-            if (string.IsNullOrEmpty(customerInforCookie))
-                return listCustomerInforCookie;
+        //// cookie có dạng: name=Hoàng Huệ#phone=0359127226#province=Hà Nội#district=Bắc Từ Liêm#subdistrict=Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
+        //public static List<Address> GetListCustomerInforCookieFromCookieValue(string customerInforCookie)
+        //{
+        //    List<Address> listCustomerInforCookie = new List<Address>();
+        //    if (string.IsNullOrEmpty(customerInforCookie))
+        //        return listCustomerInforCookie;
 
-            string[] myArray = customerInforCookie.Split('$');
-            for (int i = 0; i < myArray.Length; i++)
-            {
-                listCustomerInforCookie.Add(new Address(myArray[i]));
-            }
-            return listCustomerInforCookie;
-        }
+        //    string[] myArray = customerInforCookie.Split('$');
+        //    for (int i = 0; i < myArray.Length; i++)
+        //    {
+        //        listCustomerInforCookie.Add(new Address(myArray[i]));
+        //    }
+        //    return listCustomerInforCookie;
+        //}
 
-        public static List<Address> GetListCustomerInforCookie(HttpContextBase httpContext)
-        {
-            CookieResultState cookie = GetCustomerInforCookie(httpContext);
-            return GetListCustomerInforCookieFromCookieValue(cookie.cookieValue);
-        }
+        //public static List<Address> GetListCustomerInforCookie(HttpContextBase httpContext)
+        //{
+        //    CookieResultState cookie = GetCustomerInforCookie(httpContext);
+        //    return GetListCustomerInforCookieFromCookieValue(cookie.cookieValue);
+        //}
 
         public static CookieResultState GetItemOnRowCookie(HttpContextBase httpContext)
         {

@@ -266,8 +266,9 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(variants);
         }
 
+        // Nguyên tắc: real luôn luôn = 0 trong db, sản phẩm nào được chọn trên giao diện sẽ gửi riêng
         [HttpPost]
-        public async Task<string> AddSanPhamToCart(int sanPhamId, int quantity, int real)
+        public async Task<string> AddSanPhamToCart(int sanPhamId, int quantity/*, int real*/)
         {
             MySqlResultState result = new MySqlResultState();
             Customer customer = await AuthentCustomerAsync();
@@ -278,13 +279,13 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
 
-            // Làm mới dữ liệu trước đó real = 0
-            await ordersqler.RefreshRealOfCartAsync(customer.id);
+            //// Làm mới dữ liệu trước đó real = 0
+            //await ordersqler.RefreshRealOfCartAsync(customer.id);
 
             Cart cart = new Cart();
             cart.sanPhamId = sanPhamId;
             cart.quantity = quantity;
-            cart.real = real;
+            //cart.real = real;
             result = await customersqler.AddCartAsync(customer.id, cart);
             return JsonConvert.SerializeObject(result);
         }
@@ -294,17 +295,30 @@ namespace MVCPlayWithMe.Controllers
         {
             Customer cus = await AuthentCustomerAsync();
             List<Cart> ls = null;
-
-            if(cus == null)
-            {
-                // Đọc cart từ request body (JSON)
-                ls = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
-            }
-            else
+            // Đọc cart từ request body (JSON)
+            List<Cart>  lslocalStorage = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
+            if (cus!= null)
             {
                 // Khách đăng nhập - đọc từ DB
                 ls = await ordersqler.GetListCartAsync(cus.id);
+
+                // Tìm sản phẩm được chọn mua
+                foreach (Cart cart in lslocalStorage)
+                {
+                    foreach (Cart cartDb in ls)
+                    {
+                        if (cart.sanPhamId == cartDb.sanPhamId)
+                        {
+                            cartDb.real = cart.real;
+                            break;
+                        }
+                    }
+                }
             }
+            else
+            {
+                ls = lslocalStorage;
+            }    
             await ordersqler.GetCartsSanPhamBasicInfoAsync(ls);
 
             return JsonConvert.SerializeObject(ls);
@@ -320,17 +334,38 @@ namespace MVCPlayWithMe.Controllers
         // giảm giá thêm: giảm giá cho khách quen, giảm giá cho đơn lơn hơn 500k,...
         // cart: encode base64
         [HttpPost]
-        public async Task<string> CheckoutPageLoadCart(string cart)
+        public async Task<string> CheckoutPageLoadCart()
         {
-            List<Cart> lsRealCartCookie = new List<Cart>();
-            if (!Common.ParameterOfURLQueryIsNullOrEmpty(cart))
+            Customer cus = await AuthentCustomerAsync();
+            List<Cart> ls = null;
+            // Đọc cart từ request body (JSON)
+            List<Cart> lslocalStorage = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
+            if (cus != null)
             {
-                var base64EncodedBytes = System.Convert.FromBase64String(cart);
-                string decodeCart = System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
-                lsRealCartCookie = Cookie.GetListCartCookieFromCookieValue(decodeCart);
-                await ordersqler.GetCartsSanPhamBasicInfoAsync(lsRealCartCookie);
+                // Khách đăng nhập - đọc từ DB
+                ls = await ordersqler.GetListCartAsync(cus.id);
+
+                // Tìm sản phẩm được chọn mua
+                foreach (Cart cart in lslocalStorage)
+                {
+                    foreach (Cart cartDb in ls)
+                    {
+                        if (cart.sanPhamId == cartDb.sanPhamId)
+                        {
+                            cartDb.real = cart.real;
+                            break;
+                        }
+                    }
+                }
             }
-            return JsonConvert.SerializeObject(lsRealCartCookie);
+            else
+            {
+                ls = lslocalStorage;
+            }
+            // Không cập nhật lại số lượng trong cart vào db dù trong kho tồn tại ít hơn, chỉ cập nhật ở hiện thị
+            await ordersqler.GetCartsSanPhamBasicInfoAsync(ls);
+
+            return JsonConvert.SerializeObject(ls);
         }
 
         // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
@@ -508,6 +543,106 @@ namespace MVCPlayWithMe.Controllers
             {
                 result = await ordersqler.UpdateSanPhamQuantityOnCartAsync(cus.id, sanPhamId, quantity);
             }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Reset real = 0 cho tất cả items trong cart (khi vào Cart page từ trang khác)
+        /// </summary>
+        [HttpPost]
+        public async Task<string> RefreshRealOfCart()
+        {
+            Customer cus = await AuthentCustomerAsync();
+            MySqlResultState result = new MySqlResultState();
+
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+            }
+            else
+            {
+                result = await ordersqler.RefreshRealOfCartAsync(cus.id);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        ///// <summary>
+        ///// Update real = 1 cho các sản phẩm được chọn mua (khi click "Mua Hàng")
+        ///// </summary>
+        //[HttpPost]
+        //public async Task<string> CartPageUploadRealCart()
+        //{
+        //    Customer cus = await AuthentCustomerAsync();
+        //    MySqlResultState result = new MySqlResultState();
+
+        //    if (cus == null)
+        //    {
+        //        result.State = EMySqlResultState.AUTHEN_FAIL;
+        //        result.Message = "Bạn cần đăng nhập để thực hiện thao tác này.";
+        //    }
+        //    else
+        //    {
+        //        // Đọc list sanPhamIds từ request body (JSON array)
+        //        List<int> sanPhamIds = await Common.ReadJsonFromRequestBody<List<int>>(Request);
+
+        //        if (sanPhamIds == null)
+        //        {
+        //            result.State = EMySqlResultState.ERROR;
+        //            result.Message = "Không nhận được dữ liệu giỏ hàng.";
+        //        }
+        //        else
+        //        {
+        //            result = await ordersqler.UpdateRealCartAsync(cus.id, sanPhamIds);
+        //        }
+        //    }
+
+        //    return JsonConvert.SerializeObject(result);
+        //}
+
+        [HttpPost]
+        public async Task<string> CheckoutPageLoadRealCart()
+        {
+            Customer cus = await AuthentCustomerAsync();
+
+            if (cus == null)
+            {
+                // Guest: trả về empty, frontend dùng localStorage
+                return JsonConvert.SerializeObject(new List<Cart>());
+            }
+
+            // Logged-in: lấy cart với real=1 từ database
+            List<Cart> realCart = await ordersqler.GetRealCartAsync(cus.id);
+            return JsonConvert.SerializeObject(realCart);
+        }
+
+        [HttpPost]
+        public async Task<string> BatchUpdateCartQuantities()
+        {
+            Customer cus = await AuthentCustomerAsync();
+            MySqlResultState result = new MySqlResultState();
+
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Bạn cần đăng nhập để thực hiện thao tác này.";
+            }
+            else
+            {
+                // Đọc dictionary { sanPhamId: quantity } từ request body
+                Dictionary<int, int> updates = await Common.ReadJsonFromRequestBody<Dictionary<int, int>>(Request);
+
+                if (updates == null || updates.Count == 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không nhận được dữ liệu cập nhật.";
+                }
+                else
+                {
+                    result = await ordersqler.UpdateSanPhamQuantityListOnCartAsync(cus.id, updates);
+                }
+            }
+
             return JsonConvert.SerializeObject(result);
         }
     }

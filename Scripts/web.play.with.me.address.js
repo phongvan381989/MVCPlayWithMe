@@ -14,11 +14,9 @@ function AddProvince() {
         option.text = administrativeAddressObject[i].province;
         ele.appendChild(option);
     }
-
 }
 
 async function GetAdministrativeAddress() {
-
     // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
     const searchParams = new URLSearchParams();
 
@@ -27,52 +25,22 @@ async function GetAdministrativeAddress() {
     return await RequestHttpPostPromise(searchParams, query);
 }
 
-// Thay đổi tỉnh, add huyện tương ứng vào select tag
-function AddDistrict() {
-    let provinceEle = document.getElementById("province");
-    if (provinceEle.selectedIndex == 0 || provinceEle.selectedIndex == -1) {
-        return;
-    }
-    let districtEle = document.getElementById("district");
-
-    // Trừ 1 vì option đầu là cấp độ: tỉnh, huyện, xã
-    let Obj = administrativeAddressObject[provinceEle.selectedIndex - 1].districts;
-    let length = Obj.length;
-    for (let i = 0; i < length; i++) {
-        let option = document.createElement("option");
-        option.value = Obj[i];
-        option.text = Obj[i];
-        districtEle.appendChild(option);
-    }
-}
-
-function DeleteDistrict() {
-    let districtEle = document.getElementById("district");
-    for (let i = districtEle.length - 1; i > 0; i--) {
-        districtEle.remove(i);
-    }
-    districtEle.selectedIndex = 0;
-}
-
-// Thay đổi huyện, add xã tương ứng vào select tag
+// Thay đổi tỉnh, add xã tương ứng vào select tag
 function AddSubDistrict() {
     let provinceEle = document.getElementById("province");
     if (provinceEle.selectedIndex == 0 || provinceEle.selectedIndex == -1) {
         return;
     }
-    let districtEle = document.getElementById("district");
-    if (districtEle.selectedIndex == 0 || districtEle.selectedIndex == -1) {
-        return;
-    }
+
     let subdistrictEle = document.getElementById("subdistrict");
     // Trừ 1 vì option đầu là cấp độ: tỉnh, huyện, xã
-    let Obj = administrativeAddressObject[provinceEle.selectedIndex - 1].subdistricts[districtEle.selectedIndex - 1];
+    let subdistricts = administrativeAddressObject[provinceEle.selectedIndex - 1].subdistricts;
 
-    let length = Obj.length;
+    let length = subdistricts.length;
     for (let i = 0; i < length; i++) {
         let option = document.createElement("option");
-        option.value = Obj[i];
-        option.text = Obj[i];
+        option.value = subdistricts[i];
+        option.text = subdistricts[i];
         subdistrictEle.appendChild(option);
     }
 }
@@ -86,21 +54,10 @@ function DeleteSubDistrict() {
 }
 
 function ChangeProvince() {
-    DeleteDistrict();
-    AddDistrict();
-
-    DeleteSubDistrict();
-}
-
-function ChangeDistrict() {
-
     DeleteSubDistrict();
     AddSubDistrict();
 }
 
-function ChangeSubDistrict() {
-
-}
 
 function GetFocus(ele) {
     ele.style.border = "1px solid rgba(0,0,0,.14)";
@@ -116,7 +73,6 @@ function RefreshModalCustomerInfor() {
     document.getElementById("phone-number").value = "";
     document.getElementById("province").selectedIndex = 0;
 
-    document.getElementById("district").selectedIndex = 0;
     document.getElementById("subdistrict").selectedIndex = 0;
     document.getElementById("detail-subdistrict").value = "";
     document.getElementById("check-default").checked = false;
@@ -129,7 +85,7 @@ function RefreshModalCustomerInfor() {
 async function ShowCustomerInforModal(isCreate, isModalUnder, addressObj) {
 
     if (administrativeAddressObject == null) {
-        // Lấy dữ liệu tỉnh, huyện xã từ db
+        // Lấy dữ liệu tỉnh, xã từ db
         let responseDB = await GetAdministrativeAddress();
         administrativeAddressObject = JSON.parse(responseDB.responseText);
 
@@ -151,9 +107,7 @@ async function ShowCustomerInforModal(isCreate, isModalUnder, addressObj) {
         document.getElementById("customer-name").value = addressObj.name;
         document.getElementById("phone-number").value = addressObj.phone;
         document.getElementById("province").value = addressObj.province;
-        DeleteDistrict();
-        AddDistrict();
-        document.getElementById("district").value = addressObj.district;
+
         DeleteSubDistrict();
         AddSubDistrict();
         document.getElementById("subdistrict").value = addressObj.subdistrict;
@@ -183,12 +137,6 @@ function ValidCustomerInforInput() {
         isOk = false;
     }
 
-    // Check huyện
-    if (document.getElementById("district").selectedIndex < 1) {
-        document.getElementById("district").style.border = "1px solid red";
-        isOk = false;
-    }
-
     // Check xã
     if (document.getElementById("subdistrict").selectedIndex < 1) {
         document.getElementById("subdistrict").style.border = "1px solid red";
@@ -203,17 +151,16 @@ function ValidCustomerInforInput() {
     return isOk;
 }
 
-// Tạo cookie obj từ input
-function CreateCookieValueFromInput() {
+// Tạo obj từ input
+function CreateAddressObjFromInput() {
     let isDefault = 1;
     if (!document.getElementById("check-default").checked) {
         isDefault = 0;
     }
-    let obj = new objCustomerInforCookieFromInput(
+    let obj = new objCustomerAddressInforFromInput(
         document.getElementById("customer-name").value,
         document.getElementById("phone-number").value,
         document.getElementById("province").value,
-        document.getElementById("district").value,
         document.getElementById("subdistrict").value,
         document.getElementById("detail-subdistrict").value,
         isDefault

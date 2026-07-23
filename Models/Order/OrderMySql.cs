@@ -2,16 +2,17 @@
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
-using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.Models.SanPhamModel;
+using MVCPlayWithMe.OpenPlatform.Model;
 using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using static MVCPlayWithMe.General.Common;
-using MVCPlayWithMe.Models.SanPhamModel;
 
 namespace MVCPlayWithMe.Models.Order
 {
@@ -132,7 +133,6 @@ namespace MVCPlayWithMe.Models.Order
             order.address.name = MyMySql.GetString(rdr, "Name");
             order.address.phone = MyMySql.GetString(rdr, "Phone");
             order.address.province = MyMySql.GetString(rdr, "Province");
-            order.address.district = MyMySql.GetString(rdr, "District");
             order.address.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
             order.address.detail = MyMySql.GetString(rdr, "Detail");
             order.note = MyMySql.GetString(rdr, "Note");
@@ -478,6 +478,7 @@ namespace MVCPlayWithMe.Models.Order
                 catch (Exception ex)
                 {
                     MyLogger.GetInstance().Warn(ex.ToString());
+                    ls.Clear();
                 }
             }
             return ls;
@@ -499,7 +500,6 @@ namespace MVCPlayWithMe.Models.Order
                         cmd.Parameters.AddWithValue("@inName", cusInfor.name);
                         cmd.Parameters.AddWithValue("@inPhone", cusInfor.phone);
                         cmd.Parameters.AddWithValue("@inProvince", cusInfor.province);
-                        cmd.Parameters.AddWithValue("@inDistrict", cusInfor.district);
                         cmd.Parameters.AddWithValue("@inSubDistrict", cusInfor.subdistrict);
                         cmd.Parameters.AddWithValue("@inDetail", cusInfor.detail);
                     }
@@ -508,7 +508,6 @@ namespace MVCPlayWithMe.Models.Order
                         cmd.Parameters.AddWithValue("@inName", null);
                         cmd.Parameters.AddWithValue("@inPhone", null);
                         cmd.Parameters.AddWithValue("@inProvince", null);
-                        cmd.Parameters.AddWithValue("@inDistrict", null);
                         cmd.Parameters.AddWithValue("@inSubDistrict", null);
                         cmd.Parameters.AddWithValue("@inDetail", null);
                     }
@@ -612,6 +611,97 @@ namespace MVCPlayWithMe.Models.Order
             return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Refresh_Real_From_CustormerId", paras);
         }
 
+        /// <summary>
+        /// Lấy cart items với real=1 (sản phẩm được chọn mua)
+        /// </summary>
+        public async Task<List<Cart>> GetRealCartAsync(int customerId)
+        {
+            List<Cart> lsCart = new List<Cart>();
+
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+
+                    string query = "SELECT SanPhamId, Quantity, Real FROM tbCart WHERE CustomerId = @customerId AND Real = 1";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.AddWithValue("@customerId", customerId);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            Cart cart = new Cart();
+                            cart.sanPhamId = MyMySql.GetInt32(rdr, "SanPhamId");
+                            cart.quantity = MyMySql.GetInt32(rdr, "Quantity");
+                            cart.real = MyMySql.GetInt32(rdr, "Real");
+                            lsCart.Add(cart);
+                        }
+                    }
+
+                    // Load sản phẩm basic info
+                    await GetCartsSanPhamBasicInfoAsync(lsCart);
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
+            }
+
+            return lsCart;
+        }
+
+        /// <summary>
+        /// Update real = 1 cho list sanPhamIds được chọn mua, các sản phẩm còn lại set real = 0
+        /// </summary>
+        public async Task<MySqlResultState> UpdateRealCartAsync(int customerId, List<int> sanPhamIds)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            // Step 1: Set tất cả real = 0
+            result = await RefreshRealOfCartAsync(customerId);
+            if (result.State != EMySqlResultState.OK)
+            {
+                return result;
+            }
+
+            // Step 2: Set real = 1 cho list sanPhamIds được chọn
+            if (sanPhamIds == null || sanPhamIds.Count == 0)
+            {
+                return result; // Không có sản phẩm nào được chọn
+            }
+
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+
+                    string query = "UPDATE tbCart SET Real = 1 WHERE CustomerId = @customerId AND SanPhamId = @sanPhamId";
+                    MySqlCommand cmd = new MySqlCommand(query, conn);
+                    cmd.Parameters.Add("@customerId", MySqlDbType.Int32);
+                    cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32);
+
+                    cmd.Parameters["@customerId"].Value = customerId;
+
+                    foreach (int sanPhamId in sanPhamIds)
+                    {
+                        cmd.Parameters["@sanPhamId"].Value = sanPhamId;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    result.State = EMySqlResultState.OK;
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
+
+            return result;
+        }
+
         public async Task<MySqlResultState> DeleteSanPhamOnCartAsync(int customerId, int sanPhamId)
         {
             MySqlParameter[] paras = new MySqlParameter[2];
@@ -653,6 +743,36 @@ namespace MVCPlayWithMe.Models.Order
             paras[1] = new MySqlParameter("@inSanPhamId", sanPhamId);
             paras[2] = new MySqlParameter("@inQuantity", quantity);
             return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Update_Quantity", paras);
+        }
+
+        public async Task<MySqlResultState> UpdateSanPhamQuantityListOnCartAsync(
+            int customerId,
+            Dictionary<int, int> updates)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                MySqlCommand cmd = new MySqlCommand("st_tbCart_Update_Quantity", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                cmd.Parameters.AddWithValue("@inSanPhamId", 0);
+                cmd.Parameters.AddWithValue("@inQuantity", 0);
+                try
+                {
+                    await conn.OpenAsync();
+                    foreach (var kvp in updates)
+                    {
+                        cmd.Parameters[1].Value = kvp.Key;
+                        cmd.Parameters[2].Value = kvp.Value;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
+            return result;
         }
 
         public async Task<MySqlResultState> GetCartCountAsync(int customerId)
@@ -702,7 +822,6 @@ namespace MVCPlayWithMe.Models.Order
                             int nameIndex = rdr.GetOrdinal("Name");
                             int phoneIndex = rdr.GetOrdinal("Phone");
                             int provinceIndex = rdr.GetOrdinal("Province");
-                            int districtIndex = rdr.GetOrdinal("District");
                             int subdistrictIndex = rdr.GetOrdinal("SubDistrict");
                             int detailIndex = rdr.GetOrdinal("Detail");
                             int noteIndex = rdr.GetOrdinal("Note");
@@ -715,7 +834,6 @@ namespace MVCPlayWithMe.Models.Order
                                 order.address.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
                                 order.address.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
                                 order.address.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
-                                order.address.district = rdr.IsDBNull(districtIndex) ? string.Empty : rdr.GetString(districtIndex);
                                 order.address.subdistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
                                 order.address.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
                                 order.note = rdr.IsDBNull(noteIndex) ? string.Empty : rdr.GetString(noteIndex);
@@ -883,7 +1001,6 @@ namespace MVCPlayWithMe.Models.Order
                             int nameIndex = rdr.GetOrdinal("Name");
                             int phoneIndex = rdr.GetOrdinal("Phone");
                             int provinceIndex = rdr.GetOrdinal("Province");
-                            int districtIndex = rdr.GetOrdinal("District");
                             int subdistrictIndex = rdr.GetOrdinal("SubDistrict");
                             int detailIndex = rdr.GetOrdinal("Detail");
                             int noteIndex = rdr.GetOrdinal("Note");
@@ -896,7 +1013,6 @@ namespace MVCPlayWithMe.Models.Order
                                 order.address.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
                                 order.address.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
                                 order.address.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
-                                order.address.district = rdr.IsDBNull(districtIndex) ? string.Empty : rdr.GetString(districtIndex);
                                 order.address.subdistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
                                 order.address.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
                                 order.note = rdr.IsDBNull(noteIndex) ? string.Empty : rdr.GetString(noteIndex);

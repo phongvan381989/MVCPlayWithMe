@@ -145,7 +145,7 @@ function parseIntOrNull(val) {
 async function PostJSON(url, data) {
     if (DEBUG) {
         let jsonData = JSON.stringify(data);
-        console.log("PostJSON request:", { url, jsonData });
+        console.log("PostJSON request:", { url: url, data:jsonData });
     }
     const response = await fetch(url, {
         method: 'POST',
@@ -212,6 +212,9 @@ function DeleteCookie(name) {
 function GetCookie(cname) {
     let name = cname + "=";
     let decodedCookie = decodeURIComponent(document.cookie);
+    // if (DEBUG) {
+    //     console.log("GetCookie decodedCookie: " + decodedCookie);
+    // }
     let ca = decodedCookie.split(';');
     let cookie = "";
     for (let i = 0; i < ca.length; i++) {
@@ -737,7 +740,6 @@ function GetEasyPromise() {
 // Chưa đăng nhập trả về true, ngược lại false
 function CheckAnonymousCustomer() {
     let cookie = GetCookie(uidKey);
-
     if (isEmptyOrSpaces(cookie)) {
         return true;
     }
