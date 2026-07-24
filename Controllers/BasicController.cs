@@ -8,7 +8,7 @@ using Newtonsoft.Json;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.ProductModel;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Controllers

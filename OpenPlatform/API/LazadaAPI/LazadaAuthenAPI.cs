@@ -2,7 +2,7 @@
 using Lazop.Api.Util;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaConfig;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

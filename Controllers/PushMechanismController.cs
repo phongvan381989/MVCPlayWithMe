@@ -9,7 +9,7 @@ using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaNotification;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;

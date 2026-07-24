@@ -3,7 +3,7 @@ using Lazop.Api.Util;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;

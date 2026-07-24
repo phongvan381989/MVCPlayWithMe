@@ -1,7 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -1064,24 +1064,6 @@ namespace MVCPlayWithMe.Models.ProductModel
                             item.code);
 
                         int productId = Convert.ToInt32(await insertProductCmd.ExecuteScalarAsync());
-
-                        // Insert vào tbNeedUpdateQuantity
-                        var inserttbNeedUQCmd = new MySqlCommand(
-                            @"INSERT INTO tbNeedUpdateQuantity
-                            (
-                                ProductId,
-                                Status
-                            )
-                            VALUES
-                            (
-                                @productId,
-                                1
-                            );",
-                            connection);
-                        inserttbNeedUQCmd.Parameters.AddWithValue(
-                            "@productId",
-                            productId);
-                        await inserttbNeedUQCmd.ExecuteNonQueryAsync();
                     }
                 }
             }

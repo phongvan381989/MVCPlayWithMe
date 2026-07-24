@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using MVCPlayWithMe.OpenPlatform.Model;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System.Data;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI

@@ -1,7 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Deal;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;

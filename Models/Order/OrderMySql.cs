@@ -5,7 +5,7 @@ using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform.Model;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;

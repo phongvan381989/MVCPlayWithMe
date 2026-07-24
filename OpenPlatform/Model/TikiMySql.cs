@@ -4,7 +4,7 @@ using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -973,11 +973,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     resultState.myAnything = 0; // Không có thay đổi tồn kho.
                 }
             }
-            catch (DbUpdateException ex) when (MyMySql.IsUniqueConstraintViolation(ex))
-            {
-                MyLogger.GetInstance().Warn("unique constraint error");
-                Common.SetResultException(ex, resultState);
-            }
+            //catch (DbUpdateException ex) when (MyMySql.IsUniqueConstraintViolation(ex))
+            //{
+            //    MyLogger.GetInstance().Warn("unique constraint error");
+            //    Common.SetResultException(ex, resultState);
+            //}
             catch (Exception ex)
             {
                 Common.SetResultException(ex, resultState);
@@ -1039,11 +1039,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     resultState.myAnything = 0; // Không có thay đổi tồn kho.
                 }
             }
-            catch (DbUpdateException ex) when (MyMySql.IsUniqueConstraintViolation(ex))
-            {
-                MyLogger.GetInstance().Warn("unique constraint error");
-                Common.SetResultException(ex, resultState);
-            }
+            //catch (DbUpdateException ex) when (MyMySql.IsUniqueConstraintViolation(ex))
+            //{
+            //    MyLogger.GetInstance().Warn("unique constraint error");
+            //    Common.SetResultException(ex, resultState);
+            //}
             catch (Exception ex)
             {
                 Common.SetResultException(ex, resultState);

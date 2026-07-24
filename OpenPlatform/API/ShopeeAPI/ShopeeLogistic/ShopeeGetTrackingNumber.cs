@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeLogistic;
 using RestSharp;
@@ -9,7 +9,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using MVCPlayWithMe.OpenPlatform.Model;
 
 namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic

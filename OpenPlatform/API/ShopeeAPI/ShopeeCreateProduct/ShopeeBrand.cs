@@ -3,7 +3,7 @@ using MVCPlayWithMe.OpenPlatform.API;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using RestSharp;
 using System;

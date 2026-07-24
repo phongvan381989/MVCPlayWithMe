@@ -8,7 +8,7 @@ using Newtonsoft.Json.Linq;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model.TikiAPI.DealDiscount;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.DealDiscount;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Deal;
 using MVCPlayWithMe.Controllers.OpenPlatform;

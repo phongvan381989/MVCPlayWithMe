@@ -5,7 +5,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Event;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using Newtonsoft.Json;
 using RestSharp;
 using System;

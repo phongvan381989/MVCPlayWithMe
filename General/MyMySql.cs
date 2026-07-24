@@ -1,5 +1,5 @@
 ﻿using MVCPlayWithMe.Models;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -512,19 +512,19 @@ namespace MVCPlayWithMe.General
         //    return resultState;
         //}
 
-        // Hàm bạn cần viết để kiểm tra lỗi
-        public static bool IsUniqueConstraintViolation(DbUpdateException ex)
-        {
-            // 1. Kiểm tra xem InnerException có phải là lỗi SQL/MySQL không
-            if (ex.InnerException is MySqlException mySqlEx)
-            {
-                // 2. Mã lỗi 1062 là mã tiêu chuẩn của MySQL cho UNIQUE CONSTRAINT
-                return mySqlEx.Number == 1062;
-            }
+        //// Hàm bạn cần viết để kiểm tra lỗi
+        //public static bool IsUniqueConstraintViolation(DbUpdateException ex)
+        //{
+        //    // 1. Kiểm tra xem InnerException có phải là lỗi SQL/MySQL không
+        //    if (ex.InnerException is MySqlException mySqlEx)
+        //    {
+        //        // 2. Mã lỗi 1062 là mã tiêu chuẩn của MySQL cho UNIQUE CONSTRAINT
+        //        return mySqlEx.Number == 1062;
+        //    }
 
-            // Nếu không phải MySqlException hoặc lỗi không phải 1062, trả về false
-            return false;
-        }
+        //    // Nếu không phải MySqlException hoặc lỗi không phải 1062, trả về false
+        //    return false;
+        //}
 
         public static async Task<MySqlResultState> LoginAsync(string userName, string password, string storePro)
         {

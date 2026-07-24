@@ -1,8 +1,7 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform.Model;
-using MySql.Data.MySqlClient;
-using MySqlX.XDevAPI.Common;
+using MySqlConnector;
 using Newtonsoft.Json;
 using Org.BouncyCastle.Math.Field;
 using Org.BouncyCastle.Utilities;

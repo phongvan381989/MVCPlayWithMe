@@ -1,7 +1,7 @@
-using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.Models.ProductModel;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;

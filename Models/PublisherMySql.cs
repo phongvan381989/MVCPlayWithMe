@@ -1,5 +1,5 @@
-using MVCPlayWithMe.General;
-using MySql.Data.MySqlClient;
+﻿using MVCPlayWithMe.General;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;

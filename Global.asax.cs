@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 

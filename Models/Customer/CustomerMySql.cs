@@ -2,8 +2,8 @@
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.SanPhamModel;
-using MySql.Data.MySqlClient;
-using MySqlX.XDevAPI.Common;
+using MySqlConnector;
+//using MySqlX.XDevAPI.Common;
 using System;
 using System.Collections.Generic;
 using System.Data;

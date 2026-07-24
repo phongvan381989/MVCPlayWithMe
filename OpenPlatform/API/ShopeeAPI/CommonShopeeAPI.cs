@@ -1,4 +1,4 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp;
@@ -13,7 +13,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using System.Windows;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using System.Data;
 
 namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
