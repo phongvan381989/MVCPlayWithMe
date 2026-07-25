@@ -84,20 +84,21 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             TikiAuthorization accessToken = JsonConvert.DeserializeObject<TikiAuthorization>(response.Content);
             TikiMySql tikiMySql = new TikiMySql();
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                await conn.OpenAsync();
-                await tikiMySql.TikiSaveAccessTokenAsync(accessToken, conn);
+                try
+                {
+                    await conn.OpenAsync();
+                    await tikiMySql.TikiSaveAccessTokenAsync(accessToken, conn);
 
-                // Cập nhật
-                tikiConfigApp = await GetTikiConfigApp(conn);
+                    // Cập nhật
+                    tikiConfigApp = await GetTikiConfigApp(conn);
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
-            catch(Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
-
             MyLogger.GetInstance().Info("New token: " + accessToken.access_token);
             return string.Empty;
         }

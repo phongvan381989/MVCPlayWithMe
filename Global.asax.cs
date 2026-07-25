@@ -1,23 +1,23 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using System.Web.Optimization;
 using System.Web.Routing;
-using System.Threading;
-using System.Threading.Tasks;
-using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
-using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
-using MySqlConnector;
-using MVCPlayWithMe.OpenPlatform;
-using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 
 namespace MVCPlayWithMe
 {
@@ -103,7 +103,7 @@ namespace MVCPlayWithMe
                             //if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
                             //{
                             //    // Hàm này mất thời gian nên không chạy hàng ngày.
-                              DealAction.CheckAndCreateDeal_BackgroundAsync(true).GetAwaiter().GetResult();
+                            DealAction.CheckAndCreateDeal_BackgroundAsync(true).GetAwaiter().GetResult();
                             //}
                             //else
                             //{

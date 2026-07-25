@@ -15,7 +15,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         /// <param name="sanPham">Đối tượng sản phẩm cần insert</param>
         /// <returns>MySqlResultState với State, Message và LastInsertedId</returns>
-        public static MySqlResultState Insert(SanPham sanPham)
+        public static async Task<MySqlResultState> Insert(SanPham sanPham)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -64,7 +64,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.AddWithValue("@inSEOKeyword", sanPham.SEOKeyword ?? (object)DBNull.Value);
 
                         // Execute và đọc LastInsertId từ SELECT
-                        using (MySqlDataReader rdr = cmd.ExecuteReader())
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
                             // Đọc LastInsertId từ resultset
                             if (rdr.Read())

@@ -3,8 +3,6 @@ using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MySqlConnector;
 using Newtonsoft.Json;
-using Org.BouncyCastle.Math.Field;
-using Org.BouncyCastle.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -353,8 +351,8 @@ namespace MVCPlayWithMe.Controllers
                     string finalFileName = newFileName;
                     string mediaType = "video";
                     string videoPosterName = "";
-                    int mediaWidth = 0;
-                    int mediaHeight = 0;
+                    uint mediaWidth = 0;
+                    uint mediaHeight = 0;
 
                     if (Common.ImageExtensions.Contains(ext))
                     {
@@ -884,8 +882,8 @@ namespace MVCPlayWithMe.Controllers
                         //string webpImage = Common.ConvertSanPhamImageToWebP(destFile);
                         var (width, height, webpImage) = Common.ConvertSanPhamImageToWebP(destFile);
 
-                        int mediaWidth = width;
-                        int mediaHeight = height;
+                        uint mediaWidth = width;
+                        uint mediaHeight = height;
 
                         await SanPhamMediaMySql.InsertAsync(new SanPhamMedia
                         {

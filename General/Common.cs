@@ -2384,7 +2384,7 @@ namespace MVCPlayWithMe.General
         /// <param name="destPath">Đường dẫn lưu WebP</param>
         /// <param name="maxSize">Kích thước max (width hoặc height), giữ tỷ lệ</param>
         /// <param name="quality">Chất lượng 0-100</param>
-        public static void ConvertToWebP(string sourcePath, string destPath, int maxSize, int quality)
+        public static void ConvertToWebP(string sourcePath, string destPath, uint maxSize, uint quality)
         {
             try
             {
@@ -2418,7 +2418,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="originalImagePath">Đường dẫn ảnh gốc (JPG/PNG)</param>
         /// <returns>Tuple (width, height, fileName) - kích thước và tên file WebP, hoặc (0, 0, "") nếu fail</returns>
-        public static (int width, int height, string fileName) ConvertSanPhamImageToWebP(string originalImagePath)
+        public static (uint width, uint height, string fileName) ConvertSanPhamImageToWebP(string originalImagePath)
         {
             try
             {
@@ -2456,7 +2456,7 @@ namespace MVCPlayWithMe.General
                 ConvertToWebP(webpFullPath, webpThumbPath, 320, 80);
 
                 // Đọc kích thước ảnh WebP full size
-                int width = 0, height = 0;
+                uint width = 0, height = 0;
                 using (var image = new ImageMagick.MagickImage(webpFullPath))
                 {
                     width = image.Width;
@@ -2480,7 +2480,7 @@ namespace MVCPlayWithMe.General
         /// <param name="videoFilePath">Đường dẫn đầy đủ đến video file</param>
         /// <param name="videoPosterName">Tên file poster (VD: video_poster.webp)</param>
         /// <returns>Tuple (width, height) - kích thước video gốc hoặc (1920, 1080) nếu fail</returns>
-        public static (int width, int height) ExtractVideoPoster(string videoFilePath, string videoPosterName)
+        public static (uint width, uint height) ExtractVideoPoster(string videoFilePath, string videoPosterName)
         {
             try
             {
@@ -2489,7 +2489,7 @@ namespace MVCPlayWithMe.General
 
                 // Extract frame từ video tại giây thứ 1 + lấy metadata
                 var inputFile = new MediaToolkit.Model.MediaFile { Filename = videoFilePath };
-                int videoWidth = 0, videoHeight = 0;
+                uint videoWidth = 0, videoHeight = 0;
 
                 using (var engine = new MediaToolkit.Engine())
                 {
@@ -2504,8 +2504,8 @@ namespace MVCPlayWithMe.General
 
                     if (match.Success)
                     {
-                        videoWidth = int.Parse(match.Groups[1].Value);  // 1920
-                        videoHeight = int.Parse(match.Groups[2].Value); // 1080
+                        videoWidth = uint.Parse(match.Groups[1].Value);  // 1920
+                        videoHeight = uint.Parse(match.Groups[2].Value); // 1080
                     }
 
                     // Extract frame tại giây thứ 1

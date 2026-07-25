@@ -129,34 +129,36 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return JsonConvert.SerializeObject(commonItem);
             }
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-            if (eType == Common.eShopee)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                long lid = Common.ConvertStringToInt64(id);
-                if (lid != Int64.MinValue)
+                await conn.OpenAsync();
+                if (eType == Common.eShopee)
                 {
-                    commonItem = await ShopeeGetItemFromIdConnectOutAsync(lid, conn);
+                    long lid = Common.ConvertStringToInt64(id);
+                    if (lid != Int64.MinValue)
+                    {
+                        commonItem = await ShopeeGetItemFromIdConnectOutAsync(lid, conn);
+                    }
                 }
-            }
-            else if (eType == Common.eTiki)
-            {
-                int iid = Common.ConvertStringToInt32(id);
-                if (iid != Int32.MinValue)
+                else if (eType == Common.eTiki)
                 {
-                    commonItem = await TikiGetProductFromIdConnectOut(iid, conn);
+                    int iid = Common.ConvertStringToInt32(id);
+                    if (iid != Int32.MinValue)
+                    {
+                        commonItem = await TikiGetProductFromIdConnectOut(iid, conn);
+                    }
+                    else
+                    {
+                        MyLogger.GetInstance().Info("GetItemFromId call eType: " + eType + ", id: " + id);
+                    }
                 }
-                else
+                else if (eType == Common.eLazada)
                 {
-                    MyLogger.GetInstance().Info("GetItemFromId call eType: " + eType + ", id: " + id);
-                }
-            }
-            else if (eType == Common.eLazada)
-            {
-                long lid = Common.ConvertStringToInt64(id);
-                if (lid != Int64.MinValue)
-                {
-                    commonItem = await LazadaGetItemFromIdConnectOut(lid, conn);
+                    long lid = Common.ConvertStringToInt64(id);
+                    if (lid != Int64.MinValue)
+                    {
+                        commonItem = await LazadaGetItemFromIdConnectOut(lid, conn);
+                    }
                 }
             }
             return JsonConvert.SerializeObject(commonItem);
@@ -172,27 +174,29 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Test chỉ lấy 1 page ~ 50 sản phẩm
             //lsShopeeItem = ShopeeGetItemBaseInfo.ShopeeProductGetItemBaseInfo_PageFisrstAsync();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                // Không tồn tại trong DB ta insert
-                foreach (var pro in lsShopeeBaseInfoItem)
+                await conn.OpenAsync();
+
+                try
                 {
-                    CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
-                    lsCommonItem.Add(item);
-                    await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
+                    // Không tồn tại trong DB ta insert
+                    foreach (var pro in lsShopeeBaseInfoItem)
+                    {
+                        CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
+                        lsCommonItem.Add(item);
+                        await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
+                    }
+
+                    await shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOutAsync(lsCommonItem, conn);
+
+                    //// Cập nhật trạng thái item vào DB
+                    //shopeeSqler.ShopeeUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
                 }
-
-                await shopeeSqler.ShopeeGetListCommonItemFromListShopeeItemConnectOutAsync(lsCommonItem, conn);
-
-                //// Cập nhật trạng thái item vào DB
-                //shopeeSqler.ShopeeUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
             return lsCommonItem;
         }
@@ -296,18 +300,20 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<TikiProduct> lsTikiItem = new List<TikiProduct>();
             lsTikiItem = await GetListProductTiki.GetListLatestProductsFromOneShop();
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-
-            await tikiSqler.TikiGetListCommonItemFromListTikiProductConnectOutAsync(lsTikiItem, lsCommonItem, conn);
-
-            // Không tồn tại trong DB ta insert
-            foreach (var item in lsCommonItem)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn);
+                await conn.OpenAsync();
+
+                await tikiSqler.TikiGetListCommonItemFromListTikiProductConnectOutAsync(lsTikiItem, lsCommonItem, conn);
+
+                // Không tồn tại trong DB ta insert
+                foreach (var item in lsCommonItem)
+                {
+                    await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn);
+                }
+                //// Cập nhật trạng thái item vào DB
+                //tikiSqler.TikiUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
             }
-            //// Cập nhật trạng thái item vào DB
-            //tikiSqler.TikiUpdateStatusOfItemListToDbConnectOut(lsCommonItem, conn);
             return lsCommonItem;
         }
 
@@ -317,23 +323,25 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             DateTime dtNow = DateTime.Now;
             List<TikiProduct> lsTikiItem = await GetListProductTiki.TikiProductGetNormal_ItemList(dtNow.AddDays(-31), dtNow);
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                foreach (var pro in lsTikiItem)
+                await conn.OpenAsync();
+                try
                 {
-                    CommonItem item = new CommonItem(pro);
-                    // Không tồn tại ta thêm vào danh sách
-                    if (!await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn))
+                    foreach (var pro in lsTikiItem)
                     {
-                        lsCommonItem.Add(item);
+                        CommonItem item = new CommonItem(pro);
+                        // Không tồn tại ta thêm vào danh sách
+                        if (!await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn))
+                        {
+                            lsCommonItem.Add(item);
+                        }
                     }
                 }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
             }
             return lsCommonItem;
         }
@@ -519,43 +527,45 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
 
             MySqlResultState resultState = new MySqlResultState();
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                await conn.OpenAsync();
-                //// Lấy danh sách combo, sản phẩm thuộc combo trong kho
-                //ComboMySql comboMysql = new ComboMySql();
-                //List<Combo> lsCombo = comboMysql.GetListComboIncludeSimpleProducts(conn);
-                // Lấy danh sách sản phẩm trong kho đơn giản
-                ProductMySql productMySql = new ProductMySql();
-                List<Product> lsProduct =await productMySql.GetSimpleComboCategoryAllConnectOutAsync(conn);
-                string nameTemp = "";
-                if (eType == Common.eTiki)
+                try
                 {
-                    // Lấy danh sách sản phẩm trên sàn chưa mapping
-                    Dictionary<int, string> dic = await tikiSqler.TikiGetListItemDontMappingAsync(conn);
-                    foreach(var item in dic)
+                    await conn.OpenAsync();
+                    //// Lấy danh sách combo, sản phẩm thuộc combo trong kho
+                    //ComboMySql comboMysql = new ComboMySql();
+                    //List<Combo> lsCombo = comboMysql.GetListComboIncludeSimpleProducts(conn);
+                    // Lấy danh sách sản phẩm trong kho đơn giản
+                    ProductMySql productMySql = new ProductMySql();
+                    List<Product> lsProduct =await productMySql.GetSimpleComboCategoryAllConnectOutAsync(conn);
+                    string nameTemp = "";
+                    if (eType == Common.eTiki)
                     {
-                        foreach (var pro in lsProduct)
+                        // Lấy danh sách sản phẩm trên sàn chưa mapping
+                        Dictionary<int, string> dic = await tikiSqler.TikiGetListItemDontMappingAsync(conn);
+                        foreach(var item in dic)
                         {
-                            nameTemp = Product.GenerateName(pro);
-                            if(nameTemp == item.Value)
+                            foreach (var pro in lsProduct)
                             {
-                                await tikiSqler.TikiUpdateMappingSignleAsync(item.Key, pro.id, 1, conn);
-                                break;
+                                nameTemp = Product.GenerateName(pro);
+                                if(nameTemp == item.Value)
+                                {
+                                    await tikiSqler.TikiUpdateMappingSignleAsync(item.Key, pro.id, 1, conn);
+                                    break;
+                                }
                             }
                         }
                     }
+                    else
+                    {
+                        resultState.State = EMySqlResultState.DONT_EXIST;
+                        resultState.Message = "Chưa hỗ trợ sàn " + eType;
+                    }
                 }
-                else
+                catch(Exception ex)
                 {
-                    resultState.State = EMySqlResultState.DONT_EXIST;
-                    resultState.Message = "Chưa hỗ trợ sàn " + eType;
+                    Common.SetResultException(ex, resultState);
                 }
-            }
-            catch(Exception ex)
-            {
-                Common.SetResultException(ex, resultState);
             }
             return JsonConvert.SerializeObject(resultState);
         }
@@ -745,82 +755,84 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
                 time_from = time_to.AddDays(-30);
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-
-            // Lấy đơn hàng của shopee, lazada
-            List<LazadaOrder> lsOrderLazadaFullInfo = null;
-            if (eOrderStatus == CommonOrderStatus.CANCELLED)
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
+                await conn.OpenAsync();
+
+                // Lấy đơn hàng của shopee, lazada
+                List<LazadaOrder> lsOrderLazadaFullInfo = null;
+                if (eOrderStatus == CommonOrderStatus.CANCELLED)
+                {
+                    // Shopee
+                    lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
+                    time_from,
+                    time_to,
+                    ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED],
+                    conn);
+
+                    lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAllAsync(
+                        time_from,
+                        time_to,
+                        ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.CANCELLED],
+                        conn);
+
+                    // Lazada
+                    lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailCanceledAsync(time_from);
+                }
+                else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+                {
+                    // Shopee
+                    lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToPickUpAsync(
+                    time_from,
+                    time_to,
+                    conn);
+
+                    lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailToPickUpAsync(
+                        time_from,
+                        time_to,
+                        conn);
+
+                    // Lazada
+                    lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailReadyToShipAsync(time_from);
+                }
+                else
+                {
+                    // Shopee
+                    lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
+                        time_from,
+                        time_to,
+                        ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.ALL],
+                        conn);
+
+                    lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAllAsync(
+                        time_from,
+                        time_to,
+                        ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.ALL],
+                        conn);
+
+                    // Lazada
+                    lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailAllAsync(time_from);
+                }
+
                 // Shopee
-                lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
-                time_from,
-                time_to,
-                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.CANCELLED],
-                conn);
-
-                lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAllAsync(
-                    time_from,
-                    time_to,
-                    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.CANCELLED],
-                    conn);
-
-                // Lazada
-                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailCanceledAsync(time_from);
-            }
-            else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
-            {
-                // Shopee
-                lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToPickUpAsync(
-                time_from,
-                time_to,
-                conn);
-
-                lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailToPickUpAsync(
-                    time_from,
-                    time_to,
-                    conn);
-
-                // Lazada
-                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailReadyToShipAsync(time_from);
-            }
-            else
-            {
-                // Shopee
-                lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
-                    time_from,
-                    time_to,
-                    ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.ALL],
-                    conn);
-
-                lsBookingShopeeFullInfo = await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailAllAsync(
-                    time_from,
-                    time_to,
-                    ShopeeOrderStatus.shopeeBookingStatusArray[(int)ShopeeOrderStatus.EnumShopeeBookingStatus.ALL],
-                    conn);
-
-                // Lazada
-                lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailAllAsync(time_from);
-            }
-
-            // Shopee
-            foreach (var order in lsOrderShopeeFullInfo)
-            {
-                lsCommonOrder.Add(new CommonOrder(order));
-            }
-            foreach (var order in lsBookingShopeeFullInfo)
-            {
-                //if (string.IsNullOrEmpty(order.order_sn))
-                //{
-                //    // Đảm bảo chưa có đơn matched
+                foreach (var order in lsOrderShopeeFullInfo)
+                {
                     lsCommonOrder.Add(new CommonOrder(order));
-                //}
-            }
+                }
+                foreach (var order in lsBookingShopeeFullInfo)
+                {
+                    //if (string.IsNullOrEmpty(order.order_sn))
+                    //{
+                    //    // Đảm bảo chưa có đơn matched
+                        lsCommonOrder.Add(new CommonOrder(order));
+                    //}
+                }
 
-            // Lazada
-            foreach (var order in lsOrderLazadaFullInfo)
-            {
-                lsCommonOrder.Add(new CommonOrder(order));
+                // Lazada
+                foreach (var order in lsOrderLazadaFullInfo)
+                {
+                    lsCommonOrder.Add(new CommonOrder(order));
+                }
             }
 
             // Lấy đơn hàng của web Play With Me
@@ -846,70 +858,74 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             if (ecommerce == Common.eShopee)
             {
-                // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn 
-                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                await conn.OpenAsync();
-                if (isBookingCode == 0)
+                // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    var (sn, trackingNumber) = await tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
-                        sn_trackingNumber, EECommerceType.SHOPEE, conn);
+                    await conn.OpenAsync();
+                    if (isBookingCode == 0)
+                    {
+                        var (sn, trackingNumber) = await tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+                            sn_trackingNumber, EECommerceType.SHOPEE, conn);
 
-                    if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
-                    {
-                        // Ta cần lấy sn từ mã đơn / vận đơn
-                        sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
-                    }
-                    ShopeeOrderDetail shopeeOrderDetail =
-                    await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(sn);
+                        if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
+                        {
+                            // Ta cần lấy sn từ mã đơn / vận đơn
+                            sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
+                        }
+                        ShopeeOrderDetail shopeeOrderDetail =
+                        await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(sn);
 
-                    if (shopeeOrderDetail != null)
-                    {
-                        shopeeOrderDetail.shipCode = trackingNumber;
-                        commonOrder = new CommonOrder(shopeeOrderDetail);
+                        if (shopeeOrderDetail != null)
+                        {
+                            shopeeOrderDetail.shipCode = trackingNumber;
+                            commonOrder = new CommonOrder(shopeeOrderDetail);
+                        }
                     }
-                }
-                else
-                {
-                    var (sn, trackingNumber) = await tikiSqler.GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
-                        sn_trackingNumber, EECommerceType.SHOPEE, conn);
+                    else
+                    {
+                        var (sn, trackingNumber) = await tikiSqler.GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+                            sn_trackingNumber, EECommerceType.SHOPEE, conn);
 
-                    if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã booking
-                    {
-                        // Ta cần lấy sn từ mã đơn / vận đơn
-                        sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
-                    }
-                    // Lấy chi tiết booking
-                    ShopeeBookingDetail detail =
-                        await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSNAsync(sn);
-                    if (detail != null)
-                    {
-                        ShopeeMySql shopeeMySql = new ShopeeMySql();
-                        commonOrder = new CommonOrder(detail); ;
+                        if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã booking
+                        {
+                            // Ta cần lấy sn từ mã đơn / vận đơn
+                            sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
+                        }
+                        // Lấy chi tiết booking
+                        ShopeeBookingDetail detail =
+                            await ShopeeGetBookingDetail.ShopeeOrderGetBookingDetailFromBookingSNAsync(sn);
+                        if (detail != null)
+                        {
+                            ShopeeMySql shopeeMySql = new ShopeeMySql();
+                            commonOrder = new CommonOrder(detail); ;
+                        }
                     }
                 }
             }
             else if (ecommerce == Common.eLazada)
             {
-                // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn 
-                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                await conn.OpenAsync();
-                var (sn, trackingNumber) = await tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
-                    sn_trackingNumber, EECommerceType.LAZADA, conn);
-
-                if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
+                // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    // Ta cần lấy sn từ mã đơn
-                    sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
-                }
-                long order_id = Common.ConvertStringToInt64(sn);
-                if (order_id > 0)
-                {
-                    LazadaOrder orderDetail =
-                    await LazadaOrderAPI.LazadaGetOrderDetailAsync(order_id);
+                    await conn.OpenAsync();
+                    var (sn, trackingNumber) = await tikiSqler.GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+                        sn_trackingNumber, EECommerceType.LAZADA, conn);
 
-                    if (orderDetail != null)
+                    if (string.IsNullOrEmpty(sn)) // Vì push message xịt, nên chưa có thông tin mã đơn
                     {
-                        commonOrder = new CommonOrder(orderDetail);
+                        // Ta cần lấy sn từ mã đơn
+                        sn = sn_trackingNumber; // Nếu người dùng nhập mã vận đơn ở đây thì không tìm thấy dữ liệu chi tiết đơn hàng từ sàn
+                    }
+                    long order_id = Common.ConvertStringToInt64(sn);
+                    if (order_id > 0)
+                    {
+                        LazadaOrder orderDetail =
+                        await LazadaOrderAPI.LazadaGetOrderDetailAsync(order_id);
+
+                        if (orderDetail != null)
+                        {
+                            commonOrder = new CommonOrder(orderDetail);
+                        }
                     }
                 }
             }
@@ -946,40 +962,42 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return JsonConvert.SerializeObject(order);
             }
 
-            MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-            await conn.OpenAsync();
-            try
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                // Nếu sản phẩm trên shopee, tiki,... chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
-                // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
+                await conn.OpenAsync();
+                try
+                {
+                    // Nếu sản phẩm trên shopee, tiki,... chưa có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+                    // khi vào thông tin chi tiết của sản phẩm trên sàn sẽ được insert vào db tương ứng.
 
-                // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
-                // nhưng trạng thái cũ là tắt (Status != 0) và giờ được bật (nên mới có đơn).
-                // Ta cần cập nhật lại.
-                await ordersqler.UpdateStatusNormalOfTMDTItemConnectOut(order, conn);
+                    // Nếu sản phẩm trên shopee, tiki đã có trên tbShopeeItem, tbShopeeModel, tbTikiItem
+                    // nhưng trạng thái cũ là tắt (Status != 0) và giờ được bật (nên mới có đơn).
+                    // Ta cần cập nhật lại.
+                    await ordersqler.UpdateStatusNormalOfTMDTItemConnectOut(order, conn);
 
-                order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
+                    order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
 
-                if (order.ecommerceName == eTiki)
-                {
-                    await tikiSqler.TikiGetMappingOfCommonOrderConnectOutAsync(order, conn);
+                    if (order.ecommerceName == eTiki)
+                    {
+                        await tikiSqler.TikiGetMappingOfCommonOrderConnectOutAsync(order, conn);
+                    }
+                    else if (order.ecommerceName == eShopee)
+                    {
+                        await shopeeSqler.ShopeeGetMappingOfCommonOrderConnectOutAsync(order, conn);
+                    }
+                    else if (order.ecommerceName == eLazada)
+                    {
+                        await lazadaSqler.LazadaGetMappingOfCommonOrderConnectOutAsync(order, conn);
+                    }
+                    else if (order.ecommerceName == ePlayWithMe)
+                    {
+                        await ordersqler.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
+                    }
                 }
-                else if (order.ecommerceName == eShopee)
+                catch (Exception ex)
                 {
-                    await shopeeSqler.ShopeeGetMappingOfCommonOrderConnectOutAsync(order, conn);
+                    MyLogger.GetInstance().Warn(ex.ToString());
                 }
-                else if (order.ecommerceName == eLazada)
-                {
-                    await lazadaSqler.LazadaGetMappingOfCommonOrderConnectOutAsync(order, conn);
-                }
-                else if (order.ecommerceName == ePlayWithMe)
-                {
-                    await ordersqler.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
             }
             return JsonConvert.SerializeObject(order);
         }
@@ -1365,9 +1383,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             try
             {
-                MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                await conn.OpenAsync();
-                outputList = await tikiSqler.GetOrderStatisticsAsync(eType, intervalDay, conn);
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    outputList = await tikiSqler.GetOrderStatisticsAsync(eType, intervalDay, conn);
+                }
             }
             catch (Exception ex)
             {
@@ -1392,22 +1412,24 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     int id = (int)itemId;
 
                     // Lấy tồn kho, nếu bằng = 0 thì cho phép tắt bán sản phẩm trên sàn
-                    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-                    await conn.OpenAsync();
-                    ProductMySql productMySql = new ProductMySql();
-                    int quantity =await productMySql.TikiGetQuantityOfOneItemModelConnectOutAsync(id, conn);
-                    if(quantity != 0 && currentStatus == Common.tikiActive)
+                    using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                     {
-                        result.State = EMySqlResultState.INVALID;
-                        result.Message = "Tồn kho lớn hơn 0, không cho phép tắt sản phẩm từ đây. Bạn có thẻ vào Tiki Seller tắt.";
-                    }
-                    else
-                    {
-                        TikiUpdateStock.TikiProductUpdateStatus(id, currentStatus == Common.tikiActive ? 0 : 1, result);
-                        if(result.State == EMySqlResultState.OK)
+                        await conn.OpenAsync();
+                        ProductMySql productMySql = new ProductMySql();
+                        int quantity =await productMySql.TikiGetQuantityOfOneItemModelConnectOutAsync(id, conn);
+                        if(quantity != 0 && currentStatus == Common.tikiActive)
                         {
-                            // cập nhật trạng thái item
-                            await tikiSqler.TikiUpdateStatusOfItemToDbConnectOutAsync(id, currentStatus == Common.tikiActive? 1: 0, conn);
+                            result.State = EMySqlResultState.INVALID;
+                            result.Message = "Tồn kho lớn hơn 0, không cho phép tắt sản phẩm từ đây. Bạn có thẻ vào Tiki Seller tắt.";
+                        }
+                        else
+                        {
+                            TikiUpdateStock.TikiProductUpdateStatus(id, currentStatus == Common.tikiActive ? 0 : 1, result);
+                            if(result.State == EMySqlResultState.OK)
+                            {
+                                // cập nhật trạng thái item
+                                await tikiSqler.TikiUpdateStatusOfItemToDbConnectOutAsync(id, currentStatus == Common.tikiActive? 1: 0, conn);
+                            }
                         }
                     }
                 }

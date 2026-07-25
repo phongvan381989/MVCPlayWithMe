@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace MVCPlayWithMe.Models.SanPhamModel
 {
@@ -41,12 +41,12 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// <summary>
         /// Chiều rộng ảnh/video (px) - dùng cho PhotoSwipe
         /// </summary>
-        public int Width { get; set; }
+        public uint Width { get; set; }
 
         /// <summary>
         /// Chiều cao ảnh/video (px) - dùng cho PhotoSwipe
         /// </summary>
-        public int Height { get; set; }
+        public uint Height { get; set; }
 
         /// <summary>
         /// Thứ tự hiển thị

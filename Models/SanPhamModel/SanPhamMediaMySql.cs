@@ -49,21 +49,32 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                 using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int sanPhamIdIndex = rdr.GetOrdinal("SanPhamId");
+                    int mediaTypeIndex = rdr.GetOrdinal("MediaType");
+                    int fileNameIndex = rdr.GetOrdinal("FileName");
+                    int titleIndex = rdr.GetOrdinal("Title");
+                    int altTextIndex = rdr.GetOrdinal("AltText");
+                    int descriptionIndex = rdr.GetOrdinal("Description");
+                    int posterImageIndex = rdr.GetOrdinal("PosterImage");
+                    int widthIndex = rdr.GetOrdinal("Width");
+                    int heightIndex = rdr.GetOrdinal("Height");
+                    int displayOrderIndex = rdr.GetOrdinal("DisplayOrder");
                     while (await rdr.ReadAsync())
                     {
                         list.Add(new SanPhamMedia
                         {
-                            Id = MyMySql.GetInt32(rdr, "Id"),
-                            SanPhamId = MyMySql.GetInt32(rdr, "SanPhamId"),
-                            MediaType = MyMySql.GetString(rdr, "MediaType"),
-                            FileName = MyMySql.GetString(rdr, "FileName"),
-                            Title = MyMySql.GetString(rdr, "Title"),
-                            AltText = MyMySql.GetString(rdr, "AltText"),
-                            Description = MyMySql.GetString(rdr, "Description"),
-                            PosterImage = MyMySql.GetString(rdr, "PosterImage"),
-                            Width = MyMySql.GetInt32(rdr, "Width"),
-                            Height = MyMySql.GetInt32(rdr, "Height"),
-                            DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
+                            Id = MyMySql.GetInt32(rdr, idIndex),
+                            SanPhamId = MyMySql.GetInt32(rdr, sanPhamIdIndex),
+                            MediaType = MyMySql.GetString(rdr, mediaTypeIndex),
+                            FileName = MyMySql.GetString(rdr, fileNameIndex),
+                            Title = MyMySql.GetString(rdr, titleIndex),
+                            AltText = MyMySql.GetString(rdr, altTextIndex),
+                            Description = MyMySql.GetString(rdr, descriptionIndex),
+                            PosterImage = MyMySql.GetString(rdr, posterImageIndex),
+                            Width = (uint)MyMySql.GetInt32(rdr, widthIndex),
+                            Height = (uint)MyMySql.GetInt32(rdr, heightIndex),
+                            DisplayOrder = MyMySql.GetInt32(rdr, displayOrderIndex)
                         });
                     }
                 }
@@ -76,51 +87,51 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return list;
         }
 
-        /// <summary>
-        /// Lấy 1 media theo ID
-        /// </summary>
-        public static async Task<SanPhamMedia> GetByIdAsync(int id)
-        {
-            SanPhamMedia media = null;
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-            {
-                try
-                {
-                    await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
-                        "SELECT * FROM tb_san_pham_media WHERE Id = @id",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@id", id);
+        ///// <summary>
+        ///// Lấy 1 media theo ID
+        ///// </summary>
+        //public static async Task<SanPhamMedia> GetByIdAsync(int id)
+        //{
+        //    SanPhamMedia media = null;
+        //    using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+        //    {
+        //        try
+        //        {
+        //            await conn.OpenAsync();
+        //            MySqlCommand cmd = new MySqlCommand(
+        //                "SELECT * FROM tb_san_pham_media WHERE Id = @id",
+        //                conn);
+        //            cmd.CommandType = CommandType.Text;
+        //            cmd.Parameters.AddWithValue("@id", id);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        if (await rdr.ReadAsync())
-                        {
-                            media = new SanPhamMedia
-                            {
-                                Id = MyMySql.GetInt32(rdr, "Id"),
-                                SanPhamId = MyMySql.GetInt32(rdr, "SanPhamId"),
-                                MediaType = MyMySql.GetString(rdr, "MediaType"),
-                                FileName = MyMySql.GetString(rdr, "FileName"),
-                                Title = MyMySql.GetString(rdr, "Title"),
-                                AltText = MyMySql.GetString(rdr, "AltText"),
-                                Description = MyMySql.GetString(rdr, "Description"),
-                                PosterImage = MyMySql.GetString(rdr, "PosterImage"),
-                                Width = MyMySql.GetInt32(rdr, "Width"),
-                                Height = MyMySql.GetInt32(rdr, "Height"),
-                                DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
-                            };
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.ToString());
-                }
-            }
-            return media;
-        }
+        //            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+        //            {
+        //                if (await rdr.ReadAsync())
+        //                {
+        //                    media = new SanPhamMedia
+        //                    {
+        //                        Id = MyMySql.GetInt32(rdr, "Id"),
+        //                        SanPhamId = MyMySql.GetInt32(rdr, "SanPhamId"),
+        //                        MediaType = MyMySql.GetString(rdr, "MediaType"),
+        //                        FileName = MyMySql.GetString(rdr, "FileName"),
+        //                        Title = MyMySql.GetString(rdr, "Title"),
+        //                        AltText = MyMySql.GetString(rdr, "AltText"),
+        //                        Description = MyMySql.GetString(rdr, "Description"),
+        //                        PosterImage = MyMySql.GetString(rdr, "PosterImage"),
+        //                        Width = (uint)MyMySql.GetInt32(rdr, "Width"),
+        //                        Height = (uint)MyMySql.GetInt32(rdr, "Height"),
+        //                        DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
+        //                    };
+        //                }
+        //            }
+        //        }
+        //        catch (Exception ex)
+        //        {
+        //            MyLogger.GetInstance().Warn(ex.ToString());
+        //        }
+        //    }
+        //    return media;
+        //}
 
         /// <summary>
         /// Insert media mới
