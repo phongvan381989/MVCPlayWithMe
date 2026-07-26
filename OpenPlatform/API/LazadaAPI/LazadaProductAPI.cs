@@ -581,15 +581,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                 string videoUrl = string.Empty;
                 string videoId = string.Empty;
                 // Kiểm tra giá trị hash đã lưu trong db, nếu có thì trả về video
+                using (MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tb_lazada_video_space WHERE Hash = @inHash;", conn))
                 {
-                    MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tb_lazada_video_space WHERE Hash = @inHash;", conn);
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inHash", hash);
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
                         while (await rdr.ReadAsync())
                         {
-                            videoId  = MyMySql.GetString(rdr, "VideoId");
+                            videoId = MyMySql.GetString(rdr, "VideoId");
                             videoUrl = MyMySql.GetString(rdr, "VideoUrl");
                         }
                     }
@@ -614,11 +614,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
                             // Cập nhật video src vào DB
                             videoUrl = getVideoResponse.video_url;
-                            MySqlCommand cmdTemp = new MySqlCommand("UPDATE webplaywithme.tb_lazada_video_space SET VideoUrl = @inVideoUrl WHERE VideoId = @inVideoId;", conn);
-                            cmdTemp.CommandType = CommandType.Text;
-                            cmdTemp.Parameters.AddWithValue("@inVideoUrl", videoUrl);
-                            cmdTemp.Parameters.AddWithValue("@inVideoId", videoId);
-                            await cmdTemp.ExecuteNonQueryAsync();
+                            using (MySqlCommand cmdTemp = new MySqlCommand("UPDATE webplaywithme.tb_lazada_video_space SET VideoUrl = @inVideoUrl WHERE VideoId = @inVideoId;", conn))
+                            {
+                                cmdTemp.CommandType = CommandType.Text;
+                                cmdTemp.Parameters.AddWithValue("@inVideoUrl", videoUrl);
+                                cmdTemp.Parameters.AddWithValue("@inVideoId", videoId);
+                                await cmdTemp.ExecuteNonQueryAsync();
+                            }
                         }
 
                         result.Message = videoId;
@@ -742,9 +744,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                         videoUrl = getVideoResponse.video_url;
                     }
                     // Lưu vào db
+                    using (MySqlCommand cmd = new MySqlCommand("INSERT INTO webplaywithme.tb_lazada_video_space (VideoId, Hash, VideoUrl) VALUES ( @inVideoId, @inHash, @inVideoUrl);",
+                        conn))
                     {
-                        MySqlCommand cmd = new MySqlCommand("INSERT INTO webplaywithme.tb_lazada_video_space (VideoId, Hash, VideoUrl) VALUES ( @inVideoId, @inHash, @inVideoUrl);",
-                            conn);
                         cmd.CommandType = CommandType.Text;
                         cmd.Parameters.AddWithValue("@inVideoId", videoId);
                         cmd.Parameters.AddWithValue("@inHash", hash);

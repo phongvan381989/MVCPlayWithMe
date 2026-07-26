@@ -21,22 +21,24 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 DealCreatedResponseDetail deal = listDeal[0];
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
 
-                    cmd.Parameters.AddWithValue("@p_DealDiscount_Id", deal.id);
-                    cmd.Parameters.AddWithValue("@p_Sku", deal.sku);
-                    cmd.Parameters.AddWithValue("@p_SpecialPrice", deal.special_price);
-                    cmd.Parameters.AddWithValue("@p_SpecialFromDate", deal.special_from_date);
-                    cmd.Parameters.AddWithValue("@p_SpecialToDate", deal.special_to_date);
-                    cmd.Parameters.AddWithValue("@p_QtyMax", deal.qty_max);
-                    cmd.Parameters.AddWithValue("@p_QtyLimit", deal.qty_limit);
-                    cmd.Parameters.AddWithValue("@p_DiscountPercent", deal.discount_percent);
-                    cmd.Parameters.AddWithValue("@p_IsActive", deal.is_active);
-                    cmd.Parameters.AddWithValue("@p_Notes", deal.notes);
-                    cmd.Parameters.AddWithValue("@p_CreatedAt", deal.created_at);
+                        cmd.Parameters.AddWithValue("@p_DealDiscount_Id", deal.id);
+                        cmd.Parameters.AddWithValue("@p_Sku", deal.sku);
+                        cmd.Parameters.AddWithValue("@p_SpecialPrice", deal.special_price);
+                        cmd.Parameters.AddWithValue("@p_SpecialFromDate", deal.special_from_date);
+                        cmd.Parameters.AddWithValue("@p_SpecialToDate", deal.special_to_date);
+                        cmd.Parameters.AddWithValue("@p_QtyMax", deal.qty_max);
+                        cmd.Parameters.AddWithValue("@p_QtyLimit", deal.qty_limit);
+                        cmd.Parameters.AddWithValue("@p_DiscountPercent", deal.discount_percent);
+                        cmd.Parameters.AddWithValue("@p_IsActive", deal.is_active);
+                        cmd.Parameters.AddWithValue("@p_Notes", deal.notes);
+                        cmd.Parameters.AddWithValue("@p_CreatedAt", deal.created_at);
 
-                    await cmd.ExecuteNonQueryAsync();
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex)
@@ -55,41 +57,43 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 DealCreatedResponseDetail deal = null;
                 int count = listDeal.Count();
                 {
-                    MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@p_DealDiscount_Id", 0);
-                    cmd.Parameters.AddWithValue("@p_Sku", "");
-                    cmd.Parameters.AddWithValue("@p_SpecialPrice", 0);
-                    cmd.Parameters.AddWithValue("@p_SpecialFromDate", "");
-                    cmd.Parameters.AddWithValue("@p_SpecialToDate", "");
-                    cmd.Parameters.AddWithValue("@p_QtyMax", 0);
-                    cmd.Parameters.AddWithValue("@p_QtyLimit", 0);
-                    cmd.Parameters.AddWithValue("@p_DiscountPercent", 0.0);
-                    cmd.Parameters.AddWithValue("@p_IsActive", 0);
-                    cmd.Parameters.AddWithValue("@p_Notes", "");
-                    cmd.Parameters.AddWithValue("@p_CreatedAt", DateTime.Now);
-
-                    for (int i = 0; i < count; i++)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbTikiDealDiscount_Insert_Check_Exist", conn))
                     {
-                        deal = listDeal[i];
-                        if (skuInsertedList.Contains(deal.sku))
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@p_DealDiscount_Id", 0);
+                        cmd.Parameters.AddWithValue("@p_Sku", "");
+                        cmd.Parameters.AddWithValue("@p_SpecialPrice", 0);
+                        cmd.Parameters.AddWithValue("@p_SpecialFromDate", "");
+                        cmd.Parameters.AddWithValue("@p_SpecialToDate", "");
+                        cmd.Parameters.AddWithValue("@p_QtyMax", 0);
+                        cmd.Parameters.AddWithValue("@p_QtyLimit", 0);
+                        cmd.Parameters.AddWithValue("@p_DiscountPercent", 0.0);
+                        cmd.Parameters.AddWithValue("@p_IsActive", 0);
+                        cmd.Parameters.AddWithValue("@p_Notes", "");
+                        cmd.Parameters.AddWithValue("@p_CreatedAt", DateTime.Now);
+
+                        for (int i = 0; i < count; i++)
                         {
-                            continue;
+                            deal = listDeal[i];
+                            if (skuInsertedList.Contains(deal.sku))
+                            {
+                                continue;
+                            }
+                            skuInsertedList.Add(deal.sku);
+                            cmd.Parameters[0].Value = deal.id;
+                            cmd.Parameters[1].Value = deal.sku;
+                            cmd.Parameters[2].Value = deal.special_price;
+                            cmd.Parameters[3].Value = deal.special_from_date;
+                            cmd.Parameters[4].Value = deal.special_to_date;
+                            cmd.Parameters[5].Value = deal.qty_max;
+                            cmd.Parameters[6].Value = deal.qty_limit;
+                            cmd.Parameters[7].Value = deal.discount_percent;
+                            cmd.Parameters[8].Value = deal.is_active;
+                            cmd.Parameters[9].Value = deal.notes;
+                            cmd.Parameters[10].Value = deal.created_at;
+                            await cmd.ExecuteNonQueryAsync();
                         }
-                        skuInsertedList.Add(deal.sku);
-                        cmd.Parameters[0].Value = deal.id;
-                        cmd.Parameters[1].Value = deal.sku;
-                        cmd.Parameters[2].Value = deal.special_price;
-                        cmd.Parameters[3].Value = deal.special_from_date;
-                        cmd.Parameters[4].Value = deal.special_to_date;
-                        cmd.Parameters[5].Value = deal.qty_max;
-                        cmd.Parameters[6].Value = deal.qty_limit;
-                        cmd.Parameters[7].Value = deal.discount_percent;
-                        cmd.Parameters[8].Value = deal.is_active;
-                        cmd.Parameters[9].Value = deal.notes;
-                        cmd.Parameters[10].Value = deal.created_at;
-                        await cmd.ExecuteNonQueryAsync();
                     }
                 }
             }

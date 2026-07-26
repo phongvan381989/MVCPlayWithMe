@@ -20,152 +20,6 @@ namespace MVCPlayWithMe.General
         public static string customerConnStr;
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="stName"></param>
-        /// <param name="paras"></param>
-        /// <returns></returns>
-        //public static MySqlResultState ExcuteNonQueryStoreProceduce(string stName, List<MySqlParameter> paras)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-        //    MySqlConnection conn = new MySqlConnection(connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand(stName, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        if (paras != null)
-        //        {
-        //            foreach (var para in paras)
-        //            {
-        //                cmd.Parameters.Add(para);
-        //            }
-        //        }
-
-        //        cmd.ExecuteNonQuery();
-        //        int lengthPara = cmd.Parameters.Count;
-        //        {
-        //            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-        //            result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public static MySqlResultState ExcuteNonQueryStoreProceduce(string stName, MySqlParameter[] paras)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(connStr);
-        //    MySqlResultState result = new MySqlResultState();
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand(stName, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddRange(paras);
-
-        //        cmd.ExecuteNonQuery();
-        //        int lengthPara = cmd.Parameters.Count;
-        //        //if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
-        //        {
-        //            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-        //            result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public static MySqlResultState ExcuteNonQuery(string stName, MySqlParameter[] paras)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-        //    MySqlConnection conn = new MySqlConnection(connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand(stName, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddRange(paras);
-        //        cmd.ExecuteNonQuery();
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public static int ExcuteGetIdStoreProceduce(string stName, MySqlParameter[] paras)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(connStr);
-        //    int id = 0;
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand(stName, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddRange(paras);
-
-        //        cmd.ExecuteNonQuery();
-        //        int lengthPara = cmd.Parameters.Count;
-        //        id = (int)cmd.Parameters[lengthPara - 2].Value;
-        //    }
-        //    catch (Exception ex)
-        //    {
-                
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-
-        //    conn.Close();
-        //    return id;
-        //}
-
-        //public static MySqlResultState ExcuteNonQueryStoreProceduce(string stName, MySqlParameterCollection paras)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(connStr);
-        //    MySqlResultState result = new MySqlResultState();
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand(stName, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.Insert(0, paras);
-
-        //        cmd.ExecuteNonQuery();
-        //        int lengthPara = cmd.Parameters.Count;
-        //        //if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
-        //        {
-        //            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-        //            result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        /// <summary>
         /// Thêm 2 parameters outResult và outMessage
         /// </summary>
         /// <param name="parameters"></param>
@@ -388,178 +242,42 @@ namespace MVCPlayWithMe.General
             }
         }
 
-        //public static MySqlResultState Login(string userName, string password, string storePro)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    MySqlResultState result = new MySqlResultState();
-        //    result.Message = "Đăng nhập thành công.";
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand(storePro, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-
-        //        cmd.Parameters.AddWithValue("@inUserName", userName);
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        byte[] salt = null;
-        //        byte[] hash = null;
-        //        while (rdr.Read())
-        //        {
-        //            salt = MyMySql.GetByteArray(rdr, "Salt");
-        //            hash = MyMySql.GetByteArray(rdr, "Hash");
-        //        }
-        //        rdr.Close();
-
-        //        // Generate hash from login password with hash in db
-        //        if (salt == null || !Common.ByteArrayCompare(Common.GenerateSaltedHash(password, salt), hash))
-        //        {
-        //            result.State = EMySqlResultState.INVALID;
-        //            result.Message = "Mật khẩu không đúng.";
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public static MySqlResultState ChangePassword(int id, string oldPassWord,
-        //    string newPassWord, string renewPassWord,
-        //    string storeGetSaltHash, string storeChagePassword)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    MySqlResultState result = new MySqlResultState();
-        //    result.Message = "Thay đổi mật khẩu thành công.";
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        // Kiểm tra mật khẩu cũ chính xác không
-        //        MySqlCommand cmd = new MySqlCommand(storeGetSaltHash, conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@InId", id);
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        byte[] salt = null;
-        //        byte[] hash = null;
-        //        while (rdr.Read())
-        //        {
-        //            salt = MyMySql.GetByteArray(rdr, "Salt");
-        //            hash = MyMySql.GetByteArray(rdr, "Hash");
-        //        }
-        //        rdr.Close();
-
-        //        // Generate hash from login password with hash in db
-        //        if (!Common.ByteArrayCompare(Common.GenerateSaltedHash(oldPassWord, salt), hash))
-        //        {
-        //            result.State = EMySqlResultState.INVALID;
-        //            result.Message = "Mật khẩu cũ không đúng.";
-        //        }
-
-        //        if (result.State == EMySqlResultState.OK)
-        //        {
-        //            // Thay đổi mật khẩu cũ
-        //            MySqlCommand cmdChange = new MySqlCommand(storeChagePassword, conn);
-        //            cmdChange.CommandType = CommandType.StoredProcedure;
-        //            cmdChange.Parameters.AddWithValue("@InId", id);
-
-        //            salt = Common.CreateSalt();
-        //            hash = Common.GenerateSaltedHash(newPassWord, salt);
-
-        //            MySqlParameter paSalt = new MySqlParameter();
-        //            paSalt.ParameterName = @"inSalt";
-        //            paSalt.Size = Common.SHA256Size;
-        //            paSalt.MySqlDbType = MySqlDbType.Binary;
-        //            paSalt.Value = salt;
-        //            cmdChange.Parameters.Add(paSalt);
-
-        //            MySqlParameter paHash = new MySqlParameter();
-        //            paHash.ParameterName = @"inHash";
-        //            paHash.Size = Common.SHA256Size;
-        //            paHash.MySqlDbType = MySqlDbType.Binary;
-        //            paHash.Value = hash;
-        //            cmdChange.Parameters.Add(paHash);
-
-        //            cmdChange.ExecuteNonQuery();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public static MySqlResultState MyExcuteNonQuery(MySqlCommand cmd)
-        //{
-        //    MySqlResultState resultState = new MySqlResultState();
-        //    try
-        //    {
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, resultState);
-        //    }
-
-        //    return resultState;
-        //}
-
-        //// Hàm bạn cần viết để kiểm tra lỗi
-        //public static bool IsUniqueConstraintViolation(DbUpdateException ex)
-        //{
-        //    // 1. Kiểm tra xem InnerException có phải là lỗi SQL/MySQL không
-        //    if (ex.InnerException is MySqlException mySqlEx)
-        //    {
-        //        // 2. Mã lỗi 1062 là mã tiêu chuẩn của MySQL cho UNIQUE CONSTRAINT
-        //        return mySqlEx.Number == 1062;
-        //    }
-
-        //    // Nếu không phải MySqlException hoặc lỗi không phải 1062, trả về false
-        //    return false;
-        //}
-
         public static async Task<MySqlResultState> LoginAsync(string userName, string password, string storePro)
         {
             MySqlResultState result = new MySqlResultState();
             result.Message = "Đăng nhập thành công.";
-            using (MySqlConnection conn = new MySqlConnection(connStr))
+            try
             {
-                try
+                using (MySqlConnection conn = new MySqlConnection(connStr))
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(storePro, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inUserName", userName);
-
-                    byte[] salt = null;
-                    byte[] hash = null;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand(storePro, conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inUserName", userName);
+
+                        byte[] salt = null;
+                        byte[] hash = null;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            salt = GetByteArray(rdr, "Salt");
-                            hash = GetByteArray(rdr, "Hash");
+                            while (await rdr.ReadAsync())
+                            {
+                                salt = GetByteArray(rdr, "Salt");
+                                hash = GetByteArray(rdr, "Hash");
+                            }
+                        }
+
+                        if (salt == null || !Common.ByteArrayCompare(Common.GenerateSaltedHash(password, salt), hash))
+                        {
+                            result.State = EMySqlResultState.INVALID;
+                            result.Message = "Mật khẩu không đúng.";
                         }
                     }
-
-                    if (salt == null || !Common.ByteArrayCompare(Common.GenerateSaltedHash(password, salt), hash))
-                    {
-                        result.State = EMySqlResultState.INVALID;
-                        result.Message = "Mật khẩu không đúng.";
-                    }
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
             return result;
         }
@@ -570,63 +288,66 @@ namespace MVCPlayWithMe.General
         {
             MySqlResultState result = new MySqlResultState();
             result.Message = "Thay đổi mật khẩu thành công.";
-            using (MySqlConnection conn = new MySqlConnection(connStr))
+            try
             {
-                try
+                using (MySqlConnection conn = new MySqlConnection(connStr))
                 {
                     await conn.OpenAsync();
-
-                    MySqlCommand cmd = new MySqlCommand(storeGetSaltHash, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@InId", id);
-
-                    byte[] salt = null;
-                    byte[] hash = null;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand(storeGetSaltHash, conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@InId", id);
+
+                        byte[] salt = null;
+                        byte[] hash = null;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            salt = GetByteArray(rdr, "Salt");
-                            hash = GetByteArray(rdr, "Hash");
+                            while (await rdr.ReadAsync())
+                            {
+                                salt = GetByteArray(rdr, "Salt");
+                                hash = GetByteArray(rdr, "Hash");
+                            }
+                        }
+
+                        if (!Common.ByteArrayCompare(Common.GenerateSaltedHash(oldPassWord, salt), hash))
+                        {
+                            result.State = EMySqlResultState.INVALID;
+                            result.Message = "Mật khẩu cũ không đúng.";
+                        }
+
+                        if (result.State == EMySqlResultState.OK)
+                        {
+                            using (MySqlCommand cmdChange = new MySqlCommand(storeChangePassword, conn))
+                            {
+                                cmdChange.CommandType = CommandType.StoredProcedure;
+                                cmdChange.Parameters.AddWithValue("@InId", id);
+
+                                salt = Common.CreateSalt();
+                                hash = Common.GenerateSaltedHash(newPassWord, salt);
+
+                                MySqlParameter paSalt = new MySqlParameter();
+                                paSalt.ParameterName = @"inSalt";
+                                paSalt.Size = Common.SHA256Size;
+                                paSalt.MySqlDbType = MySqlDbType.Binary;
+                                paSalt.Value = salt;
+                                cmdChange.Parameters.Add(paSalt);
+
+                                MySqlParameter paHash = new MySqlParameter();
+                                paHash.ParameterName = @"inHash";
+                                paHash.Size = Common.SHA256Size;
+                                paHash.MySqlDbType = MySqlDbType.Binary;
+                                paHash.Value = hash;
+                                cmdChange.Parameters.Add(paHash);
+
+                                await cmdChange.ExecuteNonQueryAsync();
+                            }
                         }
                     }
-
-                    if (!Common.ByteArrayCompare(Common.GenerateSaltedHash(oldPassWord, salt), hash))
-                    {
-                        result.State = EMySqlResultState.INVALID;
-                        result.Message = "Mật khẩu cũ không đúng.";
-                    }
-
-                    if (result.State == EMySqlResultState.OK)
-                    {
-                        MySqlCommand cmdChange = new MySqlCommand(storeChangePassword, conn);
-                        cmdChange.CommandType = CommandType.StoredProcedure;
-                        cmdChange.Parameters.AddWithValue("@InId", id);
-
-                        salt = Common.CreateSalt();
-                        hash = Common.GenerateSaltedHash(newPassWord, salt);
-
-                        MySqlParameter paSalt = new MySqlParameter();
-                        paSalt.ParameterName = @"inSalt";
-                        paSalt.Size = Common.SHA256Size;
-                        paSalt.MySqlDbType = MySqlDbType.Binary;
-                        paSalt.Value = salt;
-                        cmdChange.Parameters.Add(paSalt);
-
-                        MySqlParameter paHash = new MySqlParameter();
-                        paHash.ParameterName = @"inHash";
-                        paHash.Size = Common.SHA256Size;
-                        paHash.MySqlDbType = MySqlDbType.Binary;
-                        paHash.Value = hash;
-                        cmdChange.Parameters.Add(paHash);
-
-                        await cmdChange.ExecuteNonQueryAsync();
-                    }
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
             return result;
         }
@@ -634,20 +355,23 @@ namespace MVCPlayWithMe.General
         public static async Task<MySqlResultState> ExcuteNonQueryAsync(string stName, MySqlParameter[] paras)
         {
             MySqlResultState result = new MySqlResultState();
-            using (MySqlConnection conn = new MySqlConnection(connStr))
+            try
             {
-                try
+                using (MySqlConnection conn = new MySqlConnection(connStr))
                 {
+
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(stName, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(stName, conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
             return result;
         }
@@ -655,23 +379,25 @@ namespace MVCPlayWithMe.General
         public static async Task<MySqlResultState> ExcuteNonQueryStoreProcedureAsync(string stName, MySqlParameter[] paras)
         {
             MySqlResultState result = new MySqlResultState();
-            using (MySqlConnection conn = new MySqlConnection(connStr))
+            try
             {
-                try
+                using (MySqlConnection conn = new MySqlConnection(connStr))
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(stName, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    await cmd.ExecuteNonQueryAsync();
-                    int lengthPara = cmd.Parameters.Count;
-                    result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                    result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    using (MySqlCommand cmd = new MySqlCommand(stName, conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        await cmd.ExecuteNonQueryAsync();
+                        int lengthPara = cmd.Parameters.Count;
+                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
             return result;
         }
@@ -679,22 +405,24 @@ namespace MVCPlayWithMe.General
         public static async Task<int> ExcuteGetIdStoreProcedureAsync(string stName, MySqlParameter[] paras)
         {
             int id = 0;
-            using (MySqlConnection conn = new MySqlConnection(connStr))
+            try
             {
-                try
+                using (MySqlConnection conn = new MySqlConnection(connStr))
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(stName, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    await cmd.ExecuteNonQueryAsync();
-                    int lengthPara = cmd.Parameters.Count;
-                    id = (int)cmd.Parameters[lengthPara - 2].Value;
+                    using (MySqlCommand cmd = new MySqlCommand(stName, conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        await cmd.ExecuteNonQueryAsync();
+                        int lengthPara = cmd.Parameters.Count;
+                        id = (int)cmd.Parameters[lengthPara - 2].Value;
+                    }
                 }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.ToString());
-                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
             return id;
         }

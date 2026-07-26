@@ -64,7 +64,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Trạng thái:
         //"Đã Đóng", "Đã Hoàn", "Giữ Chỗ", "Hủy Giữ Chỗ", hoặc trống
-        public string orderStatusInWarehoue { get; set; }
+        public string orderStatusInWarehouse { get; set; }
 
         /// <summary>
         /// Danh sách item id và model id tương ứng,

@@ -82,23 +82,24 @@ namespace MVCPlayWithMe.Models
             List<Publisher> ls = new List<Publisher>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbPublisher_Select_All", conn)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbPublisher_Select_All", conn)
                 {
                     CommandType = CommandType.StoredProcedure
-                };
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                })
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int nameIndex = rdr.GetOrdinal("Name");
-                    int discountIndex = rdr.GetOrdinal("Discount");
-                    int detailIndex = rdr.GetOrdinal("Detail");
-                    while (await rdr.ReadAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        ls.Add(new Publisher(rdr.GetInt32(idIndex),
-                            rdr.GetString(nameIndex),
-                            rdr.GetFloat(discountIndex),
-                            rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int discountIndex = rdr.GetOrdinal("Discount");
+                        int detailIndex = rdr.GetOrdinal("Detail");
+                        while (await rdr.ReadAsync())
+                        {
+                            ls.Add(new Publisher(rdr.GetInt32(idIndex),
+                                rdr.GetString(nameIndex),
+                                rdr.GetFloat(discountIndex),
+                                rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex)));
+                        }
                     }
                 }
             }
@@ -118,20 +119,22 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbpublisher WHERE `Id` = @inId", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inId", id);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbpublisher WHERE `Id` = @inId", conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            publisher = new Publisher(MyMySql.GetInt32(rdr, "Id"),
-                                MyMySql.GetString(rdr, "Name"),
-                                rdr.GetFloat("Discount"),
-                                MyMySql.GetString(rdr, "Detail"));
-                            publisher.tikiCertificate = MyMySql.GetString(rdr, "TikiCertificate");
-                            publisher.tikiAttributeValue = MyMySql.GetString(rdr, "TikiAttributeValue");
+                            while (await rdr.ReadAsync())
+                            {
+                                publisher = new Publisher(MyMySql.GetInt32(rdr, "Id"),
+                                    MyMySql.GetString(rdr, "Name"),
+                                    rdr.GetFloat("Discount"),
+                                    MyMySql.GetString(rdr, "Detail"));
+                                publisher.tikiCertificate = MyMySql.GetString(rdr, "TikiCertificate");
+                                publisher.tikiAttributeValue = MyMySql.GetString(rdr, "TikiAttributeValue");
+                            }
                         }
                     }
                 }

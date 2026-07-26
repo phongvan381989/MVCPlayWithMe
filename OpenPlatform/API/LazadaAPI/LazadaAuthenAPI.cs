@@ -104,19 +104,21 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
 
             try
             {
-                MySqlCommand cmd =
+                using (MySqlCommand cmd =
                     new MySqlCommand(@"UPDATE `tb_lazada_authen` SET `AccessToken`=@AccessToken,
                     `ExpiresIn`=@ExpiresIn,
                     `RefreshToken`=@RefreshToken,
                     `RefreshExpiresIn`=@RefreshExpiresIn,
                     `RefreshDatetime` = NOW()
-                    WHERE `Id` = 1", conn);
-                cmd.Parameters.AddWithValue("@AccessToken", lazadaToken.access_token);
-                cmd.Parameters.AddWithValue("@ExpiresIn", lazadaToken.expires_in);
-                cmd.Parameters.AddWithValue("@RefreshToken", lazadaToken.refresh_token);
-                cmd.Parameters.AddWithValue("@RefreshExpiresIn", lazadaToken.refresh_expires_in);
-                cmd.CommandType = CommandType.Text;
-                await cmd.ExecuteNonQueryAsync();
+                    WHERE `Id` = 1", conn))
+                {
+                    cmd.Parameters.AddWithValue("@AccessToken", lazadaToken.access_token);
+                    cmd.Parameters.AddWithValue("@ExpiresIn", lazadaToken.expires_in);
+                    cmd.Parameters.AddWithValue("@RefreshToken", lazadaToken.refresh_token);
+                    cmd.Parameters.AddWithValue("@RefreshExpiresIn", lazadaToken.refresh_expires_in);
+                    cmd.CommandType = CommandType.Text;
+                    await cmd.ExecuteNonQueryAsync();
+                }
 
                 lazadaAuthen = await LazadaGetAuthFromDBAsync(conn);
             }
@@ -133,24 +135,26 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             LazadaAuth lazadaAuth = new LazadaAuth();
             try
             {
-                MySqlCommand cmd =
+                using (MySqlCommand cmd =
                     new MySqlCommand(@"SELECT * FROM tb_lazada_authen
-                    WHERE `Id` = 1", conn);
-                cmd.CommandType = CommandType.Text;
-                using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    WHERE `Id` = 1", conn))
                 {
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        lazadaAuth.appKey = MyMySql.GetString(rdr, "AppKey");
-                        lazadaAuth.appSecret = MyMySql.GetString(rdr, "AppSecret");
+                        while (await rdr.ReadAsync())
+                        {
+                            lazadaAuth.appKey = MyMySql.GetString(rdr, "AppKey");
+                            lazadaAuth.appSecret = MyMySql.GetString(rdr, "AppSecret");
 
-                        lazadaAuth.accessToken = MyMySql.GetString(rdr, "AccessToken");
-                        lazadaAuth.expiresIn = MyMySql.GetInt32(rdr, "ExpiresIn");
+                            lazadaAuth.accessToken = MyMySql.GetString(rdr, "AccessToken");
+                            lazadaAuth.expiresIn = MyMySql.GetInt32(rdr, "ExpiresIn");
 
-                        lazadaAuth.refreshToken = MyMySql.GetString(rdr, "RefreshToken");
-                        lazadaAuth.refreshExpiresIn = MyMySql.GetInt32(rdr, "RefreshExpiresIn");
+                            lazadaAuth.refreshToken = MyMySql.GetString(rdr, "RefreshToken");
+                            lazadaAuth.refreshExpiresIn = MyMySql.GetInt32(rdr, "RefreshExpiresIn");
 
-                        lazadaAuth.refreshDatetime = MyMySql.GetDateTime(rdr, "RefreshDatetime");
+                            lazadaAuth.refreshDatetime = MyMySql.GetDateTime(rdr, "RefreshDatetime");
+                        }
                     }
                 }
             }

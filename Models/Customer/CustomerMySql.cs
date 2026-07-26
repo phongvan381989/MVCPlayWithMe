@@ -109,37 +109,39 @@ namespace MVCPlayWithMe.Models.Customer
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inEmail", "");
-
-                    MySqlParameter paSalt = new MySqlParameter();
-                    paSalt.ParameterName = @"inSalt";
-                    paSalt.Size = Common.SHA256Size;
-                    paSalt.MySqlDbType = MySqlDbType.Binary;
-                    paSalt.Value = salt;
-                    cmd.Parameters.Add(paSalt);
-
-                    MySqlParameter paHash = new MySqlParameter();
-                    paHash.ParameterName = @"inHash";
-                    paHash.Size = Common.SHA256Size;
-                    paHash.MySqlDbType = MySqlDbType.Binary;
-                    paHash.Value = hash;
-                    cmd.Parameters.Add(paHash);
-
-                    cmd.Parameters.AddWithValue("@inSDT", "");
-                    cmd.Parameters.AddWithValue("@inUserName", userName);
-                    cmd.Parameters.AddWithValue("@inFullName", "");
-                    cmd.Parameters.AddWithValue("@inBirthday", "2020-01-01");
-                    cmd.Parameters.AddWithValue("@inSex", 4);
-                    MyMySql.AddOutParameters(cmd.Parameters);
-
-                    int lengthPara = cmd.Parameters.Count;
-                    await cmd.ExecuteNonQueryAsync();
-                    if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Insert", conn))
                     {
-                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inEmail", "");
+
+                        MySqlParameter paSalt = new MySqlParameter();
+                        paSalt.ParameterName = @"inSalt";
+                        paSalt.Size = Common.SHA256Size;
+                        paSalt.MySqlDbType = MySqlDbType.Binary;
+                        paSalt.Value = salt;
+                        cmd.Parameters.Add(paSalt);
+
+                        MySqlParameter paHash = new MySqlParameter();
+                        paHash.ParameterName = @"inHash";
+                        paHash.Size = Common.SHA256Size;
+                        paHash.MySqlDbType = MySqlDbType.Binary;
+                        paHash.Value = hash;
+                        cmd.Parameters.Add(paHash);
+
+                        cmd.Parameters.AddWithValue("@inSDT", "");
+                        cmd.Parameters.AddWithValue("@inUserName", userName);
+                        cmd.Parameters.AddWithValue("@inFullName", "");
+                        cmd.Parameters.AddWithValue("@inBirthday", "2020-01-01");
+                        cmd.Parameters.AddWithValue("@inSex", 4);
+                        MyMySql.AddOutParameters(cmd.Parameters);
+
+                        int lengthPara = cmd.Parameters.Count;
+                        await cmd.ExecuteNonQueryAsync();
+                        if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                        {
+                            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                            result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -171,12 +173,14 @@ namespace MVCPlayWithMe.Models.Customer
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer_From_UserName", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inUserName", userName);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer_From_UserName", conn))
                     {
-                        await GetCustomerFromDataReaderAsync(rdr, customer);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inUserName", userName);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            await GetCustomerFromDataReaderAsync(rdr, customer);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -196,12 +200,14 @@ namespace MVCPlayWithMe.Models.Customer
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Get_Customer", conn))
                     {
-                        await GetCustomerFromDataReaderAsync(rdr, customer);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            await GetCustomerFromDataReaderAsync(rdr, customer);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -247,22 +253,24 @@ namespace MVCPlayWithMe.Models.Customer
             MySqlResultState result = new MySqlResultState();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn, transaction);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                cmd.Parameters.AddWithValue("@inSanPhamId", 0);
-                cmd.Parameters.AddWithValue("@inQuantity", 0);
-                cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
-
-                foreach (var cart in ls)
+                using (MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn, transaction))
                 {
-                    cmd.Parameters[1].Value = cart.sanPhamId;
-                    cmd.Parameters[2].Value = cart.quantity;
-                    if (cart.time.HasValue)
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    cmd.Parameters.AddWithValue("@inSanPhamId", 0);
+                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
+
+                    foreach (var cart in ls)
                     {
-                        cmd.Parameters[3].Value = cart.time;
+                        cmd.Parameters[1].Value = cart.sanPhamId;
+                        cmd.Parameters[2].Value = cart.quantity;
+                        if (cart.time.HasValue)
+                        {
+                            cmd.Parameters[3].Value = cart.time;
+                        }
+                        await cmd.ExecuteNonQueryAsync();
                     }
-                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -281,21 +289,23 @@ namespace MVCPlayWithMe.Models.Customer
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                    cmd.Parameters.AddWithValue("@inSanPhamId", cart.sanPhamId);
-                    cmd.Parameters.AddWithValue("@inQuantity", cart.quantity);
-                    //cmd.Parameters.AddWithValue("@inReal", cart.real);
-                    cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCart_Insert_And_Update", conn))
                     {
-                    }
-                    else
-                    {
-                        result.State = EMySqlResultState.EXCEPTION;
-                        result.Message = $"Không thêm sản phẩm vào giỏ hàng thành công";
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                        cmd.Parameters.AddWithValue("@inSanPhamId", cart.sanPhamId);
+                        cmd.Parameters.AddWithValue("@inQuantity", cart.quantity);
+                        //cmd.Parameters.AddWithValue("@inReal", cart.real);
+                        cmd.Parameters.AddWithValue("@inTime", DateTime.Now);
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.EXCEPTION;
+                            result.Message = $"Không thêm sản phẩm vào giỏ hàng thành công";
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -346,21 +356,23 @@ namespace MVCPlayWithMe.Models.Customer
             MySqlResultState result = new MySqlResultState();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn, transaction);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                cmd.Parameters.AddWithValue("@inName", add.name);
-                cmd.Parameters.AddWithValue("@inPhone", add.phone);
-                cmd.Parameters.AddWithValue("@inProvince", add.province);
-                cmd.Parameters.AddWithValue("@inSubDistrict", add.subdistrict);
-                cmd.Parameters.AddWithValue("@inDetail", add.detail);
-                cmd.Parameters.AddWithValue("@inDefaultAdd", add.defaultAdd);
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbAddress_Insert", conn, transaction))
                 {
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+                    cmd.Parameters.AddWithValue("@inName", add.name);
+                    cmd.Parameters.AddWithValue("@inPhone", add.phone);
+                    cmd.Parameters.AddWithValue("@inProvince", add.province);
+                    cmd.Parameters.AddWithValue("@inSubDistrict", add.subdistrict);
+                    cmd.Parameters.AddWithValue("@inDetail", add.detail);
+                    cmd.Parameters.AddWithValue("@inDefaultAdd", add.defaultAdd);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                        while (await rdr.ReadAsync())
+                        {
+                            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                        }
                     }
                 }
             }
@@ -380,21 +392,23 @@ namespace MVCPlayWithMe.Models.Customer
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Update", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", cus.id);
-                    cmd.Parameters.AddWithValue("@inEmail", cus.email);
-                    cmd.Parameters.AddWithValue("@inSDT", cus.sdt);
-                    cmd.Parameters.AddWithValue("@inFullName", cus.fullName);
-                    cmd.Parameters.AddWithValue("@inBirthday", cus.birthday);
-                    cmd.Parameters.AddWithValue("@inSex", cus.sex);
-                    MyMySql.AddOutParameters(cmd.Parameters);
-                    int lengthPara = cmd.Parameters.Count;
-                    await cmd.ExecuteNonQueryAsync();
-                    if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCustomer_Update", conn))
                     {
-                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", cus.id);
+                        cmd.Parameters.AddWithValue("@inEmail", cus.email);
+                        cmd.Parameters.AddWithValue("@inSDT", cus.sdt);
+                        cmd.Parameters.AddWithValue("@inFullName", cus.fullName);
+                        cmd.Parameters.AddWithValue("@inBirthday", cus.birthday);
+                        cmd.Parameters.AddWithValue("@inSex", cus.sex);
+                        MyMySql.AddOutParameters(cmd.Parameters);
+                        int lengthPara = cmd.Parameters.Count;
+                        await cmd.ExecuteNonQueryAsync();
+                        if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                        {
+                            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                            result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -440,23 +454,25 @@ namespace MVCPlayWithMe.Models.Customer
             List<Address> lsAddress = new List<Address>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn, transaction);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbAddress_Get", conn, transaction))
                 {
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        Address add = new Address(customerId);
-                        add.id = MyMySql.GetInt32(rdr, "Id");
-                        add.name = MyMySql.GetString(rdr, "Name");
-                        add.phone = MyMySql.GetString(rdr, "Phone");
-                        add.province = MyMySql.GetString(rdr, "Province");
-                        add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
-                        add.detail = MyMySql.GetString(rdr, "Detail");
-                        add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
-                        lsAddress.Add(add);
+                        while (await rdr.ReadAsync())
+                        {
+                            Address add = new Address(customerId);
+                            add.id = MyMySql.GetInt32(rdr, "Id");
+                            add.name = MyMySql.GetString(rdr, "Name");
+                            add.phone = MyMySql.GetString(rdr, "Phone");
+                            add.province = MyMySql.GetString(rdr, "Province");
+                            add.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
+                            add.detail = MyMySql.GetString(rdr, "Detail");
+                            add.defaultAdd = MyMySql.GetInt32(rdr, "DefaultAdd");
+                            lsAddress.Add(add);
+                        }
                     }
                 }
             }

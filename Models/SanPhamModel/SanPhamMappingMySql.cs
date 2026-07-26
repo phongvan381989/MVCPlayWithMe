@@ -39,7 +39,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             List<SanPhamMapping> list = new List<SanPhamMapping>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand(@"
+                using (MySqlCommand cmd = new MySqlCommand(@"
                     SELECT m.Id, m.SanPhamBanId, m.SanPhamKhoId, m.Quantity,
                             p.Code AS SanPhamKhoCode, p.Name AS SanPhamKhoName,
                             p.Quantity AS SanPhamKhoQuantity, p.BookCoverPrice AS SanPhamKhoBookCoverPrice,
@@ -47,26 +47,28 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     FROM tb_san_pham_mapping m
                     LEFT JOIN tbproducts p ON m.SanPhamKhoId = p.Id
                     WHERE m.SanPhamBanId = @sanPhamBanId
-                    ORDER BY m.Id", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    ORDER BY m.Id", conn))
                 {
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        list.Add(new SanPhamMapping
+                        while (await rdr.ReadAsync())
                         {
-                            Id = MyMySql.GetInt32(rdr, "Id"),
-                            SanPhamBanId = MyMySql.GetInt32(rdr, "SanPhamBanId"),
-                            SanPhamKhoId = MyMySql.GetInt32(rdr, "SanPhamKhoId"),
-                            Quantity = MyMySql.GetInt32(rdr, "Quantity"),
-                            SanPhamKhoCode = MyMySql.GetString(rdr, "SanPhamKhoCode"),
-                            SanPhamKhoName = MyMySql.GetString(rdr, "SanPhamKhoName"),
-                            SanPhamKhoQuantity = MyMySql.GetInt32(rdr, "SanPhamKhoQuantity"),
-                            SanPhamKhoBookCoverPrice = MyMySql.GetInt32(rdr, "SanPhamKhoBookCoverPrice"),
-                            SanPhamKhoDiscount = (float)rdr.GetDouble(rdr.GetOrdinal("SanPhamKhoDiscount"))
-                        });
+                            list.Add(new SanPhamMapping
+                            {
+                                Id = MyMySql.GetInt32(rdr, "Id"),
+                                SanPhamBanId = MyMySql.GetInt32(rdr, "SanPhamBanId"),
+                                SanPhamKhoId = MyMySql.GetInt32(rdr, "SanPhamKhoId"),
+                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
+                                SanPhamKhoCode = MyMySql.GetString(rdr, "SanPhamKhoCode"),
+                                SanPhamKhoName = MyMySql.GetString(rdr, "SanPhamKhoName"),
+                                SanPhamKhoQuantity = MyMySql.GetInt32(rdr, "SanPhamKhoQuantity"),
+                                SanPhamKhoBookCoverPrice = MyMySql.GetInt32(rdr, "SanPhamKhoBookCoverPrice"),
+                                SanPhamKhoDiscount = (float)rdr.GetDouble(rdr.GetOrdinal("SanPhamKhoDiscount"))
+                            });
+                        }
                     }
                 }
             }
@@ -89,22 +91,24 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         INSERT INTO tb_san_pham_mapping
                         (SanPhamBanId, SanPhamKhoId, Quantity)
                         VALUES (@sanPhamBanId, @sanPhamKhoId, @quantity)",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamBanId", mapping.SanPhamBanId);
-                    cmd.Parameters.AddWithValue("@sanPhamKhoId", mapping.SanPhamKhoId);
-                    cmd.Parameters.AddWithValue("@quantity", mapping.Quantity);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, "Thêm mapping thành công");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamBanId", mapping.SanPhamBanId);
+                        cmd.Parameters.AddWithValue("@sanPhamKhoId", mapping.SanPhamKhoId);
+                        cmd.Parameters.AddWithValue("@quantity", mapping.Quantity);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Thêm mapping thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Thêm mapping thất bại");
                     }
-                    return new MySqlResultState(EMySqlResultState.ERROR, "Thêm mapping thất bại");
                 }
                 catch (MySqlException ex) when (ex.Number == 1062) // Duplicate key
                 {
@@ -128,21 +132,23 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         UPDATE tb_san_pham_mapping
                         SET Quantity = @quantity
                         WHERE Id = @id",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@id", mappingId);
-                    cmd.Parameters.AddWithValue("@quantity", quantity);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, "Cập nhật thành công");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", mappingId);
+                        cmd.Parameters.AddWithValue("@quantity", quantity);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Cập nhật thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy mapping");
                     }
-                    return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy mapping");
                 }
                 catch (Exception ex)
                 {
@@ -162,18 +168,20 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
+                    using (MySqlCommand cmd = new MySqlCommand(
                         "DELETE FROM tb_san_pham_mapping WHERE Id = @id",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@id", mappingId);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, "Xóa mapping thành công");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", mappingId);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Xóa mapping thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy mapping");
                     }
-                    return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy mapping");
                 }
                 catch (Exception ex)
                 {
@@ -193,14 +201,16 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
+                    using (MySqlCommand cmd = new MySqlCommand(
                         "DELETE FROM tb_san_pham_mapping WHERE SanPhamBanId = @sanPhamBanId",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
+                        conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
 
-                    await cmd.ExecuteNonQueryAsync();
-                    return new MySqlResultState(EMySqlResultState.OK, "Xóa mapping thành công");
+                        await cmd.ExecuteNonQueryAsync();
+                        return new MySqlResultState(EMySqlResultState.OK, "Xóa mapping thành công");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -221,26 +231,28 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         SELECT Id, Code, Barcode, Name, Quantity, ComboId
                         FROM tbproducts
                         ORDER BY Name",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.Text;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            list.Add(new TbProduct
+                            while (await rdr.ReadAsync())
                             {
-                                Id = MyMySql.GetInt32(rdr, "Id"),
-                                Code = MyMySql.GetString(rdr, "Code"),
-                                Barcode = MyMySql.GetString(rdr, "Barcode"),
-                                Name = MyMySql.GetString(rdr, "Name"),
-                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
-                                ComboId = MyMySql.GetInt32(rdr, "ComboId")
-                            });
+                                list.Add(new TbProduct
+                                {
+                                    Id = MyMySql.GetInt32(rdr, "Id"),
+                                    Code = MyMySql.GetString(rdr, "Code"),
+                                    Barcode = MyMySql.GetString(rdr, "Barcode"),
+                                    Name = MyMySql.GetString(rdr, "Name"),
+                                    Quantity = MyMySql.GetInt32(rdr, "Quantity"),
+                                    ComboId = MyMySql.GetInt32(rdr, "ComboId")
+                                });
+                            }
                         }
                     }
                 }
@@ -264,29 +276,31 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         SELECT Id, Code, Barcode, Name, Quantity
                         FROM tbproducts
                         WHERE (Name LIKE @keyword OR Code LIKE @keyword OR Barcode LIKE @keyword)
                         ORDER BY Name
                         LIMIT @limit",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
-                    cmd.Parameters.AddWithValue("@limit", limit);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@keyword", "%" + keyword + "%");
+                        cmd.Parameters.AddWithValue("@limit", limit);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            list.Add(new TbProduct
+                            while (await rdr.ReadAsync())
                             {
-                                Id = MyMySql.GetInt32(rdr, "Id"),
-                                Code = MyMySql.GetString(rdr, "Code"),
-                                Barcode = MyMySql.GetString(rdr, "Barcode"),
-                                Name = MyMySql.GetString(rdr, "Name"),
-                                Quantity = MyMySql.GetInt32(rdr, "Quantity")
-                            });
+                                list.Add(new TbProduct
+                                {
+                                    Id = MyMySql.GetInt32(rdr, "Id"),
+                                    Code = MyMySql.GetString(rdr, "Code"),
+                                    Barcode = MyMySql.GetString(rdr, "Barcode"),
+                                    Name = MyMySql.GetString(rdr, "Name"),
+                                    Quantity = MyMySql.GetInt32(rdr, "Quantity")
+                                });
+                            }
                         }
                     }
                 }
@@ -313,7 +327,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     await conn.OpenAsync();
 
                     // Load data từ tbproducts (sản phẩm kho)
-                    MySqlCommand cmdSelect = new MySqlCommand(@"
+                    using (MySqlCommand cmdSelect = new MySqlCommand(@"
                         SELECT Code, Barcode, Name, ComboId, CategoryId, BookCoverPrice,
                                Author, Translator, PublisherId, PublishingCompany, PublishingTime,
                                ProductLong, ProductWide, ProductHigh, ProductWeight,
@@ -322,51 +336,80 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                Discount, Language, Quantity, Date
                         FROM tbproducts
                         WHERE Id = @sanPhamKhoId",
-                        conn);
-                    cmdSelect.CommandType = CommandType.Text;
-                    cmdSelect.Parameters.AddWithValue("@sanPhamKhoId", sanPhamKhoId);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmdSelect.ExecuteReaderAsync())
+                        conn))
                     {
-                        if (!await rdr.ReadAsync())
+                        cmdSelect.CommandType = CommandType.Text;
+                        cmdSelect.Parameters.AddWithValue("@sanPhamKhoId", sanPhamKhoId);
+
+                        string code;
+                        string barcode;
+                        string name;
+                        int comboId;
+                        int categoryId;
+                        int bookCoverPrice;
+                        string author;
+                        string translator;
+                        int publisherId;
+                        string publishingCompany;
+                        int publishingTime;
+                        int productLong;
+                        int productWide;
+                        int productHigh;
+                        int productWeight;
+                        string positionInWarehouse;
+                        int? hardCover;
+                        int? minAge;
+                        int? maxAge;
+                        int? parentId;
+                        int? republish;
+                        string detail;
+                        int status;
+                        int? pageNumber;
+                        float discount;
+                        string language;
+                        int quantity;
+                        DateTime? date;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmdSelect.ExecuteReaderAsync())
                         {
-                            return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy sản phẩm kho");
+                            if (!await rdr.ReadAsync())
+                            {
+                                return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy sản phẩm kho");
+                            }
+
+                            // Đóng reader trước khi thực hiện UPDATE
+                            code = MyMySql.GetString(rdr, "Code");
+                            barcode = MyMySql.GetString(rdr, "Barcode");
+                            name = MyMySql.GetString(rdr, "Name");
+                            comboId = MyMySql.GetInt32(rdr, "ComboId");
+                            categoryId = MyMySql.GetInt32(rdr, "CategoryId");
+                            bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                            author = MyMySql.GetString(rdr, "Author");
+                            translator = MyMySql.GetString(rdr, "Translator");
+                            publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+                            publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
+                            publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
+                            productLong = MyMySql.GetInt32(rdr, "ProductLong");
+                            productWide = MyMySql.GetInt32(rdr, "ProductWide");
+                            productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
+                            productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
+                            positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
+                            hardCover = rdr.IsDBNull(rdr.GetOrdinal("HardCover")) ? (int?)null : MyMySql.GetInt32(rdr, "HardCover");
+                            minAge = rdr.IsDBNull(rdr.GetOrdinal("MinAge")) ? (int?)null : MyMySql.GetInt32(rdr, "MinAge");
+                            maxAge = rdr.IsDBNull(rdr.GetOrdinal("MaxAge")) ? (int?)null : MyMySql.GetInt32(rdr, "MaxAge");
+                            parentId = rdr.IsDBNull(rdr.GetOrdinal("ParentId")) ? (int?)null : MyMySql.GetInt32(rdr, "ParentId");
+                            republish = rdr.IsDBNull(rdr.GetOrdinal("Republish")) ? (int?)null : MyMySql.GetInt32(rdr, "Republish");
+                            detail = MyMySql.GetString(rdr, "Detail");
+                            status = MyMySql.GetInt32(rdr, "Status");
+                            pageNumber = rdr.IsDBNull(rdr.GetOrdinal("PageNumber")) ? (int?)null : MyMySql.GetInt32(rdr, "PageNumber");
+                            discount = (float)rdr.GetDouble(rdr.GetOrdinal("Discount"));
+                            language = MyMySql.GetString(rdr, "Language");
+                            quantity = MyMySql.GetInt32(rdr, "Quantity");
+                            date = rdr.IsDBNull(rdr.GetOrdinal("Date")) ? (DateTime?)null : MyMySql.GetDateTime(rdr, "Date");
                         }
 
-                        // Đóng reader trước khi thực hiện UPDATE
-                        string code = MyMySql.GetString(rdr, "Code");
-                        string barcode = MyMySql.GetString(rdr, "Barcode");
-                        string name = MyMySql.GetString(rdr, "Name");
-                        int comboId = MyMySql.GetInt32(rdr, "ComboId");
-                        int categoryId = MyMySql.GetInt32(rdr, "CategoryId");
-                        int bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                        string author = MyMySql.GetString(rdr, "Author");
-                        string translator = MyMySql.GetString(rdr, "Translator");
-                        int publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-                        string publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
-                        int publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
-                        int productLong = MyMySql.GetInt32(rdr, "ProductLong");
-                        int productWide = MyMySql.GetInt32(rdr, "ProductWide");
-                        int productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
-                        int productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
-                        string positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
-                        int? hardCover = rdr.IsDBNull(rdr.GetOrdinal("HardCover")) ? (int?)null : MyMySql.GetInt32(rdr, "HardCover");
-                        int? minAge = rdr.IsDBNull(rdr.GetOrdinal("MinAge")) ? (int?)null : MyMySql.GetInt32(rdr, "MinAge");
-                        int? maxAge = rdr.IsDBNull(rdr.GetOrdinal("MaxAge")) ? (int?)null : MyMySql.GetInt32(rdr, "MaxAge");
-                        int? parentId = rdr.IsDBNull(rdr.GetOrdinal("ParentId")) ? (int?)null : MyMySql.GetInt32(rdr, "ParentId");
-                        int? republish = rdr.IsDBNull(rdr.GetOrdinal("Republish")) ? (int?)null : MyMySql.GetInt32(rdr, "Republish");
-                        string detail = MyMySql.GetString(rdr, "Detail");
-                        int status = MyMySql.GetInt32(rdr, "Status");
-                        int? pageNumber = rdr.IsDBNull(rdr.GetOrdinal("PageNumber")) ? (int?)null : MyMySql.GetInt32(rdr, "PageNumber");
-                        float discount = (float)rdr.GetDouble(rdr.GetOrdinal("Discount"));
-                        string language = MyMySql.GetString(rdr, "Language");
-                        int quantity = MyMySql.GetInt32(rdr, "Quantity");
-                        DateTime? date = rdr.IsDBNull(rdr.GetOrdinal("Date")) ? (DateTime?)null : MyMySql.GetDateTime(rdr, "Date");
-
-                        rdr.Close();
-
                         // Update vào tb_san_pham (giữ nguyên Id, SoldQuantity, URL, SEOKeyword)
-                        MySqlCommand cmdUpdate = new MySqlCommand(@"
+                        using (MySqlCommand cmdUpdate = new MySqlCommand(@"
                             UPDATE tb_san_pham SET
                                 Code = @code,
                                 Barcode = @barcode,
@@ -397,44 +440,46 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                 Quantity = @quantity,
                                 Date = @date
                             WHERE Id = @sanPhamBanId",
-                            conn);
-                        cmdUpdate.CommandType = CommandType.Text;
-                        cmdUpdate.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
-                        cmdUpdate.Parameters.AddWithValue("@code", code ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@barcode", barcode ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@name", name);
-                        cmdUpdate.Parameters.AddWithValue("@comboId", comboId);
-                        cmdUpdate.Parameters.AddWithValue("@categoryId", categoryId);
-                        cmdUpdate.Parameters.AddWithValue("@bookCoverPrice", bookCoverPrice);
-                        cmdUpdate.Parameters.AddWithValue("@author", author ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@translator", translator ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@publisherId", publisherId);
-                        cmdUpdate.Parameters.AddWithValue("@publishingCompany", publishingCompany ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@publishingTime", publishingTime);
-                        cmdUpdate.Parameters.AddWithValue("@productLong", productLong);
-                        cmdUpdate.Parameters.AddWithValue("@productWide", productWide);
-                        cmdUpdate.Parameters.AddWithValue("@productHigh", productHigh);
-                        cmdUpdate.Parameters.AddWithValue("@productWeight", productWeight);
-                        cmdUpdate.Parameters.AddWithValue("@positionInWarehouse", positionInWarehouse ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@hardCover", hardCover ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@minAge", minAge ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@maxAge", maxAge ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@parentId", parentId ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@republish", republish ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@detail", detail ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@status", status);
-                        cmdUpdate.Parameters.AddWithValue("@pageNumber", pageNumber ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@discount", discount);
-                        cmdUpdate.Parameters.AddWithValue("@language", language ?? (object)DBNull.Value);
-                        cmdUpdate.Parameters.AddWithValue("@quantity", quantity);
-                        cmdUpdate.Parameters.AddWithValue("@date", date ?? (object)DBNull.Value);
-
-                        int rowsAffected = await cmdUpdate.ExecuteNonQueryAsync();
-                        if (rowsAffected > 0)
+                            conn))
                         {
-                            return new MySqlResultState(EMySqlResultState.OK, "Chép dữ liệu thành công");
+                            cmdUpdate.CommandType = CommandType.Text;
+                            cmdUpdate.Parameters.AddWithValue("@sanPhamBanId", sanPhamBanId);
+                            cmdUpdate.Parameters.AddWithValue("@code", code ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@barcode", barcode ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@name", name);
+                            cmdUpdate.Parameters.AddWithValue("@comboId", comboId);
+                            cmdUpdate.Parameters.AddWithValue("@categoryId", categoryId);
+                            cmdUpdate.Parameters.AddWithValue("@bookCoverPrice", bookCoverPrice);
+                            cmdUpdate.Parameters.AddWithValue("@author", author ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@translator", translator ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@publisherId", publisherId);
+                            cmdUpdate.Parameters.AddWithValue("@publishingCompany", publishingCompany ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@publishingTime", publishingTime);
+                            cmdUpdate.Parameters.AddWithValue("@productLong", productLong);
+                            cmdUpdate.Parameters.AddWithValue("@productWide", productWide);
+                            cmdUpdate.Parameters.AddWithValue("@productHigh", productHigh);
+                            cmdUpdate.Parameters.AddWithValue("@productWeight", productWeight);
+                            cmdUpdate.Parameters.AddWithValue("@positionInWarehouse", positionInWarehouse ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@hardCover", hardCover ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@minAge", minAge ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@maxAge", maxAge ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@parentId", parentId ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@republish", republish ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@detail", detail ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@status", status);
+                            cmdUpdate.Parameters.AddWithValue("@pageNumber", pageNumber ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@discount", discount);
+                            cmdUpdate.Parameters.AddWithValue("@language", language ?? (object)DBNull.Value);
+                            cmdUpdate.Parameters.AddWithValue("@quantity", quantity);
+                            cmdUpdate.Parameters.AddWithValue("@date", date ?? (object)DBNull.Value);
+
+                            int rowsAffected = await cmdUpdate.ExecuteNonQueryAsync();
+                            if (rowsAffected > 0)
+                            {
+                                return new MySqlResultState(EMySqlResultState.OK, "Chép dữ liệu thành công");
+                            }
+                            return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy sản phẩm bán để cập nhật");
                         }
-                        return new MySqlResultState(EMySqlResultState.ERROR, "Không tìm thấy sản phẩm bán để cập nhật");
                     }
                 }
                 catch (Exception ex)

@@ -87,16 +87,18 @@ namespace MVCPlayWithMe.Models
             int id = -1;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("AdministratorId");
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        id = rdr.GetInt32(idIndex);
+                        int idIndex = rdr.GetOrdinal("AdministratorId");
+                        while (await rdr.ReadAsync())
+                        {
+                            id = rdr.GetInt32(idIndex);
+                        }
                     }
                 }
             }
@@ -119,16 +121,18 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCookie_Administrator_Get_From_CookieIdentify", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("AdministratorId");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inAdministratorCookieIdentify", userCookieIdentify);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            id = rdr.GetInt32(idIndex);
+                            int idIndex = rdr.GetOrdinal("AdministratorId");
+                            while (await rdr.ReadAsync())
+                            {
+                                id = rdr.GetInt32(idIndex);
+                            }
                         }
                     }
                 }
@@ -152,24 +156,26 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Get_Admin_From_UserName", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inUserName", userName);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Get_Admin_From_UserName", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int emailIndex = rdr.GetOrdinal("Email");
-                        int sdtIndex = rdr.GetOrdinal("SDT");
-                        int privilegeIndex = rdr.GetOrdinal("Privilege");
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inUserName", userName);
 
-                        while (await rdr.ReadAsync())
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            administrator.id = rdr.GetInt32(idIndex);
-                            administrator.email = rdr.IsDBNull(emailIndex) ? string.Empty : rdr.GetString(emailIndex);
-                            administrator.sdt = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
-                            administrator.userName = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
-                            administrator.privilege = rdr.IsDBNull(privilegeIndex) ? -1 : rdr.GetInt32(privilegeIndex);
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int emailIndex = rdr.GetOrdinal("Email");
+                            int sdtIndex = rdr.GetOrdinal("SDT");
+                            int privilegeIndex = rdr.GetOrdinal("Privilege");
+
+                            while (await rdr.ReadAsync())
+                            {
+                                administrator.id = rdr.GetInt32(idIndex);
+                                administrator.email = rdr.IsDBNull(emailIndex) ? string.Empty : rdr.GetString(emailIndex);
+                                administrator.sdt = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
+                                administrator.userName = rdr.IsDBNull(sdtIndex) ? string.Empty : rdr.GetString(sdtIndex);
+                                administrator.privilege = rdr.IsDBNull(privilegeIndex) ? -1 : rdr.GetInt32(privilegeIndex);
+                            }
                         }
                     }
                 }
@@ -192,37 +198,39 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    cmd.Parameters.AddWithValue("@inEmail", userNameType == 1 ? userName : "");
-
-                    MySqlParameter paSalt = new MySqlParameter();
-                    paSalt.ParameterName = @"inSalt";
-                    paSalt.Size = Common.SHA256Size;
-                    paSalt.MySqlDbType = MySqlDbType.Binary;
-                    paSalt.Value = salt;
-                    cmd.Parameters.Add(paSalt);
-
-                    MySqlParameter paHash = new MySqlParameter();
-                    paHash.ParameterName = @"inHash";
-                    paHash.Size = Common.SHA256Size;
-                    paHash.MySqlDbType = MySqlDbType.Binary;
-                    paHash.Value = hash;
-                    cmd.Parameters.Add(paHash);
-
-                    cmd.Parameters.AddWithValue("@inSDT", userNameType == 2 ? userName : "");
-                    cmd.Parameters.AddWithValue("@inUserName", userNameType == 3 ? userName : "");
-                    cmd.Parameters.AddWithValue("@inPrivilege", privilege);
-
-                    MyMySql.AddOutParameters(cmd.Parameters);
-
-                    int lengthPara = cmd.Parameters.Count;
-                    await cmd.ExecuteNonQueryAsync();
-                    if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbAdministrator_Insert", conn))
                     {
-                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
-                        result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        cmd.Parameters.AddWithValue("@inEmail", userNameType == 1 ? userName : "");
+
+                        MySqlParameter paSalt = new MySqlParameter();
+                        paSalt.ParameterName = @"inSalt";
+                        paSalt.Size = Common.SHA256Size;
+                        paSalt.MySqlDbType = MySqlDbType.Binary;
+                        paSalt.Value = salt;
+                        cmd.Parameters.Add(paSalt);
+
+                        MySqlParameter paHash = new MySqlParameter();
+                        paHash.ParameterName = @"inHash";
+                        paHash.Size = Common.SHA256Size;
+                        paHash.MySqlDbType = MySqlDbType.Binary;
+                        paHash.Value = hash;
+                        cmd.Parameters.Add(paHash);
+
+                        cmd.Parameters.AddWithValue("@inSDT", userNameType == 2 ? userName : "");
+                        cmd.Parameters.AddWithValue("@inUserName", userNameType == 3 ? userName : "");
+                        cmd.Parameters.AddWithValue("@inPrivilege", privilege);
+
+                        MyMySql.AddOutParameters(cmd.Parameters);
+
+                        int lengthPara = cmd.Parameters.Count;
+                        await cmd.ExecuteNonQueryAsync();
+                        if ((EMySqlResultState)cmd.Parameters[lengthPara - 2].Value != EMySqlResultState.OK)
+                        {
+                            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                            result.Message = (string)cmd.Parameters[lengthPara - 1].Value;
+                        }
                     }
                 }
                 catch (Exception ex)

@@ -41,41 +41,43 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             try
             {
                 // ORDER BY MediaType DESC để đảm bảo rằng media type "video" sẽ được ưu tiên hiển thị trước media type "image" trong danh sách.
-                MySqlCommand cmd = new MySqlCommand(
+                using (MySqlCommand cmd = new MySqlCommand(
                     "SELECT * FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId ORDER BY MediaType DESC, DisplayOrder ASC",
-                    conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int sanPhamIdIndex = rdr.GetOrdinal("SanPhamId");
-                    int mediaTypeIndex = rdr.GetOrdinal("MediaType");
-                    int fileNameIndex = rdr.GetOrdinal("FileName");
-                    int titleIndex = rdr.GetOrdinal("Title");
-                    int altTextIndex = rdr.GetOrdinal("AltText");
-                    int descriptionIndex = rdr.GetOrdinal("Description");
-                    int posterImageIndex = rdr.GetOrdinal("PosterImage");
-                    int widthIndex = rdr.GetOrdinal("Width");
-                    int heightIndex = rdr.GetOrdinal("Height");
-                    int displayOrderIndex = rdr.GetOrdinal("DisplayOrder");
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        list.Add(new SanPhamMedia
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int sanPhamIdIndex = rdr.GetOrdinal("SanPhamId");
+                        int mediaTypeIndex = rdr.GetOrdinal("MediaType");
+                        int fileNameIndex = rdr.GetOrdinal("FileName");
+                        int titleIndex = rdr.GetOrdinal("Title");
+                        int altTextIndex = rdr.GetOrdinal("AltText");
+                        int descriptionIndex = rdr.GetOrdinal("Description");
+                        int posterImageIndex = rdr.GetOrdinal("PosterImage");
+                        int widthIndex = rdr.GetOrdinal("Width");
+                        int heightIndex = rdr.GetOrdinal("Height");
+                        int displayOrderIndex = rdr.GetOrdinal("DisplayOrder");
+                        while (await rdr.ReadAsync())
                         {
-                            Id = MyMySql.GetInt32(rdr, idIndex),
-                            SanPhamId = MyMySql.GetInt32(rdr, sanPhamIdIndex),
-                            MediaType = MyMySql.GetString(rdr, mediaTypeIndex),
-                            FileName = MyMySql.GetString(rdr, fileNameIndex),
-                            Title = MyMySql.GetString(rdr, titleIndex),
-                            AltText = MyMySql.GetString(rdr, altTextIndex),
-                            Description = MyMySql.GetString(rdr, descriptionIndex),
-                            PosterImage = MyMySql.GetString(rdr, posterImageIndex),
-                            Width = (uint)MyMySql.GetInt32(rdr, widthIndex),
-                            Height = (uint)MyMySql.GetInt32(rdr, heightIndex),
-                            DisplayOrder = MyMySql.GetInt32(rdr, displayOrderIndex)
-                        });
+                            list.Add(new SanPhamMedia
+                            {
+                                Id = MyMySql.GetInt32(rdr, idIndex),
+                                SanPhamId = MyMySql.GetInt32(rdr, sanPhamIdIndex),
+                                MediaType = MyMySql.GetString(rdr, mediaTypeIndex),
+                                FileName = MyMySql.GetString(rdr, fileNameIndex),
+                                Title = MyMySql.GetString(rdr, titleIndex),
+                                AltText = MyMySql.GetString(rdr, altTextIndex),
+                                Description = MyMySql.GetString(rdr, descriptionIndex),
+                                PosterImage = MyMySql.GetString(rdr, posterImageIndex),
+                                Width = (uint)MyMySql.GetInt32(rdr, widthIndex),
+                                Height = (uint)MyMySql.GetInt32(rdr, heightIndex),
+                                DisplayOrder = MyMySql.GetInt32(rdr, displayOrderIndex)
+                            });
+                        }
                     }
                 }
             }
@@ -143,30 +145,32 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         INSERT INTO tb_san_pham_media
                         (SanPhamId, MediaType, FileName, Title, AltText, Description, PosterImage, Width, Height, DisplayOrder)
                         VALUES
                         (@sanPhamId, @mediaType, @fileName, @title, @altText, @description, @posterImage, @width, @height, @displayOrder)",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamId", media.SanPhamId);
-                    cmd.Parameters.AddWithValue("@mediaType", media.MediaType ?? "image");
-                    cmd.Parameters.AddWithValue("@fileName", media.FileName);
-                    cmd.Parameters.AddWithValue("@title", media.Title ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@width", media.Width);
-                    cmd.Parameters.AddWithValue("@height", media.Height);
-                    cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, "Insert thành công");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamId", media.SanPhamId);
+                        cmd.Parameters.AddWithValue("@mediaType", media.MediaType ?? "image");
+                        cmd.Parameters.AddWithValue("@fileName", media.FileName);
+                        cmd.Parameters.AddWithValue("@title", media.Title ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@width", media.Width);
+                        cmd.Parameters.AddWithValue("@height", media.Height);
+                        cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Insert thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Insert thất bại");
                     }
-                    return new MySqlResultState(EMySqlResultState.ERROR, "Insert thất bại");
                 }
                 catch (Exception ex)
                 {
@@ -186,7 +190,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         UPDATE tb_san_pham_media
                         SET Title = @title,
                             AltText = @altText,
@@ -194,21 +198,23 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             PosterImage = @posterImage,
                             DisplayOrder = @displayOrder
                         WHERE Id = @id",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@id", media.Id);
-                    cmd.Parameters.AddWithValue("@title", media.Title ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, "Update thành công");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", media.Id);
+                        cmd.Parameters.AddWithValue("@title", media.Title ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Update thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Update thất bại - không tìm thấy record");
                     }
-                    return new MySqlResultState(EMySqlResultState.ERROR, "Update thất bại - không tìm thấy record");
                 }
                 catch (Exception ex)
                 {
@@ -228,18 +234,20 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
+                    using (MySqlCommand cmd = new MySqlCommand(
                         "DELETE FROM tb_san_pham_media WHERE Id = @id",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@id", id);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, "Delete thành công");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", id);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Delete thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Delete thất bại - không tìm thấy record");
                     }
-                    return new MySqlResultState(EMySqlResultState.ERROR, "Delete thất bại - không tìm thấy record");
                 }
                 catch (Exception ex)
                 {
@@ -259,14 +267,16 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
+                    using (MySqlCommand cmd = new MySqlCommand(
                         "DELETE FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+                        conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
 
-                    await cmd.ExecuteNonQueryAsync();
-                    return new MySqlResultState(EMySqlResultState.OK, "Delete thành công");
+                        await cmd.ExecuteNonQueryAsync();
+                        return new MySqlResultState(EMySqlResultState.OK, "Delete thành công");
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -286,22 +296,24 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(@"
+                    using (MySqlCommand cmd = new MySqlCommand(@"
                         UPDATE tb_san_pham_media
                         SET FileName = @newFileName
                         WHERE SanPhamId = @sanPhamId AND FileName = @oldFileName",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
-                    cmd.Parameters.AddWithValue("@oldFileName", oldFileName);
-                    cmd.Parameters.AddWithValue("@newFileName", newFileName);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, $"Updated {rowsAffected} record(s)");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+                        cmd.Parameters.AddWithValue("@oldFileName", oldFileName);
+                        cmd.Parameters.AddWithValue("@newFileName", newFileName);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, $"Updated {rowsAffected} record(s)");
+                        }
+                        return new MySqlResultState(EMySqlResultState.OK, "No metadata record found (OK - file đổi tên nhưng chưa có metadata)");
                     }
-                    return new MySqlResultState(EMySqlResultState.OK, "No metadata record found (OK - file đổi tên nhưng chưa có metadata)");
                 }
                 catch (Exception ex)
                 {
@@ -321,19 +333,21 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
+                    using (MySqlCommand cmd = new MySqlCommand(
                         "DELETE FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId AND FileName = @fileName",
-                        conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
-                    cmd.Parameters.AddWithValue("@fileName", fileName);
-
-                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
-                    if (rowsAffected > 0)
+                        conn))
                     {
-                        return new MySqlResultState(EMySqlResultState.OK, $"Deleted {rowsAffected} record(s)");
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+                        cmd.Parameters.AddWithValue("@fileName", fileName);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, $"Deleted {rowsAffected} record(s)");
+                        }
+                        return new MySqlResultState(EMySqlResultState.OK, "No metadata record found (OK - file xóa nhưng chưa có metadata)");
                     }
-                    return new MySqlResultState(EMySqlResultState.OK, "No metadata record found (OK - file xóa nhưng chưa có metadata)");
                 }
                 catch (Exception ex)
                 {

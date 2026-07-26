@@ -29,19 +29,21 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             ShopeeAuthen shopeeAuthen = new ShopeeAuthen();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen WHERE Id = 1", conn);
-                cmd.CommandType = CommandType.Text;
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("SELECT * FROM tbShopeeAuthen WHERE Id = 1", conn))
                 {
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        shopeeAuthen.shopId = MyMySql.GetString(rdr, "ShopId");
-                        shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
-                        shopeeAuthen.partnerKey = MyMySql.GetString(rdr, "PartnerKey");
-                        shopeeAuthen.code = MyMySql.GetString(rdr, "Code");
-                        shopeeAuthen.validAccessTokenTime = MyMySql.GetDateTime(rdr, "ValidAccessTokenTime");
-                        shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
-                        shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
+                        while (await rdr.ReadAsync())
+                        {
+                            shopeeAuthen.shopId = MyMySql.GetString(rdr, "ShopId");
+                            shopeeAuthen.partnerId = MyMySql.GetString(rdr, "PartnerId");
+                            shopeeAuthen.partnerKey = MyMySql.GetString(rdr, "PartnerKey");
+                            shopeeAuthen.code = MyMySql.GetString(rdr, "Code");
+                            shopeeAuthen.validAccessTokenTime = MyMySql.GetDateTime(rdr, "ValidAccessTokenTime");
+                            shopeeAuthen.shopeeToken.access_token = MyMySql.GetString(rdr, "AccessToken");
+                            shopeeAuthen.shopeeToken.refresh_token = MyMySql.GetString(rdr, "RefreshToken");
+                        }
                     }
                 }
             }

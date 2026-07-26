@@ -520,16 +520,18 @@ namespace MVCPlayWithMe.Controllers
                     List<int> listProId = new List<int>();
                     // Lấy id sản phẩm trong kho chưa có category Id (-1), trạng thái bình thường
                     {
-                        MySqlCommand cmd = new MySqlCommand(
+                        using (MySqlCommand cmd = new MySqlCommand(
                         @"SELECT Id FROM webplaywithme.tbproducts WHERE CategoryId = -1 AND Status <> 2 ORDER BY Id;",
-                    conn);
-                        cmd.CommandType = CommandType.Text;
-                        using (MySqlDataReader reader = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    conn))
                         {
-                            int idOrdinal = reader.GetOrdinal("Id");
-                            while (await reader.ReadAsync())
+                            cmd.CommandType = CommandType.Text;
+                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
-                                listProId.Add(reader.GetInt32(idOrdinal));
+                                int idOrdinal = reader.GetOrdinal("Id");
+                                while (await reader.ReadAsync())
+                                {
+                                    listProId.Add(reader.GetInt32(idOrdinal));
+                                }
                             }
                         }
                     }
@@ -537,16 +539,18 @@ namespace MVCPlayWithMe.Controllers
                     List<int> listTikiCategoryId = new List<int>();
                     // Lấy tiki category Id
                     {
-                        MySqlCommand cmd = new MySqlCommand(
+                        using (MySqlCommand cmd = new MySqlCommand(
                         @"SELECT TikiCategoryId FROM webplaywithme.tbcategory;",
-                    conn);
-                        cmd.CommandType = CommandType.Text;
-                        using (MySqlDataReader reader =(MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    conn))
                         {
-                            int tikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
-                            while (await reader.ReadAsync())
+                            cmd.CommandType = CommandType.Text;
+                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
-                                listTikiCategoryId.Add(reader.GetInt32(tikiCategoryIdOrdinal));
+                                int tikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
+                                while (await reader.ReadAsync())
+                                {
+                                    listTikiCategoryId.Add(reader.GetInt32(tikiCategoryIdOrdinal));
+                                }
                             }
                         }
                     }
@@ -560,7 +564,7 @@ namespace MVCPlayWithMe.Controllers
                         int tikiId = 0;
                         List<int> listProIdMapping = new List<int>();
                         {
-                            MySqlCommand cmd = new MySqlCommand(
+                            using (MySqlCommand cmd = new MySqlCommand(
                             @"SELECT tbtikiitem.TikiId, tbtikimapping.ProductId
                             FROM  tbtikiitem LEFT JOIN tbtikimapping ON tbtikiitem.Id = tbtikimapping.TikiItemId
                             WHERE tbtikiitem.Id =
@@ -569,20 +573,22 @@ namespace MVCPlayWithMe.Controllers
 	                            FROM tbtikimapping LEFT JOIN tbtikiitem ON tbtikimapping.TikiItemId = tbtikiitem.Id
 	                            WHERE tbtikimapping.ProductId = @inProductId AND tbtikiitem.Status = 1 LIMIT 1
                             ) ORDER BY tbtikimapping.ProductId;",
-                        conn);
-                            cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.AddWithValue("@inProductId", listProId[0]);
-                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        conn))
                             {
-                                int tikiIdOrdinal = reader.GetOrdinal("TikiId");
-                                int productIdOrdinal = reader.GetOrdinal("ProductId");
-                                while (await reader.ReadAsync())
+                                cmd.CommandType = CommandType.Text;
+                                cmd.Parameters.AddWithValue("@inProductId", listProId[0]);
+                                using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                                 {
-                                    if (tikiId == 0)
+                                    int tikiIdOrdinal = reader.GetOrdinal("TikiId");
+                                    int productIdOrdinal = reader.GetOrdinal("ProductId");
+                                    while (await reader.ReadAsync())
                                     {
-                                        tikiId = reader.GetInt32(tikiIdOrdinal);
+                                        if (tikiId == 0)
+                                        {
+                                            tikiId = reader.GetInt32(tikiIdOrdinal);
+                                        }
+                                        listProIdMapping.Add(reader.GetInt32(productIdOrdinal));
                                     }
-                                    listProIdMapping.Add(reader.GetInt32(productIdOrdinal));
                                 }
                             }
                         }
@@ -608,20 +614,22 @@ namespace MVCPlayWithMe.Controllers
 
                         // Cập nhật categoryId của tbProducts từ id sản phẩm và TikiCategoryId trong tbCategory
                         {
-                            MySqlCommand cmd = new MySqlCommand(
-                            @"st_tbProducts_Update_CategoryId_From_TikiCategoryId", conn);
-                            cmd.CommandType = CommandType.StoredProcedure;
-                            cmd.Parameters.AddWithValue("@in_productId", 0);
-                            cmd.Parameters.AddWithValue("@in_tikicategoryId", tikiCategoryIdTemp);
-                            foreach (var proId in listProIdMapping)
+                            using (MySqlCommand cmd = new MySqlCommand(
+                            @"st_tbProducts_Update_CategoryId_From_TikiCategoryId", conn))
                             {
-                                cmd.Parameters["@in_productId"].Value = proId;
-                                await cmd.ExecuteNonQueryAsync();
-                                // Loại bỏ sản phẩm ra khỏi list chờ cập nhật
-                                listProId.Remove(proId);
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.AddWithValue("@in_productId", 0);
+                                cmd.Parameters.AddWithValue("@in_tikicategoryId", tikiCategoryIdTemp);
+                                foreach (var proId in listProIdMapping)
+                                {
+                                    cmd.Parameters["@in_productId"].Value = proId;
+                                    await cmd.ExecuteNonQueryAsync();
+                                    // Loại bỏ sản phẩm ra khỏi list chờ cập nhật
+                                    listProId.Remove(proId);
+                                }
                             }
                         }
-                    }
+                        }
                 }
             }
             catch (Exception ex)
@@ -640,19 +648,21 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
+                    using (MySqlCommand cmd = new MySqlCommand(
                         @"UPDATE tb_lazada_model SET SellerSku = @inSellerSku WHERE TMDTLazadaModelId = @inTMDTLazadaModelId;",
-                    conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inSellerSku", "");
-                    cmd.Parameters.AddWithValue("@inTMDTLazadaModelId", 0L);
-                    foreach (var pro in ls)
+                    conn))
                     {
-                        foreach (var sku in pro.skus)
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inSellerSku", "");
+                        cmd.Parameters.AddWithValue("@inTMDTLazadaModelId", 0L);
+                        foreach (var pro in ls)
                         {
-                            cmd.Parameters[0].Value = sku.SellerSku;
-                            cmd.Parameters[1].Value = sku.SkuId;
-                            await cmd.ExecuteNonQueryAsync();
+                            foreach (var sku in pro.skus)
+                            {
+                                cmd.Parameters[0].Value = sku.SellerSku;
+                                cmd.Parameters[1].Value = sku.SkuId;
+                                await cmd.ExecuteNonQueryAsync();
+                            }
                         }
                     }
                 }

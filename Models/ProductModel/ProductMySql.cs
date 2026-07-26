@@ -947,9 +947,9 @@ namespace MVCPlayWithMe.Models.ProductModel
             MySqlResultState result = new MySqlResultState();
             try
             {
-                using (MySqlConnection connection = new MySqlConnection(MyMySql.connStr))
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    await connection.OpenAsync();
+                    await conn.OpenAsync();
 
                     // cache comboName -> comboId
                     var comboCache =
@@ -971,36 +971,38 @@ namespace MVCPlayWithMe.Models.ProductModel
                         }
                         else
                         {
+                            object comboIdResult;
                             // tìm combo trong DB
-                            var getComboCmd = new MySqlCommand(
+                            using (MySqlCommand getComboCmd = new MySqlCommand(
                                 @"SELECT id
                                 FROM tbCombo
                                 WHERE Name = @name
                                 LIMIT 1",
-                                connection);
-
-                            getComboCmd.Parameters.AddWithValue(
-                                "@name",
-                                item.comboName);
-
-                            var comboIdResult =
-                                await getComboCmd.ExecuteScalarAsync();
-
-                            // chưa có -> insert
-                            if (comboIdResult == null)
+                                conn))
                             {
-                                var insertComboCmd = new MySqlCommand(
-                                    @"INSERT INTO tbCombo(name)
-                                    VALUES(@name);
-                                    SELECT LAST_INSERT_ID();",
-                                    connection);
-
-                                insertComboCmd.Parameters.AddWithValue(
+                                getComboCmd.Parameters.AddWithValue(
                                     "@name",
                                     item.comboName);
 
-                                comboId = Convert.ToInt32(
-                                    await insertComboCmd.ExecuteScalarAsync());
+                                comboIdResult =
+                                    await getComboCmd.ExecuteScalarAsync();
+                            }
+                            // chưa có -> insert
+                            if (comboIdResult == null)
+                            {
+                                using (MySqlCommand insertComboCmd = new MySqlCommand(
+                                    @"INSERT INTO tbCombo(name)
+                                VALUES(@name);
+                                SELECT LAST_INSERT_ID();",
+                                    conn))
+                                {
+                                    insertComboCmd.Parameters.AddWithValue(
+                                        "@name",
+                                        item.comboName);
+
+                                    comboId = Convert.ToInt32(
+                                        await insertComboCmd.ExecuteScalarAsync());
+                                }
                             }
                             else
                             {
@@ -1011,7 +1013,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                         }
 
                         // insert product
-                        var insertProductCmd = new MySqlCommand(
+                        using (MySqlCommand insertProductCmd = new MySqlCommand(
                             @"INSERT INTO tbproducts
                             (
                                 Code,
@@ -1035,35 +1037,37 @@ namespace MVCPlayWithMe.Models.ProductModel
                                 CURDATE()
                             );
                             SELECT LAST_INSERT_ID();",
-                            connection);
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@name",
-                            item.productName);
+                            conn))
+                        {
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@name",
+                                item.productName);
 
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@comboId",
-                            comboId);
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@comboId",
+                                comboId);
 
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@bookCoverPrice",
-                            item.bookCoverPrice);
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@bookCoverPrice",
+                                item.bookCoverPrice);
 
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@publisherId",
-                            publisherId);
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@publisherId",
+                                publisherId);
 
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@quantity",
-                            item.quantity);
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@quantity",
+                                item.quantity);
 
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@discount",
-                            item.discount);
-                        insertProductCmd.Parameters.AddWithValue(
-                            "@code",
-                            item.code);
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@discount",
+                                item.discount);
+                            insertProductCmd.Parameters.AddWithValue(
+                                "@code",
+                                item.code);
 
-                        int productId = Convert.ToInt32(await insertProductCmd.ExecuteScalarAsync());
+                            int productId = Convert.ToInt32(await insertProductCmd.ExecuteScalarAsync());
+                        }
                     }
                 }
             }
@@ -1179,17 +1183,19 @@ namespace MVCPlayWithMe.Models.ProductModel
                 {
                     await conn.OpenAsync();
 
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Product", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
-                    cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
-                    cmd.Parameters.AddWithValue("@inName", searchParameter.name);
-                    cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
-                    //cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
-
-                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Product", conn))
                     {
-                        await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inPublisher", searchParameter.publisher);
+                        cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                        cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                        cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+                        //cmd.Parameters.AddWithValue("@inStatus", searchParameter.status);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+                        {
+                            await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        }
                     }
                 }
             }
@@ -1589,15 +1595,17 @@ namespace MVCPlayWithMe.Models.ProductModel
                 }
                 if (!string.IsNullOrEmpty(store))
                 {
-                    MySqlCommand cmd = new MySqlCommand(store, conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand(store, conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            ls.Add(rdr.GetInt32(idIndex));
+                            int idIndex = rdr.GetOrdinal("Id");
+                            while (await rdr.ReadAsync())
+                            {
+                                ls.Add(rdr.GetInt32(idIndex));
+                            }
                         }
                     }
                 }
@@ -2433,12 +2441,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Barcode", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inBarcode", barcode);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Barcode", conn))
                     {
-                        while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inBarcode", barcode);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); product = null; }
@@ -2454,12 +2464,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Code", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", code);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Code", conn))
                     {
-                        while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCode", code);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); product = null; }
@@ -2472,12 +2484,14 @@ namespace MVCPlayWithMe.Models.ProductModel
             Product product = null;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Id", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inId", id);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Id", conn))
                 {
-                    while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inId", id);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); product = null; }
@@ -2489,12 +2503,14 @@ namespace MVCPlayWithMe.Models.ProductModel
             int id = 0;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("SELECT TikiCategoryId FROM webplaywithme.tbcategory WHERE Id = @in_Id LIMIT 1;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@in_Id", categoryId);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("SELECT TikiCategoryId FROM webplaywithme.tbcategory WHERE Id = @in_Id LIMIT 1;", conn))
                 {
-                    while (await rdr.ReadAsync()) id = MyMySql.GetInt32(rdr, "TikiCategoryId");
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@in_Id", categoryId);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync()) id = MyMySql.GetInt32(rdr, "TikiCategoryId");
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); id = 0; }
@@ -2546,16 +2562,18 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Insert", conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                            if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
-                            else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                            while (await rdr.ReadAsync())
+                            {
+                                result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                                if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
+                                else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                            }
                         }
                     }
                 }
@@ -2777,16 +2795,18 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update", conn))
                     {
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                            if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
-                            else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                            while (await rdr.ReadAsync())
+                            {
+                                result.myAnything = MyMySql.GetInt32(rdr, "LastId");
+                                if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
+                                else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                            }
                         }
                     }
                 }
@@ -2816,10 +2836,12 @@ namespace MVCPlayWithMe.Models.ProductModel
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_From_Fahasa", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_From_Fahasa", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -2834,14 +2856,16 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Name", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Name", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int nameIndex = rdr.GetOrdinal("Name");
-                        while (await rdr.ReadAsync())
-                            ls.Add(new ProductIdName(rdr.GetInt32(idIndex), rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int nameIndex = rdr.GetOrdinal("Name");
+                            while (await rdr.ReadAsync())
+                                ls.Add(new ProductIdName(rdr.GetInt32(idIndex), rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2857,12 +2881,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_With_Name", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@productName", productName);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_With_Name", conn))
                     {
-                        while (await rdr.ReadAsync()) { id = MyMySql.GetInt32(rdr, "Id"); break; }
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@productName", productName);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync()) { id = MyMySql.GetInt32(rdr, "Id"); break; }
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2878,12 +2904,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Barcode", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Barcode", conn))
                     {
-                        int barcodeIndex = rdr.GetOrdinal("Barcode");
-                        while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int barcodeIndex = rdr.GetOrdinal("Barcode");
+                            while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2899,12 +2927,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_ComboName", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_ComboName", conn))
                     {
-                        int comboNameIndex = rdr.GetOrdinal("ComboName");
-                        while (await rdr.ReadAsync()) ls.Add(rdr.GetString(comboNameIndex));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int comboNameIndex = rdr.GetOrdinal("ComboName");
+                            while (await rdr.ReadAsync()) ls.Add(rdr.GetString(comboNameIndex));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2920,12 +2950,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Author", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Author", conn))
                     {
-                        int authorIndex = rdr.GetOrdinal("Author");
-                        while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(authorIndex) ? string.Empty : rdr.GetString(authorIndex));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int authorIndex = rdr.GetOrdinal("Author");
+                            while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(authorIndex) ? string.Empty : rdr.GetString(authorIndex));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2941,12 +2973,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Translator", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_Translator", conn))
                     {
-                        int translatorIndex = rdr.GetOrdinal("Translator");
-                        while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(translatorIndex) ? string.Empty : rdr.GetString(translatorIndex));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int translatorIndex = rdr.GetOrdinal("Translator");
+                            while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(translatorIndex) ? string.Empty : rdr.GetString(translatorIndex));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2962,12 +2996,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_PublishingCompany", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_All_PublishingCompany", conn))
                     {
-                        int publishingCompanyIndex = rdr.GetOrdinal("PublishingCompany");
-                        while (await rdr.ReadAsync()) ls.Add(rdr.GetString(publishingCompanyIndex));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int publishingCompanyIndex = rdr.GetOrdinal("PublishingCompany");
+                            while (await rdr.ReadAsync()) ls.Add(rdr.GetString(publishingCompanyIndex));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -2983,13 +3019,15 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Difference_INT_Value", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inType", inType);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Difference_INT_Value", conn))
                     {
-                        int difValueIndex = rdr.GetOrdinal("difValue");
-                        while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(difValueIndex) ? 0 : rdr.GetInt32(difValueIndex));
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inType", inType);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int difValueIndex = rdr.GetOrdinal("difValue");
+                            while (await rdr.ReadAsync()) ls.Add(rdr.IsDBNull(difValueIndex) ? 0 : rdr.GetInt32(difValueIndex));
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -3005,32 +3043,34 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Id_Code_Barcode_Name_BookCoverPrice_All", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Id_Code_Barcode_Name_BookCoverPrice_All", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int codeIndex = rdr.GetOrdinal("Code");
-                        int barcodeIndex = rdr.GetOrdinal("Barcode");
-                        int nameIndex = rdr.GetOrdinal("Name");
-                        int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
-                        int comboIdIndex = rdr.GetOrdinal("ComboId");
-                        int comboCodeIndex = rdr.GetOrdinal("ComboCode");
-                        int comboNameIndex = rdr.GetOrdinal("ComboName");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            Product product = new Product();
-                            product.id = rdr.GetInt32(idIndex);
-                            product.code = rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex);
-                            product.barcode = rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex);
-                            product.name = rdr.GetString(nameIndex);
-                            product.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
-                            product.comboId = rdr.GetInt32(comboIdIndex);
-                            product.comboCode = rdr.IsDBNull(comboCodeIndex) ? string.Empty : rdr.GetString(comboCodeIndex);
-                            product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
-                            product.SetFirstSrcImage();
-                            ls.Add(product);
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int codeIndex = rdr.GetOrdinal("Code");
+                            int barcodeIndex = rdr.GetOrdinal("Barcode");
+                            int nameIndex = rdr.GetOrdinal("Name");
+                            int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
+                            int comboIdIndex = rdr.GetOrdinal("ComboId");
+                            int comboCodeIndex = rdr.GetOrdinal("ComboCode");
+                            int comboNameIndex = rdr.GetOrdinal("ComboName");
+                            while (await rdr.ReadAsync())
+                            {
+                                Product product = new Product();
+                                product.id = rdr.GetInt32(idIndex);
+                                product.code = rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex);
+                                product.barcode = rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex);
+                                product.name = rdr.GetString(nameIndex);
+                                product.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
+                                product.comboId = rdr.GetInt32(comboIdIndex);
+                                product.comboCode = rdr.IsDBNull(comboCodeIndex) ? string.Empty : rdr.GetString(comboCodeIndex);
+                                product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
+                                product.SetFirstSrcImage();
+                                ls.Add(product);
+                            }
                         }
                     }
                 }
@@ -3072,33 +3112,35 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbImport_Select", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inFromDate", fromDate);
-                    cmd.Parameters.AddWithValue("@inToDate", toDate);
-                    cmd.Parameters.AddWithValue("@inPublisher", publisher);
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbImport_Select", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int productIdIndex = rdr.GetOrdinal("ProductId");
-                        int productNameIndex = rdr.GetOrdinal("Name");
-                        int priceIndex = rdr.GetOrdinal("Price");
-                        int quantityIndex = rdr.GetOrdinal("Quantity");
-                        int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
-                        int dateImportIndex = rdr.GetOrdinal("Date");
-                        int discountIndex = rdr.GetOrdinal("Discount");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inFromDate", fromDate);
+                        cmd.Parameters.AddWithValue("@inToDate", toDate);
+                        cmd.Parameters.AddWithValue("@inPublisher", publisher);
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            Import imp = new Import();
-                            imp.id = rdr.GetInt32(idIndex);
-                            imp.productId = rdr.GetInt32(productIdIndex);
-                            imp.productName = rdr.GetString(productNameIndex);
-                            imp.price = rdr.GetInt32(priceIndex);
-                            imp.quantity = rdr.GetInt32(quantityIndex);
-                            imp.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
-                            imp.dateImport = rdr.GetString(dateImportIndex);
-                            imp.discount = rdr.GetFloat(discountIndex);
-                            ls.Add(imp);
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int productIdIndex = rdr.GetOrdinal("ProductId");
+                            int productNameIndex = rdr.GetOrdinal("Name");
+                            int priceIndex = rdr.GetOrdinal("Price");
+                            int quantityIndex = rdr.GetOrdinal("Quantity");
+                            int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
+                            int dateImportIndex = rdr.GetOrdinal("Date");
+                            int discountIndex = rdr.GetOrdinal("Discount");
+                            while (await rdr.ReadAsync())
+                            {
+                                Import imp = new Import();
+                                imp.id = rdr.GetInt32(idIndex);
+                                imp.productId = rdr.GetInt32(productIdIndex);
+                                imp.productName = rdr.GetString(productNameIndex);
+                                imp.price = rdr.GetInt32(priceIndex);
+                                imp.quantity = rdr.GetInt32(quantityIndex);
+                                imp.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
+                                imp.dateImport = rdr.GetString(dateImportIndex);
+                                imp.discount = rdr.GetFloat(discountIndex);
+                                ls.Add(imp);
+                            }
                         }
                     }
                 }
@@ -3121,16 +3163,18 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbImport_Update", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddRange(paras);
-                    foreach (var obj in ls)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbImport_Update", conn))
                     {
-                        paras[0].Value = obj.id;
-                        paras[1].Value = obj.price;
-                        paras[2].Value = obj.discount;
-                        await cmd.ExecuteNonQueryAsync();
-                        result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddRange(paras);
+                        foreach (var obj in ls)
+                        {
+                            paras[0].Value = obj.id;
+                            paras[1].Value = obj.price;
+                            paras[2].Value = obj.discount;
+                            await cmd.ExecuteNonQueryAsync();
+                            result.State = (EMySqlResultState)cmd.Parameters[lengthPara - 2].Value;
+                        }
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -3146,18 +3190,20 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", orderId);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
-                    foreach (var im in ls)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert", conn))
                     {
-                        if (im.quantity == 0) continue;
-                        cmd.Parameters[2].Value = im.productId;
-                        cmd.Parameters[3].Value = status == ECommerceOrderStatus.RETURNED ? im.quantity * -1 : im.quantity;
-                        await cmd.ExecuteNonQueryAsync();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inCode", orderId);
+                        cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                        cmd.Parameters.AddWithValue("@inProductId", 0);
+                        cmd.Parameters.AddWithValue("@inQuantity", 0);
+                        foreach (var im in ls)
+                        {
+                            if (im.quantity == 0) continue;
+                            cmd.Parameters[2].Value = im.productId;
+                            cmd.Parameters[3].Value = status == ECommerceOrderStatus.RETURNED ? im.quantity * -1 : im.quantity;
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, resultState); }
@@ -3184,24 +3230,26 @@ namespace MVCPlayWithMe.Models.ProductModel
             List<Product> ls = new List<Product>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_For_Mapping", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
-                cmd.Parameters.AddWithValue("@inName", searchParameter.name);
-                cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_For_Mapping", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int nameIndex = rdr.GetOrdinal("Name");
-                    int statusIndex = rdr.GetOrdinal("Status");
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inCodeOrBarcode", searchParameter.codeOrBarcode);
+                    cmd.Parameters.AddWithValue("@inName", searchParameter.name);
+                    cmd.Parameters.AddWithValue("@inCombo", searchParameter.combo);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        Product product = new Product();
-                        product.id = rdr.GetInt32(idIndex);
-                        product.name = rdr.GetString(nameIndex);
-                        product.status = rdr.GetInt32(statusIndex);
-                        product.SetFirstSrcImage();
-                        ls.Add(product);
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int statusIndex = rdr.GetOrdinal("Status");
+                        while (await rdr.ReadAsync())
+                        {
+                            Product product = new Product();
+                            product.id = rdr.GetInt32(idIndex);
+                            product.name = rdr.GetString(nameIndex);
+                            product.status = rdr.GetInt32(statusIndex);
+                            product.SetFirstSrcImage();
+                            ls.Add(product);
+                        }
                     }
                 }
             }
@@ -3214,26 +3262,28 @@ namespace MVCPlayWithMe.Models.ProductModel
             List<Product> ls = new List<Product>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Get_Simple_Combo_All", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Get_Simple_Combo_All", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int nameIndex = rdr.GetOrdinal("Name");
-                    int comboIdIndex = rdr.GetOrdinal("ComboId");
-                    int comboNameIndex = rdr.GetOrdinal("ComboName");
-                    int categoryIdIndex = rdr.GetOrdinal("CategoryId");
-                    int categoryNameIndex = rdr.GetOrdinal("CategoryName");
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        Product product = new Product();
-                        product.id = rdr.GetInt32(idIndex);
-                        product.name = rdr.GetString(nameIndex);
-                        product.comboId = rdr.GetInt32(comboIdIndex);
-                        product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
-                        product.categoryId = rdr.GetInt32(categoryIdIndex);
-                        product.categoryName = rdr.IsDBNull(categoryNameIndex) ? string.Empty : rdr.GetString(categoryNameIndex);
-                        ls.Add(product);
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int comboIdIndex = rdr.GetOrdinal("ComboId");
+                        int comboNameIndex = rdr.GetOrdinal("ComboName");
+                        int categoryIdIndex = rdr.GetOrdinal("CategoryId");
+                        int categoryNameIndex = rdr.GetOrdinal("CategoryName");
+                        while (await rdr.ReadAsync())
+                        {
+                            Product product = new Product();
+                            product.id = rdr.GetInt32(idIndex);
+                            product.name = rdr.GetString(nameIndex);
+                            product.comboId = rdr.GetInt32(comboIdIndex);
+                            product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);
+                            product.categoryId = rdr.GetInt32(categoryIdIndex);
+                            product.categoryName = rdr.IsDBNull(categoryNameIndex) ? string.Empty : rdr.GetString(categoryNameIndex);
+                            ls.Add(product);
+                        }
                     }
                 }
             }
@@ -3246,23 +3296,25 @@ namespace MVCPlayWithMe.Models.ProductModel
             List<Product> ls = new List<Product>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_From_TMDT_Name_For_Mapping", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTItemName", tmdtItemName);
-                cmd.Parameters.AddWithValue("@inTMDTModelName", tmdtModelName);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_From_TMDT_Name_For_Mapping", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int nameIndex = rdr.GetOrdinal("Name");
-                    int statusIndex = rdr.GetOrdinal("Status");
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTItemName", tmdtItemName);
+                    cmd.Parameters.AddWithValue("@inTMDTModelName", tmdtModelName);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        Product product = new Product();
-                        product.id = rdr.GetInt32(idIndex);
-                        product.name = rdr.GetString(nameIndex);
-                        product.status = rdr.GetInt32(statusIndex);
-                        product.SetFirstSrcImage();
-                        ls.Add(product);
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int statusIndex = rdr.GetOrdinal("Status");
+                        while (await rdr.ReadAsync())
+                        {
+                            Product product = new Product();
+                            product.id = rdr.GetInt32(idIndex);
+                            product.name = rdr.GetString(nameIndex);
+                            product.status = rdr.GetInt32(statusIndex);
+                            product.SetFirstSrcImage();
+                            ls.Add(product);
+                        }
                     }
                 }
             }
@@ -3297,11 +3349,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inQuantity", quantity);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inQuantity", quantity);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3317,15 +3371,17 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
-                    for (int i = 0; i < lsId.Count; i++)
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn))
                     {
-                        cmd.Parameters["@inId"].Value = lsId[i];
-                        cmd.Parameters["@inQuantity"].Value = lsQuantity[i];
-                        await cmd.ExecuteNonQueryAsync();
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", 0);
+                        cmd.Parameters.AddWithValue("@inQuantity", 0);
+                        for (int i = 0; i < lsId.Count; i++)
+                        {
+                            cmd.Parameters["@inId"].Value = lsId[i];
+                            cmd.Parameters["@inQuantity"].Value = lsQuantity[i];
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -3350,11 +3406,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbproducts SET Detail = @inDetail WHERE Id = @inId;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inDetail", detail);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbproducts SET Detail = @inDetail WHERE Id = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inDetail", detail);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -3369,11 +3427,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_BookeCoverPrice", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_BookeCoverPrice", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3388,11 +3448,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `Discount` = @inDiscount WHERE `Id` = @inId;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inDiscount", discount);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `Discount` = @inDiscount WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inDiscount", discount);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3407,11 +3469,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_PositionInWarehouse", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inpositionInWarehouse", positionInWarehouse);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_PositionInWarehouse", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inpositionInWarehouse", positionInWarehouse);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3426,11 +3490,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Status", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inStatus", statusOfProduct);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Status", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inStatus", statusOfProduct);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3445,11 +3511,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_ComboId", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inComboId", comboId);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_ComboId", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inComboId", comboId);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3464,11 +3532,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_CategoryId", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_CategoryId", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3483,11 +3553,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_PublisherId", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_PublisherId", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3502,11 +3574,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `PublishingCompany` = @inPublishingCompany WHERE `Id` = @inId;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `PublishingCompany` = @inPublishingCompany WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3521,11 +3595,13 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `Language` = @inLanguage WHERE `Id` = @inId;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inId", id);
-                    cmd.Parameters.AddWithValue("@inLanguage", language);
-                    await cmd.ExecuteNonQueryAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `Language` = @inLanguage WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inLanguage", language);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -3540,21 +3616,23 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbNeedUpdateQuantity_Get_List", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbNeedUpdateQuantity_Get_List", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int nameIndex = rdr.GetOrdinal("Name");
-                        int quantityIndex = rdr.GetOrdinal("Quantity");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            Product pro = new Product();
-                            pro.id = rdr.GetInt32(idIndex);
-                            pro.name = rdr.GetString(nameIndex);
-                            pro.quantity = rdr.GetInt32(quantityIndex);
-                            pro.SetFirstSrcImage();
-                            ls.Add(pro);
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int nameIndex = rdr.GetOrdinal("Name");
+                            int quantityIndex = rdr.GetOrdinal("Quantity");
+                            while (await rdr.ReadAsync())
+                            {
+                                Product pro = new Product();
+                                pro.id = rdr.GetInt32(idIndex);
+                                pro.name = rdr.GetString(nameIndex);
+                                pro.quantity = rdr.GetInt32(quantityIndex);
+                                pro.SetFirstSrcImage();
+                                ls.Add(pro);
+                            }
                         }
                     }
                 }
@@ -3570,13 +3648,15 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    foreach (int id in listProId)
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn))
                     {
-                        cmd.Parameters[0].Value = id;
-                        await cmd.ExecuteNonQueryAsync();
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inProductId", 0);
+                        foreach (int id in listProId)
+                        {
+                            cmd.Parameters[0].Value = id;
+                            await cmd.ExecuteNonQueryAsync();
+                        }
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -3587,13 +3667,15 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inProductId", 0);
-                foreach (int id in listProId)
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn))
                 {
-                    cmd.Parameters[0].Value = id;
-                    await cmd.ExecuteNonQueryAsync();
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inProductId", 0);
+                    foreach (int id in listProId)
+                    {
+                        cmd.Parameters[0].Value = id;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -3604,12 +3686,14 @@ namespace MVCPlayWithMe.Models.ProductModel
             List<int> listProductId = new List<int>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `Status`=1;", conn);
-                cmd.CommandType = CommandType.Text;
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `Status`=1;", conn))
                 {
-                    int productIdIndex = rdr.GetOrdinal("ProductId");
-                    while (await rdr.ReadAsync()) listProductId.Add(rdr.GetInt32(productIdIndex));
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int productIdIndex = rdr.GetOrdinal("ProductId");
+                        while (await rdr.ReadAsync()) listProductId.Add(rdr.GetInt32(productIdIndex));
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); listProductId.Clear(); }
@@ -3620,11 +3704,13 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeItem SET Image = @inImage WHERE TMDTShopeeItemId=@inTMDTShopeeItemId;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inImage", imageSrc);
-                cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", TMDTShopeeItemId);
-                await cmd.ExecuteNonQueryAsync();
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeItem SET Image = @inImage WHERE TMDTShopeeItemId=@inTMDTShopeeItemId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inImage", imageSrc);
+                    cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", TMDTShopeeItemId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
         }
@@ -3633,11 +3719,13 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeModel SET Image = @inImage WHERE TMDTShopeeModelId=@inTMDTShopeeModelId;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inImage", imageSrc);
-                cmd.Parameters.AddWithValue("@inTMDTShopeeModelId", TMDTShopeeModelId);
-                await cmd.ExecuteNonQueryAsync();
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbShopeeModel SET Image = @inImage WHERE TMDTShopeeModelId=@inTMDTShopeeModelId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inImage", imageSrc);
+                    cmd.Parameters.AddWithValue("@inTMDTShopeeModelId", TMDTShopeeModelId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
         }
@@ -3646,11 +3734,13 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             try
             {
-                MySqlCommand cmd = new MySqlCommand("UPDATE tbTikiItem SET Image = @inImage WHERE TikiId=@inTikiId;", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inImage", imageSrc);
-                cmd.Parameters.AddWithValue("@inTikiId", TikiId);
-                await cmd.ExecuteNonQueryAsync();
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbTikiItem SET Image = @inImage WHERE TikiId=@inTikiId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inImage", imageSrc);
+                    cmd.Parameters.AddWithValue("@inTikiId", TikiId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
         }
@@ -3660,14 +3750,16 @@ namespace MVCPlayWithMe.Models.ProductModel
             int quantity = 0;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inItemId", itemId);
-                cmd.Parameters.AddWithValue("@inModelId", modelId);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Get_Quantity", conn))
                 {
-                    int quantityIndex = rdr.GetOrdinal("Quantity");
-                    while (await rdr.ReadAsync()) quantity = rdr.GetInt32(quantityIndex);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inItemId", itemId);
+                    cmd.Parameters.AddWithValue("@inModelId", modelId);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int quantityIndex = rdr.GetOrdinal("Quantity");
+                        while (await rdr.ReadAsync()) quantity = rdr.GetInt32(quantityIndex);
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); quantity = 0; }
@@ -3679,14 +3771,16 @@ namespace MVCPlayWithMe.Models.ProductModel
             int quantity = 0;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbLazadaModel_Get_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inItemId", itemId);
-                cmd.Parameters.AddWithValue("@inModelId", modelId);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbLazadaModel_Get_Quantity", conn))
                 {
-                    int quantityIndex = rdr.GetOrdinal("Quantity");
-                    while (await rdr.ReadAsync()) quantity = rdr.GetInt32(quantityIndex);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inItemId", itemId);
+                    cmd.Parameters.AddWithValue("@inModelId", modelId);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int quantityIndex = rdr.GetOrdinal("Quantity");
+                        while (await rdr.ReadAsync()) quantity = rdr.GetInt32(quantityIndex);
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); quantity = 0; }
@@ -3698,13 +3792,15 @@ namespace MVCPlayWithMe.Models.ProductModel
             int quantity = 0;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Quantity", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-                cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Quantity", conn))
                 {
-                    int quantityIndex = rdr.GetOrdinal("Quantity");
-                    while (await rdr.ReadAsync()) quantity = rdr.GetInt32(quantityIndex);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTMDTTikiItemId", itemId);
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int quantityIndex = rdr.GetOrdinal("Quantity");
+                        while (await rdr.ReadAsync()) quantity = rdr.GetInt32(quantityIndex);
+                    }
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); quantity = 0; }

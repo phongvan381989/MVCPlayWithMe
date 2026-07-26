@@ -56,24 +56,26 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCategory_Select_All", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCategory_Select_All", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int nameIndex = rdr.GetOrdinal("Name");
-                        int tikiIndex = rdr.GetOrdinal("TikiCategoryId");
-                        int shopeeIndex = rdr.GetOrdinal("ShopeeCategoryId");
-                        int lazadaIndex = rdr.GetOrdinal("LazadaCategoryId");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            Category cate = new Category(rdr.GetInt32(idIndex),
-                                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex));
-                            cate.tikiCategoryId = rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex);
-                            cate.shopeeCategoryId = rdr.IsDBNull(shopeeIndex) ? -1 : rdr.GetInt64(shopeeIndex);
-                            cate.lazadaCategoryId = rdr.IsDBNull(lazadaIndex) ? -1 : rdr.GetInt64(lazadaIndex);
-                            ls.Add(cate);
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int nameIndex = rdr.GetOrdinal("Name");
+                            int tikiIndex = rdr.GetOrdinal("TikiCategoryId");
+                            int shopeeIndex = rdr.GetOrdinal("ShopeeCategoryId");
+                            int lazadaIndex = rdr.GetOrdinal("LazadaCategoryId");
+                            while (await rdr.ReadAsync())
+                            {
+                                Category cate = new Category(rdr.GetInt32(idIndex),
+                                    rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex));
+                                cate.tikiCategoryId = rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex);
+                                cate.shopeeCategoryId = rdr.IsDBNull(shopeeIndex) ? -1 : rdr.GetInt64(shopeeIndex);
+                                cate.lazadaCategoryId = rdr.IsDBNull(lazadaIndex) ? -1 : rdr.GetInt64(lazadaIndex);
+                                ls.Add(cate);
+                            }
                         }
                     }
                 }
@@ -91,19 +93,21 @@ namespace MVCPlayWithMe.Models
             Category category = null;
             try
             {
-                MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbCategory WHERE `Id` = @inId", conn);
-                cmd.CommandType = CommandType.Text;
-                cmd.Parameters.AddWithValue("@inId", id);
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("SELECT * FROM webplaywithme.tbCategory WHERE `Id` = @inId", conn))
                 {
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inId", id);
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        category = new Category(MyMySql.GetInt32(rdr, "Id"),
-                            MyMySql.GetString(rdr, "Name"));
-                        category.tikiCategoryId = MyMySql.GetInt32(rdr, "TikiCategoryId");
-                        category.shopeeCategoryId = MyMySql.GetInt64(rdr, "ShopeeCategoryId");
-                        category.lazadaCategoryId = MyMySql.GetInt64(rdr, "LazadaCategoryId");
+                        while (await rdr.ReadAsync())
+                        {
+                            category = new Category(MyMySql.GetInt32(rdr, "Id"),
+                                MyMySql.GetString(rdr, "Name"));
+                            category.tikiCategoryId = MyMySql.GetInt32(rdr, "TikiCategoryId");
+                            category.shopeeCategoryId = MyMySql.GetInt64(rdr, "ShopeeCategoryId");
+                            category.lazadaCategoryId = MyMySql.GetInt64(rdr, "LazadaCategoryId");
+                        }
                     }
                 }
             }

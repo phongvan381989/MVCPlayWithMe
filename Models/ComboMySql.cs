@@ -88,19 +88,21 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn))
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int nameIndex = rdr.GetOrdinal("Name");
-                        int codeIndex = rdr.GetOrdinal("Code");
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            ls.Add(new Combo(rdr.GetInt32(idIndex),
-                                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
-                                rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
+                            int idIndex = rdr.GetOrdinal("Id");
+                            int nameIndex = rdr.GetOrdinal("Name");
+                            int codeIndex = rdr.GetOrdinal("Code");
+                            while (await rdr.ReadAsync())
+                            {
+                                ls.Add(new Combo(rdr.GetInt32(idIndex),
+                                    rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
+                                    rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
+                            }
                         }
                     }
                 }
@@ -117,19 +119,21 @@ namespace MVCPlayWithMe.Models
             List<Combo> ls = new List<Combo>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
-
-                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                using (MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn))
                 {
-                    int idIndex = rdr.GetOrdinal("Id");
-                    int nameIndex = rdr.GetOrdinal("Name");
-                    int codeIndex = rdr.GetOrdinal("Code");
-                    while (await rdr.ReadAsync())
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        ls.Add(new Combo(rdr.GetInt32(idIndex),
-                            rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
-                            rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int codeIndex = rdr.GetOrdinal("Code");
+                        while (await rdr.ReadAsync())
+                        {
+                            ls.Add(new Combo(rdr.GetInt32(idIndex),
+                                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
+                                rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
+                        }
                     }
                 }
             }
@@ -145,8 +149,9 @@ namespace MVCPlayWithMe.Models
             List<Combo> ls = new List<Combo>();
             try
             {
-                MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All_Include_Simple_Product", conn);
-                cmd.CommandType = CommandType.StoredProcedure;
+                using (MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All_Include_Simple_Product", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
 
                 using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
@@ -174,6 +179,7 @@ namespace MVCPlayWithMe.Models
                         combo.products.Add(new Product(rdr.GetInt32(productIdIndex), rdr.GetString(productNameIndex)));
                     }
                 }
+                }
             }
             catch (Exception ex)
             {
@@ -190,9 +196,10 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_From_Id", conn);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_From_Id", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inId", id);
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
@@ -238,6 +245,7 @@ namespace MVCPlayWithMe.Models
                                 combo.products.Add(product);
                             }
                         }
+                    }
                     }
                 }
                 catch (Exception ex)

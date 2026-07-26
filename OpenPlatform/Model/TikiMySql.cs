@@ -788,18 +788,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             string sn = string.Empty;
             string trackingNumber = string.Empty;
-            MySqlCommand cmd = new MySqlCommand(
-                "SELECT `Code`, `ShipCode` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
-            cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
-            cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
-            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+            using (MySqlCommand cmd = new MySqlCommand(
+                "SELECT `Code`, `ShipCode` FROM webplaywithme.tbecommerceorder WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn))
             {
-                while (await rdr.ReadAsync())
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
+                cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    sn = MyMySql.GetString(rdr, "Code");
-                    trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    while (await rdr.ReadAsync())
+                    {
+                        sn = MyMySql.GetString(rdr, "Code");
+                        trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    }
                 }
             }
             return (sn, trackingNumber);
@@ -812,18 +814,20 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             string sn = string.Empty;
             string trackingNumber = string.Empty;
-            MySqlCommand cmd = new MySqlCommand(
-                "SELECT `Code`, `ShipCode` FROM webplaywithme.tb_ecommerce_booking WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn);
-            cmd.CommandType = CommandType.Text;
-            cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
-            cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
-            cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
-            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+            using (MySqlCommand cmd = new MySqlCommand(
+                "SELECT `Code`, `ShipCode` FROM webplaywithme.tb_ecommerce_booking WHERE (`Code` = @inCode OR `ShipCode` = @inShipCode) AND `ECommmerce` = @inECommmerce ORDER BY `ShipCode` DESC LIMIT 1", conn))
             {
-                while (await rdr.ReadAsync())
+                cmd.CommandType = CommandType.Text;
+                cmd.Parameters.AddWithValue("@inCode", sn_trackingNumber);
+                cmd.Parameters.AddWithValue("@inShipCode", sn_trackingNumber);
+                cmd.Parameters.AddWithValue("@inECommmerce", (int)type);
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    sn = MyMySql.GetString(rdr, "Code");
-                    trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    while (await rdr.ReadAsync())
+                    {
+                        sn = MyMySql.GetString(rdr, "Code");
+                        trackingNumber = MyMySql.GetString(rdr, "ShipCode");
+                    }
                 }
             }
             return (sn, trackingNumber);

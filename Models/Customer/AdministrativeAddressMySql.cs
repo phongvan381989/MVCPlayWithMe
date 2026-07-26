@@ -18,28 +18,30 @@ namespace MVCPlayWithMe.Models
                 try
                 {
                     await conn.OpenAsync();
-                    MySqlCommand cmd = new MySqlCommand(
-                        @"SELECT a.ProvinceId, p.Name, a.SubDistrict FROM tbadministrativeaddress AS a 
-                        LEFT JOIN tbaddressprovince AS p ON a.ProvinceId = p.Id ORDER BY a.ProvinceId;", conn);
-                    cmd.CommandType = CommandType.Text;
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        @"SELECT a.ProvinceId, p.Name, a.SubDistrict FROM tbadministrativeaddress AS a
+                        LEFT JOIN tbaddressprovince AS p ON a.ProvinceId = p.Id ORDER BY a.ProvinceId;", conn))
                     {
-                        int ProvinceIdIndex = rdr.GetOrdinal("ProvinceId");
-                        int NameIndex = rdr.GetOrdinal("Name");
-                        int SubDistrictIndex = rdr.GetOrdinal("SubDistrict");
-                        AdministrativeAddress lastObj = null;
-                        int provinceId = -1;
-                        while (await rdr.ReadAsync())
+                        cmd.CommandType = CommandType.Text;
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            provinceId = rdr.GetInt32(ProvinceIdIndex);
-                            if (lastObj == null || lastObj.provinceId != provinceId) // Check có phải tỉnh mới
+                            int ProvinceIdIndex = rdr.GetOrdinal("ProvinceId");
+                            int NameIndex = rdr.GetOrdinal("Name");
+                            int SubDistrictIndex = rdr.GetOrdinal("SubDistrict");
+                            AdministrativeAddress lastObj = null;
+                            int provinceId = -1;
+                            while (await rdr.ReadAsync())
                             {
-                                lastObj = new AdministrativeAddress(provinceId, rdr.GetString(NameIndex), rdr.GetString(SubDistrictIndex));
-                                ls.Add(lastObj);
-                            }
-                            else
-                            {
-                                lastObj.subdistricts.Add(rdr.GetString(SubDistrictIndex));
+                                provinceId = rdr.GetInt32(ProvinceIdIndex);
+                                if (lastObj == null || lastObj.provinceId != provinceId) // Check có phải tỉnh mới
+                                {
+                                    lastObj = new AdministrativeAddress(provinceId, rdr.GetString(NameIndex), rdr.GetString(SubDistrictIndex));
+                                    ls.Add(lastObj);
+                                }
+                                else
+                                {
+                                    lastObj.subdistricts.Add(rdr.GetString(SubDistrictIndex));
+                                }
                             }
                         }
                     }
