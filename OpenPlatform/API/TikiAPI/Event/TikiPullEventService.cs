@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
     public class TikiPullEventService
     {
         // Xử lý event của đơn hàng
-        private async Task HandleOrderEvent(TikiEvent tikiEvent, TikiMySql tikiSqler, MySqlConnection conn)
+        private async Task HandleOrderEvent(TikiEvent tikiEvent, MySqlConnection conn)
         {
             if (tikiEvent.type != "ORDER_CREATED_SUCCESSFULLY" &&
                 tikiEvent.payload.status != "canceled")
@@ -28,7 +28,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             }
 
             TbEcommerceOrder tbEcommerceOrder = 
-             await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
+             await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                 tikiEvent.payload.order_code,
                 EECommerceType.TIKI, conn);
             ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
@@ -40,7 +40,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                 status = ECommerceOrderStatus.UNBOOKED;
             }
 
-            if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            if (!TikiMySql.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
             {
                 return;
             }
@@ -54,9 +54,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                 if (tikiOrder != null)
                 {
                     CommonOrder commonOrder = new CommonOrder(tikiOrder);
-                     await tikiSqler.TikiGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                     await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
 
-                    MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+                    MySqlResultState resultState = await TikiMySql.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
                         commonOrder, status, tikiEvent.created_at, oldStatus,
                         EECommerceType.TIKI, conn);
 
@@ -158,19 +158,17 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             // Lấy ack_id từ db
             try
             {
-                TikiMySql tikiMySqler = new TikiMySql();
-                TikiDealDiscountMySql tikiDealSqler = new TikiDealDiscountMySql();
-                string ack_id = await tikiMySqler.GetAckIdOfLastestPullConnectOutAsync(conn);
+                string ack_id = await TikiMySql.GetAckIdOfLastestPullConnectOutAsync(conn);
                 Event_Response event_Response = await TikiPullEvent(ack_id);
 
                 if (event_Response != null)
                 {
-                    await tikiMySqler.UpdateAckIdOfLastestPullConnectOutAsync(event_Response.ack_id, conn);
+                    await TikiMySql.UpdateAckIdOfLastestPullConnectOutAsync(event_Response.ack_id, conn);
 
                     List<TikiEvent> listOrderEvent = GetListOrderEventFromEventTypeAll(event_Response.events);
                     foreach (var e in listOrderEvent)
                     {
-                        await HandleOrderEvent(e, tikiMySqler, conn);
+                        await HandleOrderEvent(e, conn);
                     }
 
                     //List<TikiEvent> listProductInventoryUpdate = GetListProductInventoryUpdateFromEventTypeAll(event_Response.events);

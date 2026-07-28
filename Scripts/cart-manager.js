@@ -231,8 +231,6 @@ const CartManager = {
         this.updateCartBadge();
     },
 
-
-
     updateReal(sanPhamId, real) {
         const cart = this.getCart();
         const item = cart.find(item => item.sanPhamId === sanPhamId);

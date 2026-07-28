@@ -11,43 +11,8 @@ namespace MVCPlayWithMe.Models
 {
     public class ComboMySql
     {
-        // Giữ sync vì dùng bởi BasicController.ViewDataGetListCombo()
-        //public List<Combo> GetListCombo()
-        //{
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    List<Combo> ls = new List<Combo>();
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        int idIndex = rdr.GetOrdinal("Id");
-        //        int nameIndex = rdr.GetOrdinal("Name");
-        //        int codeIndex = rdr.GetOrdinal("Code");
-
-        //        while (rdr.Read())
-        //        {
-        //            ls.Add(new Combo(rdr.GetInt32(idIndex),
-        //                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
-        //                rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-
-        //    conn.Close();
-        //    return ls;
-        //}
-
         // Lấy danh sách id sản phẩm đang kinh doanh thuộc combo
-        public async Task<List<int>> GetProductIdsOfComboAsync(int comboId)
+        public static async Task<List<int>> GetProductIdsOfComboAsync(int comboId)
         {
             List<int> productIds = new List<int>();
             try
@@ -80,7 +45,7 @@ namespace MVCPlayWithMe.Models
             return productIds;
         }
 
-        public async Task<List<Combo>> GetListComboAsync()
+        public static async Task<List<Combo>> GetListComboAsync()
         {
             List<Combo> ls = new List<Combo>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -114,7 +79,7 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public async Task<List<Combo>> GetListComboConnectOutAsync(MySqlConnection conn)
+        public static async Task<List<Combo>> GetListComboConnectOutAsync(MySqlConnection conn)
         {
             List<Combo> ls = new List<Combo>();
             try
@@ -144,7 +109,7 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public async Task<List<Combo>> GetListComboIncludeSimpleProductsAsync(MySqlConnection conn)
+        public static async Task<List<Combo>> GetListComboIncludeSimpleProductsAsync(MySqlConnection conn)
         {
             List<Combo> ls = new List<Combo>();
             try
@@ -188,7 +153,7 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public async Task<Combo> GetComboAsync(int id)
+        public static async Task<Combo> GetComboAsync(int id)
         {
             Combo combo = null;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -257,7 +222,7 @@ namespace MVCPlayWithMe.Models
             return combo;
         }
 
-        public async Task<MySqlResultState> CreateNewComboAsync(string name, string code)
+        public static async Task<MySqlResultState> CreateNewComboAsync(string name, string code)
         {
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@comboName", name);
@@ -266,7 +231,7 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Insert", paras);
         }
 
-        public async Task<MySqlResultState> DeleteComboAsync(int id)
+        public static async Task<MySqlResultState> DeleteComboAsync(int id)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@comboId", id);
@@ -274,7 +239,7 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Delete_From_Id", paras);
         }
 
-        public async Task<MySqlResultState> UpdateComboAsync(int id, string name, string code)
+        public static async Task<MySqlResultState> UpdateComboAsync(int id, string name, string code)
         {
             MySqlParameter[] paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@comboId", id);
@@ -284,7 +249,7 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Update", paras);
         }
 
-        public async Task<int> GetComboIdFromNameAsync(string name)
+        public static async Task<int> GetComboIdFromNameAsync(string name)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@comboName", name);

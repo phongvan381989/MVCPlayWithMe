@@ -1,4 +1,4 @@
-// Tham số tìm kiếm
+﻿// Tham số tìm kiếm
 let status;
 let listOrder = null; // Danh sách tất cả đơn hàng người dùng
 
@@ -148,12 +148,12 @@ function ShowResult(ele) {
         // Là khách vãng lai
         if (CheckAnonymousCustomer()) {
             cloneAddress.getElementsByClassName("address-address")[0].innerHTML =
-                orderObj.address.province + ", " + orderObj.address.district + ", ******";
+                orderObj.address.province + ", ******";
         }
         else {
             cloneAddress.getElementsByClassName("address-address")[0].innerHTML =
             orderObj.address.detail + ", " + orderObj.address.province + ", "
-                + orderObj.address.district + ", " + orderObj.address.subdistrict;
+                 + orderObj.address.subdistrict;
         }
         clone.getElementsByClassName("order-address-container")[0].append(cloneAddress);
 

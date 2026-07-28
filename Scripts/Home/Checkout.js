@@ -13,11 +13,7 @@ if (sessionStorage.getItem('fromCheckout') === 'pending') {
     sessionStorage.setItem('fromCheckout', 'visited');
 }
 
-function CreateSelectedModel() {
-    // Lấy mẫu
-    let sample = document.getElementsByClassName("sample-model")[0].firstElementChild;
-    let containerModel = document.getElementsByClassName("model-container")[0];
-
+function CreateSelectedModel(containerModel, sample) {
     let length = listCartObject.length;
 
     // Sinh bản sao
@@ -75,7 +71,11 @@ function ShowCartList() {
     // Có những sản phẩm số lượng trong kho nhỏ hơn số lượng khách đã chọn,
     // nhưng được tính lại phía server
 
-    CreateSelectedModel();
+    // Lấy mẫu
+    let sample = document.getElementsByClassName("sample-model")[0].firstElementChild;
+    let containerModel = document.getElementsByClassName("model-container")[0];
+    CreateSelectedModel(containerModel, sample);
+
     document.getElementsByClassName("cart-empty")[0].style.display = "none";
     document.getElementsByClassName("main-container")[0].style.display = "block";
 }
@@ -99,6 +99,10 @@ async function LoadCart() {
         }
 
         listCartObject = JSON.parse(responseText);
+        // Temporary comment
+        // // Lấy cart có real = 1
+        // listCartObject = listCartObject.filter(cart => cart.real === 1);
+
         ShowCartList();
     } catch (error) {
         ShowErrorWhenLoadCart(error);
@@ -111,7 +115,7 @@ function ShowSumMoney() {
     let length = listCartObject.length;
     let sumMoney = 0;
     for (let i = 0; i < length; i++) {
-        sumMoney = sumMoney + listCartObject[i].q * listCartObject[i].price;
+        sumMoney = sumMoney + listCartObject[i].quantity * listCartObject[i].sanPhamBasicInfo.SalePrice;
     }
 
     document.getElementsByClassName("model-money-sum")[0].innerHTML =
@@ -154,7 +158,6 @@ function ChangeAddressClickEvent(element) {
 }
 
 async function LoadCustomerInfor() {
-
     if (CheckAnonymousCustomer()) {// Khách vãng lai
         // Lấy từ localStorage
         listCustomerInforObject = GetListCustomerInforFromLocalStorage();
@@ -221,7 +224,7 @@ function ShowCustomerInforFromObj(obj) {
 
     document.getElementsByClassName("address-name-phone")[0].innerHTML = obj.name + ", " + obj.phone;
     document.getElementsByClassName("address-address")[0].innerHTML =
-        obj.detail + ", " + obj.province + ", " + ", " + obj.subdistrict;
+        obj.detail + ", " + obj.province + ", " + obj.subdistrict;
     if (obj.defaultAdd) {
         document.getElementsByClassName("address-default")[0].style.display = "block";
     }

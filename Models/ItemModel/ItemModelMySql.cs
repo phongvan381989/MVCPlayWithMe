@@ -12,39 +12,7 @@ namespace MVCPlayWithMe.Models.ItemModel
 {
     public class ItemModelMySql
     {
-        //public List<BasicIdName> GetListItemName()
-        //{
-        //    List<BasicIdName> ls = new List<BasicIdName>();
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbItem_Select_All_Name", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        int idIndex = rdr.GetOrdinal("Id");
-        //        int nameIndex = rdr.GetOrdinal("Name");
-        //        while (rdr.Read())
-        //        {
-        //            ls.Add(new ProductIdName(rdr.GetInt32(idIndex),
-        //                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex)));
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-                
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-
-        //    conn.Close();
-        //    return ls;
-        //}
-
-        private void ItemParameters(Item item, MySqlParameter[] paras)
+        private static void ItemParameters(Item item, MySqlParameter[] paras)
         {
             paras[0] = new MySqlParameter("@inId", item.id);
             paras[1] = new MySqlParameter("@inName", item.name);
@@ -56,81 +24,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             MyMySql.AddOutParameters(paras);
         }
 
-        //public int AddItem(Item item)
-        //{
-        //    MySqlParameter[] paras = null;
-
-        //    paras = new MySqlParameter[5];
-        //    paras[0] = new MySqlParameter("@inName", item.name);
-        //    paras[1] = new MySqlParameter("@inStatus", item.status);
-        //    paras[2] = new MySqlParameter("@inDetail", item.detail);
-        //    paras[3] = new MySqlParameter("@inQuota", item.quota);
-        //    paras[4] = new MySqlParameter("@inCategoryId", item.categoryId);
-
-        //    int id = -1;
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbItem_Insert", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddRange(paras);
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            id = MyMySql.GetInt32(rdr, "LastId");
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-                
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-        //    conn.Close();
-
-        //    return id;
-        //}
-
-        //public int GetItemIdFromName(string itemName)
-        //{
-        //    MySqlParameter[] paras = null;
-
-        //    paras = new MySqlParameter[1];
-        //    paras[0] = new MySqlParameter("@inName", itemName);
-
-        //    int id = -1;
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbItem_Get_Id_From_Name", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddRange(paras);
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            id = MyMySql.GetInt32(rdr, "Id");
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-                
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-        //    conn.Close();
-
-        //    return id;
-        //}
-
-        private void ModelParameters(Model model, MySqlParameter[] paras)
+        private static void ModelParameters(Model model, MySqlParameter[] paras)
         {
             paras[0] = new MySqlParameter("@inId", model.id);
             paras[1] = new MySqlParameter("@inItemId", model.itemId);
@@ -157,7 +51,7 @@ namespace MVCPlayWithMe.Models.ItemModel
         //    return result;
         //}
 
-        private void ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr, List<Model> models)
+        private static void ConvertOneRowFromDataMySqlToModel(MySqlDataReader rdr, List<Model> models)
         {
             int modelId = MyMySql.GetInt32(rdr, "ModelId");
             if (modelId != -1)// item có model
@@ -193,7 +87,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             }
         }
 
-        private Item ConvertOneRowFromDataMySqlToItem(MySqlDataReader rdr)
+        private static Item ConvertOneRowFromDataMySqlToItem(MySqlDataReader rdr)
         {
             Item item = new Item();
             item.id = MyMySql.GetInt32(rdr, "ItemId");
@@ -209,7 +103,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return item;
         }
 
-        public void ConvertItemToCartCookie(Item item, Cart cart)
+        public static void ConvertItemToCartCookie(Item item, Cart cart)
         {
             if (item == null || cart == null)
                 return;
@@ -231,289 +125,11 @@ namespace MVCPlayWithMe.Models.ItemModel
             //cart.UpdateQ();
         }
 
-        //public async Task<MySqlResultState> UpdateMapping(int modelId,
-        //    List<int> mappingOnlyProductId,
-        //    List<int> mappingOnlyQuantity)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
 
-        //    result = await DeleteMappingAsync(modelId);
-        //    if(result.State != EMySqlResultState.OK)
-        //    {
-        //        return result;
-        //    }
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbMapping_Insert_V2", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inModelId", modelId);
-        //        cmd.Parameters.AddWithValue("@inProductId", 0);
-        //        cmd.Parameters.AddWithValue("@inQuantity", 0);
-
-        //        int length = mappingOnlyProductId.Count;
-        //        for (int i = 0; i < length; i++)
-        //        {
-        //            cmd.Parameters[1].Value = mappingOnlyProductId[i];
-        //            cmd.Parameters[2].Value = mappingOnlyQuantity[i];
-        //            cmd.ExecuteNonQuery();
-        //        }
-
-        //        // Cập nhật giá bìa, giá theo chiết khấu (thực tế bán) sau khi thay đổi mapping, chiết khấu,...
-        //        MySqlCommand cmdTemp = new MySqlCommand("st_tbModel_Update_Price", conn);
-        //        cmdTemp.CommandType = CommandType.StoredProcedure;
-        //        cmdTemp.Parameters.AddWithValue("@inModelId", modelId);
-        //        cmdTemp.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public MySqlResultState UpdateModelName(int modelId, string name)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbModel_Update_Name", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inId", modelId);
-        //        cmd.Parameters.AddWithValue("@inName", name);
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public MySqlResultState UpdateItemName(int itemId, string name)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Name", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inId", itemId);
-        //        cmd.Parameters.AddWithValue("@inName", name);
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        // listItemId có dạng: 1,2,3
-        //public MySqlResultState UpdateDiscountForListItem(float discount, string listItemId)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Discount_ListItemId", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inDiscount", discount);
-        //        cmd.Parameters.AddWithValue("@inListItemId", listItemId);
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        // listModelId có dạng: 1,2,3
-        //public MySqlResultState UpdateDiscountForListModleId(float discount, string listModelId)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbModel_Update_Discount_ListModelId", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inDiscount", discount);
-        //        cmd.Parameters.AddWithValue("@inListModelId", listModelId);
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        //public MySqlResultState UpdateItemCategory(int itemId, int categoryId)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbItem_Update_Category", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inId", itemId);
-        //        cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
-        //        cmd.ExecuteNonQuery();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        /// <summary>
-        /// Xóa nếu tồn tại và insert vào bảng tbModel. Lấy được id mới
-        /// </summary>
-        /// <param name="itemId"></param>
-        /// <param name="modelId">Nếu chưa tồn tại mặc định là 0</param>
-        /// <param name="modelName"></param>
-        /// <param name="quota"></param>
-        /// <param name="discount"></param>
-        /// <param name="shopeeItemId"></param>
-        /// <param name="shopeeModelId"></param>
-        /// <returns></returns>
-        //public MySqlResultState BornModelFromShopeeModel( int itemId, int modelId,
-        //    string modelName,
-        //    int quota, float discount, int price, int bookCoverPrice,
-        //    long shopeeItemId,
-        //    long shopeeModelId)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbModel_Insert_From_Shopee_Model", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inItemId", itemId);
-        //        cmd.Parameters.AddWithValue("@inModelId", modelId);
-        //        cmd.Parameters.AddWithValue("@inName", modelName);
-        //        cmd.Parameters.AddWithValue("@inQuota", quota);
-        //        cmd.Parameters.AddWithValue("@inDiscount", discount);
-        //        cmd.Parameters.AddWithValue("@inPrice", price);
-        //        cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
-        //        cmd.Parameters.AddWithValue("@inShopeeItemId", shopeeItemId);
-        //        cmd.Parameters.AddWithValue("@inShopeeModelId", shopeeModelId);
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        // Từ model Id sản phẩm trên voibenho lấy được item id
-        //public MySqlResultState GetVBNItemIdFromModelId(int modelId)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("SELECT ItemId FROM tbModel WHERE Id=@inModelId;", conn);
-        //        cmd.CommandType = CommandType.Text;
-        //        cmd.Parameters.AddWithValue("@inModelId", modelId);
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            result.myAnything = MyMySql.GetInt32(rdr, "ItemId");
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
-
-        // Từ model id voibenho lấy được item id shopee
-        //public MySqlResultState GetTMDTShopeeItemIdFromModelId(int modelId)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbPWMMappingOTher_Get_Shopee_Item_Id", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inModelId", modelId);
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            result.myAnythingLong = MyMySql.GetInt64(rdr, "TMDTShopeeItemId");
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-
-        //    conn.Close();
-        //    return result;
-        //}
 
         // ── Async versions ────────────────────────────────────────────────────
 
-        public async Task<List<BasicIdName>> GetListItemNameAsync()
+        public static async Task<List<BasicIdName>> GetListItemNameAsync()
         {
             List<BasicIdName> ls = new List<BasicIdName>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -538,7 +154,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return ls;
         }
 
-        public async Task<int> AddItemAsync(Item item)
+        public static async Task<int> AddItemAsync(Item item)
         {
             int id = -1;
             MySqlParameter[] paras = new MySqlParameter[5];
@@ -567,7 +183,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public async Task<int> AddItemAsync(string itemName, int itemStatus, string itemDetail)
+        public static async Task<int> AddItemAsync(string itemName, int itemStatus, string itemDetail)
         {
             int id = -1;
             MySqlParameter[] paras = new MySqlParameter[5];
@@ -596,7 +212,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public async Task<int> GetItemIdFromNameAsync(string itemName)
+        public static async Task<int> GetItemIdFromNameAsync(string itemName)
         {
             int id = -1;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -619,14 +235,14 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public async Task<MySqlResultState> UpdateItemAsync(Item it)
+        public static async Task<MySqlResultState> UpdateItemAsync(Item it)
         {
             MySqlParameter[] paras = new MySqlParameter[8];
             ItemParameters(it, paras);
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbItem_Update", paras);
         }
 
-        public async Task<int> GetMaxItemIdAsync()
+        public static async Task<int> GetMaxItemIdAsync()
         {
             int id = -1;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -648,7 +264,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public async Task<int> GetMaxModelIdAsync()
+        public static async Task<int> GetMaxModelIdAsync()
         {
             int id = -1;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -670,7 +286,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public async Task<int> AddModelAsync(Model model)
+        public static async Task<int> AddModelAsync(Model model)
         {
             int id = -1;
             MySqlParameter[] paras = new MySqlParameter[4];
@@ -698,14 +314,14 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public async Task<MySqlResultState> UpdateModelAsync(Model model)
+        public static async Task<MySqlResultState> UpdateModelAsync(Model model)
         {
             MySqlParameter[] paras = new MySqlParameter[7];
             ModelParameters(model, paras);
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbModel_Update", paras);
         }
 
-        public async Task<MySqlResultState> DeleteModelAsync(int id)
+        public static async Task<MySqlResultState> DeleteModelAsync(int id)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@inId", id);
@@ -713,7 +329,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbModel_Delete_From_Id", paras);
         }
 
-        public async Task<MySqlResultState> DeleteItemAsync(int id)
+        public static async Task<MySqlResultState> DeleteItemAsync(int id)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -733,7 +349,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> AddMappingAsync(Model model)
+        public static async Task<MySqlResultState> AddMappingAsync(Model model)
         {
             MySqlResultState result = new MySqlResultState();
             if (model.mapping.Count() == 0) return result;
@@ -766,7 +382,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> DeleteMappingAsync(int modelId)
+        public static async Task<MySqlResultState> DeleteMappingAsync(int modelId)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@inModelId", modelId);
@@ -774,7 +390,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbMapping_Delete_From_ModelId", paras);
         }
 
-        public async Task<List<Item>> SearchItemPageAsync(ItemModelSearchParameter searchParameter)
+        public static async Task<List<Item>> SearchItemPageAsync(ItemModelSearchParameter searchParameter)
         {
             List<Item> ls = new List<Item>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -829,7 +445,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return ls;
         }
 
-        public async Task<List<Item>> SearchItemPageConnectOutAsync(ItemModelSearchParameter searchParameter, MySqlConnection conn)
+        public static async Task<List<Item>> SearchItemPageConnectOutAsync(ItemModelSearchParameter searchParameter, MySqlConnection conn)
         {
             List<Item> ls = new List<Item>();
             try
@@ -967,7 +583,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return ls;
         }
 
-        public async Task<int> SearchItemCountAsync(ItemModelSearchParameter searchParameter)
+        public static async Task<int> SearchItemCountAsync(ItemModelSearchParameter searchParameter)
         {
             int count = 0;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -991,7 +607,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return count;
         }
 
-        public async Task<int> SearchItemCountConnectOutAsync(ItemModelSearchParameter searchParameter, MySqlConnection conn)
+        public static async Task<int> SearchItemCountConnectOutAsync(ItemModelSearchParameter searchParameter, MySqlConnection conn)
         {
             int count = 0;
             try
@@ -1075,7 +691,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return count;
         }
 
-        public async Task<List<Item>> SearchItemPageIncludeMappingAsync(ItemModelSearchParameter searchParameter)
+        public static async Task<List<Item>> SearchItemPageIncludeMappingAsync(ItemModelSearchParameter searchParameter)
         {
             List<Item> ls = new List<Item>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1141,7 +757,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return ls;
         }
 
-        public async Task<Item> GetItemFromIdAsync(int id)
+        public static async Task<Item> GetItemFromIdAsync(int id)
         {
             Item item = null;
             List<Model> models = new List<Model>();
@@ -1171,7 +787,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return item;
         }
 
-        public async Task<Item> GetItemFromIdConnectOutAsync(int id, MySqlConnection conn)
+        public static async Task<Item> GetItemFromIdConnectOutAsync(int id, MySqlConnection conn)
         {
             Item item = null;
             List<Model> models = new List<Model>();
@@ -1197,7 +813,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return item;
         }
 
-        public async Task<Item> GetItemFromModelIdAsync(int id)
+        public static async Task<Item> GetItemFromModelIdAsync(int id)
         {
             Item item = null;
             List<Model> models = new List<Model>();
@@ -1227,7 +843,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return item;
         }
 
-        public async Task<Item> GetItemFromModelIdConnectOutAsync(int id, MySqlConnection conn)
+        public static async Task<Item> GetItemFromModelIdConnectOutAsync(int id, MySqlConnection conn)
         {
             Item item = null;
             List<Model> models = new List<Model>();
@@ -1256,7 +872,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return item;
         }
 
-        public async Task<MySqlResultState> UpdateDiscountAsync(int modelId, float discount)
+        public static async Task<MySqlResultState> UpdateDiscountAsync(int modelId, float discount)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1277,7 +893,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateMappingAsync(int modelId, List<int> mappingOnlyProductId, List<int> mappingOnlyQuantity)
+        public static async Task<MySqlResultState> UpdateMappingAsync(int modelId, List<int> mappingOnlyProductId, List<int> mappingOnlyQuantity)
         {
             MySqlResultState result = await DeleteMappingAsync(modelId);
             if (result.State != EMySqlResultState.OK) return result;
@@ -1313,7 +929,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateModelNameAsync(int modelId, string name)
+        public static async Task<MySqlResultState> UpdateModelNameAsync(int modelId, string name)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1334,7 +950,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateItemNameAsync(int itemId, string name)
+        public static async Task<MySqlResultState> UpdateItemNameAsync(int itemId, string name)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1355,7 +971,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateDiscountForListItemAsync(float discount, string listItemId)
+        public static async Task<MySqlResultState> UpdateDiscountForListItemAsync(float discount, string listItemId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1376,7 +992,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateDiscountForListModleIdAsync(float discount, string listModelId)
+        public static async Task<MySqlResultState> UpdateDiscountForListModleIdAsync(float discount, string listModelId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1397,7 +1013,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateItemCategoryAsync(int itemId, int categoryId)
+        public static async Task<MySqlResultState> UpdateItemCategoryAsync(int itemId, int categoryId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1418,7 +1034,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> BornModelFromShopeeModelAsync(int itemId, int modelId, string modelName, int quota, float discount, int price, int bookCoverPrice, long shopeeItemId, long shopeeModelId)
+        public static async Task<MySqlResultState> BornModelFromShopeeModelAsync(int itemId, int modelId, string modelName, int quota, float discount, int price, int bookCoverPrice, long shopeeItemId, long shopeeModelId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1449,7 +1065,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> GetVBNItemIdFromModelIdAsync(int modelId)
+        public static async Task<MySqlResultState> GetVBNItemIdFromModelIdAsync(int modelId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1472,7 +1088,7 @@ namespace MVCPlayWithMe.Models.ItemModel
             return result;
         }
 
-        public async Task<MySqlResultState> GetTMDTShopeeItemIdFromModelIdAsync(int modelId)
+        public static async Task<MySqlResultState> GetTMDTShopeeItemIdFromModelIdAsync(int modelId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))

@@ -14,12 +14,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class CategoryController : BasicController
     {
-        public CategoryMySql sqler;
-        public CategoryController() : base()
-        {
-            sqler = new CategoryMySql();
-        }
-
         // GET:  Category
         public async Task<ActionResult> Index()
         {
@@ -50,7 +44,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await sqler.CreateNewCategoryAsync(name);
+            MySqlResultState result = await CategoryMySql.CreateNewCategoryAsync(name);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -62,7 +56,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await sqler.DeleteCategoryAsync(id);
+            MySqlResultState result = await CategoryMySql.DeleteCategoryAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -96,7 +90,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                Category category = await sqler.GetCategoryAsync(id, conn);
+                Category category = await CategoryMySql.GetCategoryAsync(id, conn);
                 if (category != null)
                 {
                     ViewData["categoryName"] = category.name;
@@ -113,7 +107,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await sqler.UpdateCategoryAsync(id, name);
+            MySqlResultState result = await CategoryMySql.UpdateCategoryAsync(id, name);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -125,7 +119,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<Category>());
             }
 
-            List<Category> ls = await sqler.GetListCategoryAsync();
+            List<Category> ls = await CategoryMySql.GetListCategoryAsync();
             return JsonConvert.SerializeObject(ls);
         }
     }

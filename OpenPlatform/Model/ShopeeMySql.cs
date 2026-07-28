@@ -26,7 +26,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Đóng mở kết nối bên ngoài
         /// </summary>
         /// <returns>-2 nếu tMDTShopeeItemId đã tồn tại, -1 nếu có lỗi</returns>
-        public async Task<int> InserttbShopeeItemAsync(CommonItem item, MySqlConnection conn)
+        public static async Task<int> InserttbShopeeItemAsync(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
             try
@@ -63,7 +63,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Đóng mở kết nối bên ngoài
         /// </summary>
         /// <returns>-2 nếu tMDTShopeeModelId đã tồn tại, -1 nếu có lỗi</returns>
-        public async Task<int> InserttbShopeeModelAsync(int itemId, CommonModel model, MySqlConnection conn)
+        public static async Task<int> InserttbShopeeModelAsync(int itemId, CommonModel model, MySqlConnection conn)
         {
             MyLogger.GetInstance().Warn("Start InserttbShopeeModel");
             MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
@@ -100,7 +100,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được danh sách ShopeeModelId, TMDTShopeeModelId
-        private async Task<List<Tuple<int, long>>> ListModelOfItemAsync(long tMDTShopeeModelId, MySqlConnection conn)
+        private static async Task<List<Tuple<int, long>>> ListModelOfItemAsync(long tMDTShopeeModelId, MySqlConnection conn)
         {
             List<Tuple<int, long>> lsModel = new List<Tuple<int, long>>();
             try
@@ -139,7 +139,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // không thực hiện ở đây
         // Trả về true nếu item đã tồn tại và không thêm mới model nào,
         // ngược lại trả về false
-        public async Task<Boolean> ShopeeInsertIfDontExistConnectOutAsync(CommonItem item, MySqlConnection conn)
+        public static async Task<Boolean> ShopeeInsertIfDontExistConnectOutAsync(CommonItem item, MySqlConnection conn)
         {
             Boolean exist = false;
             try
@@ -257,7 +257,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được thông tin chi tiết
-        public async Task ShopeeGetItemFromIdConnectOutAsync(long id, CommonItem item, MySqlConnection conn)
+        public static async Task ShopeeGetItemFromIdConnectOutAsync(long id, CommonItem item, MySqlConnection conn)
         {
             try
             {
@@ -329,7 +329,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task ShopeeGetListCommonItemFromListShopeeItemConnectOutAsync(
+        public static async Task ShopeeGetListCommonItemFromListShopeeItemConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -388,7 +388,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task ShopeeUpdateStatusOfItemListToDbConnectOutAsync(
+        public static async Task ShopeeUpdateStatusOfItemListToDbConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -419,7 +419,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task ShopeeUpdateStatusOfItemToDbConnectOutAsync(
+        public static async Task ShopeeUpdateStatusOfItemToDbConnectOutAsync(
             CommonItem commonItem,
             MySqlConnection conn)
         {
@@ -440,7 +440,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<List<CommonItem>> ShopeeGetItemOnDBAsync(MySqlConnection conn)
+        public static async Task<List<CommonItem>> ShopeeGetItemOnDBAsync(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             try
@@ -511,7 +511,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lsCommonItem;
         }
 
-        public async Task<MySqlResultState> ShopeeDeleteItemOnDBAsync(long itemId)
+        public static async Task<MySqlResultState> ShopeeDeleteItemOnDBAsync(long itemId)
         {
             MySqlResultState resultState = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -567,7 +567,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<MySqlResultState> ShopeeUpdateMappingAsync(List<CommonForMapping> ls)
+        public static async Task<MySqlResultState> ShopeeUpdateMappingAsync(List<CommonForMapping> ls)
         {
             MySqlResultState result = new MySqlResultState();
             int length = ls.Count;
@@ -640,7 +640,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
-        public async Task<MySqlResultState> ShopeeInsertNewMappingOneOfModelAsync(int modelId,
+        public static async Task<MySqlResultState> ShopeeInsertNewMappingOneOfModelAsync(int modelId,
             int productId,
             int quantity,
             MySqlConnection conn)
@@ -665,7 +665,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public async Task ShopeeGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
+        public static async Task ShopeeGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
         {
             try
             {
@@ -717,7 +717,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<MySqlResultState> ShopeeSaveTokenAsync(ShopeeToken shopeeToken,
+        public static async Task<MySqlResultState> ShopeeSaveTokenAsync(ShopeeToken shopeeToken,
             MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
@@ -744,7 +744,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<MySqlResultState> ShopeeSaveLivePartnerKeyAsync(string key, MySqlConnection conn)
+        public static async Task<MySqlResultState> ShopeeSaveLivePartnerKeyAsync(string key, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -764,7 +764,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task<MySqlResultState> ShopeeSaveCodeAsync(string code, MySqlConnection conn)
+        public static async Task<MySqlResultState> ShopeeSaveCodeAsync(string code, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -784,7 +784,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task<MySqlResultState> CopyShopeeProductImageToProductAsync()
+        public static async Task<MySqlResultState> CopyShopeeProductImageToProductAsync()
         {
             MySqlResultState resultState = new MySqlResultState();
             try
@@ -832,42 +832,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        //// async không hỗ trợ ref params — giữ sync
-        //public void GetIdNameStatusDetailOfItemShopee(ref int itemId,
-        //    ref string itemName,
-        //    ref int itemStatus,
-        //    ref string itemDetail,
-        //    long itemIdShopee)
-        //{
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_TMDTShopeeItemId", conn);
-        //    cmd.CommandType = CommandType.StoredProcedure;
-        //    cmd.Parameters.AddWithValue("@inTMDTShopeeItemId", itemIdShopee);
-
-        //    MySqlDataReader rdr = null;
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            itemId = MyMySql.GetInt32(rdr, "Id");
-        //            itemName = MyMySql.GetString(rdr, "Name");
-        //            itemStatus = MyMySql.GetInt32(rdr, "Status");
-        //            itemDetail = MyMySql.GetString(rdr, "Detail");
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //        itemId = -1;
-        //    }
-        //    rdr.Close();
-        //    conn.Close();
-        //}
-
-        public async Task<List<long>> GetForSaveImageSourceConnectOutAsync(MySqlConnection conn)
+        public static async Task<List<long>> GetForSaveImageSourceConnectOutAsync(MySqlConnection conn)
         {
             List<long> lsItem = new List<long>();
             try
@@ -894,7 +859,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lsItem;
         }
 
-        public async Task UpdateImageSourceTotbShopeeItem_ModelConnectOutAsync(
+        public static async Task UpdateImageSourceTotbShopeeItem_ModelConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -937,7 +902,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task UpdateStatusOfItemFromTMDTItemIdAsync(long itemId, int status)
+        public static async Task UpdateStatusOfItemFromTMDTItemIdAsync(long itemId, int status)
         {
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -961,7 +926,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task GetTrackingNumberToListConnectOutAsync(
+        public static async Task GetTrackingNumberToListConnectOutAsync(
             List<ShopeeOrderDetail> rs,
             MySqlConnection conn)
         {
@@ -993,7 +958,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task GetBookingTrackingNumberToListConnectOutAsync(
+        public static async Task GetBookingTrackingNumberToListConnectOutAsync(
             List<ShopeeBookingDetail> rs,
             MySqlConnection conn)
         {
@@ -1024,7 +989,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Cập nhật mã vận chuyển theo mã đơn nếu mã đơn tồn tại trong db
-        public async Task UpdateTrackingNumberToDBConnectOutAsync(
+        public static async Task UpdateTrackingNumberToDBConnectOutAsync(
             string orderSN,
             string shipCode,
             MySqlConnection conn)
@@ -1040,7 +1005,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Cập nhật mã vận chuyển theo mã booking nếu mã booking tồn tại trong db
-        public async Task UpdateBookingTrackingNumberToDBConnectOutAsync(
+        public static async Task UpdateBookingTrackingNumberToDBConnectOutAsync(
             string booking_Sn,
             string shipCode,
             MySqlConnection conn)
@@ -1056,7 +1021,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // khi upload ảnh lên Shopee, lưu id ảnh
-        public async Task<MySqlResultState> InserttbShopeeMediaSpaceAsync(
+        public static async Task<MySqlResultState> InserttbShopeeMediaSpaceAsync(
             int mediaType, // 0: là ảnh, 1: video
             string mediaId,
             int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
@@ -1083,7 +1048,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task<List<string>> GetUploadedImageOfProductOnShopeeAsync(
+        public static async Task<List<string>> GetUploadedImageOfProductOnShopeeAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
@@ -1118,7 +1083,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy số lượng ảnh đã up lên shopee của sản phẩm
-        public async Task<int> GetQuantityOfProductImageUploadedToShopeeAsync(
+        public static async Task<int> GetQuantityOfProductImageUploadedToShopeeAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
@@ -1157,7 +1122,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Vì upload lại ảnh lên shopee, xóa id ảnh cũ đã lưu trong db
-        public async Task<MySqlResultState> DeleteProductImageUploadedToShopeeAsync(
+        public static async Task<MySqlResultState> DeleteProductImageUploadedToShopeeAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Shopee
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
@@ -1190,7 +1155,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // khi upload ảnh lên Shopee, lưu id ảnh
-        public async Task<MySqlResultState> InserttbShopeeBrandAsync(
+        public static async Task<MySqlResultState> InserttbShopeeBrandAsync(
             long categoryId,
             List<ShopeeBrandObject> brandList,
             MySqlConnection conn)
@@ -1302,7 +1267,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             commonModel.mapping.Add(mapping);
         }
 
-        public async Task<ShopeeBrandRequestParameter> GetBrandFromNameAsync(
+        public static async Task<ShopeeBrandRequestParameter> GetBrandFromNameAsync(
             string brandName,
             MySqlConnection conn)
         {

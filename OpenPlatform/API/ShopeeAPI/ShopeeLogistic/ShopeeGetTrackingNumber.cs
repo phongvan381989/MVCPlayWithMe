@@ -121,8 +121,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         // Lấy mã vận đơn / ship code / tracking number
         public static async Task GetTrackingNumberFromDBAsync(List<ShopeeOrderDetail> rs, MySqlConnection conn)
         {
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            await shopeeMySql.GetTrackingNumberToListConnectOutAsync(rs, conn);
+            await ShopeeMySql.GetTrackingNumberToListConnectOutAsync(rs, conn);
 
             foreach (var e in rs)
             {
@@ -132,7 +131,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
                     e.order_status != "CANCELLED")
                 {
                     e.shipCode = await ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumberAsync(e.order_sn, string.Empty);
-                    await shopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(e.order_sn, e.shipCode, conn);
+                    await ShopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(e.order_sn, e.shipCode, conn);
                 }
             }
         }
@@ -140,8 +139,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
         // Lấy mã vận đơn / ship code / tracking number
         public static async Task GetBookingTrackingNumberFromDBAsync(List<ShopeeBookingDetail> rs, MySqlConnection conn)
         {
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
-            await shopeeMySql.GetBookingTrackingNumberToListConnectOutAsync(rs, conn);
+            await ShopeeMySql.GetBookingTrackingNumberToListConnectOutAsync(rs, conn);
 
             foreach (var e in rs)
             {
@@ -150,7 +148,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic
                     e.booking_status != "CANCELLED")
                 {
                     e.shipCode = await ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumberAsync(e.booking_sn);
-                    await shopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(e.order_sn, e.shipCode, conn);
+                    await ShopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(e.order_sn, e.shipCode, conn);
                 }
             }
         }

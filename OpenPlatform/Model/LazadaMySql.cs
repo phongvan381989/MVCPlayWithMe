@@ -16,7 +16,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
     public class LazadaMySql
     {
         // -2 nếu tMDTLazadaItemId đã tồn tại, -1 nếu có lỗi</returns>
-        public async Task<int> InserttbLazadaItemAsync(CommonItem item, MySqlConnection conn)
+        public static async Task<int> InserttbLazadaItemAsync(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
 
@@ -52,7 +52,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         //-2 nếu tMDTLazadaModelId đã tồn tại, -1 nếu có lỗi</returns>
-        public async Task<int> InserttbLazadaModelAsync(int itemId, CommonModel model, MySqlConnection conn)
+        public static async Task<int> InserttbLazadaModelAsync(int itemId, CommonModel model, MySqlConnection conn)
         {
             MyLogger.GetInstance().Warn("Start InserttbLazadaModel");
             MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
@@ -92,7 +92,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
-        public async Task<MySqlResultState> LazadaInsertNewMappingOneOfModelAsync(int modelId,
+        public static async Task<MySqlResultState> LazadaInsertNewMappingOneOfModelAsync(int modelId,
             int productId,
             int quantity,
             MySqlConnection conn)
@@ -116,7 +116,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task LazadaUpdateStatusOfItemToDbConnectOutAsync(
+        public static async Task LazadaUpdateStatusOfItemToDbConnectOutAsync(
             CommonItem commonItem,
             MySqlConnection conn)
         {
@@ -138,7 +138,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task LazadaUpdateStatusOfModelToDbConnectOutAsync(
+        public static async Task LazadaUpdateStatusOfModelToDbConnectOutAsync(
             List<CommonModel> commonModelList,
             MySqlConnection conn)
         {
@@ -165,7 +165,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được danh sách LazadaModelId, TMDTLazadaModelId
-        private async Task<List<Tuple<int, long>>> ListModelOfItemAsync(long tMDTLazadaItemId,
+        private static async Task<List<Tuple<int, long>>> ListModelOfItemAsync(long tMDTLazadaItemId,
             MySqlConnection conn)
         {
             List<Tuple<int, long>> lsModel = new List<Tuple<int, long>>();
@@ -201,7 +201,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // không thực hiện ở đây
         // Trả về true nếu item đã tồn tại và không thêm mới model nào,
         // ngược lại trả về false
-        public async Task<Boolean> LazadaInsertIfDontExistConnectOutAsync(CommonItem item,
+        public static async Task<Boolean> LazadaInsertIfDontExistConnectOutAsync(CommonItem item,
             MySqlConnection conn)
         {
             Boolean exist = false;
@@ -329,7 +329,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return exist;
         }
 
-        private async Task LazadaReadMappingAsync(CommonItem item, MySqlDataReader rdr)
+        private static async Task LazadaReadMappingAsync(CommonItem item, MySqlDataReader rdr)
         {
             long modelIdTemp;
             while (await rdr.ReadAsync())
@@ -365,7 +365,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task LazadaGetListCommonItemFromListItemConnectOutAsync(
+        public static async Task LazadaGetListCommonItemFromListItemConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -504,7 +504,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return listCI;
         }
 
-        public async Task<List<CommonItem>> LazadaGetListMappingOfProductAsync(int productId, MySqlConnection conn)
+        public static async Task<List<CommonItem>> LazadaGetListMappingOfProductAsync(int productId, MySqlConnection conn)
         {
             List<CommonItem> listCI = new List<CommonItem>();
             try
@@ -559,7 +559,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được thông tin chi tiết
-        public async Task LazadaGetItemFromIdConnectOutAsync(long id,
+        public static async Task LazadaGetItemFromIdConnectOutAsync(long id,
             CommonItem item,
             MySqlConnection conn)
         {
@@ -581,7 +581,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<MySqlResultState> LazadaUpdateMappingAsync(List<CommonForMapping> ls)
+        public static async Task<MySqlResultState> LazadaUpdateMappingAsync(List<CommonForMapping> ls)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -656,7 +656,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task<List<CommonItem>> LazadaGetItemOnDBAsync(MySqlConnection conn)
+        public static async Task<List<CommonItem>> LazadaGetItemOnDBAsync(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             try
@@ -683,7 +683,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public async Task LazadaGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
+        public static async Task LazadaGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
         {
             try
             {
@@ -734,7 +734,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task InserttbLazadaBrandAsync(List<LazadaBrandModule> modules, MySqlConnection conn)
+        public static async Task InserttbLazadaBrandAsync(List<LazadaBrandModule> modules, MySqlConnection conn)
         {
             try
             {
@@ -763,7 +763,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<MySqlResultState> InserttbLazadaMediaSpaceAsync(
+        public static async Task<MySqlResultState> InserttbLazadaMediaSpaceAsync(
             int productId,
             int mediaType, // 0: là ảnh, 1: video
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
@@ -805,7 +805,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy số lượng ảnh đã up lên Lazada của sản phẩm
-        public async Task<int> GetQuantityOfProductImageUploadedToLazadaAsync(
+        public static async Task<int> GetQuantityOfProductImageUploadedToLazadaAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Lazada
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
@@ -844,7 +844,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Vì upload lại ảnh lên Lazada, xóa id ảnh cũ đã lưu trong db
-        public async Task<MySqlResultState> DeleteProductImageUploadedToLazadaAsync(
+        public static async Task<MySqlResultState> DeleteProductImageUploadedToLazadaAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên Lazada
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo
@@ -873,7 +873,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<List<string>> GetUploadedImageOfProductOnLazadaAsync(
+        public static async Task<List<string>> GetUploadedImageOfProductOnLazadaAsync(
             int mediaType, // 0: là ảnh, 1: video
             int productId, // Id của sản phẩm trong kho upload ảnh lên sàn
             int productType, // 0: là sản phẩm riêng lẻ trong kho, 1: là sản phẩm combo

@@ -112,10 +112,9 @@ namespace MVCPlayWithMe.Models
 
         public async Task SetShopeeItemId()
         {
-            ItemModelMySql sqler = new ItemModelMySql();
             if (models.Count > 0)
             {
-                MySqlResultState result = await sqler.GetTMDTShopeeItemIdFromModelIdAsync(models[0].id);
+                MySqlResultState result = await ItemModelMySql.GetTMDTShopeeItemIdFromModelIdAsync(models[0].id);
                 if (result.State == EMySqlResultState.OK)
                 {
                     shopeeItemId = result.myAnythingLong;

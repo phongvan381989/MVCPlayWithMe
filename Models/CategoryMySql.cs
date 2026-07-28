@@ -9,46 +9,7 @@ namespace MVCPlayWithMe.Models
 {
     public class CategoryMySql
     {
-        //public List<Category> GetListCategory()
-        //{
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    List<Category> ls = new List<Category>();
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbCategory_Select_All", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        int idIndex = rdr.GetOrdinal("Id");
-        //        int nameIndex = rdr.GetOrdinal("Name");
-        //        int tikiIndex = rdr.GetOrdinal("TikiCategoryId");
-        //        int shopeeIndex = rdr.GetOrdinal("ShopeeCategoryId");
-        //        int lazadaIndex = rdr.GetOrdinal("LazadaCategoryId");
-        //        while (rdr.Read())
-        //        {
-        //            Category cate = new Category(rdr.GetInt32(idIndex),
-        //                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex));
-        //            cate.tikiCategoryId = rdr.IsDBNull(tikiIndex) ? -1 : rdr.GetInt32(tikiIndex);
-        //            cate.shopeeCategoryId = rdr.IsDBNull(shopeeIndex) ? -1 : rdr.GetInt64(shopeeIndex);
-        //            cate.lazadaCategoryId = rdr.IsDBNull(lazadaIndex) ? -1 : rdr.GetInt64(lazadaIndex);
-        //            ls.Add(cate);
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //        ls.Clear();
-        //    }
-
-        //    conn.Close();
-        //    return ls;
-        //}
-
-        public async Task<List<Category>> GetListCategoryAsync()
+        public static async Task<List<Category>> GetListCategoryAsync()
         {
             List<Category> ls = new List<Category>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -88,7 +49,7 @@ namespace MVCPlayWithMe.Models
             return ls;
         }
 
-        public async Task<Category> GetCategoryAsync(int id, MySqlConnection conn)
+        public static async Task<Category> GetCategoryAsync(int id, MySqlConnection conn)
         {
             Category category = null;
             try
@@ -119,7 +80,7 @@ namespace MVCPlayWithMe.Models
             return category;
         }
 
-        public async Task<MySqlResultState> CreateNewCategoryAsync(string name)
+        public static async Task<MySqlResultState> CreateNewCategoryAsync(string name)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@categoryName", name);
@@ -127,7 +88,7 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCategory_Insert", paras);
         }
 
-        public async Task<MySqlResultState> DeleteCategoryAsync(int id)
+        public static async Task<MySqlResultState> DeleteCategoryAsync(int id)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@categoryId", id);
@@ -135,7 +96,7 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCategory_Delete_From_Id", paras);
         }
 
-        public async Task<int> GetCategoryIdFromNameAsync(string name)
+        public static async Task<int> GetCategoryIdFromNameAsync(string name)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@categoryName", name);
@@ -143,7 +104,7 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteGetIdStoreProcedureAsync("st_tbCategory_GetIdFromName", paras);
         }
 
-        public async Task<MySqlResultState> UpdateCategoryAsync(int id, string name)
+        public static async Task<MySqlResultState> UpdateCategoryAsync(int id, string name)
         {
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inId", id);

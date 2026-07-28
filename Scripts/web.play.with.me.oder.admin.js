@@ -112,7 +112,7 @@ async function CheckPackedOrderEnough() {
     let length = listOrderTemp.length;
     let isEnough = true;
     for (let i = 0; i < length; i++) {
-        if (isEmptyOrSpaces(listOrderTemp[i].orderStatusInWarehoue)) {
+        if (isEmptyOrSpaces(listOrderTemp[i].orderStatusInWarehouse)) {
             isEnough = false;
             break;
         }
@@ -382,14 +382,14 @@ function FilterOrderECommerceName(list, ecommerce) {
 // Set màu sắc của cột đóng / hoàn / giữ chỗ / hủy giữ chỗ
 // Đóng: màu mặc định, giữ chỗ: Xanh lá cây, hủy giữ chỗ: xanh nước biển, hoàn: đỏ
 function SetColorOfPackedReturned(cell) {
-    let orderStatusInWarehoue = cell.innerHTML;
-    if (orderStatusInWarehoue === returnedOrderStatusInWarehouse) {
+    let orderStatusInWarehouse = cell.innerHTML;
+    if (orderStatusInWarehouse === returnedOrderStatusInWarehouse) {
         cell.style.color = "red";
     }
-    else if (orderStatusInWarehoue === unbookedOrderStatusInWarehouse) {
+    else if (orderStatusInWarehouse === unbookedOrderStatusInWarehouse) {
         cell.style.color = "blue";
     }
-    else if (orderStatusInWarehoue === bookedOrderStatusInWarehouse) {
+    else if (orderStatusInWarehouse === bookedOrderStatusInWarehouse) {
         cell.style.color = "green";
     }
     else {
@@ -470,7 +470,7 @@ function DisplayListOrder(inlistOrderTemp) {
             cell4.title = "Đơn đã được gửi theo booking: " + order.bookingCode;
         }
 
-        cell5.innerHTML = order.orderStatusInWarehoue;
+        cell5.innerHTML = order.orderStatusInWarehouse;
         SetColorOfPackedReturned(cell5);
 
         row.onclick = function () {
@@ -521,7 +521,7 @@ function FilterOrderStatusInWarehouse(list, statusInWarehouse) {
     }
     else {
         for (let i = 0; i < list.length; i++) {
-            if (list[i].orderStatusInWarehoue === statusInWarehouse) {
+            if (list[i].orderStatusInWarehouse === statusInWarehouse) {
                 listTemp.push(list[i]);
             }
         }
@@ -895,8 +895,8 @@ async function ShowOneOrderOnModal(order) {
     EmptyAndFocusProductCodeElement();
 
     // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
-    if (order.orderStatusInWarehoue == bookedOrderStatusInWarehouse ||
-        isEmptyOrSpaces(order.orderStatusInWarehoue)) { // Vì push message xịt, nên chưa có thông tin
+    if (order.orderStatusInWarehouse == bookedOrderStatusInWarehouse ||
+        isEmptyOrSpaces(order.orderStatusInWarehouse)) { // Vì push message xịt, nên chưa có thông tin
         document.getElementsByClassName("btn-enough-product")[0].disabled = false;
     }
     else {
@@ -905,7 +905,7 @@ async function ShowOneOrderOnModal(order) {
     }
 
     // Đơn đang ở trạng thái Đã Đóng
-    if (order.orderStatusInWarehoue == packedOrderStatusInWarehouse) {
+    if (order.orderStatusInWarehouse == packedOrderStatusInWarehouse) {
         document.getElementsByClassName("btn-return-order")[0].disabled = false;
     }
     else {
@@ -914,7 +914,7 @@ async function ShowOneOrderOnModal(order) {
 
     ShowModalInOrderPage();
     // Đơn đã hoàn không thông báo gì
-    if (order.orderStatusInWarehoue == returnedOrderStatusInWarehouse) {
+    if (order.orderStatusInWarehouse == returnedOrderStatusInWarehouse) {
 
     }
     else if (isPackedOrCancelled) {
@@ -1133,8 +1133,8 @@ function EmptyAndFocusProductCodeElement() {
 // Nếu click checkbox bằng tay thì không tự động click "Đủ Sản Phẩm"
 async function AddProduct() {
     // Đơn đã hủy trên sàn hoặc đã được đóng ta disable Đủ Sản Phẩm
-    if (!isEmptyOrSpaces(currentOrder.orderStatusInWarehoue) && // Vì push message xịt, nên chưa có thông tin
-        currentOrder.orderStatusInWarehoue != bookedOrderStatusInWarehouse) {
+    if (!isEmptyOrSpaces(currentOrder.orderStatusInWarehouse) && // Vì push message xịt, nên chưa có thông tin
+        currentOrder.orderStatusInWarehouse != bookedOrderStatusInWarehouse) {
         let x = document.getElementById("myDonDaDongHoacHuy");
         x.play();
         return;
@@ -1180,14 +1180,14 @@ function UpdateOrderStatusToView() {
         if (currentOrder.isBooking == false &&
             rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
             rows[i].cells[1].innerHTML == currentOrder.code) {// Mã đơn hàng
-            rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehoue;
+            rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehouse;
             SetColorOfPackedReturned(rows[i].cells[5]);
             break;
         }
         else if (currentOrder.isBooking &&
             rows[i].cells[0].innerHTML == currentOrder.ecommerceName && // Sàn
             rows[i].cells[1].innerHTML == currentOrder.bookingCode) {// Mã đơn hàng
-            rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehoue;
+            rows[i].cells[5].innerHTML = currentOrder.orderStatusInWarehouse;
             SetColorOfPackedReturned(rows[i].cells[5])
             break;
         }
@@ -1270,7 +1270,7 @@ async function EnoughProduct() {
     // Ẩn modal
     CloseModalInOrderPage();
 
-    currentOrder.orderStatusInWarehoue = packedOrderStatusInWarehouse;
+    currentOrder.orderStatusInWarehouse = packedOrderStatusInWarehouse;
 
     // Nếu đang lọc theo giữ chỗ sau khi "Đã Đóng" ta cập nhật lại danh sách
     if (document.getElementById("order-status-booked").checked) {
@@ -1322,7 +1322,7 @@ async function ReturnedOrder() {
     // Ẩn modal
     CloseModalInOrderPage();
 
-    currentOrder.orderStatusInWarehoue = returnedOrderStatusInWarehouse;
+    currentOrder.orderStatusInWarehouse = returnedOrderStatusInWarehouse;
 
     // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
     UpdateOrderStatusToView();

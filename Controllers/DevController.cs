@@ -38,13 +38,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class DevController : BasicController
     {
-        public DevMySql sqler { get; set; }
-
-        public DevController() : base()
-        {
-            sqler = new DevMySql();
-        }
-
         // GET: Dev
         public async Task<ActionResult> Index()
         {
@@ -59,7 +52,6 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public string CopyShopeeProductImageToProduct()
         {
-            ShopeeMySql shopeeSqler = new ShopeeMySql();
             return string.Empty;
         }
 
@@ -74,14 +66,12 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             List<CommonItem> lsCommonItem = new List<CommonItem>();
 
-            ShopeeMySql shopeeSqler = new ShopeeMySql();
-
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    List<long> lsItem = await shopeeSqler.GetForSaveImageSourceConnectOutAsync(conn);
+                    List<long> lsItem = await ShopeeMySql.GetForSaveImageSourceConnectOutAsync(conn);
                     foreach (var itemId in lsItem)
                     {
                         ShopeeGetItemBaseInfoItem pro =
@@ -92,7 +82,7 @@ namespace MVCPlayWithMe.Controllers
                         }
                     }
 
-                    await shopeeSqler.UpdateImageSourceTotbShopeeItem_ModelConnectOutAsync(lsCommonItem, conn);
+                    await ShopeeMySql.UpdateImageSourceTotbShopeeItem_ModelConnectOutAsync(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
@@ -113,11 +103,10 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                ShopeeMySql shopeeSqler = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    result = await ShopeeBrand.ShopeeGetBrandList(categoryId, shopeeSqler, conn);
+                    result = await ShopeeBrand.ShopeeGetBrandList(categoryId, conn);
                 }
             }
             catch (Exception ex)
@@ -163,11 +152,10 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                LazadaMySql lazadaSQLer = new LazadaMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    List<CommonItem> ls = await lazadaSQLer.LazadaGetItemOnDBAsync(conn);
+                    List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
                     await ProductController.LazadaUpdateQuantity_CoreAsync(ls);
 
                     // Lấy danh sách item cập nhật số lượng sai
@@ -215,11 +203,10 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             try
             {
-                LazadaMySql lazadaSQLer = new LazadaMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    List<CommonItem> ls = await lazadaSQLer.LazadaGetItemOnDBAsync(conn);
+                    List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
 
                     ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
 
@@ -341,8 +328,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    TikiMySql tikiSqler = new TikiMySql();
-                    List<int> lsItemId = await tikiSqler.GetForSaveImageSourceConnectOutAsync(conn);
+                    List<int> lsItemId = await TikiMySql.GetForSaveImageSourceConnectOutAsync(conn);
 
                     foreach (var itemId in lsItemId)
                     {
@@ -354,7 +340,7 @@ namespace MVCPlayWithMe.Controllers
 
                         lsCommonItem.Add(new CommonItem(pro));
                     }
-                    await tikiSqler.UpdateImageSourceTotbTikiItemConnectOutAsync(lsCommonItem, conn);
+                    await TikiMySql.UpdateImageSourceTotbTikiItemConnectOutAsync(lsCommonItem, conn);
                 }
             }
             catch (Exception ex)
@@ -455,8 +441,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    TikiMySql tikiSqler = new TikiMySql();
-                    await tikiSqler.InsertTbTikiCategoryAsync(ls, conn);
+                    await TikiMySql.InsertTbTikiCategoryAsync(ls, conn);
                 }
             }
             catch (Exception ex)
@@ -475,8 +460,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    TikiMySql tikiSqler = new TikiMySql();
-                    categoryIdList = await tikiSqler.GetCatetoryIdListAsync(conn);
+                    categoryIdList = await TikiMySql.GetCatetoryIdListAsync(conn);
 
                     List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributeListGeneral =
     new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>();
@@ -499,7 +483,7 @@ namespace MVCPlayWithMe.Controllers
                     }
 
                     // Lưu vào db
-                    await tikiSqler.InsertTikiAttributesOfCategoryAsync(attributeListGeneral, conn);
+                    await TikiMySql.InsertTikiAttributesOfCategoryAsync(attributeListGeneral, conn);
                 }
             }
             catch (Exception ex)
@@ -525,12 +509,12 @@ namespace MVCPlayWithMe.Controllers
                     conn))
                         {
                             cmd.CommandType = CommandType.Text;
-                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
-                                int idOrdinal = reader.GetOrdinal("Id");
-                                while (await reader.ReadAsync())
+                                int idOrdinal = rdr.GetOrdinal("Id");
+                                while (await rdr.ReadAsync())
                                 {
-                                    listProId.Add(reader.GetInt32(idOrdinal));
+                                    listProId.Add(rdr.GetInt32(idOrdinal));
                                 }
                             }
                         }
@@ -544,12 +528,12 @@ namespace MVCPlayWithMe.Controllers
                     conn))
                         {
                             cmd.CommandType = CommandType.Text;
-                            using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
-                                int tikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
-                                while (await reader.ReadAsync())
+                                int tikiCategoryIdOrdinal = rdr.GetOrdinal("TikiCategoryId");
+                                while (await rdr.ReadAsync())
                                 {
-                                    listTikiCategoryId.Add(reader.GetInt32(tikiCategoryIdOrdinal));
+                                    listTikiCategoryId.Add(rdr.GetInt32(tikiCategoryIdOrdinal));
                                 }
                             }
                         }
@@ -577,17 +561,17 @@ namespace MVCPlayWithMe.Controllers
                             {
                                 cmd.CommandType = CommandType.Text;
                                 cmd.Parameters.AddWithValue("@inProductId", listProId[0]);
-                                using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                                 {
-                                    int tikiIdOrdinal = reader.GetOrdinal("TikiId");
-                                    int productIdOrdinal = reader.GetOrdinal("ProductId");
-                                    while (await reader.ReadAsync())
+                                    int tikiIdOrdinal = rdr.GetOrdinal("TikiId");
+                                    int productIdOrdinal = rdr.GetOrdinal("ProductId");
+                                    while (await rdr.ReadAsync())
                                     {
                                         if (tikiId == 0)
                                         {
-                                            tikiId = reader.GetInt32(tikiIdOrdinal);
+                                            tikiId = rdr.GetInt32(tikiIdOrdinal);
                                         }
-                                        listProIdMapping.Add(reader.GetInt32(productIdOrdinal));
+                                        listProIdMapping.Add(rdr.GetInt32(productIdOrdinal));
                                     }
                                 }
                             }
@@ -676,11 +660,10 @@ namespace MVCPlayWithMe.Controllers
 
         private async Task LazadaUpdatePrice_SalePrice()
         {
-            LazadaMySql lazadaSQLer = new LazadaMySql();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                List<CommonItem> ls = await lazadaSQLer.LazadaGetItemOnDBAsync(conn);
+                List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
                 foreach (var item in ls)
                 {
                     if (item.itemId == 3015755086)
@@ -861,7 +844,7 @@ namespace MVCPlayWithMe.Controllers
                     List<CommonItem> listCommonItem = await TikiMySql.TikiGetListAllUpdateQuantityConnectOutAsync(conn);
                     foreach (var commonItem in listCommonItem)
                     {
-                        ProductController.TikiUpdateQuantityOfOneItem(commonItem);
+                        await ProductController.TikiUpdateQuantityOfOneItemAsync(commonItem);
                         await Task.Delay(500);
                     }
                 }
@@ -908,7 +891,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(sqler.DeleteDuplicateDataOftbShopeeModel());
+            return JsonConvert.SerializeObject(await DevMySql.DeleteDuplicateDataOftbShopeeModel());
         }
 
         [HttpPost]
@@ -1024,7 +1007,6 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
 
                     // Lấy danh sách item active
-                    MVCPlayWithMe.Models.ItemModel.ItemModelMySql itemModelsqler = new MVCPlayWithMe.Models.ItemModel.ItemModelMySql();
                     List<MVCPlayWithMe.Models.Item> items = new List<Models.Item>();// await itemModelsqler.GetListItemActiveAsync(); // temporary comment
 
                     // Tạo XML sitemap

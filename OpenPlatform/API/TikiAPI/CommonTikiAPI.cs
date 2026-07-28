@@ -49,6 +49,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
                 config = null;
             }
 
+            MyLogger.GetInstance().Info("Retrieved Tiki config app: " + JsonConvert.SerializeObject(config));
             return config;
         }
 
@@ -68,7 +69,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             IRestResponse response = null;
             try
             {
-                response = await Common.client.ExecuteAsync(request);
+                response = Common.client.Execute(request);
                 MyLogger.InfoRestLog(Common.client, request, response);
             }
             catch (Exception ex)
@@ -82,14 +83,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
                 return "Lấy quyền truy cập shop lỗi. Vui lòng thử lại.";
             }
             TikiAuthorization accessToken = JsonConvert.DeserializeObject<TikiAuthorization>(response.Content);
-            TikiMySql tikiMySql = new TikiMySql();
 
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 try
                 {
                     await conn.OpenAsync();
-                    await tikiMySql.TikiSaveAccessTokenAsync(accessToken, conn);
+                    await TikiMySql.TikiSaveAccessTokenAsync(accessToken, conn);
 
                     // Cập nhật
                     tikiConfigApp = await GetTikiConfigApp(conn);
@@ -110,16 +110,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         /// <param name="request"></param>
         /// <param name="configApp"></param>
         /// <returns></returns>
-        static public async Task<IRestResponse> ExcuteRequest(RestRequest request)
+        static public async Task<IRestResponse> ExecuteRequest(RestRequest request)
         {
-            //if (CommonTikiAPI.tikiConfigApp == null)
-            //{
-            //    TikiMySql tikiMySql = new TikiMySql();
-            //    CommonTikiAPI.tikiConfigApp = tikiMySql.GetTikiConfigApp();
-            //    if (CommonTikiAPI.tikiConfigApp == null)
-            //        return null;
-            //}
-
             // Nếu access token hết hạn, ta làm mới
             if (Common.ConvertStringToInt32(tikiConfigApp.tikiAu.expires_in) == System.Int32.MinValue ||
                     (
@@ -176,7 +168,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         static public async Task<IRestResponse> GetExcuteRequest(string http)
         {
             RestRequest request = new RestRequest(http, Method.GET);
-            IRestResponse response = await ExcuteRequest(request);
+            IRestResponse response = await ExecuteRequest(request);
             return response;
         }
 
@@ -186,7 +178,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             request.AddHeader("Content-Type", "application/json");
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-            IRestResponse response = await ExcuteRequest(request);
+            IRestResponse response = await ExecuteRequest(request);
             return response;
         }
 
@@ -199,7 +191,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
-            IRestResponse response = await ExcuteRequest(request);
+            IRestResponse response = await ExecuteRequest(request);
             return response;
         }
     }

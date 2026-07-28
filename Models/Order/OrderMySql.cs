@@ -18,93 +18,6 @@ namespace MVCPlayWithMe.Models.Order
 {
     public class OrderMySql
     {
-        //public int AddOrder(int customerId, string note, int isNotWeb,
-        //    Address cusInfor)
-        //{
-        //    int id = -1;
-        //    //if (cusInfor == null)
-        //    //    return id;
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbOrder_Insert", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-        //        if (cusInfor != null)
-        //        {
-        //            cmd.Parameters.AddWithValue("@inName", cusInfor.name);
-        //            cmd.Parameters.AddWithValue("@inPhone", cusInfor.phone);
-        //            cmd.Parameters.AddWithValue("@inProvince", cusInfor.province);
-        //            cmd.Parameters.AddWithValue("@inDistrict", cusInfor.district);
-        //            cmd.Parameters.AddWithValue("@inSubDistrict", cusInfor.subdistrict);
-        //            cmd.Parameters.AddWithValue("@inDetail", cusInfor.detail);
-        //        }
-        //        else
-        //        {
-        //            cmd.Parameters.AddWithValue("@inName", null);
-        //            cmd.Parameters.AddWithValue("@inPhone", null);
-        //            cmd.Parameters.AddWithValue("@inProvince", null);
-        //            cmd.Parameters.AddWithValue("@inDistrict", null);
-        //            cmd.Parameters.AddWithValue("@inSubDistrict", null);
-        //            cmd.Parameters.AddWithValue("@inDetail", null);
-        //        }
-        //        cmd.Parameters.AddWithValue("@inNote", note);
-        //        cmd.Parameters.AddWithValue("@inIsNotWeb", isNotWeb);
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        while (rdr.Read())
-        //        {
-        //            id = MyMySql.GetInt32(rdr, "LastId");
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-        //    conn.Close();
-
-        //    return id;
-        //}
-
-        //public MySqlResultState AddPayOrder(int orderId, List<OrderPay> ls)
-        //{
-        //    MySqlResultState result = new MySqlResultState();
-        //    if (ls == null || ls.Count() == 0)
-        //        return result;
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbPayOrder_Insert", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inOrderId", orderId);
-        //        cmd.Parameters.AddWithValue("@inType", 0);
-        //        cmd.Parameters.AddWithValue("@inValue", 0);
-        //        foreach (var orderPay in ls)
-        //        {
-        //            cmd.Parameters[1].Value = orderPay.type;
-        //            cmd.Parameters[2].Value = orderPay.value;
-
-        //            cmd.ExecuteNonQuery();
-        //        }
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        Common.SetResultException(ex, result);
-        //    }
-        //    conn.Close();
-
-        //    return result;
-        //}
-
         /// <summary>
         /// Lấy index trong list có orderId bằng tham số truyền vào
         /// </summary>
@@ -113,7 +26,7 @@ namespace MVCPlayWithMe.Models.Order
         /// <param name="count">số phần tử của danh sách</param>
         /// <param name="orderId"></param>
         /// <returns></returns>
-        private int GetIndex(List<Order> ls, int fromIndex, int count, int orderId)
+        private static int GetIndex(List<Order> ls, int fromIndex, int count, int orderId)
         {
             int index = -1;
             for (int i = fromIndex; i < count; i++)
@@ -126,7 +39,7 @@ namespace MVCPlayWithMe.Models.Order
             return index;
         }
 
-        private void ReadOrder(Order order, MySqlDataReader rdr)
+        private static void ReadOrder(Order order, MySqlDataReader rdr)
         {
             order.id = MyMySql.GetInt32(rdr, "Id");
             order.customerId = MyMySql.GetInt32(rdr, "CustomerId");
@@ -139,7 +52,7 @@ namespace MVCPlayWithMe.Models.Order
             order.time = MyMySql.GetDateTime(rdr, "Time");
         }
 
-        private void ReadOrderTrack(OrderTrack track, MySqlDataReader rdr)
+        private static void ReadOrderTrack(OrderTrack track, MySqlDataReader rdr)
         {
             track.id = MyMySql.GetInt32(rdr, "Id");
             track.orderId = MyMySql.GetInt32(rdr, "OrderId");
@@ -148,7 +61,7 @@ namespace MVCPlayWithMe.Models.Order
             track.SetStrStatus();
         }
 
-        private void ReadOrderPay(OrderPay pay, MySqlDataReader rdr)
+        private static void ReadOrderPay(OrderPay pay, MySqlDataReader rdr)
         {
             pay.id = MyMySql.GetInt32(rdr, "Id");
             pay.orderId = MyMySql.GetInt32(rdr, "OrderId");
@@ -158,7 +71,7 @@ namespace MVCPlayWithMe.Models.Order
             pay.SetStrType();
         }
 
-        private void ReadOrderDetail(OrderDetail detail, MySqlDataReader rdr)
+        private static void ReadOrderDetail(OrderDetail detail, MySqlDataReader rdr)
         {
             detail.id = MyMySql.GetInt32(rdr, "Id");
             detail.orderId = MyMySql.GetInt32(rdr, "OrderId");
@@ -172,93 +85,8 @@ namespace MVCPlayWithMe.Models.Order
             detail.SetImageSrc();
         }
 
-        /// <summary>
-        /// </summary>
-        /// <param name="fromTo"> 0: 1 ngày, 1: 7 ngày, 2: 30 ngày</param>
-        /// <returns></returns>
-        //public List<CommonOrder> GetListCommonOrder(int fromTo)
-        //{
-        //    List<CommonOrder> ls = new List<CommonOrder>();
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbOrder_Get_To_Pack_Order", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inFromTo", fromTo);
-
-        //        MySqlDataReader rdr = cmd.ExecuteReader();
-        //        CommonOrder commonOrder = null;
-        //        long id = 0;
-        //        long itemId = 0;
-        //        long modelId = 0;
-        //        int modelQuantity = 0;
-        //        string itemName = "";
-        //        string modelName = "";
-        //        string imgSrc = "";
-
-        //        int orderIdIndex = rdr.GetOrdinal("OrderId");
-        //        int orderCodeIndex = rdr.GetOrdinal("OrderCode");
-        //        int orderTimeIndex = rdr.GetOrdinal("OrderTime");
-        //        int statusIndex = rdr.GetOrdinal("StatusInTrackOrder");
-        //        int modelIdIndex = rdr.GetOrdinal("ModelId");
-        //        int itemIdIndex = rdr.GetOrdinal("ItemId");
-        //        int modelQuantityIndex = rdr.GetOrdinal("ModelQuantity");
-        //        int itemNameIndex = rdr.GetOrdinal("ItemName");
-        //        int modelNameIndex = rdr.GetOrdinal("ModelName");
-
-        //        while (rdr.Read())
-        //        {
-        //            id = (long)rdr.GetInt32(orderIdIndex);
-        //            if (ls.Count == 0 || ls[ls.Count - 1].id != id)
-        //            {
-        //                ls.Add(new CommonOrder());
-        //            }
-        //            commonOrder = ls[ls.Count - 1];
-        //            commonOrder.ecommerceName = Common.ePlayWithMe;
-        //            if (commonOrder.id != id)
-        //            {
-        //                commonOrder.id = id;
-        //                commonOrder.code = rdr.IsDBNull(orderCodeIndex) ? string.Empty : rdr.GetString(orderCodeIndex);
-        //                commonOrder.created_at = rdr.IsDBNull(orderTimeIndex) ? DateTime.MinValue : rdr.GetDateTime(orderTimeIndex);
-        //                commonOrder.status = OrderTrack.GetString(rdr.IsDBNull(statusIndex) ? -1 : rdr.GetInt32(statusIndex));
-        //            }
-
-        //            modelId = rdr.IsDBNull(modelIdIndex) ? -1L : (long)rdr.GetInt32(modelIdIndex);
-
-        //            if (commonOrder.listModelId.Count == 0 ||
-        //                commonOrder.listModelId[commonOrder.listModelId.Count - 1] != modelId)
-        //            {
-        //                itemId = (long)rdr.GetInt32(itemIdIndex);
-        //                modelQuantity = rdr.IsDBNull(modelQuantityIndex) ? -1 : rdr.GetInt32(modelQuantityIndex);
-        //                itemName = rdr.IsDBNull(itemNameIndex) ? string.Empty : rdr.GetString(itemNameIndex);
-        //                modelName = rdr.IsDBNull(modelNameIndex) ? string.Empty : rdr.GetString(modelNameIndex);
-        //                imgSrc = Common.GetModelImageSrc(Common.ConvertLongToInt(itemId), Common.ConvertLongToInt(modelId));
-
-        //                commonOrder.listItemId.Add(itemId);
-        //                commonOrder.listModelId.Add(modelId);
-        //                commonOrder.listItemName.Add(itemName);
-        //                commonOrder.listModelName.Add(modelName);
-        //                commonOrder.listQuantity.Add(modelQuantity);
-        //                commonOrder.listThumbnail.Add(imgSrc);
-        //            }
-        //        }
-
-        //        rdr.Close();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //        ls.Clear();
-        //    }
-
-        //    conn.Close();
-        //    return ls;
-        //}
-
         // Lấy mapping của sản phẩm trong đơn hàng
-        public async Task PlayWithMeGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
+        public static async Task PlayWithMeGetMappingOfCommonOrderConnectOut(CommonOrder commonOrder, MySqlConnection conn)
         {
             string status = string.Empty;
             try
@@ -305,7 +133,7 @@ namespace MVCPlayWithMe.Models.Order
         }
 
         // Từ đơn hàng, cập nhật trạng thái sản phẩm trên sàn vì có sản phẩm trên sàn được bật bán trở lại
-        public async Task UpdateStatusNormalOfTMDTItemConnectOut(CommonOrder order, MySqlConnection conn)
+        public static async Task UpdateStatusNormalOfTMDTItemConnectOut(CommonOrder order, MySqlConnection conn)
         {
             try
             {
@@ -373,7 +201,7 @@ namespace MVCPlayWithMe.Models.Order
 
         // ── Async versions ────────────────────────────────────────────────────
 
-        private async Task<Order> GetOrderConnectOutAsync(int id, MySqlConnection conn)
+        private static async Task<Order> GetOrderConnectOutAsync(int id, MySqlConnection conn)
         {
             Order order = null;
             using (MySqlCommand cmd = new MySqlCommand("st_tbOrder_Get_Order", conn))
@@ -393,7 +221,7 @@ namespace MVCPlayWithMe.Models.Order
             return order;
         }
 
-        private async Task GetOrderTrackConnectOutAsync(Order order, MySqlConnection conn)
+        private static async Task GetOrderTrackConnectOutAsync(Order order, MySqlConnection conn)
         {
             using (MySqlCommand cmd = new MySqlCommand("st_tbTrackOrder_Get_From_OrderId", conn))
             {
@@ -411,7 +239,7 @@ namespace MVCPlayWithMe.Models.Order
             }
         }
 
-        private async Task GetOrderPayConnectOutAsync(Order order, MySqlConnection conn)
+        private static async Task GetOrderPayConnectOutAsync(Order order, MySqlConnection conn)
         {
             using (MySqlCommand cmd = new MySqlCommand("st_tbPayOrder_Get_From_OrderId", conn))
             {
@@ -429,7 +257,7 @@ namespace MVCPlayWithMe.Models.Order
             }
         }
 
-        private async Task GetOrderDetailConnectOutAsync(Order order, MySqlConnection conn)
+        private static async Task GetOrderDetailConnectOutAsync(Order order, MySqlConnection conn)
         {
             using (MySqlCommand cmd = new MySqlCommand("st_tbDetailOrder_Get_From_OrderId", conn))
             {
@@ -447,7 +275,7 @@ namespace MVCPlayWithMe.Models.Order
             }
         }
 
-        private async Task<Order> GetOrderFromIdConnectOutAsync(int orderId, MySqlConnection conn)
+        private static async Task<Order> GetOrderFromIdConnectOutAsync(int orderId, MySqlConnection conn)
         {
             Order order = null;
             try
@@ -466,7 +294,7 @@ namespace MVCPlayWithMe.Models.Order
             return order;
         }
 
-        public async Task<List<Cart>> GetListCartAsync(int customerId)
+        public static async Task<List<Cart>> GetListCartAsync(int customerId)
         {
             List<Cart> ls = new List<Cart>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -504,7 +332,7 @@ namespace MVCPlayWithMe.Models.Order
             return ls;
         }
 
-        public async Task<int> AddOrderAsync(int customerId, string note, int isNotWeb, Address cusInfor)
+        public static async Task<int> AddOrderAsync(int customerId, string note, int isNotWeb, Address cusInfor)
         {
             int id = -1;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -552,7 +380,7 @@ namespace MVCPlayWithMe.Models.Order
             return id;
         }
 
-        public async Task AddTrackOrderAsync(int orderId, int status)
+        public static async Task AddTrackOrderAsync(int orderId, int status)
         {
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inOrderId", orderId);
@@ -561,7 +389,7 @@ namespace MVCPlayWithMe.Models.Order
             await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbTrackOrder_Insert", paras);
         }
 
-        public async Task AddDetailOrderAsync(int orderId, List<Cart> lsCartCookie)
+        public static async Task AddDetailOrderAsync(int orderId, List<Cart> lsCartCookie)
         {
             MySqlParameter[] paras = new MySqlParameter[7];
             paras[0] = new MySqlParameter("@inOrderId", (object)0);
@@ -598,7 +426,7 @@ namespace MVCPlayWithMe.Models.Order
             }
         }
 
-        public async Task<MySqlResultState> AddPayOrderAsync(int orderId, List<OrderPay> ls)
+        public static async Task<MySqlResultState> AddPayOrderAsync(int orderId, List<OrderPay> ls)
         {
             MySqlResultState result = new MySqlResultState();
             if (ls == null || ls.Count() == 0) return result;
@@ -630,7 +458,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> RefreshRealOfCartAsync(int customerId)
+        public static async Task<MySqlResultState> RefreshRealOfCartAsync(int customerId)
         {
             MySqlParameter[] paras = new MySqlParameter[1];
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
@@ -640,7 +468,7 @@ namespace MVCPlayWithMe.Models.Order
         /// <summary>
         /// Lấy cart items với real=1 (sản phẩm được chọn mua)
         /// </summary>
-        public async Task<List<Cart>> GetRealCartAsync(int customerId)
+        public static async Task<List<Cart>> GetRealCartAsync(int customerId)
         {
             List<Cart> lsCart = new List<Cart>();
 
@@ -683,7 +511,7 @@ namespace MVCPlayWithMe.Models.Order
         /// <summary>
         /// Update real = 1 cho list sanPhamIds được chọn mua, các sản phẩm còn lại set real = 0
         /// </summary>
-        public async Task<MySqlResultState> UpdateRealCartAsync(int customerId, List<int> sanPhamIds)
+        public static async Task<MySqlResultState> UpdateRealCartAsync(int customerId, List<int> sanPhamIds)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -732,7 +560,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> DeleteSanPhamOnCartAsync(int customerId, int sanPhamId)
+        public static async Task<MySqlResultState> DeleteSanPhamOnCartAsync(int customerId, int sanPhamId)
         {
             MySqlParameter[] paras = new MySqlParameter[2];
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
@@ -740,7 +568,7 @@ namespace MVCPlayWithMe.Models.Order
             return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Delete_From_Customer_SanPhamId", paras);
         }
 
-        public async Task<MySqlResultState> DeleteListCartAsync(int customerId, List<Cart> ls)
+        public static async Task<MySqlResultState> DeleteListCartAsync(int customerId, List<Cart> ls)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -768,7 +596,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateSanPhamQuantityOnCartAsync(int customerId, int sanPhamId, int quantity)
+        public static async Task<MySqlResultState> UpdateSanPhamQuantityOnCartAsync(int customerId, int sanPhamId, int quantity)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
@@ -777,7 +605,7 @@ namespace MVCPlayWithMe.Models.Order
             return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Update_Quantity", paras);
         }
 
-        public async Task<MySqlResultState> UpdateSanPhamQuantityListOnCartAsync(
+        public static async Task<MySqlResultState> UpdateSanPhamQuantityListOnCartAsync(
             int customerId,
             Dictionary<int, int> updates)
         {
@@ -809,7 +637,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> GetCartCountAsync(int customerId)
+        public static async Task<MySqlResultState> GetCartCountAsync(int customerId)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -838,7 +666,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> GetAllOrderAsync(int customerId)
+        public static async Task<MySqlResultState> GetAllOrderAsync(int customerId)
         {
             MySqlResultState result = new MySqlResultState();
             List<Order> ls = new List<Order>();
@@ -965,7 +793,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> GetOrderFromIdAsync(int orderId)
+        public static async Task<MySqlResultState> GetOrderFromIdAsync(int orderId)
         {
             MySqlResultState result = new MySqlResultState();
             List<Order> ls = new List<Order>();
@@ -992,7 +820,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> GetAllOrderFromListIdAsync(List<int> ids)
+        public static async Task<MySqlResultState> GetAllOrderFromListIdAsync(List<int> ids)
         {
             MySqlResultState result = new MySqlResultState();
             List<Order> ls = new List<Order>();
@@ -1017,7 +845,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<MySqlResultState> SearchOrderForAnonymousAsync(string sdtNameForSearch)
+        public static async Task<MySqlResultState> SearchOrderForAnonymousAsync(string sdtNameForSearch)
         {
             MySqlResultState result = new MySqlResultState();
             List<Order> ls = new List<Order>();
@@ -1078,7 +906,7 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        public async Task<List<CommonOrder>> GetListCommonOrderAsync(int fromTo)
+        public static async Task<List<CommonOrder>> GetListCommonOrderAsync(int fromTo)
         {
             List<CommonOrder> ls = new List<CommonOrder>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1149,11 +977,11 @@ namespace MVCPlayWithMe.Models.Order
         }
 
         // Lấy cart với các thông tin chi tiết của sản phẩm từ DB và cập nhật vào List<Cart>
-        public async Task GetCartsSanPhamBasicInfoAsync(List<Cart> ls)
+        public static async Task GetCartsSanPhamBasicInfoAsync(List<Cart> ls)
         {
             if (ls == null || ls.Count() == 0)
                 return;
-            ItemModelMySql itemModelsqler = new ItemModelMySql();
+
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 try
@@ -1171,7 +999,7 @@ namespace MVCPlayWithMe.Models.Order
             }
         }
 
-        public async Task GetOrderStatusInWarehouseToCommonOrderAsync(List<CommonOrder> ls)
+        public static async Task GetOrderStatusInWarehouseToCommonOrderAsync(List<CommonOrder> ls)
         {
             if (ls == null || ls.Count == 0) return;
 
@@ -1182,36 +1010,36 @@ namespace MVCPlayWithMe.Models.Order
                     await conn.OpenAsync();
                     using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn))
                     {     
-                    using (MySqlCommand cmdBooking = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inCode", "");
-                        cmd.Parameters.AddWithValue("@inECommmerce", 0);
-
-                        cmdBooking.CommandType = CommandType.StoredProcedure;
-                        cmdBooking.Parameters.AddWithValue("@inCode", "");
-                        cmdBooking.Parameters.AddWithValue("@inECommmerce", 0);
-
-                        foreach (var order in ls)
+                        using (MySqlCommand cmdBooking = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn))
                         {
-                            MySqlCommand cmdTem = order.isBooking ? cmdBooking : cmd;
-                            string status = string.Empty;
-                            cmdTem.Parameters[0].Value = order.isBooking ? order.bookingCode : order.code;
-                            if (order.ecommerceName == Common.eTiki)        cmdTem.Parameters[1].Value = (int)EECommerceType.TIKI;
-                            else if (order.ecommerceName == Common.eShopee)  cmdTem.Parameters[1].Value = (int)EECommerceType.SHOPEE;
-                            else if (order.ecommerceName == Common.eLazada)  cmdTem.Parameters[1].Value = (int)EECommerceType.LAZADA;
-                            else if (order.ecommerceName == Common.ePlayWithMe) cmdTem.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@inCode", "");
+                            cmd.Parameters.AddWithValue("@inECommmerce", 0);
 
-                            using (MySqlDataReader rdr = (MySqlDataReader)await cmdTem.ExecuteReaderAsync())
+                            cmdBooking.CommandType = CommandType.StoredProcedure;
+                            cmdBooking.Parameters.AddWithValue("@inCode", "");
+                            cmdBooking.Parameters.AddWithValue("@inECommmerce", 0);
+
+                            foreach (var order in ls)
                             {
-                                while (await rdr.ReadAsync())
+                                MySqlCommand cmdTem = order.isBooking ? cmdBooking : cmd;
+                                string status = string.Empty;
+                                cmdTem.Parameters[0].Value = order.isBooking ? order.bookingCode : order.code;
+                                if (order.ecommerceName == Common.eTiki)        cmdTem.Parameters[1].Value = (int)EECommerceType.TIKI;
+                                else if (order.ecommerceName == Common.eShopee)  cmdTem.Parameters[1].Value = (int)EECommerceType.SHOPEE;
+                                else if (order.ecommerceName == Common.eLazada)  cmdTem.Parameters[1].Value = (int)EECommerceType.LAZADA;
+                                else if (order.ecommerceName == Common.ePlayWithMe) cmdTem.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
+
+                                using (MySqlDataReader rdr = (MySqlDataReader)await cmdTem.ExecuteReaderAsync())
                                 {
-                                    status = Common.OrderStatusArray[MyMySql.GetInt32(rdr, "Status")];
+                                    while (await rdr.ReadAsync())
+                                    {
+                                        status = Common.OrderStatusArray[MyMySql.GetInt32(rdr, "Status")];
+                                    }
                                 }
+                                order.orderStatusInWarehouse = status;
                             }
-                            order.orderStatusInWarehouse = status;
                         }
-                    }
                     }
                 }
                 catch (Exception ex)
@@ -1220,70 +1048,5 @@ namespace MVCPlayWithMe.Models.Order
                 }
             }
         }
-
-        // Lấy trạng thái từ DB và cập nhật trạng thái đơn hàng đã đóng/ đã hoàn vào List<CommonOrder>
-        // Hàm này dùng cho sàn: web PWM, Tiki, Shopee,...
-        //public void GetOrderStatusInWarehouseToCommonOrder(List<CommonOrder> ls)
-        //{
-        //    if (ls == null || ls.Count == 0)
-        //    {
-        //        return;
-        //    }
-
-        //    MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
-        //    string status = string.Empty;
-        //    try
-        //    {
-        //        conn.Open();
-
-        //        MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Get_Lastest_Status_From_Code", conn);
-        //        cmd.CommandType = CommandType.StoredProcedure;
-        //        cmd.Parameters.AddWithValue("@inCode", "");
-        //        cmd.Parameters.AddWithValue("@inECommmerce", 0);
-
-        //        MySqlCommand cmdBooking = new MySqlCommand("st_tbECommerceBooking_Get_Lastest_Status_From_Code", conn);
-        //        cmdBooking.CommandType = CommandType.StoredProcedure;
-        //        cmdBooking.Parameters.AddWithValue("@inCode", "");
-        //        cmdBooking.Parameters.AddWithValue("@inECommmerce", 0);
-        //        MySqlCommand cmdTem = null;
-        //        MySqlDataReader rdr;
-        //        foreach (var order in ls)
-        //        {
-        //            cmdTem = cmd;
-        //            if (order.isBooking)
-        //            {
-        //                cmdTem = cmdBooking;
-        //            }
-        //            status = string.Empty;
-        //            cmdTem.Parameters[0].Value = order.code;
-        //            if (order.isBooking)
-        //            {
-        //                cmdTem.Parameters[0].Value = order.bookingCode;
-        //            }
-        //            if (order.ecommerceName == Common.eTiki)
-        //                cmdTem.Parameters[1].Value = (int)EECommerceType.TIKI;
-        //            else if (order.ecommerceName == Common.eShopee)
-        //                cmdTem.Parameters[1].Value = (int)EECommerceType.SHOPEE;
-        //            else if (order.ecommerceName == Common.eLazada)
-        //                cmdTem.Parameters[1].Value = (int)EECommerceType.LAZADA;
-        //            else if (order.ecommerceName == Common.ePlayWithMe)
-        //                cmdTem.Parameters[1].Value = (int)EECommerceType.PLAY_WITH_ME;
-
-        //            rdr = cmdTem.ExecuteReader();
-        //            while (rdr.Read())
-        //            {
-        //                status = Common.OrderStatusArray[MyMySql.GetInt32(rdr, "Status")];
-        //            }
-        //            order.orderStatusInWarehoue = status;
-        //            rdr.Close();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        MyLogger.GetInstance().Warn(ex.ToString());
-        //    }
-
-        //    conn.Close();
-        //}
     }
 }

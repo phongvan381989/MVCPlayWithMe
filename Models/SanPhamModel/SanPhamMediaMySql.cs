@@ -89,52 +89,6 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return list;
         }
 
-        ///// <summary>
-        ///// Lấy 1 media theo ID
-        ///// </summary>
-        //public static async Task<SanPhamMedia> GetByIdAsync(int id)
-        //{
-        //    SanPhamMedia media = null;
-        //    using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-        //    {
-        //        try
-        //        {
-        //            await conn.OpenAsync();
-        //            MySqlCommand cmd = new MySqlCommand(
-        //                "SELECT * FROM tb_san_pham_media WHERE Id = @id",
-        //                conn);
-        //            cmd.CommandType = CommandType.Text;
-        //            cmd.Parameters.AddWithValue("@id", id);
-
-        //            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-        //            {
-        //                if (await rdr.ReadAsync())
-        //                {
-        //                    media = new SanPhamMedia
-        //                    {
-        //                        Id = MyMySql.GetInt32(rdr, "Id"),
-        //                        SanPhamId = MyMySql.GetInt32(rdr, "SanPhamId"),
-        //                        MediaType = MyMySql.GetString(rdr, "MediaType"),
-        //                        FileName = MyMySql.GetString(rdr, "FileName"),
-        //                        Title = MyMySql.GetString(rdr, "Title"),
-        //                        AltText = MyMySql.GetString(rdr, "AltText"),
-        //                        Description = MyMySql.GetString(rdr, "Description"),
-        //                        PosterImage = MyMySql.GetString(rdr, "PosterImage"),
-        //                        Width = (uint)MyMySql.GetInt32(rdr, "Width"),
-        //                        Height = (uint)MyMySql.GetInt32(rdr, "Height"),
-        //                        DisplayOrder = MyMySql.GetInt32(rdr, "DisplayOrder")
-        //                    };
-        //                }
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            MyLogger.GetInstance().Warn(ex.ToString());
-        //        }
-        //    }
-        //    return media;
-        //}
-
         /// <summary>
         /// Insert media mới
         /// </summary>

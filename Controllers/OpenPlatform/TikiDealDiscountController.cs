@@ -24,13 +24,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 {
     public class TikiDealDiscountController : BasicController
     {
-        public static TikiDealDiscountMySql sqler = new TikiDealDiscountMySql();
-
-        //public TikiDealDiscountController()
-        //{
-        //    sqler = new TikiDealDiscountMySql();
-        //}
-
         // GET: TikiDealDiscount
         public async Task<ActionResult> Index()
         {
@@ -43,7 +36,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Insert nếu chưa tồn tại
             if (listDeal != null && listDeal.Count > 0)
             {
-                await sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
+                await TikiDealDiscountMySql.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
             }
             return listDeal;
         }
@@ -57,7 +50,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // Insert nếu chưa tồn tại
             if (listDeal != null && listDeal.Count > 0)
             {
-                await sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
+                await TikiDealDiscountMySql.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
             }
             return listDeal;
         }
@@ -93,7 +86,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                tikiId = await sqler.GetTikiIdBySkuAsync(sku, conn);
+                tikiId = await TikiDealDiscountMySql.GetTikiIdBySkuAsync(sku, conn);
             }
 
             return tikiId.ToString();
@@ -114,13 +107,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     await conn.OpenAsync();
 
                     // Lấy danh sách sku đang bật bán và lấy chương trình giảm giá lần lượt
-                    List<string> skuList = await sqler.GetListSkuOfActiveItemConnectOutAsync(conn);
+                    List<string> skuList = await TikiDealDiscountMySql.GetListSkuOfActiveItemConnectOutAsync(conn);
 
                     List<DealCreatedResponseDetail> listDeal = await DealAction.SearchDealOfSkuList(skuList, -1);
                     // Insert nếu chưa tồn tại
                     if (listDeal != null && listDeal.Count > 0)
                     {
-                        await sqler.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
+                        await TikiDealDiscountMySql.InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(listDeal, conn);
                     }
                 }
             }
@@ -143,7 +136,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // Lấy những sản phẩm chưa gắn với deal nào
             List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
-            simpleTikiProducts = await sqler.GetItemsNoDealDiscountRunningAsync(conn);
+            simpleTikiProducts = await TikiDealDiscountMySql.GetItemsNoDealDiscountRunningAsync(conn);
 
             List<SimpleTikiProduct> listSimpleTikiProductTemp = new List<SimpleTikiProduct>();
             foreach (var simpleTiki in simpleTikiProducts)
@@ -154,7 +147,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 // Chưa mapping cũng không set deal
                 if (simpleTiki.models[0].mapping.Count == 0 ||
                      (simpleTiki.models[0].mapping.Count > 0 &&
-                     simpleTiki.models[0].GetQuatityFromListMapping() == 0))
+                     simpleTiki.models[0].GetQuantityFromListMapping() == 0))
                 {
                     continue;
                 }
@@ -203,7 +196,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    taxAndFee = await sqler.GetTaxAndFeeAsync(eEcommerceName, conn);
+                    taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(eEcommerceName, conn);
                 }
             }
             catch (Exception ex)
@@ -273,7 +266,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                                 {
                                     // Lưu chương trình tạo thành công
                                     // Insert nếu chưa tồn tại
-                                    await sqler.InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(dealCreatingResponse.dealList, conn);
+                                    await TikiDealDiscountMySql.InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(dealCreatingResponse.dealList, conn);
                                 }
                             }
                         }
@@ -321,7 +314,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 {
                     await conn.OpenAsync();
                     // Insert nếu chưa tồn tại
-                    result = await sqler.UpdateIsActiveCloseFromLsDealIdAsync(ls, conn);
+                    result = await TikiDealDiscountMySql.UpdateIsActiveCloseFromLsDealIdAsync(ls, conn);
                 }
 
             }
@@ -333,7 +326,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         // Hàm này mất thời gian. Tính bằng 10 phút và gọi API TIKI liên tục. Hạn chế sử dụng.
         public static async Task UpdateDealStatusOfRunningDealOnDB_Core(MySqlConnection conn)
         {
-            List<SimpleTikiProduct> simpleTikiProducts = await sqler.GetItemsHasDealDiscountRunningAsync(conn);
+            List<SimpleTikiProduct> simpleTikiProducts = await TikiDealDiscountMySql.GetItemsHasDealDiscountRunningAsync(conn);
             List<string> skuList = new List<string>();
             foreach (var pro in simpleTikiProducts)
             {
@@ -353,7 +346,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             // is_active = 2 và is_active = 5
             // Tìm phần tử có trong strList2 nhưng không có trong strList1
             List<string> skuListOff = skuList.Except(strList1).ToList();
-            await sqler.UpdateIsActiveCloseFromSkuAsync(skuListOff, conn);
+            await TikiDealDiscountMySql.UpdateIsActiveCloseFromSkuAsync(skuListOff, conn);
         }
 
         [HttpPost]
@@ -440,11 +433,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             MySqlResultState result = new MySqlResultState();
 
             // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
-            PublisherMySql publisherSqler = new PublisherMySql();
-            List<Publisher> listPublisher = await publisherSqler.GetListPublisherConnectOutAsync(conn);
+
+            List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
 
             // Lấy danh sách thuế phí
-            TaxAndFee taxAndFee = await sqler.GetTaxAndFeeAsync(Common.eTiki, conn);
+            TaxAndFee taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(Common.eTiki, conn);
 
             // Tính giá bìa, chiết khấu hợp lý theo nhà phát hành hoặc sản phẩm, thuế, phí, lợi nhuận mong muốn.
             // Từ đó tính giá bán.
@@ -497,7 +490,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         {
                             // Lưu chương trình tạo thành công
                             // Insert nếu chưa tồn tại
-                            await sqler.InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(dealCreatingResponse.dealList, conn);
+                            await TikiDealDiscountMySql.InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(dealCreatingResponse.dealList, conn);
                         }
                     }
                 }

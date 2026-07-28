@@ -65,7 +65,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Từ list mapping tính được tồn kho sản phẩm
-        public int GetQuatityFromListMapping()
+        public int GetQuantityFromListMapping()
         {
             int qty = Int32.MaxValue;
             if (mapping.Count == 0)

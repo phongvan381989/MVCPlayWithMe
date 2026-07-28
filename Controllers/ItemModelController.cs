@@ -16,13 +16,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class ItemModelController : BasicController
     {
-        public ItemModelMySql sqler;
-
-        public ItemModelController()
-        {
-            sqler = new ItemModelMySql();
-        }
-
         // GET: ItemModel
         public ActionResult Index()
         {
@@ -61,7 +54,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(null);
             }
 
-            return JsonConvert.SerializeObject(await sqler.GetItemFromIdAsync(id));
+            return JsonConvert.SerializeObject(await ItemModelMySql.GetItemFromIdAsync(id));
         }
 
         /// <summary>
@@ -92,7 +85,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             Item it = new Item(name, status, quota, detail, categoryId);
-            int id = await sqler.AddItemAsync(it);
+            int id = await ItemModelMySql.AddItemAsync(it);
             MySqlResultState result = new MySqlResultState();
             result.myAnything = id;
 
@@ -108,7 +101,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             Item it = new Item(id, name, status, quota, detail, categoryId);
-            MySqlResultState result = await sqler.UpdateItemAsync(it);
+            MySqlResultState result = await ItemModelMySql.UpdateItemAsync(it);
 
             return JsonConvert.SerializeObject(result);
         }
@@ -200,17 +193,17 @@ namespace MVCPlayWithMe.Controllers
 
             if (modelId != -1)
             {
-                result = await sqler.UpdateModelAsync(model);
-                await sqler.DeleteMappingAsync(model.id);
-                await sqler.AddMappingAsync(model);
+                result = await ItemModelMySql.UpdateModelAsync(model);
+                await ItemModelMySql.DeleteMappingAsync(model.id);
+                await ItemModelMySql.AddMappingAsync(model);
             }
             else
             {
                 result = new MySqlResultState();
-                modelId = await sqler.AddModelAsync(model);
+                modelId = await ItemModelMySql.AddModelAsync(model);
                 result.myAnything = modelId;
                 model.id = modelId;
-                await sqler.AddMappingAsync(model);
+                await ItemModelMySql.AddMappingAsync(model);
             }
             if (result.State != EMySqlResultState.OK)
             {
@@ -250,7 +243,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(null);
             }
 
-            MySqlResultState result = await sqler.DeleteModelAsync(modelId);
+            MySqlResultState result = await ItemModelMySql.DeleteModelAsync(modelId);
 
             // Xóa ảnh làm thumbnail
             Common.DeleteImageModelInclude320(itemId, modelId);
@@ -266,7 +259,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(null);
             }
 
-            MySqlResultState result = await sqler.DeleteItemAsync(itemId);
+            MySqlResultState result = await ItemModelMySql.DeleteItemAsync(itemId);
 
             // Xóa media file
             Common.DeleteMediaItemInclude320(itemId);
@@ -284,7 +277,7 @@ namespace MVCPlayWithMe.Controllers
             ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
             searchParameter.name = namePara;
             searchParameter.publisherId = publisherId;
-            int count = await sqler.SearchItemCountAsync(searchParameter);
+            int count = await ItemModelMySql.SearchItemCountAsync(searchParameter);
             return count.ToString();
         }
 
@@ -297,7 +290,7 @@ namespace MVCPlayWithMe.Controllers
         //    searchParameter.name = namePara;
         //    searchParameter.start = start;
         //    searchParameter.offset = offset;
-        //    lsSearchResult = sqler.SearchItemPage(searchParameter);
+        //    lsSearchResult = ItemModelMySql.SearchItemPage(searchParameter);
 
         //    return JsonConvert.SerializeObject(lsSearchResult);
         //}
@@ -316,7 +309,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.name = namePara;
             searchParameter.start = 0;
             searchParameter.offset = 1000000;
-            List<Item> lsSearchResult = await sqler.SearchItemPageIncludeMappingAsync(searchParameter);
+            List<Item> lsSearchResult = await ItemModelMySql.SearchItemPageIncludeMappingAsync(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -325,7 +318,7 @@ namespace MVCPlayWithMe.Controllers
         //[HttpGet]
         //public string GetItemFromId(int id)
         //{
-        //    return JsonConvert.SerializeObject(sqler.GetItemFromId(id));
+        //    return JsonConvert.SerializeObject(ItemModelMySql.GetItemFromId(id));
         //}
 
         // Lấy tên và id của item
@@ -337,7 +330,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(null);
             }
 
-            return JsonConvert.SerializeObject(await sqler.GetListItemNameAsync());
+            return JsonConvert.SerializeObject(await ItemModelMySql.GetListItemNameAsync());
         }
 
         // Cập nhật chiết khấu
@@ -348,7 +341,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
-            return JsonConvert.SerializeObject(await sqler.UpdateDiscountAsync(modelId, discount));
+            return JsonConvert.SerializeObject(await ItemModelMySql.UpdateDiscountAsync(modelId, discount));
         }
 
         // Cập nhật mapping
@@ -363,7 +356,7 @@ namespace MVCPlayWithMe.Controllers
             List<int> mappingOnlyQuantity = JsonConvert.DeserializeObject<List<int>>(listQuantityMapping);
 
             return JsonConvert.SerializeObject(
-                await sqler.UpdateMappingAsync(modelId, mappingOnlyProductId, mappingOnlyQuantity));
+                await ItemModelMySql.UpdateMappingAsync(modelId, mappingOnlyProductId, mappingOnlyQuantity));
         }
 
         // Cập nhật tên model
@@ -374,7 +367,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
-            return JsonConvert.SerializeObject(await sqler.UpdateModelNameAsync(modelId, name));
+            return JsonConvert.SerializeObject(await ItemModelMySql.UpdateModelNameAsync(modelId, name));
         }
 
         // Cập nhật tên item
@@ -385,7 +378,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
-            return JsonConvert.SerializeObject(await sqler.UpdateItemNameAsync(itemId, name));
+            return JsonConvert.SerializeObject(await ItemModelMySql.UpdateItemNameAsync(itemId, name));
         }
 
         // Cập nhật chiết khấu cho danh sách item/model
@@ -397,7 +390,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
-            return JsonConvert.SerializeObject(await sqler.UpdateDiscountForListItemAsync(discount, listItemId));
+            return JsonConvert.SerializeObject(await ItemModelMySql.UpdateDiscountForListItemAsync(discount, listItemId));
         }
 
         // Cập nhật chiết khấu cho danh sách item/model
@@ -409,7 +402,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
-            return JsonConvert.SerializeObject(await sqler.UpdateDiscountForListModleIdAsync(discount, listModelId));
+            return JsonConvert.SerializeObject(await ItemModelMySql.UpdateDiscountForListModleIdAsync(discount, listModelId));
         }
 
         // Cập nhật tên item
@@ -420,7 +413,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(null);
             }
-            return JsonConvert.SerializeObject(await sqler.UpdateItemCategoryAsync(itemId, categoryId));
+            return JsonConvert.SerializeObject(await ItemModelMySql.UpdateItemCategoryAsync(itemId, categoryId));
         }
 
         // Lấy được item id từ model id
@@ -432,7 +425,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(null);
             }
 
-            return JsonConvert.SerializeObject(await sqler.GetVBNItemIdFromModelIdAsync(modelId));
+            return JsonConvert.SerializeObject(await ItemModelMySql.GetVBNItemIdFromModelIdAsync(modelId));
         }
     }
 }

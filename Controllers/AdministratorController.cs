@@ -16,12 +16,12 @@ namespace MVCPlayWithMe.Controllers
 {
     public class AdministratorController : BasicController
     {
-        AdministratorMySql sqler;
-        public AdministratorController ()
-        {
-            //sqler = new ProductMySql();
-            sqler = new AdministratorMySql();
-        }
+        //AdministratorMySql sqler;
+        //public AdministratorController ()
+        //{
+        //    //sqler = new ProductMySql();
+        //    sqler = new AdministratorMySql();
+        //}
 
         // GET: Administrator
         public async Task<ActionResult> Index()
@@ -49,7 +49,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
-            MySqlResultState result = await sqler.AddNewAdministratorAsync(userName, userNameType, passWord, privilege);
+            MySqlResultState result = await AdministratorMySql.AddNewAdministratorAsync(userName, userNameType, passWord, privilege);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -70,7 +70,7 @@ namespace MVCPlayWithMe.Controllers
 
             if (!string.IsNullOrEmpty(cookieResult.cookieValue))
             {
-                await sqler.AdministratorLogoutAsync(cookieResult.cookieValue);
+                await AdministratorMySql.AdministratorLogoutAsync(cookieResult.cookieValue);
                 Cookie.DeleteVisitorTypeCookie(HttpContext);
             }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
@@ -79,7 +79,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> Login_Login(string userName, string passWord)
         {
-            MySqlResultState result = await sqler.LoginAdministratorAsync(userName, passWord);
+            MySqlResultState result = await AdministratorMySql.LoginAdministratorAsync(userName, passWord);
 
             // Set cookie cho tài khoản quản trị
             if (result.State == EMySqlResultState.OK)
@@ -87,10 +87,10 @@ namespace MVCPlayWithMe.Controllers
                 CookieResultState cookieResult = Cookie.SetAndGetVisitorTypeCookie(HttpContext);
 
                 // Lấy thông tin adminstrator
-                Administrator administrator = await sqler.GetAdministratorFromUserNameAsync(userName);
+                Administrator administrator = await AdministratorMySql.GetAdministratorFromUserNameAsync(userName);
 
                 // Lưu cookie vào bảng tbcookie_administrator
-                MySqlResultState resultInsert = await sqler.AddNewCookieAdministratorAsync(cookieResult.cookieValue, administrator.id);
+                MySqlResultState resultInsert = await AdministratorMySql.AddNewCookieAdministratorAsync(cookieResult.cookieValue, administrator.id);
                 if (resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);
@@ -110,7 +110,7 @@ namespace MVCPlayWithMe.Controllers
             Administrator administrator = await AuthentAdministratorAsync();
             if (administrator != null)
             {
-                result = await sqler.ChangePasswordAdministratorAsync(administrator.id,
+                result = await AdministratorMySql.ChangePasswordAdministratorAsync(administrator.id,
                     oldPassWord, newPassWord, renewPassWord);
             }
             else

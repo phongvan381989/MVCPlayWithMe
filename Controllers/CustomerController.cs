@@ -15,15 +15,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class CustomerController : BasicController
     {
-        public CustomerMySql sqler;
-        public OrderMySql ordersqler;
-
-        public CustomerController()
-        {
-            sqler = new CustomerMySql();
-            ordersqler = new OrderMySql();
-        }
-
         // GET: Customer
         public async Task<ActionResult> CreateCustomer()
         {
@@ -39,7 +30,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> CreateCustomer_Add(string userName, string passWord)
         {
-            MySqlResultState result = await sqler.AddNewCustomerAsync(userName, passWord);
+            MySqlResultState result = await CustomerMySql.AddNewCustomerAsync(userName, passWord);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -60,7 +51,7 @@ namespace MVCPlayWithMe.Controllers
             CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
             if (!string.IsNullOrEmpty(cookieResult.cookieValue))
             {
-                await sqler.CustomerLogoutAsync(cookieResult.cookieValue);
+                await CustomerMySql.CustomerLogoutAsync(cookieResult.cookieValue);
                 Cookie.DeleteUserIdCookie(HttpContext);
             }
             return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.OK, MySqlResultState.LogoutMessage));
@@ -78,7 +69,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> Login_Login(string userName, string passWord)
         {
-            MySqlResultState result = await sqler.LoginCustomerAsync(userName, passWord);
+            MySqlResultState result = await CustomerMySql.LoginCustomerAsync(userName, passWord);
 
             do
             {
@@ -88,7 +79,7 @@ namespace MVCPlayWithMe.Controllers
                 CookieResultState cookieResult = Cookie.SetAndGetUserIdCookie(HttpContext);
 
                 // Lấy thông tin customer
-                Customer customer = await sqler.GetCustomerFromUserNameAsync(userName);
+                Customer customer = await CustomerMySql.GetCustomerFromUserNameAsync(userName);
                 if (customer == null || customer.id == -1)
                 {
                     result.State = EMySqlResultState.ERROR;
@@ -97,7 +88,7 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 // Lưu cookie vào bảng tbcookie
-                MySqlResultState resultInsert = await sqler.CookieCustomerLoginAsync(cookieResult.cookieValue, customer.id);
+                MySqlResultState resultInsert = await CustomerMySql.CookieCustomerLoginAsync(cookieResult.cookieValue, customer.id);
                 if (resultInsert.State != EMySqlResultState.OK)
                 {
                     MyLogger.GetInstance().Warn(resultInsert.Message);
@@ -146,7 +137,7 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 // 3. ✅ Sync trong 1 transaction (1 connection, all-or-nothing)
-                result = await sqler.SyncGuestDataInTransactionAsync(cus.id, guestCarts, guestAddresses);
+                result = await CustomerMySql.SyncGuestDataInTransactionAsync(cus.id, guestCarts, guestAddresses);
             }
             catch (Exception ex)
             {
@@ -169,9 +160,9 @@ namespace MVCPlayWithMe.Controllers
                 Address add = JsonConvert.DeserializeObject<Address>(address);
                 if (add.defaultAdd == 1)
                 {
-                    await sqler.DeleteDefaultAddressAsync(cus.id);
+                    await CustomerMySql.DeleteDefaultAddressAsync(cus.id);
                 }
-                result = await sqler.UpdateAddressAsync(add);
+                result = await CustomerMySql.UpdateAddressAsync(add);
             }
             else
             {
@@ -193,7 +184,7 @@ namespace MVCPlayWithMe.Controllers
                 Address add = JsonConvert.DeserializeObject<Address>(address);
                 if (add.defaultAdd != 1)
                 {
-                    result = await sqler.DeleteAddressAsync(add);
+                    result = await CustomerMySql.DeleteAddressAsync(add);
                 }
             }
             else
@@ -216,9 +207,9 @@ namespace MVCPlayWithMe.Controllers
                 Address add = JsonConvert.DeserializeObject<Address>(address);
                 if (add.defaultAdd == 1)
                 {
-                    await sqler.DeleteDefaultAddressAsync(cus.id);
+                    await CustomerMySql.DeleteDefaultAddressAsync(cus.id);
                 }
-                result = await sqler.InsertAddressAsync(cus.id, add);
+                result = await CustomerMySql.InsertAddressAsync(cus.id, add);
             }
             else
             {
@@ -245,7 +236,7 @@ namespace MVCPlayWithMe.Controllers
                 cus.birthday = new DateTime(year, month, day);
                 cus.sex = sex;
 
-                result = await sqler.UpdateInforAsync(cus);
+                result = await CustomerMySql.UpdateInforAsync(cus);
             }
             else
             {
@@ -265,7 +256,7 @@ namespace MVCPlayWithMe.Controllers
             Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
-                result = await sqler.ChangePasswordCustomerAsync(cus.id, oldPassWord, newPassWord, renewPassWord);
+                result = await CustomerMySql.ChangePasswordCustomerAsync(cus.id, oldPassWord, newPassWord, renewPassWord);
             }
             else
             {
@@ -295,7 +286,7 @@ namespace MVCPlayWithMe.Controllers
             Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
-                lsAddress = await sqler.GetListAddressAsync(cus.id);
+                lsAddress = await CustomerMySql.GetListAddressAsync(cus.id);
             }
             else
             {
@@ -303,14 +294,6 @@ namespace MVCPlayWithMe.Controllers
             }
             return JsonConvert.SerializeObject(lsAddress);
         }
-
-        //[HttpPost]
-        //public string CreateCustomer_CheckValidUserName(string userName)
-        //{
-        //    MySqlResultState result;
-        //    result = sqler.CheckValidUserName(userName);
-        //    return JsonConvert.SerializeObject(result);
-        //}
 
         [HttpPost]
         public async Task<string> GetCartCount()
@@ -323,7 +306,7 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = await ordersqler.GetCartCountAsync(cus.id);
+                result = await OrderMySql.GetCartCountAsync(cus.id);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -334,7 +317,7 @@ namespace MVCPlayWithMe.Controllers
             Customer cus = await AuthentCustomerAsync();
             if (cus != null)
             {
-                cus = await sqler.GetCustomerAsync(cus.id);
+                cus = await CustomerMySql.GetCustomerAsync(cus.id);
             }
             return JsonConvert.SerializeObject(cus);
         }
@@ -378,7 +361,7 @@ namespace MVCPlayWithMe.Controllers
         //    }
         //    else
         //    {
-        //        result = ordersqler.SearchOrderCount(cus.id, statusOrder);
+        //        result = orderCustomerMySql.SearchOrderCount(cus.id, statusOrder);
         //    }
         //    return JsonConvert.SerializeObject(result);
         //}
@@ -419,11 +402,11 @@ namespace MVCPlayWithMe.Controllers
                 {
                     lsId.Add(Common.ConvertStringToInt32(id));
                 }
-                result = await ordersqler.GetAllOrderFromListIdAsync(lsId);
+                result = await OrderMySql.GetAllOrderFromListIdAsync(lsId);
             }
             else
             {
-                result = await ordersqler.GetAllOrderAsync(cus.id);
+                result = await OrderMySql.GetAllOrderAsync(cus.id);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -433,7 +416,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> GetOrderFromId(int id)
         {
-            MySqlResultState result = await ordersqler.GetOrderFromIdAsync(id);
+            MySqlResultState result = await OrderMySql.GetOrderFromIdAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -441,7 +424,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> SearchOrderForAnonymous(string sdtNameForSearch)
         {
-            MySqlResultState result = await ordersqler.SearchOrderForAnonymousAsync(sdtNameForSearch);
+            MySqlResultState result = await OrderMySql.SearchOrderForAnonymousAsync(sdtNameForSearch);
             return JsonConvert.SerializeObject(result);
         }
     }

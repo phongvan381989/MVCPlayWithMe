@@ -81,8 +81,6 @@ namespace MVCPlayWithMe.OpenPlatform
                 List<ShopeeGetItemBaseInfoItem> lsShopeeBaseInfoItem =
                     await ShopeeGetItemBaseInfo.ShopeeProductGetListItemBaseInforFromListShopeeItemAsync(lsShopeeItem);
 
-                 ShopeeMySql shopeeSqler = new ShopeeMySql();
-                TikiMySql tikiSqler = new TikiMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
@@ -90,14 +88,14 @@ namespace MVCPlayWithMe.OpenPlatform
                     {
                         CommonItem item = new CommonItem(pro);
                         // Không tồn tại ta thêm vào danh sách
-                        await tikiSqler.TikiInsertIfDontExistConnectOutAsync(item, conn);
+                        await TikiMySql.TikiInsertIfDontExistConnectOutAsync(item, conn);
                     }
 
                     foreach (var pro in lsShopeeBaseInfoItem)
                     {
                         CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync(pro);
                         // Không tồn tại trong DB ta insert
-                        await shopeeSqler.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
+                        await ShopeeMySql.ShopeeInsertIfDontExistConnectOutAsync(item, conn);
                     }
                 }
             }

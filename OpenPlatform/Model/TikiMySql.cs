@@ -19,7 +19,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
     {
         //private int TikiInsertAsync(int supperId, int tikiId, string name,
         //    int status, string sku, string superSku, MySqlConnection conn)
-        private async Task<int> TikiInsertAsync(CommonItem item, MySqlConnection conn)
+        private static async Task<int> TikiInsertAsync(CommonItem item, MySqlConnection conn)
         {
             int id = 0;
             try
@@ -52,7 +52,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Kiểm tra item đã tồn tại trong bảng tbtikiitem
-        public async Task<Boolean> CheckItemExistIntbTikiItemAsync(int itemId,
+        public static async Task<Boolean> CheckItemExistIntbTikiItemAsync(int itemId,
             MySqlConnection conn)
         {
             Boolean isExist = false;
@@ -79,7 +79,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Ta chỉ check chọn xem item, check item đã bị xóa trên db
         // không thực hiện ở đây
         // return true: nếu tồn tại ngược lại false
-        public async Task<Boolean> TikiInsertIfDontExistConnectOutAsync(CommonItem item, MySqlConnection conn)
+        public static async Task<Boolean> TikiInsertIfDontExistConnectOutAsync(CommonItem item, MySqlConnection conn)
         {
             try
             {
@@ -113,7 +113,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy được thông tin mapping chi tiết
-        public async Task TikiGetItemFromIdConnectOutAsync(int id, CommonItem item, MySqlConnection conn)
+        public static async Task TikiGetItemFromIdConnectOutAsync(int id, CommonItem item, MySqlConnection conn)
         {
             try
             {
@@ -157,7 +157,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task TikiGetListCommonItemFromListTikiProductConnectOutAsync(
+        public static async Task TikiGetListCommonItemFromListTikiProductConnectOutAsync(
             List<TikiProduct> lsTikiItem,
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
@@ -220,7 +220,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task TikiUpdateStatusOfItemListToDbConnectOutAsync(
+        public static async Task TikiUpdateStatusOfItemListToDbConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -251,7 +251,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task TikiUpdateStatusOfItemToDbConnectOutAsync(
+        public static async Task TikiUpdateStatusOfItemToDbConnectOutAsync(
             int itemId,
             int status,
             MySqlConnection conn)
@@ -275,7 +275,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Hàm này được gọi 1 lần duy nhất để lấy sku, super sku vì mới thêm 2 trường này trong bảng tbTikiItem
         // Sau khi gọi ta comment lại.
-        public async Task TikiUpdateSku_SuperSkuOfItemToDbConnectOutAsync(
+        public static async Task TikiUpdateSku_SuperSkuOfItemToDbConnectOutAsync(
             List<CommonItem> lsCommonItem,
             MySqlConnection conn)
         {
@@ -306,7 +306,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             //}
         }
 
-        public async Task<List<CommonItem>> TikiGetItemOnDBAsync(MySqlConnection conn)
+        public static async Task<List<CommonItem>> TikiGetItemOnDBAsync(MySqlConnection conn)
         {
             List<CommonItem> lsCommonItem = new List<CommonItem>();
             try
@@ -371,7 +371,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lsCommonItem;
         }
 
-        public async Task<Dictionary<int, string>> TikiGetListItemDontMappingAsync(MySqlConnection conn)
+        public static async Task<Dictionary<int, string>> TikiGetListItemDontMappingAsync(MySqlConnection conn)
         {
             Dictionary<int, string> dic = new Dictionary<int, string>();
             try
@@ -398,7 +398,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return dic;
         }
 
-        public async Task<MySqlResultState> TikiDeleteItemOnDBAsync(int itemId)
+        public static async Task<MySqlResultState> TikiDeleteItemOnDBAsync(int itemId)
         {
             MySqlResultState resultState = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -422,7 +422,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<MySqlResultState> TikiUpdateMappingSignleAsync(int itemId,
+        public static async Task<MySqlResultState> TikiUpdateMappingSignleAsync(int itemId,
             int productId,
             int quantity,
             MySqlConnection conn)
@@ -452,7 +452,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="ls">luôn có 1 phần tử</param>
         /// <returns></returns>
-        public async Task<MySqlResultState> TikiUpdateMappingAsync(List<CommonForMapping> ls)
+        public static async Task<MySqlResultState> TikiUpdateMappingAsync(List<CommonForMapping> ls)
         {
             // item Tiki không có model, chỉ có 1 model tượng trưng nên ls có 1 phần tử
             CommonForMapping commonForMapping = ls[0];
@@ -516,7 +516,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
-        public async Task TikiGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
+        public static async Task TikiGetMappingOfCommonOrderConnectOutAsync(CommonOrder commonOrder, MySqlConnection conn)
         {
             try
             {
@@ -565,7 +565,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
         // storeName: st_tbOutput_Insert hoặc st_tbOutput_Insert_If_DontExist_When_Packing
-        public async Task<MySqlResultState> UpdateOutputAndProductTableFromCommonOrderConnectOut_OldVersionAsync(MySqlConnection conn,
+        public static async Task<MySqlResultState> UpdateOutputAndProductTableFromCommonOrderConnectOut_OldVersionAsync(MySqlConnection conn,
             string storeName,
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
@@ -649,7 +649,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi
         // giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         // Kết nối được mở đóng bên ngoài hàm
-        public async Task<MySqlResultState> UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
+        public static async Task<MySqlResultState> UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
             MySqlConnection conn,
             CommonOrder commonOrder,
             ECommerceOrderStatus status,
@@ -713,7 +713,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<TbEcommerceOrder> GetLastestStatusOfECommerceOrderAsync(string code,
+        public static async Task<TbEcommerceOrder> GetLastestStatusOfECommerceOrderAsync(string code,
             EECommerceType eCommerceType,
             MySqlConnection conn)
         {
@@ -747,7 +747,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lastest;
         }
 
-        public async Task<TbEcommerceOrder> GetLastestStatusOfECommerceBookingAsync(string code,
+        public static async Task<TbEcommerceOrder> GetLastestStatusOfECommerceBookingAsync(string code,
             EECommerceType eCommerceType,
             MySqlConnection conn)
         {
@@ -781,7 +781,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lastest;
         }
 
-        public async Task<(string sn, string trackingNumber)> GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+        public static async Task<(string sn, string trackingNumber)> GetSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
             string sn_trackingNumber,
             EECommerceType type,
             MySqlConnection conn)
@@ -807,7 +807,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return (sn, trackingNumber);
         }
 
-        public async Task<(string sn, string trackingNumber)> GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
+        public static async Task<(string sn, string trackingNumber)> GetBookingSN_TrackingNumberFromSN_TrackingNumberConnectOutAsync(
             string sn_trackingNumber,
             EECommerceType type,
             MySqlConnection conn)
@@ -833,7 +833,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return (sn, trackingNumber);
         }
 
-        public async Task<string> GetTrackingNumberFromSNConnectOutAsync(
+        public static async Task<string> GetTrackingNumberFromSNConnectOutAsync(
             string sn,
             EECommerceType type,
             MySqlConnection conn)
@@ -858,7 +858,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return trackingNumber;
         }
 
-        public async Task<string> GetBookingTrackingNumberFromSNConnectOutAsync(
+        public static async Task<string> GetBookingTrackingNumberFromSNConnectOutAsync(
             string sn,
             EECommerceType type,
             MySqlConnection conn)
@@ -885,7 +885,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Từ trạng thái mới, cũ của đơn hàng kiểm tra xem cần tiếp tục cập nhật vào db
         // true: là tiếp tục ngược lại là false
-        public Boolean IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(
+        public static Boolean IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(
             ECommerceOrderStatus status, ECommerceOrderStatus? oldStatus)
         {
             if (status == oldStatus)
@@ -923,7 +923,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
-        public async Task<MySqlResultState> UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+        public static async Task<MySqlResultState> UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
             CommonOrder commonOrder,
             ECommerceOrderStatus status,
             long update_time, // Thời gian event được sàn ghi nhận
@@ -997,7 +997,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
-        public async Task<MySqlResultState> UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
+        public static async Task<MySqlResultState> UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
             CommonOrder commonOrder,
             ECommerceOrderStatus status,
             long update_time, // Thời gian event được sàn ghi nhận
@@ -1057,7 +1057,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // HOàn lại số lượng về kho khi đơn được matched với booking, tbOutput sẽ cập nhật số lượng về 0
-        public async Task<MySqlResultState> ReturnQuantityOfOrderMatchedBookingAsync(
+        public static async Task<MySqlResultState> ReturnQuantityOfOrderMatchedBookingAsync(
             CommonOrder commonOrder,
             EECommerceType eCommerceType,
             MySqlConnection conn)
@@ -1124,7 +1124,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<MySqlResultState> TikiSaveAccessTokenAsync(TikiAuthorization accessToken,
+        public static async Task<MySqlResultState> TikiSaveAccessTokenAsync(TikiAuthorization accessToken,
             MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
@@ -1154,7 +1154,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        public async Task<List<int>> GetForSaveImageSourceConnectOutAsync(MySqlConnection conn)
+        public static async Task<List<int>> GetForSaveImageSourceConnectOutAsync(MySqlConnection conn)
         {
             List<int> lsItemId = new List<int>();
             try
@@ -1180,7 +1180,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return lsItemId;
         }
 
-        public async Task UpdateImageSourceTotbTikiItemConnectOutAsync(List<CommonItem> lsCommonItem, MySqlConnection conn)
+        public static async Task UpdateImageSourceTotbTikiItemConnectOutAsync(List<CommonItem> lsCommonItem, MySqlConnection conn)
         {
             try
             {
@@ -1206,7 +1206,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Lấy ack_id của pull event cuối cùng
-        public async Task<string> GetAckIdOfLastestPullConnectOutAsync(MySqlConnection conn)
+        public static async Task<string> GetAckIdOfLastestPullConnectOutAsync(MySqlConnection conn)
         {
             string ack_id = string.Empty;
             try
@@ -1233,7 +1233,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Cập nhật ack_id mới nhất của pull event
-        public async Task UpdateAckIdOfLastestPullConnectOutAsync(string ack_id, MySqlConnection conn)
+        public static async Task UpdateAckIdOfLastestPullConnectOutAsync(string ack_id, MySqlConnection conn)
         {
             try
             {
@@ -1253,7 +1253,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Lưu thông tin sản phẩm trên san sàn db, item id, model id của đơn hàng
         // Có check tồn tại
-        public async Task InsertTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
+        public static async Task InsertTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
             EECommerceType type,
             MySqlConnection conn)
         {
@@ -1292,7 +1292,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Khi nhận được thông báo có đơn hỏa tốc, thêm dữ liệu vào bảng này. Khi xác nhận đã biết có đơn hỏa tốc
         // (từ mini app khởi động cùng window, khi được đóng,...) sẽ xóa khỏi bảng này
-        public async Task InsertTbExpressOrderAsync(string code,
+        public static async Task InsertTbExpressOrderAsync(string code,
             EECommerceType type,
             MySqlConnection conn)
         {
@@ -1315,7 +1315,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task UpdateStatusToReadyToShipTbExpressOrderAsync(string code,
+        public static async Task UpdateStatusToReadyToShipTbExpressOrderAsync(string code,
             EECommerceType type,
             MySqlConnection conn)
         {
@@ -1338,7 +1338,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task UpdateStatusToKnownTbExpressOrderAsync(string code,
+        public static async Task UpdateStatusToKnownTbExpressOrderAsync(string code,
             EECommerceType type,
             MySqlConnection conn)
         {
@@ -1361,7 +1361,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task UpdateCancelledStatusTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
+        public static async Task UpdateCancelledStatusTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
              EECommerceType type,
             MySqlConnection conn)
         {
@@ -1398,7 +1398,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Lấy danh sách xuất hàng theo đơn hàng của một sản phẩm
         // Dữ liệu được sắp xếp từ mới đến cũ theo thời gian
-        public async Task<List<TbEcommerceOrder>> GetOrderStatisticsAsync(
+        public static async Task<List<TbEcommerceOrder>> GetOrderStatisticsAsync(
             int eCommmerce, // -1 nếu lấy tất cả các sàn, web
             int intervalDay,
             MySqlConnection conn)
@@ -1447,7 +1447,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Khi nhận được thông báo có đơn hỏa tốc, thêm dữ liệu vào bảng này. Khi xác nhận đã biết có đơn hỏa tốc
         // (từ mini app khởi động cùng window, khi được đóng,...) sẽ xóa khỏi bảng này
-        public async Task InsertTbTikiCategoryAsync(
+        public static async Task InsertTbTikiCategoryAsync(
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls,
             MySqlConnection conn)
         {
@@ -1475,7 +1475,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<List<int>> GetCatetoryIdListAsync(MySqlConnection conn)
+        public static async Task<List<int>> GetCatetoryIdListAsync(MySqlConnection conn)
         {
             List<int> CatetoryIdList = new List<int>();
             try
@@ -1485,14 +1485,14 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     cmd.CommandType = System.Data.CommandType.Text;
 
-                    using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
                         // Sử dụng GetOrdinal để lấy index của cột trước khi đọc
-                        int TikiCategoryIdOrdinal = reader.GetOrdinal("TikiCategoryId");
+                        int TikiCategoryIdOrdinal = rdr.GetOrdinal("TikiCategoryId");
 
-                        while (await reader.ReadAsync())
+                        while (await rdr.ReadAsync())
                         {
-                            CatetoryIdList.Add(reader.GetInt32(TikiCategoryIdOrdinal));
+                            CatetoryIdList.Add(rdr.GetInt32(TikiCategoryIdOrdinal));
                         }
                     }
                 }
@@ -1505,7 +1505,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return CatetoryIdList;
         }
 
-        public async Task<List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>>
+        public static async Task<List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>>
             GetTikiAttributesOfCategoryAsync(int categoryId, MySqlConnection conn)
         {
             var attributes = new List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute>();
@@ -1514,36 +1514,36 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 command.CommandType = CommandType.Text;
                 command.Parameters.AddWithValue("@in_CategoryId", categoryId);
-                using (MySqlDataReader reader = (MySqlDataReader)await command.ExecuteReaderAsync())
+                using (MySqlDataReader rdr = (MySqlDataReader)await command.ExecuteReaderAsync())
                 {
                     // Sử dụng GetOrdinal để lấy index của cột trước khi đọc
-                    int codeOrdinal = reader.GetOrdinal("Code");
-                    int dataTypeOrdinal = reader.GetOrdinal("DataType");
-                    int defaultValueOrdinal = reader.GetOrdinal("DefaultValue");
-                    int descriptionOrdinal = reader.GetOrdinal("Description");
-                    int descriptionEnOrdinal = reader.GetOrdinal("DescriptionEn");
-                    int displayNameOrdinal = reader.GetOrdinal("DisplayName");
-                    int displayNameEnOrdinal = reader.GetOrdinal("DisplayNameEn");
-                    int attributeIdOrdinal = reader.GetOrdinal("AttributeId");
-                    int inputTypeOrdinal = reader.GetOrdinal("InputType");
-                    int isRequiredOrdinal = reader.GetOrdinal("IsRequired");
-                    int categoryIdOrdinal = reader.GetOrdinal("CategoryId");
+                    int codeOrdinal = rdr.GetOrdinal("Code");
+                    int dataTypeOrdinal = rdr.GetOrdinal("DataType");
+                    int defaultValueOrdinal = rdr.GetOrdinal("DefaultValue");
+                    int descriptionOrdinal = rdr.GetOrdinal("Description");
+                    int descriptionEnOrdinal = rdr.GetOrdinal("DescriptionEn");
+                    int displayNameOrdinal = rdr.GetOrdinal("DisplayName");
+                    int displayNameEnOrdinal = rdr.GetOrdinal("DisplayNameEn");
+                    int attributeIdOrdinal = rdr.GetOrdinal("AttributeId");
+                    int inputTypeOrdinal = rdr.GetOrdinal("InputType");
+                    int isRequiredOrdinal = rdr.GetOrdinal("IsRequired");
+                    int categoryIdOrdinal = rdr.GetOrdinal("CategoryId");
 
-                    while (await reader.ReadAsync())
+                    while (await rdr.ReadAsync())
                     {
                         var attribute = new MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute
                         {
-                            code = reader.GetString(codeOrdinal),
-                            data_type = reader.IsDBNull(dataTypeOrdinal) ? null : reader.GetString(dataTypeOrdinal),
-                            default_value = reader.IsDBNull(defaultValueOrdinal) ? null : reader.GetString(defaultValueOrdinal),
-                            description = reader.IsDBNull(descriptionOrdinal) ? null : reader.GetString(descriptionOrdinal),
-                            description_en = reader.IsDBNull(descriptionEnOrdinal) ? null : reader.GetString(descriptionEnOrdinal),
-                            display_name = reader.IsDBNull(displayNameOrdinal) ? null : reader.GetString(displayNameOrdinal),
-                            display_name_en = reader.IsDBNull(displayNameEnOrdinal) ? null : reader.GetString(displayNameEnOrdinal),
-                            id = reader.GetInt32(attributeIdOrdinal),
-                            input_type = reader.IsDBNull(inputTypeOrdinal) ? null : reader.GetString(inputTypeOrdinal),
-                            is_required = reader.GetBoolean(isRequiredOrdinal),
-                            category_id = reader.GetInt32(categoryIdOrdinal)
+                            code = rdr.GetString(codeOrdinal),
+                            data_type = rdr.IsDBNull(dataTypeOrdinal) ? null : rdr.GetString(dataTypeOrdinal),
+                            default_value = rdr.IsDBNull(defaultValueOrdinal) ? null : rdr.GetString(defaultValueOrdinal),
+                            description = rdr.IsDBNull(descriptionOrdinal) ? null : rdr.GetString(descriptionOrdinal),
+                            description_en = rdr.IsDBNull(descriptionEnOrdinal) ? null : rdr.GetString(descriptionEnOrdinal),
+                            display_name = rdr.IsDBNull(displayNameOrdinal) ? null : rdr.GetString(displayNameOrdinal),
+                            display_name_en = rdr.IsDBNull(displayNameEnOrdinal) ? null : rdr.GetString(displayNameEnOrdinal),
+                            id = rdr.GetInt32(attributeIdOrdinal),
+                            input_type = rdr.IsDBNull(inputTypeOrdinal) ? null : rdr.GetString(inputTypeOrdinal),
+                            is_required = rdr.GetBoolean(isRequiredOrdinal),
+                            category_id = rdr.GetInt32(categoryIdOrdinal)
                         };
                         attributes.Add(attribute);
                     }
@@ -1553,7 +1553,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return attributes;
         }
 
-        public async Task InsertTikiAttributesOfCategoryAsync(
+        public static async Task InsertTikiAttributesOfCategoryAsync(
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes,
             MySqlConnection conn)
         {
@@ -1595,7 +1595,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task TikiInsert_tbTikiTrackCreateProductAsync(string track_id,
+        public static async Task TikiInsert_tbTikiTrackCreateProductAsync(string track_id,
             string state,
             string reason,
             string request_id,

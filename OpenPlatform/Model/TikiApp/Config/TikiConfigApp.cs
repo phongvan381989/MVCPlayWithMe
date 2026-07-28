@@ -10,7 +10,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config
     {
         public TikiConfigApp()
         {
-            Empty();
+            Empty(); 
         }
         public string appID { get; set; }
         public string homeAddress { get; set; }

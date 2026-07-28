@@ -1,14 +1,14 @@
-// mảng sản phẩm cần cập nhật
+﻿// mảng sản phẩm cần cập nhật
 let listCommonItem = [];
 let listPro = [];
 
-async function GetListProductInWarehoueChangedQuantity() {
+async function GetListProductInWarehouseChangedQuantity() {
     // Ẩn div chứa table kia
     document.getElementById("myTableTMDTDiv").style.display = "none";
 
     listPro = [];
     const searchParams = new URLSearchParams();
-    let query = "/Product/GetListProductInWarehoueChangedQuantity";
+    let query = "/Product/GetListProductInWarehouseChangedQuantity";
     ShowCircleLoader();
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     RemoveCircleLoader();
@@ -18,27 +18,27 @@ async function GetListProductInWarehoueChangedQuantity() {
     }
     else {
         listPro = [];
-        document.getElementById("myTableWarehoueseDiv").style.display = "none";
+        document.getElementById("myTableWarehouseDiv").style.display = "none";
         CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
         return;
     }
-    ShowListProductInWarehoueChangedQuatity(listPro);
+    ShowListProductInWarehouseChangedQuantity(listPro);
 }
 
-function ShowListProductInWarehoueChangedQuatity(list) {
+function ShowListProductInWarehouseChangedQuantity(list) {
 
-    let table = document.getElementById("myTableWarehouese");
+    let table = document.getElementById("myTableWarehouse");
     DeleteRowsExcludeHead(table);
 
     let length = list.length;
     if (length == 0) {
         alert("Không có sản phẩm thay đổi số lượng.")
-        document.getElementById("myTableWarehoueseDiv").style.display = "none";
+        document.getElementById("myTableWarehouseDiv").style.display = "none";
         return;
     }
 
     // Show
-    document.getElementById("myTableWarehoueseDiv").style.display = "initial";
+    document.getElementById("myTableWarehouseDiv").style.display = "initial";
 
     for (let i = 0; i < length; i++) {
         let item = list[i];
@@ -83,7 +83,7 @@ function ShowListProductInWarehoueChangedQuatity(list) {
 
 async function GetListNeedUpdateQuantityAndUpdate() {
     // Ẩn div chứa table, table kia
-    document.getElementById("myTableWarehoueseDiv").style.display = "none";
+    document.getElementById("myTableWarehouseDiv").style.display = "none";
 
     const searchParams = new URLSearchParams();
     let query = "/Product/GetListNeedUpdateQuantityAndUpdate";

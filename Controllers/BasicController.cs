@@ -177,8 +177,7 @@ namespace MVCPlayWithMe.Controllers
                 MyLogger.GetInstance().Warn("cookieValue is null or empty");
                 return null;
             }
-            AdministratorMySql sqler = new AdministratorMySql();
-            Administrator administrator = await sqler.GetAdministratorFromCookieAsync(cookieResult.cookieValue);
+            Administrator administrator = await AdministratorMySql.GetAdministratorFromCookieAsync(cookieResult.cookieValue);
             if (administrator == null)
                 MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
             return administrator;
@@ -192,8 +191,8 @@ namespace MVCPlayWithMe.Controllers
                 MyLogger.GetInstance().Warn("cookieValue is null or empty");
                 return null;
             }
-            AdministratorMySql sqler = new AdministratorMySql();
-            Administrator administrator = await sqler.GetAdministratorFromCookieConnectOutAsync(
+
+            Administrator administrator = await AdministratorMySql.GetAdministratorFromCookieConnectOutAsync(
                 cookieResult.cookieValue, conn);
             if (administrator == null)
                 MyLogger.GetInstance().Warn("Authent administrator fail." + cookieResult.cookieValue);
@@ -203,8 +202,7 @@ namespace MVCPlayWithMe.Controllers
         public async Task<Customer> AuthentCustomerAsync()
         {
             CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
-            CustomerMySql sqler = new CustomerMySql();
-            Customer customer = await sqler.GetCustomerFromCookieAsync(cookieResult.cookieValue);
+            Customer customer = await CustomerMySql.GetCustomerFromCookieAsync(cookieResult.cookieValue);
             if (customer == null)
             {
                 Cookie.DeleteUserIdCookie(HttpContext);
@@ -215,110 +213,95 @@ namespace MVCPlayWithMe.Controllers
 
         public async Task ViewDataGetListPublisherAsync()
         {
-            PublisherMySql sqlPubliser = new PublisherMySql();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                List<Publisher> ls = await sqlPubliser.GetListPublisherConnectOutAsync(conn);
+                List<Publisher> ls = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
                 ViewData["lsPublisher"] = ls;
             }
         }
 
         public async Task ViewDataGetListComboAsync()
         {
-            ComboMySql sqler = new ComboMySql();
-            List<Combo> ls = await sqler.GetListComboAsync();
+            List<Combo> ls = await ComboMySql.GetListComboAsync();
             ViewData["lsCombo"] = ls;
         }
 
         public async Task ViewDataGetListCategoryAsync()
         {
-            CategoryMySql sqler = new CategoryMySql();
-            List<Category> ls = await sqler.GetListCategoryAsync();
+            List<Category> ls = await CategoryMySql.GetListCategoryAsync();
             ViewData["lsCategory"] = ls;
         }
 
         public async Task ViewDataGetListProductNameAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<ProductIdName> ls = await sqler.GetListProductNameAsync();
+            List<ProductIdName> ls = await ProductMySql.GetListProductNameAsync();
             ViewData["lsProductName"] = ls;
         }
 
         public async Task ViewDataGetListPublishingCompanyAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<string> ls = await sqler.GetListPublishingCompanyAsync();
+            List<string> ls = await ProductMySql.GetListPublishingCompanyAsync();
             ViewData["lsPublishingCompany"] = ls;
         }
 
         public async Task ViewDataGetListAuthorAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<string> ls = await sqler.GetListAuthorAsync();
+            List<string> ls = await ProductMySql.GetListAuthorAsync();
             ViewData["lsAuthor"] = ls;
         }
 
         public async Task ViewDataGetListTranslatorAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<string> ls = await sqler.GetListTranslatorAsync();
+            List<string> ls = await ProductMySql.GetListTranslatorAsync();
             ViewData["lsTranslator"] = ls;
         }
 
         public async Task ViewDataGetListProductLongAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(1);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(1);
             ViewData["lsProductLong"] = ls;
         }
 
         public async Task ViewDataGetListProductWideAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(2);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(2);
             ViewData["lsProductWide"] = ls;
         }
 
         public async Task ViewDataGetListProductHighAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(3);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(3);
             ViewData["lsProductHigh"] = ls;
         }
 
         public async Task ViewDataGetListProductWeightAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(4);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(4);
             ViewData["lsProductWeight"] = ls;
         }
 
         public async Task ViewDataGetListMinAgeAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(5);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(5);
             ViewData["lsMinAge"] = ls;
         }
 
         public async Task ViewDataGetListMaxAgeAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(6);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(6);
             ViewData["lsMaxAge"] = ls;
         }
 
         public async Task ViewDataGetListPublishingTimeAsync()
         {
-            ProductMySql sqler = new ProductMySql();
-            List<int> ls = await sqler.GetListDifferenceIntValueAsync(7);
+            List<int> ls = await ProductMySql.GetListDifferenceIntValueAsync(7);
             ViewData["lsPublishingTime"] = ls;
         }
 
         public async Task ViewDataGetListItemNameAsync()
         {
-            ItemModelMySql sqler = new ItemModelMySql();
-            List<BasicIdName> ls = await sqler.GetListItemNameAsync();
+            List<BasicIdName> ls = await ItemModelMySql.GetListItemNameAsync();
             ViewData["lsItemName"] = ls;
         }
 

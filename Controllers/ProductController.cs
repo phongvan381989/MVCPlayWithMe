@@ -33,26 +33,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class ProductController : BasicController
     {
-        public ProductMySql productSqler;
-        TikiDealDiscountMySql tikiDealDiscountMySql;
-        public ComboMySql comboSqler;
-        public CategoryMySql categorySqler;
-        public PublisherMySql publisherSqler;
-        ShopeeMySql shopeeMysql;
-        TikiMySql tikiMySql;
-        LazadaMySql lazadaMySql;
-        public ProductController () : base ()
-        {
-            productSqler = new ProductMySql();
-            comboSqler = new ComboMySql();
-            categorySqler = new CategoryMySql();
-            publisherSqler = new PublisherMySql();
-            tikiDealDiscountMySql = new TikiDealDiscountMySql();
-            tikiMySql = new TikiMySql();
-            shopeeMysql = new ShopeeMySql();
-            lazadaMySql = new LazadaMySql();
-        }
-
         // GET: Product
         public async Task<ActionResult> Create()
         {
@@ -77,7 +57,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                product = await productSqler.GetProductFromIdAsync(id, conn);
+                product = await ProductMySql.GetProductFromIdAsync(id, conn);
             }
 
             return JsonConvert.SerializeObject(product);
@@ -169,22 +149,22 @@ namespace MVCPlayWithMe.Controllers
         //    if (string.IsNullOrWhiteSpace(comboName))
         //        comboId = -1;
         //    else
-        //        comboId = comboSqler.GetComboIdFromName(comboName);
+        //        comboId = await ComboMySql.GetComboIdFromName(comboName);
 
         //    if (string.IsNullOrWhiteSpace(categoryName))
         //        categoryId = -1;
         //    else
-        //        categoryId = categorySqler.GetCategoryIdFromName(categoryName);
+        //        categoryId = await CategoryMySql.GetCategoryIdFromName(categoryName);
 
         //    if (string.IsNullOrWhiteSpace(publisherName))
         //        publisherId = -1;
         //    else
-        //        publisherId = publisherSqler.GetPublisherIdFromName(publisherName);
+        //        publisherId = await PublisherMySql.GetPublisherIdFromName(publisherName);
 
         //    if (string.IsNullOrWhiteSpace(parentName))
         //        parentId = -1;
         //    else
-        //        parentId = sqler.GetProductIdFromName(parentName);
+        //        parentId = await ProductMySql.GetProductIdFromName(parentName);
         //}
 
         [HttpPost]
@@ -255,7 +235,7 @@ namespace MVCPlayWithMe.Controllers
                  pageNumber
                  );
 
-             MySqlResultState result = await productSqler.AddNewProAsync(pro);
+             MySqlResultState result = await ProductMySql.AddNewProAsync(pro);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -279,7 +259,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 else
                 {
-                   result = await productSqler.AddNewProsFromCSVPromise(products, publisherId);
+                   result = await ProductMySql.AddNewProsFromCSVPromise(products, publisherId);
                 }
             }
             catch (Exception ex)
@@ -361,7 +341,7 @@ namespace MVCPlayWithMe.Controllers
                  pageNumber
                  );
 
-            MySqlResultState result = await productSqler.UpdateProductAsync(pro);
+            MySqlResultState result = await ProductMySql.UpdateProductAsync(pro);
 
             return JsonConvert.SerializeObject(result);
         }
@@ -392,7 +372,7 @@ namespace MVCPlayWithMe.Controllers
 
             string decodeDetail = WebUtility.UrlDecode(detail);
 
-            MySqlResultState result = await productSqler.UpdateProductFromFahasaAsync(
+            MySqlResultState result = await ProductMySql.UpdateProductFromFahasaAsync(
                 productId,
                 author,
                 publishingTime,
@@ -429,7 +409,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await productSqler.DeleteProductAsync(id);
+            MySqlResultState result = await ProductMySql.DeleteProductAsync(id);
 
             // xóa thư mục ảnh video của sản phẩm
             string path = Common.GetAbsoluteProductMediaFolderPath(id.ToString());
@@ -493,7 +473,7 @@ namespace MVCPlayWithMe.Controllers
                  status,
                  pageNumber
                 );
-            MySqlResultState result = await productSqler.UpdateCommonInfoWithComboAsync(pro);
+            MySqlResultState result = await ProductMySql.UpdateCommonInfoWithComboAsync(pro);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -510,7 +490,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonHardCoverWithComboAsync(comboId, hardCover, conn);
+                result = await ProductMySql.UpdateCommonHardCoverWithComboAsync(comboId, hardCover, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -529,7 +509,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonAgeWithComboAsync(comboId, minAge, maxAge, conn);
+                result = await ProductMySql.UpdateCommonAgeWithComboAsync(comboId, minAge, maxAge, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -548,7 +528,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonLanguageWithComboAsync(comboId, language, conn);
+                result = await ProductMySql.UpdateCommonLanguageWithComboAsync(comboId, language, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -569,7 +549,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonDimensionWithComboAsync(comboId, productLong, productWide, productHigh, productWeight, conn);
+                result = await ProductMySql.UpdateCommonDimensionWithComboAsync(comboId, productLong, productWide, productHigh, productWeight, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -588,7 +568,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonCategoryWithComboAsync(comboId, categoryId, conn);
+                result = await ProductMySql.UpdateCommonCategoryWithComboAsync(comboId, categoryId, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -606,7 +586,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonPageNumberWithComboAsync(comboId, pageNumber, conn);
+                result = await ProductMySql.UpdateCommonPageNumberWithComboAsync(comboId, pageNumber, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -625,7 +605,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonPublishingTimeWithComboAsync(comboId, publishingTime, conn);
+                result = await ProductMySql.UpdateCommonPublishingTimeWithComboAsync(comboId, publishingTime, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -644,7 +624,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await productSqler.UpdateCommonBookCoverPriceWithComboAsync(comboId, bookCoverPrice, conn);
+                result = await ProductMySql.UpdateCommonBookCoverPriceWithComboAsync(comboId, bookCoverPrice, conn);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -687,7 +667,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                Product product = await productSqler.GetProductFromIdAsync(Common.ConvertStringToInt32(productId), conn);
+                Product product = await ProductMySql.GetProductFromIdAsync(Common.ConvertStringToInt32(productId), conn);
                 if(product == null)
                 {
                     return JsonConvert.SerializeObject(
@@ -822,7 +802,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<Product>());
             }
 
-            List<Product> ls = await productSqler.GetProductIdCodeBarcodeNameBookCoverPriceAsync(publisherId);
+            List<Product> ls = await ProductMySql.GetProductIdCodeBarcodeNameBookCoverPriceAsync(publisherId);
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -847,7 +827,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 else
                 {
-                    result = await productSqler.AddListImportAsync(ls);
+                    result = await ProductMySql.AddListImportAsync(ls);
                 }
             }
             catch (Exception ex)
@@ -896,7 +876,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 else
                 {
-                    result = await productSqler.CreateOrderManuallyAsync(ls, sumPay);
+                    result = await ProductMySql.CreateOrderManuallyAsync(ls, sumPay);
                 }
             }
             catch (Exception ex)
@@ -921,7 +901,7 @@ namespace MVCPlayWithMe.Controllers
             }
             if (Common.ParameterOfURLQueryIsNullOrEmpty(toDate))
                 toDate = DateTime.Now.ToString(Common.dateFormat);
-            List<Import> ls = await productSqler.GetImportListAsync(fromDate, toDate, publisher);
+            List<Import> ls = await ProductMySql.GetImportListAsync(fromDate, toDate, publisher);
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -943,7 +923,7 @@ namespace MVCPlayWithMe.Controllers
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Danh sách cần cập nhât không đúng.";
                 }
-                result = await productSqler.UpdateListImportAsync(ls);
+                result = await ProductMySql.UpdateListImportAsync(ls);
             }
             catch (Exception ex)
             {
@@ -999,7 +979,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.combo = combo;
             //searchParameter.status = status;
             List<Product> lsSearchResult;
-            lsSearchResult = await productSqler.SearchProduct(searchParameter);
+            lsSearchResult = await ProductMySql.SearchProduct(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -1023,7 +1003,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    lsSearchResult = await productSqler.SearchProductForMappingAsync(searchParameter, conn);
+                    lsSearchResult = await ProductMySql.SearchProductForMappingAsync(searchParameter, conn);
                 }
             }
             catch (Exception ex)
@@ -1047,7 +1027,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    ls = await productSqler.SearchProductFromTMDTNameForMappingAsync(tmdtItemName, tmdtModelName, conn);
+                    ls = await ProductMySql.SearchProductFromTMDTNameForMappingAsync(tmdtItemName, tmdtModelName, conn);
                 }
             }
             catch (Exception ex)
@@ -1071,7 +1051,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                lsSearchResult = await productSqler.SearchDontSellOnECommerce(isSingle, eType, conn);
+                lsSearchResult = await ProductMySql.SearchDontSellOnECommerce(isSingle, eType, conn);
             }
 
             return JsonConvert.SerializeObject(lsSearchResult);
@@ -1281,7 +1261,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
 
                     // Lấy danh sách sản phẩm có combo
-                    List<Product> lsProduct = await productSqler.GetActiveProductHasComboActiveAll(conn);
+                    List<Product> lsProduct = await ProductMySql.GetActiveProductHasComboActiveAll(conn);
 
                     // Tạo danh sách combo
                     List<Combo> lsCombo = new List<Combo>();
@@ -1305,7 +1285,7 @@ namespace MVCPlayWithMe.Controllers
                         //lsSearchResult = TikiSearchDontSellFullComboAndSigleOnECommerce(lsCombo, conn);
                         foreach(var combo in lsCombo)
                         {
-                            if(!await productSqler.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
+                            if(!await ProductMySql.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
                             {
                                 lsSearchResult.AddRange(combo.products);
                             }
@@ -1339,7 +1319,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
 
                     // Lấy danh sách sản phẩm có combo
-                    List<Product> lsProduct = await productSqler.GetActiveProductHasComboActiveAll(conn);
+                    List<Product> lsProduct = await ProductMySql.GetActiveProductHasComboActiveAll(conn);
 
                     // Tạo danh sách combo
                     List<Combo> lsCombo = new List<Combo>();
@@ -1362,7 +1342,7 @@ namespace MVCPlayWithMe.Controllers
                     {
                         foreach (var combo in lsCombo)
                         {
-                            if (!await productSqler.TikiDontSellSigleWithParrentConnectOut(combo, conn))
+                            if (!await ProductMySql.TikiDontSellSigleWithParrentConnectOut(combo, conn))
                             {
                                 lsSearchResult.AddRange(combo.products);
                             }
@@ -1372,7 +1352,7 @@ namespace MVCPlayWithMe.Controllers
                     {
                         foreach (var combo in lsCombo)
                         {
-                            if (!await productSqler.Shopee_LazadaDontSellSigleWithParrentConnectOut(eType, combo, conn))
+                            if (!await ProductMySql.Shopee_LazadaDontSellSigleWithParrentConnectOut(eType, combo, conn))
                             {
                                 lsSearchResult.AddRange(combo.products);
                             }
@@ -1404,7 +1384,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     lsSearchResult = await
-                        productSqler.SearchDontSellSigleWithNoParrentOnECommerceConnectOut(eType, conn);
+                        ProductMySql.SearchDontSellSigleWithNoParrentOnECommerceConnectOut(eType, conn);
                 }
             }
             catch (Exception ex)
@@ -1434,7 +1414,7 @@ namespace MVCPlayWithMe.Controllers
             searchParameter.offset = offset;
 
             List<Product> lsSearchResult;
-            lsSearchResult = await productSqler.SearchProductChangePage(searchParameter);
+            lsSearchResult = await ProductMySql.SearchProductChangePage(searchParameter);
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
@@ -1447,7 +1427,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateNameAsync(id, name));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateNameAsync(id, name));
         }
 
         [HttpGet]
@@ -1458,7 +1438,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateCodeAsync(id, code));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateCodeAsync(id, code));
         }
 
         [HttpPost]
@@ -1469,7 +1449,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateQuantityAsync(id, quantity));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateQuantityAsync(id, quantity));
         }
 
         [HttpGet]
@@ -1480,7 +1460,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateISBNAsync(id, isbn));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateISBNAsync(id, isbn));
         }
 
         [HttpPost]
@@ -1491,7 +1471,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
             string decodeDetail = WebUtility.UrlDecode(detail);
-            return JsonConvert.SerializeObject(await productSqler.UpdateDetailAsync(id, decodeDetail));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateDetailAsync(id, decodeDetail));
         }
 
         [HttpGet]
@@ -1502,7 +1482,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateBookCoverPriceAsync(id, bookCoverPrice));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateBookCoverPriceAsync(id, bookCoverPrice));
         }
 
         [HttpGet]
@@ -1513,7 +1493,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateDiscountWhenImportAsync(id, discount));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateDiscountWhenImportAsync(id, discount));
         }
 
         [HttpGet]
@@ -1524,7 +1504,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdatePositionInWarehouseAsync(id, positionInWarehouse));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdatePositionInWarehouseAsync(id, positionInWarehouse));
         }
 
         [HttpGet]
@@ -1535,7 +1515,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateStatusOfProductAsync(id, statusOfProduct));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateStatusOfProductAsync(id, statusOfProduct));
         }
 
         [HttpGet]
@@ -1546,7 +1526,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateComboIdAsync(id, comboId));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateComboIdAsync(id, comboId));
         }
 
         [HttpGet]
@@ -1557,7 +1537,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateCategoryIdAsync(id, categoryId));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateCategoryIdAsync(id, categoryId));
         }
 
         [HttpGet]
@@ -1568,7 +1548,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdatePublisherIdAsync(id, publisherId));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdatePublisherIdAsync(id, publisherId));
         }
 
         [HttpGet]
@@ -1579,7 +1559,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdatePublishingCompanyAsync(id, publishingCompany));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdatePublishingCompanyAsync(id, publishingCompany));
         }
 
         [HttpGet]
@@ -1590,7 +1570,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateLanguageAsync(id, language));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateLanguageAsync(id, language));
         }
 
         //// str có dạng: 12,45,24
@@ -1621,7 +1601,7 @@ namespace MVCPlayWithMe.Controllers
             List<int> lsId = JsonConvert.DeserializeObject<List<int>>(listId);
             List<int> lsQuantity = JsonConvert.DeserializeObject<List<int>>(listQuantity);
 
-            return JsonConvert.SerializeObject(await productSqler.UpdateQuantityFromListAsync(lsId, lsQuantity));
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateQuantityFromListAsync(lsId, lsQuantity));
         }
 
         [HttpPost]
@@ -1632,7 +1612,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<string>());
             }
 
-            return JsonConvert.SerializeObject(await productSqler.GetListAuthorAsync());
+            return JsonConvert.SerializeObject(await ProductMySql.GetListAuthorAsync());
         }
 
         
@@ -1644,7 +1624,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<string>());
             }
 
-            return JsonConvert.SerializeObject(await productSqler.GetListTranslatorAsync());
+            return JsonConvert.SerializeObject(await ProductMySql.GetListTranslatorAsync());
         }
 
         [HttpPost]
@@ -1655,7 +1635,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<string>());
             }
 
-            return JsonConvert.SerializeObject(await productSqler.GetListPublishingCompanyAsync());
+            return JsonConvert.SerializeObject(await ProductMySql.GetListPublishingCompanyAsync());
         }
 
         [HttpPost]
@@ -1665,7 +1645,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new List<ProductIdName>());
             }
-            return JsonConvert.SerializeObject(await productSqler.GetListProductNameAsync());
+            return JsonConvert.SerializeObject(await ProductMySql.GetListProductNameAsync());
         }
 
         [HttpGet]
@@ -1708,7 +1688,7 @@ namespace MVCPlayWithMe.Controllers
                         if (string.IsNullOrEmpty(item.imageSrc))
                         {
                             item.imageSrc = pro.image.image_url_list[0];
-                            await productSqler.UpdateImageSrcShopeeItemAsync(item.itemId, item.imageSrc, conn);
+                            await ProductMySql.UpdateImageSrcShopeeItemAsync(item.itemId, item.imageSrc, conn);
                         }
 
                         // Lấy imageSrc cho model nếu có
@@ -1733,7 +1713,7 @@ namespace MVCPlayWithMe.Controllers
                                             if (m.modelId == model.model_id)
                                             {
                                                 m.imageSrc = option.image.image_url;
-                                                await productSqler.UpdateImageSrcShopeeModelAsync(m.modelId, m.imageSrc, conn);
+                                                await ProductMySql.UpdateImageSrcShopeeModelAsync(m.modelId, m.imageSrc, conn);
                                                 break;
                                             }
                                         }
@@ -1849,7 +1829,7 @@ namespace MVCPlayWithMe.Controllers
                     // Chưa mapping set quantity = 0
                     skus.Add(new LazadaParameterQuantity_PriceUpdate(commonItem.itemId,
                         commonModel.modelId,
-                        commonModel.GetQuatityFromListMapping()));
+                        commonModel.GetQuantityFromListMapping()));
                 }
             }
             if(skus.Count == 0)
@@ -1870,12 +1850,10 @@ namespace MVCPlayWithMe.Controllers
             List<LazadaParameterQuantity_PriceUpdate> skus = new List<LazadaParameterQuantity_PriceUpdate>();
 
             // Lấy danh sách thuế phí
-            TikiDealDiscountMySql sqler = new TikiDealDiscountMySql();
-            TaxAndFee taxAndFee = await sqler.GetTaxAndFeeAsync(Common.eLazada, conn);
+            TaxAndFee taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(Common.eLazada, conn);
 
             // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
-            PublisherMySql publisherSqler = new PublisherMySql();
-            List<Publisher> listPublisher = await publisherSqler.GetListPublisherConnectOutAsync(conn);
+            List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
 
             // Tính giá bìa, chiết khấu hợp lý theo nhà phát hành hoặc sản phẩm, thuế, phí, lợi nhuận mong muốn.
             // Từ đó tính giá bán.
@@ -1918,12 +1896,10 @@ namespace MVCPlayWithMe.Controllers
             List<LazadaParameterQuantity_PriceUpdate> skus = new List<LazadaParameterQuantity_PriceUpdate>();
 
             // Lấy danh sách thuế phí
-            TikiDealDiscountMySql sqler = new TikiDealDiscountMySql();
-            TaxAndFee taxAndFee = await sqler.GetTaxAndFeeAsync(Common.eLazada, conn);
+            TaxAndFee taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(Common.eLazada, conn);
 
             // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
-            PublisherMySql publisherSqler = new PublisherMySql();
-            List<Publisher> listPublisher = await publisherSqler.GetListPublisherConnectOutAsync(conn);
+            List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
 
             // Tính giá bìa, chiết khấu hợp lý theo nhà phát hành hoặc sản phẩm, thuế, phí, lợi nhuận mong muốn.
             // Từ đó tính giá bán.
@@ -1944,7 +1920,7 @@ namespace MVCPlayWithMe.Controllers
 
                     skus.Add(new LazadaParameterQuantity_PriceUpdate(commonItem.itemId,
                         commonModel.modelId,
-                        commonModel.GetQuatityFromListMapping(),
+                        commonModel.GetQuantityFromListMapping(),
                         commonModel.GetBookCoverPrice(),
                         sale_price));
                 }
@@ -1962,7 +1938,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Trả về danh sách id sản phẩm mapping với sku cập nhật lỗi
-        private static async Task<List<CommonItem>> LazadaGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
+        private static async Task<List<CommonItem>> LazadaGetListNeedUpdateQuantityAndUpdateAsync(MySqlConnection conn)
         {
             List<CommonItem> listCommonItem = await LazadaMySql.LazadaGetListNeedUpdateQuantityConnectOutAsync(conn);
 
@@ -2001,14 +1977,14 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
-        private static async Task<List<CommonItem>> TikiGetListNeedUpdateQuantityAndUpdate(MySqlConnection conn)
+        private static async Task<List<CommonItem>> TikiGetListNeedUpdateQuantityAndUpdateAsync(MySqlConnection conn)
         {
             // Danh sách sản phẩm Tiki
             List<CommonItem> listCommonItem = await TikiMySql.TikiGetListNeedUpdateQuantityConnectOutAsync(conn);
             //TikiGetStatusImageSrcQuantitySellable(listCommonItem);
             foreach( var commonItem in listCommonItem)
             {
-                 TikiUpdateQuantityOfOneItem(commonItem/*, conn*/);
+                 await TikiUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
             }
             return listCommonItem;
         }
@@ -2127,8 +2103,8 @@ namespace MVCPlayWithMe.Controllers
                     List<int> listProductId = await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn);
 
                     List<CommonItem> shopeeList = await ShopeeGetListNeedUpdateQuantityAndUpdateAsync(conn);
-                    List<CommonItem> tikiList = await TikiGetListNeedUpdateQuantityAndUpdate(conn);
-                    List<CommonItem> lazadaList = await LazadaGetListNeedUpdateQuantityAndUpdate(conn);
+                    List<CommonItem> tikiList = await TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                    List<CommonItem> lazadaList = await LazadaGetListNeedUpdateQuantityAndUpdateAsync(conn);
 
 
                     ls.AddRange(tikiList);
@@ -2159,14 +2135,14 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> GetListProductInWarehoueChangedQuantity()
+        public async Task<string> GetListProductInWarehouseChangedQuantity()
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new List<Product>());
             }
             List<Product> ls = null;
-            ls = await productSqler.GetListProductInWarehoueChangedQuantityAsync();
+            ls = await ProductMySql.GetListProductInWarehouseChangedQuantityAsync();
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -2184,7 +2160,7 @@ namespace MVCPlayWithMe.Controllers
         //private List<CommonItem> ShopeeGetListMappingOfProduct(int id, MySqlConnection conn)
         //{
         //    // Danh sách sản phẩm Shopee
-        //    List<CommonItem> shopeeList = productSqler.ShopeeGetListMappingOfProduct(id, conn);
+        //    List<CommonItem> shopeeList = ProductMySql.ShopeeGetListMappingOfProduct(id, conn);
         //    //ShopeeGetStatusImageSrcQuantitySellable(shopeeList);
         //    return shopeeList;
         //}
@@ -2192,14 +2168,14 @@ namespace MVCPlayWithMe.Controllers
         //private List<CommonItem> LazadaGetListMappingOfProduct(int id, MySqlConnection conn)
         //{
         //    // Danh sách sản phẩm Shopee
-        //    List<CommonItem> ls = lazadaMySql.LazadaGetListMappingOfProduct(id, conn);
+        //    List<CommonItem> ls = LazadaMySql.LazadaGetListMappingOfProduct(id, conn);
         //    return ls;
         //}
 
         //private List<CommonItem> TikiGetListMappingOfProductAsync(int id, MySqlConnection conn)
         //{
         //    // Danh sách sản phẩm Tiki
-        //    List<CommonItem> tikiList = TikiMySql.TikiGetListMappingOfProductAsync(id, conn);
+        //    List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfProductAsync(id, conn);
         //    //TikiGetStatusImageSrcQuantitySellable(tikiList);
         //    return tikiList;
         //}
@@ -2221,7 +2197,7 @@ namespace MVCPlayWithMe.Controllers
 
                     List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfProductAsync(id, conn);
                     List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfProductAsync(id, conn);
-                    List<CommonItem> lazadaList = await lazadaMySql.LazadaGetListMappingOfProductAsync(id, conn);
+                    List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfProductAsync(id, conn);
 
                     ls.AddRange(tikiList);
                     ls.AddRange(shopeeList);
@@ -2276,8 +2252,8 @@ namespace MVCPlayWithMe.Controllers
                         //},
 
                         // Item trạng thái abnormal trên shopee. Xóa bỏ mọi thứ liên quan đến item vĩnh viễn khỏi csdl
-                        ShopeeMySql sqlShopee = new ShopeeMySql();
-                        await sqlShopee.ShopeeDeleteItemOnDBAsync(st.item_id);
+
+                        await ShopeeMySql.ShopeeDeleteItemOnDBAsync(st.item_id);
                     }
                     else
                     {
@@ -2298,7 +2274,7 @@ namespace MVCPlayWithMe.Controllers
             MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = await productSqler.ShopeeGetQuantityOfOneItemModelConnectOutAsync(itemId, modelId, conn);
+            int quantity = await ProductMySql.ShopeeGetQuantityOfOneItemModelConnectOutAsync(itemId, modelId, conn);
 
             MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock st =
                     new MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct.ShopeeUpdateStock();
@@ -2323,7 +2299,7 @@ namespace MVCPlayWithMe.Controllers
             MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = await productSqler.LazadaGetQuantityOfOneItemModelConnectOutAsync(itemId, modelId, conn);
+            int quantity = await ProductMySql.LazadaGetQuantityOfOneItemModelConnectOutAsync(itemId, modelId, conn);
 
             result.myJson = await LazadaProductAPI.LazadaUpdateQuantityOfOneItemModelAsync(
                 new LazadaParameterQuantity_PriceUpdate(itemId, modelId, quantity));
@@ -2365,7 +2341,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 modelId = model.modelId;
                 //quantity = sqler.ShopeeGetQuantityOfOneItemModelConnectOut(itemId, modelId, conn);
-                quantity = model.GetQuatityFromListMapping();
+                quantity = model.GetQuantityFromListMapping();
 
                 if(modelId == -1)
                 {
@@ -2384,14 +2360,14 @@ namespace MVCPlayWithMe.Controllers
         private async Task<MySqlResultState> TikiUpdateQuantityOfOneItemModelAsync(int itemId, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            int quantity = await productSqler.TikiGetQuantityOfOneItemModelConnectOutAsync(itemId, conn);
+            int quantity = await ProductMySql.TikiGetQuantityOfOneItemModelConnectOutAsync(itemId, conn);
 
-            TikiUpdateStock.TikiProductUpdateQuantity(itemId, quantity, result);
+            await TikiUpdateStock.TikiProductUpdateQuantityAsync(itemId, quantity, result);
 
             // Comment vì mỗi ngày check lại toàn bộ deal đang chạy
             //if (quantity <= Common.minQuantityOfDealTiki)
             //{
-            //    tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId(itemId, conn);
+            //    TikiDealDiscountMySql.UpdateIsActiveCloseFromItemId(itemId, conn);
             //}
 
             return result;
@@ -2399,7 +2375,7 @@ namespace MVCPlayWithMe.Controllers
 
         // Với Tiki TikiUpdateQuantityOfOneItemModel, và TikiUpdateQuantityOfOneItem giống nhau, khác tham số truyền vào
         // TikiUpdateQuantityOfOneItem có thể check item active
-        public static void TikiUpdateQuantityOfOneItem(CommonItem commonItem/*, MySqlConnection conn*/)
+        public static async Task TikiUpdateQuantityOfOneItemAsync(CommonItem commonItem/*, MySqlConnection conn*/)
         {
             if (!commonItem.bActive)
             {
@@ -2410,14 +2386,14 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             //int quantity = sqler.TikiGetQuantityOfOneItemModelConnectOut((int)commonItem.itemId, conn);
 
-            int quantity = commonItem.models[0].GetQuatityFromListMapping();
+            int quantity = commonItem.models[0].GetQuantityFromListMapping();
 
-            TikiUpdateStock.TikiProductUpdateQuantity((int)commonItem.itemId, quantity, result);
+            await TikiUpdateStock.TikiProductUpdateQuantityAsync((int)commonItem.itemId, quantity, result);
 
             // Comment vì mỗi ngày check lại toàn bộ deal đang chạy
             //if (quantity <= Common.minQuantityOfDealTiki)
             //{
-            //    tikiDealDiscountMySql.UpdateIsActiveCloseFromItemId((int)commonItem.itemId, conn);
+            //    TikiDealDiscountMySql.UpdateIsActiveCloseFromItemId((int)commonItem.itemId, conn);
             //}
 
             commonItem.result = result;
@@ -2471,7 +2447,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 if (commonItem.eType == Common.eTiki)
                 {
-                    TikiUpdateQuantityOfOneItem(commonItem/*, conn*/);
+                    await TikiUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
                 }
                 else if (commonItem.eType == Common.eShopee)
                 {
@@ -2538,8 +2514,7 @@ namespace MVCPlayWithMe.Controllers
                 else
                 {
                     // Lấy danh sách id sản phẩm đang kinh doanh thuộc combo Id
-                    ComboMySql comboMySql = new ComboMySql();
-                    listProductId = await comboMySql.GetProductIdsOfComboAsync(productOrComboId);
+                    listProductId = await ComboMySql.GetProductIdsOfComboAsync(productOrComboId);
 
                 }
                 await UpdateQuantityToTMDT_DbFromListCommonItemAsync(ls, listProductId);
@@ -2563,7 +2538,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    statisticsList = await productSqler.GetProductSellingStatisticsAsync(
+                    statisticsList = await ProductMySql.GetProductSellingStatisticsAsync(
                         Common.GetIntECommerceTypeFromString(eType),
                         intervalDay, -1, conn);
                 }
@@ -2591,7 +2566,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    statisticsList = await productSqler.GetProductSellingStatisticsAsync(
+                    statisticsList = await ProductMySql.GetProductSellingStatisticsAsync(
                         -1, intervalDay, publisherId, conn);
                 }
             }
@@ -2619,7 +2594,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    outputList =await productSqler.GetOutputOfProductAsync(id, conn);
+                    outputList =await ProductMySql.GetOutputOfProductAsync(id, conn);
                 }
             }
             catch (Exception ex)
@@ -2709,11 +2684,11 @@ namespace MVCPlayWithMe.Controllers
                 TikiCreatingProduct tikiCreatingProduct = new TikiCreatingProduct();
 
                 // Lấy sản phẩm trong kho
-                Product product = await productSqler.GetProductFromIdAsync(id, conn);
+                Product product = await ProductMySql.GetProductFromIdAsync(id, conn);
 
                 // Từ category id sản phẩm trong kho, lấy category tương ứng trên Tiki
                 tikiCreatingProduct.category_id =
-                    await productSqler.GetTikiCategoryIdFromProductCategoryIdAsync(product.categoryId, conn);
+                    await ProductMySql.GetTikiCategoryIdFromProductCategoryIdAsync(product.categoryId, conn);
 
                 if (string.IsNullOrEmpty(name))
                 {
@@ -2727,12 +2702,11 @@ namespace MVCPlayWithMe.Controllers
                 tikiCreatingProduct.description = GetDescriptsFromDetailForTiki(product.detail);
                 tikiCreatingProduct.market_price = product.bookCoverPrice;
 
-                PublisherMySql publisherMySql = new PublisherMySql();
-                Publisher publisher = await publisherMySql.GetPublisherAsync(product.publisherId);
+                Publisher publisher = await PublisherMySql.GetPublisherAsync(product.publisherId);
 
                 // Attribute. Ta chỉ cập nhật những thuộc tính bắt buộc phải có và 1 vài thuộc tính khác
                 List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes =
-                    await tikiMySql.GetTikiAttributesOfCategoryAsync(tikiCreatingProduct.category_id, conn);
+                    await TikiMySql.GetTikiAttributesOfCategoryAsync(tikiCreatingProduct.category_id, conn);
                 var tikiAttributesGroups = new Dictionary<string, object>();
                 //string product_height = (product.productHigh / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
                 //string product_length = (product.productLong / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
@@ -2872,7 +2846,7 @@ namespace MVCPlayWithMe.Controllers
                 trackObj = await TikiCreateProduct.CreateProduct(tikiCreatingProduct);
                 if (trackObj != null)
                 {
-                    await tikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
+                    await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
                         trackObj.state,
                         trackObj.reason,
                         trackObj.request_id,
@@ -2903,7 +2877,7 @@ namespace MVCPlayWithMe.Controllers
                 await conn.OpenAsync();
                 // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không cha
                 List<int> needList =
-                    await productSqler.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
+                    await ProductMySql.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
                     eType, conn
                     );
 
@@ -2926,7 +2900,7 @@ namespace MVCPlayWithMe.Controllers
                                 trackObj = await TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
                                 if (trackObj != null)
                                 {
-                                    await tikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
+                                    await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
                                         trackObj.state,
                                         trackObj.reason,
                                         trackObj.request_id,
@@ -2997,7 +2971,7 @@ namespace MVCPlayWithMe.Controllers
                         break;
                     }
 
-                    result = await shopeeMysql.InserttbShopeeMediaSpaceAsync(0,
+                    result = await ShopeeMySql.InserttbShopeeMediaSpaceAsync(0,
                         objResponse.response.image_info.image_id,
                         id, 0, conn);
                     if (result.State != EMySqlResultState.OK)
@@ -3032,7 +3006,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 if(result.State == EMySqlResultState.OK)
                 {
-                    await lazadaMySql.InserttbLazadaMediaSpaceAsync(id, 0, 0, images, conn);
+                    await LazadaMySql.InserttbLazadaMediaSpaceAsync(id, 0, 0, images, conn);
                 }
             }
 
@@ -3076,13 +3050,13 @@ namespace MVCPlayWithMe.Controllers
             }
 
             CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync (pro);
-            int itemIdInserted = await shopeeMysql.InserttbShopeeItemAsync(item, conn);
+            int itemIdInserted = await ShopeeMySql.InserttbShopeeItemAsync(item, conn);
 
             // Vì chỉ có 1 model
-            int modelIdInsert = await shopeeMysql.InserttbShopeeModelAsync(itemIdInserted, item.models[0], conn);
+            int modelIdInsert = await ShopeeMySql.InserttbShopeeModelAsync(itemIdInserted, item.models[0], conn);
 
             // Ta mapping
-            await shopeeMysql.ShopeeInsertNewMappingOneOfModelAsync(modelIdInsert, productId, 1, conn);
+            await ShopeeMySql.ShopeeInsertNewMappingOneOfModelAsync(modelIdInsert, productId, 1, conn);
         }
 
         public MySqlResultState CheckValidBookProductInfo(Product product)
@@ -3316,7 +3290,7 @@ namespace MVCPlayWithMe.Controllers
         {
             MyLogger.GetInstance().Info("CreateShopeeProductFromProductIdInWarehouse Call productId: " + productId +", name: " + name + ", isNeedUploadImage: " + isNeedUploadImage.ToString());
             // Lấy sản phẩm trong kho
-            Product product = await productSqler.GetProductFromIdAsync(productId, conn);
+            Product product = await ProductMySql.GetProductFromIdAsync(productId, conn);
             MySqlResultState result = CheckValidBookProductInfo(product);
             if(result.State != EMySqlResultState.OK)
             {
@@ -3335,7 +3309,7 @@ namespace MVCPlayWithMe.Controllers
                 // Cần kiểm tra xem đã up ảnh lên shopee chưa? 
                 // Không mỗi lần đăng sản phẩm lại up ảnh lại không cần thiết
 
-                int count = await shopeeMysql.GetQuantityOfProductImageUploadedToShopeeAsync(0, productId, 0, conn);
+                int count = await ShopeeMySql.GetQuantityOfProductImageUploadedToShopeeAsync(0, productId, 0, conn);
 
                 if(count == -1)
                 {
@@ -3350,7 +3324,7 @@ namespace MVCPlayWithMe.Controllers
                     // Trước khi up xóa bỏ id ảnh cũ nếu có
                     if (count > 0)
                     {
-                        result = await shopeeMysql.DeleteProductImageUploadedToShopeeAsync(0, productId, 0, conn);
+                        result = await ShopeeMySql.DeleteProductImageUploadedToShopeeAsync(0, productId, 0, conn);
                         if (result.State != EMySqlResultState.OK)
                         {
                             return result;
@@ -3419,7 +3393,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // Image
-            List<string> image = await shopeeMysql.GetUploadedImageOfProductOnShopeeAsync(0, product.id, 0, conn);
+            List<string> image = await ShopeeMySql.GetUploadedImageOfProductOnShopeeAsync(0, product.id, 0, conn);
             requestParameters.image = new ShopeeImage(image);
 
             // Thương hiệu là tên tác giả, nhiều tác giả thì lựa chọn thương hiệu nhiều tác giả.
@@ -3431,7 +3405,7 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                brand = await shopeeMysql.GetBrandFromNameAsync(product.author, conn);
+                brand = await ShopeeMySql.GetBrandFromNameAsync(product.author, conn);
                 if(brand == null)
                 {
                     result.State = EMySqlResultState.INVALID;
@@ -3478,7 +3452,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 // Cần kiểm tra xem đã up ảnh lên lazada chưa? 
                 // Không mỗi lần đăng sản phẩm lại up ảnh lại không cần thiết
-                int count = await lazadaMySql.GetQuantityOfProductImageUploadedToLazadaAsync(0, product.id, 0, conn);
+                int count = await LazadaMySql.GetQuantityOfProductImageUploadedToLazadaAsync(0, product.id, 0, conn);
 
                 if (count == -1)
                 {
@@ -3494,7 +3468,7 @@ namespace MVCPlayWithMe.Controllers
                     // Trước khi up xóa bỏ id ảnh cũ nếu có
                     if (count > 0)
                     {
-                        result = await lazadaMySql.DeleteProductImageUploadedToLazadaAsync(0, product.id, 0, conn);
+                        result = await LazadaMySql.DeleteProductImageUploadedToLazadaAsync(0, product.id, 0, conn);
                         if (result.State != EMySqlResultState.OK)
                         {
                             return;
@@ -3515,12 +3489,10 @@ namespace MVCPlayWithMe.Controllers
             MySqlConnection conn)
         {
             // Lấy danh sách thuế phí
-            TikiDealDiscountMySql sqler = new TikiDealDiscountMySql();
-            TaxAndFee taxAndFee = await sqler.GetTaxAndFeeAsync(Common.eLazada, conn);
+            TaxAndFee taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(Common.eLazada, conn);
 
             // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
-            PublisherMySql publisherSqler = new PublisherMySql();
-            List<Publisher> listPublisher = await publisherSqler.GetListPublisherConnectOutAsync(conn);
+            List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
 
             float discountOfPublisher = 0;
             foreach(var publisher in listPublisher)
@@ -3667,13 +3639,13 @@ namespace MVCPlayWithMe.Controllers
             }
 
             CommonItem item = new CommonItem(pro);
-            int itemIdInserted = await lazadaMySql.InserttbLazadaItemAsync(item, conn);
+            int itemIdInserted = await LazadaMySql.InserttbLazadaItemAsync(item, conn);
 
             // Vì chỉ có 1 model
-            int modelIdInsert = await lazadaMySql.InserttbLazadaModelAsync(itemIdInserted, item.models[0], conn);
+            int modelIdInsert = await LazadaMySql.InserttbLazadaModelAsync(itemIdInserted, item.models[0], conn);
 
             // Ta mapping
-            await lazadaMySql.LazadaInsertNewMappingOneOfModelAsync(modelIdInsert, productId, 1, conn);
+            await LazadaMySql.LazadaInsertNewMappingOneOfModelAsync(modelIdInsert, productId, 1, conn);
         }
 
         // Tạo sản phẩm là sách, thực tế đều yêu cầu trường thông tin giống nhau
@@ -3763,7 +3735,7 @@ namespace MVCPlayWithMe.Controllers
             lazadaPro.Attributes.isbn_issn = !string.IsNullOrEmpty(product.barcode) ? product.barcode : product.code;
 
             // Ảnh của sản phẩm, không cần ảnh của sku vì chỉ có 1 sku
-            List<string> images = await lazadaMySql.GetUploadedImageOfProductOnLazadaAsync(0, product.id, 0, conn);
+            List<string> images = await LazadaMySql.GetUploadedImageOfProductOnLazadaAsync(0, product.id, 0, conn);
             LazadaProductImageRequest lazadaProductImageRequest = new LazadaProductImageRequest();
             lazadaProductImageRequest.Image = images;
             lazadaPro.Images = lazadaProductImageRequest;
@@ -3881,7 +3853,7 @@ namespace MVCPlayWithMe.Controllers
             //lazadaPro.Attributes.battery_required = "KHÔNG";
 
             // Ảnh của sản phẩm, không cần ảnh của sku vì chỉ có 1 sku
-            List<string> images = await lazadaMySql.GetUploadedImageOfProductOnLazadaAsync(0, product.id, 0, conn);
+            List<string> images = await LazadaMySql.GetUploadedImageOfProductOnLazadaAsync(0, product.id, 0, conn);
             LazadaProductImageRequest lazadaProductImageRequest = new LazadaProductImageRequest();
             lazadaProductImageRequest.Image = images;
             lazadaPro.Images = lazadaProductImageRequest;
@@ -3938,11 +3910,10 @@ namespace MVCPlayWithMe.Controllers
         {
             MyLogger.GetInstance().Info("LazadaCreateProductFromProductIdInWarehouse Call productId: " + productId + ", name: " + name + ", isNeedUploadImage: " + isNeedUploadImage.ToString());
             // Lấy sản phẩm trong kho
-            Product product = await productSqler.GetProductFromIdAsync(productId, conn);
+            Product product = await ProductMySql.GetProductFromIdAsync(productId, conn);
 
             // Lấy category
-            CategoryMySql categoryMySql = new CategoryMySql();
-            Category cate = await categoryMySql.GetCategoryAsync(product.categoryId, conn);
+            Category cate = await CategoryMySql.GetCategoryAsync(product.categoryId, conn);
             MySqlResultState result = new MySqlResultState();
             if (cate != null)
             {
@@ -4020,7 +3991,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
                     // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không cha
                     List<int> needList =
-                        await productSqler.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
+                        await ProductMySql.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
                         eType, conn
                         );
 
@@ -4086,8 +4057,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // Lấy danh sách id sản phẩm đang kinh doanh thuộc combo Id
-            ComboMySql comboMySql = new ComboMySql();
-            List<int> productIds = await comboMySql.GetProductIdsOfComboAsync(comboId);
+            List<int> productIds = await ComboMySql.GetProductIdsOfComboAsync(comboId);
 
             return await CreateProductOnECommerceFromList_Core(productIds, eType);
         }

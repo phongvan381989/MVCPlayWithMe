@@ -1,6 +1,12 @@
 ﻿let administrativeAddressObject; // địa giới hành chính
 //let addressObj; // Đối tượng địa chỉ hiển thị trên modal
 
+// Config cho localStorage cache
+const ADDRESS_CACHE_CONFIG = {
+    KEY: "vnAddressData",
+    VERSION: "1.0"  // Tăng lên khi có thay đổi địa chỉ hành chính
+};
+
 // Chỉ gọi 1 lần, vì option không thay đổi
 function AddProvince() {
     if (administrativeAddressObject == null)
@@ -16,13 +22,72 @@ function AddProvince() {
     }
 }
 
+// Lấy data từ localStorage (nếu version khớp)
+function GetAddressFromCache() {
+    try {
+        const cached = localStorage.getItem(ADDRESS_CACHE_CONFIG.KEY);
+        if (!cached) return null;
+
+        const data = JSON.parse(cached);
+
+        // Chỉ check version - không cần expiry vì data này rất ít thay đổi
+        if (data.version === ADDRESS_CACHE_CONFIG.VERSION) {
+            return data.addresses;
+        }
+
+        // Version không khớp → xóa cache cũ
+        localStorage.removeItem(ADDRESS_CACHE_CONFIG.KEY);
+        return null;
+    } catch (e) {
+        console.warn("Không đọc được localStorage:", e);
+        return null;
+    }
+}
+
+// Lưu data vào localStorage
+function SaveAddressToCache(addresses) {
+    try {
+        const cacheData = {
+            version: ADDRESS_CACHE_CONFIG.VERSION,
+            addresses: addresses
+        };
+        localStorage.setItem(ADDRESS_CACHE_CONFIG.KEY, JSON.stringify(cacheData));
+    } catch (e) {
+        // localStorage full hoặc disabled → bỏ qua, vẫn hoạt động bình thường
+        console.warn("Không lưu được localStorage:", e);
+    }
+}
+
 async function GetAdministrativeAddress() {
-    // Thông tin chung này lấy từ sản phẩm đầu tiên thuộc combo trong db
-    const searchParams = new URLSearchParams();
+    // Bước 1: Thử lấy từ cache trước
+    let addresses = GetAddressFromCache();
+    if (addresses) {
+        if (DEBUG){
+            console.log("✓ Load địa chỉ từ localStorage cache");
+        }
+        return addresses;
+    }
+    try {
+        // Bước 2: Cache miss → load từ server
+        if (DEBUG) {
+            console.log("→ Load địa chỉ từ server...");
+        }
+        const searchParams = new URLSearchParams();
+        let query = "/Home/GetAdministrativeAddress";
 
-    let query = "/Home/GetAdministrativeAddress";
+        const responseDB = await RequestHttpPostPromise(searchParams, query);
 
-    return await RequestHttpPostPromise(searchParams, query);
+        // Bước 3: Lưu vào cache cho lần sau
+        addresses = JSON.parse(responseDB.responseText);
+        SaveAddressToCache(addresses);
+        if (DEBUG) {
+            console.log("✓ Đã cache địa chỉ vào localStorage");
+        }
+    } catch (e) {
+        console.warn("Lỗi khi parse/cache địa chỉ:", e);
+    }
+
+    return addresses;
 }
 
 // Thay đổi tỉnh, add xã tương ứng vào select tag
@@ -51,6 +116,9 @@ function DeleteSubDistrict() {
         subdistrictEle.remove(i);
     }
     subdistrictEle.selectedIndex = 0;
+
+    // Xóa detail-subdistrict
+    document.getElementById("detail-subdistrict").value = "";
 }
 
 function ChangeProvince() {
@@ -58,6 +126,10 @@ function ChangeProvince() {
     AddSubDistrict();
 }
 
+function ChangeSubDistrict() {
+    // Xóa detail-subdistrict
+    document.getElementById("detail-subdistrict").value = "";
+}
 
 function GetFocus(ele) {
     ele.style.border = "1px solid rgba(0,0,0,.14)";
@@ -86,9 +158,7 @@ async function ShowCustomerInforModal(isCreate, isModalUnder, addressObj) {
 
     if (administrativeAddressObject == null) {
         // Lấy dữ liệu tỉnh, xã từ db
-        let responseDB = await GetAdministrativeAddress();
-        administrativeAddressObject = JSON.parse(responseDB.responseText);
-
+        administrativeAddressObject = await GetAdministrativeAddress();
         AddProvince();
     }
     let ele = document.getElementById("modal-customer-infor");

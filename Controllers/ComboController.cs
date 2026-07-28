@@ -15,12 +15,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class ComboController : BasicController
     {
-        public ComboMySql sqler;
-        public ComboController() : base()
-        {
-            sqler = new ComboMySql();
-        }
-
         // GET: Combo
         public ActionResult Index()
         {
@@ -56,7 +50,7 @@ namespace MVCPlayWithMe.Controllers
             //    return JsonConvert.SerializeObject(result);
             //}
 
-            MySqlResultState result = await sqler.CreateNewComboAsync(name, code);
+            MySqlResultState result = await ComboMySql.CreateNewComboAsync(name, code);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -68,7 +62,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await sqler.DeleteComboAsync(id);
+            MySqlResultState result = await ComboMySql.DeleteComboAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -85,14 +79,14 @@ namespace MVCPlayWithMe.Controllers
                 code = string.Empty;
             }
 
-            MySqlResultState result = await sqler.UpdateComboAsync(id, name, code);
+            MySqlResultState result = await ComboMySql.UpdateComboAsync(id, name, code);
             return JsonConvert.SerializeObject(result);
         }
 
         public async Task<string> LoadCombo()
         {
             StringBuilder sb = new StringBuilder();
-            List<Combo> ls = await sqler.GetListComboAsync();
+            List<Combo> ls = await ComboMySql.GetListComboAsync();
             if (ls != null && ls.Count() > 0)
             {
                 sb.Append(@"<tr>
@@ -116,7 +110,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new List<Combo>());
             }
 
-            List<Combo> ls = await sqler.GetListComboAsync();
+            List<Combo> ls = await ComboMySql.GetListComboAsync();
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -128,7 +122,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(null);
             }
 
-            Combo combo = await sqler.GetComboAsync(id);
+            Combo combo = await ComboMySql.GetComboAsync(id);
             return JsonConvert.SerializeObject(combo);
         }
 

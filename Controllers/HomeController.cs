@@ -18,19 +18,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class HomeController : BasicController
     {
-        public ItemModelMySql itemModelsqler;
-        public OrderMySql ordersqler;
-        public CustomerMySql customersqler;
-        public AdministrativeAddressMySql admiAddsqler;
-
-        public HomeController()
-        {
-            itemModelsqler = new ItemModelMySql();
-            ordersqler = new OrderMySql();
-            customersqler = new CustomerMySql();
-            admiAddsqler = new AdministrativeAddressMySql();
-        }
-
         [HttpGet]
         public async Task<ActionResult> Search(string keyword, int? page, string author, string translator, int? categoryId, string publishingCompany, int? publisherId)
         {
@@ -45,7 +32,7 @@ namespace MVCPlayWithMe.Controllers
                 searchParameter.categoryId = categoryId;
                 searchParameter.publishingCompany = publishingCompany;
                 searchParameter.publisherId = publisherId ?? 0;
-                int count = await itemModelsqler.SearchItemCountConnectOutAsync(searchParameter, conn);
+                int count = await ItemModelMySql.SearchItemCountConnectOutAsync(searchParameter, conn);
                 ViewData["dataCountResult"] = count.ToString();
 
                 List<Item> lsSearchResult;
@@ -61,7 +48,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 searchParameter.offset = itemOnRow * Common.rowOnPage;
                 searchParameter.start = (intPage - 1) * searchParameter.offset;
-                lsSearchResult = await itemModelsqler.SearchItemPageConnectOutAsync(searchParameter, conn);
+                lsSearchResult = await ItemModelMySql.SearchItemPageConnectOutAsync(searchParameter, conn);
                 ViewData["dataListItem"] = JsonConvert.SerializeObject(lsSearchResult);
             }
             return View();
@@ -84,7 +71,7 @@ namespace MVCPlayWithMe.Controllers
 
                 ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
                 searchParameter.name = keyword;
-                int count = await itemModelsqler.SearchItemCountConnectOutAsync(searchParameter, conn);
+                int count = await ItemModelMySql.SearchItemCountConnectOutAsync(searchParameter, conn);
 
                 List<Item> lsSearchResult;
                 int intPage = 1;
@@ -94,7 +81,7 @@ namespace MVCPlayWithMe.Controllers
                 int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
                 searchParameter.offset = itemOnRow * Common.rowOnPage;
                 searchParameter.start = (intPage - 1) * searchParameter.offset;
-                lsSearchResult = await itemModelsqler.SearchItemPageConnectOutAsync(searchParameter, conn);
+                lsSearchResult = await ItemModelMySql.SearchItemPageConnectOutAsync(searchParameter, conn);
 
                 StringBuilder sb = new StringBuilder();
                 sb.Append("{\"countResult\":" + count.ToString() + ",\"listItem\":" + JsonConvert.SerializeObject(lsSearchResult) + @"}");
@@ -111,7 +98,7 @@ namespace MVCPlayWithMe.Controllers
             int itemOnRow = Common.ConvertStringToInt32(Cookie.GetItemOnRowCookie(HttpContext).cookieValue);
             searchParameter.offset = itemOnRow * Common.rowOnPage;
             searchParameter.start = (page - 1) * searchParameter.offset;
-            List<Item> lsSearchResult = await itemModelsqler.SearchItemPageAsync(searchParameter);
+            List<Item> lsSearchResult = await ItemModelMySql.SearchItemPageAsync(searchParameter);
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
@@ -126,7 +113,7 @@ namespace MVCPlayWithMe.Controllers
             //}
 
             //// Lấy item để kiểm tra tồn tại
-            //Item item = await itemModelsqler.GetItemFromIdAsync(id);
+            //Item item = await ItemModelMySql.GetItemFromIdAsync(id);
             //if (item == null)
             //{
             //    return RedirectToAction("Error");
@@ -155,7 +142,7 @@ namespace MVCPlayWithMe.Controllers
         //{
         //    try
         //    {
-        //        Item item = await itemModelsqler.GetItemFromIdAsync(id);
+        //        Item item = await ItemModelMySql.GetItemFromIdAsync(id);
         //        if (item == null)
         //        {
         //            return RedirectToAction("Error");
@@ -204,7 +191,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> GetItemFromId(int id)
         {
-            Item item = await itemModelsqler.GetItemFromIdAsync(id);
+            Item item = await ItemModelMySql.GetItemFromIdAsync(id);
             if (item != null)
             {
                 item.SetShopeeItemId();
@@ -280,13 +267,13 @@ namespace MVCPlayWithMe.Controllers
             }
 
             //// Làm mới dữ liệu trước đó real = 0
-            //await ordersqler.RefreshRealOfCartAsync(customer.id);
+            //await OrderMySql.RefreshRealOfCartAsync(customer.id);
 
             Cart cart = new Cart();
             cart.sanPhamId = sanPhamId;
             cart.quantity = quantity;
             //cart.real = real;
-            result = await customersqler.AddCartAsync(customer.id, cart);
+            result = await CustomerMySql.AddCartAsync(customer.id, cart);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -300,7 +287,7 @@ namespace MVCPlayWithMe.Controllers
             if (cus!= null)
             {
                 // Khách đăng nhập - đọc từ DB
-                ls = await ordersqler.GetListCartAsync(cus.id);
+                ls = await OrderMySql.GetListCartAsync(cus.id);
 
                 // Tìm sản phẩm được chọn mua
                 foreach (Cart cart in lslocalStorage)
@@ -319,7 +306,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 ls = lslocalStorage;
             }    
-            await ordersqler.GetCartsSanPhamBasicInfoAsync(ls);
+            await OrderMySql.GetCartsSanPhamBasicInfoAsync(ls);
 
             return JsonConvert.SerializeObject(ls);
         }
@@ -343,7 +330,7 @@ namespace MVCPlayWithMe.Controllers
             if (cus != null)
             {
                 // Khách đăng nhập - đọc từ DB
-                ls = await ordersqler.GetListCartAsync(cus.id);
+                ls = await OrderMySql.GetListCartAsync(cus.id);
 
                 // Tìm sản phẩm được chọn mua
                 foreach (Cart cart in lslocalStorage)
@@ -363,7 +350,7 @@ namespace MVCPlayWithMe.Controllers
                 ls = lslocalStorage;
             }
             // Không cập nhật lại số lượng trong cart vào db dù trong kho tồn tại ít hơn, chỉ cập nhật ở hiện thị
-            await ordersqler.GetCartsSanPhamBasicInfoAsync(ls);
+            await OrderMySql.GetCartsSanPhamBasicInfoAsync(ls);
 
             return JsonConvert.SerializeObject(ls);
         }
@@ -380,7 +367,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> GetAdministrativeAddress()
         {
-            List<AdministrativeAddress> ls = await admiAddsqler.GetListAdministrativeAddressAsync();
+            List<AdministrativeAddress> ls = await AdministrativeAddressMySql.GetListAdministrativeAddressAsync();
             return JsonConvert.SerializeObject(ls);
         }
 
@@ -405,7 +392,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // Lấy dữ liệu mới nhất
-            await ordersqler.GetCartsSanPhamBasicInfoAsync(lsTemp);
+            await OrderMySql.GetCartsSanPhamBasicInfoAsync(lsTemp);
             int indexWarning = 0;
             for (int i = 0; i < length; i++)
             {
@@ -475,9 +462,9 @@ namespace MVCPlayWithMe.Controllers
             // insert order
             int orderId;
             if (cus != null)
-                orderId = await ordersqler.AddOrderAsync(cus.id, noteToShop, 0, cusInfor);
+                orderId = await OrderMySql.AddOrderAsync(cus.id, noteToShop, 0, cusInfor);
             else
-                orderId = await ordersqler.AddOrderAsync(-1, noteToShop, 0, cusInfor);
+                orderId = await OrderMySql.AddOrderAsync(-1, noteToShop, 0, cusInfor);
 
             if (orderId == -1)
             {
@@ -495,7 +482,7 @@ namespace MVCPlayWithMe.Controllers
             if (cus != null)
             {
                 // Xóa sản phẩm trong đơn hàng khỏi cart
-                result = await ordersqler.DeleteListCartAsync(cus.id, lsBuyedCart);
+                result = await OrderMySql.DeleteListCartAsync(cus.id, lsBuyedCart);
                 if (result.State != EMySqlResultState.OK)
                 {
                     return JsonConvert.SerializeObject(result);
@@ -503,13 +490,13 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // insert track order
-            await ordersqler.AddTrackOrderAsync(orderId, 0);
+            await OrderMySql.AddTrackOrderAsync(orderId, 0);
 
             // insert detail order
-            await ordersqler.AddDetailOrderAsync(orderId, lsBuyedCart);
+            await OrderMySql.AddDetailOrderAsync(orderId, lsBuyedCart);
 
             // insert pay order
-            await ordersqler.AddPayOrderAsync(orderId, lsOrderPay);
+            await OrderMySql.AddPayOrderAsync(orderId, lsOrderPay);
 
             return JsonConvert.SerializeObject(result);
         }
@@ -525,7 +512,7 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = await ordersqler.DeleteSanPhamOnCartAsync(cus.id, sanPhamId);
+                result = await OrderMySql.DeleteSanPhamOnCartAsync(cus.id, sanPhamId);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -541,7 +528,7 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = await ordersqler.UpdateSanPhamQuantityOnCartAsync(cus.id, sanPhamId, quantity);
+                result = await OrderMySql.UpdateSanPhamQuantityOnCartAsync(cus.id, sanPhamId, quantity);
             }
             return JsonConvert.SerializeObject(result);
         }
@@ -561,7 +548,7 @@ namespace MVCPlayWithMe.Controllers
             }
             else
             {
-                result = await ordersqler.RefreshRealOfCartAsync(cus.id);
+                result = await OrderMySql.RefreshRealOfCartAsync(cus.id);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -593,7 +580,7 @@ namespace MVCPlayWithMe.Controllers
         //        }
         //        else
         //        {
-        //            result = await ordersqler.UpdateRealCartAsync(cus.id, sanPhamIds);
+        //            result = await OrderMySql.UpdateRealCartAsync(cus.id, sanPhamIds);
         //        }
         //    }
 
@@ -612,7 +599,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // Logged-in: lấy cart với real=1 từ database
-            List<Cart> realCart = await ordersqler.GetRealCartAsync(cus.id);
+            List<Cart> realCart = await OrderMySql.GetRealCartAsync(cus.id);
             return JsonConvert.SerializeObject(realCart);
         }
 
@@ -639,7 +626,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 else
                 {
-                    result = await ordersqler.UpdateSanPhamQuantityListOnCartAsync(cus.id, updates);
+                    result = await OrderMySql.UpdateSanPhamQuantityListOnCartAsync(cus.id, updates);
                 }
             }
 

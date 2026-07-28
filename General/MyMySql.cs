@@ -68,8 +68,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetInt32(columnName);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetInt32 failed for column '{columnName}': {ex.Message}");
                 return -1;
             }
         }
@@ -89,8 +90,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetInt32(indexColumn);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetInt32 failed for column index {indexColumn}: {ex.Message}");
                 return -1;
             }
         }
@@ -104,8 +106,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetFloat(columnName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetFloat failed for column '{columnName}': {ex.Message}");
                 return -1;
             }
         }
@@ -122,8 +125,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetFloat(indexColumn);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetFloat failed for column index {indexColumn}: {ex.Message}");
                 return -1;
             }
         }
@@ -137,8 +141,9 @@ namespace MVCPlayWithMe.General
             {
                 return (byte[])rdr[columnName];
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetByteArray failed for column '{columnName}': {ex.Message}");
                 return null;
             }
         }
@@ -155,8 +160,9 @@ namespace MVCPlayWithMe.General
             {
                 return (byte[])rdr[indexColumn];
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetByteArray failed for column index {indexColumn}: {ex.Message}");
                 return null;
             }
         }
@@ -170,8 +176,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetInt64(columnName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetInt64 failed for column '{columnName}': {ex.Message}");
                 return -1;
             }
         }
@@ -188,8 +195,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetInt64(indexColumn);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetInt64 failed for column index {indexColumn}: {ex.Message}");
                 return -1;
             }
         }
@@ -203,8 +211,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetString(columnName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetString failed for column '{columnName}': {ex.Message}");
                 return string.Empty;
             }
         }
@@ -221,8 +230,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetString(indexColumn);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetString failed for column index {indexColumn}: {ex.Message}");
                 return string.Empty;
             }
         }
@@ -236,8 +246,9 @@ namespace MVCPlayWithMe.General
             {
                 return rdr.GetDateTime(columnName);
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                MyLogger.GetInstance().Warn($"GetDateTime failed for column '{columnName}': {ex.Message}");
                 return DateTime.MinValue;
             }
         }
@@ -359,7 +370,6 @@ namespace MVCPlayWithMe.General
             {
                 using (MySqlConnection conn = new MySqlConnection(connStr))
                 {
-
                     await conn.OpenAsync();
                     using (MySqlCommand cmd = new MySqlCommand(stName, conn))
                     {

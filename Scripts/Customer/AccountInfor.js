@@ -62,7 +62,7 @@ function ShowAddress() {
 
         clone.getElementsByClassName("detail")[0].innerHTML = obj.detail;
         clone.getElementsByClassName("province-district-subdistrict")[0].innerHTML =
-            obj.subdistrict + ", " + obj.district + ", " + obj.province;
+            obj.subdistrict + ", " + obj.province;
 
         if (!obj.defaultAdd) {
             clone.getElementsByClassName("default-address")[0].style.display = "none";

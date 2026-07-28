@@ -4,13 +4,14 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MVCPlayWithMe.Models.Dev
 {
     public class DevMySql
     {
-        public MySqlResultState DeleteDuplicateDataOftbShopeeModel()
+        public static async Task<MySqlResultState> DeleteDuplicateDataOftbShopeeModel()
         {
             MySqlResultState result = new MySqlResultState();
             //MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
@@ -66,7 +67,7 @@ namespace MVCPlayWithMe.Models.Dev
             return result;
         }
 
-        public MySqlResultState ShopeeSaveLivePartnerKey(string key)
+        public static async Task<MySqlResultState> ShopeeSaveLivePartnerKey(string key)
         {
             MySqlResultState result = new MySqlResultState();
             //MySqlConnection conn = new MySqlConnection(MyMySql.connStr);

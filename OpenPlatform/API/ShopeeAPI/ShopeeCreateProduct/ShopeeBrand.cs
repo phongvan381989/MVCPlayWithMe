@@ -21,7 +21,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
         // category id: sách trẻ em 101541, sách người lớn 101543 có chung brand id
         public static async Task<MySqlResultState> ShopeeGetBrandList(
             long categoryId,
-            ShopeeMySql shopeeSqler,
             MySqlConnection conn)
         {
             List<ShopeeBrandObject> brandList = new List<ShopeeBrandObject>();
@@ -53,7 +52,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct
                         objResponse = JsonConvert.DeserializeObject<ShopeeGetBrandListResponseHTTP>(response.Content, Common.jsonSerializersettings);
 
                         //brandList.AddRange(objResponse.response.brand_list);
-                        result = await shopeeSqler.InserttbShopeeBrandAsync(categoryId, objResponse.response.brand_list, conn);
+                        result = await ShopeeMySql.InserttbShopeeBrandAsync(categoryId, objResponse.response.brand_list, conn);
                         if(result.State != EMySqlResultState.OK)
                         {
                             break;

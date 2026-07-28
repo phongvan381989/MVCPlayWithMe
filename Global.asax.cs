@@ -103,7 +103,7 @@ namespace MVCPlayWithMe
                             //if (DateTime.Now.DayOfWeek == DayOfWeek.Sunday)
                             //{
                             //    // Hàm này mất thời gian nên không chạy hàng ngày.
-                            DealAction.CheckAndCreateDeal_BackgroundAsync(true).GetAwaiter().GetResult();
+                            //DealAction.CheckAndCreateDeal_BackgroundAsync(true).GetAwaiter().GetResult();
                             //}
                             //else
                             //{

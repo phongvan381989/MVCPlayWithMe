@@ -38,7 +38,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             return null;
         }
 
-        public static async Task TikiProductUpdateQuantity(int itemId,
+        public static async Task TikiProductUpdateQuantityAsync(int itemId,
             int quantity,
             MySqlResultState result
             )

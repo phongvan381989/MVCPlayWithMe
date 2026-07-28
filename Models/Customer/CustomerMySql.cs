@@ -18,7 +18,7 @@ namespace MVCPlayWithMe.Models.Customer
     public class CustomerMySql
     {
         // Giữ sync vì dùng bởi BasicController.AuthentCustomer()
-        public async Task<Customer> GetCustomerFromCookie(string userCookieIdentify)
+        public static async Task<Customer> GetCustomerFromCookie(string userCookieIdentify)
         {
             if(string.IsNullOrEmpty(userCookieIdentify))
             {
@@ -46,7 +46,7 @@ namespace MVCPlayWithMe.Models.Customer
             return customer;
         }
 
-        private async Task GetCustomerFromDataReaderAsync(MySqlDataReader rdr, Customer customer)
+        private static async Task GetCustomerFromDataReaderAsync(MySqlDataReader rdr, Customer customer)
         {
             while (await rdr.ReadAsync())
             {
@@ -75,7 +75,7 @@ namespace MVCPlayWithMe.Models.Customer
             }
         }
 
-        public async Task<Customer> GetCustomerFromCookieAsync(string userCookieIdentify)
+        public static async Task<Customer> GetCustomerFromCookieAsync(string userCookieIdentify)
         {
             if (string.IsNullOrEmpty(userCookieIdentify)) return null;
 
@@ -98,7 +98,7 @@ namespace MVCPlayWithMe.Models.Customer
             return customer;
         }
 
-        public async Task<MySqlResultState> AddNewCustomerAsync(string userName, string passWord)
+        public static async Task<MySqlResultState> AddNewCustomerAsync(string userName, string passWord)
         {
             byte[] salt = Common.CreateSalt();
             byte[] hash = Common.GenerateSaltedHash(passWord, salt);
@@ -152,7 +152,7 @@ namespace MVCPlayWithMe.Models.Customer
             return result;
         }
 
-        public async Task<MySqlResultState> CustomerLogoutAsync(string userCookieIdentify)
+        public static async Task<MySqlResultState> CustomerLogoutAsync(string userCookieIdentify)
         {
             MySqlParameter[] paras = new MySqlParameter[3];
             paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
@@ -160,12 +160,12 @@ namespace MVCPlayWithMe.Models.Customer
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Logout", paras);
         }
 
-        public async Task<MySqlResultState> LoginCustomerAsync(string userName, string password)
+        public static async Task<MySqlResultState> LoginCustomerAsync(string userName, string password)
         {
             return await MyMySql.LoginAsync(userName, password, "st_tbCustomer_Get_Salt_Hash");
         }
 
-        public async Task<Customer> GetCustomerFromUserNameAsync(string userName)
+        public static async Task<Customer> GetCustomerFromUserNameAsync(string userName)
         {
             Customer customer = new Customer();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -192,7 +192,7 @@ namespace MVCPlayWithMe.Models.Customer
             return customer;
         }
 
-        public async Task<Customer> GetCustomerAsync(int id)
+        public static async Task<Customer> GetCustomerAsync(int id)
         {
             Customer customer = new Customer();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -219,7 +219,7 @@ namespace MVCPlayWithMe.Models.Customer
             return customer;
         }
 
-        public async Task<MySqlResultState> AddNewCookieAsync(string userCookieIdentify, int customerId)
+        public static async Task<MySqlResultState> AddNewCookieAsync(string userCookieIdentify, int customerId)
         {
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
@@ -228,7 +228,7 @@ namespace MVCPlayWithMe.Models.Customer
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCookie_Insert", paras);
         }
 
-        public async Task<MySqlResultState> CookieCustomerLoginAsync(string userCookieIdentify, int customerId)
+        public static async Task<MySqlResultState> CookieCustomerLoginAsync(string userCookieIdentify, int customerId)
         {
             return await AddNewCookieAsync(userCookieIdentify, customerId);
         }
@@ -236,7 +236,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// <summary>
         /// Overload 1: Tự mở connection mới (backward compatible)
         /// </summary>
-        public async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls)
+        public static async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls)
         {
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -248,7 +248,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// <summary>
         /// Overload 2: Dùng connection từ bên ngoài (transaction support)
         /// </summary>
-        public async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls, MySqlConnection conn, MySqlTransaction transaction = null)
+        public static async Task<MySqlResultState> AddCartLoginAsync(int customerId, List<Cart> ls, MySqlConnection conn, MySqlTransaction transaction = null)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -281,7 +281,7 @@ namespace MVCPlayWithMe.Models.Customer
             return result;
         }
 
-        public async Task<MySqlResultState> AddCartAsync(int customerId, Cart cart)
+        public static async Task<MySqlResultState> AddCartAsync(int customerId, Cart cart)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -316,7 +316,8 @@ namespace MVCPlayWithMe.Models.Customer
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateAddressAsync(Address add)
+        // 
+        public static async Task<MySqlResultState> UpdateAddressAsync(Address add)
         {
             MySqlParameter[] paras = new MySqlParameter[7];
             paras[0] = new MySqlParameter("@inId", add.id);
@@ -329,7 +330,7 @@ namespace MVCPlayWithMe.Models.Customer
             return await MyMySql.ExcuteNonQueryAsync("st_tbAddress_Update", paras);
         }
 
-        public async Task<MySqlResultState> DeleteAddressAsync(Address add)
+        public static async Task<MySqlResultState> DeleteAddressAsync(Address add)
         {
             MySqlParameter[] paras = new MySqlParameter[1];
             paras[0] = new MySqlParameter("@inId", add.id);
@@ -339,7 +340,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// <summary>
         /// Overload 1: Tự mở connection mới (backward compatible)
         /// </summary>
-        public async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add)
+        public static async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add)
         {
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -351,7 +352,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// <summary>
         /// Overload 2: Dùng connection từ bên ngoài (transaction support)
         /// </summary>
-        public async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add, MySqlConnection conn, MySqlTransaction transaction = null)
+        public static async Task<MySqlResultState> InsertAddressAsync(int customerId, Address add, MySqlConnection conn, MySqlTransaction transaction = null)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -384,7 +385,7 @@ namespace MVCPlayWithMe.Models.Customer
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateInforAsync(Customer cus)
+        public static async Task<MySqlResultState> UpdateInforAsync(Customer cus)
         {
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -419,7 +420,7 @@ namespace MVCPlayWithMe.Models.Customer
             return result;
         }
 
-        public async Task<MySqlResultState> ChangePasswordCustomerAsync(int id, string oldPassWord,
+        public static async Task<MySqlResultState> ChangePasswordCustomerAsync(int id, string oldPassWord,
             string newPassWord, string renewPassWord)
         {
             return await MyMySql.ChangePasswordAsync(id, oldPassWord, newPassWord, renewPassWord,
@@ -427,7 +428,7 @@ namespace MVCPlayWithMe.Models.Customer
                 "st_tbCustomer_ChangePassword");
         }
 
-        public async Task<MySqlResultState> DeleteDefaultAddressAsync(int customerId)
+        public static async Task<MySqlResultState> DeleteDefaultAddressAsync(int customerId)
         {
             MySqlParameter[] paras = new MySqlParameter[1];
             paras[0] = new MySqlParameter("@inCustomerId", customerId);
@@ -437,7 +438,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// <summary>
         /// Overload 1: Tự mở connection mới (backward compatible)
         /// </summary>
-        public async Task<List<Address>> GetListAddressAsync(int customerId)
+        public static async Task<List<Address>> GetListAddressAsync(int customerId)
         {
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -449,7 +450,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// <summary>
         /// Overload 2: Dùng connection từ bên ngoài (transaction support)
         /// </summary>
-        public async Task<List<Address>> GetListAddressAsync(int customerId, MySqlConnection conn, MySqlTransaction transaction = null)
+        public static async Task<List<Address>> GetListAddressAsync(int customerId, MySqlConnection conn, MySqlTransaction transaction = null)
         {
             List<Address> lsAddress = new List<Address>();
             try
@@ -490,7 +491,7 @@ namespace MVCPlayWithMe.Models.Customer
         /// All-or-nothing: nếu 1 phần fail → rollback toàn bộ
         /// Ưu điểm: 1 connection, có transaction, reuse existing methods
         /// </summary>
-        public async Task<MySqlResultState> SyncGuestDataInTransactionAsync(
+        public static async Task<MySqlResultState> SyncGuestDataInTransactionAsync(
             int customerId,
             List<Cart> guestCarts,
             List<Address> guestAddresses)
@@ -556,7 +557,7 @@ namespace MVCPlayWithMe.Models.Customer
                                     if (insertResult.State == EMySqlResultState.OK)
                                     {
                                         addressSyncCount++;
-                                        existingAddresses.Add(addr);
+                                        //existingAddresses.Add(addr);
                                     }
                                 }
                             }

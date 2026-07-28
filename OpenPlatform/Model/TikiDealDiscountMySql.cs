@@ -13,7 +13,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 {
     public class TikiDealDiscountMySql
     {
-        public async Task InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(
+        public static async Task InsertCheckExistTikiDealDiscountOfOneSkuConnectOutAsync(
             List<DealCreatedResponseDetail> listDeal,
             MySqlConnection conn)
         {
@@ -47,7 +47,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(
+        public static async Task InsertCheckExistTikiDealDiscountOfSkuListConnectOutAsync(
             List<DealCreatedResponseDetail> listDeal,
             MySqlConnection conn)
         {
@@ -103,7 +103,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
         }
 
-        public async Task<List<string>> GetListSkuOfActiveItemConnectOutAsync(MySqlConnection conn)
+        public static async Task<List<string>> GetListSkuOfActiveItemConnectOutAsync(MySqlConnection conn)
         {
             List<string> skuList = new List<string>();
             string query = "SELECT Sku FROM tbtikiitem WHERE Status = 0";
@@ -112,11 +112,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
-                    using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (await reader.ReadAsync())
+                        while (await rdr.ReadAsync())
                         {
-                            skuList.Add(MyMySql.GetString(reader, "Sku"));
+                            skuList.Add(MyMySql.GetString(rdr, "Sku"));
                         }
                     }
                 }
@@ -129,7 +129,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return skuList;
         }
 
-        public async Task<List<SimpleTikiProduct>> GetItemsWithDealDiscountAsync(string store,
+        public static async Task<List<SimpleTikiProduct>> GetItemsWithDealDiscountAsync(string store,
             MySqlConnection conn)
         {
             List<SimpleTikiProduct> simpleTikiProducts = new List<SimpleTikiProduct>();
@@ -145,21 +145,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    using (MySqlDataReader reader = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        int idIndex = reader.GetOrdinal("TikiId");
-                        int skuIndex = reader.GetOrdinal("Sku");
-                        int nameIndex = reader.GetOrdinal("Name");
-                        int imageSrcIndex = reader.GetOrdinal("Image");
+                        int idIndex = rdr.GetOrdinal("TikiId");
+                        int skuIndex = rdr.GetOrdinal("Sku");
+                        int nameIndex = rdr.GetOrdinal("Name");
+                        int imageSrcIndex = rdr.GetOrdinal("Image");
 
-                        while (await reader.ReadAsync())
+                        while (await rdr.ReadAsync())
                         {
                             SimpleTikiProduct product = new SimpleTikiProduct
                             {
-                                id = reader.GetInt32(idIndex),
-                                sku = reader.IsDBNull(skuIndex) ? null : reader.GetString(skuIndex),
-                                name = reader.IsDBNull(nameIndex) ? null : reader.GetString(nameIndex),
-                                imageSrc = reader.IsDBNull(imageSrcIndex) ? null : reader.GetString(imageSrcIndex)
+                                id = rdr.GetInt32(idIndex),
+                                sku = rdr.IsDBNull(skuIndex) ? null : rdr.GetString(skuIndex),
+                                name = rdr.IsDBNull(nameIndex) ? null : rdr.GetString(nameIndex),
+                                imageSrc = rdr.IsDBNull(imageSrcIndex) ? null : rdr.GetString(imageSrcIndex)
                             };
 
                             simpleTikiProducts.Add(product);
@@ -167,12 +167,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     }
                 }
 
-                TikiMySql tikiSqler = new TikiMySql();
                 foreach (var simpleTiki in simpleTikiProducts)
                 {
                     CommonItem item = new CommonItem();
                     item.models.Add(new CommonModel());
-                    await tikiSqler.TikiGetItemFromIdConnectOutAsync(simpleTiki.id, item, conn);
+                    await TikiMySql.TikiGetItemFromIdConnectOutAsync(simpleTiki.id, item, conn);
                     simpleTiki.models = item.models;
                 }
             }
@@ -184,17 +183,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return simpleTikiProducts;
         }
 
-        public async Task<List<SimpleTikiProduct>> GetItemsNoDealDiscountRunningAsync(MySqlConnection conn)
+        public static async Task<List<SimpleTikiProduct>> GetItemsNoDealDiscountRunningAsync(MySqlConnection conn)
         {
             return await GetItemsWithDealDiscountAsync("st_tbTikiDealDiscount_Get_Item_No_Deal_Running", conn);
         }
 
-        public async Task<List<SimpleTikiProduct>> GetItemsHasDealDiscountRunningAsync(MySqlConnection conn)
+        public static async Task<List<SimpleTikiProduct>> GetItemsHasDealDiscountRunningAsync(MySqlConnection conn)
         {
             return await GetItemsWithDealDiscountAsync("st_tbTikiDealDiscount_Get_Item_Deal_Running", conn);
         }
 
-        public async Task<TaxAndFee> GetTaxAndFeeAsync(string eEcommerceName, MySqlConnection conn)
+        public static async Task<TaxAndFee> GetTaxAndFeeAsync(string eEcommerceName, MySqlConnection conn)
         {
             TaxAndFee taxAndFee = null;
             try
@@ -234,7 +233,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return taxAndFee;
         }
 
-        public async Task<MySqlResultState> UpdateIsActiveCloseFromLsDealIdAsync(List<int> lsDealId, MySqlConnection conn)
+        public static async Task<MySqlResultState> UpdateIsActiveCloseFromLsDealIdAsync(List<int> lsDealId, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -258,7 +257,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task<MySqlResultState> UpdateIsActiveCloseFromSkuAsync(List<string> skuList, MySqlConnection conn)
+        public static async Task<MySqlResultState> UpdateIsActiveCloseFromSkuAsync(List<string> skuList, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
             try
@@ -282,7 +281,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public async Task<int> GetTikiIdBySkuAsync(string sku, MySqlConnection conn)
+        public static async Task<int> GetTikiIdBySkuAsync(string sku, MySqlConnection conn)
         {
             int tikiId = 0;
             try
@@ -310,7 +309,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return tikiId;
         }
 
-        public async Task UpdateIsActiveCloseFromItemIdAsync(int itemId, MySqlConnection conn)
+        public static async Task UpdateIsActiveCloseFromItemIdAsync(int itemId, MySqlConnection conn)
         {
             try
             {

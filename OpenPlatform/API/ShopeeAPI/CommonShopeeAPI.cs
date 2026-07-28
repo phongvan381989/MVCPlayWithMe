@@ -79,7 +79,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             string path = "/api/v2/shop/auth_partner";
             string redirect = "https://vnexpress.net/";
             long partner_id = 2002851;
-            ShopeeMySql shopeeMySql = new ShopeeMySql();
             string tmp_partner_key = shopeeAuthen.partnerKey;
             string tmp_base_string = String.Format("{0}{1}{2}", partner_id, path, timest);
             byte[] partner_key = Encoding.UTF8.GetBytes(tmp_partner_key);
@@ -150,11 +149,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             }
             if (token != null)
             {
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    await shopeeMySql.ShopeeSaveTokenAsync(token, conn);
+                    await ShopeeMySql.ShopeeSaveTokenAsync(token, conn);
                     shopeeAuthen = await ShopeeGetAuthen(conn);
                 }
             }
@@ -167,11 +165,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             MySqlResultState result = null;
             try
             {
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    result = await shopeeMySql.ShopeeSaveLivePartnerKeyAsync(key, conn);
+                    result = await ShopeeMySql.ShopeeSaveLivePartnerKeyAsync(key, conn);
                     if (result.State == EMySqlResultState.OK)
                     {
                         shopeeAuthen = await ShopeeGetAuthen(conn);
@@ -191,11 +188,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
             MySqlResultState result = null;
             try
             {
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    result = await shopeeMySql.ShopeeSaveCodeAsync(code, conn);
+                    result = await ShopeeMySql.ShopeeSaveCodeAsync(code, conn);
                     if (result.State == EMySqlResultState.OK)
                     {
                         shopeeAuthen = await ShopeeGetAuthen(conn);
@@ -271,11 +267,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI
                 MyLogger.GetInstance().Info("new access_token from token: " + token.access_token);
                 MyLogger.GetInstance().Info("new refresh_token from token: " + token.refresh_token);
 
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    await shopeeMySql.ShopeeSaveTokenAsync(token, conn);
+                    await ShopeeMySql.ShopeeSaveTokenAsync(token, conn);
                     shopeeAuthen = await ShopeeGetAuthen(conn);
                 }
             }

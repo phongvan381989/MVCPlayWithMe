@@ -60,30 +60,26 @@
                     </div>
                 </div>
                 <div class="selected_model">
-                    @*<div class="model-container-header">
-                        <div class="ktatB-">
-                            <h2 class="_6HCfS6">Sản phẩm</h2>
-                        </div>
-                        <div class="jNp-ZB">Đơn giá</div>
-                        <div class="jNp-ZB">Số lượng</div>
-                        <div class="LBqTli">Thành tiền</div>
-                    </div>*@
                     <div class="model-container">
 
                     </div>
                 </div>
                 <div class="message-to-shop">
-                    @*<div>
-                        <span style="padding-right:10px">Lời nhắn:</span>
-                    </div>*@
-                    <div class="peusTR">
-                        <input class="gQuJxM" type="text" placeholder="Lời nhắn cho Shop" value="">
-                    </div>
+                    <textarea class="gQuJxM" placeholder="Lời nhắn cho Shop" rows="2"></textarea>
                 </div>
             </div>
             <div class="payment-method">
                 <div class="SzEjHI">Phương thức thanh toán</div>
-                <div class="KoRB7y">Thanh toán khi nhận hàng</div>
+                <div class="mvna89xnd">
+                    <div class="hjhgui88">
+                        <input type="radio" name="payment-method" id="payment-cod" value="cod" checked>
+                        <label for="payment-cod" class="KoRB7y">Thanh toán khi nhận hàng</label>
+                    </div>
+                    <div class="hjhgui88" style="display:none;">
+                        <input type="radio" name="payment-method" id="payment-bank" value="bank">
+                        <label for="payment-bank" class="KoRB7y">Chuyển khoản ngân hàng</label>
+                    </div>
+                </div>
             </div>
             <div class="payment-infor">
                 <div class="flex-end">

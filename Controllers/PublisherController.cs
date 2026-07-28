@@ -14,12 +14,6 @@ namespace MVCPlayWithMe.Controllers
 {
     public class PublisherController : BasicController
     {
-        public PublisherMySql sqler;
-        public PublisherController() : base()
-        {
-            sqler = new PublisherMySql();
-        }
-
         [HttpPost]
         public async Task<string> CreatePublisher(string name, float discount, string detail, string tikiCertificate)
         {
@@ -33,7 +27,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.INVALID, "Tên không hợp lệ."));
             }
 
-            MySqlResultState result = await sqler.CreateNewPublisherAsync(name, discount, detail);
+            MySqlResultState result = await PublisherMySql.CreateNewPublisherAsync(name, discount, detail);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -45,7 +39,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await sqler.DeletePublisherAsync(id);
+            MySqlResultState result = await PublisherMySql.DeletePublisherAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -57,7 +51,7 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            MySqlResultState result = await sqler.UpdatePublisherAsync(id, name, discount, detail);
+            MySqlResultState result = await PublisherMySql.UpdatePublisherAsync(id, name, discount, detail);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -99,7 +93,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return AuthenticationFail();
             }
-            Publisher publisher = await sqler.GetPublisherAsync(id);
+            Publisher publisher = await PublisherMySql.GetPublisherAsync(id);
             if (publisher != null)
             {
                 ViewData["publisherName"] = publisher.name;
@@ -119,7 +113,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                List<Publisher> ls = await sqler.GetListPublisherConnectOutAsync(conn);
+                List<Publisher> ls = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
                 return JsonConvert.SerializeObject(ls);
             }
         }

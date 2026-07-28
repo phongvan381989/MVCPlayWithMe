@@ -55,10 +55,8 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
-                TikiMySql tikiSqler = new TikiMySql();
 
-                TbEcommerceOrder tbEcommerceOrderLastest = await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
+                TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                     orderStatusPush.ordersn,
                     EECommerceType.SHOPEE, conn);
 
@@ -70,23 +68,23 @@ namespace MVCPlayWithMe.Controllers
                 {
                     status = ECommerceOrderStatus.UNBOOKED;
 
-                    string trackingNumber = await tikiSqler.GetTrackingNumberFromSNConnectOutAsync(
+                    string trackingNumber = await TikiMySql.GetTrackingNumberFromSNConnectOutAsync(
                         orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
 
                     if (string.IsNullOrEmpty(trackingNumber))
                     {
                         trackingNumber = await ShopeeGetTrackingNumber.ShopeeOrderGetTrackingNumberAsync(orderStatusPush.ordersn, string.Empty);
-                        await shopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(orderStatusPush.ordersn, trackingNumber, conn);
+                        await ShopeeMySql.UpdateTrackingNumberToDBConnectOutAsync(orderStatusPush.ordersn, trackingNumber, conn);
                     }
                 }
 
                 if (orderStatusPush.status == "READY_TO_SHIP")
                 {
                     // Nếu là hỏa tốc và đã được lưu thì cập nhật trạng thái sang ready to ship
-                    await tikiSqler.UpdateStatusToReadyToShipTbExpressOrderAsync(orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
+                    await TikiMySql.UpdateStatusToReadyToShipTbExpressOrderAsync(orderStatusPush.ordersn, EECommerceType.SHOPEE, conn);
                 }
 
-                if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                if (!TikiMySql.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                     return;
 
                 // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
@@ -105,19 +103,19 @@ namespace MVCPlayWithMe.Controllers
                         {
                             if (orderStatusPush.status == "UNPAID")
                             {
-                                await tikiSqler.InsertTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                                await TikiMySql.InsertTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
                             }
                             else if (orderStatusPush.status == "READY_TO_SHIP")
                             {
-                                await tikiSqler.InsertTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
-                                await tikiSqler.UpdateStatusToReadyToShipTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                                await TikiMySql.InsertTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
+                                await TikiMySql.UpdateStatusToReadyToShipTbExpressOrderAsync(shopeeOrderDetail.order_sn, EECommerceType.SHOPEE, conn);
                             }
                         }
 
                         CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
-                        await shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                        await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
 
-                        MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+                        MySqlResultState resultState = await TikiMySql.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
                             commonOrder, status, orderStatusPush.update_time, oldStatus,
                             EECommerceType.SHOPEE, conn);
 
@@ -141,8 +139,7 @@ namespace MVCPlayWithMe.Controllers
             if (violationItemPush != null)
             {
                 int status = CommonOpenPlatform.ShopeeGetEnumValueFromString(violationItemPush.item_status);
-                ShopeeMySql shopeeMySql = new ShopeeMySql();
-                await shopeeMySql.UpdateStatusOfItemFromTMDTItemIdAsync(violationItemPush.item_id, status);
+                await ShopeeMySql.UpdateStatusOfItemFromTMDTItemIdAsync(violationItemPush.item_id, status);
             }
         }
 
@@ -161,14 +158,12 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    TikiMySql tikiSqler = new TikiMySql();
-                    ShopeeMySql shopeeMySql = new ShopeeMySql();
                     ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
                     ECommerceOrderStatus oldStatus = ECommerceOrderStatus.DONT_EXIST;
                     if (data.booking_status == "READY_TO_SHIP"
                         || data.booking_status == "CANCELLED")
                     {
-                        TbEcommerceOrder tbEcommerceBookingLastest = await tikiSqler.GetLastestStatusOfECommerceBookingAsync(
+                        TbEcommerceOrder tbEcommerceBookingLastest = await TikiMySql.GetLastestStatusOfECommerceBookingAsync(
                             data.booking_sn, EECommerceType.SHOPEE, conn);
 
                         oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
@@ -178,13 +173,13 @@ namespace MVCPlayWithMe.Controllers
                         {
                             status = ECommerceOrderStatus.UNBOOKED;
 
-                            string trackingNumber = await tikiSqler.GetBookingTrackingNumberFromSNConnectOutAsync(
+                            string trackingNumber = await TikiMySql.GetBookingTrackingNumberFromSNConnectOutAsync(
                                 data.booking_sn, EECommerceType.SHOPEE, conn);
 
                             if (string.IsNullOrEmpty(trackingNumber))
                             {
                                 trackingNumber = await ShopeeGetTrackingNumber.ShopeeGetBookingTrackingNumberAsync(data.booking_sn);
-                                await shopeeMySql.UpdateBookingTrackingNumberToDBConnectOutAsync(data.booking_sn, trackingNumber, conn);
+                                await ShopeeMySql.UpdateBookingTrackingNumberToDBConnectOutAsync(data.booking_sn, trackingNumber, conn);
                             }
                         }
 
@@ -210,14 +205,14 @@ namespace MVCPlayWithMe.Controllers
 
                         // Chờ 120 giây vì có thể shopee vừa gửi push thay đổi trạng thái đơn hàng
                         await Task.Delay(120000);
-                        await tikiSqler.ReturnQuantityOfOrderMatchedBookingAsync(commonOrder, EECommerceType.SHOPEE, conn);
+                        await TikiMySql.ReturnQuantityOfOrderMatchedBookingAsync(commonOrder, EECommerceType.SHOPEE, conn);
                         await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                         return;
                     }
 
-                    await shopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                    await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
 
-                    MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
+                    MySqlResultState resultState = await TikiMySql.UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
                         commonOrder, status, data.update_time, oldStatus,
                         EECommerceType.SHOPEE, conn);
 
@@ -319,10 +314,8 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                TikiMySql tikiSqler = new TikiMySql();
-                LazadaMySql lazadaMySql = new LazadaMySql();
 
-                TbEcommerceOrder tbEcommerceOrderLastest = await tikiSqler.GetLastestStatusOfECommerceOrderAsync(
+                TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                     orderStatusPush.trade_order_id,
                     EECommerceType.LAZADA, conn);
 
@@ -334,7 +327,7 @@ namespace MVCPlayWithMe.Controllers
                     status = ECommerceOrderStatus.UNBOOKED;
                 }
 
-                if (!tikiSqler.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                if (!TikiMySql.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                     return;
 
                 // Ta cần check xem có nhận lại event cũ, duplicate không bởi thời gian event được sàn ghi nhận.
@@ -354,9 +347,9 @@ namespace MVCPlayWithMe.Controllers
                         order.orderItems = orderItems;
 
                         CommonOrder commonOrder = new CommonOrder(order);
-                        await lazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                        await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
 
-                        MySqlResultState resultState = await tikiSqler.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+                        MySqlResultState resultState = await TikiMySql.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
                             commonOrder, status, orderStatusPush.status_update_time, oldStatus,
                             EECommerceType.LAZADA, conn);
 

@@ -10,7 +10,7 @@ namespace MVCPlayWithMe.Models
 {
     public class AdministrativeAddressMySql
     {
-        public async Task<List<AdministrativeAddress>> GetListAdministrativeAddressAsync()
+        public static async Task<List<AdministrativeAddress>> GetListAdministrativeAddressAsync()
         {
             List<AdministrativeAddress> ls = new List<AdministrativeAddress>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))

@@ -472,7 +472,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             Boolean isError = false;
             try
             {
-                LazadaMySql lazadaMySql = new LazadaMySql();
                 while (true)
                 {
                     request.UpdateApiParameter("startRow", startRow.ToString());
@@ -489,7 +488,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
                         JsonConvert.DeserializeObject<LazadaGetBrandByPagesResponseBody>(response.Body,
                         Common.jsonSerializersettings);
 
-                    await lazadaMySql.InserttbLazadaBrandAsync(objectRes.data.module, conn);
+                    await LazadaMySql.InserttbLazadaBrandAsync(objectRes.data.module, conn);
 
                     startRow = theMaximum * objectRes.data.page_index;
                     if(startRow >= objectRes.data.total_record)

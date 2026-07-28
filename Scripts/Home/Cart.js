@@ -293,7 +293,6 @@ async function LoadCartBFCache() {
     }
 }
 
-
 // Hiển thị tổng tiền thanh toán
 function ShowSumMoney() {
     let length = listCartObject.length;
