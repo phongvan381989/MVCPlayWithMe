@@ -154,9 +154,9 @@ namespace MVCPlayWithMe.Models.ItemModel
             return ls;
         }
 
-        public static async Task<int> AddItemAsync(Item item)
+        public static async Task<long> AddItemAsync(Item item)
         {
-            int id = -1;
+            long id = -1;
             MySqlParameter[] paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@inName", item.name);
             paras[1] = new MySqlParameter("@inStatus", item.status);
@@ -172,10 +172,9 @@ namespace MVCPlayWithMe.Models.ItemModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddRange(paras);
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync()) id = MyMySql.GetInt32(rdr, "LastId");
-                        }
+
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        id = Convert.ToInt64(scalarResult);
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -183,9 +182,9 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public static async Task<int> AddItemAsync(string itemName, int itemStatus, string itemDetail)
+        public static async Task<long> AddItemAsync(string itemName, int itemStatus, string itemDetail)
         {
-            int id = -1;
+            long id = -1;
             MySqlParameter[] paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@inName", itemName);
             paras[1] = new MySqlParameter("@inStatus", itemStatus);
@@ -201,10 +200,9 @@ namespace MVCPlayWithMe.Models.ItemModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddRange(paras);
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync()) id = MyMySql.GetInt32(rdr, "LastId");
-                        }
+
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        id = Convert.ToInt64(scalarResult);
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -286,9 +284,9 @@ namespace MVCPlayWithMe.Models.ItemModel
             return id;
         }
 
-        public static async Task<int> AddModelAsync(Model model)
+        public static async Task<long> AddModelAsync(Model model)
         {
-            int id = -1;
+            long id = -1;
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inItemId", model.itemId);
             paras[1] = new MySqlParameter("@inName", model.name);
@@ -303,10 +301,8 @@ namespace MVCPlayWithMe.Models.ItemModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddRange(paras);
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync()) id = MyMySql.GetInt32(rdr, "LastId");
-                        }
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        id = Convert.ToInt64(scalarResult);
                     }
                 }
                 catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
@@ -1054,10 +1050,10 @@ namespace MVCPlayWithMe.Models.ItemModel
                         cmd.Parameters.AddWithValue("@inBookCoverPrice", bookCoverPrice);
                         cmd.Parameters.AddWithValue("@inShopeeItemId", shopeeItemId);
                         cmd.Parameters.AddWithValue("@inShopeeModelId", shopeeModelId);
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync()) result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                        }
+
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        result.myAnythingLong = Convert.ToInt64(scalarResult);
+                        result.myAnything = (int)result.myAnythingLong;
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }

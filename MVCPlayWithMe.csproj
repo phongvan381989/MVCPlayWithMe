@@ -313,6 +313,8 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Helpers\UrlHelperExtensions.cs" />
+    <Compile Include="Models\BankAccount\BankAccount.cs" />
+    <Compile Include="Models\BankAccount\BankAccountMySql.cs" />
     <Compile Include="Models\Customer\AdministrativeAddress.cs" />
     <Compile Include="Models\Customer\AdministrativeAddressMySql.cs" />
     <Compile Include="Models\Administrator.cs" />
@@ -335,11 +337,16 @@
     <Compile Include="Models\ItemModel\ItemModelSearchParameter.cs" />
     <Compile Include="Models\Model.cs" />
     <Compile Include="Models\Order\Order.cs" />
+    <Compile Include="Models\Order\OrderCodeSequenceMySql.cs" />
     <Compile Include="Models\Order\OrderDetail.cs" />
     <Compile Include="Models\Order\OrderMySql.cs" />
     <Compile Include="Models\Order\OrderPay.cs" />
+    <Compile Include="Models\Order\OrderSimplePromotion.cs" />
+    <Compile Include="Models\Order\OrderSimplePromotionMySql.cs" />
     <Compile Include="Models\Order\OrderTrack.cs" />
     <Compile Include="Models\Output.cs" />
+    <Compile Include="Models\PaymentProof\PaymentProof.cs" />
+    <Compile Include="Models\PaymentProof\PaymentProofMySql.cs" />
     <Compile Include="Models\PriceQuantity.cs" />
     <Compile Include="Models\ProductModel\ProductCommonInfoWithCombo.cs" />
     <Compile Include="Models\ProductModel\ProductFromCsv.cs" />
@@ -852,6 +859,9 @@
     <Content Include="Scripts\bootstrap.esm.js.map" />
     <Content Include="Scripts\bootstrap.bundle.min.js.map" />
     <Content Include="Scripts\bootstrap.bundle.js.map" />
+    <Content Include="Views\Administrator\PaymentProofs.cshtml" />
+    <Content Include="Views\Administrator\PendingOrders.cshtml" />
+    <Content Include="Views\Administrator\PendingPayments.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

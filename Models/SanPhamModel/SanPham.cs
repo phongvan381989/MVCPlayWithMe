@@ -316,6 +316,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public int BookCoverPrice { get; set; }
         public int SalePrice { get; set; }
         public int Quantity { get; set; }
+        public int Status { get; set; }
         public string CoverImageFileName { get; set; } // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
     }
 }

@@ -653,7 +653,7 @@ async function AddToCart() {
         + "#real=0");
     // Là khách vãng lai
     if (CheckAnonymousCustomer()) {
-        let listCartCookie = RefreshRealOfCartCookieAndGet();
+        let listCartCookie = [];// RefreshRealOfCartCookieAndGet();
 
         let overMax = InsertAtBeginToListCartCookieCheckExist(listCartCookie, obj, maxQuantity);
         if (overMax) { // Hiện thị modal thông báo vượt tồn kho
@@ -715,7 +715,7 @@ async function BuyNow() {
     //let overMax = false; // true: Nếu số lượng khách chọn + số lượng đã chọn lưu trong cookie/ db vượt quá số lượng max
     // Là khách vãng lai
     if (CheckAnonymousCustomer()) {
-        let listCartCookie = RefreshRealOfCartCookieAndGet();
+        let listCartCookie = []; // RefreshRealOfCartCookieAndGet();
 
         InsertAtBeginToListCartCookieCheckExist(listCartCookie, obj, maxQuantity);
 

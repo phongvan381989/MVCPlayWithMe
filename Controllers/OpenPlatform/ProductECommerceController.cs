@@ -1211,7 +1211,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     status = 0;
                 else
                     status = 1;
-                itemId = await ItemModelMySql.AddItemAsync(commonItem.name, status, commonItem.detail);
+                itemId = (int)await ItemModelMySql.AddItemAsync(commonItem.name, status, commonItem.detail);
 
                 // Lưu ảnh vào thư mục \Media\Item\ItemId\
                 SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);

@@ -16,9 +16,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
     public class LazadaMySql
     {
         // -2 nếu tMDTLazadaItemId đã tồn tại, -1 nếu có lỗi</returns>
-        public static async Task<int> InserttbLazadaItemAsync(CommonItem item, MySqlConnection conn)
+        public static async Task<long> InserttbLazadaItemAsync(CommonItem item, MySqlConnection conn)
         {
-            int id = 0;
+            long id = 0;
 
             try
             {
@@ -33,13 +33,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
                     cmd.Parameters.AddWithValue("@inDetail", item.detail);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            id = MyMySql.GetInt32(rdr, "LastId");
-                        }
-                    }
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    id = Convert.ToInt64(scalarResult);
                 }
             }
             catch (Exception ex)
@@ -52,12 +47,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         //-2 nếu tMDTLazadaModelId đã tồn tại, -1 nếu có lỗi</returns>
-        public static async Task<int> InserttbLazadaModelAsync(int itemId, CommonModel model, MySqlConnection conn)
+        public static async Task<long> InserttbLazadaModelAsync(long itemId, CommonModel model, MySqlConnection conn)
         {
             MyLogger.GetInstance().Warn("Start InserttbLazadaModel");
             MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
             MyLogger.GetInstance().Warn("tMDTLazadaModelId: " + model.modelId.ToString());
-            int id = 0;
+            long id = 0;
 
             try
             {
@@ -73,13 +68,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inImage", model.imageSrc);
                     cmd.Parameters.AddWithValue("@inSellerSku", model.sellerSku);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            id = MyMySql.GetInt32(rdr, "LastId");
-                        }
-                    }
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    id = Convert.ToInt64(scalarResult);
                 }
             }
             catch (Exception ex)
@@ -92,7 +82,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
-        public static async Task<MySqlResultState> LazadaInsertNewMappingOneOfModelAsync(int modelId,
+        public static async Task<MySqlResultState> LazadaInsertNewMappingOneOfModelAsync(long modelId,
             int productId,
             int quantity,
             MySqlConnection conn)
@@ -207,7 +197,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             Boolean exist = false;
             try
             {
-                int itemIdInserted = 0;
+                long itemIdInserted = 0;
                 // Kiểm tra itemId đã tồn tại trong bảng tbLazadaitem
                 using (MySqlCommand cmd = new MySqlCommand(
                     @"SELECT * FROM webplaywithme.tb_lazada_item WHERE TMDTLazadaItemId = @inTMDTLazadaItemId",
@@ -220,7 +210,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     {
                         while (await rdr.ReadAsync())
                         {
-                            itemIdInserted = MyMySql.GetInt32(rdr, "Id");
+                            itemIdInserted = MyMySql.GetInt64(rdr, "Id");
                             exist = true;
                         }
                     }

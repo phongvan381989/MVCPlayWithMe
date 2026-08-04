@@ -29,39 +29,39 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.CommandType = CommandType.StoredProcedure;
 
                         // Add IN parameters
-                        cmd.Parameters.AddWithValue("@inCode", sanPham.Code ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inBarcode", sanPham.Barcode ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inName", sanPham.Name);
-                        cmd.Parameters.AddWithValue("@inShortName", sanPham.ShortName ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inComboId", sanPham.ComboId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inCategoryId", sanPham.CategoryId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inBookCoverPrice", sanPham.BookCoverPrice);
-                        cmd.Parameters.AddWithValue("@inAuthor", sanPham.Author ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inTranslator", sanPham.Translator ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublisherId", sanPham.PublisherId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublishingCompany", sanPham.PublishingCompany ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublishingTime", sanPham.PublishingTime ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inProductLong", sanPham.ProductLong);
-                        cmd.Parameters.AddWithValue("@inProductWide", sanPham.ProductWide);
-                        cmd.Parameters.AddWithValue("@inProductHigh", sanPham.ProductHigh);
-                        cmd.Parameters.AddWithValue("@inProductWeight", sanPham.ProductWeight);
-                        cmd.Parameters.AddWithValue("@inPositionInWarehouse", sanPham.PositionInWarehouse ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inHardCover", sanPham.HardCover ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inMinAge", sanPham.MinAge ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inMaxAge", sanPham.MaxAge ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inParentId", sanPham.ParentId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inRepublish", sanPham.Republish ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDetail", sanPham.Detail ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inStatus", sanPham.Status);
-                        cmd.Parameters.AddWithValue("@inQuantity", sanPham.Quantity);
-                        cmd.Parameters.AddWithValue("@inPageNumber", sanPham.PageNumber ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDiscount", sanPham.Discount);
-                        cmd.Parameters.AddWithValue("@inSalePrice", sanPham.SalePrice);
-                        cmd.Parameters.AddWithValue("@inLanguage", sanPham.Language ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDate", sanPham.Date ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inSoldQuantity", sanPham.SoldQuantity ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inURL", sanPham.URL ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inSEOKeyword", sanPham.SEOKeyword ?? (object)DBNull.Value);
+                        cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = sanPham.Code ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inBarcode", MySqlDbType.VarChar).Value = sanPham.Barcode ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inName", MySqlDbType.VarChar).Value = sanPham.Name;
+                        cmd.Parameters.Add("@inShortName", MySqlDbType.VarChar).Value = sanPham.ShortName ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = sanPham.ComboId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inCategoryId", MySqlDbType.Int32).Value = sanPham.CategoryId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inBookCoverPrice", MySqlDbType.Int32).Value = sanPham.BookCoverPrice;
+                        cmd.Parameters.Add("@inAuthor", MySqlDbType.VarChar).Value = sanPham.Author ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inTranslator", MySqlDbType.VarChar).Value = sanPham.Translator ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublisherId", MySqlDbType.Int32).Value = sanPham.PublisherId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublishingCompany", MySqlDbType.VarChar).Value = sanPham.PublishingCompany ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublishingTime", MySqlDbType.Int32).Value = sanPham.PublishingTime ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inProductLong", MySqlDbType.Int32).Value = sanPham.ProductLong;
+                        cmd.Parameters.Add("@inProductWide", MySqlDbType.Int32).Value = sanPham.ProductWide;
+                        cmd.Parameters.Add("@inProductHigh", MySqlDbType.Int32).Value = sanPham.ProductHigh;
+                        cmd.Parameters.Add("@inProductWeight", MySqlDbType.Int32).Value = sanPham.ProductWeight;
+                        cmd.Parameters.Add("@inPositionInWarehouse", MySqlDbType.VarChar).Value = sanPham.PositionInWarehouse ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Int32).Value = sanPham.HardCover ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inMinAge", MySqlDbType.Int32).Value = sanPham.MinAge ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inMaxAge", MySqlDbType.Int32).Value = sanPham.MaxAge ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inParentId", MySqlDbType.Int32).Value = sanPham.ParentId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inRepublish", MySqlDbType.Int32).Value = sanPham.Republish ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = sanPham.Detail ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Int32).Value = sanPham.Status;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = sanPham.Quantity;
+                        cmd.Parameters.Add("@inPageNumber", MySqlDbType.Int32).Value = sanPham.PageNumber ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = sanPham.Discount;
+                        cmd.Parameters.Add("@inSalePrice", MySqlDbType.Int32).Value = sanPham.SalePrice;
+                        cmd.Parameters.Add("@inLanguage", MySqlDbType.VarChar).Value = sanPham.Language ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDate", MySqlDbType.Date).Value = sanPham.Date ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSoldQuantity", MySqlDbType.Int32).Value = sanPham.SoldQuantity ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inURL", MySqlDbType.VarChar).Value = sanPham.URL ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSEOKeyword", MySqlDbType.VarChar).Value = sanPham.SEOKeyword ?? (object)DBNull.Value;
 
                         // Execute và đọc LastInsertId từ SELECT
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
@@ -119,39 +119,39 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.CommandType = CommandType.StoredProcedure;
 
                         // Add IN parameters
-                        cmd.Parameters.AddWithValue("@inCode", sanPham.Code ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inBarcode", sanPham.Barcode ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inName", sanPham.Name);
-                        cmd.Parameters.AddWithValue("@inShortName", sanPham.ShortName ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inComboId", sanPham.ComboId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inCategoryId", sanPham.CategoryId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inBookCoverPrice", sanPham.BookCoverPrice);
-                        cmd.Parameters.AddWithValue("@inAuthor", sanPham.Author ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inTranslator", sanPham.Translator ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublisherId", sanPham.PublisherId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublishingCompany", sanPham.PublishingCompany ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublishingTime", sanPham.PublishingTime ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inProductLong", sanPham.ProductLong);
-                        cmd.Parameters.AddWithValue("@inProductWide", sanPham.ProductWide);
-                        cmd.Parameters.AddWithValue("@inProductHigh", sanPham.ProductHigh);
-                        cmd.Parameters.AddWithValue("@inProductWeight", sanPham.ProductWeight);
-                        cmd.Parameters.AddWithValue("@inPositionInWarehouse", sanPham.PositionInWarehouse ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inHardCover", sanPham.HardCover ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inMinAge", sanPham.MinAge ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inMaxAge", sanPham.MaxAge ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inParentId", sanPham.ParentId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inRepublish", sanPham.Republish ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDetail", sanPham.Detail ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inStatus", sanPham.Status);
-                        cmd.Parameters.AddWithValue("@inQuantity", sanPham.Quantity);
-                        cmd.Parameters.AddWithValue("@inPageNumber", sanPham.PageNumber ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDiscount", sanPham.Discount);
-                        cmd.Parameters.AddWithValue("@inSalePrice", sanPham.SalePrice);
-                        cmd.Parameters.AddWithValue("@inLanguage", sanPham.Language ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDate", sanPham.Date ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inSoldQuantity", sanPham.SoldQuantity ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inURL", sanPham.URL ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inSEOKeyword", sanPham.SEOKeyword ?? (object)DBNull.Value);
+                        cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = sanPham.Code ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inBarcode", MySqlDbType.VarChar).Value = sanPham.Barcode ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inName", MySqlDbType.VarChar).Value = sanPham.Name;
+                        cmd.Parameters.Add("@inShortName", MySqlDbType.VarChar).Value = sanPham.ShortName ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = sanPham.ComboId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inCategoryId", MySqlDbType.Int32).Value = sanPham.CategoryId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inBookCoverPrice", MySqlDbType.Int32).Value = sanPham.BookCoverPrice;
+                        cmd.Parameters.Add("@inAuthor", MySqlDbType.VarChar).Value = sanPham.Author ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inTranslator", MySqlDbType.VarChar).Value = sanPham.Translator ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublisherId", MySqlDbType.Int32).Value = sanPham.PublisherId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublishingCompany", MySqlDbType.VarChar).Value = sanPham.PublishingCompany ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublishingTime", MySqlDbType.Int32).Value = sanPham.PublishingTime ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inProductLong", MySqlDbType.Int32).Value = sanPham.ProductLong;
+                        cmd.Parameters.Add("@inProductWide", MySqlDbType.Int32).Value = sanPham.ProductWide;
+                        cmd.Parameters.Add("@inProductHigh", MySqlDbType.Int32).Value = sanPham.ProductHigh;
+                        cmd.Parameters.Add("@inProductWeight", MySqlDbType.Int32).Value = sanPham.ProductWeight;
+                        cmd.Parameters.Add("@inPositionInWarehouse", MySqlDbType.VarChar).Value = sanPham.PositionInWarehouse ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Int32).Value = sanPham.HardCover ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inMinAge", MySqlDbType.Int32).Value = sanPham.MinAge ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inMaxAge", MySqlDbType.Int32).Value = sanPham.MaxAge ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inParentId", MySqlDbType.Int32).Value = sanPham.ParentId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inRepublish", MySqlDbType.Int32).Value = sanPham.Republish ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = sanPham.Detail ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Int32).Value = sanPham.Status;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = sanPham.Quantity;
+                        cmd.Parameters.Add("@inPageNumber", MySqlDbType.Int32).Value = sanPham.PageNumber ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = sanPham.Discount;
+                        cmd.Parameters.Add("@inSalePrice", MySqlDbType.Int32).Value = sanPham.SalePrice;
+                        cmd.Parameters.Add("@inLanguage", MySqlDbType.VarChar).Value = sanPham.Language ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDate", MySqlDbType.Date).Value = sanPham.Date ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSoldQuantity", MySqlDbType.Int32).Value = sanPham.SoldQuantity ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inURL", MySqlDbType.VarChar).Value = sanPham.URL ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSEOKeyword", MySqlDbType.VarChar).Value = sanPham.SEOKeyword ?? (object)DBNull.Value;
 
                         // Execute và đọc LastInsertId từ SELECT
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
@@ -208,7 +208,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         "SELECT * FROM tb_san_pham WHERE Id = @inId", conn))
                     {
                         cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
@@ -248,6 +248,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         sp.BookCoverPrice,
                         sp.SalePrice,
                         sp.Quantity,
+                        sp.Status,
                         (SELECT FileName
                             FROM tb_san_pham_media
                             WHERE SanPhamId = sp.Id
@@ -260,7 +261,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
                     cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inId", id);
+                    cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
@@ -274,6 +275,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                 BookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice"),
                                 SalePrice = MyMySql.GetInt32(rdr, "SalePrice"),
                                 Quantity = MyMySql.GetInt32(rdr, "Quantity"),
+                                Status = MyMySql.GetInt32(rdr, "Status"),
                                 CoverImageFileName = MyMySql.GetString(rdr, "CoverImageFileName")
                             };
                         }
@@ -343,40 +345,40 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        cmd.Parameters.AddWithValue("@inId", sanPham.Id);
-                        cmd.Parameters.AddWithValue("@inCode", sanPham.Code ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inBarcode", sanPham.Barcode ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inName", sanPham.Name);
-                        cmd.Parameters.AddWithValue("@inShortName", sanPham.ShortName ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inComboId", sanPham.ComboId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inCategoryId", sanPham.CategoryId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inBookCoverPrice", sanPham.BookCoverPrice);
-                        cmd.Parameters.AddWithValue("@inAuthor", sanPham.Author ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inTranslator", sanPham.Translator ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublisherId", sanPham.PublisherId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublishingCompany", sanPham.PublishingCompany ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inPublishingTime", sanPham.PublishingTime ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inProductLong", sanPham.ProductLong);
-                        cmd.Parameters.AddWithValue("@inProductWide", sanPham.ProductWide);
-                        cmd.Parameters.AddWithValue("@inProductHigh", sanPham.ProductHigh);
-                        cmd.Parameters.AddWithValue("@inProductWeight", sanPham.ProductWeight);
-                        cmd.Parameters.AddWithValue("@inPositionInWarehouse", sanPham.PositionInWarehouse ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inHardCover", sanPham.HardCover ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inMinAge", sanPham.MinAge ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inMaxAge", sanPham.MaxAge ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inParentId", sanPham.ParentId ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inRepublish", sanPham.Republish ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDetail", sanPham.Detail ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inStatus", sanPham.Status);
-                        cmd.Parameters.AddWithValue("@inQuantity", sanPham.Quantity);
-                        cmd.Parameters.AddWithValue("@inPageNumber", sanPham.PageNumber ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDiscount", sanPham.Discount);
-                        cmd.Parameters.AddWithValue("@inSalePrice", sanPham.SalePrice);
-                        cmd.Parameters.AddWithValue("@inLanguage", sanPham.Language ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inDate", sanPham.Date ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inSoldQuantity", sanPham.SoldQuantity ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inURL", sanPham.URL ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@inSEOKeyword", sanPham.SEOKeyword ?? (object)DBNull.Value);
+                        cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = sanPham.Id;
+                        cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = sanPham.Code ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inBarcode", MySqlDbType.VarChar).Value = sanPham.Barcode ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inName", MySqlDbType.VarChar).Value = sanPham.Name;
+                        cmd.Parameters.Add("@inShortName", MySqlDbType.VarChar).Value = sanPham.ShortName ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = sanPham.ComboId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inCategoryId", MySqlDbType.Int32).Value = sanPham.CategoryId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inBookCoverPrice", MySqlDbType.Int32).Value = sanPham.BookCoverPrice;
+                        cmd.Parameters.Add("@inAuthor", MySqlDbType.VarChar).Value = sanPham.Author ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inTranslator", MySqlDbType.VarChar).Value = sanPham.Translator ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublisherId", MySqlDbType.Int32).Value = sanPham.PublisherId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublishingCompany", MySqlDbType.VarChar).Value = sanPham.PublishingCompany ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inPublishingTime", MySqlDbType.Int32).Value = sanPham.PublishingTime ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inProductLong", MySqlDbType.Int32).Value = sanPham.ProductLong;
+                        cmd.Parameters.Add("@inProductWide", MySqlDbType.Int32).Value = sanPham.ProductWide;
+                        cmd.Parameters.Add("@inProductHigh", MySqlDbType.Int32).Value = sanPham.ProductHigh;
+                        cmd.Parameters.Add("@inProductWeight", MySqlDbType.Int32).Value = sanPham.ProductWeight;
+                        cmd.Parameters.Add("@inPositionInWarehouse", MySqlDbType.VarChar).Value = sanPham.PositionInWarehouse ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Int32).Value = sanPham.HardCover ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inMinAge", MySqlDbType.Int32).Value = sanPham.MinAge ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inMaxAge", MySqlDbType.Int32).Value = sanPham.MaxAge ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inParentId", MySqlDbType.Int32).Value = sanPham.ParentId ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inRepublish", MySqlDbType.Int32).Value = sanPham.Republish ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = sanPham.Detail ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Int32).Value = sanPham.Status;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = sanPham.Quantity;
+                        cmd.Parameters.Add("@inPageNumber", MySqlDbType.Int32).Value = sanPham.PageNumber ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = sanPham.Discount;
+                        cmd.Parameters.Add("@inSalePrice", MySqlDbType.Int32).Value = sanPham.SalePrice;
+                        cmd.Parameters.Add("@inLanguage", MySqlDbType.VarChar).Value = sanPham.Language ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inDate", MySqlDbType.Date).Value = sanPham.Date ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSoldQuantity", MySqlDbType.Int32).Value = sanPham.SoldQuantity ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inURL", MySqlDbType.VarChar).Value = sanPham.URL ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSEOKeyword", MySqlDbType.VarChar).Value = sanPham.SEOKeyword ?? (object)DBNull.Value;
 
                         await cmd.ExecuteNonQueryAsync();
 
@@ -421,8 +423,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@salePrice", salePrice);
-                        cmd.Parameters.AddWithValue("@id", sanPhamId);
+                        cmd.Parameters.Add("@salePrice", MySqlDbType.Int32).Value = salePrice;
+                        cmd.Parameters.Add("@id", MySqlDbType.Int32).Value = sanPhamId;
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
@@ -477,9 +479,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@bookCoverPrice", bookCoverPrice);
-                        cmd.Parameters.AddWithValue("@discount", discount);
-                        cmd.Parameters.AddWithValue("@id", sanPhamId);
+                        cmd.Parameters.Add("@bookCoverPrice", MySqlDbType.Int32).Value = bookCoverPrice;
+                        cmd.Parameters.Add("@discount", MySqlDbType.Float).Value = discount;
+                        cmd.Parameters.Add("@id", MySqlDbType.Int32).Value = sanPhamId;
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
@@ -530,7 +532,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
                         await cmd.ExecuteNonQueryAsync();
 
@@ -621,7 +623,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         "SELECT * FROM tb_san_pham WHERE ComboId = @inComboId AND Status = 0 ORDER BY Id ASC", conn))
                     {
                         cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.AddWithValue("@inComboId", comboId);
+                        cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = comboId;
 
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
@@ -665,7 +667,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     using (MySqlCommand cmd = new MySqlCommand("sp_tbSanPham_GetSanPhamWithVariants", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
@@ -692,7 +694,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             "SELECT Name FROM webplaywithme.tbcategory WHERE Id = @inId;", conn))
                         {
                             cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.AddWithValue("@inId", variants[0].CategoryId);
+                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = variants[0].CategoryId;
 
                             using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
@@ -707,7 +709,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             "SELECT Name FROM webplaywithme.tbpublisher WHERE Id = @inId;", conn))
                         {
                             cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.AddWithValue("@inId", variants[0].PublisherId);
+                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = variants[0].PublisherId;
 
                             using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
@@ -747,5 +749,92 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
             return variants;
         }
+
+        #region Update Quantity After Sale
+
+        /// <summary>
+        /// [TRANSACTION] Trừ số lượng sản phẩm sau khi bán (dùng trong transaction)
+        /// </summary>
+        /// <param name="conn">MySqlConnection đã mở</param>
+        /// <param name="transaction">MySqlTransaction hiện tại</param>
+        /// <param name="items">Danh sách (productId, quantity) đã mua</param>
+        /// <returns>MySqlResultState</returns>
+        public static async Task<MySqlResultState> UpdateQuantityAfterSaleTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            List<(int productId, int quantity)> items)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                string updateQuery = "UPDATE tb_san_pham SET Quantity = Quantity - @quantity WHERE Id = @sanPhamId";
+
+                using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn, transaction))
+                {
+                    cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32);
+                    cmd.Parameters.Add("@quantity", MySqlDbType.Int32);
+
+                    foreach (var (productId, quantity) in items)
+                    {
+                        cmd.Parameters["@sanPhamId"].Value = productId;
+                        cmd.Parameters["@quantity"].Value = quantity;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+
+                result.State = EMySqlResultState.OK;
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Trừ số lượng sản phẩm sau khi bán (tự mở connection, không dùng transaction)
+        /// </summary>
+        /// <param name="items">Danh sách (productId, quantity) đã mua</param>
+        /// <returns>MySqlResultState</returns>
+        public static async Task<MySqlResultState> UpdateQuantityAfterSaleAsync(
+            List<(int productId, int quantity)> items)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    string updateQuery = "UPDATE tb_san_pham SET Quantity = Quantity - @quantity WHERE Id = @sanPhamId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn))
+                    {
+                        cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32);
+                        cmd.Parameters.Add("@quantity", MySqlDbType.Int32);
+
+                        foreach (var (productId, quantity) in items)
+                        {
+                            cmd.Parameters["@sanPhamId"].Value = productId;
+                            cmd.Parameters["@quantity"].Value = quantity;
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
+
+                    result.State = EMySqlResultState.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

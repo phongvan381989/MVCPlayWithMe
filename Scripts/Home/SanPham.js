@@ -1018,7 +1018,7 @@ async function AddToCart() {
     try {
         // Check user đã login chưa (cookie 'uid')
         const isLoggedIn = !CheckAnonymousCustomer();
-        setTimeout(CloseModal, 500);
+        setTimeout(CloseModal, 1000);
         if (isLoggedIn) {
             // Khách đã đăng nhập → Thêm vào DB
             await addToCartServer(sanPhamObject.Id, quantity, 0);

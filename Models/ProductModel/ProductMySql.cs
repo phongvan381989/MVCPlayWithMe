@@ -961,15 +961,10 @@ namespace MVCPlayWithMe.Models.ProductModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddRange(paras);
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync())
-                            {
-                                result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                                if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
-                                else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
-                            }
-                        }
+
+                        result.myAnything = (int) await cmd.ExecuteScalarAsync();
+                        if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
+                        else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -1194,15 +1189,12 @@ namespace MVCPlayWithMe.Models.ProductModel
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddRange(paras);
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync())
-                            {
-                                result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                                if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
-                                else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
-                            }
-                        }
+
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        result.myAnythingLong = Convert.ToInt64(scalarResult);
+                        if (result.myAnythingLong == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
+                        else if (result.myAnythingLong == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                        result.myAnything = (int)result.myAnythingLong;
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -1608,11 +1600,16 @@ namespace MVCPlayWithMe.Models.ProductModel
 
         public static async Task<MySqlResultState> CreateOrderManuallyAsync(List<Import> ls, int sumPay)
         {
-            int orderId = await OrderMySql.AddOrderAsync(-1, "", 1, null);
-            MySqlResultState result = await UpdateOutputAndProductTableFromFromListImportAsync(orderId, ls, ECommerceOrderStatus.PACKED, EECommerceType.PLAY_WITH_ME);
+            MySqlResultState result = await OrderMySql.AddOrderAsync(-1, "", 1, null);
+            if(result.State != EMySqlResultState.OK)
+            {
+                return result;
+            }
+            int orderId = result.myAnything;
+            result = await UpdateOutputAndProductTableFromFromListImportAsync(orderId, ls, ECommerceOrderStatus.PACKED, EECommerceType.PLAY_WITH_ME);
             if (result.State != EMySqlResultState.OK) return result;
             OrderPay orderPay = new OrderPay();
-            orderPay.type = EPayType.SUM;
+            orderPay.type = (int)EPayType.FINAL;
             orderPay.value = sumPay;
 
             await OrderMySql.AddPayOrderAsync(orderId, new List<OrderPay> { orderPay });
@@ -2275,5 +2272,87 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
             return list;
         }
+
+        #region Update Quantity After Sale
+
+        /// <summary>
+        /// [TRANSACTION] Trừ tồn kho sản phẩm kho (tbproducts) sau khi bán (dùng trong transaction)
+        /// </summary>
+        /// <param name="conn">MySqlConnection đã mở</param>
+        /// <param name="transaction">MySqlTransaction hiện tại</param>
+        /// <param name="items">Danh sách (productId, quantity) cần trừ kho</param>
+        /// <returns>MySqlResultState</returns>
+        public static async Task<MySqlResultState> UpdateQuantityAfterSaleVBNTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            List<(int productId, int quantity)> items)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                string updateQuery = "UPDATE tbproducts SET Quantity = Quantity - @quantity WHERE Id = @productId";
+
+                using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn, transaction))
+                {
+                    cmd.Parameters.Add("@productId", MySqlDbType.Int32);
+                    cmd.Parameters.Add("@quantity", MySqlDbType.Int32);
+
+                    foreach (var (productId, quantity) in items)
+                    {
+                        cmd.Parameters["@productId"].Value = productId;
+                        cmd.Parameters["@quantity"].Value = quantity;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Trừ tồn kho sản phẩm kho (tbproducts) sau khi bán (tự mở connection, không dùng transaction)
+        /// </summary>
+        /// <param name="items">Danh sách (productId, quantity) cần trừ kho</param>
+        /// <returns>MySqlResultState</returns>
+        public static async Task<MySqlResultState> UpdateQuantityAfterSaleVBNAsync(List<(int productId, int quantity)> items)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    string updateQuery = "UPDATE tbproducts SET Quantity = Quantity - @quantity WHERE Id = @productId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn))
+                    {
+                        cmd.Parameters.Add("@productId", MySqlDbType.Int32);
+                        cmd.Parameters.Add("@quantity", MySqlDbType.Int32);
+
+                        foreach (var (productId, quantity) in items)
+                        {
+                            cmd.Parameters["@productId"].Value = productId;
+                            cmd.Parameters["@quantity"].Value = quantity;
+                            await cmd.ExecuteNonQueryAsync();
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        #endregion
     }
 }

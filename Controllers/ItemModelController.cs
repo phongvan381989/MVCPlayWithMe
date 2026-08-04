@@ -85,9 +85,10 @@ namespace MVCPlayWithMe.Controllers
             }
 
             Item it = new Item(name, status, quota, detail, categoryId);
-            int id = await ItemModelMySql.AddItemAsync(it);
+            long id = await ItemModelMySql.AddItemAsync(it);
             MySqlResultState result = new MySqlResultState();
-            result.myAnything = id;
+            result.myAnythingLong = id;
+            result.myAnything = (int)result.myAnythingLong;
 
             return JsonConvert.SerializeObject(result);
         }
@@ -200,7 +201,7 @@ namespace MVCPlayWithMe.Controllers
             else
             {
                 result = new MySqlResultState();
-                modelId = await ItemModelMySql.AddModelAsync(model);
+                modelId = (int)await ItemModelMySql.AddModelAsync(model);
                 result.myAnything = modelId;
                 model.id = modelId;
                 await ItemModelMySql.AddMappingAsync(model);

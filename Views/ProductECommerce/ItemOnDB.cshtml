@@ -15,9 +15,11 @@
 
             <div style="display: flex;" title="Lấy itemid, modelid sản phẩm Shopee, Tiki, Lazada đã được lưu trên db.">
                 <button type="button" class="pwm-btn-common" onclick="GetItemOnDB()"><span class="pwm-btn-text-common">Lấy Sản Phẩm</span></button>
-                <button type="button" class="pwm-btn-common" onclick="AutoUpdateMapping()" 
+                <button type="button" class="pwm-btn-common" onclick="AutoUpdateMapping()"
                         title="Nếu sản phẩm chưa được mapping, tên sản phẩm trên sàn trùn tên được sinh tự động từ sản phẩm trong kho sẽ được mapping tương ứng,
-                        CÓ KHẢ NĂNG LỖI nếu tên có sự trùng lặp"><span class="pwm-btn-text-common">Tự Động Mapping Theo Tên</span></button>
+                        CÓ KHẢ NĂNG LỖI nếu tên có sự trùng lặp">
+                    <span class="pwm-btn-text-common">Tự Động Mapping Theo Tên</span>
+                </button>
             </div>
             <div>
                 <input type="checkbox" id="find-non-mapping" onclick="FindNonMapping()">
@@ -37,7 +39,8 @@
                         <th>Tên Model</th>
                         <th>Trạng Thái</th>
                         <th title="Thông báo cân nhắc tắt/ẩn sản phẩm trên sàn khi mapping có sản phẩm ngừng kinh doanh.">
-                        Cân Nhắc Ẩn/Tắt</th>
+                            Cân Nhắc Ẩn/Tắt
+                        </th>
                         <th title="Tiki có hiển thị dữ liệu này">SKU</th>
                     </tr>
                 </table>
@@ -47,7 +50,6 @@
     <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.paging.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
     <script src="~/Scripts/ProductECommerce/ItemOnDB.js?v=20260610"></script>
 </body>
 </html>

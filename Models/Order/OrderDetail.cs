@@ -15,13 +15,9 @@ namespace MVCPlayWithMe.Models.Order
 
         public int orderId { get; set; }
 
-        public int itemId { get; set; }
+        public int sanPhamId { get; set; }
 
-        public string itemName { get; set; }
-
-        public int modelId { get; set; }
-
-        public string modelName { get; set; }
+        public string name { get; set; }
 
         public string imageSrc { get; set; }
 
@@ -33,7 +29,7 @@ namespace MVCPlayWithMe.Models.Order
 
         public void SetImageSrc()
         {
-            imageSrc = Common.GetModelImageSrc(itemId, modelId);
+            //imageSrc = Common.GetModelImageSrc(productId, modelId);
         }
     }
 }

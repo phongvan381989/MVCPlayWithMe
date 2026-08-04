@@ -166,13 +166,12 @@
 
     <script src="~/Scripts/web.play.with.me.update.width.js?v=20260625"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260625"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260625"></script>
     <script>
         // Cache data - chỉ load từ server 1 lần duy nhất
         let allSanPhamList = [];
 
         // Load danh sách khi trang load
-        window.addEventListener('DOMContentLoaded', async function() {
+        window.addEventListener('DOMContentLoaded', async function () {
             await GetListCombo();
             await GetListCategory();
             await GetListPublisher();
@@ -238,9 +237,9 @@
                     const code = (sp.Code || '').toLowerCase();
                     const barcode = (sp.Barcode || '').toLowerCase();
                     const matchKeyword = name.includes(keyword) ||
-                                       shortName.includes(keyword) ||
-                                       code.includes(keyword) ||
-                                       barcode.includes(keyword);
+                        shortName.includes(keyword) ||
+                        code.includes(keyword) ||
+                        barcode.includes(keyword);
                     if (!matchKeyword) return false;
                 }
 
@@ -277,17 +276,17 @@
             filteredList.forEach(sp => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${sp.Id}</td>
-                    <td>${sp.Name || ''}</td>
-                    <td>${sp.ShortName || ''}</td>
-                    <td>${FormatCurrency(sp.BookCoverPrice || 0)}</td>
-                    <td>${sp.Discount || 0}%</td>
-                    <td>${sp.Quantity || 0}</td>
-                    <td>${FormatStatus(sp.Status)}</td>
-                    <td>
-                        <a href="/SanPham/UpdateDelete?id=${sp.Id}" class="edit-link" target="_blank" rel="noopener noreferrer">Chỉnh sửa</a>
-                    </td>
-                `;
+                        <td>${sp.Id}</td>
+                        <td>${sp.Name || ''}</td>
+                        <td>${sp.ShortName || ''}</td>
+                        <td>${FormatCurrency(sp.BookCoverPrice || 0)}</td>
+                        <td>${sp.Discount || 0}%</td>
+                        <td>${sp.Quantity || 0}</td>
+                        <td>${FormatStatus(sp.Status)}</td>
+                        <td>
+                            <a href="/SanPham/UpdateDelete?id=${sp.Id}" class="edit-link" target="_blank" rel="noopener noreferrer">Chỉnh sửa</a>
+                        </td>
+                    `;
                 tbody.appendChild(row);
             });
         }

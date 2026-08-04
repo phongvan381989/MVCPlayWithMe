@@ -244,14 +244,24 @@ async function WaitForPendingBatchSync() {
     }
 }
 
+async function CartPageLoadCart() {
+    // Lấy guest cart từ localStorage (nếu có)
+    let guestCart = CartManager.getCart();
+    if (DEBUG) {
+        console.log("CartPageLoadCart guestCart: " + JSON.stringify(guestCart));
+    }
+
+// Gửi cart data dưới dạng JSON body
+    return await PostJSON('/Home/CartPageLoadCart', guestCart);
+}
+
 async function LoadCart() {
     try {
         let responseText = await CartPageLoadCart();
 
         // Sau khi load cart với dữ liệu đầy đủ, set real = 0 với khách vãng lai và xóa cart với khách đăng nhập
-        if (typeof CartManager !== 'undefined') {
-            CartManager.setRealZeroOrClear();
-        }
+        CartManager.setRealZeroOrClear();
+
 
         listCartObject = JSON.parse(responseText);
         ShowCartList();
@@ -269,9 +279,7 @@ async function LoadCartBFCache() {
     try {
         let responseText = await CartPageLoadCart();
 
-        if (typeof CartManager !== 'undefined') {
-            CartManager.setRealZeroOrClear();
-        }
+        CartManager.setRealZeroOrClear();
 
         let listCartObjectTem = listCartObject; // Lưu lại listCartObject cũ để so sánh
         listCartObject = JSON.parse(responseText);
@@ -299,7 +307,7 @@ function ShowSumMoney() {
     let count = 0;
     let sumMoney = 0;
     for (let i = 0; i < length; i++) {
-        if (listCartObject[i].real == 1) {
+        if (listCartObject[i].real === 1) {
             sumMoney = sumMoney + listCartObject[i].quantity * listCartObject[i].sanPhamBasicInfo.SalePrice;
             count++;
         }
@@ -393,19 +401,13 @@ function GetMaxQuantityInputInCartPage(model) {
 // element là input tag
 function UpdateWhenChangeInputQuantity(model, quan) {
     let id = parseInt(model.getAttribute("data-model-id"));
-    // let obj = listCartObject.find(item => item.sanPhamId === id);
+    let obj = listCartObject.find(item => item.sanPhamId === id);
 
     // // ✅ STEP 1: Update memory ngay (instant UI)
-    // obj.quantity = quan;
+    obj.quantity = quan;
 
     // ✅ STEP 2: Update localStorage (cho cả guest và logged-in)
-    if (typeof CartManager !== 'undefined') {
-        // let real = 0;
-        // if (model.getElementsByClassName("model-checkbox-input")[0].checked) {
-        //     real = 1;
-        // }
-        guestCart = CartManager.updateQuantity(id, quan);
-    }
+    CartManager.updateQuantity(id, quan);
 
     // ✅ STEP 3: Logged-in users - Batch debounce sync to server
     if (!CheckAnonymousCustomer()) {
@@ -426,6 +428,7 @@ function UpdateWhenChangeInputQuantity(model, quan) {
 }
 
 function ValidateInput(element) {
+    let model = element.closest('.selected-model');
     let maxQuantity = GetMaxQuantityInputInCartPage(model);
     if (maxQuantity === 0) {
         CreateMustClickOkModal("Sản phẩm tạm hết hàng.", null);
@@ -433,7 +436,6 @@ function ValidateInput(element) {
         return;
     }
 
-    let model = element.closest('.selected-model');
     let newInput = element.value;
     let iInput = 1;
 
@@ -512,9 +514,7 @@ async function DeleteSanPhamOnCartElement(element) {
         if (listCartObject[i].sanPhamId == id) {
             // Là khách vãng lai
             if (CheckAnonymousCustomer()) {
-                if (typeof CartManager !== 'undefined') {
-                    guestCart = CartManager.removeFromCart(id);
-                }
+                guestCart = CartManager.removeFromCart(id);
             }
             else {// Khách đăng nhập
                 try {
@@ -570,31 +570,27 @@ async function BuyNow() {
                 await CreateMustClickOkModal("Không thể đồng bộ giỏ hàng. Vui lòng thử lại.", null);
                 return;
             }
-            if (typeof CartManager !== 'undefined') {
-                CartManager.clearAndCreateCartFromList(selectedItems); // real = 1)
-            }
+            CartManager.clearAndCreateCartFromList(selectedItems); // real = 1)
 
         } else {
 
             // Cần lưu real = 1 cho các sản phẩm được chọn vào localStorage (cho cả guest và logged-in)
-            if (typeof CartManager !== 'undefined') {
-                const cart = CartManager.getCart();
-                cart.forEach(item => {
-                    item.real = 0; // Reset real = 0 trước
-                });
+            const cart = CartManager.getCart();
+            cart.forEach(item => {
+                item.real = 0; // Reset real = 0 trước
+            });
 
 
-                // Update real field: 1 cho selected, 0 cho unselected
-                cart.forEach(item => {
-                    const isSelected = selectedItems.some(s => s.sanPhamId === item.sanPhamId);
-                    if (isSelected) {
-                        item.real = 1;
-                        item.time = Date.now(); // Update timestamp cho items được chọn
-                    }
-                });
+            // Update real field: 1 cho selected, 0 cho unselected
+            cart.forEach(item => {
+                const isSelected = selectedItems.some(s => s.sanPhamId === item.sanPhamId);
+                if (isSelected) {
+                    item.real = 1;
+                    item.time = Date.now(); // Update timestamp cho items được chọn
+                }
+            });
 
-                CartManager.saveCart(cart);
-            }
+            CartManager.saveCart(cart);
         }
 
 
@@ -612,22 +608,6 @@ async function BuyNow() {
 
 // Initial load
 window.addEventListener('DOMContentLoaded', async function () {
-    if (DEBUG) {
-        console.log("DOMContentLoaded - Initial load");
-        console.log("window.innerWidth: " + window.innerWidth);
-
-        const vw = document.documentElement.clientWidth;
-        const mq = window.matchMedia('(min-width: 800px)');
-
-        console.log("Viewport:", vw);
-        console.log("Media query matches:", mq.matches);
-
-        if (vw >= 800 && !mq.matches) {
-            console.error("❌ CÓ VẤN ĐỀ!");
-        } else if (vw < 800) {
-            console.log("ℹ️ Viewport nhỏ hơn 800px → Media query KHÔNG apply");
-        }
-    }
     await LoadCart();
 });
 

@@ -11,18 +11,14 @@ namespace MVCPlayWithMe.Models.Order
     /// </summary>
     public class OrderTrack
     {
-        static public string[] arrayStatus = {
-            "Chưa thanh toán",
-            "Chuẩn bị hàng",
-            "Chờ giao ĐVVC",
-            "Lấy hàng thất bại",
-            "Chờ giao khách",
-            "Nhận hàng",
+        static public string[] arrayOrderStatus = {
+            "Shop chuẩn bị hàng",
+            "Đã giao ĐVVC",
+            "Khách đã nhận hàng",
             "Đơn hủy",
             "Đã hủy đơn",
             "Đơn hoàn",
-            "Hoàn thành",
-            "Tất cả",
+            "Hoàn thành"
         };
         public int id { get; set; }
 
@@ -36,20 +32,14 @@ namespace MVCPlayWithMe.Models.Order
 
         public void SetStrStatus()
         {
-            strStatus = arrayStatus[(int)status];
+            strStatus = OrderStatus.arrayOrderStatus[(int)status];
         }
 
         public static string GetString(int index)
         {
             string str = null;
-            if (index == (int)EOrderStatus.UNPAID)
-                str = "UNPAID";
-            else if (index == (int)EOrderStatus.READY_TO_SHIP)
-                str = "READY_TO_SHIP";
-            else if (index == (int)EOrderStatus.PROCESSED)
+            if (index == (int)EOrderStatus.PROCESSED)
                 str = "PROCESSED";
-            else if (index == (int)EOrderStatus.RETRY_SHIP)
-                str = "RETRY_SHIP";
             else if (index == (int)EOrderStatus.SHIPPED)
                 str = "SHIPPED";
             if (index == (int)EOrderStatus.TO_CONFIRM_RECEIVE)
@@ -62,8 +52,7 @@ namespace MVCPlayWithMe.Models.Order
                 str = "TO_RETURN";
             else if (index == (int)EOrderStatus.COMPLETED)
                 str = "COMPLETED";
-            else if (index == (int)EOrderStatus.ALL)
-                str = "ALL";
+
             return str;
         }
     }

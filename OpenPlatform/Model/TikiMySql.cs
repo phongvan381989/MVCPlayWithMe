@@ -19,9 +19,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
     {
         //private int TikiInsertAsync(int supperId, int tikiId, string name,
         //    int status, string sku, string superSku, MySqlConnection conn)
-        private static async Task<int> TikiInsertAsync(CommonItem item, MySqlConnection conn)
+        private static async Task<long> TikiInsertAsync(CommonItem item, MySqlConnection conn)
         {
-            int id = 0;
+            long id = 0;
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Insert", conn))
@@ -35,13 +35,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inSuperSku", item.superSku);
                     cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            id = MyMySql.GetInt32(rdr, "LastId");
-                        }
-                    }
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    id = Convert.ToInt64(scalarResult);
                 }
             }
             catch (Exception ex)

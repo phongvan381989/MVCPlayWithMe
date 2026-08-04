@@ -1,0 +1,447 @@
+@model List<MVCPlayWithMe.Models.PaymentProof.PaymentProof>
+@{
+    ViewBag.Title = "Xác Nhận Thanh Toán";
+    Layout = "~/Views/Shared/_LayoutAdministrator.cshtml";
+}
+
+<style>
+    .payment-proof-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .proof-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .proof-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .proof-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 15px;
+    }
+
+    .proof-status {
+        display: inline-block;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-verified {
+        background: #d4edda;
+        color: #155724;
+    }
+
+    .status-rejected {
+        background: #f8d7da;
+        color: #721c24;
+    }
+
+    .proof-image {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+
+    .proof-image:hover {
+        transform: scale(1.02);
+    }
+
+    .proof-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #212529;
+        font-weight: 500;
+    }
+
+    .btn-action {
+        padding: 8px 20px;
+        font-weight: 600;
+        border-radius: 6px;
+        transition: all 0.2s;
+    }
+
+    .btn-approve {
+        background: #28a745;
+        color: white;
+        border: none;
+    }
+
+    .btn-approve:hover {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+    }
+
+    .btn-reject {
+        background: #dc3545;
+        color: white;
+        border: none;
+    }
+
+    .btn-reject:hover {
+        background: #c82333;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(220,53,69,0.3);
+    }
+
+    .image-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.9);
+        overflow: auto;
+    }
+
+    .modal-content-img {
+        margin: auto;
+        display: block;
+        max-width: 90%;
+        max-height: 90%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    .close-modal {
+        position: absolute;
+        top: 20px;
+        right: 40px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    .close-modal:hover {
+        color: #ccc;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .reject-reason-input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        margin-top: 10px;
+        display: none;
+    }
+</style>
+
+<div class="payment-proof-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 style="margin: 0; color: #212529;">
+            <i class="fas fa-file-invoice-dollar"></i> Xác Nhận Thanh Toán
+        </h2>
+        <div>
+            <span class="badge bg-warning text-dark" style="font-size: 14px; padding: 8px 15px;">
+                <i class="fas fa-clock"></i> @Model.Count chứng từ chờ duyệt
+            </span>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="proof-card">
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h4>Không có chứng từ nào chờ duyệt</h4>
+                <p>Tất cả thanh toán đã được xác nhận</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        foreach (var proof in Model)
+        {
+            <div class="proof-card" data-proof-id="@proof.Id">
+                <div class="proof-header">
+                    <div>
+                        <h5 style="margin: 0; color: #212529;">
+                            Đơn hàng: <strong>#@proof.OrderId</strong>
+                        </h5>
+                        <small style="color: #6c757d;">
+                            <i class="far fa-clock"></i> @proof.CreatedAt?.ToString("dd/MM/yyyy HH:mm:ss")
+                        </small>
+                    </div>
+                    <span class="proof-status status-@proof.Status">
+                        @switch (proof.Status)
+                        {
+                            case "pending":
+                                <i class="fas fa-hourglass-half"></i>
+                                @:Chờ duyệt
+                                break;
+                            case "verified":
+                                <i class="fas fa-check-circle"></i>
+                                @:Đã duyệt
+                                break;
+                            case "rejected":
+                                <i class="fas fa-times-circle"></i>
+                                @:Đã từ chối
+                                break;
+                        }
+                    </span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="proof-info">
+                            <div class="info-item">
+                                <div class="info-label">Mã giao dịch</div>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(proof.TransactionCode))
+                                    {
+                                        <span style="color: #007bff;">@proof.TransactionCode</span>
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #adb5bd;">Không có</span>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="info-item">
+                                <div class="info-label">Số tiền chuyển</div>
+                                <div class="info-value" style="color: #28a745; font-size: 18px;">
+                                    @proof.TransferAmount.ToString("N0")đ
+                                </div>
+                            </div>
+
+                            <div class="info-item" style="grid-column: 1 / -1;">
+                                <div class="info-label">Nội dung chuyển khoản</div>
+                                <div class="info-value">
+                                    @if (!string.IsNullOrEmpty(proof.TransferNote))
+                                    {
+                                        @proof.TransferNote
+                                    }
+                                    else
+                                    {
+                                        <span style="color: #adb5bd;">Không có</span>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+
+                        @if (proof.Status == "pending")
+                        {
+                            <div style="margin-top: 20px;">
+                                <button class="btn btn-approve btn-action" onclick="approveProof(@proof.Id)">
+                                    <i class="fas fa-check"></i> Xác nhận thanh toán
+                                </button>
+                                <button class="btn btn-reject btn-action" onclick="showRejectReason(@proof.Id)">
+                                    <i class="fas fa-times"></i> Từ chối
+                                </button>
+
+                                <div class="reject-reason-input" id="rejectReason-@proof.Id">
+                                    <input type="text" placeholder="Lý do từ chối (VD: Số tiền không khớp)"
+                                           class="form-control" id="reasonText-@proof.Id" />
+                                    <div style="margin-top: 10px;">
+                                        <button class="btn btn-sm btn-danger" onclick="rejectProof(@proof.Id)">
+                                            Xác nhận từ chối
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" onclick="hideRejectReason(@proof.Id)">
+                                            Hủy
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        else if (proof.Status == "verified")
+                        {
+                            <div style="margin-top: 20px; padding: 12px; background: #d4edda; border-radius: 6px;">
+                                <i class="fas fa-user-check"></i>
+                                <strong>Đã duyệt</strong> bởi Admin #@proof.VerifiedBy lúc @proof.VerifiedAt?.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                        }
+                        else if (proof.Status == "rejected")
+                        {
+                            <div style="margin-top: 20px; padding: 12px; background: #f8d7da; border-radius: 6px;">
+                                <i class="fas fa-user-times"></i>
+                                <strong>Đã từ chối</strong> bởi Admin #@proof.VerifiedBy lúc @proof.VerifiedAt?.ToString("dd/MM/yyyy HH:mm")
+                                @if (!string.IsNullOrEmpty(proof.RejectReason))
+                                {
+                                    <br />
+                                    <small>Lý do: <em>@proof.RejectReason</em></small>
+                                }
+                            </div>
+                        }
+                    </div>
+
+                    <div class="col-md-6">
+                        @if (!string.IsNullOrEmpty(proof.ImageUrl))
+                        {
+                            <div style="text-align: center;">
+                                <div class="info-label" style="margin-bottom: 10px;">Ảnh chứng từ</div>
+                                <img src="@proof.ImageUrl" alt="Chứng từ thanh toán" class="proof-image"
+                                     onclick="openImageModal('@proof.ImageUrl')" />
+                                <div style="margin-top: 8px;">
+                                    <small style="color: #6c757d;">
+                                        <i class="fas fa-search-plus"></i> Click để phóng to
+                                    </small>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            <div style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 8px;">
+                                <i class="fas fa-image" style="font-size: 48px; color: #dee2e6;"></i>
+                                <p style="margin-top: 10px; color: #6c757d;">Không có ảnh chứng từ</p>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<!-- Image Modal -->
+<div id="imageModal" class="image-modal" onclick="closeImageModal()">
+    <span class="close-modal">&times;</span>
+    <img class="modal-content-img" id="modalImage">
+</div>
+
+<script>
+    // Open image modal
+    function openImageModal(imageUrl) {
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("modalImage");
+        modal.style.display = "block";
+        modalImg.src = imageUrl;
+    }
+
+    // Close image modal
+    function closeImageModal() {
+        document.getElementById("imageModal").style.display = "none";
+    }
+
+    // Show reject reason input
+    function showRejectReason(proofId) {
+        document.getElementById('rejectReason-' + proofId).style.display = 'block';
+    }
+
+    // Hide reject reason input
+    function hideRejectReason(proofId) {
+        document.getElementById('rejectReason-' + proofId).style.display = 'none';
+        document.getElementById('reasonText-' + proofId).value = '';
+    }
+
+    // Approve payment proof
+    async function approveProof(proofId) {
+        if (!confirm('Xác nhận thanh toán này?\n\nSau khi duyệt, đơn hàng sẽ được chuyển sang trạng thái ĐÃ THANH TOÁN và trừ tồn kho.')) {
+            return;
+        }
+
+        try {
+            const responseText = await PostJSON('/Administrator/ApprovePaymentProof', { proofId: proofId });
+
+            const response = JSON.parse(responseText);
+            if (response.success) {
+                alert('✅ Đã xác nhận thanh toán thành công!');
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + response.message);
+            }
+        } catch (error) {
+            alert('❌ Có lỗi xảy ra. Vui lòng thử lại.');
+            console.error(error);
+        }
+    }
+
+    // Reject payment proof
+    async function rejectProof(proofId) {
+        var reason = document.getElementById('reasonText-' + proofId).value.trim();
+
+        if (!reason) {
+            alert('Vui lòng nhập lý do từ chối');
+            return;
+        }
+
+        if (!confirm('Từ chối chứng từ này?\n\nLý do: ' + reason)) {
+            return;
+        }
+
+        try {
+            const responseText = await PostJSON('/Administrator/RejectPaymentProof', {
+                proofId: proofId,
+                rejectReason: reason
+            });
+
+            const response = JSON.parse(responseText);
+            if (response.success) {
+                alert('✅ Đã từ chối chứng từ!');
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + response.message);
+            }
+        } catch (error) {
+            alert('❌ Có lỗi xảy ra. Vui lòng thử lại.');
+            console.error(error);
+        }
+    }
+
+    // ESC key to close modal
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeImageModal();
+        }
+    });
+</script>

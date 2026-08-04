@@ -77,8 +77,6 @@ namespace MVCPlayWithMe.Models.Customer
 
         public static async Task<Customer> GetCustomerFromCookieAsync(string userCookieIdentify)
         {
-            if (string.IsNullOrEmpty(userCookieIdentify)) return null;
-
             MySqlParameter[] paras = new MySqlParameter[4];
             paras[0] = new MySqlParameter("@inUserCookieIdentify", userCookieIdentify);
 
@@ -368,13 +366,9 @@ namespace MVCPlayWithMe.Models.Customer
                     cmd.Parameters.AddWithValue("@inDetail", add.detail);
                     cmd.Parameters.AddWithValue("@inDefaultAdd", add.defaultAdd);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            result.myAnything = MyMySql.GetInt32(rdr, "LastId");
-                        }
-                    }
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    result.myAnythingLong = Convert.ToInt64(scalarResult);
+                    result.myAnything = (int)result.myAnythingLong;
                 }
             }
             catch (Exception ex)

@@ -32,6 +32,8 @@ var sanPhamMediaFolderPath = MediaFolderPath + "/SanPham/";
 
 var tikiConstDiscount = 5;
 
+var messageRetryLater = "Vui lòng thử lại sau.";
+
 function isEmptyOrSpaces(str) {
     return str == null || str.match(/^[ |	]*$/) !== null;
 }
@@ -105,18 +107,25 @@ function CheckUserNameValid(userName) {
 }
 
 // Check SDT di động hợp lệ
-// Đầu số Viettel: 086|096|097|098|039|038|037|036|035|034|033|032
-// Đầu số Vinaphone: 091|094|088|083|084|085|081|082
-// Đầu số MobiFone: 070|079|077|076|078|089|090|093
-// Đầu số Vietnamobile: 092|052|056|058
-// Đầu số Gmobile: 099|059
-// Đầu số Itelecom: 087
+/**
+ * Validate số điện thoại Việt Nam (10 số)
+ *
+ * Đầu số hợp lệ:
+ * - Viettel: 032-039, 086, 096, 097, 098
+ * - Vinaphone: 052, 056, 058, 081-085, 088, 091, 094
+ * - Mobifone: 070, 076-079, 089, 090, 093
+ * - Vietnamobile: 055, 059, 092
+ * - Gmobile: 099
+ *
+ * @param {string} sdt - Số điện thoại cần validate
+ * @returns {boolean} true nếu hợp lệ, false nếu không
+ */
 function CheckValidSDT(sdt) {
-    let pattern = /((086|096|097|098|039|038|037|036|035|034|033|032  |091|094|088|083|084|085|081|082  |070|079|077|076|078|089|090|093  |092|052|056|058  |099|059  |087)+([0-9]{7})\b)/g;
-    if (!pattern.test(sdt)) {
-        return false;
-    }
-    return true;
+    // Regex chuẩn: 3 số đầu (đầu số) + 7 số sau = 10 số
+    // ^ = bắt đầu chuỗi, $ = kết thúc chuỗi (không cho ký tự thừa)
+    const pattern = /^(032|033|034|035|036|037|038|039|052|055|056|058|059|070|076|077|078|079|081|082|083|084|085|086|088|089|090|091|092|093|094|096|097|098|099)[0-9]{7}$/;
+
+    return pattern.test(sdt);
 }
 
 function IsValidString(str) {
@@ -603,9 +612,13 @@ function ConvertToInt(value) {
     return i;
 }
 
-// Convert số tiền sang text dạng: 123,456,700
+// Convert số tiền sang text dạng: 123,456,700 hoặc -123,456,700
 function ConvertMoneyToText(money) {
-    let text = money.toString();
+    // Xử lý số âm
+    let isNegative = money < 0;
+    let absValue = Math.abs(money); // Lấy giá trị tuyệt đối
+
+    let text = absValue.toString();
     let textMoney = "";
     let length = text.length;
     for (let i = length - 1; i >= 0; i--) {
@@ -617,7 +630,8 @@ function ConvertMoneyToText(money) {
         }
     }
 
-    return textMoney;
+    // Thêm dấu - nếu là số âm
+    return isNegative ? "-" + textMoney : textMoney;
 }
 
 // Convert số tiền sang text dạng: đ123,456,700
@@ -740,6 +754,9 @@ function GetEasyPromise() {
 // Chưa đăng nhập trả về true, ngược lại false
 function CheckAnonymousCustomer() {
     let cookie = GetCookie(uidKey);
+    // if (DEBUG) {
+    //     console.log("CheckAnonymousCustomer CALL cookie = " + cookie);
+    // }
     if (isEmptyOrSpaces(cookie)) {
         return true;
     }

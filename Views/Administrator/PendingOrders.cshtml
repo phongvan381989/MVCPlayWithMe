@@ -1,0 +1,364 @@
+﻿@model List<MVCPlayWithMe.Models.Order.Order>
+@{
+    ViewBag.Title = "Đơn Hàng Chờ Thanh Toán";
+    Layout = "~/Views/Shared/_LayoutAdministrator.cshtml";
+}
+
+<style>
+    .pending-orders-container {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+    }
+
+    .order-card {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .order-card:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e9ecef;
+        margin-bottom: 15px;
+    }
+
+    .order-info {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .info-item {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: #6c757d;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .info-value {
+        font-size: 15px;
+        color: #212529;
+        font-weight: 500;
+    }
+
+    .total-amount {
+        font-size: 20px;
+        color: #28a745;
+        font-weight: 700;
+    }
+
+    .btn-confirm-payment {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-confirm-payment:hover {
+        background: #218838;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(40,167,69,0.3);
+    }
+
+    .btn-cancel-order {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-left: 10px;
+    }
+
+    .btn-cancel-order:hover {
+        background: #c82333;
+    }
+
+    .transaction-input-area {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 15px;
+        display: none;
+    }
+
+    .transaction-input-area.show {
+        display: block;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        margin-bottom: 10px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        color: #6c757d;
+    }
+
+    .empty-state i {
+        font-size: 64px;
+        margin-bottom: 20px;
+        opacity: 0.3;
+    }
+
+    .payment-deadline {
+        color: #dc3545;
+        font-weight: 600;
+    }
+
+    .payment-deadline.ok {
+        color: #28a745;
+    }
+</style>
+
+<div class="pending-orders-container">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+        <h2 style="margin: 0; color: #212529;">
+            <i class="fas fa-clock"></i> Đơn Hàng Chờ Thanh Toán
+        </h2>
+        <div>
+            <span class="badge bg-warning text-dark" style="font-size: 14px; padding: 8px 15px;">
+                <i class="fas fa-hourglass-half"></i> @Model.Count đơn chờ xác nhận
+            </span>
+        </div>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="order-card">
+            <div class="empty-state">
+                <i class="fas fa-check-circle"></i>
+                <h4>Không có đơn hàng nào chờ thanh toán</h4>
+                <p>Tất cả đơn chuyển khoản đã được xác nhận</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        foreach (var order in Model.OrderByDescending(o => o.time))
+        {
+            var totalAmount = order.lsOrderPay?.Where(p => p.type == (int)MVCPlayWithMe.Models.Order.EPayType.FINAL)
+                                                 .Sum(p => p.value) ?? 0;
+            var isExpired = order.PaymentDeadline.HasValue && order.PaymentDeadline < DateTime.Now;
+
+            <div class="order-card" data-order-id="@order.id">
+                <div class="order-header">
+                    <div>
+                        <h4 style="margin: 0; color: #212529;">
+                            Đơn hàng: <strong style="color: #007bff;">@order.OrderCode</strong>
+                        </h4>
+                        <small style="color: #6c757d;">
+                            <i class="far fa-clock"></i> Đặt lúc: @order.time?.ToString("dd/MM/yyyy HH:mm:ss")
+                        </small>
+                        @if (order.PaymentDeadline.HasValue)
+                        {
+                            <br />
+                            <small class="payment-deadline @(isExpired ? "" : "ok")">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                Hạn thanh toán: @order.PaymentDeadline?.ToString("dd/MM/yyyy HH:mm")
+                                @if (isExpired)
+                                {
+                                    <span style="color: #dc3545; font-weight: 700;">(ĐÃ QUÁ HẠN)</span>
+                                }
+                            </small>
+                        }
+                    </div>
+                    <div style="text-align: right;">
+                        <div class="info-label">Tổng tiền</div>
+                        <div class="total-amount">@totalAmount.ToString("N0")đ</div>
+                    </div>
+                </div>
+
+                <div class="order-info">
+                    <div class="info-item">
+                        <div class="info-label">Khách hàng</div>
+                        <div class="info-value">@order.name</div>
+                        <small style="color: #6c757d;">@order.phone</small>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">Địa chỉ giao hàng</div>
+                        <div class="info-value">
+                            @order.detail<br />
+                            @order.subDistrict, @order.province
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-label">Ghi chú</div>
+                        <div class="info-value">
+                            @if (!string.IsNullOrEmpty(order.note))
+                            {
+                                @order.note
+                            }
+                            else
+                            {
+                                <span style="color: #adb5bd;">Không có</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Danh sách sản phẩm -->
+                <div style="margin-bottom: 15px;">
+                    <div class="info-label" style="margin-bottom: 8px;">Sản phẩm đã đặt</div>
+                    <div style="background: #f8f9fa; padding: 12px; border-radius: 6px;">
+                        @if (order.lsOrderDetail != null && order.lsOrderDetail.Count > 0)
+                        {
+                            foreach (var detail in order.lsOrderDetail)
+                            {
+                                <div style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid #e9ecef;">
+                                    <span>@detail.name</span>
+                                    <span>
+                                        <strong>x@detail.Quantity</strong> -
+                                        <span style="color: #28a745;">@detail.price.ToString("N0")đ</span>
+                                    </span>
+                                </div>
+                            }
+                        }
+                    </div>
+                </div>
+
+                <!-- Nút xác nhận -->
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-confirm-payment" onclick="showTransactionInput(@order.id)">
+                        <i class="fas fa-check"></i> Xác nhận đã nhận tiền
+                    </button>
+                    <button class="btn-cancel-order" onclick="cancelOrder(@order.id)">
+                        <i class="fas fa-times"></i> Hủy đơn
+                    </button>
+                </div>
+
+                <!-- Form nhập mã GD -->
+                <div class="transaction-input-area" id="transactionInput-@order.id">
+                    <div class="info-label" style="margin-bottom: 8px;">
+                        <i class="fas fa-file-invoice-dollar"></i> Thông tin xác nhận thanh toán
+                    </div>
+
+                    <input type="text"
+                           class="form-control"
+                           id="transactionCode-@order.id"
+                           placeholder="Mã giao dịch (optional, VD: FT23080112345)" />
+
+                    <textarea class="form-control"
+                              id="transferNote-@order.id"
+                              rows="2"
+                              placeholder="Nội dung chuyển khoản (optional)"></textarea>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn btn-success" onclick="confirmPayment(@order.id, @totalAmount)">
+                            <i class="fas fa-check-circle"></i> Xác nhận thanh toán
+                        </button>
+                        <button class="btn btn-secondary" onclick="hideTransactionInput(@order.id)">
+                            <i class="fas fa-times"></i> Hủy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+</div>
+
+<script>
+    // Show transaction input
+    function showTransactionInput(orderId) {
+        document.getElementById('transactionInput-' + orderId).classList.add('show');
+    }
+
+    // Hide transaction input
+    function hideTransactionInput(orderId) {
+        document.getElementById('transactionInput-' + orderId).classList.remove('show');
+        document.getElementById('transactionCode-' + orderId).value = '';
+        document.getElementById('transferNote-' + orderId).value = '';
+    }
+
+    // Confirm payment
+    async function confirmPayment(orderId, totalAmount) {
+        var transactionCode = document.getElementById('transactionCode-' + orderId).value.trim();
+        var transferNote = document.getElementById('transferNote-' + orderId).value.trim();
+
+        var confirmMsg = 'Xác nhận đã nhận tiền cho đơn hàng này?\n\n';
+        confirmMsg += 'Tổng tiền: ' + totalAmount.toLocaleString() + 'đ\n';
+        if (transactionCode) {
+            confirmMsg += 'Mã GD: ' + transactionCode + '\n';
+        }
+        confirmMsg += '\nSau khi xác nhận:\n';
+        confirmMsg += '- Đơn hàng → ĐÃ THANH TOÁN\n';
+        confirmMsg += '- Tồn kho sẽ bị trừ';
+
+        if (!confirm(confirmMsg)) {
+            return;
+        }
+
+        try {
+            const responseText = await PostJSON('/Administrator/ConfirmBankTransferPayment', {
+                orderId: orderId,
+                transactionCode: transactionCode,
+                transferNote: transferNote,
+                transferAmount: totalAmount
+            });
+
+            const response = JSON.parse(responseText);
+            if (response.success) {
+                alert('✅ Đã xác nhận thanh toán thành công!\n\nĐơn hàng đã chuyển sang trạng thái ĐÃ THANH TOÁN.');
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + response.message);
+            }
+        } catch (error) {
+            alert('❌ Có lỗi xảy ra. Vui lòng thử lại.');
+            console.error(error);
+        }
+    }
+
+    // Cancel order
+    async function cancelOrder(orderId) {
+        if (!confirm('Hủy đơn hàng này?\n\nĐơn hàng sẽ chuyển sang trạng thái HỦY.')) {
+            return;
+        }
+
+        try {
+            const responseText = await PostJSON('/Administrator/CancelOrder', { orderId: orderId });
+
+            const response = JSON.parse(responseText);
+            if (response.success) {
+                alert('✅ Đã hủy đơn hàng!');
+                location.reload();
+            } else {
+                alert('❌ Lỗi: ' + response.message);
+            }
+        } catch (error) {
+            alert('❌ Có lỗi xảy ra. Vui lòng thử lại.');
+            console.error(error);
+        }
+    }
+</script>

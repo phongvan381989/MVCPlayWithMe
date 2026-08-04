@@ -3,6 +3,7 @@ using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.SanPhamModel;
 using MySqlConnector;
 using Newtonsoft.Json;
@@ -283,7 +284,7 @@ namespace MVCPlayWithMe.Controllers
             Customer cus = await AuthentCustomerAsync();
             List<Cart> ls = null;
             // Đọc cart từ request body (JSON)
-            List<Cart>  lslocalStorage = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
+            List<Cart> lslocalStorage = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
             if (cus!= null)
             {
                 // Khách đăng nhập - đọc từ DB
@@ -313,54 +314,34 @@ namespace MVCPlayWithMe.Controllers
 
         public ActionResult Cart()
         {
-            ViewData["title"] = "Giỏ hàng";
+            ViewData["title"] = "Giỏ Hàng";
             return View();
         }
 
-        // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
-        // giảm giá thêm: giảm giá cho khách quen, giảm giá cho đơn lơn hơn 500k,...
-        // cart: encode base64
         [HttpPost]
         public async Task<string> CheckoutPageLoadCart()
         {
-            Customer cus = await AuthentCustomerAsync();
-            List<Cart> ls = null;
             // Đọc cart từ request body (JSON)
             List<Cart> lslocalStorage = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
-            if (cus != null)
-            {
-                // Khách đăng nhập - đọc từ DB
-                ls = await OrderMySql.GetListCartAsync(cus.id);
+            await OrderMySql.GetCartsSanPhamBasicInfoAsync(lslocalStorage);
 
-                // Tìm sản phẩm được chọn mua
-                foreach (Cart cart in lslocalStorage)
-                {
-                    foreach (Cart cartDb in ls)
-                    {
-                        if (cart.sanPhamId == cartDb.sanPhamId)
-                        {
-                            cartDb.real = cart.real;
-                            break;
-                        }
-                    }
-                }
-            }
-            else
-            {
-                ls = lslocalStorage;
-            }
-            // Không cập nhật lại số lượng trong cart vào db dù trong kho tồn tại ít hơn, chỉ cập nhật ở hiện thị
-            await OrderMySql.GetCartsSanPhamBasicInfoAsync(ls);
-
-            return JsonConvert.SerializeObject(ls);
+            return JsonConvert.SerializeObject(lslocalStorage);
         }
 
         // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
         // giảm giá thêm: giảm giá cho khách quen, giảm giá cho đơn lơn hơn 500k,...
-        // cart: encode base64
-        public ActionResult Checkout(string cart)
+
+        public async Task<ActionResult> Checkout()
         {
-            ViewData["title"] = "Thông tin đơn hàng trước khi mua";
+            ViewData["title"] = "Thanh Toán";
+
+            // Load bank account info để hiển thị cho payment method = BANK_TRANSFER
+            var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
+            ViewBag.BankAccount = bankAccount;
+
+            // Pass orderDeadline để hiển thị hạn thanh toán
+            ViewBag.OrderDeadline = Common.orderDeadline;
+
             return View();
         }
 
@@ -372,131 +353,577 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Check id model đúng, check số lượng cần mua có đủ, check giá bìa, giá bán thực tế có chính xác
-        private async Task<MySqlResultState> CheckCartAsync(List<Cart> ls)
+        /// <summary>
+        /// LAYER 1: Validate từng sản phẩm trong giỏ hàng
+        /// - Kiểm tra sản phẩm có tồn tại
+        /// - Kiểm tra GIÁ từ client vs DB (CRITICAL - chống hack giá!)
+        /// - Kiểm tra số lượng tồn kho
+        /// </summary>
+        private void CheckCartValidation(
+            List<Cart> cartListFromClient,
+            List<SanPhamBasicInfo> SanPhamBasicInfos,
+            string messageWhenValidationFail,
+            MySqlResultState result)
         {
-            MySqlResultState result = new MySqlResultState();
-            int length = ls.Count();
-            if (length == 0)
+            // Với tồn kho không còn đủ, kiểm tra cả danh sách
+            string notEnought = string.Empty;
+            // Validate từng sản phẩm
+            foreach (var cart in cartListFromClient)
             {
-                result.State = EMySqlResultState.EMPTY;
-                result.Message = "Giỏ hàng trống.";
-                MyLogger.GetInstance().Warn("result: " + JsonConvert.SerializeObject(result));
-                return result;
+                // 1. LẤY THÔNG TIN THẬT TỪ DATABASE (KHÔNG TIN CLIENT!)
+                SanPhamBasicInfo sanPhamFromDb = SanPhamBasicInfos.Find(item=>item.Id == cart.sanPhamId);
+
+                if (sanPhamFromDb == null)
+                {
+                    result.State = EMySqlResultState.DONT_EXIST;
+                    result.Message = "Thông tin giỏ hàng đã thay đổi. Vui lòng tải lại trang.";
+                    MyLogger.GetInstance().Warn($"⚠️ PRODUCT NOT FOUND - SanPhamId={cart.sanPhamId}");
+                    return;
+                }
+
+                // 2. VALIDATE GIÁ bán (CRITICAL - CHỐNG HACK!)
+                if (cart.sanPhamBasicInfo == null ||
+                    cart.sanPhamBasicInfo.SalePrice == null ||
+                    cart.sanPhamBasicInfo.SalePrice != sanPhamFromDb.SalePrice)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = messageWhenValidationFail;
+
+                    // Log chi tiết để admin phát hiện hack attempt
+                    MyLogger.GetInstance().Warn($"🚨 PRICE MISMATCH DETECTED!");
+                    MyLogger.GetInstance().Warn($"   SanPhamId: {cart.sanPhamId}");
+                    MyLogger.GetInstance().Warn($"   SanPham: {sanPhamFromDb.Name}");
+                    MyLogger.GetInstance().Warn($"   Client Price: {cart.sanPhamBasicInfo.SalePrice:N0}đ");
+                    MyLogger.GetInstance().Warn($"   DB Price: {sanPhamFromDb.SalePrice:N0}đ");
+                    MyLogger.GetInstance().Warn($"   Difference: {Math.Abs(cart.sanPhamBasicInfo.SalePrice - sanPhamFromDb.SalePrice):N0}đ");
+                    MyLogger.GetInstance().Warn("client cart: " + JsonConvert.SerializeObject(cart));
+                    MyLogger.GetInstance().Warn("sanPhamFromDb : " + JsonConvert.SerializeObject(sanPhamFromDb));
+
+                    return; // CHẶN NGAY!
+                }
+                // KHông check giá bìa vì không ảnh hưởng
+
+                // 3. VALIDATE SỐ LƯỢNG TỒN KHO
+                if (sanPhamFromDb.Quantity < cart.quantity)
+                {
+                    //result.State = EMySqlResultState.OVER_MAX;
+                    //result.Message = $"'{sanPhamFromDb.Name}' chỉ còn {sanPhamFromDb.Quantity} sản phẩm. Vui lòng chọn lại.";
+                    notEnought = notEnought + $"'{sanPhamFromDb.Name}' chỉ còn {sanPhamFromDb.Quantity} sản phẩm.\n";
+
+                    MyLogger.GetInstance().Warn($"⚠️ INSUFFICIENT STOCK - {sanPhamFromDb.Name}");
+                    MyLogger.GetInstance().Warn($"   Requested: {cart.quantity}, Available: {sanPhamFromDb.Quantity}");
+                    MyLogger.GetInstance().Warn("client cart: " + JsonConvert.SerializeObject(cart));
+                    MyLogger.GetInstance().Warn("sanPhamFromDb : " + JsonConvert.SerializeObject(sanPhamFromDb));
+                }
+
+                // 4. (Optional) Validate sản phẩm còn kinh doanh
+                if (sanPhamFromDb.Status != 0) // Ngừng kinh doanh
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = $"Sản phẩm '{sanPhamFromDb.ShortName ?? sanPhamFromDb.Name}' đã ngừng kinh doanh.";
+                    MyLogger.GetInstance().Warn($"⚠️ PRODUCT DISCONTINUED - {sanPhamFromDb.Name}");
+                    MyLogger.GetInstance().Warn("client cart: " + JsonConvert.SerializeObject(cart));
+                    MyLogger.GetInstance().Warn("sanPhamFromDb : " + JsonConvert.SerializeObject(sanPhamFromDb));
+
+                    return;
+                }
+
+                // Validate tên sản phẩm
+                if(sanPhamFromDb.Name != cart.sanPhamBasicInfo.Name)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = messageWhenValidationFail;
+
+                    // Log chi tiết để admin phát hiện hack attempt
+                    MyLogger.GetInstance().Warn($"🚨 NAME MISMATCH DETECTED!");
+                    MyLogger.GetInstance().Warn($"   SanPham DB Name: {sanPhamFromDb.Name}");
+                    MyLogger.GetInstance().Warn($"   SanPham client Name: {cart.sanPhamBasicInfo.Name}");
+                    MyLogger.GetInstance().Warn("client cart: " + JsonConvert.SerializeObject(cart));
+                    MyLogger.GetInstance().Warn("sanPhamFromDb : " + JsonConvert.SerializeObject(sanPhamFromDb));
+
+                    return;
+                }
             }
 
-            List<Cart> lsTemp = new List<Cart>();
-            for (int i = 0; i < length; i++)
+            if (!string.IsNullOrEmpty(notEnought))
             {
-                var cart = ls[i];
-                //lsTemp.Add(new Cart(cart.id, cart.q, cart.real));
+                result.State = EMySqlResultState.OVER_MAX;
+                result.Message = $"{notEnought} Vui lòng chọn lại.";
+                return;
             }
 
-            // Lấy dữ liệu mới nhất
-            await OrderMySql.GetCartsSanPhamBasicInfoAsync(lsTemp);
-            int indexWarning = 0;
-            for (int i = 0; i < length; i++)
-            {
-                var cart = ls[i];
-                var cartTemp = lsTemp[i];
-
-                //// Check id model đúng
-                //if (cartTemp.itemId == 0)
-                //{
-                //    result.State = EMySqlResultState.ERROR;
-                //    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
-                //        " không lấy được thông tin. Vui lòng tải lại trang và kiểm tra";
-                //    indexWarning = i;
-                //    break;
-                //}
-
-                //// Check số lượng cần mua có đủ
-                //if (cartTemp.q < cart.q)
-                //{
-                //    result.State = EMySqlResultState.OVER_MAX;
-                //    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
-                //        " số lượng tồn kho không đủ. Vui lòng chọn lại";
-                //    indexWarning = i;
-                //    break;
-                //}
-
-                //// Check giá thực tế có đúng
-                //if (cartTemp.price != cart.price)
-                //{
-                //    result.State = EMySqlResultState.ERROR;
-                //    result.Message = "Sản phẩm: " + cart.itemName + " - " + cart.modelName +
-                //        " giá không đúng. Vui lòng tải lại trang và kiểm tra";
-                //    indexWarning = i;
-                //    break;
-                //}
-            }
-
-            if (result.State != EMySqlResultState.OK)
-            {
-                MyLogger.GetInstance().Warn("cart web sent to server: " + JsonConvert.SerializeObject(ls[indexWarning]));
-                MyLogger.GetInstance().Warn("cart get from db to check: " + JsonConvert.SerializeObject(lsTemp[indexWarning]));
-                MyLogger.GetInstance().Warn("result: " + JsonConvert.SerializeObject(result));
-            }
-            return result;
+            MyLogger.GetInstance().Info($"✅ CheckCartAsync PASSED - {cartListFromClient.Count} items validated");
         }
 
+        private void CheckMoneyValidation(List<OrderPay> lsOrderPay,
+            int totalMoney,
+            int shipFee,
+            int shipFeeDiscount,
+            int totalMoneyDiscount,
+            int finalAmount,
+            string messageWhenValidationFail,
+            MySqlResultState result
+            )
+        {
+            // So sánh tổng tiền hàng
+            if (totalMoney != (lsOrderPay.Find(x => x.type == (int)EPayType.TOTAL)?.value ?? 581989))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = messageWhenValidationFail;
+                MyLogger.GetInstance().Warn($"🚨 total money MISMATCH!");
+                MyLogger.GetInstance().Warn($"🚨 total money from DB: " + totalMoney);
+
+                return;
+            }
+
+            // So sánh phí ship
+            if (shipFee != (lsOrderPay.Find(x => x.type == (int)EPayType.SHIP)?.value ?? 581989))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = messageWhenValidationFail;
+                MyLogger.GetInstance().Warn($"🚨 ship fee MISMATCH!");
+                MyLogger.GetInstance().Warn($"🚨 ship fee from DB: " + shipFee);
+
+                return;
+            }
+
+            // So sánh giảm giá phí ship
+            if (shipFeeDiscount != (lsOrderPay.Find(x => x.type == (int)EPayType.PROMOTION && x.orderSimplePromotion.Type == (int)EOrderSimplePromotionType.SHIP_DISCOUNT)?.value ?? 581989))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = messageWhenValidationFail;
+                MyLogger.GetInstance().Warn($"🚨 ship fee discount MISMATCH!");
+                MyLogger.GetInstance().Warn($"🚨 ship fee discount from DB: " + shipFeeDiscount);
+
+                return;
+            }
+
+            // So sánh giảm giá tổng tiền hàng theo bậc 100k
+            if (totalMoneyDiscount != (lsOrderPay.Find(x => x.type == (int)EPayType.PROMOTION && x.orderSimplePromotion.Type == (int)EOrderSimplePromotionType.TOTAL_DISCOUNT)?.value ?? 581989))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = messageWhenValidationFail;
+                MyLogger.GetInstance().Warn($"🚨 total money discount MISMATCH!");
+                MyLogger.GetInstance().Warn($"🚨 total money discount from DB: " + totalMoneyDiscount);
+            }
+
+            // So sánh thanh toán cuối cùng
+            if (finalAmount != (lsOrderPay.Find(x => x.type == (int)EPayType.FINAL)?.value ?? 581989))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = messageWhenValidationFail;
+                MyLogger.GetInstance().Warn($"🚨 final amount MISMATCH!");
+                MyLogger.GetInstance().Warn($"🚨 final amount from DB: " + finalAmount);
+            }
+        }
+        // Tạo lsOrderPayFromDb
+        private List<OrderPay> CaculateListOrderPay(
+            int newOrderId,
+            int totalMoney,
+            int shipFee,
+            int shipFeeDiscount,
+            int totalMoneyDiscount,
+            int finalAmount,
+            List<OrderSimplePromotion> promotions
+            )
+        {
+            List<OrderPay> lsOrderPayFromDb = new List<OrderPay>();
+            lsOrderPayFromDb.Add(new OrderPay { type = (int)EPayType.TOTAL, value = totalMoney, orderId = newOrderId });
+            lsOrderPayFromDb.Add(new OrderPay { type = (int)EPayType.SHIP, value = shipFee, orderId = newOrderId });
+
+            // Khuyến mãi giảm phí ship
+            {
+                OrderPay orderPay = new OrderPay { type = (int)EPayType.PROMOTION, value = shipFeeDiscount, orderId = newOrderId };
+                orderPay.orderSimplePromotion = promotions.Find(item => item.Type == (int)EOrderSimplePromotionType.SHIP_DISCOUNT);
+
+                lsOrderPayFromDb.Add(orderPay);
+            }
+
+            // Khuyến mãi giảm tổng tiền hàng
+            {
+                OrderPay orderPay = new OrderPay { type = (int)EPayType.PROMOTION, value = totalMoneyDiscount, orderId = newOrderId };
+                orderPay.orderSimplePromotion = promotions.Find(item => item.Type == (int)EOrderSimplePromotionType.TOTAL_DISCOUNT);
+
+                lsOrderPayFromDb.Add(orderPay);
+            }
+
+            lsOrderPayFromDb.Add(new OrderPay { type = (int)EPayType.FINAL, value = finalAmount, orderId = newOrderId });
+            return lsOrderPayFromDb;
+        }
+
+        private async Task<string> RoolBackWhenOrderError(MySqlTransaction transaction, MySqlResultState result)
+        {
+            // ROLLBACK nếu có lỗi
+            await transaction.RollbackAsync();
+            result.Message = "Không tạo được đơn hàng. Vui lòng thử lại sau.";
+            return JsonConvert.SerializeObject(result);
+        }
+
+        private async Task GetSanPhamBasicInfosFromDBAsync(
+            List<SanPhamBasicInfo> sanPhamBasicInfos,
+            List<Cart> lsBuyedCart,
+            MySqlResultState result
+            )
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    foreach (var cartItem in lsBuyedCart)
+                    {
+                        // Lấy giá THẬT từ DB (lần nữa để double-check)
+                        SanPhamBasicInfo sanPham = await SanPhamMySql.GetSanPhamBasicInfo_ConnectOutAsync(cartItem.sanPhamId, conn);
+                        if (sanPham != null)
+                        {
+                            sanPhamBasicInfos.Add(sanPham);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+        }
+
+        // 1. TÍNH LẠI TỔNG TIỀN HÀNG TỪ DATABASE
+        private void CalculateMoneyFromDB(
+            List<Cart> lsBuyedCart,
+            List<SanPhamBasicInfo> sanPhamBasicInfos,
+            List<OrderSimplePromotion> promotions,
+            Address cusInfor,
+            ref int totalMoney,
+            ref int shipFee,
+            ref int shipFeeDiscount,
+            ref int totalMoneyDiscount,
+            ref int finalAmount,
+            MySqlResultState result
+            )
+        {
+            // 1. TÍNH LẠI TỔNG TIỀN HÀNG TỪ DATABASE
+            totalMoney = 0;
+            foreach (var cartItem in lsBuyedCart)
+            {
+                // Lấy giá THẬT từ DB (lần nữa để double-check)
+                SanPhamBasicInfo sanPhamFromDb = sanPhamBasicInfos.Find(item => item.Id == cartItem.sanPhamId);
+                totalMoney += sanPhamFromDb.SalePrice * cartItem.quantity;
+            }
+
+            // 2. TÍNH LẠI PHÍ SHIP TỪ DATABASE
+            shipFee = 0;
+            if (cusInfor.province.Contains("Hà Nội"))
+            {
+                shipFee = Common.standardShipFeeInHaNoi; // 15,000đ
+            }
+            else
+            {
+                shipFee = Common.standardShipFeeOutHaNoi; // 30,000đ
+            }
+
+            // 3. TÍNH LẠI DISCOUNT TỪ DATABASE (truyền shipFee để tính Type 0 - Free Ship)
+            // Tách riêng 2 loại giảm giá (giống client để dễ so sánh)
+            shipFeeDiscount = 0;      // Giảm phí ship (Type = 0)
+            totalMoneyDiscount = 0;    // Giảm tổng tiền hàng (Type = 1)
+
+            try
+            {
+                foreach (var promo in promotions)
+                {
+                    if (promo.Type == (int)(int)EOrderSimplePromotionType.SHIP_DISCOUNT)
+                    {
+                        // ===== TYPE 0: MIỄN PHÍ SHIP =====
+                        // Điều kiện: totalMoney >= MinOrderValue (giống client)
+                        // Giảm giá = shipFee (KHÔNG phải promo.Discount!)
+
+                        if (totalMoney >= promo.MinOrderValue)
+                        {
+                            shipFeeDiscount = shipFee * -1; // ← Giảm bằng phí ship (giống client!)
+                            //break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
+                        }
+                    }
+                    else if (promo.Type == (int)EOrderSimplePromotionType.TOTAL_DISCOUNT)
+                    {
+                        // ===== TYPE 1: GIẢM THEO BẬC 100K =====
+                        // Điều kiện: totalMoney >= MinOrderValue (STRICT >=, giống client)
+                        // Công thức: ((totalMoney - MinOrderValue) / 100,000 + 1) × Discount
+
+                        if (totalMoney >= promo.MinOrderValue)  // ← STRICT >= (giống client!)
+                        {
+                            int extraAmount = totalMoney - promo.MinOrderValue;
+                            int multiplier = (extraAmount / 100000) + 1;
+                            totalMoneyDiscount = multiplier * promo.Discount * -1;
+                            //break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
+                        }
+                    }
+                }
+                finalAmount = totalMoney + shipFee + shipFeeDiscount + totalMoneyDiscount;
+                // Log breakdown để dễ debug
+                //{
+                //    MyLogger.GetInstance().Info($"Discount breakdown - Total: {totalMoney:N0}đ, ShipFee: {shipFee:N0}đ");
+                //    if (shipFeeDiscount > 0)
+                //        MyLogger.GetInstance().Info($"  ✓ Free ship discount: {shipFeeDiscount:N0}đ");
+                //    if (totalMoneyDiscount > 0)
+                //        MyLogger.GetInstance().Info($"  ✓ Total money discount: {totalMoneyDiscount:N0}đ");
+                //}
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+        }
         // Cần kiểm tra vì khách có thể f12 trên web, sửa javascipt, html
         [HttpPost]
         public async Task<string> CheckOrderOnSever(string cart, string customerInfor,
-            string listOrderPay, string noteToShop)
+            string listOrderPay, string noteToShop, SByte paymentMethod)
         {
-            MySqlResultState result = null;
+            MyLogger.GetInstance().Info("CheckOrderOnSever START");
+            MyLogger.GetInstance().Info("cart: " + cart);
+            MyLogger.GetInstance().Info("customerInfor: " + customerInfor);
+            MyLogger.GetInstance().Info("listOrderPay: " + listOrderPay);
+
+            MySqlResultState result = new MySqlResultState();
             List<Cart> lsBuyedCart = JsonConvert.DeserializeObject<List<Cart>>(cart);
             Address cusInfor = JsonConvert.DeserializeObject<Address>(customerInfor);
             List<OrderPay> lsOrderPay = JsonConvert.DeserializeObject<List<OrderPay>>(listOrderPay);
 
-            // Kiểm tra cart
-            result = await CheckCartAsync(lsBuyedCart);
+            if (lsBuyedCart == null || lsBuyedCart.Count == 0)
+            {
+                result.State = EMySqlResultState.EMPTY;
+                result.Message = "Giỏ hàng trống.";
+                MyLogger.GetInstance().Warn("CheckCartAsync: Giỏ hàng trống");
+                return JsonConvert.SerializeObject(result);
+            }
+
+            // Lấy dữ liệu từ db 1 lần để so sánh
+            // Lấy tất cả promotion đang bật
+            List<OrderSimplePromotion> promotions = await OrderSimplePromotionMySql.GetActivePromotionsAsync();
+
+            List<SanPhamBasicInfo> sanPhamBasicInfos = new List<SanPhamBasicInfo>();
+            await GetSanPhamBasicInfosFromDBAsync(sanPhamBasicInfos, lsBuyedCart, result);
             if (result.State != EMySqlResultState.OK)
             {
                 return JsonConvert.SerializeObject(result);
             }
 
-            // Với khách đăng nhập
-            Customer cus = await AuthentCustomerAsync();
-
-            // insert order
-            int orderId;
-            if (cus != null)
-                orderId = await OrderMySql.AddOrderAsync(cus.id, noteToShop, 0, cusInfor);
-            else
-                orderId = await OrderMySql.AddOrderAsync(-1, noteToShop, 0, cusInfor);
-
-            if (orderId == -1)
+            if (sanPhamBasicInfos.Count == 0)
             {
                 result.State = EMySqlResultState.ERROR;
-                result.Message = "Không tạo được đơn hàng.";
+                result.Message = "Thông tin giỏ hàng đã thay đổi. Vui lòng tải lại trang.";
+
+                MyLogger.GetInstance().Warn($"🚨 Cant get SanPhamBasicInfos from DB. SanPhamBasicInfos.Count == 0");
                 return JsonConvert.SerializeObject(result);
             }
 
-            // khách vãng lai ta thêm order id vào cookie
-            if (cus == null)
+            string messageWhenValidationFail = "Thông tin giỏ hàng đã thay đổi. Vui lòng tải lại trang.";
+            // ===== LAYER 1: VALIDATE TỪNG SẢN PHẨM =====
+            CheckCartValidation(lsBuyedCart, sanPhamBasicInfos, messageWhenValidationFail, result);
+            if (result.State != EMySqlResultState.OK)
             {
-                Cookie.SetOrderListCookie(HttpContext, orderId);
+                return JsonConvert.SerializeObject(result);
             }
 
-            if (cus != null)
+            // ===== LAYER 2: TÍNH LẠI VÀ VALIDATE TỔNG TIỀN =====
+            // KHÔNG TIN DỮ LIỆU TỪ CLIENT - Tính lại hoàn toàn từ DB!
+
+            // 1. TÍNH LẠI TIỀN TỪ DATABASE
+            int totalMoney = 0;
+
+            // 2. TÍNH LẠI PHÍ SHIP TỪ DATABASE
+            int shipFee = 0;
+
+            // 3. TÍNH LẠI DISCOUNT TỪ DATABASE (truyền shipFee để tính Type 0 - Free Ship)
+            // Tách riêng 2 loại giảm giá (giống client để dễ so sánh)
+            int shipFeeDiscount = 0;      // Giảm phí ship (Type = 0)
+            int totalMoneyDiscount = 0;    // Giảm tổng tiền hàng (Type = 1)
+            int finalAmount = 0;// Tổng tiền thanh toán cuối cùng (totalMoney + shipFee + shipFeeDiscount + totalMoneyDiscount)
+
+            CalculateMoneyFromDB(lsBuyedCart, sanPhamBasicInfos, promotions, cusInfor,
+                ref totalMoney, ref shipFee, ref shipFeeDiscount, ref totalMoneyDiscount, ref finalAmount, result);
+
+
+            CheckMoneyValidation(lsOrderPay, totalMoney, shipFee, shipFeeDiscount,
+                totalMoneyDiscount, finalAmount, messageWhenValidationFail, result);
+            if (result.State != EMySqlResultState.OK)
             {
-                // Xóa sản phẩm trong đơn hàng khỏi cart
-                result = await OrderMySql.DeleteListCartAsync(cus.id, lsBuyedCart);
-                if (result.State != EMySqlResultState.OK)
+                return JsonConvert.SerializeObject(result);
+            }
+
+            // ===== TẤT CẢ VALIDATION PASSED - TIẾP TỤC TẠO ĐƠN HÀNG =====
+
+            // Với khách đăng nhập
+            Customer cus = await AuthentCustomerAsync();
+            int customerId = cus != null ? cus.id : -1;
+
+            int newOrderId = -1;
+
+            // danh sách (sanPhamId, quantity) cần trừ tồn kho tb_san_pham
+            var sanPhamQuantities = lsBuyedCart.Select(c => (c.sanPhamId, c.quantity)).ToList();
+
+            // Lấy danh sách (productId, quantity) cần trừ tồn kho tbProducts
+            var productIdQuantities = await SanPhamMappingMySql.GetListProductIdQuantity_ConnectOutAsync(sanPhamQuantities);
+
+            // Sinh mã đơn hàng unique
+            string orderCode = string.Empty;
+            try
+            {
+                orderCode = await OrderCodeSequenceMySql.GenerateUniqueOrderCodeAsync();
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+                return JsonConvert.SerializeObject(result);
+            }
+
+            // VietQR URL (chỉ generate khi payment = BANK_TRANSFER)
+            string qrCodeUrl = null;
+            MVCPlayWithMe.Models.BankAccount.BankAccount bankAccount = null;
+
+            // Sau khi check thông tin đơn hàng chính xác
+            if (paymentMethod == (int)EPaymentMethod.BANK_TRANSFER)
+            {
+                // Lấy bank account và generate VietQR với OrderCode
+                bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
+
+                if (bankAccount != null)
                 {
-                    return JsonConvert.SerializeObject(result);
+                    // Generate VietQR URL
+                    qrCodeUrl = bankAccount.GenerateVietQR(
+                        amount: finalAmount,
+                        orderCode: orderCode,
+                        template: "compact2"
+                    );
+
+                    MyLogger.GetInstance().Info($"🏦 Generated VietQR: {qrCodeUrl}");
                 }
             }
 
-            // insert track order
-            await OrderMySql.AddTrackOrderAsync(orderId, 0);
+            // Start TRANSACTION
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
 
-            // insert detail order
-            await OrderMySql.AddDetailOrderAsync(orderId, lsBuyedCart);
+                using (MySqlTransaction transaction = await conn.BeginTransactionAsync())
+                {
+                    try
+                    {
+                        // 2. Insert Order
+                        result = await OrderMySql.AddOrderTransactionAsync(conn, transaction,
+                            customerId, noteToShop, (SByte)EOrderFrom.VOI_BE_NHO, orderCode,
+                            (SByte)EOrderStatus.PROCESSED,
+                            (SByte)EOrderPayStatus.PENDING,
+                            paymentMethod,
+                            DateTime.Now.AddHours(Common.orderDeadline), cusInfor);
 
-            // insert pay order
-            await OrderMySql.AddPayOrderAsync(orderId, lsOrderPay);
+                        if(result.State != EMySqlResultState.OK)
+                        {
+                            return await RoolBackWhenOrderError(transaction, result);
+                        }
+                        newOrderId = result.myAnything;
+
+                        // KHÔNG CẦN: Insert theo trigger mysql
+                        //// 3. Insert OrderTrack
+                        //result = await OrderMySql.AddTrackOrderTransactionAsync(conn, transaction, newOrderId, (int)EOrderStatus.PROCESSED);
+                        //if (result.State != EMySqlResultState.OK)
+                        //{
+                        //    return await RoolBackWhenOrderError(transaction, result);
+                        //}
+
+                        // 4. Insert OrderDetail
+                        result = await OrderMySql.AddDetailOrderTransactionAsync(conn, transaction, newOrderId, lsBuyedCart);
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            return await RoolBackWhenOrderError(transaction, result);
+                        }
+
+                        // 4.5. Trừ số lượng sản phẩm trong tb_san_pham
+                        result = await SanPhamMySql.UpdateQuantityAfterSaleTransactionAsync(conn, transaction, sanPhamQuantities);
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            return await RoolBackWhenOrderError(transaction, result);
+                        }
+
+                        // Temporary comments
+                        // 4.6. Trừ số lượng sản phẩm trong tbProducts
+                        //result = await ProductMySql.UpdateQuantityAfterSaleVBNTransactionAsync(conn, transaction, productIdQuantities);
+                        //if (result.State != EMySqlResultState.OK)
+                        //{
+                        //    return await RoolBackWhenOrderError(transaction, result);
+                        //}
+
+                        // 5. Tạo list OrderPay
+                        List<OrderPay> lsOrderPayFromDb = CaculateListOrderPay(newOrderId,
+                            totalMoney,
+                            shipFee,
+                            shipFeeDiscount,
+                            totalMoneyDiscount,
+                            finalAmount,
+                            promotions);
+
+                        // 6. Insert OrderPay
+                        result = await OrderMySql.AddPayOrderTransactionAsync(conn, transaction, newOrderId, lsOrderPayFromDb);
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            return await RoolBackWhenOrderError(transaction, result); ;
+                        }
+
+                        // Xóa sản phẩm khỏi cart
+                        if (cus != null)
+                        {
+                            result = await OrderMySql.DeleteListCartTransactionAsync(conn, transaction, cus.id, lsBuyedCart);
+                            if (result.State != EMySqlResultState.OK)
+                            {
+                                return await RoolBackWhenOrderError(transaction, result);
+                            }
+                        }
+
+                        // COMMIT TRANSACTION - Tất cả insert thành công
+                        await transaction.CommitAsync();
+                        MyLogger.GetInstance().Info($"🎉 Transaction committed successfully! OrderId={newOrderId}, OrderCode={orderCode}");
+
+                        result.State = EMySqlResultState.OK;
+                        result.Message = orderCode;
+                        result.myAnything = newOrderId;
+                    }
+                    catch (Exception ex)
+                    {
+                        // ROLLBACK nếu có lỗi
+                        await transaction.RollbackAsync();
+                        MyLogger.GetInstance().Error($"❌ Transaction rollback: {ex.Message}\n{ex.StackTrace}");
+
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Không tạo được đơn hàng. Vui lòng thử lại sau.";
+                        return JsonConvert.SerializeObject(result);
+                    }
+                }
+            }
+            // End TRANSACTION
+
+            // Trả về OrderCode trong result.Message, OrderId trong result.myAnything
+            MyLogger.GetInstance().Info($"✅ CheckOrderOnSever DONE! OrderID={newOrderId}, OrderCode={orderCode}");
+
+            // Nếu thanh toán bằng chuyển khoản, return thêm QR code info
+            if (paymentMethod == (int)EPaymentMethod.BANK_TRANSFER && qrCodeUrl != null)
+            {
+                var responseWithQR = new
+                {
+                    State = (int)result.State,
+                    Message = result.Message,  // OrderCode
+                    OrderId = newOrderId,
+                    PaymentMethod = paymentMethod,
+                    QRCodeUrl = qrCodeUrl,
+                    BankAccount = new
+                    {
+                        bankAccount.BankName,
+                        bankAccount.AccountNumber,
+                        bankAccount.AccountHolder,
+                        bankAccount.Branch
+                    },
+                    TotalAmount = finalAmount
+                };
+
+                return JsonConvert.SerializeObject(responseWithQR);
+            }
 
             return JsonConvert.SerializeObject(result);
         }
@@ -631,6 +1058,27 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// API lấy danh sách promotion đang hoạt động (Status = 0)
+        /// </summary>
+        /// <returns>JSON array của OrderSimplePromotion</returns>
+        [HttpPost]
+        public async Task<string> GetActiveOrderSimplePromotions()
+        {
+            // Không cần check đăng nhập, vì promotion áp dụng cho tất cả khách hàng
+
+            try
+            {
+                List<OrderSimplePromotion> promotions = await OrderSimplePromotionMySql.GetActivePromotionsAsync();
+                return JsonConvert.SerializeObject(promotions);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetActiveOrderSimplePromotions failed: {ex.Message}");
+                return "[]"; // Trả về mảng rỗng nếu có lỗi
+            }
         }
     }
 }

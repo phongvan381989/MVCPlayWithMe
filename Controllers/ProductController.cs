@@ -3050,10 +3050,10 @@ namespace MVCPlayWithMe.Controllers
             }
 
             CommonItem item = await CommonItem.CommonItemFromShopeeGetItemBaseInfoItemAsync (pro);
-            int itemIdInserted = await ShopeeMySql.InserttbShopeeItemAsync(item, conn);
+            long itemIdInserted = await ShopeeMySql.InserttbShopeeItemAsync(item, conn);
 
             // Vì chỉ có 1 model
-            int modelIdInsert = await ShopeeMySql.InserttbShopeeModelAsync(itemIdInserted, item.models[0], conn);
+            long modelIdInsert = await ShopeeMySql.InserttbShopeeModelAsync(itemIdInserted, item.models[0], conn);
 
             // Ta mapping
             await ShopeeMySql.ShopeeInsertNewMappingOneOfModelAsync(modelIdInsert, productId, 1, conn);
@@ -3639,10 +3639,10 @@ namespace MVCPlayWithMe.Controllers
             }
 
             CommonItem item = new CommonItem(pro);
-            int itemIdInserted = await LazadaMySql.InserttbLazadaItemAsync(item, conn);
+            long itemIdInserted = await LazadaMySql.InserttbLazadaItemAsync(item, conn);
 
             // Vì chỉ có 1 model
-            int modelIdInsert = await LazadaMySql.InserttbLazadaModelAsync(itemIdInserted, item.models[0], conn);
+            long modelIdInsert = await LazadaMySql.InserttbLazadaModelAsync(itemIdInserted, item.models[0], conn);
 
             // Ta mapping
             await LazadaMySql.LazadaInsertNewMappingOneOfModelAsync(modelIdInsert, productId, 1, conn);

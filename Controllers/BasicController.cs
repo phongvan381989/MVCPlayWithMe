@@ -202,6 +202,9 @@ namespace MVCPlayWithMe.Controllers
         public async Task<Customer> AuthentCustomerAsync()
         {
             CookieResultState cookieResult = Cookie.GetUserIdCookie(HttpContext);
+            if (string.IsNullOrEmpty(cookieResult.cookieValue))
+                return null;
+
             Customer customer = await CustomerMySql.GetCustomerFromCookieAsync(cookieResult.cookieValue);
             if (customer == null)
             {

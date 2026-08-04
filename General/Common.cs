@@ -1,30 +1,31 @@
-﻿using MVCPlayWithMe.Models;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.IO;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Web;
-using System.Web.Mvc;
-using System.Globalization;
-using RestSharp;
-using System.Drawing.Imaging;
-using System.Drawing;
-using System.Drawing.Drawing2D;
-using System.Windows.Media.Imaging;
-using System.Windows.Media;
-using System.Windows;
-using System.Threading;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+﻿using ImageMagick;
 using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
-using ImageMagick;
+using MVCPlayWithMe.Models;
+using MySqlConnector;
+using Newtonsoft.Json;
+using RestSharp;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Globalization;
+using System.IO;
+using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Mvc;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace MVCPlayWithMe.General
 {
@@ -38,6 +39,10 @@ namespace MVCPlayWithMe.General
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
         public static readonly string httpsVoiBeNho = "https://voibenho.com";
+
+        public static readonly string messageRetryLater = "Vui lòng thử lại sau.";
+
+        public static Int16 orderDeadline = 48; // 48 h sau khi đặt hàng mà khách chưa thanh toán thì đơn sẽ bị hủy 
 
         public static readonly JsonSerializerSettings jsonSerializersettings = new JsonSerializerSettings
         {
@@ -2679,5 +2684,55 @@ namespace MVCPlayWithMe.General
 
             return null;
         }
+
+        #region Order Code Generator
+
+        /// <summary>
+        /// Bộ ký tự cho mã đơn hàng (loại bỏ 0, 1, O, I để tránh nhầm lẫn khi đọc)
+        /// </summary>
+        private const string ORDER_CODE_CHARSET = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ";
+
+        /// <summary>
+        /// Random generator (thread-safe với lock)
+        /// </summary>
+        private static readonly Random _orderCodeRandom = new Random();
+        private static readonly object _orderCodeLock = new object();
+
+        /// <summary>
+        /// Sinh mã đơn hàng format: YYMMDDXXXXX
+        /// Ví dụ: "260731A3K9RA"
+        /// </summary>
+        /// <returns>Mã đơn hàng 12 ký tự</returns>
+        public static string GenerateOrderCode()
+        {
+            // YYMMDD (6 ký tự)
+            string datePrefix = DateTime.Now.ToString("yyMMdd");
+
+            // Random 6 ký tự từ ORDER_CODE_CHARSET
+            string randomPart = GenerateRandomOrderCodeString(6);
+
+            return $"{datePrefix}{randomPart}";
+        }
+
+        /// <summary>
+        /// Sinh chuỗi random từ ORDER_CODE_CHARSET (thread-safe)
+        /// </summary>
+        /// <param name="length">Độ dài chuỗi random</param>
+        /// <returns>Chuỗi random gồm các ký tự trong ORDER_CODE_CHARSET</returns>
+        private static string GenerateRandomOrderCodeString(int length)
+        {
+            char[] result = new char[length];
+
+            lock (_orderCodeLock)
+            {
+                for (int i = 0; i < length; i++)
+                {
+                    result[i] = ORDER_CODE_CHARSET[_orderCodeRandom.Next(ORDER_CODE_CHARSET.Length)];
+                }
+            }
+
+            return new string(result);
+        }
+        #endregion
     }
 }

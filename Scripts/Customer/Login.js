@@ -41,10 +41,7 @@
 async function SyncGuestDataToServer() {
     try {
         // 1. Collect guest cart từ localStorage
-        let guestCart = null;
-        if (typeof CartManager !== 'undefined') {
-            guestCart = CartManager.getCart();
-        }
+        let guestCart = CartManager.getCart();
 
         // 2. Collect guest addresses từ localStorage
         let guestAddresses = GetListCustomerInforFromLocalStorage();
@@ -74,9 +71,7 @@ async function SyncGuestDataToServer() {
 
         if (resObj.State === 0) {
             // 5. Clear localStorage sau khi sync thành công
-            if (typeof CartManager !== 'undefined') {
-                CartManager.clearCart();
-            }
+            CartManager.clearCart();
             DeleteAllCustomerInfor();
 
             console.log("✅ Synced guest cart + addresses to server");

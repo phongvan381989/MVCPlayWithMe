@@ -167,6 +167,94 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        /// <summary>
+        /// Đọc TINYINT (signed byte: -128 to 127) từ MySQL
+        /// </summary>
+        /// <param name="rdr">MySqlDataReader</param>
+        /// <param name="columnName">Tên cột</param>
+        /// <returns>sbyte value, hoặc -1 nếu NULL/error</returns>
+        public static sbyte GetSByte(MySqlDataReader rdr, string columnName)
+        {
+            if (Convert.IsDBNull(rdr[columnName]))
+                return -1;
+
+            try
+            {
+                return rdr.GetSByte(columnName);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetSByte failed for column '{columnName}': {ex.Message}");
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Overload: Đọc TINYINT từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        /// <param name="rdr">MySqlDataReader</param>
+        /// <param name="indexColumn">Column index (lấy từ rdr.GetOrdinal(columnName))</param>
+        /// <returns>sbyte value, hoặc -1 nếu NULL/error</returns>
+        public static sbyte GetSByte(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return -1;
+
+            try
+            {
+                return rdr.GetSByte(indexColumn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetSByte failed for column index {indexColumn}: {ex.Message}");
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Đọc TINYINT UNSIGNED (unsigned byte: 0 to 255) từ MySQL
+        /// </summary>
+        /// <param name="rdr">MySqlDataReader</param>
+        /// <param name="columnName">Tên cột</param>
+        /// <returns>byte value, hoặc 0 nếu NULL/error</returns>
+        public static byte GetByte(MySqlDataReader rdr, string columnName)
+        {
+            if (Convert.IsDBNull(rdr[columnName]))
+                return 0;
+
+            try
+            {
+                return rdr.GetByte(columnName);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetByte failed for column '{columnName}': {ex.Message}");
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Overload: Đọc TINYINT UNSIGNED từ column index
+        /// </summary>
+        /// <param name="rdr">MySqlDataReader</param>
+        /// <param name="indexColumn">Column index</param>
+        /// <returns>byte value, hoặc 0 nếu NULL/error</returns>
+        public static byte GetByte(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return 0;
+
+            try
+            {
+                return rdr.GetByte(indexColumn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetByte failed for column index {indexColumn}: {ex.Message}");
+                return 0;
+            }
+        }
+
         public static long GetInt64(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))
@@ -249,7 +337,29 @@ namespace MVCPlayWithMe.General
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn($"GetDateTime failed for column '{columnName}': {ex.Message}");
-                return DateTime.MinValue;
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Overload: Đọc DateTime từ column index (nhanh hơn khi đọc nhiều rows)
+        /// </summary>
+        /// <param name="rdr">MySqlDataReader</param>
+        /// <param name="indexColumn">Column index (lấy từ rdr.GetOrdinal(columnName))</param>
+        /// <returns>DateTime? value, hoặc null nếu NULL, DateTime.MinValue nếu error</returns>
+        public static DateTime? GetDateTime(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return null;
+
+            try
+            {
+                return rdr.GetDateTime(indexColumn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetDateTime failed for column index {indexColumn}: {ex.Message}");
+                return null;
             }
         }
 

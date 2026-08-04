@@ -43,11 +43,11 @@ namespace MVCPlayWithMe.Models.Order
         {
             order.id = MyMySql.GetInt32(rdr, "Id");
             order.customerId = MyMySql.GetInt32(rdr, "CustomerId");
-            order.address.name = MyMySql.GetString(rdr, "Name");
-            order.address.phone = MyMySql.GetString(rdr, "Phone");
-            order.address.province = MyMySql.GetString(rdr, "Province");
-            order.address.subdistrict = MyMySql.GetString(rdr, "SubDistrict");
-            order.address.detail = MyMySql.GetString(rdr, "Detail");
+            order.name = MyMySql.GetString(rdr, "Name");
+            order.phone = MyMySql.GetString(rdr, "Phone");
+            order.province = MyMySql.GetString(rdr, "Province");
+            order.subDistrict = MyMySql.GetString(rdr, "SubDistrict");
+            order.detail = MyMySql.GetString(rdr, "Detail");
             order.note = MyMySql.GetString(rdr, "Note");
             order.time = MyMySql.GetDateTime(rdr, "Time");
         }
@@ -65,24 +65,22 @@ namespace MVCPlayWithMe.Models.Order
         {
             pay.id = MyMySql.GetInt32(rdr, "Id");
             pay.orderId = MyMySql.GetInt32(rdr, "OrderId");
-            pay.promotionOrderId = MyMySql.GetInt32(rdr, "PromotionOrderId");
-            pay.type = (EPayType)MyMySql.GetInt32(rdr, "Type");
+            //pay.orderSimplePromoId = MyMySql.GetInt32(rdr, "OrderSimplePromoId");
+            pay.type = /*(EPayType)*/MyMySql.GetSByte(rdr, "Type");
             pay.value = MyMySql.GetInt32(rdr, "Value");
-            pay.SetStrType();
+            //pay.SetStrType();
         }
 
         private static void ReadOrderDetail(OrderDetail detail, MySqlDataReader rdr)
         {
             detail.id = MyMySql.GetInt32(rdr, "Id");
             detail.orderId = MyMySql.GetInt32(rdr, "OrderId");
-            detail.itemId = MyMySql.GetInt32(rdr, "ItemId");
-            detail.itemName = MyMySql.GetString(rdr, "ItemName");
-            detail.modelId = MyMySql.GetInt32(rdr, "ModelId");
-            detail.modelName = MyMySql.GetString(rdr, "ModelName");
+            detail.sanPhamId = MyMySql.GetInt32(rdr, "ItemId");
+            detail.name = MyMySql.GetString(rdr, "Name");
             detail.quantity = MyMySql.GetInt32(rdr, "Quantity");
             detail.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
             detail.price = MyMySql.GetInt32(rdr, "Price");
-            detail.SetImageSrc();
+            detail.SetImageSrc(); // Temporary 
         }
 
         // Lấy mapping của sản phẩm trong đơn hàng
@@ -223,7 +221,7 @@ namespace MVCPlayWithMe.Models.Order
 
         private static async Task GetOrderTrackConnectOutAsync(Order order, MySqlConnection conn)
         {
-            using (MySqlCommand cmd = new MySqlCommand("st_tbTrackOrder_Get_From_OrderId", conn))
+            using (MySqlCommand cmd = new MySqlCommand("st_tbOrderTrack_Get_From_OrderId", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inOrderId", order.id);
@@ -241,7 +239,7 @@ namespace MVCPlayWithMe.Models.Order
 
         private static async Task GetOrderPayConnectOutAsync(Order order, MySqlConnection conn)
         {
-            using (MySqlCommand cmd = new MySqlCommand("st_tbPayOrder_Get_From_OrderId", conn))
+            using (MySqlCommand cmd = new MySqlCommand("st_tbOrderPay_Get_From_OrderId", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inOrderId", order.id);
@@ -259,7 +257,7 @@ namespace MVCPlayWithMe.Models.Order
 
         private static async Task GetOrderDetailConnectOutAsync(Order order, MySqlConnection conn)
         {
-            using (MySqlCommand cmd = new MySqlCommand("st_tbDetailOrder_Get_From_OrderId", conn))
+            using (MySqlCommand cmd = new MySqlCommand("st_tbOrderDetail_Get_From_OrderId", conn))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 cmd.Parameters.AddWithValue("@inOrderId", order.id);
@@ -332,98 +330,216 @@ namespace MVCPlayWithMe.Models.Order
             return ls;
         }
 
-        public static async Task<int> AddOrderAsync(int customerId, string note, int isNotWeb, Address cusInfor)
+        public static async Task<MySqlResultState> AddOrderAsync(int customerId,
+            string note,
+            int from,
+            Address cusInfor)
         {
-            int id = -1;
+            MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 try
                 {
                     await conn.OpenAsync();
+
+                    // Sinh mã đơn hàng unique
+                    string orderCode = await OrderCodeSequenceMySql.GenerateUniqueOrderCodeAsync();
+
                     using (MySqlCommand cmd = new MySqlCommand("st_tbOrder_Insert", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                        if (cusInfor != null)
-                        {
-                            cmd.Parameters.AddWithValue("@inName", cusInfor.name);
-                            cmd.Parameters.AddWithValue("@inPhone", cusInfor.phone);
-                            cmd.Parameters.AddWithValue("@inProvince", cusInfor.province);
-                            cmd.Parameters.AddWithValue("@inSubDistrict", cusInfor.subdistrict);
-                            cmd.Parameters.AddWithValue("@inDetail", cusInfor.detail);
-                        }
-                        else
-                        {
-                            cmd.Parameters.AddWithValue("@inName", null);
-                            cmd.Parameters.AddWithValue("@inPhone", null);
-                            cmd.Parameters.AddWithValue("@inProvince", null);
-                            cmd.Parameters.AddWithValue("@inSubDistrict", null);
-                            cmd.Parameters.AddWithValue("@inDetail", null);
-                        }
-                        cmd.Parameters.AddWithValue("@inNote", note);
-                        cmd.Parameters.AddWithValue("@inIsNotWeb", isNotWeb);
+                        cmd.Parameters.Add("@inCustomerId", MySqlDbType.Int32).Value = customerId;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync())
-                            {
-                                id = MyMySql.GetInt32(rdr, "LastId");
-                            }
-                        }
+                        cmd.Parameters.Add("@inName", MySqlDbType.VarChar).Value = cusInfor.name;
+                        cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = orderCode;
+                        cmd.Parameters.Add("@inPhone", MySqlDbType.VarChar).Value = cusInfor.phone;
+                        cmd.Parameters.Add("@inProvince", MySqlDbType.VarChar).Value = cusInfor.province;
+                        cmd.Parameters.Add("@inSubDistrict",MySqlDbType.VarChar).Value = cusInfor.subdistrict;
+                        cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = cusInfor.detail;
+
+                        cmd.Parameters.Add("@inNote", MySqlDbType.VarChar).Value = note;
+                        cmd.Parameters.Add("@inFrom", MySqlDbType.Byte).Value = from;
+
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        result.myAnythingLong = Convert.ToInt64(scalarResult);
+                        result.myAnything = (int)result.myAnythingLong;
+                        result.Message = orderCode;
                     }
                 }
                 catch (Exception ex)
                 {
-                    MyLogger.GetInstance().Warn(ex.ToString());
+                    Common.SetResultException(ex, result);
                 }
             }
-            return id;
+            return result;
         }
 
-        public static async Task AddTrackOrderAsync(int orderId, int status)
+        public static async Task<MySqlResultState> AddOrderTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            int customerId,
+            string note,
+            SByte from,
+            string orderCode, // mã đơn hàng unique
+            SByte status,
+            SByte payStatus, // 0: ĐANG CHỜ XỬ LÝ, 1: ĐÃ THANH TOÁN, 2: ĐÃ HOÀN TIỀN
+            SByte paymentMethod, // 0: tiền mặt, 1: chuyển khoản
+            DateTime paymentDeadline, // thời hạn thanh toán, quá sẽ bị admin hủy đơn
+            Address cusInfor)
         {
-            MySqlParameter[] paras = new MySqlParameter[4];
-            paras[0] = new MySqlParameter("@inOrderId", orderId);
-            paras[1] = new MySqlParameter("@inStatus", status);
-            MyMySql.AddOutParameters(paras);
-            await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbTrackOrder_Insert", paras);
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbOrder_Insert", conn, transaction))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@inCustomerId", MySqlDbType.Int32).Value = customerId;
+
+                    cmd.Parameters.Add("@inName", MySqlDbType.VarChar).Value = cusInfor.name;
+                    cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = orderCode;
+                    cmd.Parameters.Add("@inPhone", MySqlDbType.VarChar).Value = cusInfor.phone;
+                    cmd.Parameters.Add("@inProvince", MySqlDbType.VarChar).Value = cusInfor.province;
+                    cmd.Parameters.Add("@inSubDistrict", MySqlDbType.VarChar).Value = cusInfor.subdistrict;
+                    cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = cusInfor.detail;
+
+                    cmd.Parameters.Add("@inNote", MySqlDbType.VarChar).Value = note;
+                    cmd.Parameters.Add("@inFrom", MySqlDbType.Byte).Value = from;
+                    cmd.Parameters.Add("@inPayStatus", MySqlDbType.Byte).Value = payStatus;
+                    cmd.Parameters.Add("@inPaymentMethod", MySqlDbType.Byte).Value = paymentMethod;
+                    cmd.Parameters.Add("@inStatus", MySqlDbType.Byte).Value = status;
+                    cmd.Parameters.Add("@inPaymentDeadline", MySqlDbType.DateTime).Value = paymentDeadline;
+
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    result.myAnythingLong = Convert.ToInt64(scalarResult);
+                    result.myAnything = (int)result.myAnythingLong;
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
         }
 
-        public static async Task AddDetailOrderAsync(int orderId, List<Cart> lsCartCookie)
+        public static async Task<MySqlResultState> AddTrackOrderAsync(int orderId, SByte status)
         {
-            MySqlParameter[] paras = new MySqlParameter[7];
-            paras[0] = new MySqlParameter("@inOrderId", (object)0);
-            paras[1] = new MySqlParameter("@inModelId", (object)0);
-            paras[2] = new MySqlParameter("@inQuantity", (object)0);
-            paras[3] = new MySqlParameter("@inBookCoverPrice", (object)0);
-            paras[4] = new MySqlParameter("@inPrice", (object)0);
-            MyMySql.AddOutParameters(paras);
-
+            MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
                 try
                 {
-                    using (MySqlCommand cmd = new MySqlCommand("st_tbDetailOrder_Insert", conn))
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbOrderTrack_Insert", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddRange(paras);
+                        cmd.Parameters.Add("@inOrderId", MySqlDbType.Int32).Value = orderId;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Byte).Value = status;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
+
+            return result;
+        }
+
+        public static async Task<MySqlResultState> AddTrackOrderTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            int orderId, SByte status)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbOrderTrack_Insert", conn, transaction))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@inOrderId", MySqlDbType.Int32).Value = orderId;
+                    cmd.Parameters.Add("@inStatus", MySqlDbType.Byte).Value = status;
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public static async Task<MySqlResultState> AddDetailOrderAsync(int orderId, List<Cart> lsCartCookie)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                try
+                {
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbOrderDetail_Insert", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@inOrderId", MySqlDbType.Int32).Value = orderId;
+                        cmd.Parameters.Add("@inProductId", MySqlDbType.Int32).Value = 0;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = 0;
+                        cmd.Parameters.Add("@inBookCoverPrice", MySqlDbType.Int32).Value = 0;
+                        cmd.Parameters.Add("@inPrice", MySqlDbType.Int32).Value = 0;
+
                         foreach (var cart in lsCartCookie)
                         {
-                            paras[0].Value = orderId;
-                            paras[1].Value = cart.id;
-                            paras[2].Value = cart.quantity;
-                            //paras[3].Value = cart.bookCoverPrice;
-                            //paras[4].Value = cart.price;
+                            cmd.Parameters[1].Value = cart.sanPhamId;
+                            cmd.Parameters[2].Value = cart.quantity;
+                            cmd.Parameters[3].Value = cart.sanPhamBasicInfo.BookCoverPrice;
+                            cmd.Parameters[4].Value = cart.sanPhamBasicInfo.SalePrice;
                             await cmd.ExecuteNonQueryAsync();
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    MyLogger.GetInstance().Warn(ex.ToString());
+                    Common.SetResultException(ex, result);
                 }
             }
+
+            return result;
+        }
+
+        public static async Task<MySqlResultState> AddDetailOrderTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            int orderId, List<Cart> lsCartCookie)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbOrderDetail_Insert", conn, transaction))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@inOrderId", MySqlDbType.Int32).Value = orderId;
+                    cmd.Parameters.Add("@inProductId", MySqlDbType.Int32).Value = 0;
+                    cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = 0;
+                    cmd.Parameters.Add("@inBookCoverPrice", MySqlDbType.Int32).Value = 0;
+                    cmd.Parameters.Add("@inPrice", MySqlDbType.Int32).Value = 0;
+
+                    foreach (var cart in lsCartCookie)
+                    {
+                        cmd.Parameters[1].Value = cart.sanPhamId;
+                        cmd.Parameters[2].Value = cart.quantity;
+                        cmd.Parameters[3].Value = cart.sanPhamBasicInfo.BookCoverPrice;
+                        cmd.Parameters[4].Value = cart.sanPhamBasicInfo.SalePrice;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
         }
 
         public static async Task<MySqlResultState> AddPayOrderAsync(int orderId, List<OrderPay> ls)
@@ -433,19 +549,24 @@ namespace MVCPlayWithMe.Models.Order
 
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
+                await conn.OpenAsync();
                 try
                 {
-                    await conn.OpenAsync();
-                    using (MySqlCommand cmd = new MySqlCommand("st_tbPayOrder_Insert", conn))
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbOrderPay_Insert", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inOrderId", orderId);
-                        cmd.Parameters.AddWithValue("@inType", 0);
-                        cmd.Parameters.AddWithValue("@inValue", 0);
+                        cmd.Parameters.Add("@inOrderId", MySqlDbType.Int32).Value = orderId;
+                        cmd.Parameters.Add("@inType", MySqlDbType.Byte).Value = 0;
+                        cmd.Parameters.Add("@inValue", MySqlDbType.Int32).Value = 0;
+                        cmd.Parameters.Add("@inOrderSimplePromoId", MySqlDbType.Int32).Value = 0;
                         foreach (var orderPay in ls)
                         {
                             cmd.Parameters[1].Value = orderPay.type;
                             cmd.Parameters[2].Value = orderPay.value;
+                            if(orderPay.type == (int)EPayType.PROMOTION)
+                            {
+                                cmd.Parameters[2].Value = orderPay.orderSimplePromotion.Id;
+                            }    
                             await cmd.ExecuteNonQueryAsync();
                         }
                     }
@@ -454,6 +575,45 @@ namespace MVCPlayWithMe.Models.Order
                 {
                     Common.SetResultException(ex, result);
                 }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> AddPayOrderTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            int orderId, List<OrderPay> ls)
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (ls == null || ls.Count() == 0) return result;
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbOrderPay_Insert", conn, transaction))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.Add("@inOrderId", MySqlDbType.Int32).Value = orderId;
+                    cmd.Parameters.Add("@inType", MySqlDbType.Byte).Value = 0;
+                    cmd.Parameters.Add("@inValue", MySqlDbType.Int32).Value = 0;
+                    cmd.Parameters.Add("@inOrderSimplePromoId", MySqlDbType.Int32).Value = 0;
+                    foreach (var orderPay in ls)
+                    {
+                        cmd.Parameters[1].Value = orderPay.type;
+                        cmd.Parameters[2].Value = orderPay.value;
+                        if (orderPay.type == (int)EPayType.PROMOTION)
+                        {
+                            cmd.Parameters[3].Value = orderPay.orderSimplePromotion.Id;
+                        }
+                        else
+                        {
+                            cmd.Parameters[3].Value = 0;
+                        }    
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
             return result;
         }
@@ -537,10 +697,8 @@ namespace MVCPlayWithMe.Models.Order
                     string query = "UPDATE tbCart SET Real = 1 WHERE CustomerId = @customerId AND SanPhamId = @sanPhamId";
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        cmd.Parameters.Add("@customerId", MySqlDbType.Int32);
-                        cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32);
-
-                        cmd.Parameters["@customerId"].Value = customerId;
+                        cmd.Parameters.Add("@customerId", MySqlDbType.Int32).Value = customerId;
+                        cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32).Value = 0;
 
                         foreach (int sanPhamId in sanPhamIds)
                         {
@@ -562,10 +720,26 @@ namespace MVCPlayWithMe.Models.Order
 
         public static async Task<MySqlResultState> DeleteSanPhamOnCartAsync(int customerId, int sanPhamId)
         {
-            MySqlParameter[] paras = new MySqlParameter[2];
-            paras[0] = new MySqlParameter("@inCustomerId", customerId);
-            paras[1] = new MySqlParameter("@inSanPhamId", sanPhamId);
-            return await MyMySql.ExcuteNonQueryAsync("st_tbCart_Delete_From_Customer_SanPhamId", paras);
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbCart_Delete_From_Customer_SanPhamId", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@inCustomerId", MySqlDbType.Int32).Value = customerId;
+                        cmd.Parameters.Add("@inSanPhamId", MySqlDbType.Int32).Value = sanPhamId;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
         }
 
         public static async Task<MySqlResultState> DeleteListCartAsync(int customerId, List<Cart> ls)
@@ -573,17 +747,17 @@ namespace MVCPlayWithMe.Models.Order
             MySqlResultState result = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
-                using (MySqlCommand cmd = new MySqlCommand("st_tbCart_Delete_From_Customer_ModelId", conn))
+                await conn.OpenAsync();
+                using (MySqlCommand cmd = new MySqlCommand("st_tbCart_Delete_From_Customer_SanPhamId", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCustomerId", customerId);
-                    cmd.Parameters.AddWithValue("@inModelId", (object)0);
+                    cmd.Parameters.Add("@inCustomerId", MySqlDbType.Int32).Value = customerId;
+                    cmd.Parameters.Add("@inCustomerId", MySqlDbType.Int32).Value = 0;
                     try
                     {
-                        await conn.OpenAsync();
                         foreach (var cart in ls)
                         {
-                            cmd.Parameters[1].Value = cart.id;
+                            cmd.Parameters[1].Value = cart.sanPhamId;
                             await cmd.ExecuteNonQueryAsync();
                         }
                     }
@@ -591,6 +765,34 @@ namespace MVCPlayWithMe.Models.Order
                     {
                         Common.SetResultException(ex, result);
                     }
+                }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> DeleteListCartTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            int customerId,
+            List<Cart> ls)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlCommand cmd = new MySqlCommand("st_tbCart_Delete_From_Customer_SanPhamId", conn, transaction))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.Add("@inCustomerId", MySqlDbType.Int32).Value = customerId;
+                cmd.Parameters.Add("@inSanPhamId", MySqlDbType.Int32).Value = 0;
+                try
+                {
+                    foreach (var cart in ls)
+                    {
+                        cmd.Parameters[1].Value = cart.sanPhamId;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
                 }
             }
             return result;
@@ -695,11 +897,11 @@ namespace MVCPlayWithMe.Models.Order
                                 Order order = new Order();
                                 order.id = rdr.GetInt32(idIndex);
                                 order.customerId = rdr.GetInt32(customerIdIndex);
-                                order.address.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
-                                order.address.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
-                                order.address.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
-                                order.address.subdistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
-                                order.address.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
+                                order.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
+                                order.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
+                                order.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
+                                order.subDistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
+                                order.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
                                 order.note = rdr.IsDBNull(noteIndex) ? string.Empty : rdr.GetString(noteIndex);
                                 order.time = rdr.IsDBNull(timeIndex) ? DateTime.MinValue : rdr.GetDateTime(timeIndex);
                                 ls.Add(order);
@@ -713,7 +915,7 @@ namespace MVCPlayWithMe.Models.Order
                     int count = ls.Count();
                     if (count > 0)
                     {
-                        using (MySqlCommand cmd = new MySqlCommand("st_tbTrackOrder_Search", conn))
+                        using (MySqlCommand cmd = new MySqlCommand("st_tbOrderTrack_Search", conn))
                         {
                             cmd.CommandType = CommandType.StoredProcedure;
                             cmd.Parameters.AddWithValue("@inCustomerId", customerId);
@@ -736,7 +938,7 @@ namespace MVCPlayWithMe.Models.Order
                             }
                         }
 
-                        using (MySqlCommand cmd = new MySqlCommand("st_tbPayOrder_Search", conn))
+                        using (MySqlCommand cmd = new MySqlCommand("st_tbOrderPay_Search", conn))
                         {
                             cmd.CommandType = CommandType.StoredProcedure;
                             cmd.Parameters.AddWithValue("@inCustomerId", customerId);
@@ -759,7 +961,7 @@ namespace MVCPlayWithMe.Models.Order
                             }
                         }
 
-                        using (MySqlCommand cmd = new MySqlCommand("st_tbDetailOrder_Search", conn))
+                        using (MySqlCommand cmd = new MySqlCommand("st_tbOrderDetail_Search", conn))
                         {
                             cmd.CommandType = CommandType.StoredProcedure;
                             cmd.Parameters.AddWithValue("@inCustomerId", customerId);
@@ -874,11 +1076,11 @@ namespace MVCPlayWithMe.Models.Order
                                 Order order = new Order();
                                 order.id = rdr.GetInt32(idIndex);
                                 order.customerId = rdr.GetInt32(customerIdIndex);
-                                order.address.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
-                                order.address.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
-                                order.address.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
-                                order.address.subdistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
-                                order.address.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
+                                order.name = rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex);
+                                order.phone = rdr.IsDBNull(phoneIndex) ? string.Empty : rdr.GetString(phoneIndex);
+                                order.province = rdr.IsDBNull(provinceIndex) ? string.Empty : rdr.GetString(provinceIndex);
+                                order.subDistrict = rdr.IsDBNull(subdistrictIndex) ? string.Empty : rdr.GetString(subdistrictIndex);
+                                order.detail = rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex);
                                 order.note = rdr.IsDBNull(noteIndex) ? string.Empty : rdr.GetString(noteIndex);
                                 order.time = rdr.IsDBNull(timeIndex) ? DateTime.MinValue : rdr.GetDateTime(timeIndex);
                                 ls.Add(order);
@@ -891,9 +1093,9 @@ namespace MVCPlayWithMe.Models.Order
                         await GetOrderTrackConnectOutAsync(order, conn);
                         await GetOrderPayConnectOutAsync(order, conn);
                         await GetOrderDetailConnectOutAsync(order, conn);
-                        order.address.phone = "******" + order.address.phone.Substring(6);
-                        order.address.detail = "";
-                        order.address.subdistrict = "";
+                        order.phone = "******" + order.phone.Substring(6);
+                        order.detail = "";
+                        order.subDistrict = "";
                     }
                 }
                 catch (Exception ex)
@@ -1048,5 +1250,171 @@ namespace MVCPlayWithMe.Models.Order
                 }
             }
         }
+
+        #region Bank Transfer Payment Support
+
+        /// <summary>
+        /// Lấy danh sách đơn hàng theo OrderStatus
+        /// </summary>
+        public static async Task<List<Order>> GetOrdersByStatusAsync(string orderStatus)
+        {
+            List<Order> list = new List<Order>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    string query = @"
+                        SELECT * FROM tbOrder
+                        WHERE Status = @orderStatus
+                        ORDER BY time DESC";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.Add("@orderStatus", MySqlDbType.VarChar).Value = orderStatus;
+
+                        using (MySqlDataReader rdr = await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync())
+                            {
+                                Order order = new Order();
+                                ReadOrder(order, rdr);
+
+                                // Đọc thêm các trường mới
+                                order.OrderCode = MyMySql.GetString(rdr, "Code");
+                                order.OrderStatus = MyMySql.GetSByte(rdr, "Status");
+                                order.PaymentMethod = MyMySql.GetSByte(rdr, "PaymentType");
+                                order.PaymentDeadline = MyMySql.GetDateTime(rdr, "PaymentDeadline");
+
+                                list.Add(order);
+                            }
+                        }
+
+                        // Load OrderDetail và OrderPay cho mỗi order
+                        foreach (var order in list)
+                        {
+                            await GetOrderDetailConnectOutAsync(order, conn);
+                            await GetOrderPayConnectOutAsync(order, conn);
+                        }
+                    }
+
+
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error($"GetOrdersByStatusAsync error: {ex.Message}");
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Lấy order theo ID với đầy đủ thông tin
+        /// </summary>
+        public static async Task<Order> GetByIdAsync(int orderId)
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    string query = "SELECT * FROM tbOrder WHERE Id = @orderId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.Add("@orderId", MySqlDbType.Int32).Value = orderId;
+
+                        using (MySqlDataReader rdr = await cmd.ExecuteReaderAsync())
+                        {
+                            if (await rdr.ReadAsync())
+                            {
+                                Order order = new Order();
+                                ReadOrder(order, rdr);
+
+                                // Đọc thêm các trường mới
+                                order.OrderCode = MyMySql.GetString(rdr, "Code");
+                                order.OrderStatus = MyMySql.GetSByte(rdr, "Status");
+                                order.PaymentMethod = MyMySql.GetSByte(rdr, "PaymentType");
+                                order.PaymentDeadline = MyMySql.GetDateTime(rdr, "PaymentDeadline");
+
+                                await GetOrderDetailConnectOutAsync(order, conn);
+                                await GetOrderPayConnectOutAsync(order, conn);
+
+                                return order;
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error($"GetByIdAsync error: {ex.Message}");
+            }
+            return null;
+        }
+
+        /// <summary>
+        /// Update order status (standalone version)
+        /// </summary>
+        public static async Task<MySqlResultState> UpdateOrderStatusAsync(int orderId, string orderStatus)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    string query = "UPDATE tbOrder SET OrderStatus = @orderStatus WHERE Id = @orderId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.Add("@orderId", MySqlDbType.Int32).Value = orderId;
+                        cmd.Parameters.Add("@orderStatus", MySqlDbType.VarChar).Value = orderStatus;
+
+                        await cmd.ExecuteNonQueryAsync();
+                        result.State = EMySqlResultState.OK;
+                        result.Message = "Cập nhật trạng thái đơn hàng thành công";
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Update order status (transaction version)
+        /// </summary>
+        public static async Task<MySqlResultState> UpdateOrderStatusTransactionAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            int orderId,
+            string orderStatus)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                string query = "UPDATE tbOrder SET OrderStatus = @orderStatus WHERE Id = @orderId";
+
+                using (MySqlCommand cmd = new MySqlCommand(query, conn, transaction))
+                {
+                    cmd.Parameters.Add("@orderId", MySqlDbType.Int32).Value = orderId;
+                    cmd.Parameters.Add("@orderStatus", MySqlDbType.VarChar).Value = orderStatus;
+
+                    await cmd.ExecuteNonQueryAsync();
+                    result.State = EMySqlResultState.OK;
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
+        #endregion
     }
 }

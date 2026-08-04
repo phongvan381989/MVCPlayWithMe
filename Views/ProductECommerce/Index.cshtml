@@ -67,15 +67,15 @@
                     </div>
                 </div>
                 @*<div class="fcnal986j" title="Nhà phát hành">
-                <label for="publisher-id">Nhà phát hành</label>
-                <input list="list-Publisher" id="publisher-id">
-                <datalist id="list-Publisher">
-                    @foreach (var pub in ViewData["lsPublisher"] as IList<MVCPlayWithMe.Models.Publisher>)
-                    {
-                        <option data-id=@pub.id data-detail="@pub.detail">@pub.name</option>
-                    }
-                </datalist>
-            </div>*@
+                        <label for="publisher-id">Nhà phát hành</label>
+                        <input list="list-Publisher" id="publisher-id">
+                        <datalist id="list-Publisher">
+                            @foreach (var pub in ViewData["lsPublisher"] as IList<MVCPlayWithMe.Models.Publisher>)
+                            {
+                                <option data-id=@pub.id data-detail="@pub.detail">@pub.name</option>
+                            }
+                        </datalist>
+                    </div>*@
 
                 <div class="fcnal986j" title="Tên sản phẩm">
                     <label for="product-name">Tên sản phẩm</label>
@@ -111,7 +111,6 @@
     <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.paging.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
     <script src="~/Scripts/ProductECommerce/Index.js?v=20260610"></script>
 </body>
 </html>

@@ -73,39 +73,39 @@ function SetCartCookieFromListCartCookieObject(listCartCookie) {
     SetCookie(cartKey, newCart, 365);
 }
 
-// Từ trang giỏ hàng, khi xóa sản phẩm, cập nhật vào cookie
-function DeleteOneCartCookie(obj) {
-    let listOld = GetOldListCartCookie();
+// // Từ trang giỏ hàng, khi xóa sản phẩm, cập nhật vào cookie
+// function DeleteOneCartCookie(obj) {
+//     let listOld = GetOldListCartCookie();
 
-    for (let i = 0; i < listOld.length; i++) {
-        if (listOld[i].id == obj.id) {
-            listOld.splice(i, 1);
-        }
-    }
-    SetCartCookieFromListCartCookieObject(listOld);
-}
+//     for (let i = 0; i < listOld.length; i++) {
+//         if (listOld[i].id == obj.id) {
+//             listOld.splice(i, 1);
+//         }
+//     }
+//     SetCartCookieFromListCartCookieObject(listOld);
+// }
 
-// Từ trang giỏ hàng, khi thay đổi số lượng, cập nhật vào cookie
-function UpdateQuantityOfCookie(obj) {
-    let listOld = GetOldListCartCookie();
+// // Từ trang giỏ hàng, khi thay đổi số lượng, cập nhật vào cookie
+// function UpdateQuantityOfCookie(obj) {
+//     let listOld = GetOldListCartCookie();
 
-    for (let i = 0; i < listOld.length; i++) {
-        if (listOld[i].id == obj.id) {
-            listOld[i].q = obj.q;
-        }
-    }
-    SetCartCookieFromListCartCookieObject(listOld);
-}
+//     for (let i = 0; i < listOld.length; i++) {
+//         if (listOld[i].id == obj.id) {
+//             listOld[i].q = obj.q;
+//         }
+//     }
+//     SetCartCookieFromListCartCookieObject(listOld);
+// }
 
-// Lấy list cart cookie trước khi thêm mới sản phẩm vào giỏ
-function GetOldListCartCookie() {
-    // Lấy cookie cũ
-    let oldCart = GetCookie(cartKey);
+// // Lấy list cart cookie trước khi thêm mới sản phẩm vào giỏ
+// function GetOldListCartCookie() {
+//     // Lấy cookie cũ
+//     let oldCart = GetCookie(cartKey);
 
-    let listCartCookie = GetListCartCookieFromCartCookie(oldCart);
+//     let listCartCookie = GetListCartCookieFromCartCookie(oldCart);
 
-    return listCartCookie;
-}
+//     return listCartCookie;
+// }
 
 // Làm mới real=0 của cart cookie
 function RefreshRealOfCartCookieAndGet() {
@@ -127,34 +127,7 @@ function RefreshRealOfCartCookieAndGet() {
     return listCartCookie;
 }
 
-async function CartPageLoadCart() {
-    // Lấy guest cart từ localStorage (nếu có)
-    let guestCart = [];
-    if (typeof CartManager !== 'undefined') {
-        guestCart = CartManager.getCart();
-        if (DEBUG) {
-            console.log("CartPageLoadCart guestCart: " + JSON.stringify(guestCart));
-        }
-    }
 
-    // Gửi cart data dưới dạng JSON body
-    return await PostJSON('/Home/CartPageLoadCart', guestCart);
-}
-
-async function CheckoutPageLoadCart() {
-    // Lấy guest cart từ localStorage
-    let guestCart = [];
-    if (typeof CartManager !== 'undefined') {
-        guestCart = CartManager.getCart();
-        if (DEBUG) {
-            console.log("CheckoutPageLoadCart guestCart: " + JSON.stringify(guestCart));
-        }
-    }
-
-    // Gửi cart data dưới dạng JSON body
-    return await PostJSON('/Home/CheckoutPageLoadCart', guestCart);
-}
-
-function DeleteAllCartCookie() {
-    DeleteCookie(cartKey);
-}
+// function DeleteAllCartCookie() {
+//     DeleteCookie(cartKey);
+// }

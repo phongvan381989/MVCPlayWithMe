@@ -227,7 +227,6 @@ button.change-address-btn {
     border-radius: 3px;
 }
 
-
 .gQuJxM {
     padding: 5px 10px;
     width: 100%;
@@ -275,14 +274,18 @@ button.change-address-btn {
     padding:10px 0px;
 }
 
+/*.jh-bank-transfer {
+    display:none;
+}*/
+
 .payment-infor {
     background: #fffefb;
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
     border-top: 1px solid #f1f0ed;
-    padding-top: 15px;
+    padding: 15px 0px;
 }
 
-.flex-end {
+.checkout-money-flex-end {
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -300,9 +303,9 @@ button.change-address-btn {
     color: #ee4d2d;
 }
 
-.money-title {
+/*.money-title {
     width: 120px;
-}
+}*/
 
 .order-btn {
     background: #ee4d2d;
@@ -334,6 +337,15 @@ button.change-address-btn {
     display: none;
     text-align: center;
 }
+
+/* Dấu "x" giữa giá và số lượng (VD: ₫29.800 x 2) */
+.quantity-model-x {
+    font-size: 0.85rem;
+    color: #888;
+/*    margin: 0 4px;*/
+    font-weight: 400;
+}
+
 @media (min-width: 800px) {
     .rTOisL {
         width: 100px;

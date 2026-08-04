@@ -1,6 +1,8 @@
 ﻿
 @{
     Layout = null;
+    var bankAccount = ViewBag.BankAccount as MVCPlayWithMe.Models.BankAccount.BankAccount;
+    var orderDeadline = ViewBag.OrderDeadline ?? 48; // Default 48 giờ nếu không có
 }
 
 <!DOCTYPE html>
@@ -52,8 +54,8 @@
                             <h2>Địa chỉ nhận hàng</h2>
                         </div>
                         <div class="address-content">
-                            <div class="address-name-phone">Huệ hoàng (+84) 383519872</div>
-                            <div class="address-address">Số 28, Ngõ 3, Khu Tập Thể Đo Lường, Tổ Dân Phố 3A, phường Đông Ngạc, Hà Nội</div>
+                            <div class="address-name-phone">Tên (+84) SDT</div>
+                            <div class="address-address">địa chỉ</div>
                             <div class="address-default">Mặc định</div>
                             <button type="button" class="change-address-btn">Thay đổi</button>
                         </div>
@@ -75,27 +77,68 @@
                         <input type="radio" name="payment-method" id="payment-cod" value="cod" checked>
                         <label for="payment-cod" class="KoRB7y">Thanh toán khi nhận hàng</label>
                     </div>
-                    <div class="hjhgui88" style="display:none;">
+                    <div class="hjhgui88 jh-bank-transfer">
                         <input type="radio" name="payment-method" id="payment-bank" value="bank">
                         <label for="payment-bank" class="KoRB7y">Chuyển khoản ngân hàng</label>
+                        <div class="bank-transfer-container" style="display: none; margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 6px;">
+                            @if (bankAccount != null)
+                            {
+                                <div style="margin-bottom: 10px;">
+                                    <div style="color: #6c757d; font-size: 0.9rem; margin-bottom: 8px;">
+                                        <i class="fas fa-info-circle"></i> Thông tin chuyển khoản
+                                    </div>
+                                    <div style="background: white; padding: 12px; border-radius: 4px; margin-bottom: 8px;">
+                                        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e9ecef;">
+                                            <span style="color: #6c757d; font-size: 0.85rem;">Ngân hàng:</span>
+                                            <span style="font-weight: 500; font-size: 0.9rem;">@bankAccount.BankName</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e9ecef;">
+                                            <span style="color: #6c757d; font-size: 0.85rem;">Số TK:</span>
+                                            <span style="font-weight: 600; font-size: 0.9rem;">@bankAccount.AccountNumber</span>
+                                        </div>
+                                        <div style="display: flex; justify-content: space-between; padding: 6px 0;">
+                                            <span style="color: #6c757d; font-size: 0.85rem;">Chủ TK:</span>
+                                            <span style="font-weight: 500; font-size: 0.9rem;">@bankAccount.AccountHolder</span>
+                                        </div>
+                                    </div>
+                                    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 10px; border-radius: 4px; font-size: 0.85rem; color: #856404;">
+                                        <strong>📌 Lưu ý:</strong> Mã QR thanh toán và mã đơn hàng sẽ hiển thị sau khi bạn nhấn "Đặt hàng"
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div style="color: #dc3545; font-size: 0.9rem;">
+                                    Không tìm thấy thông tin tài khoản ngân hàng. Vui lòng liên hệ shop.
+                                </div>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="payment-infor">
-                <div class="flex-end">
+                <div class="checkout-money-flex-end">
                     <div class="money-title">Tổng tiền hàng</div>
                     <div class="money-padding model-money-sum">₫405.080</div>
                 </div>
-                <div class="flex-end">
+                <div class="checkout-money-flex-end">
                     <div class="money-title">Phí vận chuyển</div>
                     <div class="money-padding shipee-fee">₫39.150</div>
                 </div>
-                <div class="flex-end">
+                <div class="checkout-money-flex-end">
+                    <div class="money-title">Giảm giá phí vận chuyển</div>
+                    <div class="money-padding free-shipee-fee">-₫39.150</div>
+                </div>
+                <div class="checkout-money-flex-end">
+                    <div class="money-title">Giảm giá tổng tiền hàng</div>
+                    <div class="money-padding discount-sum-money">-₫39.150</div>
+                </div>
+                <div class="checkout-money-flex-end">
                     <div class="money-title">Tổng thanh toán</div>
                     <div class="money-padding money-sum">₫0</div>
                 </div>
-                <div class="flex-end">
-                    <button type="button" class="order-btn" onclick="Order()">Đặt hàng</button>
+                <div class="checkout-money-flex-end">
+                    <button type="button" class="order-btn" onclick="CheckOutOrder()">Đặt hàng</button>
                 </div>
             </div>
         </div>
@@ -105,11 +148,33 @@
     </div>
     <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.cart.cookie.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.address.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
     <script src="~/Scripts/cart-manager.js"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
+    <script>
+        // Pass orderDeadline từ C# sang JavaScript
+        const ORDER_DEADLINE_HOURS = @orderDeadline;
+    </script>
     <script src="~/Scripts/Home/Checkout.js?v=20260610"></script>
+    <script>
+        // Toggle bank transfer info khi chọn payment method
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentCod = document.getElementById('payment-cod');
+            const paymentBank = document.getElementById('payment-bank');
+            const bankContainer = document.querySelector('.bank-transfer-container');
+
+            function updateBankContainerVisibility() {
+                if (paymentBank.checked) {
+                    bankContainer.style.display = 'block';
+                } else {
+                    bankContainer.style.display = 'none';
+                }
+            }
+
+            paymentCod.addEventListener('change', updateBankContainerVisibility);
+            paymentBank.addEventListener('change', updateBankContainerVisibility);
+        });
+    </script>
 </body>
 </html>

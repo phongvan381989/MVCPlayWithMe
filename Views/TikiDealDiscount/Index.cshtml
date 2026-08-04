@@ -26,11 +26,15 @@
             <label for="sku-tiki-item" style="margin-right:10px;">sku</label>
             <input type="text" id="sku-tiki-item" style="margin-right:10px;">
             <button type="button" onclick="GetDealDiscountOfSku()" style="margin-right:10px;"
-                     title="Từ sku sản phẩm trên sàn tiki, lấy được chương trình giảm giá từ 0.5 năm trước đến 2 năm sau.
-             Lưu vào db nếu chưa tồn tại hoặc cập nhật trạng thái nếu đã tồn tại">Lấy Chương Trình Giảm Giá</button>
+                    title="Từ sku sản phẩm trên sàn tiki, lấy được chương trình giảm giá từ 0.5 năm trước đến 2 năm sau.
+             Lưu vào db nếu chưa tồn tại hoặc cập nhật trạng thái nếu đã tồn tại">
+                Lấy Chương Trình Giảm Giá
+            </button>
 
             <button type="button" onclick="ShowModalFromSku()" style="margin-right:10px;"
-                     title="Từ sku sản phẩm trên sàn tiki, tạo chương trình giảm giá">Tạo Chương Trình Giảm Giá</button>
+                    title="Từ sku sản phẩm trên sàn tiki, tạo chương trình giảm giá">
+                Tạo Chương Trình Giảm Giá
+            </button>
 
             <button type="button" title="Lưu dữ liệu mới, cập nhật chương trình giảm giá của tất cả sku đang bật bán vào db.
                     Hàm mất thời gian, dữ liệu. CÂN NHẮC?"
@@ -120,7 +124,7 @@
 
                         <label for="packingCost">Chi phí đóng gói:</label>
                         <input type="text" id="packingCost" name="packingCost"
-                               title="Thay đổi để cập nhật giá bán" 
+                               title="Thay đổi để cập nhật giá bán"
                                oninput="CaculateSalePrice()">VND<br><br>
 
                         <label for="absoluteMinProfit" title="Là lợi nhuận tuyệt đối tối thiểu trên một sản phẩm mà
@@ -134,7 +138,7 @@
                         <label for="profitPercent">Lợi nhuận so với giá bán:</label>
                         <input type="number" id="profitPercent" name="profitPercent" step="0.1" min="0" max="100"
                                title="Thay đổi để cập nhật giá bán.Phần trăm lợi nhuận mong muốn(so với giá nhập) để cập nhật giá bán"
-                                oninput="CaculateSalePrice()">%<br><br>
+                               oninput="CaculateSalePrice()">%<br><br>
 
                         <div class="display-flex-align-items-center">
                             <label for="salePrice" title="Giá bán">Giá bán:</label>
@@ -145,7 +149,9 @@
                         </div>
 
                         <button type="button" id="btnCreateOneDeal" onclick="CreateOneDeal(this)"
-                                title="Kiểm tra chương trình giảm giá hiện tại đang chạy thì phải tắt thủ công trước">Tạo chương trình giảm giá</button>
+                                title="Kiểm tra chương trình giảm giá hiện tại đang chạy thì phải tắt thủ công trước">
+                            Tạo chương trình giảm giá
+                        </button>
                     </div>
                 </div>
             </div>
@@ -154,7 +160,6 @@
     <script src="~/Scripts/web.play.with.me.update.width.js"></script>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/web.play.with.me.item.model.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
     <script>
         let modal = document.getElementById("myModal");
         modal.style.display = "none";
@@ -248,7 +253,7 @@
                 }
                 if (DEBUG) {
                     console.log("importDiscount: " + importDiscount);
-                    console.log("mapping["+ i + "].product.discount: " + mapping[i].product.discount);
+                    console.log("mapping[" + i + "].product.discount: " + mapping[i].product.discount);
                 }
 
                 // So sánh với discount của sản phẩm, chọn giá trị lớn nhất
@@ -512,7 +517,7 @@
                 imgDiv.tikiItemId = tikiItem.id;
                 imgDiv.onclick = function () {
                     let url = "/ProductECommerce/Item?eType=TIKI&id=" + this.tikiItemId;
-                        window.open(url);
+                    window.open(url);
                 }
                 cell2.append(imgDiv);
 
@@ -535,8 +540,7 @@
             }
         }
 
-        function DeleteItemFromNoDealDiscountRunning(sku)
-        {
+        function DeleteItemFromNoDealDiscountRunning(sku) {
             // Xóa khỏi bảng đang hiển thị
             const table = document.getElementById("myTableGetItemsNoDealDiscountRunning");
             // Duyệt qua các hàng từ cuối về đầu để tránh làm hỏng chỉ số khi xóa
@@ -623,7 +627,7 @@
         }
 
         // Xây dựng công thức tính giá bán
-        // p: giá bìa, 
+        // p: giá bìa,
         // dI: chiết khấu nhập, VD: 0.4
         // dO: chiết khấu bán,
         // x: % lợi nhuận mong muốn so với GIÁ BÁN

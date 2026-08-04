@@ -1,0 +1,246 @@
+@model List<MVCPlayWithMe.Models.PaymentProof.PaymentProof>
+@{
+    ViewBag.Title = "Lịch Sử Chứng Từ Thanh Toán";
+    Layout = "~/Views/Shared/_LayoutAdministrator.cshtml";
+}
+
+<style>
+    .filter-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e9ecef;
+        padding-bottom: 0;
+    }
+
+    .filter-tab {
+        padding: 10px 20px;
+        background: transparent;
+        border: none;
+        border-bottom: 3px solid transparent;
+        cursor: pointer;
+        font-weight: 600;
+        color: #6c757d;
+        transition: all 0.2s;
+    }
+
+    .filter-tab:hover {
+        color: #212529;
+        border-bottom-color: #dee2e6;
+    }
+
+    .filter-tab.active {
+        color: #007bff;
+        border-bottom-color: #007bff;
+    }
+
+    .proof-table {
+        width: 100%;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .proof-table th {
+        background: #f8f9fa;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        font-size: 13px;
+        text-transform: uppercase;
+    }
+
+    .proof-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        vertical-align: middle;
+    }
+
+    .proof-table tr:hover {
+        background: #f8f9fa;
+    }
+
+    .proof-table tr:last-child td {
+        border-bottom: none;
+    }
+
+    .badge-status {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+    }
+
+    .badge-pending { background: #fff3cd; color: #856404; }
+    .badge-verified { background: #d4edda; color: #155724; }
+    .badge-rejected { background: #f8d7da; color: #721c24; }
+
+    .amount {
+        font-weight: 600;
+        color: #28a745;
+        font-size: 15px;
+    }
+
+    .btn-view {
+        padding: 5px 12px;
+        font-size: 12px;
+        border-radius: 4px;
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+    }
+
+    .btn-view:hover {
+        background: #0056b3;
+    }
+</style>
+
+<div class="payment-proof-container">
+    <h2 style="margin-bottom: 30px;">
+        <i class="fas fa-history"></i> Lịch Sử Chứng Từ Thanh Toán
+    </h2>
+
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filterByStatus('all')">
+            <i class="fas fa-list"></i> Tất cả (@Model.Count)
+        </button>
+        <button class="filter-tab" onclick="filterByStatus('pending')">
+            <i class="fas fa-clock"></i> Chờ duyệt (@Model.Count(p => p.Status == "pending"))
+        </button>
+        <button class="filter-tab" onclick="filterByStatus('verified')">
+            <i class="fas fa-check-circle"></i> Đã duyệt (@Model.Count(p => p.Status == "verified"))
+        </button>
+        <button class="filter-tab" onclick="filterByStatus('rejected')">
+            <i class="fas fa-times-circle"></i> Đã từ chối (@Model.Count(p => p.Status == "rejected"))
+        </button>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 8px;">
+            <i class="fas fa-inbox" style="font-size: 64px; color: #dee2e6;"></i>
+            <h4 style="margin-top: 20px; color: #6c757d;">Chưa có chứng từ nào</h4>
+        </div>
+    }
+    else
+    {
+        <table class="proof-table">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th style="width: 100px;">Đơn hàng</th>
+                    <th>Mã GD</th>
+                    <th>Số tiền</th>
+                    <th>Nội dung CK</th>
+                    <th style="width: 120px;">Trạng thái</th>
+                    <th style="width: 150px;">Ngày tạo</th>
+                    <th style="width: 150px;">Xác nhận</th>
+                    <th style="width: 100px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var proof in Model.OrderByDescending(p => p.CreatedAt))
+                {
+                    <tr class="proof-row" data-status="@proof.Status">
+                        <td><strong>#@proof.Id</strong></td>
+                        <td>
+                            <a href="/Administrator/OrderDetail/@proof.OrderId" style="color: #007bff; text-decoration: none;">
+                                #@proof.OrderId
+                            </a>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(proof.TransactionCode))
+                            {
+                                <span style="font-family: monospace; color: #007bff;">@proof.TransactionCode</span>
+                            }
+                            else
+                            {
+                                <span style="color: #adb5bd;">—</span>
+                            }
+                        </td>
+                        <td class="amount">@proof.TransferAmount.ToString("N0")đ</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(proof.TransferNote))
+                            {
+                                <span style="font-size: 13px;">@(proof.TransferNote.Length > 40 ? proof.TransferNote.Substring(0, 40) + "..." : proof.TransferNote)</span>
+                            }
+                            else
+                            {
+                                <span style="color: #adb5bd;">—</span>
+                            }
+                        </td>
+                        <td>
+                            <span class="badge-status badge-@proof.Status">
+                                @switch (proof.Status)
+                                {
+                                    case "pending":
+                                        <i class="fas fa-hourglass-half"></i>
+                                        @:Chờ duyệt
+                                        break;
+                                    case "verified":
+                                        <i class="fas fa-check-circle"></i>
+                                        @:Đã duyệt
+                                        break;
+                                    case "rejected":
+                                        <i class="fas fa-times-circle"></i>
+                                        @:Từ chối
+                                        break;
+                                }
+                            </span>
+                        </td>
+                        <td style="font-size: 13px; color: #6c757d;">
+                            @proof.CreatedAt?.ToString("dd/MM/yyyy HH:mm")
+                        </td>
+                        <td style="font-size: 13px; color: #6c757d;">
+                            @if (proof.VerifiedAt.HasValue)
+                            {
+                                <div>@proof.VerifiedAt?.ToString("dd/MM/yyyy HH:mm")</div>
+                                <small style="color: #adb5bd;">Admin #@proof.VerifiedBy</small>
+                            }
+                            else
+                            {
+                                <span style="color: #adb5bd;">—</span>
+                            }
+                        </td>
+                        <td>
+                            <button class="btn-view" onclick="viewProofDetail(@proof.Id)">
+                                <i class="fas fa-eye"></i> Xem
+                            </button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+<script>
+    // Filter by status
+    function filterByStatus(status) {
+        // Update active tab
+        document.querySelectorAll('.filter-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.closest('.filter-tab').classList.add('active');
+
+        // Show/hide rows
+        const rows = document.querySelectorAll('.proof-row');
+        rows.forEach(row => {
+            if (status === 'all' || row.dataset.status === status) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    }
+
+    // View proof detail
+    function viewProofDetail(proofId) {
+        window.location.href = '/Administrator/PaymentProofDetail/' + proofId;
+    }
+</script>

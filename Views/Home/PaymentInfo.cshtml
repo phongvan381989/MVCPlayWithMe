@@ -1,0 +1,614 @@
+@model MVCPlayWithMe.Models.Order.Order
+@{
+    ViewBag.Title = "Thông tin thanh toán";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var bankAccount = ViewBag.BankAccount as MVCPlayWithMe.Models.BankAccount.BankAccount;
+    var qrCodeUrl = ViewBag.QRCodeUrl as string;
+    var totalAmount = (int)ViewBag.TotalAmount;
+    var orderCode = ViewBag.OrderCode as string;
+    var paymentDeadline = ViewBag.PaymentDeadline as DateTime?;
+}
+
+<style>
+    .payment-page {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        padding: 40px 0;
+    }
+
+    .payment-container {
+        max-width: 700px;
+        margin: 0 auto;
+        padding: 0 15px;
+    }
+
+    .payment-card {
+        background: #fff;
+        border-radius: 16px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        overflow: hidden;
+        animation: slideUp 0.5s ease-out;
+    }
+
+    @@keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .card-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+    }
+
+    .success-icon {
+        width: 80px;
+        height: 80px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        animation: pulse 2s infinite;
+    }
+
+    @@keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .card-header h2 {
+        margin: 0 0 10px;
+        font-size: 28px;
+        font-weight: 700;
+    }
+
+    .order-code-badge {
+        display: inline-block;
+        background: rgba(255,255,255,0.2);
+        padding: 8px 20px;
+        border-radius: 30px;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 2px;
+    }
+
+    .card-body {
+        padding: 0;
+    }
+
+    /* QR Section */
+    .qr-section {
+        padding: 40px 30px;
+        text-align: center;
+        background: linear-gradient(to bottom, #f8f9fa, white);
+        border-bottom: 3px dashed #dee2e6;
+    }
+
+    .qr-title {
+        color: #667eea;
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 20px;
+    }
+
+    .qr-code-wrapper {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        display: inline-block;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+
+    .qr-code-wrapper img {
+        max-width: 320px;
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .qr-instruction {
+        color: #6c757d;
+        font-size: 15px;
+        line-height: 1.6;
+    }
+
+    .qr-instruction i {
+        color: #667eea;
+        font-size: 18px;
+    }
+
+    /* Bank Info Section */
+    .bank-info-section {
+        padding: 40px 30px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #212529;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title i {
+        color: #667eea;
+    }
+
+    .info-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: #6c757d;
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .info-value {
+        color: #212529;
+        font-weight: 500;
+        font-size: 15px;
+        text-align: right;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .amount-highlight {
+        color: #28a745;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .order-code-highlight {
+        color: #667eea;
+        font-family: 'Courier New', monospace;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 1px;
+    }
+
+    .copy-btn {
+        padding: 6px 12px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .copy-btn:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+    }
+
+    .copy-btn.copied {
+        background: #28a745;
+    }
+
+    /* Alert Section */
+    .alert-section {
+        padding: 30px;
+        background: #fff3cd;
+        border-top: 3px solid #ffc107;
+    }
+
+    .alert-title {
+        color: #856404;
+        font-weight: 700;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .alert-list {
+        margin: 0;
+        padding-left: 20px;
+        color: #856404;
+        line-height: 1.8;
+    }
+
+    .alert-list li {
+        margin-bottom: 8px;
+    }
+
+    .alert-list strong {
+        color: #533f03;
+    }
+
+    /* Deadline Warning */
+    .deadline-warning {
+        background: #f8d7da;
+        border: 2px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-top: 15px;
+        text-align: center;
+    }
+
+    .deadline-warning .clock-icon {
+        color: #dc3545;
+        font-size: 24px;
+        margin-bottom: 8px;
+    }
+
+    .deadline-text {
+        color: #721c24;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    /* Action Buttons */
+    .action-section {
+        padding: 30px;
+        background: #f8f9fa;
+        text-align: center;
+        display: flex;
+        gap: 15px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        color: white;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        color: white;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom {
+        background: white;
+        border: 2px solid #dee2e6;
+        color: #495057;
+        padding: 14px 32px;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 15px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .btn-secondary-custom:hover {
+        border-color: #667eea;
+        color: #667eea;
+        text-decoration: none;
+    }
+
+    /* Responsive */
+    @@media (max-width: 576px) {
+        .payment-page {
+            padding: 20px 0;
+        }
+
+        .card-header {
+            padding: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 22px;
+        }
+
+        .qr-section, .bank-info-section, .alert-section, .action-section {
+            padding: 20px;
+        }
+
+        .info-row {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .info-value {
+            text-align: left;
+        }
+
+        .action-section {
+            flex-direction: column;
+        }
+
+        .btn-primary-custom, .btn-secondary-custom {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+</style>
+
+<div class="payment-page">
+    <div class="payment-container">
+        <div class="payment-card">
+            <!-- Header -->
+            <div class="card-header">
+                <div class="success-icon">
+                    <i class="fas fa-check-circle" style="font-size: 40px;"></i>
+                </div>
+                <h2>Đặt hàng thành công!</h2>
+                <p style="margin: 0; font-size: 16px; opacity: 0.9;">
+                    Mã đơn hàng
+                </p>
+                <div class="order-code-badge">@orderCode</div>
+            </div>
+
+            <div class="card-body">
+                <!-- QR Code Section -->
+                <div class="qr-section">
+                    <div class="qr-title">
+                        <i class="fas fa-qrcode"></i> Quét mã QR để thanh toán
+                    </div>
+                    <div class="qr-code-wrapper">
+                        <img src="@qrCodeUrl" alt="QR Code thanh toán" id="qrCodeImage" />
+                    </div>
+                    <div class="qr-instruction">
+                        <i class="fas fa-mobile-alt"></i>
+                        Mở app ngân hàng → Quét QR Code → Xác nhận thanh toán<br />
+                        <small style="color: #adb5bd;">(Số tiền và nội dung chuyển khoản sẽ tự động điền)</small>
+                    </div>
+                </div>
+
+                <!-- Bank Info Section -->
+                <div class="bank-info-section">
+                    <div class="section-title">
+                        <i class="fas fa-university"></i>
+                        Hoặc chuyển khoản thủ công
+                    </div>
+
+                    <div class="info-table">
+                        <div class="info-row">
+                            <span class="info-label">Ngân hàng</span>
+                            <span class="info-value">
+                                <strong>@bankAccount.BankName</strong>
+                            </span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Số tài khoản</span>
+                            <span class="info-value">
+                                <strong>@bankAccount.AccountNumber</strong>
+                                <button class="copy-btn" onclick="copyToClipboard('@bankAccount.AccountNumber', this)">
+                                    <i class="far fa-copy"></i> Copy
+                                </button>
+                            </span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Chủ tài khoản</span>
+                            <span class="info-value">
+                                <strong>@bankAccount.AccountHolder</strong>
+                            </span>
+                        </div>
+
+                        @if (!string.IsNullOrEmpty(bankAccount.Branch))
+                        {
+                            <div class="info-row">
+                                <span class="info-label">Chi nhánh</span>
+                                <span class="info-value">@bankAccount.Branch</span>
+                            </div>
+                        }
+
+                        <div class="info-row">
+                            <span class="info-label">Số tiền</span>
+                            <span class="info-value">
+                                <span class="amount-highlight">@totalAmount.ToString("N0")đ</span>
+                                <button class="copy-btn" onclick="copyToClipboard('@totalAmount', this)">
+                                    <i class="far fa-copy"></i> Copy
+                                </button>
+                            </span>
+                        </div>
+
+                        <div class="info-row">
+                            <span class="info-label">Nội dung CK</span>
+                            <span class="info-value">
+                                <span class="order-code-highlight">@orderCode</span>
+                                <button class="copy-btn" onclick="copyToClipboard('@orderCode', this)">
+                                    <i class="far fa-copy"></i> Copy
+                                </button>
+                            </span>
+                        </div>
+                    </div>
+
+                    @if (paymentDeadline.HasValue)
+                    {
+                        <div class="deadline-warning">
+                            <div class="clock-icon">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="deadline-text">
+                                Vui lòng thanh toán trước: @paymentDeadline.Value.ToString("dd/MM/yyyy HH:mm")
+                            </div>
+                            <small style="color: #856404;">
+                                (Đơn hàng sẽ tự động hủy nếu quá hạn)
+                            </small>
+                        </div>
+                    }
+                </div>
+
+                <!-- Alert Section -->
+                <div class="alert-section">
+                    <div class="alert-title">
+                        <i class="fas fa-info-circle"></i>
+                        Lưu ý quan trọng
+                    </div>
+                    <ul class="alert-list">
+                        <li>Vui lòng chuyển khoản <strong>đúng số tiền: @totalAmount.ToString("N0")đ</strong></li>
+                        <li>Nội dung chuyển khoản: <strong>@orderCode</strong> (để chúng tôi xác nhận nhanh hơn)</li>
+                        <li>Đơn hàng sẽ được xử lý sau khi nhận được thanh toán (1-2 giờ)</li>
+                        <li>Bạn sẽ nhận email xác nhận khi đơn hàng được duyệt</li>
+                        @if (paymentDeadline.HasValue)
+                        {
+                            <li>Hạn thanh toán: <strong>@((int)(paymentDeadline.Value - DateTime.Now).TotalHours) giờ</strong> kể từ bây giờ</li>
+                        }
+                    </ul>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-section">
+                    <a href="/" class="btn-primary-custom">
+                        <i class="fas fa-home"></i>
+                        Về trang chủ
+                    </a>
+                    <a href="/Customer/MyOrders" class="btn-secondary-custom">
+                        <i class="fas fa-box"></i>
+                        Đơn hàng của tôi
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Copy to clipboard với animation
+    function copyToClipboard(text, button) {
+        navigator.clipboard.writeText(text).then(function() {
+            // Change button state
+            var originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="fas fa-check"></i> Đã copy';
+            button.classList.add('copied');
+
+            // Show toast notification
+            showToast('✅ Đã copy: ' + text);
+
+            // Reset button after 2 seconds
+            setTimeout(function() {
+                button.innerHTML = originalHTML;
+                button.classList.remove('copied');
+            }, 2000);
+        }, function(err) {
+            console.error('Copy failed:', err);
+            showToast('❌ Không thể copy. Vui lòng copy thủ công.');
+        });
+    }
+
+    // Toast notification
+    function showToast(message) {
+        // Remove existing toast
+        var existingToast = document.getElementById('copyToast');
+        if (existingToast) {
+            existingToast.remove();
+        }
+
+        // Create toast
+        var toast = document.createElement('div');
+        toast.id = 'copyToast';
+        toast.style.cssText = `
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #28a745;
+            color: white;
+            padding: 16px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 9999;
+            font-weight: 600;
+            animation: slideInUp 0.3s ease-out;
+        `;
+        toast.textContent = message;
+
+        document.body.appendChild(toast);
+
+        // Auto remove after 3 seconds
+        setTimeout(function() {
+            toast.style.animation = 'slideOutDown 0.3s ease-in';
+            setTimeout(function() {
+                toast.remove();
+            }, 300);
+        }, 3000);
+    }
+
+    // CSS animations
+    var style = document.createElement('style');
+    style.textContent = `
+        @@keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @@keyframes slideOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
+    // Download QR code (optional feature)
+    function downloadQR() {
+        var link = document.createElement('a');
+        link.href = document.getElementById('qrCodeImage').src;
+        link.download = 'qr-thanh-toan-@orderCode.jpg';
+        link.click();
+        showToast('📥 Đang tải QR Code...');
+    }
+
+    // Auto refresh QR code after 10 minutes (nếu user để lâu)
+    setTimeout(function() {
+        var img = document.getElementById('qrCodeImage');
+        var src = img.src;
+        img.src = src + '&t=' + Date.now();
+    }, 600000); // 10 minutes
+</script>

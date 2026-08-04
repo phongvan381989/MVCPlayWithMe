@@ -26,9 +26,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Đóng mở kết nối bên ngoài
         /// </summary>
         /// <returns>-2 nếu tMDTShopeeItemId đã tồn tại, -1 nếu có lỗi</returns>
-        public static async Task<int> InserttbShopeeItemAsync(CommonItem item, MySqlConnection conn)
+        public static async Task<long> InserttbShopeeItemAsync(CommonItem item, MySqlConnection conn)
         {
-            int id = 0;
+            long id = 0;
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Insert", conn))
@@ -41,13 +41,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
                     cmd.Parameters.AddWithValue("@inDetail", item.detail);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            id = MyMySql.GetInt32(rdr, "LastId");
-                        }
-                    }
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    id = Convert.ToInt64(scalarResult);
                 }
             }
             catch (Exception ex)
@@ -63,12 +58,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Đóng mở kết nối bên ngoài
         /// </summary>
         /// <returns>-2 nếu tMDTShopeeModelId đã tồn tại, -1 nếu có lỗi</returns>
-        public static async Task<int> InserttbShopeeModelAsync(int itemId, CommonModel model, MySqlConnection conn)
+        public static async Task<long> InserttbShopeeModelAsync(long itemId, CommonModel model, MySqlConnection conn)
         {
             MyLogger.GetInstance().Warn("Start InserttbShopeeModel");
             MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
             MyLogger.GetInstance().Warn("tMDTShopeeModelId: " + model.modelId.ToString());
-            int id = 0;
+            long id = 0;
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbShopeeModel_Insert", conn))
@@ -81,13 +76,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inStatus", model.bActive ? 0 : 1);
                     cmd.Parameters.AddWithValue("@inImage", model.imageSrc);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
-                        {
-                            id = MyMySql.GetInt32(rdr, "LastId");
-                        }
-                    }
+                    object scalarResult = await cmd.ExecuteScalarAsync();
+                    id = Convert.ToInt64(scalarResult);
                 }
             }
             catch (Exception ex)
@@ -144,7 +134,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             Boolean exist = false;
             try
             {
-                int itemIdInserted = 0;
+                long itemIdInserted = 0;
 
                 using (MySqlCommand cmd = new MySqlCommand("st_tbShopeeItem_Get_From_TMDTShopeeItemId", conn))
                 {
@@ -640,7 +630,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         }
 
         // Insert mapping của model mới, và model chỉ mapping với 1 sản phẩm
-        public static async Task<MySqlResultState> ShopeeInsertNewMappingOneOfModelAsync(int modelId,
+        public static async Task<MySqlResultState> ShopeeInsertNewMappingOneOfModelAsync(long modelId,
             int productId,
             int quantity,
             MySqlConnection conn)

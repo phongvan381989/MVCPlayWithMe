@@ -3,6 +3,7 @@ using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.Models.SanPhamModel
@@ -54,19 +55,30 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
+                        // Lấy index của các cột 1 lần duy nhất (tối ưu performance)
+                        int idIndex = rdr.GetOrdinal("Id");
+                        int sanPhamBanIdIndex = rdr.GetOrdinal("SanPhamBanId");
+                        int sanPhamKhoIdIndex = rdr.GetOrdinal("SanPhamKhoId");
+                        int quantityIndex = rdr.GetOrdinal("Quantity");
+                        int sanPhamKhoCodeIndex = rdr.GetOrdinal("SanPhamKhoCode");
+                        int sanPhamKhoNameIndex = rdr.GetOrdinal("SanPhamKhoName");
+                        int sanPhamKhoQuantityIndex = rdr.GetOrdinal("SanPhamKhoQuantity");
+                        int sanPhamKhoBookCoverPriceIndex = rdr.GetOrdinal("SanPhamKhoBookCoverPrice");
+                        int sanPhamKhoDiscountIndex = rdr.GetOrdinal("SanPhamKhoDiscount");
+
                         while (await rdr.ReadAsync())
                         {
                             list.Add(new SanPhamMapping
                             {
-                                Id = MyMySql.GetInt32(rdr, "Id"),
-                                SanPhamBanId = MyMySql.GetInt32(rdr, "SanPhamBanId"),
-                                SanPhamKhoId = MyMySql.GetInt32(rdr, "SanPhamKhoId"),
-                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
-                                SanPhamKhoCode = MyMySql.GetString(rdr, "SanPhamKhoCode"),
-                                SanPhamKhoName = MyMySql.GetString(rdr, "SanPhamKhoName"),
-                                SanPhamKhoQuantity = MyMySql.GetInt32(rdr, "SanPhamKhoQuantity"),
-                                SanPhamKhoBookCoverPrice = MyMySql.GetInt32(rdr, "SanPhamKhoBookCoverPrice"),
-                                SanPhamKhoDiscount = (float)rdr.GetDouble(rdr.GetOrdinal("SanPhamKhoDiscount"))
+                                Id = MyMySql.GetInt32(rdr, idIndex),
+                                SanPhamBanId = MyMySql.GetInt32(rdr, sanPhamBanIdIndex),
+                                SanPhamKhoId = MyMySql.GetInt32(rdr, sanPhamKhoIdIndex),
+                                Quantity = MyMySql.GetInt32(rdr, quantityIndex),
+                                SanPhamKhoCode = MyMySql.GetString(rdr, sanPhamKhoCodeIndex),
+                                SanPhamKhoName = MyMySql.GetString(rdr, sanPhamKhoNameIndex),
+                                SanPhamKhoQuantity = MyMySql.GetInt32(rdr, sanPhamKhoQuantityIndex),
+                                SanPhamKhoBookCoverPrice = MyMySql.GetInt32(rdr, sanPhamKhoBookCoverPriceIndex),
+                                SanPhamKhoDiscount = (float)rdr.GetDouble(sanPhamKhoDiscountIndex)
                             });
                         }
                     }
@@ -75,6 +87,93 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.ToString());
+                list.Clear();
+            }
+
+            return list;
+        }
+
+        // Từ List<(int sanPhamId, int quantity) của tb_san_pham
+        // lấy được danh sách List<(int productId, int quantity) của tbProducts
+        /// <summary>
+        /// [OPTIMIZED] Lấy danh sách (SanPhamKhoId, Quantity) từ danh sách (SanPhamBanId, Quantity)
+        /// Dùng 1 query duy nhất với IN clause để tránh N+1 query problem
+        /// </summary>
+        /// <param name="sanPhams">Danh sách (sanPhamBanId, quantity) đã mua</param>
+        /// <param name="conn">MySqlConnection đã mở</param>
+        /// <returns>Danh sách (sanPhamKhoId, totalQuantity) cần trừ kho</returns>
+        public static async Task<List<(int productId, int quantity)>> GetListProductIdQuantity_ConnectOutAsync(
+            List<(int sanPhamId, int quantity)> sanPhams)
+        {
+            List<(int productId, int quantity)> list = new List<(int productId, int quantity)>();
+
+            //if (sanPhams == null || sanPhams.Count == 0)
+            //{
+            //    return list;
+            //}
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    // Tạo Dictionary để lookup quantity theo sanPhamId
+                    var quantityMap = new Dictionary<int, int>();
+                    foreach (var sp in sanPhams)
+                    {
+                        // Nếu duplicate ID, cộng dồn quantity
+                        if (quantityMap.ContainsKey(sp.sanPhamId))
+                        {
+                            quantityMap[sp.sanPhamId] += sp.quantity;
+                        }
+                        else
+                        {
+                            quantityMap[sp.sanPhamId] = sp.quantity;
+                        }
+                    }
+
+                    // Build IN clause parameters
+                    var ids = quantityMap.Keys.ToList();
+                    var inClause = string.Join(",", ids.Select((_, i) => $"@id{i}"));
+
+                    string query = $@"
+                    SELECT m.SanPhamBanId, m.SanPhamKhoId, m.Quantity
+                    FROM tb_san_pham_mapping m
+                    WHERE m.SanPhamBanId IN ({inClause})
+                    ORDER BY m.SanPhamBanId, m.Id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+
+                        // Add parameters
+                        for (int i = 0; i < ids.Count; i++)
+                        {
+                            cmd.Parameters.Add($"@id{i}", MySqlDbType.Int32).Value = ids[i];
+                        }
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            while (await rdr.ReadAsync())
+                            {
+                                int sanPhamBanId = rdr.GetInt32(0);  // SanPhamBanId
+                                int sanPhamKhoId = rdr.GetInt32(1);  // SanPhamKhoId
+                                int mappingQty = rdr.GetInt32(2);    // Quantity trong mapping
+
+                                // Nhân với quantity từ input
+                                int totalQty = mappingQty * quantityMap[sanPhamBanId];
+
+                                list.Add((sanPhamKhoId, totalQty));
+                            }
+                        }
+                    }
+
+                    //MyLogger.GetInstance().Info($"✅ Mapped {sanPhams.Count} SanPhamBan to {list.Count} SanPhamKho");
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Error($"❌ GetListProductIdQuantity_ConnectOutAsync failed: {ex.Message}\n{ex.StackTrace}");
                 list.Clear();
             }
 
