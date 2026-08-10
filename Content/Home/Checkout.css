@@ -289,7 +289,7 @@ button.change-address-btn {
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    margin: 20px;
+    margin: 15px;
 }
 
 .money-padding {
@@ -297,7 +297,7 @@ button.change-address-btn {
     text-align: end;
 }
 
-.money-sum {
+.final-money {
     font-size: 20px;
     font-weight: 500;
     color: #ee4d2d;

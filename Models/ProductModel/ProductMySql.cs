@@ -1609,7 +1609,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             result = await UpdateOutputAndProductTableFromFromListImportAsync(orderId, ls, ECommerceOrderStatus.PACKED, EECommerceType.PLAY_WITH_ME);
             if (result.State != EMySqlResultState.OK) return result;
             OrderPay orderPay = new OrderPay();
-            orderPay.type = (int)EPayType.FINAL;
+            orderPay.type = EOrderPayType.FINAL;
             orderPay.value = sumPay;
 
             await OrderMySql.AddPayOrderAsync(orderId, new List<OrderPay> { orderPay });

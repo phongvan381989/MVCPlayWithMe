@@ -14,28 +14,42 @@ namespace MVCPlayWithMe.Models.Order
     public class OrderSimplePromotionMySql
     {
         /// <summary>
-        /// Đọc 1 row promotion từ MySqlDataReader (dùng column index)
+        /// Đọc 1 row promotion từ MySqlDataReader (dùng column name)
         /// </summary>
-        private static OrderSimplePromotion ReadPromotionFromReader(MySqlDataReader rdr,
-            int idIndex, int nameIndex, int minOrderValueIndex, int statusIndex,
-            int typeIndex, int discountIndex, int discountTypeIndex, int timeIndex, int descriptionIndex)
+        private static OrderSimplePromotion ReadPromotionFromReader(MySqlDataReader rdr)
         {
             return new OrderSimplePromotion
             {
-                Id = MyMySql.GetInt32(rdr, idIndex),
-                Name = MyMySql.GetString(rdr, nameIndex),
-                MinOrderValue = MyMySql.GetInt32(rdr, minOrderValueIndex),
-                Status = MyMySql.GetSByte(rdr, statusIndex),
-                Type = MyMySql.GetSByte(rdr, typeIndex),
-                Discount = MyMySql.GetInt32(rdr, discountIndex),
-                DiscountType = MyMySql.GetSByte(rdr, discountTypeIndex),
-                Time = MyMySql.GetDateTime(rdr, timeIndex),
-                Description = MyMySql.GetString(rdr, descriptionIndex)
+                Id = MyMySql.GetInt32(rdr, "Id"),
+                Name = MyMySql.GetString(rdr, "Name"),
+                MinOrderValue = MyMySql.GetInt32(rdr, "MinOrderValue"),
+                Status = MyMySql.GetSByte(rdr, "Status"),
+                Type = (EOrderSimplePromotionType)MyMySql.GetSByte(rdr, "Type"),
+                Discount = MyMySql.GetInt32(rdr, "Discount"),
+                DiscountType = (eDiscountType)MyMySql.GetSByte(rdr, "DiscountType"),
+                Time = MyMySql.GetDateTime(rdr, "Time"),
+                Description = MyMySql.GetString(rdr, "Description")
             };
         }
 
         /// <summary>
-        /// Execute query và trả về danh sách promotion
+        /// Đọc tất cả rows từ MySqlDataReader và trả về List<OrderSimplePromotion>
+        /// </summary>
+        private static async Task<List<OrderSimplePromotion>> ReadPromotionsFromReaderAsync(MySqlDataReader rdr)
+        {
+            List<OrderSimplePromotion> list = new List<OrderSimplePromotion>();
+
+            while (await rdr.ReadAsync())
+            {
+                OrderSimplePromotion promo = ReadPromotionFromReader(rdr);
+                list.Add(promo);
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Execute query và trả về danh sách promotion (tự mở connection)
         /// </summary>
         private static async Task<List<OrderSimplePromotion>> ExecuteQueryAsync(string query, string methodName)
         {
@@ -50,25 +64,37 @@ namespace MVCPlayWithMe.Models.Order
                     {
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            // Lấy column ordinal một lần duy nhất
-                            int idIndex = rdr.GetOrdinal("Id");
-                            int nameIndex = rdr.GetOrdinal("Name");
-                            int minOrderValueIndex = rdr.GetOrdinal("MinOrderValue");
-                            int statusIndex = rdr.GetOrdinal("Status");
-                            int typeIndex = rdr.GetOrdinal("Type");
-                            int discountIndex = rdr.GetOrdinal("Discount");
-                            int discountTypeIndex = rdr.GetOrdinal("DiscountType");
-                            int timeIndex = rdr.GetOrdinal("Time");
-                            int descriptionIndex = rdr.GetOrdinal("Description");
-
-                            while (await rdr.ReadAsync())
-                            {
-                                OrderSimplePromotion promo = ReadPromotionFromReader(rdr,
-                                    idIndex, nameIndex, minOrderValueIndex, statusIndex,
-                                    typeIndex, discountIndex, discountTypeIndex, timeIndex, descriptionIndex);
-                                list.Add(promo);
-                            }
+                            list = await ReadPromotionsFromReaderAsync(rdr);
                         }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"{methodName} failed: {ex.Message}");
+                list.Clear();
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Execute query và trả về danh sách promotion (connection mở sẵn bên ngoài)
+        /// </summary>
+        private static async Task<List<OrderSimplePromotion>> ExecuteQueryConnectOutAsync(
+            MySqlConnection conn,
+            string query,
+            string methodName)
+        {
+            List<OrderSimplePromotion> list = new List<OrderSimplePromotion>();
+
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        list = await ReadPromotionsFromReaderAsync(rdr);
                     }
                 }
             }
@@ -104,6 +130,20 @@ namespace MVCPlayWithMe.Models.Order
         }
 
         /// <summary>
+        /// Lấy tất cả chương trình giảm giá đang BẬT (Status = 0)
+        /// Phiên bản ConnectOut - connection mở sẵn bên ngoài (dùng trong transaction hoặc shared connection)
+        /// </summary>
+        /// <param name="conn">MySqlConnection đã mở</param>
+        /// <returns>Danh sách promotion đang hoạt động</returns>
+        public static async Task<List<OrderSimplePromotion>> GetActivePromotionsConnectOutAsync(MySqlConnection conn)
+        {
+            return await ExecuteQueryConnectOutAsync(
+                conn,
+                "SELECT * FROM tborder_simple_promotion WHERE Status = 0 ORDER BY MinOrderValue",
+                nameof(GetActivePromotionsConnectOutAsync));
+        }
+
+        /// <summary>
         /// Lấy chương trình giảm giá theo ID
         /// </summary>
         /// <param name="id">ID của promotion</param>
@@ -126,20 +166,7 @@ namespace MVCPlayWithMe.Models.Order
                         {
                             if (await rdr.ReadAsync())
                             {
-                                // Lấy column ordinal
-                                int idIndex = rdr.GetOrdinal("Id");
-                                int nameIndex = rdr.GetOrdinal("Name");
-                                int minOrderValueIndex = rdr.GetOrdinal("MinOrderValue");
-                                int statusIndex = rdr.GetOrdinal("Status");
-                                int typeIndex = rdr.GetOrdinal("Type");
-                                int discountIndex = rdr.GetOrdinal("Discount");
-                                int discountTypeIndex = rdr.GetOrdinal("DiscountType");
-                                int timeIndex = rdr.GetOrdinal("Time");
-                                int descriptionIndex = rdr.GetOrdinal("Description");
-
-                                promo = ReadPromotionFromReader(rdr,
-                                    idIndex, nameIndex, minOrderValueIndex, statusIndex,
-                                    typeIndex, discountIndex, discountTypeIndex, timeIndex, descriptionIndex);
+                                promo = ReadPromotionFromReader(rdr);
                             }
                         }
                     }
@@ -153,72 +180,72 @@ namespace MVCPlayWithMe.Models.Order
             return promo;
         }
 
-        /// <summary>
-        /// Tính tổng giảm giá cho đơn hàng
-        /// </summary>
-        /// <param name="totalMoney">Tổng tiền hàng (tổng đơn giá × số lượng)</param>
-        /// <param name="shipFee">Phí ship (để tính giảm Type 0)</param>
-        /// <returns>Số tiền được giảm (VNĐ)</returns>
-        public static async Task<int> CalculateTotalDiscountAsync(int totalMoney, int shipFee = 0)
-        {
-            // Tách riêng 2 loại giảm giá (giống client để dễ so sánh)
-            int freeShipDiscount = 0;      // Giảm phí ship (Type = 0)
-            int totalMoneyDiscount = 0;    // Giảm tổng tiền hàng (Type = 1)
+        ///// <summary>
+        ///// Tính tổng giảm giá cho đơn hàng
+        ///// </summary>
+        ///// <param name="totalMoney">Tổng tiền hàng (tổng đơn giá × số lượng)</param>
+        ///// <param name="shipFee">Phí ship (để tính giảm Type 0)</param>
+        ///// <returns>Số tiền được giảm (VNĐ)</returns>
+        //public static async Task<int> CalculateTotalDiscountAsync(int totalMoney, int shipFee = 0)
+        //{
+        //    // Tách riêng 2 loại giảm giá (giống client để dễ so sánh)
+        //    int freeShipDiscount = 0;      // Giảm phí ship (Type = 0)
+        //    int totalMoneyDiscount = 0;    // Giảm tổng tiền hàng (Type = 1)
 
-            try
-            {
-                // Lấy tất cả promotion đang bật
-                List<OrderSimplePromotion> promotions = await GetActivePromotionsAsync();
+        //    try
+        //    {
+        //        // Lấy tất cả promotion đang bật
+        //        List<OrderSimplePromotion> promotions = await GetActivePromotionsAsync();
 
-                foreach (var promo in promotions)
-                {
-                    if (promo.Type == 0)
-                    {
-                        // ===== TYPE 0: MIỄN PHÍ SHIP =====
-                        // Điều kiện: totalMoney >= MinOrderValue (giống client)
-                        // Giảm giá = shipFee (KHÔNG phải promo.Discount!)
+        //        foreach (var promo in promotions)
+        //        {
+        //            if (promo.Type == EOrderSimplePromotionType.SHIP_DISCOUNT)
+        //            {
+        //                // ===== TYPE 0: MIỄN PHÍ SHIP =====
+        //                // Điều kiện: totalMoney >= MinOrderValue (giống client)
+        //                // Giảm giá = shipFee (KHÔNG phải promo.Discount!)
 
-                        if (totalMoney >= promo.MinOrderValue)
-                        {
-                            freeShipDiscount = shipFee; // ← Giảm bằng phí ship (giống client!)
-                            break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
-                        }
-                    }
-                    else if (promo.Type == 1)
-                    {
-                        // ===== TYPE 1: GIẢM THEO BẬC 100K =====
-                        // Điều kiện: totalMoney > MinOrderValue (STRICT >, giống client)
-                        // Công thức: ((totalMoney - MinOrderValue) / 100,000 + 1) × Discount
+        //                if (totalMoney >= promo.MinOrderValue)
+        //                {
+        //                    freeShipDiscount = shipFee; // ← Giảm bằng phí ship (giống client!)
+        //                    break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
+        //                }
+        //            }
+        //            else if (promo.Type == EOrderSimplePromotionType.TOTAL_DISCOUNT)
+        //            {
+        //                // ===== TYPE 1: GIẢM THEO BẬC 100K =====
+        //                // Điều kiện: totalMoney > MinOrderValue (STRICT >, giống client)
+        //                // Công thức: ((totalMoney - MinOrderValue) / 100,000 + 1) × Discount
 
-                        if (totalMoney > promo.MinOrderValue)  // ← STRICT > (giống client!)
-                        {
-                            int extraAmount = totalMoney - promo.MinOrderValue;
-                            int multiplier = (extraAmount / 100000) + 1;
-                            totalMoneyDiscount = multiplier * promo.Discount;
-                            break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
-                        }
-                    }
-                }
+        //                if (totalMoney > promo.MinOrderValue)  // ← STRICT > (giống client!)
+        //                {
+        //                    int extraAmount = totalMoney - promo.MinOrderValue;
+        //                    int multiplier = (extraAmount / 100000) + 1;
+        //                    totalMoneyDiscount = multiplier * promo.Discount;
+        //                    break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
+        //                }
+        //            }
+        //        }
 
-                // Log breakdown để dễ debug
-                if (freeShipDiscount > 0 || totalMoneyDiscount > 0)
-                {
-                    MyLogger.GetInstance().Info($"Discount breakdown - Total: {totalMoney:N0}đ, ShipFee: {shipFee:N0}đ");
-                    if (freeShipDiscount > 0)
-                        MyLogger.GetInstance().Info($"  ✓ Free ship discount: {freeShipDiscount:N0}đ");
-                    if (totalMoneyDiscount > 0)
-                        MyLogger.GetInstance().Info($"  ✓ Total money discount: {totalMoneyDiscount:N0}đ");
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn($"CalculateTotalDiscountAsync failed: {ex.Message}");
-            }
+        //        // Log breakdown để dễ debug
+        //        if (freeShipDiscount > 0 || totalMoneyDiscount > 0)
+        //        {
+        //            MyLogger.GetInstance().Info($"Discount breakdown - Total: {totalMoney:N0}đ, ShipFee: {shipFee:N0}đ");
+        //            if (freeShipDiscount > 0)
+        //                MyLogger.GetInstance().Info($"  ✓ Free ship discount: {freeShipDiscount:N0}đ");
+        //            if (totalMoneyDiscount > 0)
+        //                MyLogger.GetInstance().Info($"  ✓ Total money discount: {totalMoneyDiscount:N0}đ");
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn($"CalculateTotalDiscountAsync failed: {ex.Message}");
+        //    }
 
-            // Tổng giảm giá = freeShipDiscount + totalMoneyDiscount (giống client)
-            int totalDiscount = freeShipDiscount + totalMoneyDiscount;
-            return totalDiscount;
-        }
+        //    // Tổng giảm giá = freeShipDiscount + totalMoneyDiscount (giống client)
+        //    int totalDiscount = freeShipDiscount + totalMoneyDiscount;
+        //    return totalDiscount;
+        //}
 
         /// <summary>
         /// Lấy mô tả các promotion áp dụng cho đơn hàng

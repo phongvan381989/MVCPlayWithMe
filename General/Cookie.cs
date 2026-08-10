@@ -67,28 +67,28 @@ namespace MVCPlayWithMe.General
         /// ex: 13#43#....#466
         /// </summary>
         /// <param name="httpContext"></param>
-        public static void SetOrderListCookie(HttpContextBase httpContext, int id)
-        {
-            string value = "";
-            if (httpContext.Request.Cookies[Common.orderIdList] != null)
-            {
-                value = httpContext.Request.Cookies[Common.orderIdList].Value;
-                if(string.IsNullOrEmpty(value))
-                {
-                    value = id.ToString();
-                }
-                else
-                {
-                    value = value + "#" + id.ToString();
-                }
-            }
-            HttpCookie orderIdList = new HttpCookie(Common.orderIdList);
-            orderIdList.Value = value;
-            orderIdList.Expires = SetExpires(100);
-            //uId.HttpOnly = true;
+        //public static void SetOrderListCookie(HttpContextBase httpContext, int id)
+        //{
+        //    string value = "";
+        //    if (httpContext.Request.Cookies[Common.orderIdList] != null)
+        //    {
+        //        value = httpContext.Request.Cookies[Common.orderIdList].Value;
+        //        if(string.IsNullOrEmpty(value))
+        //        {
+        //            value = id.ToString();
+        //        }
+        //        else
+        //        {
+        //            value = value + "#" + id.ToString();
+        //        }
+        //    }
+        //    HttpCookie orderIdList = new HttpCookie(Common.orderIdList);
+        //    orderIdList.Value = value;
+        //    orderIdList.Expires = SetExpires(100);
+        //    //uId.HttpOnly = true;
 
-            httpContext.Response.Cookies.Add(orderIdList);
-        }
+        //    httpContext.Response.Cookies.Add(orderIdList);
+        //}
 
         public static CookieResultState GetUserIdCookie(HttpContextBase httpContext)
         {
@@ -138,15 +138,15 @@ namespace MVCPlayWithMe.General
             return;
         }
 
-        public static CookieResultState GetCartCookie(HttpContextBase httpContext)
-        {
-            CookieResultState cookie = new CookieResultState();
-            if(httpContext.Request.Cookies[Common.cartKey] != null)
-            {
-                cookie.cookieValue = httpContext.Request.Cookies[Common.cartKey].Value;
-            }
-            return cookie;
-        }
+        //public static CookieResultState GetCartCookie(HttpContextBase httpContext)
+        //{
+        //    CookieResultState cookie = new CookieResultState();
+        //    if(httpContext.Request.Cookies[Common.cartKey] != null)
+        //    {
+        //        cookie.cookieValue = httpContext.Request.Cookies[Common.cartKey].Value;
+        //    }
+        //    return cookie;
+        //}
 
         //public static CookieResultState GetCustomerInforCookie(HttpContextBase httpContext)
         //{
@@ -159,26 +159,26 @@ namespace MVCPlayWithMe.General
         //}
 
         // cookie có dạng: cart=id=123#q=10#real=1$id=321#q=1#real=0$....$id=321#q=2#real=0
-        public static List<Cart> GetListCartCookieFromCookieValue(string cartCookie)
-        {
-            List<Cart> listCartCookie = new List<Cart>();
-            if (string.IsNullOrEmpty(cartCookie))
-                return listCartCookie;
+        //public static List<Cart> GetListCartCookieFromCookieValue(string cartCookie)
+        //{
+        //    List<Cart> listCartCookie = new List<Cart>();
+        //    if (string.IsNullOrEmpty(cartCookie))
+        //        return listCartCookie;
 
-            string[] myArray = cartCookie.Split('$');
-            for (int i = 0; i < myArray.Length; i++)
-            {
-                //listCartCookie.Add(new Cart(myArray[i]));
-            }
+        //    string[] myArray = cartCookie.Split('$');
+        //    for (int i = 0; i < myArray.Length; i++)
+        //    {
+        //        //listCartCookie.Add(new Cart(myArray[i]));
+        //    }
 
-            return listCartCookie;
-        }
+        //    return listCartCookie;
+        //}
 
-        public static List<Cart> GetListCartCookie(HttpContextBase httpContext)
-        {
-            CookieResultState cookie = GetCartCookie(httpContext);
-            return GetListCartCookieFromCookieValue(cookie.cookieValue);
-        }
+        //public static List<Cart> GetListCartCookie(HttpContextBase httpContext)
+        //{
+        //    CookieResultState cookie = GetCartCookie(httpContext);
+        //    return GetListCartCookieFromCookieValue(cookie.cookieValue);
+        //}
 
         //// cookie có dạng: name=Hoàng Huệ#phone=0359127226#province=Hà Nội#district=Bắc Từ Liêm#subdistrict=Cổ Nhuế 2#detail=Số 24 , Ngõ Việt Hà 2, khu tập thể Việt Hà, tổ dân phố Phú Minh#defaultAdd=1
         //public static List<Address> GetListCustomerInforCookieFromCookieValue(string customerInforCookie)
@@ -211,14 +211,14 @@ namespace MVCPlayWithMe.General
             return cookie;
         }
 
-        public static CookieResultState GetOrderListCookie(HttpContextBase httpContext)
-        {
-            CookieResultState cookie = new CookieResultState();
-            if (httpContext.Request.Cookies[Common.orderIdList] != null)
-            {
-                cookie.cookieValue = httpContext.Request.Cookies[Common.orderIdList].Value;
-            }
-            return cookie;
-        }
+        //public static CookieResultState GetOrderListCookie(HttpContextBase httpContext)
+        //{
+        //    CookieResultState cookie = new CookieResultState();
+        //    if (httpContext.Request.Cookies[Common.orderIdList] != null)
+        //    {
+        //        cookie.cookieValue = httpContext.Request.Cookies[Common.orderIdList].Value;
+        //    }
+        //    return cookie;
+        //}
     }
 }

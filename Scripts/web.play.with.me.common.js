@@ -634,10 +634,10 @@ function ConvertMoneyToText(money) {
     return isNegative ? "-" + textMoney : textMoney;
 }
 
-// Convert số tiền sang text dạng: đ123,456,700
+// Convert số tiền sang text dạng: ₫123,456,700
 function ConvertMoneyToTextWithIcon(money) {
     let text = ConvertMoneyToText(money);
-    return "<sup>₫</sup>" + text;
+    return text + "₫";
 }
 
 // Convert text dạng: 123,456,700 sang số tiền
@@ -675,16 +675,19 @@ function Get320VersionOfImageSrc(src) {
 
     let filename = src.replace(/^.*[\\/]/, '');
 
-
     let lastIndex = src.lastIndexOf(filename);
-    // Nếu đuôi file khác .png, .jpg,.webp thì mặc định là .jpeg
+
+    // Lấy extension từ filename (handle cả trường hợp có nhiều dấu chấm: "image.backup.jpg")
+    let dotIndex = filename.lastIndexOf(".");
+    let nameWithoutExt = dotIndex > 0 ? filename.substring(0, dotIndex) : filename;
+    let ext = dotIndex > 0 ? filename.substring(dotIndex + 1).toLowerCase() : "";
+
+    // Nếu đuôi file không phải png/jpg/webp → mặc định là .jpg
     let newFileName = filename;
-    const myArray = filename.split(".");
-    if (myArray[1].toLowerCase() != "png" &&
-        myArray[1].toLowerCase() != "jpg" &&
-        myArray[1].toLowerCase() != "webp") {
-        newFileName = myArray[0] + ".jpg";
+    if (ext !== "png" && ext !== "jpg" && ext !== "webp") {
+        newFileName = nameWithoutExt + ".jpg";
     }
+
     let newSrc = src.substring(0, lastIndex - 1) + "_320/" + newFileName;
     return newSrc;
 }
@@ -1491,4 +1494,13 @@ function GenerateSlug(text) {
 
 function GenerateSlugIdFromItem(item) {
     return GenerateSlug(item.name) + "-" + item.id;
+}
+
+
+function GetFormattedDate(date) {
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
 }

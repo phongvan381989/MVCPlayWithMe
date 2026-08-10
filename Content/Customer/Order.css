@@ -1,11 +1,77 @@
-.status-container {
+﻿.search-filter-order {
+    position: sticky;
+    top: 0;
+    background-color: white; /* ✅ Thêm dòng này */
+}
+.order-search-container {
+    width: 100%;
+    display: flex;
+/*    position: sticky;*/
+    border: 1px solid rgb(221, 221, 227);
+    border-radius: 8px;
+    /*-webkit-box-align: center;*/
+    align-items: center;
+    padding-left: 10px;
+}
+
+.order-search-input-text {
+    border: 0px;
+    padding: 0px 4px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    flex: 1 1 0%;
+    outline: none;
+}
+
+.order-search-button:hover {
+    background: #e1e1e1;
+}
+
+/*.top-account-container:hover .dropdown-content {
+    display: block;
+}*/
+.order-search-button {
+    cursor: pointer;
+    border: 0px;
+    width: 92px;
+    height: 38px;
+    padding: 4px;
+    border-radius: 0px 8px 8px 0px;
+/*    background: transparent;*/
+    /*color: rgb(10, 104, 255);*/
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 150%;
+    outline: none;
+    display: flex;
+    /*-webkit-box-align: center;*/
+    align-items: center;
+    /*-webkit-box-pack: center;*/
+    justify-content: center;
+    position: relative;
+}
+
+.order-search-button::before {
+    content: "";
+    display: block;
+    position: absolute;
+    border-left: 1px solid rgb(221, 221, 227);
+    height: 24px;
+    left: 0px;
+    top: 8px;
+}
+
+.filter-container {
     display: flex;
     padding: 10px;
     background-color: white;
     flex-wrap: wrap;
     border-radius: 3px;
-    position: sticky;
-    top: 0;
+/*    position: sticky;
+    top: 0;*/
 }
 
 .sample-order {
@@ -34,13 +100,23 @@
     align-items: center;
 }
 
+.order-code {
+    line-height: 24px;
+/*    text-align: right;*/
+    white-space: nowrap;
+    margin: 10px 5px;
+}
+.yMGIuJ {
+    margin: 0 5px;
+}
+
 .fxASnxvd {
     line-height: 24px;
     color: #ee4d2d;
     text-align: right;
     text-transform: uppercase;
     white-space: nowrap;
-    margin: 10px;
+    margin: 10px 5px;
 }
 
 .sample-item-container {
@@ -66,7 +142,7 @@
 .model-icon {
     width: 80px;
     height: 80px;
-    flex-shrink: 0;
+/*    flex-shrink: 0;*/
     border: 1px solid #e1e1e1;
     background: #e1e1e1;
 }
@@ -78,51 +154,64 @@
     align-items: center;
 }
 
-.j2En5csA {
-    margin: 0 4px 0 0;
-    text-decoration-line: line-through;
-    color: #000;
-    opacity: .26;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.ffZM87hf-name {
+    word-break: break-all;
 }
 
-.ffZM87hf {
-    word-break: break-all;
+.M-AAFK {
+    margin-right: 10px;
+    color: #ee4d2d;
+}
+
+.vWt6ZL {
+    color: rgba(0,0,0,.54);
+    margin-right: 10px;
+    text-decoration: line-through;
+}
+.G7E4B7 {
+    padding: 5px;
+}
+
+/* Dấu "x" giữa giá và số lượng (VD: ₫29.800 x 2) */
+.quantity-model-x {
+    font-size: 0.85rem;
+    color: #888;
+    /*    margin: 0 4px;*/
+    font-weight: 400;
 }
 
 .result-container {
     width: 100%;
 }
 
-.payment-infor-container {
-    background: #fffefb;
+/*.payment-infor-container {
+    background: #fffefb;*/
     /*box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);*/
     /*border-top: 1px solid #f1f0ed;*/
-    border-style: solid;
-    border-width: 0px;
+    /*border-style: solid;
+    border-width: 0px;*/
     /*padding-top: 15px;*/
-}
+/*}*/
 
-.money-title {
+/*.money-title {
     width: 120px;
-}
+}*/
 
 .money-padding {
     min-width: 130px;
     text-align: end;
 }
 
-.money-sum {
+.final-money {
     height: 30px;
     font-size: 20px;
     font-weight: 500;
     color: #ee4d2d;
 }
 
-#note_anonymous, #xvbxw3636 {
+/*#note_anonymous, #xvbxw3636 {
     padding: 5px;
-}
+}*/
 
 #input_sdt_name_for_search {
     min-width:300px;
@@ -130,12 +219,6 @@
     margin-bottom:5px;
 }
 
-.sample-address-container {
-    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-    background: #fff;
-    border-radius: 3px;
-    display:none;
-}
 .address-name-phone {
     font-weight: 700;
     color: #222;
@@ -144,4 +227,109 @@
 .address-address, .address-date {
     margin: 5px;
     word-break: break-word;
+}
+
+/* Payment method & info styles (from Checkout.css) */
+.payment-method {
+    align-items: center;
+    min-height: 90px;
+    padding: 10px 20px;
+    box-sizing: border-box;
+    background-color: white;
+    border-radius: 3px;
+    margin-top: 15px;
+}
+
+.mvna89xnd {
+    margin-left: 20px;
+}
+
+.SzEjHI {
+    font-size: 1.25rem;
+    color: #222;
+    padding: 10px 0px;
+}
+
+.KoRB7y {
+    color: #222;
+}
+
+.hjhgui88 {
+    padding: 10px 0px;
+}
+
+.payment-infor {
+    background: #fffefb;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
+    border-top: 1px solid #f1f0ed;
+    padding: 15px 0px;
+}
+
+.checkout-money-flex-end {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin: 15px;
+}
+
+.order-btn {
+    background: #ee4d2d;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: capitalize;
+    max-width: 250px;
+    min-width: 8.25rem;
+    height: 48px;
+    border: 1px solid rgba(0,0,0,.09);
+    border-radius: 2px;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+    .order-btn:hover {
+        background: #d73211;
+    }
+
+/* Empty state khi không có đơn hàng */
+.empty-order-state {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #999;
+    font-size: 1.1rem;
+}
+
+.message-to-shop {
+/*    display: flex;
+    align-items: center;*/
+    margin: 15px 0px;
+    padding: 5px 10px;
+    background-color: white;
+    border-radius: 3px;
+}
+
+.gQuJxM {
+    padding: 5px 10px;
+    width: 100%;
+    /*    height: 40px;*/
+    box-sizing: border-box;
+    background-color: initial;
+    outline: none;
+    font-size: .875rem;
+    /*    min-width: 0;*/
+    color: #222;
+    border: 1px solid rgba(0,0,0,.14);
+    border-radius: 2px;
+}
+
+@media (min-width: 800px) {
+    .model-icon {
+        width: 100px;
+        height: 100px;
+        border: 1px solid #e1e1e1;
+        background: #e1e1e1;
+    }
 }

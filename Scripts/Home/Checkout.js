@@ -12,14 +12,6 @@ let listOrderSimplePromotionsObject = null; // Danh sách promotion đang hoạt
 
 let listOrderPay = null; // Danh sách các loại thanh toán: tổng tiền hàng, phí ship, tổng thanh toán,....
 
-let typeTongTienHang = 0; // Type = 0: Tổng tiền hàng
-let typePhiShip = 1; // Type = 1: Phí ship
-let typeKhuyenMaiKhac = 2; // Type = 2: Khuyến mại khác
-let typeTongThanhToan = 10; // Type = 10: Tổng thanh toán = Tổng tiền hàng + Phí ship - Khuyến mại khác
-
-let promotionTypeFreeShip = 0; // Type = 0: Miễn phí ship
-let promotionTypeGiamTienHang = 1; // Type = 1: Giảm tiền hàng theo bậc 100k
-
 // Mark rằng user đã vào checkout page (để Cart page detect back navigation)
 if (sessionStorage.getItem('fromCheckout') === 'pending') {
     sessionStorage.setItem('fromCheckout', 'visited');
@@ -220,7 +212,7 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
                         <h4 style='color: white; margin: 0 0 15px 0; font-size: 1rem;'>
                             📱 Quét mã QR để thanh toán
                         </h4>
-                        <div style='background: white; padding: 15px; border-radius: 6px; display: inline-block;'>
+                        <div style='background: white; padding: 5px; border-radius: 6px; display: inline-block;'>
                             <img src='${qrCodeUrl}' alt='QR Code' style='max-width: 280px; width: 100%; height: auto;' />
                         </div>
                         <p style='color: white; font-size: 0.85rem; margin: 12px 0 0 0;'>
@@ -527,7 +519,7 @@ function ShowCheckoutMoney() {
 
         if (listOrderSimplePromotionsObject && listOrderSimplePromotionsObject.length > 0) {
             listOrderSimplePromotionsObject.find(promo => {
-                if (promo.Type === promotionTypeFreeShip) {
+                if (promo.Type === EOrderSimplePromotionType.SHIP_DISCOUNT) {
                     // Type 0: Miễn phí ship
                     if (totalMoney >= promo.MinOrderValue) {
                         shipFeeDiscount = shipFeeValue * -1; // Giảm bằng phí ship
@@ -554,7 +546,7 @@ function ShowCheckoutMoney() {
 
     if (listOrderSimplePromotionsObject && listOrderSimplePromotionsObject.length > 0) {
         listOrderSimplePromotionsObject.find(promo => {
-            if (promo.Type === promotionTypeGiamTienHang) {
+            if (promo.Type === EOrderSimplePromotionType.TOTAL_DISCOUNT) {
                 // Type 1: Giảm theo bậc 100k
                 if (totalMoney >= promo.MinOrderValue) {
                     let extraAmount = totalMoney - promo.MinOrderValue;
@@ -566,7 +558,7 @@ function ShowCheckoutMoney() {
     }
 
     // Hiển thị/Ẩn giảm tổng tiền hàng
-    const discountSumElements = document.getElementsByClassName("discount-sum-money");
+    const discountSumElements = document.getElementsByClassName("discount-final-money");
     if (discountSumElements.length > 0) {
         if (totalMoneyDiscount < 0) {
             discountSumElements[0].innerHTML = ConvertMoneyToTextWithIcon(totalMoneyDiscount);
@@ -584,7 +576,7 @@ function ShowCheckoutMoney() {
 
 
     // Hiển thị tổng thanh toán
-    document.getElementsByClassName("money-sum")[0].innerHTML =
+    document.getElementsByClassName("final-money")[0].innerHTML =
         ConvertMoneyToTextWithIcon(finalAmount);
 
     // Debug log
@@ -602,19 +594,19 @@ function ShowCheckoutMoney() {
     /// 10: Tổng thanh toán = Tổng tiền hàng + Phí ship - Khuyến mại khác
     listOrderPay = [];
     // Tổng tiền hàng
-    listOrderPay.push(new objOrderPay(typeTongTienHang, "Tổng tiền hàng", totalMoney, null));
+    listOrderPay.push(new objOrderPay(EOrderPayType.TOTAL, "Tổng tiền hàng", totalMoney, null));
 
     // Phí ship
-    listOrderPay.push(new objOrderPay(typePhiShip, "Phí vận chuyển", shipFeeValue, null ));
+    listOrderPay.push(new objOrderPay(EOrderPayType.SHIP, "Phí vận chuyển", shipFeeValue, null ));
 
     // Giảm giá phí ship
-    listOrderPay.push(new objOrderPay(typeKhuyenMaiKhac, "Giảm phí ship", shipFeeDiscount, listOrderSimplePromotionsObject.find(p => p.Type === 0)));
+    listOrderPay.push(new objOrderPay(EOrderPayType.PROMOTION, "Giảm phí ship", shipFeeDiscount, listOrderSimplePromotionsObject.find(p => p.Type === 0)));
 
     // Giảm giá tổng tiền hàng theo bậc 100k
-    listOrderPay.push(new objOrderPay(typeKhuyenMaiKhac, "Mỗi 100k giảm thêm", totalMoneyDiscount, listOrderSimplePromotionsObject.find(p => p.Type === 1)));
+    listOrderPay.push(new objOrderPay(EOrderPayType.PROMOTION, "Mỗi 100k giảm thêm", totalMoneyDiscount, listOrderSimplePromotionsObject.find(p => p.Type === 1)));
 
     // Tổng thanh toán
-    listOrderPay.push(new objOrderPay(typeTongThanhToan, "Tổng thanh toán", finalAmount, null));
+    listOrderPay.push(new objOrderPay(EOrderPayType.FINAL, "Tổng thanh toán", finalAmount, null));
 }
 
 function GetShipFee() {
@@ -712,7 +704,7 @@ function ShowCustomerInforFromObj(obj) {
 
     document.getElementsByClassName("address-name-phone")[0].innerHTML = obj.name + ", " + obj.phone;
     document.getElementsByClassName("address-address")[0].innerHTML =
-        obj.detail + ", " + obj.province + ", " + obj.subdistrict;
+        obj.detail + ", " + obj.subdistrict + ", " + obj.province;
     if (obj.defaultAdd) {
         document.getElementsByClassName("address-default")[0].style.display = "block";
     }
@@ -753,7 +745,7 @@ function ShowListCustomerInforModal() {
 
         clone.getElementsByClassName("detail")[0].innerHTML = obj.detail;
         clone.getElementsByClassName("province-district-subdistrict")[0].innerHTML =
-            obj.subdistrict + ", " + ", " + obj.province;
+            obj.subdistrict + ", " + obj.province;
 
         if (!obj.defaultAdd) {
             clone.getElementsByClassName("default-address")[0].style.display = "none";
@@ -915,7 +907,7 @@ async function CheckOrderOnSever() {
 
     // Lấy payment method từ radio button
     const paymentMethodRadio = document.querySelector('input[name="payment-method"]:checked');
-    const paymentMethod = paymentMethodRadio.value === 'bank' ? 1 : 0; // 0 = COD, 1 = BANK_TRANSFER
+    const paymentMethod = paymentMethodRadio.value === 'bank' ? EPaymentMethod.BANK_TRANSFER : EPaymentMethod.CASH_ON_DELIVERY;
     searchParams.append("paymentMethod", paymentMethod);
 
     let query = "/Home/CheckOrderOnSever";
@@ -972,7 +964,7 @@ async function CheckOutOrder() {
     }
 
     // Nếu thanh toán bằng chuyển khoản, hiển thị modal với QR code
-    if (result.PaymentMethod === 1 && result.QRCodeUrl) {
+    if (result.PaymentMethod === EPaymentMethod.BANK_TRANSFER && result.QRCodeUrl) {
         const paymentInfo = {
             orderCode: orderCode,
             qrCodeUrl: result.QRCodeUrl,
@@ -1006,4 +998,20 @@ window.addEventListener('DOMContentLoaded', async function () {
 
     // Hiển thị cart sau khi đã load xong tất cả data
     await ShowCheckoutCartList();
+
+    // Toggle bank transfer info khi chọn payment method
+    const paymentCod = document.getElementById('payment-cod');
+    const paymentBank = document.getElementById('payment-bank');
+    const bankContainer = document.querySelector('.bank-transfer-container');
+
+    function updateBankContainerVisibility() {
+        if (paymentBank.checked) {
+            bankContainer.style.display = 'block';
+        } else {
+            bankContainer.style.display = 'none';
+        }
+    }
+
+    paymentCod.addEventListener('change', updateBankContainerVisibility);
+    paymentBank.addEventListener('change', updateBankContainerVisibility);
 });

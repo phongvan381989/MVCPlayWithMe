@@ -1,36 +1,21 @@
 ﻿@{
     Layout = null;
+    int? orderId = ViewData["orderId"] as int?;
 }
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <link rel="stylesheet" href="~/Content/Customer/Order.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/Administrator/OrderDetail.css?v=20260809">
 </head>
 <body>
-
     <div id="biggestContainer">
-        @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
-        <div>
-            <div class="search-filter-order">
-                <div class="order-search-container">
-                    <div>
-                        <img class="icon20" src="~/Media/searchIcon.png">
-                    </div>
-                    <input class="order-search-input-text" id="search-input-text-order-id" type="text" value="">
-                    <button type="button" class="search-button" onclick="OrderSearch()">Tìm kiếm</button>
-                </div>
-                <div class="filter-container">
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderAll(this);">Tất cả</button>
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderPending(this);">Chờ thanh toán</button>
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderProcessing(this);">Chuẩn bị hàng</button>
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderShipping(this);">Đang giao</button>
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderReceived(this);">Đã nhận</button>
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderCancelled(this);">Đã hủy</button>
-                    <button type="button" class="nvsflAB87" onclick="FilterOrderRefunded(this);">Hoàn tiền</button>
-                </div>
-            </div>
+        <div class="admin-order-detail-container">
+
+            <h1 class="page-title">Chi tiết đơn hàng</h1>
+
+            <!-- Sample templates (hidden, dùng để clone) -->
             <div class="sample-item-container">
                 <img class="model-icon"
                      src="/Media/NoImageThumbnail.png"
@@ -47,10 +32,7 @@
                     </div>
                 </div>
             </div>
-            <div class="sample-payment">
-                <div class="money-title">Tổng tiền hàng</div>
-                <div class="money-padding">₫156,000</div>
-            </div>
+
             <div class="sample-order">
                 <div class="order-header">
                     <div class="order-code"></div>
@@ -100,19 +82,24 @@
                 </div>
             </div>
 
+            <!-- Result container -->
             <div class="result-container">
                 <div class="result-content-container">
-                    <div class="empty-order-state">Danh sách trống</div>
+                    <div class="empty-order-state">Đang tải...</div>
                 </div>
             </div>
         </div>
-        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
-    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
-    <script src="~/Scripts/cart-manager.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
-    <script src="~/Scripts/Customer/CommonOrder.js?v=20260610"></script>
-    <script src="~/Scripts/Customer/Order.js?v=20260610"></script>
+
+    <script>
+        // Pass orderId từ server sang client
+        var ORDER_ID = @(orderId.HasValue ? orderId.Value.ToString() : "null");
+    </script>
+
+    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260809"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260809"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260809"></script>
+    <script src="~/Scripts/Customer/CommonOrder.js?v=20260809"></script>
+    <script src="~/Scripts/Administrator/OrderDetail.js?v=20260809"></script>
 </body>
 </html>

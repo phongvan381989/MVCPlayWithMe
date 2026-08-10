@@ -11,6 +11,7 @@ using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,9 +24,10 @@ namespace MVCPlayWithMe
 {
     public class MvcApplication : System.Web.HttpApplication
     {
-        private static Thread _backgroundThread; // Thread chạy nền
-        private static bool _isRunning;          // Cờ kiểm soát vòng lặp của thread
-
+        #if !DEBUG
+            private static Thread _backgroundThread; // Thread chạy nền
+            private static bool _isRunning;          // Cờ kiểm soát vòng lặp của thread
+        #endif
         protected void Application_Start()
         {
             MyLogger.GetInstance().Info("Application is starting...");
@@ -77,6 +79,8 @@ namespace MVCPlayWithMe
                 throw; // Ném lại lỗi để ứng dụng không khởi động nếu có lỗi nghiêm trọng
             }
 
+            #if !DEBUG
+            MyLogger.GetInstance().Info("Background thread for Tiki is starting...");
             // Khởi tạo cờ kiểm soát
             _isRunning = true;
 
@@ -129,6 +133,7 @@ namespace MVCPlayWithMe
             // Đặt thread thành background thread (không chặn ứng dụng dừng)
             _backgroundThread.IsBackground = true;
             _backgroundThread.Start();
+#endif
         }
 
         protected void Application_End()
@@ -136,11 +141,13 @@ namespace MVCPlayWithMe
             // Hàm được gọi khi ứng dụng dừng
             MyLogger.GetInstance().Info("Application is stopping...");
 
+            #if !DEBUG
             // Đặt cờ kiểm soát để dừng vòng lặp
             _isRunning = false;
 
             // Chờ thread hoàn tất công việc
             _backgroundThread?.Join();
+            #endif
 
             MyLogger.GetInstance().Info("Background thread stopped.");
         }

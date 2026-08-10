@@ -174,7 +174,7 @@ namespace MVCPlayWithMe.Controllers
                 int adminId = admin.id;
 
                 // Lấy thông tin order
-                var order = await OrderMySql.GetByIdAsync(orderId);
+                var order = await OrderMySql.GetCommonOrderFromCodeIdAsync(orderId);
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
@@ -267,7 +267,7 @@ namespace MVCPlayWithMe.Controllers
                 int adminId = admin.id;
 
                 // Lấy thông tin order
-                var order = await OrderMySql.GetByIdAsync(orderId);
+                var order = await OrderMySql.GetCommonOrderFromCodeIdAsync(orderId);
                 if (order == null)
                 {
                     return Json(new { success = false, message = "Không tìm thấy đơn hàng" });
@@ -293,6 +293,185 @@ namespace MVCPlayWithMe.Controllers
                 MyLogger.GetInstance().Error($"CancelOrder error: {ex.Message}");
                 return Json(new { success = false, message = ex.Message });
             }
+        }
+
+        #endregion
+
+        #region Order Management
+
+        /// <summary>
+        /// Trang quản lý tất cả đơn hàng (Admin)
+        /// </summary>
+        public async Task<ActionResult> OrderList()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return AuthenticationFail();
+            }
+
+            ViewData["title"] = "Quản lý đơn hàng";
+            return View();
+        }
+
+        /// <summary>
+        /// Lấy tất cả đơn hàng (Admin xem được tất cả)
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GetAllOrdersAdmin(OrderDateRangeRequest request = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, "Chưa đăng nhập"));
+            }
+
+            // Parse dates
+            DateTime? fromDate = null;
+            DateTime? toDate = null;
+
+            if (request != null)
+            {
+                if (!string.IsNullOrEmpty(request.dateFrom))
+                {
+                    if (DateTime.TryParse(request.dateFrom, out DateTime from))
+                    {
+                        fromDate = from;
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(request.dateTo))
+                {
+                    if (DateTime.TryParse(request.dateTo, out DateTime to))
+                    {
+                        // Set to end of day
+                        toDate = to.Date.AddDays(1).AddSeconds(-1);
+                    }
+                }
+            }
+
+            MySqlResultState result = await OrderMySql.GetAllOrdersAsync(fromDate, toDate);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public class OrderDateRangeRequest
+        {
+            public string dateFrom { get; set; }
+            public string dateTo { get; set; }
+        }
+
+        /// <summary>
+        /// Admin cập nhật trạng thái đơn hàng
+        /// </summary>
+        [HttpPost]
+        public async Task<string> UpdateOrderStatus(UpdateOrderStatusRequest request)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                Administrator admin = await AuthentAdministratorAsync();
+                if (admin == null)
+                {
+                    result.State = EMySqlResultState.AUTHEN_FAIL;
+                    result.Message = "Chưa đăng nhập";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Validate status
+                if (!Enum.IsDefined(typeof(EOrderStatus), request.newStatus))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Trạng thái không hợp lệ";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Update status
+                result = await OrderMySql.UpdateOrderStatusByIdAsync(request.orderId, request.newStatus);
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public class UpdateOrderStatusRequest
+        {
+            public int orderId { get; set; }
+            public int newStatus { get; set; }
+        }
+
+        /// <summary>
+        /// Admin cập nhật trạng thái thanh toán
+        /// </summary>
+        [HttpPost]
+        public async Task<string> UpdatePaymentStatus(UpdatePaymentStatusRequest request)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                Administrator admin = await AuthentAdministratorAsync();
+                if (admin == null)
+                {
+                    result.State = EMySqlResultState.AUTHEN_FAIL;
+                    result.Message = "Chưa đăng nhập";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Validate payment status
+                if (!Enum.IsDefined(typeof(EOrderPayStatus), request.newPaymentStatus))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Trạng thái thanh toán không hợp lệ";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Update payment status
+                result = await OrderMySql.UpdatePaymentStatusByIdAsync(request.orderId, request.newPaymentStatus);
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public class UpdatePaymentStatusRequest
+        {
+            public int orderId { get; set; }
+            public int newPaymentStatus { get; set; }
+        }
+
+        /// <summary>
+        /// Trang chi tiết đơn hàng (Admin)
+        /// </summary>
+        public async Task<ActionResult> OrderDetail(int? id)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return AuthenticationFail();
+            }
+
+            ViewData["title"] = "Chi tiết đơn hàng";
+            ViewData["orderId"] = id;
+            return View();
+        }
+
+        /// <summary>
+        /// Lấy chi tiết 1 đơn hàng (Admin)
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GetOrderDetailAdmin(int id)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, "Chưa đăng nhập"));
+            }
+
+            MySqlResultState result = await OrderMySql.GetOrderByOrderIdAsync(id);
+            return JsonConvert.SerializeObject(result);
         }
 
         #endregion

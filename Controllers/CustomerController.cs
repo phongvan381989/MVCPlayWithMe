@@ -338,7 +338,7 @@ namespace MVCPlayWithMe.Controllers
             //if (AuthentCustomer() == null)
             //    return View("~/Views/Customer/Login.cshtml");
 
-            ViewData["title"] = "Danh sách đơn hàng";
+            ViewData["title"] = "Đơn mua";
             return View();
         }
 
@@ -395,18 +395,13 @@ namespace MVCPlayWithMe.Controllers
             MySqlResultState result = new MySqlResultState();
             if (cus == null)
             {
-                CookieResultState cookie = Cookie.GetOrderListCookie(HttpContext);
-                List<int> lsId = new List<int>();
-                string[] ids = cookie.cookieValue.Split('#');
-                foreach (var id in ids)
-                {
-                    lsId.Add(Common.ConvertStringToInt32(id));
-                }
-                result = await OrderMySql.GetAllOrderFromListIdAsync(lsId);
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Chưa đăng nhập";
+                return JsonConvert.SerializeObject(result);
             }
             else
             {
-                result = await OrderMySql.GetAllOrderAsync(cus.id);
+                result = await OrderMySql.GetOrderListByCustomerIdAsync(cus.id);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -416,15 +411,80 @@ namespace MVCPlayWithMe.Controllers
         [HttpPost]
         public async Task<string> GetOrderFromId(int id)
         {
-            MySqlResultState result = await OrderMySql.GetOrderFromIdAsync(id);
+            MySqlResultState result = new MySqlResultState();
+            Customer cus = await AuthentCustomerAsync();
+            if (cus == null)
+            {
+                result.State = EMySqlResultState.AUTHEN_FAIL;
+                result.Message = "Chưa đăng nhập";
+                return JsonConvert.SerializeObject(result);
+            }
+            result = await OrderMySql.GetOrderByOrderIdAsync(id);
             return JsonConvert.SerializeObject(result);
         }
 
-        // Tìm kiếm đơn theo tên hoặc 4 số cuối SDT người nhận đối với khách vãng lai
+        // Tìm kiếm đơn theo tên hoặc 5 số cuối SDT người nhận đối với khách vãng lai
         [HttpPost]
         public async Task<string> SearchOrderForAnonymous(string sdtNameForSearch)
         {
             MySqlResultState result = await OrderMySql.SearchOrderForAnonymousAsync(sdtNameForSearch);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Lấy danh sách đơn hàng từ OrderCodes (localStorage) - dùng cho khách vãng lai
+        /// </summary>
+        /// <param name="orderCodes">Danh sách OrderCode từ localStorage (comma-separated hoặc JSON array)</param>
+        [HttpPost]
+        public async Task<string> GetOrdersByOrderCodes(string orderCodes)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            if (string.IsNullOrWhiteSpace(orderCodes))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Danh sách OrderCode trống";
+                result.myJson = new List<Order>();
+                return JsonConvert.SerializeObject(result);
+            }
+
+            try
+            {
+                // Parse orderCodes (có thể là JSON array hoặc comma-separated string)
+                List<string> orderCodeList;
+
+                if (orderCodes.Trim().StartsWith("["))
+                {
+                    // JSON array format: ["ORD-001", "ORD-002", "ORD-003"]
+                    orderCodeList = JsonConvert.DeserializeObject<List<string>>(orderCodes);
+                }
+                else
+                {
+                    // Comma-separated format: "ORD-001,ORD-002,ORD-003"
+                    orderCodeList = orderCodes.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries)
+                        .Select(code => code.Trim())
+                        .Where(code => !string.IsNullOrWhiteSpace(code))
+                        .ToList();
+                }
+
+                if (orderCodeList == null || orderCodeList.Count == 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Danh sách OrderCode trống sau khi parse";
+                    result.myJson = new List<Order>();
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                result = await OrderMySql.GetOrderListByOrderCodesAsync(orderCodeList);
+            }
+            catch (Exception ex)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = $"Lỗi parse OrderCodes: {ex.Message}";
+                result.myJson = new List<Order>();
+                MyLogger.GetInstance().Error($"GetOrdersByOrderCodes error: {ex}");
+            }
+
             return JsonConvert.SerializeObject(result);
         }
     }

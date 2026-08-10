@@ -11,15 +11,6 @@ namespace MVCPlayWithMe.Models.Order
     /// </summary>
     public class OrderTrack
     {
-        static public string[] arrayOrderStatus = {
-            "Shop chuẩn bị hàng",
-            "Đã giao ĐVVC",
-            "Khách đã nhận hàng",
-            "Đơn hủy",
-            "Đã hủy đơn",
-            "Đơn hoàn",
-            "Hoàn thành"
-        };
         public int id { get; set; }
 
         public int orderId { get; set; }
@@ -35,25 +26,25 @@ namespace MVCPlayWithMe.Models.Order
             strStatus = OrderStatus.arrayOrderStatus[(int)status];
         }
 
-        public static string GetString(int index)
-        {
-            string str = null;
-            if (index == (int)EOrderStatus.PROCESSED)
-                str = "PROCESSED";
-            else if (index == (int)EOrderStatus.SHIPPED)
-                str = "SHIPPED";
-            if (index == (int)EOrderStatus.TO_CONFIRM_RECEIVE)
-                str = "TO_CONFIRM_RECEIVE";
-            else if (index == (int)EOrderStatus.IN_CANCEL)
-                str = "IN_CANCEL";
-            else if (index == (int)EOrderStatus.CANCELLED)
-                str = "CANCELLED";
-            else if (index == (int)EOrderStatus.TO_RETURN)
-                str = "TO_RETURN";
-            else if (index == (int)EOrderStatus.COMPLETED)
-                str = "COMPLETED";
+        //public static string GetString(int index)
+        //{
+        //    string str = null;
+        //    if (index == (int)EOrderStatus.PROCESSING)
+        //        str = "PROCESSING";
+        //    else if (index == (int)EOrderStatus.SHIPPED)
+        //        str = "SHIPPED";
+        //    if (index == (int)EOrderStatus.TO_CONFIRM_RECEIVE)
+        //        str = "TO_CONFIRM_RECEIVE";
+        //    else if (index == (int)EOrderStatus.IN_CANCEL)
+        //        str = "IN_CANCEL";
+        //    else if (index == (int)EOrderStatus.CANCELLED)
+        //        str = "CANCELLED";
+        //    else if (index == (int)EOrderStatus.TO_RETURN)
+        //        str = "TO_RETURN";
+        //    else if (index == (int)EOrderStatus.COMPLETED)
+        //        str = "COMPLETED";
 
-            return str;
-        }
+        //    return str;
+        //}
     }
 }

@@ -59,6 +59,7 @@
     flex-wrap: wrap;
     background-color: white;
     border-radius: 8px;
+    padding-bottom:1rem;
 }
 
 #biggestContainer_top div[class="search_wrapper"] {
@@ -425,7 +426,6 @@ sup {
     border-radius: 2px;
 }
 
-
 .div-modal-must-click-ok {
     display: flex;
     color: #fff;
@@ -505,7 +505,7 @@ sup {
     color: black;
 }
 .mzljai09 {
-    padding: 0.75rem;
+    padding: 0.75rem 0.75rem 0rem 0.75rem;
     /*    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     min-width: 250px;*/
 }

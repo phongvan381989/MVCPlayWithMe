@@ -421,7 +421,9 @@ async function Save() {
     let length = rows.length;
     for (let i = 1; i < length; i++) {
         if (DEBUG) {
-            console.log("Import Save: " + rows[i].cells[6].childNodes[0].value);
+            if (Number(rows[i].cells[0].innerHTML) !== -1) {
+                console.log("Import Save: " + rows[i].cells[6].childNodes[0].value);
+            }
         }
         if (Number(rows[i].cells[0].innerHTML) !== -1 &&
             rows[i].cells[8].childNodes[0].value != 0) { // Chỉ lưu những sản phẩm có id khác -1 và số lượng nhập khác 0

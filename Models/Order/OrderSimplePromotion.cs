@@ -19,12 +19,29 @@ namespace MVCPlayWithMe.Models
         TOTAL_DISCOUNT
     }
 
+    public enum eDiscountType
+    {
+        /// <summary>
+        /// 0 = Discount là số tiền tuyệt đối (VNĐ)
+        /// </summary>
+        ABSOLUTE,
+        /// <summary>
+        /// 1 = Discount là % chiết khấu (không có số lẻ vì INT)
+        /// </summary>
+        PERCENTAGE
+    }
+
     /// <summary>
     /// Entity cho bảng OrderSimplePromotion
     /// Chương trình giảm giá đơn giản áp dụng cho tất cả đơn hàng
     /// </summary>
     public class OrderSimplePromotion
     {
+        static public string[] arrayOrderSimplePromotionType = {
+            "Giảm phí ship",
+            "Mỗi 100k giảm thêm"
+        };
+
         /// <summary>
         /// ID tự tăng
         /// </summary>
@@ -50,23 +67,14 @@ namespace MVCPlayWithMe.Models
         /// 0 = Miễn phí ship khi tổng tiền hàng >= MinOrderValue
         /// 1 = Mỗi 100k giảm thêm Discount (tính từ MinOrderValue)
         /// </summary>
-        public SByte Type { get; set; }
+        public EOrderSimplePromotionType Type { get; set; }
 
-        public string strType
+        public void SetStrType()
         {
-            get
-            {
-                switch (Type)
-                {
-                    case (SByte)EOrderSimplePromotionType.SHIP_DISCOUNT:
-                        return "Giảm phí ship";
-                    case (SByte)EOrderSimplePromotionType.TOTAL_DISCOUNT:
-                        return "Mỗi 100k giảm thêm";
-                    default:
-                        return "Không xác định";
-                }
-            }
+            StrType = arrayOrderSimplePromotionType[(int)Type];
         }
+        public string StrType { get; set; }
+       
 
         /// <summary>
         /// Số tiền giảm hoặc % giảm (tùy DiscountType)
@@ -78,7 +86,7 @@ namespace MVCPlayWithMe.Models
         /// 0 = Discount là số tiền tuyệt đối (VNĐ)
         /// 1 = Discount là % chiết khấu (không có số lẻ vì INT)
         /// </summary>
-        public SByte DiscountType { get; set; }
+        public eDiscountType DiscountType { get; set; }
 
         /// <summary>
         /// Thời gian tạo chương trình
@@ -104,7 +112,7 @@ namespace MVCPlayWithMe.Models
         /// Constructor đầy đủ
         /// </summary>
         public OrderSimplePromotion(int id, string name, int minOrderValue, SByte status,
-            SByte type, int discount, SByte discountType, DateTime? time, string description)
+            EOrderSimplePromotionType type, int discount, eDiscountType discountType, DateTime? time, string description)
         {
             Id = id;
             Name = name;

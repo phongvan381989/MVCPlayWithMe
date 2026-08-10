@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.Models.Customer;
+﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Customer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,7 +27,7 @@ namespace MVCPlayWithMe.Models.Order
         public string name { get; set; }
         public string phone { get; set; }
         public string province { get; set; }
-        public string subDistrict { get; set; }
+        public string subdistrict { get; set; }
         public string detail { get; set; }
         public string code { get; set; }
 
@@ -39,9 +40,9 @@ namespace MVCPlayWithMe.Models.Order
 
         // Bank transfer payment support
         public string OrderCode { get; set; }
-        public SByte OrderStatus { get; set; }
-        public SByte OrderPayStatus { get; set; }
-        public SByte PaymentMethod { get; set; }
+        public EOrderStatus OrderStatus { get; set; }
+        public EOrderPayStatus OrderPayStatus { get; set; }
+        public EPaymentMethod PaymentMethod { get; set; }
         public DateTime? PaymentDeadline { get; set; }
 
 

@@ -29,7 +29,7 @@
                             <span class="vWt6ZL">₫39.000</span>
                             <span class="M-AAFK ">₫29.800</span>
                             <span class="quantity-model-x">x</span>
-                            <span class="quantity-model">x1</span>
+                            <span class="quantity-model">1</span>
                         </div>
 
                     </div>
@@ -131,11 +131,11 @@
                 </div>
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Giảm giá tổng tiền hàng</div>
-                    <div class="money-padding discount-sum-money">-₫39.150</div>
+                    <div class="money-padding discount-final-money">-₫39.150</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Tổng thanh toán</div>
-                    <div class="money-padding money-sum">₫0</div>
+                    <div class="money-padding final-money">₫0</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <button type="button" class="order-btn" onclick="CheckOutOrder()">Đặt hàng</button>
@@ -152,29 +152,11 @@
     <script src="~/Scripts/web.play.with.me.address.js?v=20260610"></script>
     <script src="~/Scripts/cart-manager.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
+    <script src="~/Scripts/Customer/CommonOrder.js?v=20260610"></script>
     <script>
         // Pass orderDeadline từ C# sang JavaScript
         const ORDER_DEADLINE_HOURS = @orderDeadline;
     </script>
     <script src="~/Scripts/Home/Checkout.js?v=20260610"></script>
-    <script>
-        // Toggle bank transfer info khi chọn payment method
-        document.addEventListener('DOMContentLoaded', function () {
-            const paymentCod = document.getElementById('payment-cod');
-            const paymentBank = document.getElementById('payment-bank');
-            const bankContainer = document.querySelector('.bank-transfer-container');
-
-            function updateBankContainerVisibility() {
-                if (paymentBank.checked) {
-                    bankContainer.style.display = 'block';
-                } else {
-                    bankContainer.style.display = 'none';
-                }
-            }
-
-            paymentCod.addEventListener('change', updateBankContainerVisibility);
-            paymentBank.addEventListener('change', updateBankContainerVisibility);
-        });
-    </script>
 </body>
 </html>

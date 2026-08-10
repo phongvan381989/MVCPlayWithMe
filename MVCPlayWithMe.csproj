@@ -611,6 +611,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Administrator\Index.css" />
+    <Content Include="Content\Administrator\OrderDetail.css" />
+    <Content Include="Content\Administrator\OrderList.css" />
     <Content Include="Content\bootstrap-grid.css" />
     <Content Include="Content\bootstrap-grid.min.css" />
     <Content Include="Content\bootstrap-grid.rtl.css" />
@@ -683,6 +685,8 @@
     <Content Include="Scripts\Administrator\Index.js" />
     <Content Include="Scripts\Administrator\Login.js" />
     <Content Include="Scripts\Administrator\New.js" />
+    <Content Include="Scripts\Administrator\OrderDetail.js" />
+    <Content Include="Scripts\Administrator\OrderList.js" />
     <Content Include="Scripts\bootstrap.bundle.js" />
     <Content Include="Scripts\bootstrap.bundle.min.js" />
     <Content Include="Scripts\bootstrap.esm.js" />
@@ -696,6 +700,7 @@
     <Content Include="Scripts\Combo\MappingOfCombo.js" />
     <Content Include="Scripts\Combo\UpdateDelete.js" />
     <Content Include="Scripts\Customer\AccountInfor.js" />
+    <Content Include="Scripts\Customer\CommonOrder.js" />
     <Content Include="Scripts\Customer\CreateCustomer.js" />
     <Content Include="Scripts\Customer\Login.js" />
     <Content Include="Scripts\Customer\Order.js" />
@@ -862,6 +867,8 @@
     <Content Include="Views\Administrator\PaymentProofs.cshtml" />
     <Content Include="Views\Administrator\PendingOrders.cshtml" />
     <Content Include="Views\Administrator\PendingPayments.cshtml" />
+    <Content Include="Views\Administrator\OrderList.cshtml" />
+    <Content Include="Views\Administrator\OrderDetail.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

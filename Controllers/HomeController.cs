@@ -466,7 +466,7 @@ namespace MVCPlayWithMe.Controllers
             )
         {
             // So sánh tổng tiền hàng
-            if (totalMoney != (lsOrderPay.Find(x => x.type == (int)EPayType.TOTAL)?.value ?? 581989))
+            if (totalMoney != (lsOrderPay.Find(x => x.type == (int)EOrderPayType.TOTAL)?.value ?? 581989))
             {
                 result.State = EMySqlResultState.ERROR;
                 result.Message = messageWhenValidationFail;
@@ -477,7 +477,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // So sánh phí ship
-            if (shipFee != (lsOrderPay.Find(x => x.type == (int)EPayType.SHIP)?.value ?? 581989))
+            if (shipFee != (lsOrderPay.Find(x => x.type == EOrderPayType.SHIP)?.value ?? 581989))
             {
                 result.State = EMySqlResultState.ERROR;
                 result.Message = messageWhenValidationFail;
@@ -488,7 +488,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // So sánh giảm giá phí ship
-            if (shipFeeDiscount != (lsOrderPay.Find(x => x.type == (int)EPayType.PROMOTION && x.orderSimplePromotion.Type == (int)EOrderSimplePromotionType.SHIP_DISCOUNT)?.value ?? 581989))
+            if (shipFeeDiscount != (lsOrderPay.Find(x => x.type == EOrderPayType.PROMOTION && x.orderSimplePromotion.Type == EOrderSimplePromotionType.SHIP_DISCOUNT)?.value ?? 581989))
             {
                 result.State = EMySqlResultState.ERROR;
                 result.Message = messageWhenValidationFail;
@@ -499,7 +499,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // So sánh giảm giá tổng tiền hàng theo bậc 100k
-            if (totalMoneyDiscount != (lsOrderPay.Find(x => x.type == (int)EPayType.PROMOTION && x.orderSimplePromotion.Type == (int)EOrderSimplePromotionType.TOTAL_DISCOUNT)?.value ?? 581989))
+            if (totalMoneyDiscount != (lsOrderPay.Find(x => x.type == EOrderPayType.PROMOTION && x.orderSimplePromotion.Type == EOrderSimplePromotionType.TOTAL_DISCOUNT)?.value ?? 581989))
             {
                 result.State = EMySqlResultState.ERROR;
                 result.Message = messageWhenValidationFail;
@@ -508,7 +508,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // So sánh thanh toán cuối cùng
-            if (finalAmount != (lsOrderPay.Find(x => x.type == (int)EPayType.FINAL)?.value ?? 581989))
+            if (finalAmount != (lsOrderPay.Find(x => x.type == EOrderPayType.FINAL)?.value ?? 581989))
             {
                 result.State = EMySqlResultState.ERROR;
                 result.Message = messageWhenValidationFail;
@@ -528,26 +528,27 @@ namespace MVCPlayWithMe.Controllers
             )
         {
             List<OrderPay> lsOrderPayFromDb = new List<OrderPay>();
-            lsOrderPayFromDb.Add(new OrderPay { type = (int)EPayType.TOTAL, value = totalMoney, orderId = newOrderId });
-            lsOrderPayFromDb.Add(new OrderPay { type = (int)EPayType.SHIP, value = shipFee, orderId = newOrderId });
+            lsOrderPayFromDb.Add(new OrderPay { type = EOrderPayType.TOTAL, value = totalMoney, orderId = newOrderId, orderSimplePromoId = 0 });
+            lsOrderPayFromDb.Add(new OrderPay { type = EOrderPayType.SHIP, value = shipFee, orderId = newOrderId, orderSimplePromoId = 0 });
 
             // Khuyến mãi giảm phí ship
             {
-                OrderPay orderPay = new OrderPay { type = (int)EPayType.PROMOTION, value = shipFeeDiscount, orderId = newOrderId };
+                OrderPay orderPay = new OrderPay { type = EOrderPayType.PROMOTION, value = shipFeeDiscount, orderId = newOrderId };
                 orderPay.orderSimplePromotion = promotions.Find(item => item.Type == (int)EOrderSimplePromotionType.SHIP_DISCOUNT);
-
+                orderPay.orderSimplePromoId = orderPay.orderSimplePromotion?.Id ?? 0;
                 lsOrderPayFromDb.Add(orderPay);
             }
 
             // Khuyến mãi giảm tổng tiền hàng
             {
-                OrderPay orderPay = new OrderPay { type = (int)EPayType.PROMOTION, value = totalMoneyDiscount, orderId = newOrderId };
-                orderPay.orderSimplePromotion = promotions.Find(item => item.Type == (int)EOrderSimplePromotionType.TOTAL_DISCOUNT);
+                OrderPay orderPay = new OrderPay { type =EOrderPayType.PROMOTION, value = totalMoneyDiscount, orderId = newOrderId };
+                orderPay.orderSimplePromotion = promotions.Find(item => item.Type == EOrderSimplePromotionType.TOTAL_DISCOUNT);
+                orderPay.orderSimplePromoId = orderPay.orderSimplePromotion?.Id ?? 0;
 
                 lsOrderPayFromDb.Add(orderPay);
             }
 
-            lsOrderPayFromDb.Add(new OrderPay { type = (int)EPayType.FINAL, value = finalAmount, orderId = newOrderId });
+            lsOrderPayFromDb.Add(new OrderPay { type = EOrderPayType.FINAL, value = finalAmount, orderId = newOrderId });
             return lsOrderPayFromDb;
         }
 
@@ -630,7 +631,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 foreach (var promo in promotions)
                 {
-                    if (promo.Type == (int)(int)EOrderSimplePromotionType.SHIP_DISCOUNT)
+                    if (promo.Type == EOrderSimplePromotionType.SHIP_DISCOUNT)
                     {
                         // ===== TYPE 0: MIỄN PHÍ SHIP =====
                         // Điều kiện: totalMoney >= MinOrderValue (giống client)
@@ -642,7 +643,7 @@ namespace MVCPlayWithMe.Controllers
                             //break; // Chỉ áp dụng promotion đầu tiên thỏa điều kiện
                         }
                     }
-                    else if (promo.Type == (int)EOrderSimplePromotionType.TOTAL_DISCOUNT)
+                    else if (promo.Type == EOrderSimplePromotionType.TOTAL_DISCOUNT)
                     {
                         // ===== TYPE 1: GIẢM THEO BẬC 100K =====
                         // Điều kiện: totalMoney >= MinOrderValue (STRICT >=, giống client)
@@ -810,7 +811,7 @@ namespace MVCPlayWithMe.Controllers
                         // 2. Insert Order
                         result = await OrderMySql.AddOrderTransactionAsync(conn, transaction,
                             customerId, noteToShop, (SByte)EOrderFrom.VOI_BE_NHO, orderCode,
-                            (SByte)EOrderStatus.PROCESSED,
+                            (SByte)EOrderStatus.PROCESSING,
                             (SByte)EOrderPayStatus.PENDING,
                             paymentMethod,
                             DateTime.Now.AddHours(Common.orderDeadline), cusInfor);
@@ -881,7 +882,6 @@ namespace MVCPlayWithMe.Controllers
                         await transaction.CommitAsync();
                         MyLogger.GetInstance().Info($"🎉 Transaction committed successfully! OrderId={newOrderId}, OrderCode={orderCode}");
 
-                        result.State = EMySqlResultState.OK;
                         result.Message = orderCode;
                         result.myAnything = newOrderId;
                     }

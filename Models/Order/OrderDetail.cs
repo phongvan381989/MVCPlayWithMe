@@ -19,17 +19,13 @@ namespace MVCPlayWithMe.Models.Order
 
         public string name { get; set; }
 
-        public string imageSrc { get; set; }
+        // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
+        public string CoverImageFileName { get; set; }
 
         public int quantity { get; set; }
 
         public int bookCoverPrice { get; set; }
 
         public int price { get; set; }
-
-        public void SetImageSrc()
-        {
-            //imageSrc = Common.GetModelImageSrc(productId, modelId);
-        }
     }
 }

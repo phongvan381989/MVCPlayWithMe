@@ -1,0 +1,195 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/Administrator/OrderList.css?v=20260807">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="admin-order-container">
+            <h1 class="page-title">Quản lý đơn hàng</h1>
+
+            <!-- Filters -->
+            <div class="filter-section">
+                <!-- Date Range Radio -->
+                <div class="date-range-radio">
+                    <label class="radio-label">
+                        <input type="radio" name="date-range" value="30" checked onclick="OnDateRangeChange(this)">
+                        <span>30 ngày</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="date-range" value="7" onclick="OnDateRangeChange(this)">
+                        <span>7 ngày</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="date-range" value="all" onclick="OnDateRangeChange(this)">
+                        <span>Tất cả</span>
+                    </label>
+                </div>
+
+                <div class="filter-row">
+                    <!-- Date Range Filter -->
+                    <div class="filter-group">
+                        <label>Từ ngày:</label>
+                        <input type="date" id="date-from" class="date-input" onchange="OnManualDateChange()">
+                    </div>
+                    <div class="filter-group">
+                        <label>Đến ngày:</label>
+                        <input type="date" id="date-to" class="date-input" onchange="OnManualDateChange()">
+                    </div>
+
+                    <!-- Load Data Button -->
+                    <button type="button" class="btn btn-success" onclick="LoadAllOrders()">
+                        📥 Tải dữ liệu
+                    </button>
+
+                    <!-- Search -->
+                    <div class="filter-group search-group">
+                        <input type="text"
+                               id="search-input"
+                               class="search-input"
+                               placeholder="Tìm mã đơn, tên, SDT...">
+                        <button type="button" class="btn btn-primary" onclick="ApplyFilters()">
+                            🔍 Tìm kiếm
+                        </button>
+                    </div>
+
+                    <!-- Reset Button -->
+                    <button type="button" class="btn btn-secondary" onclick="ResetFilters()">
+                        🔄 Reset
+                    </button>
+                </div>
+
+                <!-- Status Filters -->
+                <div class="status-filter-container">
+                    <button type="button" class="status-filter-btn active" data-status="all" onclick="FilterByStatus(this, 'all')">
+                        Tất cả
+                    </button>
+                    <button type="button" class="status-filter-btn" data-status="0" onclick="FilterByStatus(this, 0)">
+                        Chờ thanh toán
+                    </button>
+                    <button type="button" class="status-filter-btn" data-status="1" onclick="FilterByStatus(this, 1)">
+                        Chuẩn bị hàng
+                    </button>
+                    <button type="button" class="status-filter-btn" data-status="2" onclick="FilterByStatus(this, 2)">
+                        Đang giao
+                    </button>
+                    <button type="button" class="status-filter-btn" data-status="3" onclick="FilterByStatus(this, 3)">
+                        Đã nhận
+                    </button>
+                    <button type="button" class="status-filter-btn" data-status="4" onclick="FilterByStatus(this, 4)">
+                        Đã hủy
+                    </button>
+                    <button type="button" class="status-filter-btn" data-status="5" onclick="FilterByStatus(this, 5)">
+                        Hoàn tiền
+                    </button>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-container">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-orders">0</div>
+                    <div class="stat-label">Tổng đơn</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="filtered-orders">0</div>
+                    <div class="stat-label">Hiển thị</div>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="table-container">
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="SortTable('id')">
+                                ID <span class="sort-icon">↕️</span>
+                            </th>
+                            <th class="sortable" onclick="SortTable('code')">
+                                Mã đơn <span class="sort-icon">↕️</span>
+                            </th>
+                            <th class="sortable" onclick="SortTable('name')">
+                                Khách hàng <span class="sort-icon">↕️</span>
+                            </th>
+                            <th class="sortable" onclick="SortTable('phone')">
+                                SĐT <span class="sort-icon">↕️</span>
+                            </th>
+                            <th>Tổng tiền</th>
+                            <th>Thanh toán</th>
+                            <th>Trạng thái</th>
+                            <th class="sortable" onclick="SortTable('time')">
+                                Ngày tạo <span class="sort-icon">↕️</span>
+                            </th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-table-body">
+                        <!-- Rows rendered by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination-container" id="pagination-container">
+                <!-- Pagination buttons rendered by JavaScript -->
+            </div>
+
+            <!-- Empty State -->
+            <div class="empty-state" id="empty-state" style="display: none;">
+                <div class="empty-icon">📦</div>
+                <div class="empty-text">Không tìm thấy đơn hàng nào</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Status Modal -->
+    <div class="modal" id="edit-status-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Cập nhật trạng thái</h2>
+                <button class="modal-close" onclick="CloseEditModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Mã đơn:</label>
+                    <input type="text" id="modal-order-code" readonly>
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái đơn hàng:</label>
+                    <select id="modal-order-status" class="form-control">
+                        <option value="0">Chuẩn bị hàng</option>
+                        <option value="1">Đang giao</option>
+                        <option value="2">Đã nhận</option>
+                        <option value="3">Đã hủy</option>
+                        <option value="4">Hoàn về</option>
+                        <option value="5">Hoàn thành</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Trạng thái thanh toán:</label>
+                    <select id="modal-payment-status" class="form-control">
+                        <option value="0">Chờ thanh toán</option>
+                        <option value="1">Đã thanh toán</option>
+                        <option value="2">Hoàn tiền</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="CloseEditModal()">Hủy</button>
+                <button class="btn btn-primary" onclick="SaveStatus()">Lưu</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260807"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260807"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260807"></script>
+    <script src="~/Scripts/Customer/CommonOrder.js?v=20260807"></script>
+    <script src="~/Scripts/Administrator/OrderList.js?v=20260807"></script>
+</body>
+</html>
