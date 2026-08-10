@@ -2389,7 +2389,7 @@ namespace MVCPlayWithMe.General
         /// <param name="destPath">Đường dẫn lưu WebP</param>
         /// <param name="maxSize">Kích thước max (width hoặc height), giữ tỷ lệ</param>
         /// <param name="quality">Chất lượng 0-100</param>
-        public static void ConvertToWebP(string sourcePath, string destPath, uint maxSize, uint quality)
+        public static Boolean ConvertToWebP(string sourcePath, string destPath, uint maxSize, uint quality)
         {
             try
             {
@@ -2414,7 +2414,9 @@ namespace MVCPlayWithMe.General
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn($"ConvertToWebP failed: {sourcePath} -> {destPath}. Error: {ex.Message}");
+                return false;
             }
+            return true;
         }
 
         /// <summary>
@@ -2437,7 +2439,13 @@ namespace MVCPlayWithMe.General
 
                 // Path cho WebP full size (1000x1000, 80%)
                 string webpFullPath = Path.Combine(directory, fileNameWithoutExt + ".webp");
-                ConvertToWebP(originalImagePath, webpFullPath, 1000, 80);
+                bool convertSuccess = ConvertToWebP(originalImagePath, webpFullPath, 1000, 80);
+
+                if (!convertSuccess)
+                {
+                    MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP failed to convert image to WebP: {originalImagePath}");
+                    return (0, 0, string.Empty);
+                }
 
                 // Xóa ảnh gốc sau khi convert thành công
                 if (File.Exists(originalImagePath))
@@ -2458,7 +2466,12 @@ namespace MVCPlayWithMe.General
                 string webpThumbPath = Path.Combine(thumbFolder, fileNameWithoutExt + ".webp");
 
                 // Convert từ WebP full size → WebP thumbnail (không dùng ảnh gốc)
-                ConvertToWebP(webpFullPath, webpThumbPath, 320, 80);
+                bool thumbConvertSuccess = ConvertToWebP(webpFullPath, webpThumbPath, 320, 80);
+                if (!thumbConvertSuccess)
+                {
+                    MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP failed to convert thumbnail: {webpFullPath}");
+                    return (0, 0, string.Empty);
+                }
 
                 // Đọc kích thước ảnh WebP full size
                 uint width = 0, height = 0;
@@ -2529,7 +2542,12 @@ namespace MVCPlayWithMe.General
 
                 // Convert JPG → WebP 320px trong thư mục _320
                 string webpThumbPath = Path.Combine(thumbFolder, videoPosterName);
-                ConvertToWebP(tempJpgPath, webpThumbPath, 320, 80);
+                bool thumbConvertSuccess = ConvertToWebP(tempJpgPath, webpThumbPath, 320, 80);
+                if (thumbConvertSuccess)
+                {
+                    MyLogger.GetInstance().Warn($"ExtractVideoPoster failed: {videoFilePath}.");
+                    return (0, 0);
+                }
 
                 // Xóa temp JPG
                 if (File.Exists(tempJpgPath))
@@ -2544,7 +2562,7 @@ namespace MVCPlayWithMe.General
             {
                 MyLogger.GetInstance().Warn($"ExtractVideoPoster failed: {videoFilePath}. Error: {ex.Message}");
             }
-            return (1920, 1080);
+            return (0, 0);
         }
 
         /// <summary>

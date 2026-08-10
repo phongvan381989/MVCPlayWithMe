@@ -3,6 +3,19 @@ using System.Collections.Generic;
 
 namespace MVCPlayWithMe.Models.SanPhamModel
 {
+    public enum ESanPhamStatus
+    {
+        DANG_KINH_DOANH = 0,
+        TAM_HET_HANG = 1,
+        NGUNG_KINH_DOANH = 2
+    }
+
+    public enum ESanPhamCoverType
+    {
+        BIA_MEM = 0,
+        BIA_CUNG = 1
+    }
+
     public class SanPham
     {
         public int Id { get; set; }
@@ -81,7 +94,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// <summary>
         /// Bìa cứng: 1, Bìa mềm: 0
         /// </summary>
-        public int? HardCover { get; set; }
+        public ESanPhamCoverType HardCover { get; set; }
 
         /// <summary>
         /// Tuổi nhỏ nhất nên dùng. Đơn vị tháng. Không giới hạn khi MinAge hoặc / và MaxAge đều = -1
@@ -108,7 +121,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// <summary>
         /// Trạng thái sản phẩm. 0: Đang kinh doanh bình thường, 1: Nhà phát hành tạm thời hết hàng, 2: Ngừng kinh doanh
         /// </summary>
-        public int Status { get; set; }
+        public ESanPhamStatus Status { get; set; }
 
         /// <summary>
         /// Số lượng hàng tồn kho, giá trị này được cập nhật khi có thông tin nhập/ xuất kho
@@ -158,7 +171,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             ProductWide = 0;
             ProductHigh = 0;
             ProductWeight = 0;
-            Status = 0;
+            Status = ESanPhamStatus.DANG_KINH_DOANH;
             Quantity = 0;
             Discount = 0;
             SalePrice = 0;
@@ -171,9 +184,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             string author, string translator, int? publisherId,
             string publishingCompany, int? publishingTime,
             int productLong, int productWide, int productHigh, int productWeight,
-            string positionInWarehouse, int? hardCover,
+            string positionInWarehouse, ESanPhamCoverType hardCover,
             int? minAge, int? maxAge, int? parentId, int? republish,
-            string detail, int status, int quantity, int? pageNumber,
+            string detail, ESanPhamStatus status, int quantity, int? pageNumber,
             float discount, int salePrice, string language, DateTime? date,
             int? soldQuantity, string url, string seoKeyword)
         {
@@ -229,7 +242,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public bool IsInStock()
         {
-            return Quantity > 0 && Status == 0;
+            return Quantity > 0 && Status == ESanPhamStatus.DANG_KINH_DOANH;
         }
 
         /// <summary>
@@ -237,7 +250,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public bool IsActive()
         {
-            return Status == 0;
+            return Status == ESanPhamStatus.DANG_KINH_DOANH;
         }
 
         /// <summary>
@@ -247,14 +260,12 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         {
             switch (Status)
             {
-                case 0:
+                case ESanPhamStatus.DANG_KINH_DOANH:
                     return "Đang kinh doanh";
-                case 1:
+                case ESanPhamStatus.TAM_HET_HANG:
                     return "Tạm hết hàng";
-                case 2:
-                    return "Ngừng kinh doanh";
                 default:
-                    return "Không xác định";
+                    return "Ngừng kinh doanh";
             }
         }
 
@@ -263,9 +274,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public string GetCoverTypeText()
         {
-            if (HardCover == null)
-                return "Không xác định";
-            return HardCover == 1 ? "Bìa cứng" : "Bìa mềm";
+            if (HardCover == ESanPhamCoverType.BIA_CUNG)
+                return "Bìa cứng";
+            return "Bìa mềm";
         }
 
         /// <summary>

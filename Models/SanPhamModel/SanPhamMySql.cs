@@ -46,13 +46,13 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.Add("@inProductHigh", MySqlDbType.Int32).Value = sanPham.ProductHigh;
                         cmd.Parameters.Add("@inProductWeight", MySqlDbType.Int32).Value = sanPham.ProductWeight;
                         cmd.Parameters.Add("@inPositionInWarehouse", MySqlDbType.VarChar).Value = sanPham.PositionInWarehouse ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Int32).Value = sanPham.HardCover ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Byte).Value = (SByte)sanPham.HardCover;
                         cmd.Parameters.Add("@inMinAge", MySqlDbType.Int32).Value = sanPham.MinAge ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inMaxAge", MySqlDbType.Int32).Value = sanPham.MaxAge ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inParentId", MySqlDbType.Int32).Value = sanPham.ParentId ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inRepublish", MySqlDbType.Int32).Value = sanPham.Republish ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = sanPham.Detail ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@inStatus", MySqlDbType.Int32).Value = sanPham.Status;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Byte).Value = (SByte)sanPham.Status;
                         cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = sanPham.Quantity;
                         cmd.Parameters.Add("@inPageNumber", MySqlDbType.Int32).Value = sanPham.PageNumber ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = sanPham.Discount;
@@ -136,13 +136,13 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.Add("@inProductHigh", MySqlDbType.Int32).Value = sanPham.ProductHigh;
                         cmd.Parameters.Add("@inProductWeight", MySqlDbType.Int32).Value = sanPham.ProductWeight;
                         cmd.Parameters.Add("@inPositionInWarehouse", MySqlDbType.VarChar).Value = sanPham.PositionInWarehouse ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Int32).Value = sanPham.HardCover ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Byte).Value = (SByte)sanPham.HardCover;
                         cmd.Parameters.Add("@inMinAge", MySqlDbType.Int32).Value = sanPham.MinAge ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inMaxAge", MySqlDbType.Int32).Value = sanPham.MaxAge ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inParentId", MySqlDbType.Int32).Value = sanPham.ParentId ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inRepublish", MySqlDbType.Int32).Value = sanPham.Republish ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = sanPham.Detail ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@inStatus", MySqlDbType.Int32).Value = sanPham.Status;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Byte).Value = (SByte)sanPham.Status;
                         cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = sanPham.Quantity;
                         cmd.Parameters.Add("@inPageNumber", MySqlDbType.Int32).Value = sanPham.PageNumber ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = sanPham.Discount;
@@ -363,13 +363,13 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.Add("@inProductHigh", MySqlDbType.Int32).Value = sanPham.ProductHigh;
                         cmd.Parameters.Add("@inProductWeight", MySqlDbType.Int32).Value = sanPham.ProductWeight;
                         cmd.Parameters.Add("@inPositionInWarehouse", MySqlDbType.VarChar).Value = sanPham.PositionInWarehouse ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Int32).Value = sanPham.HardCover ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inHardCover", MySqlDbType.Byte).Value = (SByte)sanPham.HardCover;
                         cmd.Parameters.Add("@inMinAge", MySqlDbType.Int32).Value = sanPham.MinAge ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inMaxAge", MySqlDbType.Int32).Value = sanPham.MaxAge ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inParentId", MySqlDbType.Int32).Value = sanPham.ParentId ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inRepublish", MySqlDbType.Int32).Value = sanPham.Republish ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inDetail", MySqlDbType.VarChar).Value = sanPham.Detail ?? (object)DBNull.Value;
-                        cmd.Parameters.Add("@inStatus", MySqlDbType.Int32).Value = sanPham.Status;
+                        cmd.Parameters.Add("@inStatus", MySqlDbType.Byte).Value = (SByte)sanPham.Status;
                         cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = sanPham.Quantity;
                         cmd.Parameters.Add("@inPageNumber", MySqlDbType.Int32).Value = sanPham.PageNumber ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = sanPham.Discount;
@@ -434,6 +434,49 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             result.Message = $"Cập nhật SalePrice thành công. ID: {sanPhamId}, SalePrice: {salePrice:N0} đ";
                         }
                         else
+                        {
+                            result.State = EMySqlResultState.EXCEPTION;
+                            result.Message = $"Không tìm thấy sản phẩm với ID: {sanPhamId}";
+                        }
+                    }
+                }
+            }
+            catch (MySqlException ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+
+            return result;
+        }
+
+        public static async Task<MySqlResultState> UpdateStatusAsync(int sanPhamId, ESanPhamStatus status)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    string query = "UPDATE tb_san_pham SET Status = @status WHERE Id = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.Parameters.Add("@status", MySqlDbType.Byte).Value = (SByte)status;
+                        cmd.Parameters.Add("@id", MySqlDbType.Int32).Value = sanPhamId;
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                        if (rowsAffected == 0)
                         {
                             result.State = EMySqlResultState.EXCEPTION;
                             result.Message = $"Không tìm thấy sản phẩm với ID: {sanPhamId}";
@@ -584,13 +627,13 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 ProductHigh = MyMySql.GetInt32(rdr, "ProductHigh"),
                 ProductWeight = MyMySql.GetInt32(rdr, "ProductWeight"),
                 PositionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse"),
-                HardCover = MyMySql.GetInt32(rdr, "HardCover"),
+                HardCover = (ESanPhamCoverType)MyMySql.GetSByte(rdr, "HardCover"),
                 MinAge = MyMySql.GetInt32(rdr, "MinAge"),
                 MaxAge = MyMySql.GetInt32(rdr, "MaxAge"),
                 ParentId = MyMySql.GetInt32(rdr, "ParentId"),
                 Republish = MyMySql.GetInt32(rdr, "Republish"),
                 Detail = MyMySql.GetString(rdr, "Detail"),
-                Status = MyMySql.GetInt32(rdr, "Status"),
+                Status = (ESanPhamStatus)MyMySql.GetSByte(rdr, "Status"),
                 Quantity = MyMySql.GetInt32(rdr, "Quantity"),
                 PageNumber = MyMySql.GetInt32(rdr, "PageNumber"),
                 Discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat(rdr.GetOrdinal("Discount")),

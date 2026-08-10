@@ -163,7 +163,7 @@ async function PostJSON(url, data) {
     });
     let responseText = await response.text();
     if (DEBUG) {
-        console.log("PostJSON responseText: " + responseText);
+        console.log("PostJSON " + url + " responseText: " + responseText);
     }
     return responseText;
 }

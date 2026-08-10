@@ -358,6 +358,13 @@ namespace MVCPlayWithMe.Controllers
                     {
                         // Image: Convert sang WebP + lấy kích thước
                         var (width, height, fileName) = Common.ConvertSanPhamImageToWebP(saveToFileLoc);
+                        if (width == 0 || height == 0)
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = $"Failed to convert image to WebP: {saveToFileLoc}";
+                            return JsonConvert.SerializeObject(result);
+                        }
+
                         finalFileName = fileName;
                         mediaWidth = width;
                         mediaHeight = height;
@@ -368,6 +375,13 @@ namespace MVCPlayWithMe.Controllers
                         // Video: extract poster thumbnail + lấy kích thước video
                         videoPosterName = Path.GetFileNameWithoutExtension(finalFileName) + "-video-poster.webp";
                         var (width, height) = Common.ExtractVideoPoster(saveToFileLoc, videoPosterName);
+                        if (width == 0 || height == 0)
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = $"Failed to extract video poster: {saveToFileLoc}";
+                            return JsonConvert.SerializeObject(result);
+                        }
+
                         mediaWidth = width;
                         mediaHeight = height;
                     }
@@ -375,7 +389,7 @@ namespace MVCPlayWithMe.Controllers
                     // Insert metadata vào tb_san_pham_media
                     if (int.TryParse(sanPhamId, out int sanPhamIdInt))
                     {
-                        MySqlResultState insertResult = await SanPhamMediaMySql.InsertAsync(new SanPhamMedia
+                        result = await SanPhamMediaMySql.InsertAsync(new SanPhamMedia
                         {
                             SanPhamId = sanPhamIdInt,
                             MediaType = mediaType,
@@ -389,13 +403,13 @@ namespace MVCPlayWithMe.Controllers
                             DisplayOrder = 38 //  hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery
                         });
 
-                        if (insertResult.State != EMySqlResultState.OK)
+                        if (result.State != EMySqlResultState.OK)
                         {
-                            MyLogger.GetInstance().Warn($"Failed to insert media metadata: {insertResult.Message}");
+                            MyLogger.GetInstance().Warn($"Failed to insert media metadata: {result.Message}");
+                            return JsonConvert.SerializeObject(result);
                         }
                     }
 
-                    result.State = EMySqlResultState.OK;
                     result.Message = "Upload thành công: " + finalFileName;
                     MyLogger.GetInstance().Info($"Uploaded: {originalFileName} -> {finalFileName}");
                 }
@@ -881,6 +895,12 @@ namespace MVCPlayWithMe.Controllers
 
                         //string webpImage = Common.ConvertSanPhamImageToWebP(destFile);
                         var (width, height, webpImage) = Common.ConvertSanPhamImageToWebP(destFile);
+                        if(width == 0 || height == 0)
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = $"Failed to convert image to WebP: {destFile}";
+                            return JsonConvert.SerializeObject(result);
+                        }
 
                         uint mediaWidth = width;
                         uint mediaHeight = height;
@@ -943,8 +963,11 @@ namespace MVCPlayWithMe.Controllers
 
                 if (mappings == null || mappings.Count == 0)
                 {
+                    // Cập nhật trạng thái sang dừng bán (ngưng bán) nếu chưa có mapping
+                    await SanPhamMySql.UpdateStatusAsync(sanPhamId, ESanPhamStatus.NGUNG_KINH_DOANH);
+
                     result.State = EMySqlResultState.ERROR;
-                    result.Message = "Chưa có mapping sản phẩm kho. Vui lòng mapping trước khi tính giá.";
+                    result.Message = "Chưa có mapping sản phẩm kho. Vui lòng mapping trước khi tính giá. Sản phấm tạm thời dừng bán";
                     return JsonConvert.SerializeObject(result);
                 }
 

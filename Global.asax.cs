@@ -141,15 +141,15 @@ namespace MVCPlayWithMe
             // Hàm được gọi khi ứng dụng dừng
             MyLogger.GetInstance().Info("Application is stopping...");
 
-            #if !DEBUG
+#if !DEBUG
             // Đặt cờ kiểm soát để dừng vòng lặp
             _isRunning = false;
 
             // Chờ thread hoàn tất công việc
             _backgroundThread?.Join();
-            #endif
-
+            
             MyLogger.GetInstance().Info("Background thread stopped.");
+#endif
         }
 
     }

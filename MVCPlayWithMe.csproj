@@ -35,6 +35,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>0</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -44,6 +45,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Antlr3.Runtime, Version=3.5.0.2, Culture=neutral, PublicKeyToken=eb42632606e9261f, processorArchitecture=MSIL">
@@ -61,17 +63,14 @@
     <Reference Include="K4os.Hash.xxHash, Version=1.0.6.0, Culture=neutral, PublicKeyToken=32cd54395057cec3, processorArchitecture=MSIL">
       <HintPath>..\packages\K4os.Hash.xxHash.1.0.6\lib\net46\K4os.Hash.xxHash.dll</HintPath>
     </Reference>
-    <Reference Include="LazopSdk">
-      <HintPath>..\LazopSDK\bin\Debug\LazopSdk.dll</HintPath>
-    </Reference>
     <Reference Include="log4net, Version=3.3.2.0, Culture=neutral, PublicKeyToken=669e0ddf0bb1aa2a, processorArchitecture=MSIL">
       <HintPath>..\packages\log4net.3.3.2\lib\net462\log4net.dll</HintPath>
     </Reference>
-    <Reference Include="Magick.NET-Q8-AnyCPU, Version=14.15.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
-      <HintPath>..\packages\Magick.NET-Q8-AnyCPU.14.15.0\lib\netstandard20\Magick.NET-Q8-AnyCPU.dll</HintPath>
+    <Reference Include="Magick.NET-Q8-x64, Version=14.16.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=AMD64">
+      <HintPath>..\packages\Magick.NET-Q8-x64.14.16.0\lib\netstandard20\Magick.NET-Q8-x64.dll</HintPath>
     </Reference>
-    <Reference Include="Magick.NET.Core, Version=14.15.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
-      <HintPath>..\packages\Magick.NET.Core.14.15.0\lib\netstandard20\Magick.NET.Core.dll</HintPath>
+    <Reference Include="Magick.NET.Core, Version=14.16.0.0, Culture=neutral, PublicKeyToken=2004825badfa91ec, processorArchitecture=MSIL">
+      <HintPath>..\packages\Magick.NET.Core.14.16.0\lib\netstandard20\Magick.NET.Core.dll</HintPath>
     </Reference>
     <Reference Include="MediaToolkit, Version=1.1.0.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MediaToolkit.1.1.0.1\lib\net40\MediaToolkit.dll</HintPath>
@@ -652,6 +651,9 @@
     <Content Include="Content\Product\RecheckImport.css" />
     <Content Include="Content\Product\Search.css" />
     <Content Include="Content\Product\UpdateDelete.css" />
+    <Content Include="Content\SanPham\Create.css" />
+    <Content Include="Content\SanPham\Search.css" />
+    <Content Include="Content\SanPham\UpdateDelete.css" />
     <Content Include="Content\web.play.with.me.common.css" />
     <Content Include="Content\web.play.with.me.modal.common.css" />
     <Content Include="Content\web.play.with.me.table.show.data.css" />
@@ -745,7 +747,9 @@
     <Content Include="Scripts\Product\UpdateDelete.js" />
     <Content Include="Scripts\Publisher\Create.js" />
     <Content Include="Scripts\Publisher\UpdateDelete.js" />
-    <Content Include="Scripts\SanPham\SanPhamCommon.js" />
+    <Content Include="Scripts\SanPham\Create.js" />
+    <Content Include="Scripts\SanPham\Search.js" />
+    <Content Include="Scripts\SanPham\UpdateDelete.js" />
     <Content Include="Scripts\web.play.with.me.action.common.js" />
     <Content Include="Scripts\web.play.with.me.address.js" />
     <Content Include="Scripts\web.play.with.me.cart.cookie.js" />
@@ -869,6 +873,7 @@
     <Content Include="Views\Administrator\PendingPayments.cshtml" />
     <Content Include="Views\Administrator\OrderList.cshtml" />
     <Content Include="Views\Administrator\OrderDetail.cshtml" />
+    <Content Include="Views\Home\PaymentInfo.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -879,9 +884,34 @@
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\LazopSDK\LazopSdk.csproj">
+      <Project>{9c11cae5-5188-4e71-825b-68fc3135728a}</Project>
+      <Name>LazopSdk</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <WarningLevel>4</WarningLevel>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <Optimize>true</Optimize>
+    <DebugType>pdbonly</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>7.3</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
   </PropertyGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="'$(VSToolsPath)' != ''" />
@@ -918,7 +948,7 @@
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.2.0.0\build\net46\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.props'))" />
-    <Error Condition="!Exists('..\packages\Magick.NET-Q8-AnyCPU.14.15.0\build\netstandard20\Magick.NET-Q8-AnyCPU.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Magick.NET-Q8-AnyCPU.14.15.0\build\netstandard20\Magick.NET-Q8-AnyCPU.targets'))" />
+    <Error Condition="!Exists('..\packages\Magick.NET-Q8-x64.14.16.0\build\netstandard20\Magick.NET-Q8-x64.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Magick.NET-Q8-x64.14.16.0\build\netstandard20\Magick.NET-Q8-x64.targets'))" />
   </Target>
-  <Import Project="..\packages\Magick.NET-Q8-AnyCPU.14.15.0\build\netstandard20\Magick.NET-Q8-AnyCPU.targets" Condition="Exists('..\packages\Magick.NET-Q8-AnyCPU.14.15.0\build\netstandard20\Magick.NET-Q8-AnyCPU.targets')" />
+  <Import Project="..\packages\Magick.NET-Q8-x64.14.16.0\build\netstandard20\Magick.NET-Q8-x64.targets" Condition="Exists('..\packages\Magick.NET-Q8-x64.14.16.0\build\netstandard20\Magick.NET-Q8-x64.targets')" />
 </Project>
