@@ -280,80 +280,79 @@ async function LoadMediaList() {
     try {
         // Load metadata từ database (single source of truth)
         const metadataResultText = await PostJSON('/SanPham/GetAllMediaMetadata', {sanPhamId: sanPhamId });
-const metadataList = JSON.parse(metadataResultText);
+        const metadataList = JSON.parse(metadataResultText);
 
-const container = document.getElementById('media-container');
-container.innerHTML = '';
+        const container = document.getElementById('media-container');
+        container.innerHTML = '';
 
         if (metadataList && metadataList.length > 0) {
-metadataList.forEach((metadata, index) => {
-    const isImage = metadata.MediaType === 'image';
+        metadataList.forEach((metadata, index) => {
+        const isImage = metadata.MediaType === 'image';
 
-    // Tự sinh URL phiên bản 320 từ FileName
-    const filePath = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamId, metadata.FileName));
+        // Tự sinh URL phiên bản 320 từ FileName
+        const filePath = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamId, metadata.FileName));
 
-    const mediaItem = document.createElement('div');
-    mediaItem.className = 'media-item';
-    mediaItem.dataset.fileName = metadata.FileName;
-    mediaItem.dataset.mediaId = metadata.Id;
+        const mediaItem = document.createElement('div');
+        mediaItem.className = 'media-item';
+        mediaItem.dataset.fileName = metadata.FileName;
+        mediaItem.dataset.mediaId = metadata.Id;
 
-    // Media element (ảnh hoặc video)
-    let mediaElement;
-    if (isImage) {
-        // WebP path (ảnh đã được convert sang WebP)
-        mediaElement = `
-                        <picture>
-                            <source srcset="${filePath}" type="image/webp">
-                            <img src="${filePath}" alt="${metadata.AltText || metadata.FileName}" />
-                        </picture>
-                    `;
-    } else {
-        mediaElement = `<video src="${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}" controls></video>`;
-    }
+        // Media element (ảnh hoặc video)
+        let mediaElement;
+        if (isImage) {
+            // WebP path (ảnh đã được convert sang WebP)
+            mediaElement = `
+                            <picture>
+                                <source srcset="${filePath}" type="image/webp">
+                                <img src="${filePath}" alt="${metadata.AltText || metadata.FileName}" />
+                            </picture>
+                        `;
+        } else {
+            mediaElement = `<video src="${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}" controls></video>`;
+        }
 
-    mediaItem.innerHTML = `
-                    ${mediaElement}
-                    <input type="text" value="${metadata.FileName}" readonly placeholder="Tên file"
-                            onclick="RenameMediaFile('${metadata.FileName}')"
-                            style="background: #eee; cursor: pointer;"
-                            title="Click để đổi tên file" />
-                    <div style="font-size: 12px; color: #666; margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px;">
-                        📐 Kích thước: <strong>${metadata.Width || 0} × ${metadata.Height || 0} px</strong>
-                        ${(metadata.Width === 0 || metadata.Height === 0) ? ' <span style="color: #ff9800;">(chưa có - upload lại để lấy kích thước)</span>' : ''}
-                    </div>
-                    ${isImage ? `
-                        <input type="text" class="media-alt" placeholder="Alt text (SEO - bắt buộc cho ảnh)"
-                                value="${metadata.AltText || ''}"
-                                title="Alt text (SEO - bắt buộc cho ảnh):nội dung ngắn gọn, có giá trị, có keyword + tác giả nếu tác giả nổi tiếng, giới hạn 125 ký tự VD: Sách eho moi moi trang bìa" />
-                        <input type="text" class="media-title" placeholder="Caption (tùy chọn)"
-                                value="${metadata.Title || ''}"
-                                title="Text hiển thị dưới ảnh (nếu cần)" />
-                    ` : `
-                        <input type="text" class="media-title" placeholder="Title video (bắt buộc)"
-                                value="${metadata.Title || ''}"
-                                title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán" />
-                        <textarea spellcheck="false" class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
-                                    title="Mô tả chi tiết nội dung video">${metadata.Description || ''}</textarea>
-                    `}
-                    <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự ảnh"
-                            value="${metadata.DisplayOrder ?? index}"
-                            style="width: 80px;" min="0" />
-                    <div style="margin-top: 5px;">
-                        <button onclick="SaveMediaMetadata('${metadata.FileName}')"
-                                style="background-color: #4CAF50;">💾 Lưu metadata</button>
-                        <button onclick="RenameMediaFile('${metadata.FileName}')"
-                                style="background-color: #2196F3;">Đổi tên</button>
+        mediaItem.innerHTML = `
+                        ${mediaElement}
+                        <input type="text" value="${metadata.FileName}" readonly placeholder="Tên file"
+                                onclick="RenameMediaFile('${metadata.FileName}')"
+                                style="background: #eee; cursor: pointer;"
+                                title="Click để đổi tên file" />
+                        <div style="font-size: 12px; color: #666; margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px;">
+                            📐 Kích thước: <strong>${metadata.Width || 0} × ${metadata.Height || 0} px</strong>
+                            ${(metadata.Width === 0 || metadata.Height === 0) ? ' <span style="color: #ff9800;">(chưa có - upload lại để lấy kích thước)</span>' : ''}
+                        </div>
                         ${isImage ? `
-                            <button onclick="PinImageToDetail('${metadata.FileName}')"
-                                    style="background-color: #FF9800;"
-                                    title="Chèn {{image:${metadata.FileName}}} vào vị trí con trỏ">
-                                Ghim ảnh
-                            </button>
-                        ` : ''}
-                        <button onclick="DeleteMediaFile('${metadata.FileName}')"
-                                style="background-color: #f44336;">Xóa</button>
-                    </div>
-                `;
+                            <textarea spellcheck="false" class="media-alt" placeholder="Alt text (SEO - bắt buộc cho ảnh)" rows="2"
+                                    title="Alt text (SEO - bắt buộc cho ảnh):nội dung ngắn gọn, có giá trị, có keyword + tác giả nếu tác giả nổi tiếng, giới hạn 125 ký tự VD: Sách eho moi moi trang bìa">${metadata.AltText || ''}</textarea>
+                            <textarea spellcheck="false" class="media-title" placeholder="Caption (tùy chọn)" rows="2"
+                                    title="Text hiển thị dưới ảnh (nếu cần)">${metadata.Title || ''}</textarea>
+                        ` : `
+                            <textarea spellcheck="false" class="media-title" placeholder="Title video (bắt buộc)" rows="2"
+                                    title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán">${metadata.Title || ''}</textarea>
+                            <textarea spellcheck="false" class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
+                                        title="Mô tả chi tiết nội dung video">${metadata.Description || ''}</textarea>
+                        `}
+                        <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự ảnh"
+                                value="${metadata.DisplayOrder ?? index}"
+                                style="width: 80px;" min="0" />
+                        <div style="margin-top: 5px;">
+                            <button onclick="SaveMediaMetadata('${metadata.FileName}')"
+                                    style="background-color: #4CAF50;">💾 Lưu metadata</button>
+                            <button onclick="RenameMediaFile('${metadata.FileName}')"
+                                    style="background-color: #2196F3;">Đổi tên</button>
+                            ${isImage ? `
+                                <button onclick="PinImageToDetail('${metadata.FileName}')"
+                                        style="background-color: #FF9800;"
+                                        title="Chèn {{image:${metadata.FileName}}} vào vị trí con trỏ">
+                                    Ghim ảnh
+                                </button>
+                            ` : ''}
+                            <button onclick="ViewBigImage('${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}')"
+                                    style="background-color: #f136f4;">Xem ảnh lớn</button>
+                            <button onclick="DeleteMediaFile('${metadata.FileName}')"
+                                    style="background-color: #f44336;">Xóa</button>
+                        </div>
+                    `;
 
     container.appendChild(mediaItem);
 });
@@ -560,17 +559,22 @@ async function DeleteMediaFile(fileName) {
         return;
     }
 
-try {
-ShowCircleLoader();
-const resultText = await PostJSON('/SanPham/DeleteMedia', {sanPhamId: sanPhamId, fileName: fileName });
-RemoveCircleLoader();
+    try {
+        ShowCircleLoader();
+        const resultText = await PostJSON('/SanPham/DeleteMedia', {sanPhamId: sanPhamId, fileName: fileName });
+        RemoveCircleLoader();
 
-CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
-await LoadMediaList();
+        CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+        await LoadMediaList();
     } catch (error) {
-RemoveCircleLoader();
-CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
     }
+}
+
+function ViewBigImage(url) {
+    // mở ảnh trong tab mới
+    window.open(url, '_blank');
 }
 
 // ============================================
@@ -1031,6 +1035,59 @@ function RenderKhoMappingTable() {
     } catch (error) {
         RemoveCircleLoader();
     CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+    }
+}
+
+    // ========================================
+    // Tạo Sản Phẩm Mới (Copy thông tin)
+    // ========================================
+
+    /**
+     * Tạo sản phẩm mới từ sản phẩm hiện tại
+     * Copy thông tin NHƯNG KHÔNG copy: giá tiền, media, mappings
+     */
+    async function CopyToNewProduct() {
+    const sanPhamName = document.getElementById('sp-name').value.trim() || 'Sản phẩm';
+
+    const confirmMsg = `Tạo sản phẩm mới từ "${sanPhamName}"?\n\n` +
+        `✅ Copy:\n` +
+        `• Thông tin sản phẩm (tên, tác giả, NXB, kích thước...)\n` +
+        `• Mô tả chi tiết\n\n` +
+        `❌ KHÔNG copy:\n` +
+        `• Giá bìa, giá bán, chiết khấu\n` +
+        `• Media (ảnh/video)\n` +
+        `• Mapping sản phẩm kho\n` +
+        `• URL, SEO keyword\n` +
+        `• Code, Barcode\n\n` +
+        `Sản phẩm mới sẽ ở trạng thái "Ngừng bán" và cần mapping + tính giá.`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    try {
+        ShowCircleLoader();
+        const resultText = await PostJSON('/SanPham/CopyToNewProduct', {
+            sanPhamId: parseInt(sanPhamId)
+        });
+        RemoveCircleLoader();
+
+        const result = JSON.parse(resultText);
+
+        if (result.State === 0) {
+            const newProductId = result.myJson;
+            CreateMustClickOkModal(`✓ ${result.Message}\n\nĐang chuyển sang sản phẩm mới...`, null);
+
+            // Redirect to new product page
+            setTimeout(() => {
+                window.location.href = `/SanPham/UpdateDelete?id=${newProductId}`;
+            }, 1500);
+        } else {
+            CreateMustClickOkModal('❌ ' + result.Message, null);
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi kết nối: ' + error.message, null);
     }
 }
 

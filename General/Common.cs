@@ -2643,6 +2643,10 @@ namespace MVCPlayWithMe.General
             {
                 fileNameWithoutExt = "anh-bia";
             }
+            else
+            {
+                fileNameWithoutExt = "trang-" + fileNameWithoutExt;
+            }    
             string fileSlug = ConvertToSlug(fileNameWithoutExt, 20);
             if (string.IsNullOrWhiteSpace(fileSlug))
                 fileSlug = "image";

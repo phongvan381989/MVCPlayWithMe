@@ -24,6 +24,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Threading.Tasks;
+using System.Transactions;
 using System.Web.Mvc;
 using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
@@ -987,6 +988,28 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(order);
         }
 
+        private EECommerceType GetFromStringEType (string eType)
+        {
+            EECommerceType eECommerceType = EECommerceType.TIKI;
+            if (eType == Common.eShopee)
+            {
+                eECommerceType = EECommerceType.SHOPEE;
+            }
+            else if (eType == Common.eTiki)
+            {
+                eECommerceType = EECommerceType.TIKI;
+            }
+            else if (eType == Common.eLazada)
+            {
+                eECommerceType = EECommerceType.LAZADA;
+            }
+            else if (eType == Common.ePlayWithMe)
+            {
+                eECommerceType = EECommerceType.PLAY_WITH_ME;
+            }
+            return eECommerceType;
+        }
+
         [HttpPost]
         public async Task<string> EnoughProductInOrder(string eType, string commonOrder)
         {
@@ -1004,26 +1027,14 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    EECommerceType eECommerceType = EECommerceType.TIKI;
-                    if (eType == Common.eShopee)
+                    EECommerceType eECommerceType = GetFromStringEType(eType);
+                    if (eType == Common.eTiki)
                     {
-                        eECommerceType = EECommerceType.SHOPEE;
-                    }
-                    else if (eType == Common.eTiki)
-                    {
-                        eECommerceType = EECommerceType.TIKI;
-                        // Lấy event để trạng thái đơn hàng trên db là mới nhất
+                        // Lấy event để check trạng thái đơn hàng trên db là mới nhất
                         TikiPullEventService tikiPullEventService = new TikiPullEventService();
                         await tikiPullEventService.DoWork(conn);
                     }
-                    else if (eType == Common.eLazada)
-                    {
-                        eECommerceType = EECommerceType.LAZADA;
-                    }
-                    else if (eType == Common.ePlayWithMe)
-                    {
-                        eECommerceType = EECommerceType.PLAY_WITH_ME;
-                    }
+                    
                     // Là đơn booking
                     if (order.isBooking)
                     {
@@ -1074,6 +1085,36 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         }
 
         [HttpPost]
+        public async Task<string> ManualMinusQuantityOrder(string eType, string commonOrder)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState resultState = new MySqlResultState();
+            CommonOrder order = null;
+            EECommerceType eECommerceType = GetFromStringEType(eType);
+
+            try
+            {
+                order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
+
+                await TikiMySql.UpdateOutputAndProductManualConnectOutAsync(order, eECommerceType, 1, resultState);
+                if(resultState.State == EMySqlResultState.OK)
+                {
+                    // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                    await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                }    
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+            return JsonConvert.SerializeObject(resultState);
+        }
+
+        [HttpPost]
         public async Task<string> ReturnedOrder(string eType, string commonOrder)
         {
             if ((await AuthentAdministratorAsync()) == null)
@@ -1088,19 +1129,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
 
-                EECommerceType eECommerceType = EECommerceType.TIKI;
-                if (eType == Common.eShopee)
-                {
-                    eECommerceType = EECommerceType.SHOPEE;
-                }
-                else if (eType == Common.eTiki)
-                {
-                    eECommerceType = EECommerceType.TIKI;
-                }
-                else if (eType == Common.ePlayWithMe)
-                {
-                    eECommerceType = EECommerceType.PLAY_WITH_ME;
-                }
+                EECommerceType eECommerceType = GetFromStringEType(eType);
+                
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
@@ -1116,6 +1146,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         result = await TikiMySql.UpdateQuantityOfProductInWarehouseFromBookingConnectOutAsync(
                         order, status, 0, oldStatus,
                         EECommerceType.SHOPEE, conn);
+
+                        if (result != null && result.myAnything == 1)
+                        {
+                            // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                            await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                        }
                     }
                     else
                     {
@@ -1141,7 +1177,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             catch (Exception ex)
             {
                 Common.SetResultException(ex, result);
-                return JsonConvert.SerializeObject(result);
             }
             return JsonConvert.SerializeObject(result);
         }

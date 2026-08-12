@@ -1,10 +1,12 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ItemModel;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySqlConnector;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -565,28 +567,29 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             CommonOrder commonOrder, ECommerceOrderStatus status,
             EECommerceType eCommerceType)
         {
-            Boolean isNeedExecuteReader = true;
-            if (storeName == "st_tbOutput_Insert")
-            {
-                isNeedExecuteReader = false;
-            }
-
-            // Có mã đơn, không phải chỉ booking shopee
-            if (!string.IsNullOrEmpty(commonOrder.code))
-            {
-                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
-                {
-                    await UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
-                }
-                else
-                {
-                    await InsertTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
-                }
-            }
-
             MySqlResultState resultState = new MySqlResultState();
             try
             {
+                Boolean isNeedExecuteReader = true;
+                if (storeName == "st_tbOutput_Insert")
+                {
+                    isNeedExecuteReader = false;
+                }
+
+                // Có mã đơn, không phải chỉ booking shopee
+                if (!string.IsNullOrEmpty(commonOrder.code))
+                {
+                    if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                    {
+                        await UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn, resultState);
+                    }
+                    else
+                    {
+                        await InsertTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn, resultState);
+                    }
+                }
+
+
                 // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
                 int delta = 1;
                 if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
@@ -641,39 +644,21 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi
-        // giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
-        // Kết nối được mở đóng bên ngoài hàm
-        public static async Task<MySqlResultState> UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
+        // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity
+        public static async Task UpdateOutputAndProductCoreConnectOutAsync(
             MySqlConnection conn,
+            MySqlTransaction transaction,
             CommonOrder commonOrder,
-            ECommerceOrderStatus status,
-            EECommerceType eCommerceType)
+            EECommerceType eCommerceType,
+            int delta, // 1: xuất kho, -1: nhập kho
+            MySqlResultState resultState)
         {
-            // Chỉ áp dụng với đơn hàng, không áp dụng với booking
-            if (!string.IsNullOrEmpty(commonOrder.code))
-            {
-                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
-                {
-                    await UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
-                }
-                else
-                {
-                    await InsertTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn);
-                }
-            }
-
-            MySqlResultState resultState = new MySqlResultState();
             try
             {
-                // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
-                int delta = 1;
-                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
-                {
-                    delta = -1;
-                }
+                // Dùng unique constraint để Atomic Check bằng db
                 using (MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert_Order_Booking", conn))
                 {
+                    cmd.Transaction = transaction;
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
@@ -699,6 +684,111 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                         }
                     }
                 }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, resultState);
+            }
+        }
+
+        // Thủ công bằng tay. Ví dụ khi phát sinh đơn mà đơn chưa mapping
+        public static async Task UpdateOutputAndProductManualConnectOutAsync(
+            CommonOrder commonOrder,
+            EECommerceType eCommerceType,
+            int delta, // 1: xuất kho, -1: nhập kho
+            MySqlResultState resultState)
+        {
+            MySqlTransaction transaction = null;
+            try
+            {
+
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    // Bắt đầu transaction
+                    transaction = await conn.BeginTransactionAsync();
+
+                    await TikiMySql.UpdateOutputAndProductCoreConnectOutAsync(conn, transaction, commonOrder,
+                    eCommerceType, delta, resultState);
+                    if (resultState.State == EMySqlResultState.OK)
+                    {
+                        await transaction.CommitAsync();
+                    }
+                    else
+                    {
+                        await transaction.RollbackAsync();
+                        MyLogger.GetInstance().Warn($"Transaction rollback: {commonOrder.code}, Status: {resultState.State}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Rollback transaction nếu có lỗi
+                if (transaction != null)
+                {
+                    try
+                    {
+                        await transaction.RollbackAsync();
+                        MyLogger.GetInstance().Warn($"Transaction rollback: {commonOrder.code}");
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        MyLogger.GetInstance().Error($"Rollback failed: {rollbackEx.ToString()}");
+                    }
+                }
+
+                Common.SetResultException(ex, resultState);
+            }
+            finally
+            {
+                // Dispose transaction
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
+            }
+        }
+
+        // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity khi
+        // giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
+        // Kết nối được mở đóng bên ngoài hàm
+        // Transaction: Nếu truyền vào transaction, tất cả commands sẽ dùng transaction đó
+        public static async Task<MySqlResultState> UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
+            MySqlConnection conn,
+            MySqlTransaction transaction,
+            CommonOrder commonOrder,
+            ECommerceOrderStatus status,
+            EECommerceType eCommerceType)
+        {
+            MySqlResultState resultState = new MySqlResultState();
+            try
+            {
+                // Chỉ áp dụng với đơn hàng, không áp dụng với booking
+                if (!string.IsNullOrEmpty(commonOrder.code))
+                {
+                    if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                    {
+                        await UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn, resultState, transaction);
+                    }
+                    else
+                    {
+                        await InsertTbItemOfEcommerceOderAsync(commonOrder, eCommerceType, conn, resultState, transaction);
+                    }
+                    if(resultState.State != EMySqlResultState.OK)
+                    {
+                        return resultState;
+                    }
+                }
+
+
+                // Lưu vào bảng tbOutput, tbProducts, tbNeedUpdateQuantity
+                int delta = 1;
+                if (status == ECommerceOrderStatus.RETURNED || status == ECommerceOrderStatus.UNBOOKED)
+                {
+                    delta = -1;
+                }
+                await UpdateOutputAndProductCoreConnectOutAsync(conn, transaction, commonOrder,
+                    eCommerceType, delta, resultState);
             }
             catch (Exception ex)
             {
@@ -915,6 +1005,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         /// Insert thông tin trạng thái đơn hàng vào bảng tbECommerceOrder
         /// Cập nhật số lượng ở tbProducts, tbOutput, tbNeedUpdateQuantity
+        /// Transaction: Tất cả operations được bọc trong transaction, rollback nếu có lỗi
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
@@ -926,13 +1017,19 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             EECommerceType eCommerceType,
             MySqlConnection conn)
         {
-            MySqlResultState resultState = new MySqlResultState();
+            MySqlResultState result = new MySqlResultState();
+            MySqlTransaction transaction = null;
+
             try
             {
+                // Bắt đầu transaction
+                transaction = await conn.BeginTransactionAsync();
+
                 // Lưu vào bảng tbECommerceOrder
                 // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiếp
                 using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn))
                 {
+                    cmd.Transaction = transaction;
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
                     cmd.Parameters.AddWithValue("@inShipCode", commonOrder.shipCode);
@@ -947,7 +1044,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 {
                     // Cập nhật tbOutput cho cột Code, Quantity = 0, hoàn kho số lượng
                     //resultState = await UpdateOrderCodeOftbOutputWhenPackedWithBooking(commonOrder, eCommerceType, conn);
-                    return resultState;
+                    await transaction.CommitAsync();
+                    return result;
                 }
 
                 // Kiểm tra xem cần thay đổi tồn kho không?
@@ -963,32 +1061,63 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
                     (status == ECommerceOrderStatus.RETURNED))
                 {
-                    resultState = await UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
-                        conn, commonOrder, status, eCommerceType);
-                    resultState.myAnything = 1; // Có thay đổi tồn kho.
+                    result = await UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
+                        conn, transaction, commonOrder, status, eCommerceType);
+                    if (result.State == EMySqlResultState.OK)
+                    {
+                        result.myAnything = 1; // Có thay đổi tồn kho.
+                    }
                 }
                 else
                 {
-                    resultState.myAnything = 0; // Không có thay đổi tồn kho.
+                    result.myAnything = 0; // Không có thay đổi tồn kho.
+                }
+
+                // Commit transaction nếu thành công
+                if (result.State == EMySqlResultState.OK)
+                {
+                    await transaction.CommitAsync();
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
                 }
             }
-            //catch (DbUpdateException ex) when (MyMySql.IsUniqueConstraintViolation(ex))
-            //{
-            //    MyLogger.GetInstance().Warn("unique constraint error");
-            //    Common.SetResultException(ex, resultState);
-            //}
             catch (Exception ex)
             {
-                Common.SetResultException(ex, resultState);
+                // Rollback transaction nếu có lỗi
+                if (transaction != null)
+                {
+                    try
+                    {
+                        await transaction.RollbackAsync();
+                        MyLogger.GetInstance().Warn($"Transaction rollback: {commonOrder.code}, Status: {status}");
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        MyLogger.GetInstance().Error($"Rollback failed: {rollbackEx.ToString()}");
+                    }
+                }
+
+                Common.SetResultException(ex, result);
+            }
+            finally
+            {
+                // Dispose transaction
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
             }
 
-            return resultState;
+            return result;
         }
 
         /// <summary>
         /// Cập nhật số lượng sản phẩm trong kho khi giữ chỗ / hủy giữ chỗ / đóng đơn / hoàn đơn
         /// Insert thông tin trạng thái đơn hàng vào bảng tb_ecommerce_booking
         /// Cập nhật số lượng ở tbProducts
+        /// Transaction: Tất cả operations được bọc trong transaction, rollback nếu có lỗi
         /// </summary>
         /// <param name="commonOrder"></param>
         /// <param name="status">Trạng thái thực tế đã thực hiện: 0: đã đóng hàng, 1: đã hoàn hàng nhập kho, 2: giữ chỗ, 3: hủy giữ chỗ</param>
@@ -1001,12 +1130,18 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlConnection conn)
         {
             MySqlResultState resultState = new MySqlResultState();
+            MySqlTransaction transaction = null;
+
             try
             {
+                // Bắt đầu transaction
+                transaction = await conn.BeginTransactionAsync();
+
                 // Lưu vào bảng tbECommerceBooking
                 // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiếp
                 using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn))
                 {
+                    cmd.Transaction = transaction;
                     cmd.CommandType = CommandType.StoredProcedure;
                     cmd.Parameters.AddWithValue("@inCode", commonOrder.bookingCode);
                     cmd.Parameters.AddWithValue("@inShipCode", commonOrder.bookingShipCode);
@@ -1030,22 +1165,52 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     (status == ECommerceOrderStatus.RETURNED))
                 {
                     resultState = await UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(
-                        conn, commonOrder, status, eCommerceType);
-                    resultState.myAnything = 1; // Có thay đổi tồn kho.
+                        conn, transaction, commonOrder, status, eCommerceType);
+                    if(resultState.State == EMySqlResultState.OK)
+                    {
+                        resultState.myAnything = 1; // Có thay đổi tồn kho.
+                    }
                 }
                 else
                 {
                     resultState.myAnything = 0; // Không có thay đổi tồn kho.
                 }
+
+                if (resultState.State == EMySqlResultState.OK)
+                {
+                    // Commit transaction nếu thành công
+                    await transaction.CommitAsync();
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                }
             }
-            //catch (DbUpdateException ex) when (MyMySql.IsUniqueConstraintViolation(ex))
-            //{
-            //    MyLogger.GetInstance().Warn("unique constraint error");
-            //    Common.SetResultException(ex, resultState);
-            //}
             catch (Exception ex)
             {
+                // Rollback transaction nếu có lỗi
+                if (transaction != null)
+                {
+                    try
+                    {
+                        await transaction.RollbackAsync();
+                        MyLogger.GetInstance().Warn($"Transaction rollback (Booking): {commonOrder.bookingCode}, Status: {status}");
+                    }
+                    catch (Exception rollbackEx)
+                    {
+                        MyLogger.GetInstance().Error($"Rollback failed (Booking): {rollbackEx.ToString()}");
+                    }
+                }
+
                 Common.SetResultException(ex, resultState);
+            }
+            finally
+            {
+                // Dispose transaction
+                if (transaction != null)
+                {
+                    await transaction.DisposeAsync();
+                }
             }
 
             return resultState;
@@ -1250,12 +1415,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         // Có check tồn tại
         public static async Task InsertTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
             EECommerceType type,
-            MySqlConnection conn)
+            MySqlConnection conn,
+            MySqlResultState resultState,
+            MySqlTransaction transaction = null)
         {
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbItemOfEcommerceOder_Insert", conn))
                 {
+                    cmd.Transaction = transaction;
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
                     // Thêm các tham số
@@ -1281,7 +1449,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Info(ex.ToString());
+                Common.SetResultException(ex, resultState);
             }
         }
 
@@ -1358,12 +1526,15 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         public static async Task UpdateCancelledStatusTbItemOfEcommerceOderAsync(CommonOrder commonOrder,
              EECommerceType type,
-            MySqlConnection conn)
+            MySqlConnection conn,
+            MySqlResultState resultState,
+            MySqlTransaction transaction = null)
         {
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbItemOfEcommerceOder_Update_Cancelled_Status", conn))
                 {
+                    cmd.Transaction = transaction;
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
                     // Thêm các tham số
@@ -1387,7 +1558,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Info(ex.ToString());
+                Common.SetResultException(ex, resultState);
             }
         }
 

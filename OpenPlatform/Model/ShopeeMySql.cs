@@ -60,9 +60,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// <returns>-2 nếu tMDTShopeeModelId đã tồn tại, -1 nếu có lỗi</returns>
         public static async Task<long> InserttbShopeeModelAsync(long itemId, CommonModel model, MySqlConnection conn)
         {
-            MyLogger.GetInstance().Warn("Start InserttbShopeeModel");
-            MyLogger.GetInstance().Warn("itemId: " + itemId.ToString());
-            MyLogger.GetInstance().Warn("tMDTShopeeModelId: " + model.modelId.ToString());
+            MyLogger.GetInstance().Info("Start InserttbShopeeModel");
+            MyLogger.GetInstance().Info("itemId: " + itemId.ToString());
+            MyLogger.GetInstance().Info("tMDTShopeeModelId: " + model.modelId.ToString());
             long id = 0;
             try
             {
@@ -166,7 +166,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
                 else // Model trên sàn nào chưa lưu ta lưu vào db, model nào đã xóa trên sàn ta xóa trên db
                 {
-                    MyLogger.GetInstance().Warn("Start xử lý model trên sàn có thay đổi so với model lưu trên db");
+                    MyLogger.GetInstance().Info("Start xử lý model trên sàn có thay đổi so với model lưu trên db item.itemId = " + item.itemId);
 
                     // Cập nhật trạng thái item vào DB
                     await ShopeeUpdateStatusOfItemToDbConnectOutAsync(item, conn);
@@ -174,7 +174,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Lấy list shopee model id đã lưu trong db
                     List<Tuple<int, long>> lsTupleTMDTShopeeModelOnDb = await ListModelOfItemAsync(item.itemId, conn);
 
-                    // Danh sách model đã bị xóa trên sàn
+                    // Danh sách model đã bị xóa trên sàn nhưng vẫn còn trên db
                     List<int> lsTMDTShopeeModelNeedDeleteOnDb = new List<int>();
                     Boolean existTemp = false;
                     foreach (var id in lsTupleTMDTShopeeModelOnDb)
@@ -196,7 +196,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                     if (lsTMDTShopeeModelNeedDeleteOnDb.Count > 0)
                     {
+                        MyLogger.GetInstance().Info("Start disable model trên db item.itemId = " + item.itemId);
+                        MyLogger.GetInstance().Info("List of modelId: " + string.Join(", ", lsTMDTShopeeModelNeedDeleteOnDb));
                         // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
+                        // Không xóa, chỉ disable để xem lại sau này
                         using (MySqlCommand cmdTem = new MySqlCommand("st_tbShopeeModel_Disable_From_Id", conn))
                         {
                             cmdTem.CommandType = CommandType.StoredProcedure;
@@ -227,9 +230,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             lsTMDTShopeeModelNeedSaveOnDb.Add(m);
                         }
                     }
+
                     // Thêm model mới vào tbshopeemodel
                     if (lsTMDTShopeeModelNeedSaveOnDb.Count > 0)
                     {
+                        MyLogger.GetInstance().Info("Start insert model mới trên db item.itemId = " + item.itemId);
+                        MyLogger.GetInstance().Info("List of modelId: " + string.Join(", ", lsTMDTShopeeModelNeedSaveOnDb.Select(m => m.modelId.ToString())));
                         exist = false;
                         foreach (var m in lsTMDTShopeeModelNeedSaveOnDb)
                         {

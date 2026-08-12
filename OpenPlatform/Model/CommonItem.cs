@@ -282,7 +282,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 if (!instance.has_model)
                 {
                     CommonModel commonModel = new CommonModel();
-                    commonModel.modelId = -1;// Thực tế trên sàn shopee không có model id
+                    commonModel.modelId = -1;//Giống với giá trị lưu db để so sánh. Thực tế trên sàn shopee không có model id
                     commonModel.price = (int)pro.price_info[0].current_price;
                     commonModel.market_price = (int)pro.price_info[0].original_price;
                     if (pro.stock_info_v2 != null)

@@ -1318,7 +1318,7 @@ async function ReturnedOrder() {
         return;
     }
 
-    alert("Cập nhật thành công.");
+    alert("Hoàn đơn thành công.");
     // Ẩn modal
     CloseModalInOrderPage();
 
@@ -1326,4 +1326,39 @@ async function ReturnedOrder() {
 
     // Cập nhật trạng thái đơn hàng trên danh sách đơn hàng
     UpdateOrderStatusToView();
+}
+
+async function ManualMinusQuantityOrder() {
+    if (currentOrder === null) {
+        CreateMustClickOkModal("Chưa chọn đơn hàng nào.", null);
+        return;
+    }
+
+    let text = "Bạn Muốn Trừ Tồn Kho Theo Đơn?";
+    if (confirm(text) == false) {
+        return;
+    }
+
+// disable trong 5 giây
+    DisableButtonForDuration("manual-minus-quantity-order-id", 5000);
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("eType", currentOrder.ecommerceName);
+    searchParams.append("commonOrder", JSON.stringify(currentOrder));
+
+    let query = "/ProductECommerce/ManualMinusQuantityOrder";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+    let resObj = JSON.parse(responseDB.responseText);
+
+    if (resObj.State != 0) {
+        await CreateMustClickOkModal(resObj.Message, null);
+        return;
+    }
+
+    alert("Trừ kho theo đơn thành công.");
+    // Ẩn modal
+    CloseModalInOrderPage();
 }

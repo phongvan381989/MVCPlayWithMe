@@ -942,6 +942,96 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        /// <summary>
+        /// Copy sản phẩm hiện tại sang sản phẩm mới (không copy giá tiền, media, mapping, code, barcode,...)
+        /// </summary>
+        [HttpPost]
+        public async Task<string> CopyToNewProduct(int sanPhamId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                // 1. Load sản phẩm nguồn
+                SanPham sourceSanPham = await SanPhamMySql.GetByIdAsync(sanPhamId);
+                if (sourceSanPham == null)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không tìm thấy sản phẩm nguồn";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // 2. Tạo sản phẩm mới (copy thông tin, KHÔNG copy giá tiền và một số fields khác)
+                SanPham newSanPham = new SanPham
+                {
+                    // KHÔNG copy: Id (auto-increment), BookCoverPrice, SalePrice, Discount, SoldQuantity, Date, URL, SEOKeyword
+                    Code = null,
+                    Barcode = null,
+                    Name = sourceSanPham.Name + " (Copy)", // Thêm suffix để phân biệt
+                    ShortName = sourceSanPham.ShortName,
+                    ComboId = sourceSanPham.ComboId,
+                    CategoryId = sourceSanPham.CategoryId,
+                    SalePrice = 0, // KHÔNG copy giá bán
+                    BookCoverPrice = 0, // KHÔNG copy giá bìa
+                    Author = sourceSanPham.Author,
+                    Translator = sourceSanPham.Translator,
+                    PublisherId = sourceSanPham.PublisherId,
+                    PublishingCompany = sourceSanPham.PublishingCompany,
+                    PublishingTime = sourceSanPham.PublishingTime,
+                    ProductLong = sourceSanPham.ProductLong,
+                    ProductWide = sourceSanPham.ProductWide,
+                    ProductHigh = sourceSanPham.ProductHigh,
+                    ProductWeight = sourceSanPham.ProductWeight,
+                    PositionInWarehouse = sourceSanPham.PositionInWarehouse,
+                    HardCover = sourceSanPham.HardCover,
+                    MinAge = sourceSanPham.MinAge,
+                    MaxAge = sourceSanPham.MaxAge,
+                    ParentId = sourceSanPham.ParentId,
+                    Republish = sourceSanPham.Republish,
+                    Detail = sourceSanPham.Detail,
+                    Status = ESanPhamStatus.NGUNG_KINH_DOANH, // Mặc định ngừng bán, cần mapping và tính giá
+                    Quantity = 0, // Tồn kho = 0
+                    PageNumber = sourceSanPham.PageNumber,
+                    Discount = 0, // KHÔNG copy chiết khấu
+                    SalePrice = 0, // KHÔNG copy giá bán
+                    Language = sourceSanPham.Language,
+                    Date = null, // Ngày tạo mới
+                    SoldQuantity = null, // KHÔNG copy số lượng đã bán
+                    URL = null, // KHÔNG copy URL
+                    SEOKeyword = null // KHÔNG copy SEO keyword
+                };
+
+                // 3. Insert sản phẩm mới
+                MySqlResultState insertResult = await SanPhamMySql.InsertAsync(newSanPham);
+
+                if (insertResult.State == EMySqlResultState.OK)
+                {
+                    // newSanPham.Id đã được set trong InsertAsync
+                    result.State = EMySqlResultState.OK;
+                    result.Message = $"Tạo sản phẩm mới thành công (ID: {newSanPham.Id})";
+                    result.myJson = newSanPham.Id; // Return new product ID
+                }
+                else
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Lỗi khi insert: " + insertResult.Message;
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.ERROR;
+                result.Message = ex.Message;
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
         #endregion
 
         #region Price Calculation API Methods
