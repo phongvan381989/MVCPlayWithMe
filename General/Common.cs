@@ -33,6 +33,7 @@ namespace MVCPlayWithMe.General
     {
         public static readonly List<string> ImageExtensions = new List<string> { ".jpg", ".jpeg", ".jfif", ".png", ".svg",".webp"};
         public static readonly List<string> VideoExtensions = new List<string> { ".mp4" };
+        public static readonly string webpExtension = ".webp";
         public static readonly string dateFormat = "yyyy-MM-dd";
         public static readonly int quota = 5;
         public static readonly string srcNoImageThumbnail = "/Media/NoImageThumbnail.png";
@@ -44,6 +45,8 @@ namespace MVCPlayWithMe.General
 
         public static Int16 orderDeadline = 48; // 48 h sau khi đặt hàng mà khách chưa thanh toán thì đơn sẽ bị hủy 
 
+        public static readonly string pathSeperator = @"\";
+        public static readonly string tail320 = "_320";
         public static readonly JsonSerializerSettings jsonSerializersettings = new JsonSerializerSettings
         {
             NullValueHandling = NullValueHandling.Ignore,
@@ -108,34 +111,6 @@ namespace MVCPlayWithMe.General
                 eEnumType = EECommerceType.LAZADA;
             }
             return eEnumType;
-        }
-
-        // Trả về kiểu int với ALL type là -1;
-        public static int GetIntECommerceTypeFromString(string eType)
-        {
-            EECommerceType eEnumType = EECommerceType.ALL;
-            if (eType == ePlayWithMe)
-            {
-                eEnumType = EECommerceType.PLAY_WITH_ME;
-            }
-            else if (eType == eTiki)
-            {
-                eEnumType = EECommerceType.TIKI;
-            }
-            else if (eType == eShopee)
-            {
-                eEnumType = EECommerceType.SHOPEE;
-            }
-            else if (eType == eLazada)
-            {
-                eEnumType = EECommerceType.LAZADA;
-            }
-
-            if (eEnumType == EECommerceType.ALL)
-            {
-                return -1;
-            }
-            return (int)eEnumType;
         }
 
         public enum ECommerceOrderStatus
@@ -226,7 +201,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteProductMediaFolderPath(string productId)
         {
-            string path = absoluteProductMediaFolderPath + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
             //MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
@@ -246,25 +221,25 @@ namespace MVCPlayWithMe.General
             string path = string.Empty;
             if (eType == eTiki)
             {
-                path = srcCertificateFolderPath + eTiki + @"/";
+                path = srcCertificateFolderPath + eTiki + pathSeperator;
             }
             else if (eType == eShopee)
             {
-                path = srcCertificateFolderPath + eShopee + @"/";
+                path = srcCertificateFolderPath + eShopee + pathSeperator;
             }
             else if (eType == eLazada)
             {
-                path = srcCertificateFolderPath + eLazada + @"/";
+                path = srcCertificateFolderPath + eLazada + pathSeperator;
             }
             return path;
         }
 
         public static string CreateAbsoluteProductMediaFolderPath(string productId)
         {
-            string path = absoluteProductMediaFolderPath + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
-            Directory.CreateDirectory(absoluteProductMediaFolderPath + productId + @"_320");
+            Directory.CreateDirectory(absoluteProductMediaFolderPath + productId + tail320);
             return path;
         }
 
@@ -273,7 +248,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string GetAbsoluteSanPhamMediaFolderPath(string sanPhamId)
         {
-            string path = absoluteSanPhamMediaFolderPath + sanPhamId + @"/";
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + pathSeperator;
             if (!Directory.Exists(path))
             {
                 path = null;
@@ -286,10 +261,10 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string CreateAbsoluteSanPhamMediaFolderPath(string sanPhamId)
         {
-            string path = absoluteSanPhamMediaFolderPath + sanPhamId + @"/";
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + pathSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
-            Directory.CreateDirectory(absoluteSanPhamMediaFolderPath + sanPhamId + @"_320");
+            Directory.CreateDirectory(absoluteSanPhamMediaFolderPath + sanPhamId + tail320);
             return path;
         }
 
@@ -345,7 +320,7 @@ namespace MVCPlayWithMe.General
         {
             List<string> src = new List<string>();
 
-            string path = absoluteProductMediaFolderPath + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
             if (!Directory.Exists(path))
             {
                 return src;
@@ -353,7 +328,7 @@ namespace MVCPlayWithMe.General
 
             string[] files = Directory.GetFiles(path);
 
-            string relPath = ProductMediaFolderPath + productId + @"/";
+            string relPath = ProductMediaFolderPath + productId + pathSeperator;
 
             foreach (var file in files)
             {
@@ -369,7 +344,7 @@ namespace MVCPlayWithMe.General
         //// Lấy ảnh đầu tiên của imageSrc cho nhanh
         //public static string GetFirstProductImageSrc(string productId)
         //{
-        //    string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + @"/";
+        //    string path = System.Web.HttpContext.Current.Server.MapPath(ProductMediaFolderPath) + productId + Common.pathSeperator;
         //    //MyLogger.GetInstance().Info(path);
         //    if (!Directory.Exists(path))
         //    {
@@ -379,7 +354,7 @@ namespace MVCPlayWithMe.General
         //    string src = string.Empty;
         //    string[] files = Directory.GetFiles(path, "0.*");
 
-        //    string relPath = ProductMediaFolderPath + productId + @"/";
+        //    string relPath = ProductMediaFolderPath + productId + Common.pathSeperator;
 
         //    foreach (var file in files)
         //    {
@@ -411,7 +386,7 @@ namespace MVCPlayWithMe.General
 
                     if (matchedFile != null)
                     {
-                        src = ProductMediaFolderPath + productId + @"/" + Path.GetFileName(matchedFile);
+                        src = ProductMediaFolderPath + productId + pathSeperator + Path.GetFileName(matchedFile);
                     }
                 }
             }
@@ -471,7 +446,7 @@ namespace MVCPlayWithMe.General
             string path = GetAbsoluteProductMediaFolderPath(productId.ToString());
             string[] files = Directory.GetFiles(Path.GetDirectoryName(path), "0.*");
 
-            string relPath = ProductMediaFolderPath + productId + @"/";
+            string relPath = ProductMediaFolderPath + productId + pathSeperator;
 
             foreach (var file in files)
             {
@@ -511,7 +486,7 @@ namespace MVCPlayWithMe.General
         {
             List<string> src = new List<string>();
 
-            string path = absoluteProductMediaFolderPath + productId + @"/";
+            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
             if (!Directory.Exists(path))
             {
                 return src;
@@ -519,7 +494,7 @@ namespace MVCPlayWithMe.General
 
             string[] files = Directory.GetFiles(path);
 
-            string relPath = ProductMediaFolderPath + productId + @"/";
+            string relPath = ProductMediaFolderPath + productId + pathSeperator;
 
             foreach (var file in files)
             {
@@ -589,7 +564,7 @@ namespace MVCPlayWithMe.General
             string newPath = string.Empty;
 
             // Lấy được foler ông
-            string dir = Path.GetDirectoryName(path) + "_320";
+            string dir = Path.GetDirectoryName(path) + Common.tail320;
             if(isCreateFolder && !Directory.Exists(dir))
             {
                 Directory.CreateDirectory(dir);
@@ -673,7 +648,7 @@ namespace MVCPlayWithMe.General
                 {
                     string parentDir = Directory.GetParent(directory).FullName;
                     string folderName = new DirectoryInfo(directory).Name;
-                    string thumbFolder = Path.Combine(parentDir, folderName + "_320");
+                    string thumbFolder = Path.Combine(parentDir, folderName + Common.tail320);
 
                     if (Directory.Exists(thumbFolder))
                     {
@@ -716,7 +691,7 @@ namespace MVCPlayWithMe.General
                 while (intName <= maxName)
                 {
                     string fileNameTemp = intName.ToString() + Path.GetExtension(path);
-                    DeleteImageVideoWithoutExtension(Path.GetDirectoryName(path) + @"/" + fileNameTemp);
+                    DeleteImageVideoWithoutExtension(Path.GetDirectoryName(path) + pathSeperator + fileNameTemp);
                     intName++;
                 }
             }
@@ -735,7 +710,7 @@ namespace MVCPlayWithMe.General
             }
 
             // Xóa cả thư mục ảnh phiên bản 320
-            string x = Path.GetDirectoryName(path) + "_320";
+            string x = Path.GetDirectoryName(path) + Common.tail320;
             if (Directory.Exists(x))
             {
                 Directory.Delete(x, true);
@@ -761,8 +736,8 @@ namespace MVCPlayWithMe.General
 
             // Xóa phiên bản 320
             // Vì path có "/" cuối cùng, ta xử lý cắt bỏ
-            path = path + @"_320";
-            path = Path.GetDirectoryName(path) + @"_320";
+            path = path + Common.tail320;
+            path = Path.GetDirectoryName(path) + Common.tail320;
             if (Directory.Exists(path))
             {
                 string[] files320 = Directory.GetFiles(path, modelId.ToString() + ".*");
@@ -788,7 +763,7 @@ namespace MVCPlayWithMe.General
 
             // Xóa phiên bản 320
             // Vì path có "/" cuối cùng, ta xử lý cắt bỏ
-            path = Path.GetDirectoryName(path) + @"_320";
+            path = Path.GetDirectoryName(path) + Common.tail320;
             if (Directory.Exists(path))
             {
                 Directory.Delete(path, true);
@@ -817,7 +792,7 @@ namespace MVCPlayWithMe.General
         static public void DeleteAllImage320(string path)
         {
             // Không xóa thư mục, xóa file ảnh trong thư mục
-            string x = Path.GetDirectoryName(path) + "_320";
+            string x = Path.GetDirectoryName(path) + Common.tail320;
             string[] files = Directory.GetFiles(x);
 
             foreach (var f in files)
@@ -857,7 +832,7 @@ namespace MVCPlayWithMe.General
             Directory.Delete(path, true);
 
             // Xóa cả thư mục ảnh phiên bản 320
-            string x = Path.GetDirectoryName(path) + "_320";
+            string x = Path.GetDirectoryName(path) + Common.tail320;
             if (Directory.Exists(x))
             {
                 Directory.Delete(x, true);
@@ -1346,7 +1321,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteItemMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -1357,10 +1332,10 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteItemMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
-            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + @"_320");
+            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + Common.tail320);
             return path;
         }
 
@@ -1370,7 +1345,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteModelMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/Model/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator + "Model" + pathSeperator;
             //MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
@@ -1381,10 +1356,10 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteModelMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/Model/";
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator + "Model" + pathSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
-            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + @"/Model_320");
+            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator + "Model" + tail320);
             return path;
         }
 
@@ -1400,7 +1375,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
+                string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
 
                 files = Directory.GetFiles(path);
             }
@@ -1409,7 +1384,7 @@ namespace MVCPlayWithMe.General
                 return src;
             }
 
-            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
+            string relPath = ItemMediaFolderPath + itemId.ToString() + pathSeperator;
 
             foreach (var file in files)
             {
@@ -1427,7 +1402,7 @@ namespace MVCPlayWithMe.General
         public static string Get320VersionOfImageSrc(string path)
         {
             // Nếu đã là phiên bản 320 bỏ qua
-            if (path.Contains("_320"))
+            if (path.Contains(Common.tail320))
                 return path;
             // Nếu là NoImageThumbnail.png bỏ qua
             if (path.Contains("NoImageThumbnail"))
@@ -1448,7 +1423,7 @@ namespace MVCPlayWithMe.General
             {
                 newFileName = Path.GetFileName(path);
             }
-            var newSrc = fileDir + "_320/" + newFileName;
+            var newSrc = fileDir + Common.tail320 + Common.pathSeperator + newFileName;
             return newSrc;
         }
 
@@ -1460,7 +1435,7 @@ namespace MVCPlayWithMe.General
 
         //    try
         //    {
-        //        string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
+        //        string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
 
         //        files = Directory.GetFiles(path, "0.*"); // trả về file ảnh và video nếu có
         //    }
@@ -1469,10 +1444,10 @@ namespace MVCPlayWithMe.General
         //        return src;
         //    }
 
-        //    string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
+        //    string relPath = ItemMediaFolderPath + itemId.ToString() + pathSeperator;
 
         //    foreach (var file in files)
-        //    {
+        //    { 
         //        if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
         //        {
         //            src = relPath + Path.GetFileName(file);
@@ -1498,7 +1473,7 @@ namespace MVCPlayWithMe.General
                         return src;
                 }
             }
-            src = ItemMediaFolderPath + itemId.ToString() + @"/" + Path.GetFileName(path);
+            src = ItemMediaFolderPath + itemId.ToString() + pathSeperator + Path.GetFileName(path);
 
             return src;
         }
@@ -1515,7 +1490,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                string path = absoluteItemMediaFolderPath + itemId.ToString() + @"/";
+                string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
 
                 files = Directory.GetFiles(path);
             }
@@ -1524,7 +1499,7 @@ namespace MVCPlayWithMe.General
                 return src;
             }
 
-            string relPath = ItemMediaFolderPath + itemId.ToString() + @"/";
+            string relPath = ItemMediaFolderPath + itemId.ToString() + pathSeperator;
 
             foreach (var file in files)
             {
@@ -2389,14 +2364,43 @@ namespace MVCPlayWithMe.General
         /// <param name="destPath">Đường dẫn lưu WebP</param>
         /// <param name="maxSize">Kích thước max (width hoặc height), giữ tỷ lệ</param>
         /// <param name="quality">Chất lượng 0-100</param>
-        public static Boolean ConvertToWebP(string sourcePath, string destPath, uint maxSize, uint quality)
+        /// <summary>
+        /// Convert ảnh sang WebP với quality và maxSize chỉ định
+        /// </summary>
+        /// <param name="sourcePath">Đường dẫn ảnh nguồn</param>
+        /// <param name="destPath">Đường dẫn ảnh đích</param>
+        /// <param name="maxSize">Kích thước tối đa (width/height)</param>
+        /// <param name="quality">Chất lượng WebP (0-100)</param>
+        /// <param name="forceResize">True = bắt buộc resize ngay cả với WebP (dùng cho thumbnail), False = WebP giữ nguyên ảnh gốc (copy)</param>
+        public static Boolean ConvertToWebP(string sourcePath, string destPath, uint maxSize, uint quality, bool forceResize = false)
         {
             try
             {
                 using (MagickImage image = new MagickImage(sourcePath))
                 {
-                    // Resize giữ tỷ lệ nếu ảnh lớn hơn maxSize
-                    if (image.Width > maxSize || image.Height > maxSize)
+                    bool isWebP = image.Format == MagickFormat.WebP;
+
+                    // Nếu ĐÃ là WebP + KHÔNG force resize → LUÔN giữ nguyên ảnh gốc (copy, không re-encode)
+                    if (isWebP && !forceResize)
+                    {
+                        // Check nếu source và dest giống nhau → skip (tránh File.Copy throw exception)
+                        string sourceFullPath = Path.GetFullPath(sourcePath);
+                        string destFullPath = Path.GetFullPath(destPath);
+
+                        if (sourceFullPath.Equals(destFullPath, StringComparison.OrdinalIgnoreCase))
+                        {
+                            MyLogger.GetInstance().Info($"Skip copy WebP (source = dest): {sourcePath} (size: {image.Width}x{image.Height}, quality: {image.Quality}%)");
+                            return true;
+                        }
+
+                        File.Copy(sourcePath, destPath, true);
+                        MyLogger.GetInstance().Info($"Keep original WebP (no re-encode): {sourcePath} → {destPath} (size: {image.Width}x{image.Height}, quality: {image.Quality}%)");
+                        return true;
+                    }
+
+                    // Resize nếu cần (cho non-WebP HOẶC WebP với forceResize=true)
+                    bool needResize = image.Width > maxSize || image.Height > maxSize;
+                    if (needResize)
                     {
                         MagickGeometry geometry = new MagickGeometry(maxSize, maxSize);
                         geometry.IgnoreAspectRatio = false; // Giữ tỷ lệ
@@ -2425,48 +2429,50 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="originalImagePath">Đường dẫn ảnh gốc (JPG/PNG)</param>
         /// <returns>Tuple (width, height, fileName) - kích thước và tên file WebP, hoặc (0, 0, "") nếu fail</returns>
-        public static (uint width, uint height, string fileName) ConvertSanPhamImageToWebP(string originalImagePath)
+        public static (uint width, uint height, string fileName) ConvertSanPhamImageToWebP_Thumbnail(
+            string originalImagePath)
         {
             try
             {
                 string directory = Path.GetDirectoryName(originalImagePath);
                 string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalImagePath);
-                string ext = Path.GetExtension(originalImagePath).ToLower();
+                //string ext = Path.GetExtension(originalImagePath).ToLower();
 
-                //// Chỉ convert ảnh, bỏ qua video
-                //if (!ImageExtensions.Contains(ext))
-                //    return;
 
                 // Path cho WebP full size (1000x1000, 80%)
-                string webpFullPath = Path.Combine(directory, fileNameWithoutExt + ".webp");
-                bool convertSuccess = ConvertToWebP(originalImagePath, webpFullPath, 1000, 80);
-
-                if (!convertSuccess)
+                string webpFullPath = Path.Combine(directory, fileNameWithoutExt + webpExtension);
+                if (!Path.GetFullPath(webpFullPath).Equals(Path.GetFullPath(originalImagePath), StringComparison.OrdinalIgnoreCase))
                 {
-                    MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP failed to convert image to WebP: {originalImagePath}");
-                    return (0, 0, string.Empty);
-                }
+                    bool convertSuccess = ConvertToWebP(originalImagePath, webpFullPath, 1000, 80);
 
-                // Xóa ảnh gốc sau khi convert thành công
-                if (File.Exists(originalImagePath))
-                {
-                    File.Delete(originalImagePath);
-                    MyLogger.GetInstance().Info($"Deleted original image: {originalImagePath}");
+                    if (!convertSuccess)
+                    {
+                        MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP_Thumbnail failed to convert image to WebP: {originalImagePath}");
+                        return (0, 0, string.Empty);
+                    }
+
+                    // Xóa ảnh gốc sau khi convert thành công
+                    if (File.Exists(originalImagePath))
+                    {
+                        File.Delete(originalImagePath);
+                        MyLogger.GetInstance().Info($"Deleted original image: {originalImagePath}");
+                    }
                 }
 
                 // Path cho WebP thumbnail (320x320, 80%)
                 // Tìm hoặc tạo thư mục _320 ngang hàng với thư mục gốc
                 string parentDir = Directory.GetParent(directory).FullName;
                 string folderName = new DirectoryInfo(directory).Name;
-                string thumbFolder = Path.Combine(parentDir, folderName + "_320");
+                string thumbFolder = Path.Combine(parentDir, folderName + Common.tail320);
 
                 if (!Directory.Exists(thumbFolder))
                     Directory.CreateDirectory(thumbFolder);
 
                 string webpThumbPath = Path.Combine(thumbFolder, fileNameWithoutExt + ".webp");
 
-                // Convert từ WebP full size → WebP thumbnail (không dùng ảnh gốc)
-                bool thumbConvertSuccess = ConvertToWebP(webpFullPath, webpThumbPath, 320, 80);
+                // Convert từ WebP full size → WebP thumbnail (forceResize=true để resize WebP)
+                bool thumbConvertSuccess = ConvertToWebP(webpFullPath, webpThumbPath,
+                    320, 80, forceResize: true);
                 if (!thumbConvertSuccess)
                 {
                     MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP failed to convert thumbnail: {webpFullPath}");
@@ -2535,7 +2541,7 @@ namespace MVCPlayWithMe.General
                 // Tạo thư mục _320 nếu chưa có (ngang hàng với thư mục gốc)
                 string parentDir = Directory.GetParent(directory).FullName;
                 string folderName = new DirectoryInfo(directory).Name;
-                string thumbFolder = Path.Combine(parentDir, folderName + "_320");
+                string thumbFolder = Path.Combine(parentDir, folderName + Common.tail320);
 
                 if (!Directory.Exists(thumbFolder))
                     Directory.CreateDirectory(thumbFolder);

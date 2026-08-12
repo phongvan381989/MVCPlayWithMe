@@ -988,27 +988,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(order);
         }
 
-        private EECommerceType GetFromStringEType (string eType)
-        {
-            EECommerceType eECommerceType = EECommerceType.TIKI;
-            if (eType == Common.eShopee)
-            {
-                eECommerceType = EECommerceType.SHOPEE;
-            }
-            else if (eType == Common.eTiki)
-            {
-                eECommerceType = EECommerceType.TIKI;
-            }
-            else if (eType == Common.eLazada)
-            {
-                eECommerceType = EECommerceType.LAZADA;
-            }
-            else if (eType == Common.ePlayWithMe)
-            {
-                eECommerceType = EECommerceType.PLAY_WITH_ME;
-            }
-            return eECommerceType;
-        }
 
         [HttpPost]
         public async Task<string> EnoughProductInOrder(string eType, string commonOrder)
@@ -1027,7 +1006,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    EECommerceType eECommerceType = GetFromStringEType(eType);
+                    EECommerceType eECommerceType = Common.GetEECommerceTypeFromString(eType);
                     if (eType == Common.eTiki)
                     {
                         // Lấy event để check trạng thái đơn hàng trên db là mới nhất
@@ -1094,7 +1073,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             MySqlResultState resultState = new MySqlResultState();
             CommonOrder order = null;
-            EECommerceType eECommerceType = GetFromStringEType(eType);
+            EECommerceType eECommerceType = Common.GetEECommerceTypeFromString(eType);
 
             try
             {
@@ -1129,8 +1108,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             {
                 order = JsonConvert.DeserializeObject<CommonOrder>(commonOrder);
 
-                EECommerceType eECommerceType = GetFromStringEType(eType);
-                
+                EECommerceType eECommerceType = Common.GetEECommerceTypeFromString(eType);
+
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();

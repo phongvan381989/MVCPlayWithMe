@@ -1,12 +1,17 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
-using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySqlConnector;
@@ -14,20 +19,16 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Web;
-using System.Web.Mvc;
 using System.Net;
-using System.Globalization;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
-using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
-using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
-using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
-using MVCPlayWithMe.OpenPlatform;
-using System.Text;
+using System.Web;
+using System.Web.Mvc;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Controllers
 {
@@ -2539,7 +2540,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     statisticsList = await ProductMySql.GetProductSellingStatisticsAsync(
-                        Common.GetIntECommerceTypeFromString(eType),
+                        Common.GetEECommerceTypeFromString(eType),
                         intervalDay, -1, conn);
                 }
             }
@@ -2567,7 +2568,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     statisticsList = await ProductMySql.GetProductSellingStatisticsAsync(
-                        -1, intervalDay, publisherId, conn);
+                        EECommerceType.ALL, intervalDay, publisherId, conn);
                 }
             }
             catch (Exception ex)

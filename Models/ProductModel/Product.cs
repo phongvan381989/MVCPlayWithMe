@@ -203,7 +203,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             List<string> src = new List<string>();
 
-            string path = Common.absoluteProductMediaFolderPath + productId + @"/";
+            string path = Common.absoluteProductMediaFolderPath + productId + Common.pathSeperator;
             if (!Directory.Exists(path))
             {
                 return src;

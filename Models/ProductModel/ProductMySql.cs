@@ -2201,15 +2201,16 @@ namespace MVCPlayWithMe.Models.ProductModel
             return quantity;
         }
 
-        public static async Task<List<ProductSellingStatistics>> GetProductSellingStatisticsAsync(int eCommmerce, int intervalDay, int publisherId, MySqlConnection conn)
+        public static async Task<List<ProductSellingStatistics>> GetProductSellingStatisticsAsync(EECommerceType eCommmerceType, int intervalDay, int publisherId, MySqlConnection conn)
         {
             var statisticsList = new List<ProductSellingStatistics>();
             using (var command = new MySqlCommand("st_tbOutput_Selling_Statistics", conn))
             {
                 command.CommandType = CommandType.StoredProcedure;
-                command.Parameters.AddWithValue("inECommmerce", eCommmerce);
-                command.Parameters.AddWithValue("inIntervalDay", intervalDay);
-                command.Parameters.AddWithValue("inPublisherId", publisherId);
+                // Lấy tất cả nếu inECommmerce = -1, nếu không thì lấy theo eCommmerceType
+                command.Parameters.Add("inECommmerce", MySqlDbType.Byte).Value = eCommmerceType == EECommerceType.ALL ? -1 : (int)eCommmerceType;
+                command.Parameters.Add("inIntervalDay", MySqlDbType.Int32).Value = intervalDay;
+                command.Parameters.Add("inPublisherId", MySqlDbType.Int32).Value = publisherId;
                 using (MySqlDataReader rdr = (MySqlDataReader)await command.ExecuteReaderAsync())
                 {
                     int productIdIndex = rdr.GetOrdinal("Id");

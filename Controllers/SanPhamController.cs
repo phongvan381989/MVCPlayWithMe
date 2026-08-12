@@ -357,7 +357,7 @@ namespace MVCPlayWithMe.Controllers
                     if (Common.ImageExtensions.Contains(ext))
                     {
                         // Image: Convert sang WebP + lấy kích thước
-                        var (width, height, fileName) = Common.ConvertSanPhamImageToWebP(saveToFileLoc);
+                        var (width, height, fileName) = Common.ConvertSanPhamImageToWebP_Thumbnail(saveToFileLoc);
                         if (width == 0 || height == 0)
                         {
                             result.State = EMySqlResultState.ERROR;
@@ -494,7 +494,7 @@ namespace MVCPlayWithMe.Controllers
                 //string parentDir = Directory.GetParent(path).FullName;
                 //string folderName = new DirectoryInfo(path).Name;
                 //string thumbFolder = Path.Combine(parentDir, folderName + "_320");
-                string thumbFolder = Path.GetDirectoryName(path) + "_320";
+                string thumbFolder = Path.GetDirectoryName(path) + Common.tail320;
 
                 string oldThumbPath = Path.Combine(thumbFolder, oldFileName);
                 string newThumbPath = Path.Combine(thumbFolder, newFileNameWithExt);
@@ -559,7 +559,7 @@ namespace MVCPlayWithMe.Controllers
                     // Là ảnh
                     if (Common.ImageExtensions.Contains(ext))
                     {
-                        string pathThumbFileName = Path.Combine(Path.GetDirectoryName(path) + "_320", fileName);
+                        string pathThumbFileName = Path.Combine(Path.GetDirectoryName(path) + Common.tail320, fileName);
 
                         // Xóa ảnh gốc
                         if (System.IO.File.Exists(pathFileName))
@@ -894,7 +894,7 @@ namespace MVCPlayWithMe.Controllers
                         System.IO.File.Copy(sourceFile, destFile, overwrite: true);
 
                         //string webpImage = Common.ConvertSanPhamImageToWebP(destFile);
-                        var (width, height, webpImage) = Common.ConvertSanPhamImageToWebP(destFile);
+                        var (width, height, webpImage) = Common.ConvertSanPhamImageToWebP_Thumbnail(destFile);
                         if(width == 0 || height == 0)
                         {
                             result.State = EMySqlResultState.ERROR;
@@ -976,7 +976,6 @@ namespace MVCPlayWithMe.Controllers
                     ShortName = sourceSanPham.ShortName,
                     ComboId = sourceSanPham.ComboId,
                     CategoryId = sourceSanPham.CategoryId,
-                    SalePrice = 0, // KHÔNG copy giá bán
                     BookCoverPrice = 0, // KHÔNG copy giá bìa
                     Author = sourceSanPham.Author,
                     Translator = sourceSanPham.Translator,
