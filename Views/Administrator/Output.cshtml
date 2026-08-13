@@ -1,0 +1,85 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/Administrator/Output.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="output-container">
+            <h1 class="page-title">📦 Quản lý Output (Xuất/Nhập Kho)</h1>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label for="input-code">Mã đơn hàng (Code)</label>
+                        <input type="text"
+                               id="input-code"
+                               class="search-input"
+                               placeholder="Nhập mã đơn hàng..."
+                               onkeypress="if(event.keyCode==13) SearchOutput()">
+                    </div>
+
+                    <div class="search-group">
+                        <label for="select-ecommerce">Sàn thương mại (ECommerce)</label>
+                        <select id="select-ecommerce" class="search-select">
+                            <option value="0">PLAY WITH ME</option>
+                            <option value="1">TIKI</option>
+                            <option value="2" selected>SHOPEE</option>
+                            <option value="3">LAZADA</option>
+                        </select>
+                    </div>
+
+                    <button type="button" class="btn btn-primary" onclick="SearchOutput()">
+                        🔍 Tìm kiếm
+                    </button>
+
+                    <button type="button" class="btn btn-secondary" onclick="ResetSearch()">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="results-section" style="display: none;">
+                <div class="results-header">
+                    Kết quả: <span class="results-count" id="results-count">0</span> bản ghi
+                </div>
+
+                <table class="output-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Mã đơn</th>
+                            <th>Sàn</th>
+                            <th>Product</th>
+                            <th>Số lượng</th>
+                            <th>Booking Code</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-tbody">
+                        <!-- Data loaded via AJAX -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="no-results" id="no-results" style="display: none;">
+                📭 Không tìm thấy kết quả
+            </div>
+
+            <div class="loading" id="loading" style="display: none;">
+                ⏳ Đang tải dữ liệu...
+            </div>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script src="~/Scripts/Administrator/Output.js"></script>
+</body>
+</html>

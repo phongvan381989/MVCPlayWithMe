@@ -336,9 +336,10 @@ namespace MVCPlayWithMe.Controllers
                         newFileName = Common.GenerateVideoFileName(sanPhamName, originalFileName);
                     }
 
-                    // XÓA tất cả file cùng tên (không kể extension) nếu có
-                    // VD: Xóa harry-potter-anh-bia.jpg, harry-potter-anh-bia.webp
-                    Common.DeleteImageVideoWithoutExtension(Path.Combine(path, newFileName));
+                    //NOTE: Không cần xóa vì tên mới có chuỗi ngẫu nhiên sẽ không trùng
+                    //// XÓA tất cả file cùng tên (không kể extension) nếu có
+                    //// VD: Xóa harry-potter-anh-bia.jpg, harry-potter-anh-bia.webp
+                    //Common.DeleteImageVideoWithoutExtension(Path.Combine(path, newFileName));
 
                     // Lưu file mới
                     string saveToFileLoc = Path.Combine(path, newFileName);
@@ -460,7 +461,7 @@ namespace MVCPlayWithMe.Controllers
                 //string oldFileNameWithoutExt = Path.GetFileNameWithoutExtension(oldFileName);
 
                 //// Tạo slug cho tên mới
-                //string newFileSlug = Common.ConvertToSlug(newFileName, 80);
+                //string newFileSlug = Common.ConvertToSlug(newFileName, 120);
                 //if (string.IsNullOrWhiteSpace(newFileSlug))
                 //    newFileSlug = "renamed";
 

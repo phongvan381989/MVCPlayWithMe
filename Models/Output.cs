@@ -13,7 +13,8 @@ namespace MVCPlayWithMe.Models
         public int eCommmerce { get; set; }
         public int productId { get; set; }
         public int quantity { get; set; }
-        public DateTime time { get; set; }
+        public string bookingCode { get; set; }
+        public DateTime? time { get; set; }
 
         // true: nếu đơn đã bị hủy
         // dữ liệu này không có trong bảng tbOutput

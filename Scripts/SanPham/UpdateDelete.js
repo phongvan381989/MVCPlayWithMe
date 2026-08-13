@@ -799,27 +799,6 @@ async function LoadKhoMappingList() {
     }
 }
 
-// Helper: Lấy URL ảnh thumbnail sản phẩm kho (với fallback)
-function GetKhoThumbnailUrl_JPGFormat(sanPhamKhoId) {
-    // Path pattern: /Media/Product/{Id}_320/0.{ext}
-    // Try: 0.jpg, 0.png, 0.webp
-    const basePath = `/Media/Product/${sanPhamKhoId}_320/`;
-
-    // Return first one (browser will try to load, show broken if not exists)
-    // We could use onerror to fallback, but simpler to just use jpg as default
-    return basePath + '0.jpg';
-}
-
-function GetKhoThumbnailUrl_PNGFormat(sanPhamKhoId) {
-    // Path pattern: /Media/Product/{Id}_320/0.{ext}
-    // Try: 0.jpg, 0.png, 0.webp
-    const basePath = `/Media/Product/${sanPhamKhoId}_320/`;
-
-    // Return first one (browser will try to load, show broken if not exists)
-    // We could use onerror to fallback, but simpler to just use jpg as default
-    return basePath + '0.png';
-}
-
 // Render bảng mapping
 function RenderKhoMappingTable() {
     const tbody = document.getElementById('mapping-tbody');

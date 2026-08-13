@@ -190,6 +190,7 @@ function CheckValidProductISBN(code) {
     return true;
 
 }
+
 function CheckPassWordValid(passWord, repassWord) {
     if (passWord !== repassWord) {
         return '{"isValid":false, "message":"Nhập lại mật khẩu không chính xác."}';
@@ -1496,11 +1497,31 @@ function GenerateSlugIdFromItem(item) {
     return GenerateSlug(item.name) + "-" + item.id;
 }
 
-
 function GetFormattedDate(date) {
     return date.toLocaleDateString(undefined, {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit'
     });
+}
+
+// Helper: Lấy URL ảnh thumbnail sản phẩm kho (với fallback)
+function GetKhoThumbnailUrl_JPGFormat(sanPhamKhoId) {
+    // Path pattern: /Media/Product/{Id}_320/0.{ext}
+    // Try: 0.jpg, 0.png, 0.webp
+    const basePath = `/Media/Product/${sanPhamKhoId}_320/`;
+
+    // Return first one (browser will try to load, show broken if not exists)
+    // We could use onerror to fallback, but simpler to just use jpg as default
+    return basePath + '0.jpg';
+}
+
+function GetKhoThumbnailUrl_PNGFormat(sanPhamKhoId) {
+    // Path pattern: /Media/Product/{Id}_320/0.{ext}
+    // Try: 0.jpg, 0.png, 0.webp
+    const basePath = `/Media/Product/${sanPhamKhoId}_320/`;
+
+// Return first one (browser will try to load, show broken if not exists)
+// We could use onerror to fallback, but simpler to just use jpg as default
+    return basePath + '0.png';
 }

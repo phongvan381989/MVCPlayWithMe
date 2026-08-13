@@ -2576,8 +2576,8 @@ namespace MVCPlayWithMe.General
         /// VD: "Harry Potter và Hòn Đá Phù Thủy" -> "harry-potter-va-hon-da-phu-thuy"
         /// </summary>
         /// <param name="text">Text cần convert</param>
-        /// <param name="maxLength">Độ dài tối đa (mặc định 80 chars - phù hợp với hầu hết tên sách)</param>
-        public static string ConvertToSlug(string text, int maxLength = 80)
+        /// <param name="maxLength">Độ dài tối đa (mặc định 120 chars - phù hợp với hầu hết tên sách)</param>
+        public static string ConvertToSlug(string text, int maxLength = 120)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return string.Empty;
@@ -2635,8 +2635,8 @@ namespace MVCPlayWithMe.General
         /// <returns>Filename: {slug-san-pham}-{slug-ten-file}{extension}</returns>
         public static string GenerateImageFileName(string productName, string originalFileName)
         {
-            // Slug tên sản phẩm (max 60 chars để còn chỗ cho tên file)
-            string productSlug = ConvertToSlug(productName, 60);
+            // Slug tên sản phẩm (max 120 chars để còn chỗ cho tên file)
+            string productSlug = ConvertToSlug(productName, 120);
             if (string.IsNullOrWhiteSpace(productSlug))
                 productSlug = "san-pham";
 
@@ -2658,7 +2658,9 @@ namespace MVCPlayWithMe.General
                 fileSlug = "image";
 
             // Ghép: {product-slug}-{file-slug}{extension}
-            return $"{productSlug}-{fileSlug}{extension}";
+            // Thêm chuỗi ngẫu nhiên 5 ký tự để tránh trùng tên file dù 1 file được up lại nhiều lần.
+            // Tên sẽ cần sửa thủ công sau
+            return $"{productSlug}-{fileSlug}-{GenerateRandomOrderCodeString(5)}{extension}";
         }
 
         /// <summary>
@@ -2670,13 +2672,15 @@ namespace MVCPlayWithMe.General
         /// <returns>Filename: {slug-san-pham}-{slug-ten-file}{extension}</returns>
         public static string GenerateVideoFileName(string productName, string originalFileName)
         {
-            // Slug tên sản phẩm (max 80 chars để còn chỗ cho tên file)
-            string productSlug = ConvertToSlug(productName, 80);
+            // Slug tên sản phẩm (max 120 chars để còn chỗ cho tên file)
+            string productSlug = ConvertToSlug(productName, 120);
 
             // Tách extension và tên file gốc
             string extension = Path.GetExtension(originalFileName);
 
-            return $"{productSlug}{extension}";
+            // Thêm chuỗi ngẫu nhiên 5 ký tự để tránh trùng tên file dù 1 file được up lại nhiều lần.
+            // Tên sẽ cần sửa thủ công sau
+            return $"{productSlug}-{GenerateRandomOrderCodeString(5)}{extension}";
         }
 
         /// <summary>

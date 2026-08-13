@@ -644,7 +644,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return resultState;
         }
 
-        // Cần cập nhật số bảng output, products, tbNeedUpdateQuantity
+        // Cần insert/cập nhật số bảng output, products, tbNeedUpdateQuantity
         public static async Task UpdateOutputAndProductCoreConnectOutAsync(
             MySqlConnection conn,
             MySqlTransaction transaction,
@@ -655,16 +655,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         {
             try
             {
-                // Dùng unique constraint để Atomic Check bằng db
+                // Dùng unique constraint để insert ignore, nếu đã tồn tại thì bỏ qua, không cần check tồn tại trước
                 using (MySqlCommand cmd = new MySqlCommand("st_tbOutput_Insert_Order_Booking", conn))
                 {
                     cmd.Transaction = transaction;
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = commonOrder.code;
+                    cmd.Parameters.Add("@inBookingCode", MySqlDbType.VarChar).Value = commonOrder.bookingCode;
+                    cmd.Parameters.Add("@inECommmerce", MySqlDbType.Int32).Value = (int)eCommerceType;
+                    cmd.Parameters.Add("@inProductId", MySqlDbType.Int32).Value = 0;
+                    cmd.Parameters.Add("@inQuantity", MySqlDbType.Int64).Value = 0;
                     int productId = 0;
                     long quantity = 0;
                     for (int i = 0; i < commonOrder.listMapping.Count; i++)
@@ -701,10 +701,32 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             MySqlTransaction transaction = null;
             try
             {
-
+                // Đơn hàng có thể đã mapping 1 sản phẩm, nên không trừ sản phẩm này nữa
+                // Lấy danh sách output
+                
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
+
+                    List<Output> outputs = await OutputMySql.GetOutputsByCodeAndECommerceAsync(conn,
+                    commonOrder.code, (int)eCommerceType);
+                    // Để đơn giản ta cộng tồn kho sản phẩm đã trừ trong output sau đó trừ lại trong transaction
+                    List<int> lsId = new List<int>();
+                    List<int> lsQuantity = new List<int>();
+                    foreach (var output in outputs)
+                    {
+                        if(output.quantity > 0)
+                        {
+                            lsId.Add(output.productId);
+                            lsQuantity.Add(output.quantity);
+                        }
+                    }
+                    resultState = await ProductMySql.AddQuantityFromListAsync(lsId, lsQuantity);
+                    if (resultState.State != EMySqlResultState.OK)
+                    {
+                        return;
+                    }
+
                     // Bắt đầu transaction
                     transaction = await conn.BeginTransactionAsync();
 
@@ -1026,7 +1048,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 transaction = await conn.BeginTransactionAsync();
 
                 // Lưu vào bảng tbECommerceOrder
-                // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiếp
+                // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ bỏ qua và không thực hiện tiếp
                 using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceOrder_Insert", conn))
                 {
                     cmd.Transaction = transaction;
@@ -1138,7 +1160,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 transaction = await conn.BeginTransactionAsync();
 
                 // Lưu vào bảng tbECommerceBooking
-                // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ crash và không thực hiện tiếp
+                // Dùng unique constraint để Atomic Check bằng db, nếu đã tồn tại sẽ bỏ qua và không thực hiện tiếp
                 using (MySqlCommand cmd = new MySqlCommand("st_tbECommerceBooking_Insert", conn))
                 {
                     cmd.Transaction = transaction;
@@ -1228,12 +1250,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 // Cập nhật cột code trong tbOutput sinh ra khi có đơn nhưng sau đó đơn được matched với Booking
                 using (MySqlCommand cmd = new MySqlCommand(@"UPDATE `tbOutput` SET `Code` = @inCode
-                WHERE `BookingCode` = @inBookingCode AND `ECommmerce` = @inECommmerce; ", conn))
+                WHERE (`Code` IS NULL OR `Code` = '') AND `ECommmerce` = @inECommmerce AND `BookingCode` = @inBookingCode; ", conn))
                 {
                     cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inBookingCode", commonOrder.bookingCode);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = commonOrder.code;
+                    cmd.Parameters.Add("@inBookingCode", MySqlDbType.VarChar).Value = commonOrder.bookingCode;
+                    cmd.Parameters.Add("@inECommmerce", MySqlDbType.Byte).Value = (int)eCommerceType;
                     await cmd.ExecuteNonQueryAsync();
                 }
 
@@ -1242,19 +1264,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 WHERE `Code` = @inCode AND `ECommmerce` = @inECommmerce AND BookingCode IS NULL; ", conn))
                 {
                     cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
+                    cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = commonOrder.code;
+                    cmd.Parameters.Add("@inECommmerce", MySqlDbType.Byte).Value = (int)eCommerceType;
                     await cmd.ExecuteNonQueryAsync();
                 }
 
                 // Hoàn lại số lượng trong kho, trạng thái
-                using (MySqlCommand cmd = new MySqlCommand("st_tbOutput_ReturnQuantityOrderMatchedBooking", conn))
+                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inCode", commonOrder.code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", (int)eCommerceType);
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    cmd.Parameters.AddWithValue("@inQuantity", 0);
+                    cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = 0;
+                    cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = 0;
 
                     int productId = 0;
                     long quantity = 0;
@@ -1269,8 +1289,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                             }
 
                             productId = commonOrder.listMapping[i][j].product.id;
-                            cmd.Parameters[2].Value = productId;
-                            cmd.Parameters[3].Value = quantity;
+                            cmd.Parameters[0].Value = productId;
+                            cmd.Parameters[1].Value = quantity;
                             await cmd.ExecuteNonQueryAsync();
                         }
                     }

@@ -1569,7 +1569,8 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
-        public static async Task<MySqlResultState> UpdateOutputAndProductTableFromFromListImportAsync(int orderId, List<Import> ls, ECommerceOrderStatus status, EECommerceType eCommerceType)
+        public static async Task<MySqlResultState> UpdateOutputAndProductTableFromFromListImportAsync(
+            int orderId, List<Import> ls, ECommerceOrderStatus status, EECommerceType eCommerceType)
         {
             MySqlResultState resultState = new MySqlResultState();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -1743,8 +1744,30 @@ namespace MVCPlayWithMe.Models.ProductModel
                     using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inId", id);
-                        cmd.Parameters.AddWithValue("@inQuantity", quantity);
+                        cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = quantity;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        // C?p nh?t c? ? tbNeedUpdateQuantity n?u có thay d?i t?n kho
+        public static async Task<MySqlResultState> AddQuantityAsync(int id, int quantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = quantity;
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
@@ -1762,16 +1785,68 @@ namespace MVCPlayWithMe.Models.ProductModel
                 try
                 {
                     await conn.OpenAsync();
-                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn))
+                    using (MySqlTransaction transaction = await conn.BeginTransactionAsync())
                     {
-                        cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inId", 0);
-                        cmd.Parameters.AddWithValue("@inQuantity", 0);
-                        for (int i = 0; i < lsId.Count; i++)
+                        try
                         {
-                            cmd.Parameters["@inId"].Value = lsId[i];
-                            cmd.Parameters["@inQuantity"].Value = lsQuantity[i];
-                            await cmd.ExecuteNonQueryAsync();
+                            using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Update_Quantity", conn))
+                            {
+                                cmd.Transaction = transaction;
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = 0;
+                                cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = 0;
+                                for (int i = 0; i < lsId.Count; i++)
+                                {
+                                    cmd.Parameters[0].Value = lsId[i];
+                                    cmd.Parameters[1].Value = lsQuantity[i];
+                                    await cmd.ExecuteNonQueryAsync();
+                                }
+                            }
+                            await transaction.CommitAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            await transaction.RollbackAsync();
+                            Common.SetResultException(ex, result);
+                        }
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> AddQuantityFromListAsync(List<int> lsId, List<int> lsQuantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlTransaction transaction = await conn.BeginTransactionAsync())
+                    {
+                        try
+                        {
+                            using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Add_Quantity", conn))
+                            {
+                                cmd.Transaction = transaction;
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = 0;
+                                cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = 0;
+                                for (int i = 0; i < lsId.Count; i++)
+                                {
+                                    cmd.Parameters[0].Value = lsId[i];
+                                    cmd.Parameters[1].Value = lsQuantity[i];
+                                    await cmd.ExecuteNonQueryAsync();
+                                }
+                            }
+                            await transaction.CommitAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            await transaction.RollbackAsync();
+                            Common.SetResultException(ex, result);
                         }
                     }
                 }

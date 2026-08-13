@@ -475,5 +475,61 @@ namespace MVCPlayWithMe.Controllers
         }
 
         #endregion
+
+        #region Output Management
+
+        /// <summary>
+        /// Trang quản lý Output (xuất/nhập kho)
+        /// </summary>
+        public async Task<ActionResult> Output()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return AuthenticationFail();
+            }
+
+            return View();
+        }
+
+        /// <summary>
+        /// Tìm kiếm Output theo Code và ECommerce
+        /// Accepts both form data and JSON
+        /// </summary>
+        [HttpPost]
+        public async Task<string> SearchOutput(string code = null, int? ecommerce = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, "Chưa đăng nhập"));
+            }
+
+
+            if (string.IsNullOrWhiteSpace(code) || !ecommerce.HasValue)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.EXCEPTION, "Code hoặc ECommerce không hợp lệ"));
+            }
+
+            List<Output> outputs = new List<Output>();
+
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    outputs = await OutputMySql.GetOutputsByCodeAndECommerceAsync(conn, code, ecommerce.Value);
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn($"SearchOutput failed: {ex.Message}");
+                    return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.EXCEPTION, ex.Message));
+                }
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            result.myJson = outputs;
+            return JsonConvert.SerializeObject(result);
+        }
+
+        #endregion
     }
 }
