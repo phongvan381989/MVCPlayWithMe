@@ -2107,7 +2107,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public static async Task UpdateStatusOfNeedUpdateQuantityAsync(List<int> listProId)
+        public static async Task UpdateZeroStatusOfNeedUpdateQuantityAsync(List<int> listProId)
         {
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -2129,7 +2129,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
         }
 
-        public static async Task UpdateStatusOfNeedUpdateQuantityConnectOutAsync(List<int> listProId, MySqlConnection conn)
+        public static async Task UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(List<int> listProId, MySqlConnection conn)
         {
             try
             {

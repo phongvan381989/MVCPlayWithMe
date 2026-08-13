@@ -2089,7 +2089,7 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
 
-            await ProductMySql.UpdateStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, conn);
+            await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, conn);
         }
         public static async Task<List<CommonItem>> GetListNeedUpdateQuantityAndUpdate_CoreAsync()
         {
