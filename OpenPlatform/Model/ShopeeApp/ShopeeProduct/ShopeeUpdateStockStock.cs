@@ -11,6 +11,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct
         public ShopeeUpdateStockStock(long id, long stock)
         {
             model_id = id;
+            if (stock < 0)
+            {
+                stock = 0;
+            }
             normal_stock = stock;
             seller_stock = new List<ShopeeUpdateStockStock_SellerStock>();
             seller_stock.Add(new ShopeeUpdateStockStock_SellerStock(stock));

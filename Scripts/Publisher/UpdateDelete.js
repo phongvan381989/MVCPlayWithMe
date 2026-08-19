@@ -4,8 +4,8 @@ function ShowDoesntFindIdPublisher() {
         document.getElementById("result-find-id").remove();
         let ele = document.getElementById("doesnt-find-id");
         ele.style.display = "flex";
-        ele.style.alignItems = "center";
-        ele.style.justifyContent = "center";
+        // ele.style.alignItems = "center";
+        // ele.style.justifyContent = "center";
     }
 }
 ShowDoesntFindIdPublisher();

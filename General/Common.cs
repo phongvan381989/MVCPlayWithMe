@@ -2647,7 +2647,7 @@ namespace MVCPlayWithMe.General
             // Slug tên file gốc (max 20 chars)
             if(fileNameWithoutExt == "0")
             {
-                fileNameWithoutExt = "anh-bia";
+                fileNameWithoutExt = "bia";
             }
             else
             {

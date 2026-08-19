@@ -44,6 +44,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
         public void UpdateQuantity(int qty)
         {
             //if(warehouse_quantities.Count() == 0)
+            if(qty < 0 )
+            {
+                qty = 0;
+            }
             warehouse_quantities[0].qty_available = qty;
         }
         //public int product_id { get; set; }

@@ -279,28 +279,37 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return "Bìa mềm";
         }
 
+        ///// <summary>
+        ///// Lấy độ tuổi phù hợp dưới dạng text
+        ///// VD: "2-5 tuổi", "3 tuổi trở lên", "Không giới hạn"
+        ///// </summary>
+        //public string GetAgeRangeText()
+        //{
+        //    return GetAgeRangeText(MinAge, MaxAge);
+        //}
+
         /// <summary>
-        /// Lấy độ tuổi phù hợp dưới dạng text
+        /// Static overload - Convert độ tuổi từ tháng → năm và format thành text
         /// VD: "2-5 tuổi", "3 tuổi trở lên", "Không giới hạn"
         /// </summary>
-        public string GetAgeRangeText()
+        public static string GetAgeRangeText(int? minAge, int? maxAge)
         {
-            if (MinAge == null || MaxAge == null || (MinAge == -1 && MaxAge == -1))
+            if ((minAge == null || minAge == -1) && (maxAge == null || maxAge == -1))
             {
-                return "Không giới hạn";
+                return string.Empty;
             }
 
-            int minYears = MinAge.Value / 12;
-            int maxYears = MaxAge.Value / 12;
+            int minYears = (minAge != null && minAge != -1) ? minAge.Value / 12 : -1;
+            int maxYears = (maxAge != null && maxAge != -1) ? maxAge.Value / 12 : -1;
 
-            if (MinAge == -1)
+            if (minAge == -1)
             {
                 return $"Đến {maxYears} tuổi";
             }
 
-            if (MaxAge == -1)
+            if (maxAge == -1)
             {
-                return $"{minYears} tuổi trở lên";
+                return $"Từ {minYears} tuổi";
             }
 
             if (minYears == maxYears)

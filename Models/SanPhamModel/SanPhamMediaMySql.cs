@@ -155,12 +155,52 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         conn))
                     {
                         cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.AddWithValue("@id", media.Id);
-                        cmd.Parameters.AddWithValue("@title", media.Title ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
+                        cmd.Parameters.Add("@id", MySqlDbType.Int32).Value = media.Id;
+                        cmd.Parameters.Add("@title", MySqlDbType.VarChar).Value = media.Title ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@altText", MySqlDbType.VarChar).Value = media.AltText ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@description", MySqlDbType.VarChar).Value = media.Description ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@posterImage", MySqlDbType.VarChar).Value = media.PosterImage ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@displayOrder", MySqlDbType.Int32).Value = media.DisplayOrder;
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            return new MySqlResultState(EMySqlResultState.OK, "Update thành công");
+                        }
+                        return new MySqlResultState(EMySqlResultState.ERROR, "Update thất bại - không tìm thấy record");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                    return new MySqlResultState(EMySqlResultState.ERROR, ex.Message);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update media (chỉ update Title, AltText, Description, PosterImage, DisplayOrder)
+        /// </summary>
+        public static async Task<MySqlResultState> UpdateTextsAsync(SanPhamMedia media)
+        {
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(@"
+                        UPDATE tb_san_pham_media
+                        SET Title = @title,
+                            AltText = @altText,
+                            Description = @description
+                        WHERE Id = @id",
+                        conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.Add("@id", MySqlDbType.Int32).Value = media.Id;
+                        cmd.Parameters.Add("@title", MySqlDbType.VarChar).Value = media.Title ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@altText", MySqlDbType.VarChar).Value = media.AltText ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@description", MySqlDbType.VarChar).Value = media.Description ?? (object)DBNull.Value;
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)

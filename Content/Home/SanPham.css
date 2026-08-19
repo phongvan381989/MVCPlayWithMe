@@ -31,7 +31,16 @@
     -ms-user-select: none;  /* IE/Edge */
     width: 100%;
     overflow: hidden;  /* Ngăn nội dung tràn ra ngoài */
-    /* Height được set bằng JavaScript (600px hoặc scrWidth) */
+
+    /* Mobile first: chiều cao = chiều rộng màn hình */
+    height: 100vw;
+}
+
+/* Desktop: chiều cao cố định 600px khi màn hình >= 800px */
+@media (min-width: 800px) {
+    #item-medium-media {
+        height: 600px;
+    }
 }
 
 #medium_picture {

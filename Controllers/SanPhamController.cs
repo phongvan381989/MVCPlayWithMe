@@ -1,4 +1,6 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.General.ClaudeAI;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MySqlConnector;
@@ -401,7 +403,8 @@ namespace MVCPlayWithMe.Controllers
                             PosterImage = videoPosterName,
                             Width = mediaWidth,
                             Height = mediaHeight,
-                            DisplayOrder = 38 //  hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery
+                            DisplayOrder = 38 //  hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery,
+                                              //  từ 38 trở đi dùng hiện thị cho phần mô tả sản phẩm
                         });
 
                         if (result.State != EMySqlResultState.OK)
@@ -715,6 +718,70 @@ namespace MVCPlayWithMe.Controllers
             SanPhamMedia media = JsonConvert.DeserializeObject<SanPhamMedia>(json);
 
             MySqlResultState result = await SanPhamMediaMySql.UpdateAsync(media);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Cập nhật chỉ DisplayOrder của media
+        /// </summary>
+        [HttpPost]
+        public async Task<string> UpdateMediaDisplayOrder(int? id = null, int? displayOrder = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            var result = new MySqlResultState();
+
+            try
+            {
+                // Parse JSON body nếu không có parameters
+                if (id == null || displayOrder == null)
+                {
+                    using (var reader = new StreamReader(Request.InputStream))
+                    {
+                        string body = await reader.ReadToEndAsync();
+                        var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+                        id = Convert.ToInt32(jsonData["Id"]);
+                        displayOrder = Convert.ToInt32(jsonData["DisplayOrder"]);
+                    }
+                }
+
+                if (!id.HasValue || !displayOrder.HasValue)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Thiếu thông tin Id hoặc DisplayOrder";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Update DisplayOrder
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    string sql = "UPDATE tb_san_pham_media SET DisplayOrder = @displayOrder WHERE Id = @id";
+
+                    using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@id", id.Value);
+                        cmd.Parameters.AddWithValue("@displayOrder", displayOrder.Value);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected == 0)
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = "Không tìm thấy media để cập nhật";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"UpdateMediaDisplayOrder error: {ex}");
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+            }
+
             return JsonConvert.SerializeObject(result);
         }
 
@@ -1181,6 +1248,153 @@ namespace MVCPlayWithMe.Controllers
                     state = (int)EMySqlResultState.EXCEPTION,
                     message = ex.Message
                 });
+            }
+        }
+
+        /// <summary>
+        /// Generate Title, Alt Text, Description cho ảnh sử dụng Claude AI
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GenerateImageAltText(int? sanPhamId = null,
+            string fileName = null,
+            int? imageType = null)
+        {
+            var result = new MySqlResultState();
+
+            try
+            {
+                // Parse JSON body nếu không có parameters
+                if (sanPhamId == null || fileName == null || imageType == null)
+                {
+                    using (var reader = new StreamReader(Request.InputStream))
+                    {
+                        string body = await reader.ReadToEndAsync();
+                        var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+                        sanPhamId = Convert.ToInt32(jsonData["sanPhamId"]);
+                        fileName = jsonData["fileName"]?.ToString();
+                        imageType = Convert.ToInt32(jsonData["imageType"]);
+                    }
+                }
+
+                // Validate parameters
+                if (!sanPhamId.HasValue || string.IsNullOrEmpty(fileName) || !imageType.HasValue)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Thiếu thông tin: sanPhamId, fileName hoặc imageType";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Lấy thông tin sản phẩm từ database
+                var sanPham = await SanPhamMySql.GetByIdAsync(sanPhamId.Value);
+                if (sanPham == null)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không tìm thấy sản phẩm";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Lấy API key từ Web.config
+                string apiKey = System.Configuration.ConfigurationManager.AppSettings["ClaudeAIAPIKey"];
+                if (string.IsNullOrEmpty(apiKey))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Chưa cấu hình ClaudeAIAPIKey trong Web.config";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Xác định đường dẫn ảnh
+                // - InsidePage (1): dùng ảnh lớn (cần OCR)
+                // - Các loại khác: dùng thumbnail 320 (tiết kiệm chi phí)
+                string imagePath;
+                var bookImageType = (BookImageType)imageType.Value;
+
+                //if (bookImageType != BookImageType.InsidePage)
+                //{
+                //    // Ảnh trang trong - dùng ảnh lớn để OCR chính xác
+                //    imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + fileName;
+                //}
+                //else
+                //{
+                //    // Ảnh bìa/gáy/mặt sau - dùng thumbnail
+                //    string thumbnailFolder = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + "_320\\";
+                //    imagePath = thumbnailFolder + fileName;
+
+                //    // Fallback về ảnh lớn nếu thumbnail không tồn tại
+                //    if (!System.IO.File.Exists(imagePath))
+                //    {
+                //        imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + fileName;
+                //    }
+                //}
+
+                // Dùng ảnh lớn để OCR chính xác nếu cần
+                imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + fileName;
+
+                // Kiểm tra file tồn tại
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = $"Không tìm thấy file ảnh: {fileName}";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Lấy thông tin nhà xuất bản
+                string publisherName = sanPham.PublishingCompany;
+
+                // Xác định loại sách (bìa cứng/bìa mềm)
+                string bookFormat = null;
+
+                bookFormat = sanPham.HardCover == ESanPhamCoverType.BIA_CUNG ? "bìa cứng" : "bìa mềm";
+
+                // Gọi Claude AI
+                var aiResult = await ImageAltTextResult.GenerateImageAltTextAsync(
+                    imagePath: imagePath,
+                    apiKey: apiKey,
+                    imageType: bookImageType,
+                    bookName: sanPham.Name,
+                    author: sanPham.Author,
+                    bookFormat: bookFormat,
+                    publisher: publisherName,
+                    minAge: sanPham.MinAge,
+                    maxAge: sanPham.MaxAge
+                );
+
+                // Kiểm tra lỗi
+                if (aiResult.HasError)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = aiResult.Error;
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Insert/Update metadata vào tb_san_pham_media
+                var mediaList = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sanPhamId.Value);
+                var existingMedia = mediaList.FirstOrDefault(m => m.FileName == fileName);
+
+                if (existingMedia != null)
+                {
+                    // Update metadata hiện có
+                    existingMedia.Title = aiResult.Title;
+                    existingMedia.AltText = aiResult.AltText;
+                    existingMedia.Description = aiResult.Description;
+                    await SanPhamMediaMySql.UpdateTextsAsync(existingMedia);
+                }
+
+                // Trả về kết quả thành công
+                return JsonConvert.SerializeObject(new
+                {
+                    State = (int)EMySqlResultState.OK,
+                    Message = "Tạo Alt Text và lưu metadata thành công",
+                    Title = aiResult.Title,
+                    AltText = aiResult.AltText,
+                    Description = aiResult.Description
+                });
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GenerateImageAltText error: {ex}");
+                result.State = EMySqlResultState.EXCEPTION;
+                result.Message = ex.Message;
+                return JsonConvert.SerializeObject(result);
             }
         }
 

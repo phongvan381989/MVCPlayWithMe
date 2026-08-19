@@ -116,7 +116,7 @@ namespace MVCPlayWithMe
                             Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
 
                             // Lấy sản phẩm mới / mới cập nhật trên sàn và lưu db
-                            CommonOpenPlatform.GetNewItemAndInsertIfDontExist(3).GetAwaiter().GetResult();
+                            //CommonOpenPlatform.GetNewItemAndInsertIfDontExist(3).GetAwaiter().GetResult();
                         }
                     }
                     catch (Exception ex)

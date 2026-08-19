@@ -191,6 +191,15 @@ async function LoadSanPhamData() {
             document.getElementById('sp-sold-quantity').value = (sanPham.SoldQuantity && sanPham.SoldQuantity !== -1) ? sanPham.SoldQuantity : '';
             document.getElementById('sp-url').value = sanPham.URL || '';
             document.getElementById('sp-seo-keyword').value = sanPham.SEOKeyword || '';
+
+            // Cập nhật document title (tab browser)
+            document.title = sanPham.Name + ' - Cập Nhật Sản Phẩm';
+
+            // Cập nhật page header
+            const header = document.querySelector('h2');
+            if (header) {
+                header.textContent = sanPham.Name + ' (ID: ' + sanPhamId + ')';
+            }
         }
     } catch (error) {
         alert('Lỗi load dữ liệu: ' + error.message);
@@ -254,6 +263,28 @@ async function UpdateSanPham() {
     } catch (error) {
         CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
     }
+}
+
+// Xem trước sản phẩm trên website
+function PreviewProduct() {
+    const name = document.getElementById('sp-name').value.trim();
+    if (!name) {
+        alert('Tên sản phẩm không được để trống!');
+        return;
+    }
+
+    // Tạo object item để generate slug-id
+    const item = {
+        name: name,
+        id: sanPhamId
+    };
+
+    // Generate slug-id (vd: "sach-harry-potter-123")
+    const slugId = GenerateSlugIdFromItem(item);
+
+    // Mở tab mới với URL preview
+    const previewUrl = `/san-pham/${slugId}`;
+    window.open(previewUrl, '_blank');
 }
 
 async function DeleteSanPham() {
@@ -321,20 +352,48 @@ async function LoadMediaList() {
                             📐 Kích thước: <strong>${metadata.Width || 0} × ${metadata.Height || 0} px</strong>
                             ${(metadata.Width === 0 || metadata.Height === 0) ? ' <span style="color: #ff9800;">(chưa có - upload lại để lấy kích thước)</span>' : ''}
                         </div>
-                        ${isImage ? `
-                            <textarea spellcheck="false" class="media-alt" placeholder="Alt text (SEO - bắt buộc cho ảnh)" rows="2"
-                                    title="Alt text (SEO - bắt buộc cho ảnh):nội dung ngắn gọn, có giá trị, có keyword + tác giả nếu tác giả nổi tiếng, giới hạn 125 ký tự VD: Sách eho moi moi trang bìa">${metadata.AltText || ''}</textarea>
-                            <textarea spellcheck="false" class="media-title" placeholder="Caption (tùy chọn)" rows="2"
-                                    title="Text hiển thị dưới ảnh (nếu cần)">${metadata.Title || ''}</textarea>
-                        ` : `
+                        ${isImage ? (() => {
+                            const isAnhBia = metadata.FileName.toLowerCase().includes('-bia');
+                            const defaultImageType = isAnhBia ? 0 : 1;
+                            return `
+                            <div style="display: flex; gap: 8px; margin: 8px 0; align-items: center; background: #f0f7ff; padding: 8px; border-radius: 4px;">
+                                <select class="image-type-select" style="flex: 1; padding: 6px; border: 1px solid #2196F3; border-radius: 4px;">
+                                    <option value="0" ${defaultImageType === 0 ? 'selected' : ''}>Ảnh bìa trước (Cover)</option>
+                                    <option value="1" ${defaultImageType === 1 ? 'selected' : ''}>Ảnh trang trong (Inside Page)</option>
+                                    <option value="3">Ảnh bìa sau (Back Cover)</option>
+                                    <option value="2">Ảnh gáy sách (Spine)</option>
+                                    <option value="4">Ảnh toàn cảnh (Full View)</option>
+                                </select>
+                                <button type="button"
+                                        onclick="GenerateAltTextForImage('${metadata.FileName}')"
+                                        style="padding: 6px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 500;"
+                                        title="Dùng Claude AI để tạo Title, Alt Text, Description tự động">
+                                    🤖 Lấy Alt Text
+                                </button>
+                            </div>
+                            <textarea spellcheck="false" class="media-title" placeholder="Title/Caption (5-10 từ)" rows="2"
+                                    title="Tiêu đề ngắn gọn">${metadata.Title || ''}</textarea>
+                            <textarea spellcheck="false" class="media-alt" placeholder="Alt text (SEO - bắt buộc, 50-125 ký tự)" rows="2"
+                                    title="Alt text tối ưu SEO cho thẻ img">${metadata.AltText || ''}</textarea>
+                            <textarea spellcheck="false" class="media-description" placeholder="Description (20-40 từ, mô tả chi tiết)" rows="3"
+                                    title="Mô tả chi tiết hình ảnh">${metadata.Description || ''}</textarea>
+                        `;
+                        })() : `
                             <textarea spellcheck="false" class="media-title" placeholder="Title video (bắt buộc)" rows="2"
                                     title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán">${metadata.Title || ''}</textarea>
                             <textarea spellcheck="false" class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
                                         title="Mô tả chi tiết nội dung video">${metadata.Description || ''}</textarea>
                         `}
-                        <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự ảnh"
-                                value="${metadata.DisplayOrder ?? index}"
-                                style="width: 80px;" min="0" />
+                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                            <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự hiển thị"
+                                    value="${metadata.DisplayOrder ?? index}"
+                                    style="width: 80px; padding: 6px;" min="0" />
+                            <button type="button" onclick="UpdateDisplayOrder('${metadata.FileName}')"
+                                    style="padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 500;"
+                                    title="Cập nhật số thứ tự hiển thị">
+                                🔄 Cập nhật
+                            </button>
+                        </div>
                         <div style="margin-top: 5px;">
                             <button onclick="SaveMediaMetadata('${metadata.FileName}')"
                                     style="background-color: #4CAF50;">💾 Lưu metadata</button>
@@ -368,7 +427,7 @@ async function LoadMediaList() {
 // Ghim ảnh vào chi tiết (insert {{ image: filename }} tại vị trí con trỏ)
 function PinImageToDetail(fileName) {
     const detailTextarea = document.getElementById('sp-detail');
-    const imageTag = `{{ image: ${fileName}}}`;
+    const imageTag = `{{image:${fileName}}}`;
 
     // Lấy vị trí con trỏ hiện tại
     const cursorPos = detailTextarea.selectionStart;
@@ -461,6 +520,47 @@ async function SaveMediaMetadata(fileName) {
     } catch (error) {
         RemoveCircleLoader();
         CreateMustClickOkModal('Lỗi kết nối: ' + error.message, null);
+    }
+}
+
+// Cập nhật chỉ DisplayOrder (số thứ tự)
+async function UpdateDisplayOrder(fileName) {
+    try {
+        // Tìm media item
+        const mediaItem = document.querySelector(`.media-item[data-file-name="${fileName}"]`);
+        if (!mediaItem) {
+            alert('Không tìm thấy media item!');
+            return;
+        }
+
+        // Lấy DisplayOrder mới
+        const displayOrder = parseInt(mediaItem.querySelector('.media-order')?.value);
+        if (isNaN(displayOrder) || displayOrder < 0) {
+            alert('Số thứ tự không hợp lệ!');
+            return;
+        }
+
+        // Lấy metadata hiện có
+        const mediaId = mediaItem.dataset.mediaId;
+        if (!mediaId) {
+            alert('Ảnh chưa có metadata. Vui lòng bấm "💾 Lưu metadata" trước!');
+            return;
+        }
+
+        // Gọi API update chỉ DisplayOrder
+        const data = {
+            Id: parseInt(mediaId),
+            DisplayOrder: displayOrder
+        };
+
+        ShowCircleLoader();
+        const resultText = await PostJSON('/SanPham/UpdateMediaDisplayOrder', data);
+        RemoveCircleLoader();
+
+        CheckStatusResponseAndShowPrompt(resultText, "Cập nhật số thứ tự thành công", "Cập nhật thất bại", false);
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi: ' + error.message, null);
     }
 }
 
@@ -965,7 +1065,7 @@ async function CopyDataFromKhoProduct() {
             // Reload page để hiển thị dữ liệu mới
             setTimeout(() => {
                 location.reload();
-            }, 1000);
+            }, 2000);
         } else {
             CreateMustClickOkModal('Lỗi: ' + result.Message);
         }
@@ -1067,6 +1167,97 @@ async function CopyToNewProduct() {
     } catch (error) {
         RemoveCircleLoader();
         CreateMustClickOkModal('Lỗi kết nối: ' + error.message, null);
+    }
+}
+
+// ========================================
+// 🤖 Claude AI - Generate Alt Text
+// ========================================
+
+/**
+ * Gọi Claude AI để tạo Title, Alt Text, Description cho ảnh
+ */
+async function GenerateAltTextForImage(fileName) {
+    try {
+        // Tìm media item có fileName này
+        const mediaItem = document.querySelector(`.media-item[data-file-name="${fileName}"]`);
+        if (!mediaItem) {
+            CreateMustClickOkModal('Không tìm thấy ảnh!');
+            return;
+        }
+
+        // Lấy loại ảnh từ dropdown
+        const imageTypeSelect = mediaItem.querySelector('.image-type-select');
+        const imageType = parseInt(imageTypeSelect.value);
+
+        // Lấy button để hiển thị loading
+        const button = mediaItem.querySelector('button[onclick*="GenerateAltTextForImage"]');
+        const originalButtonText = button.innerHTML;
+
+        // Hiển thị loading state
+        button.disabled = true;
+        button.innerHTML = '⏳ Đang phân tích ảnh...';
+        button.style.background = '#FF9800';
+
+        ShowCircleLoader();
+
+        // Gọi API backend
+        const resultText = await PostJSON('/SanPham/GenerateImageAltText', {
+            sanPhamId: sanPhamId,
+            fileName: fileName,
+            imageType: imageType
+        });
+
+        RemoveCircleLoader();
+
+        const result = JSON.parse(resultText);
+
+        if (result.State === 0) {
+            // Success - update 3 textarea fields
+            const titleTextarea = mediaItem.querySelector('.media-title');
+            const altTextarea = mediaItem.querySelector('.media-alt');
+            const descriptionTextarea = mediaItem.querySelector('.media-description');
+
+            if (titleTextarea) titleTextarea.value = result.Title || '';
+            if (altTextarea) altTextarea.value = result.AltText || '';
+            if (descriptionTextarea) descriptionTextarea.value = result.Description || '';
+
+            // Flash effect để user biết đã update
+            [titleTextarea, altTextarea, descriptionTextarea].forEach(el => {
+                if (el) {
+                    el.style.backgroundColor = '#d4edda';
+                    setTimeout(() => {
+                        el.style.backgroundColor = '';
+                    }, 1000);
+                }
+            });
+
+            // Restore button
+            button.disabled = false;
+            button.innerHTML = originalButtonText;
+            button.style.background = '#2196F3';
+
+            //CreateMustClickOkModal('✓ Đã tạo Alt Text thành công!\n\nNhớ click "💾 Lưu metadata" để lưu vào database.');
+        } else {
+            // Error
+            button.disabled = false;
+            button.innerHTML = originalButtonText;
+            button.style.background = '#2196F3';
+
+            CreateMustClickOkModal('❌ Lỗi: ' + result.Message);
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+
+        // Restore button on error
+        const mediaItem = document.querySelector(`.media-item[data-file-name="${fileName}"]`);
+        const button = mediaItem?.querySelector('button[onclick*="GenerateAltTextForImage"]');
+        if (button) {
+            button.disabled = false;
+            button.innerHTML = '🤖 Lấy Alt Text';
+            button.style.background = '#2196F3';
+        }
     }
 }
 

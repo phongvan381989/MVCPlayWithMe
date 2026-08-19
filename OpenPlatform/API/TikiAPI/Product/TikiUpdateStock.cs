@@ -122,6 +122,12 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         /// <returns></returns>
         public static async Task TikiProductUpdatePrice(int proId, int price, MySqlResultState result)
         {
+            if (price <= 0)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Giá bán không được nhỏ hơn 0";
+                return;
+            }
             TikiUpdatePrice st = new TikiUpdatePrice(proId);
             st.UpdatePrice(price);
             TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);

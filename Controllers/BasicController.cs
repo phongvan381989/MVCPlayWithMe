@@ -17,7 +17,7 @@ namespace MVCPlayWithMe.Controllers
     {
         public BasicController()
         {
-            ViewData["title"] = "Play with books";
+            ViewData["title"] = "Tiệm sách Voi bé nhỏ";
         }
 
         public MySqlResultState AuthentFailReturnState()

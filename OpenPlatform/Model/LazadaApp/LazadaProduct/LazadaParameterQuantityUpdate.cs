@@ -45,6 +45,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct
         {
             itemId = initemId;
             skuId = inskuId;
+            if (inquantity < 0)
+            {
+                inquantity = 0;
+            }
             quantity = inquantity;
             price = inprice;
             salePrice = insalePrice;
