@@ -273,14 +273,8 @@ function PreviewProduct() {
         return;
     }
 
-    // Tạo object item để generate slug-id
-    const item = {
-        name: name,
-        id: sanPhamId
-    };
-
     // Generate slug-id (vd: "sach-harry-potter-123")
-    const slugId = GenerateSlugIdFromItem(item);
+    const slugId = GenerateSlugId(name, sanPhamId);
 
     // Mở tab mới với URL preview
     const previewUrl = `/san-pham/${slugId}`;
@@ -307,6 +301,126 @@ async function DeleteSanPham() {
     }
 }
 
+/**
+ * Tạo DOM element cho 1 media item
+ * @param {Object} metadata - Metadata object từ API
+ * @param {number} index - Index trong list (dùng làm default DisplayOrder)
+ * @returns {HTMLElement} - DOM element div.media-item
+ */
+function CreateMediaItemElement(metadata, index) {
+    const isImage = metadata.MediaType === 'image';
+
+    // Tự sinh URL phiên bản 320 từ FileName
+    const filePath = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamId, metadata.FileName));
+
+    const mediaItem = document.createElement('div');
+    mediaItem.className = 'media-item';
+    mediaItem.dataset.fileName = metadata.FileName;
+    mediaItem.dataset.mediaId = metadata.Id;
+
+    // Preserve data-page-number nếu có (từ Claude AI)
+    // (sẽ được set lại khi generate alt text mới)
+
+    // Media element (ảnh hoặc video)
+    let mediaElement;
+    if (isImage) {
+        // WebP path (ảnh đã được convert sang WebP)
+        mediaElement = `
+                <picture>
+                    <source srcset="${filePath}" type="image/webp">
+                    <img src="${filePath}" alt="${metadata.AltText || metadata.FileName}" />
+                </picture>
+            `;
+    } else {
+        mediaElement = `<video src="${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}" controls></video>`;
+    }
+
+    mediaItem.innerHTML = `
+            ${mediaElement}
+            <input type="text" value="${metadata.FileName}" readonly placeholder="Tên file"
+                    onclick="RenameMediaFile('${metadata.FileName}')"
+                    style="background: #eee; cursor: pointer;"
+                    title="Click để đổi tên file" />
+            <div style="font-size: 12px; color: #666; margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px;">
+                📐 Kích thước: <strong>${metadata.Width || 0} × ${metadata.Height || 0} px</strong>
+                ${(metadata.Width === 0 || metadata.Height === 0) ? ' <span style="color: #ff9800;">(chưa có - upload lại để lấy kích thước)</span>' : ''}
+            </div>
+            ${isImage ? (() => {
+                const isAnhBia = metadata.FileName.toLowerCase().includes('-bia');
+                const defaultImageType = isAnhBia ? 0 : 1;
+                return `
+                <div style="display: flex; gap: 8px; margin: 8px 0; align-items: center; background: #f0f7ff; padding: 8px; border-radius: 4px;">
+                    <select class="image-type-select" style="flex: 1; padding: 6px; border: 1px solid #2196F3; border-radius: 4px;">
+                        <option value="0" ${defaultImageType === 0 ? 'selected' : ''}>Ảnh bìa trước (Cover)</option>
+                        <option value="1" ${defaultImageType === 1 ? 'selected' : ''}>Ảnh trang trong (Inside Page)</option>
+                        <option value="3">Ảnh bìa sau (Back Cover)</option>
+                        <option value="2">Ảnh gáy sách (Spine)</option>
+                        <option value="4">Ảnh toàn cảnh (Full View)</option>
+                    </select>
+                    <button type="button"
+                            onclick="GenerateAltTextForImage('${metadata.FileName}')"
+                            style="padding: 6px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 500;"
+                            title="Dùng Claude AI để tạo Title, Alt Text, Description tự động">
+                        🤖 Lấy Alt Text
+                    </button>
+                </div>
+                <textarea spellcheck="false" class="media-title" placeholder="Title/Caption (5-10 từ)" rows="2"
+                        title="Tiêu đề ngắn gọn">${metadata.Title || ''}</textarea>
+                <textarea spellcheck="false" class="media-alt" placeholder="Alt text (SEO - bắt buộc, 50-125 ký tự)" rows="2"
+                        title="Alt text tối ưu SEO cho thẻ img">${metadata.AltText || ''}</textarea>
+                <textarea spellcheck="false" class="media-description" placeholder="Description (20-40 từ, mô tả chi tiết)" rows="3"
+                        title="Mô tả chi tiết hình ảnh">${metadata.Description || ''}</textarea>
+            `;
+            })() : `
+                <textarea spellcheck="false" class="media-title" placeholder="Title video (bắt buộc)" rows="2"
+                        title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán">${metadata.Title || ''}</textarea>
+                <textarea spellcheck="false" class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
+                            title="Mô tả chi tiết nội dung video">${metadata.Description || ''}</textarea>
+            `}
+            <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+                <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự hiển thị"
+                        value="${metadata.DisplayOrder ?? index}"
+                        style="width: 80px; padding: 6px;" min="0" />
+                <button type="button" onclick="UpdateDisplayOrder('${metadata.FileName}')"
+                        style="padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 500;"
+                        title="Cập nhật số thứ tự hiển thị">
+                    🔄 Cập nhật
+                </button>
+            </div>
+            <div style="margin-top: 5px;">
+                <button onclick="SaveMediaMetadata('${metadata.FileName}')"
+                        style="background-color: #4CAF50;">💾 Lưu metadata</button>
+                <button onclick="RenameMediaFile('${metadata.FileName}')"
+                        style="background-color: #2196F3;">Đổi tên</button>
+                ${isImage ? `
+                    <button onclick="AutoRenameFromAltText('${metadata.FileName}')"
+                            style="background-color: #9C27B0; color: white;"
+                            title="Tự động đổi tên dựa trên thông tin AI trả về hoặc trang trong Alt Text (VD: trang 2-3 → trang-2-3)">
+                        🤖 Auto đổi tên .webp
+                    </button>
+                    ${metadata.FileName.toLowerCase().includes('-bia') ? `
+                        <button onclick="RemoveCoverSuffix('${metadata.FileName}')"
+                                style="background-color: #E91E63; color: white;"
+                                title="Loại bỏ suffix sau '-bia' (VD: sach-abc-bia-ABCD → sach-abc-bia)">
+                            🗑️ Loại bỏ -bia suffix
+                        </button>
+                    ` : ''}
+                    <button onclick="PinImageToDetail('${metadata.FileName}')"
+                            style="background-color: #FF9800;"
+                            title="Chèn {{image:${metadata.FileName}}} vào vị trí con trỏ">
+                        Ghim ảnh
+                    </button>
+                ` : ''}
+                <button onclick="ViewBigImage('${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}')"
+                        style="background-color: #f136f4;">Xem ảnh lớn</button>
+                <button onclick="DeleteMediaFile('${metadata.FileName}')"
+                        style="background-color: #f44336;">Xóa</button>
+            </div>
+        `;
+
+    return mediaItem;
+}
+
 async function LoadMediaList() {
     try {
         // Load metadata từ database (single source of truth)
@@ -318,101 +432,7 @@ async function LoadMediaList() {
 
         if (metadataList && metadataList.length > 0) {
             metadataList.forEach((metadata, index) => {
-                const isImage = metadata.MediaType === 'image';
-
-                // Tự sinh URL phiên bản 320 từ FileName
-                const filePath = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamId, metadata.FileName));
-
-                const mediaItem = document.createElement('div');
-                mediaItem.className = 'media-item';
-                mediaItem.dataset.fileName = metadata.FileName;
-                mediaItem.dataset.mediaId = metadata.Id;
-
-                // Media element (ảnh hoặc video)
-                let mediaElement;
-                if (isImage) {
-                    // WebP path (ảnh đã được convert sang WebP)
-                    mediaElement = `
-                            <picture>
-                                <source srcset="${filePath}" type="image/webp">
-                                <img src="${filePath}" alt="${metadata.AltText || metadata.FileName}" />
-                            </picture>
-                        `;
-                } else {
-                    mediaElement = `<video src="${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}" controls></video>`;
-                }
-
-                mediaItem.innerHTML = `
-                        ${mediaElement}
-                        <input type="text" value="${metadata.FileName}" readonly placeholder="Tên file"
-                                onclick="RenameMediaFile('${metadata.FileName}')"
-                                style="background: #eee; cursor: pointer;"
-                                title="Click để đổi tên file" />
-                        <div style="font-size: 12px; color: #666; margin: 5px 0; padding: 5px; background: #f5f5f5; border-radius: 3px;">
-                            📐 Kích thước: <strong>${metadata.Width || 0} × ${metadata.Height || 0} px</strong>
-                            ${(metadata.Width === 0 || metadata.Height === 0) ? ' <span style="color: #ff9800;">(chưa có - upload lại để lấy kích thước)</span>' : ''}
-                        </div>
-                        ${isImage ? (() => {
-                            const isAnhBia = metadata.FileName.toLowerCase().includes('-bia');
-                            const defaultImageType = isAnhBia ? 0 : 1;
-                            return `
-                            <div style="display: flex; gap: 8px; margin: 8px 0; align-items: center; background: #f0f7ff; padding: 8px; border-radius: 4px;">
-                                <select class="image-type-select" style="flex: 1; padding: 6px; border: 1px solid #2196F3; border-radius: 4px;">
-                                    <option value="0" ${defaultImageType === 0 ? 'selected' : ''}>Ảnh bìa trước (Cover)</option>
-                                    <option value="1" ${defaultImageType === 1 ? 'selected' : ''}>Ảnh trang trong (Inside Page)</option>
-                                    <option value="3">Ảnh bìa sau (Back Cover)</option>
-                                    <option value="2">Ảnh gáy sách (Spine)</option>
-                                    <option value="4">Ảnh toàn cảnh (Full View)</option>
-                                </select>
-                                <button type="button"
-                                        onclick="GenerateAltTextForImage('${metadata.FileName}')"
-                                        style="padding: 6px 16px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 500;"
-                                        title="Dùng Claude AI để tạo Title, Alt Text, Description tự động">
-                                    🤖 Lấy Alt Text
-                                </button>
-                            </div>
-                            <textarea spellcheck="false" class="media-title" placeholder="Title/Caption (5-10 từ)" rows="2"
-                                    title="Tiêu đề ngắn gọn">${metadata.Title || ''}</textarea>
-                            <textarea spellcheck="false" class="media-alt" placeholder="Alt text (SEO - bắt buộc, 50-125 ký tự)" rows="2"
-                                    title="Alt text tối ưu SEO cho thẻ img">${metadata.AltText || ''}</textarea>
-                            <textarea spellcheck="false" class="media-description" placeholder="Description (20-40 từ, mô tả chi tiết)" rows="3"
-                                    title="Mô tả chi tiết hình ảnh">${metadata.Description || ''}</textarea>
-                        `;
-                        })() : `
-                            <textarea spellcheck="false" class="media-title" placeholder="Title video (bắt buộc)" rows="2"
-                                    title="Tiêu đề video. VD: Hướng dẫn sử dụng sách Toán">${metadata.Title || ''}</textarea>
-                            <textarea spellcheck="false" class="media-description" placeholder="Mô tả video (tùy chọn)" rows="2"
-                                        title="Mô tả chi tiết nội dung video">${metadata.Description || ''}</textarea>
-                        `}
-                        <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
-                            <input type="number" class="media-order" placeholder="Thứ tự" title="Số thứ tự hiển thị"
-                                    value="${metadata.DisplayOrder ?? index}"
-                                    style="width: 80px; padding: 6px;" min="0" />
-                            <button type="button" onclick="UpdateDisplayOrder('${metadata.FileName}')"
-                                    style="padding: 6px 12px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap; font-weight: 500;"
-                                    title="Cập nhật số thứ tự hiển thị">
-                                🔄 Cập nhật
-                            </button>
-                        </div>
-                        <div style="margin-top: 5px;">
-                            <button onclick="SaveMediaMetadata('${metadata.FileName}')"
-                                    style="background-color: #4CAF50;">💾 Lưu metadata</button>
-                            <button onclick="RenameMediaFile('${metadata.FileName}')"
-                                    style="background-color: #2196F3;">Đổi tên</button>
-                            ${isImage ? `
-                                <button onclick="PinImageToDetail('${metadata.FileName}')"
-                                        style="background-color: #FF9800;"
-                                        title="Chèn {{image:${metadata.FileName}}} vào vị trí con trỏ">
-                                    Ghim ảnh
-                                </button>
-                            ` : ''}
-                            <button onclick="ViewBigImage('${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}')"
-                                    style="background-color: #f136f4;">Xem ảnh lớn</button>
-                            <button onclick="DeleteMediaFile('${metadata.FileName}')"
-                                    style="background-color: #f44336;">Xóa</button>
-                        </div>
-                    `;
-
+                const mediaItem = CreateMediaItemElement(metadata, index);
                 container.appendChild(mediaItem);
             });
         } else {
@@ -421,6 +441,57 @@ async function LoadMediaList() {
     } catch (error) {
         console.error('Lỗi load media:', error);
         alert('Lỗi load media: ' + error.message);
+    }
+}
+
+/**
+ * Refresh chỉ 1 media item thay vì reload toàn bộ (tối ưu performance)
+ * @param {string} oldFileName - Tên file cũ (để tìm element hiện tại)
+ * @param {string} newFileName - Tên file mới (sau khi rename), null nếu không rename
+ */
+async function RefreshMediaItem(oldFileName, newFileName = null) {
+    try {
+        // Load tất cả metadata từ DB
+        const metadataResultText = await PostJSON('/SanPham/GetAllMediaMetadata', { sanPhamId: sanPhamId });
+        const metadataList = JSON.parse(metadataResultText);
+
+        // Tìm metadata của file (dùng newFileName nếu có, không thì oldFileName)
+        const targetFileName = newFileName || oldFileName;
+        const metadata = metadataList.find(m => m.FileName === targetFileName);
+
+        if (!metadata) {
+            console.error(`RefreshMediaItem: Không tìm thấy metadata cho file "${targetFileName}"`);
+            // Fallback: reload toàn bộ
+            await LoadMediaList();
+            return;
+        }
+
+        // Tìm media-item cũ trong DOM (theo oldFileName)
+        const oldMediaItem = document.querySelector(`.media-item[data-file-name="${oldFileName}"]`);
+
+        if (!oldMediaItem) {
+            console.error(`RefreshMediaItem: Không tìm thấy DOM element cho file "${oldFileName}"`);
+            // Fallback: reload toàn bộ
+            await LoadMediaList();
+            return;
+        }
+
+        // Tạo element mới
+        const index = metadataList.findIndex(m => m.FileName === targetFileName);
+        const newMediaItem = CreateMediaItemElement(metadata, index);
+
+        // Preserve data-page-number nếu có (từ Claude AI - đã set trước đó)
+        if (oldMediaItem.dataset.pageNumber) {
+            newMediaItem.dataset.pageNumber = oldMediaItem.dataset.pageNumber;
+        }
+
+        // Replace old element với new element
+        oldMediaItem.replaceWith(newMediaItem);
+
+    } catch (error) {
+        console.error('Lỗi refresh media item:', error);
+        // Fallback: reload toàn bộ
+        await LoadMediaList();
     }
 }
 
@@ -516,7 +587,14 @@ async function SaveMediaMetadata(fileName) {
         const resultText = await PostJSON(endpoint, data);
         RemoveCircleLoader();
 
-        CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
+        const result = JSON.parse(resultText);
+        if (result.State === 0) {
+            // Success - refresh chỉ media-item này để cập nhật mediaId nếu mới insert
+            await RefreshMediaItem(fileName);
+            //CreateMustClickOkModal('✓ Lưu metadata thành công!');
+        } else {
+            CreateMustClickOkModal('✗ Lưu metadata thất bại: ' + result.Message);
+        }
     } catch (error) {
         RemoveCircleLoader();
         CreateMustClickOkModal('Lỗi kết nối: ' + error.message, null);
@@ -621,6 +699,117 @@ async function UploadFiles() {
     await LoadMediaList();
 }
 
+/**
+ * Tự động đổi tên file dựa trên PageNumber từ Claude AI hoặc Alt Text
+ * Ưu tiên: PageNumber từ Claude AI → Parse từ Alt Text
+ * VD: PageNumber="2-3" → đổi "trang-1-8RSRG" thành "trang-2-3"
+ */
+async function AutoRenameFromAltText(fileName) {
+    try {
+        // Tìm media item
+        const mediaItem = document.querySelector(`.media-item[data-file-name="${fileName}"]`);
+        if (!mediaItem) {
+            CreateMustClickOkModal('Không tìm thấy media item!');
+            return;
+        }
+
+        let pageInfo = null;
+        let source = '';
+
+        // Ưu tiên 1: Lấy PageNumber từ Claude AI (data attribute)
+        if (mediaItem.dataset.pageNumber) {
+            pageInfo = mediaItem.dataset.pageNumber;
+            source = '🤖 Claude AI';
+        } else {
+            // Fallback: Parse từ Alt Text
+            const altTextarea = mediaItem.querySelector('.media-alt');
+            const altText = altTextarea?.value.trim();
+
+            if (!altText) {
+                CreateMustClickOkModal('Không có PageNumber từ Claude AI và Alt Text trống!\n\nVui lòng:\n1. Click "🤖 Lấy Alt Text" để Claude AI detect số trang\nHOẶC\n2. Nhập Alt Text có chứa "trang X" hoặc "trang X-Y"');
+                return;
+            }
+
+            // Extract thông tin trang từ Alt Text
+            // Pattern: "trang 2-3" hoặc "trang 5" hoặc "trang 2 - 3"
+            const pagePatterns = [
+                /trang\s+(\d+)\s*-\s*(\d+)/i,  // "trang 2-3" hoặc "trang 2 - 3"
+                /trang\s+(\d+)/i                // "trang 5"
+            ];
+
+            for (const pattern of pagePatterns) {
+                const match = altText.match(pattern);
+                if (match) {
+                    if (match[2]) {
+                        // Range: "2-3"
+                        pageInfo = `${match[1]}-${match[2]}`;
+                    } else {
+                        // Single page: "5"
+                        pageInfo = match[1];
+                    }
+                    break;
+                }
+            }
+
+            if (!pageInfo) {
+                CreateMustClickOkModal('Không tìm thấy thông tin trang!\n\nVui lòng:\n1. Click "🤖 Lấy Alt Text" để Claude AI detect số trang\nHOẶC\n2. Thêm "trang X" hoặc "trang X-Y" vào Alt Text');
+                return;
+            }
+
+            source = '📝 Alt Text';
+        }
+
+        // Xử lý filename
+        const oldNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
+        // Tìm "trang-" và cắt bỏ tất cả phần đằng sau
+        // Pattern: "trang-" + bất kỳ thứ gì đến cuối filename
+        const filePattern = /trang-.*$/i;
+
+        if (!filePattern.test(oldNameWithoutExt)) {
+            CreateMustClickOkModal('Filename không có "trang-"!\n\nVí dụ cần: sach-ten-trang-123-xyz.webp');
+            return;
+        }
+
+        // Thay thế: "sach-abc-trang-123-xyz" → "sach-abc-trang-2-3"
+        const newNameWithoutExt = oldNameWithoutExt.replace(filePattern, `trang-${pageInfo}`);
+
+        if (newNameWithoutExt === oldNameWithoutExt) {
+            CreateMustClickOkModal('Tên file mới giống tên cũ!\n\nKiểm tra lại Alt Text và filename.');
+            return;
+        }
+
+        // Confirm
+        if (!confirm(`Đổi tên file (${source}):\n\nCũ: ${oldNameWithoutExt}\nMới: ${newNameWithoutExt}\nTrang: ${pageInfo}\n\nXác nhận?`)) {
+            return;
+        }
+
+        // Gọi API rename
+        ShowCircleLoader();
+        const resultText = await PostJSON('/SanPham/RenameMedia', {
+            sanPhamId: sanPhamId,
+            oldFileName: fileName,
+            newFileNameWithoutExt: newNameWithoutExt
+        });
+        RemoveCircleLoader();
+
+        const result = JSON.parse(resultText);
+        if (result.State === 0) {
+            // Success - refresh chỉ media-item này
+            const extension = fileName.substring(fileName.lastIndexOf('.'));
+            const newFileName = newNameWithoutExt + extension;
+            await RefreshMediaItem(fileName, newFileName);
+            //CreateMustClickOkModal('✓ Đổi tên thành công!');
+        } else {
+            CreateMustClickOkModal('✗ Đổi tên thất bại: ' + result.Message);
+        }
+
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi: ' + error.message);
+    }
+}
+
 async function RenameMediaFile(oldFileName) {
     // Lấy tên file không có extension để làm giá trị mặc định
     const oldNameWithoutExt = oldFileName.substring(0, oldFileName.lastIndexOf('.')) || oldFileName;
@@ -646,11 +835,256 @@ async function RenameMediaFile(oldFileName) {
         });
         RemoveCircleLoader();
 
-        CheckStatusResponseAndShowPrompt(resultText, "Thành công", "Thất bại", false);
-        await LoadMediaList();
+        const result = JSON.parse(resultText);
+        if (result.State === 0) {
+            // Success - refresh chỉ media-item này
+            const extension = oldFileName.substring(oldFileName.lastIndexOf('.'));
+            const newFileName = newName.trim() + extension;
+            await RefreshMediaItem(oldFileName, newFileName);
+            //CreateMustClickOkModal('✓ Đổi tên thành công!');
+        } else {
+            CreateMustClickOkModal('✗ Đổi tên thất bại: ' + result.Message);
+        }
     } catch (error) {
         RemoveCircleLoader();
         CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+    }
+}
+
+/**
+ * Loại bỏ suffix sau "-bia" cho ảnh bìa trước
+ * VD: sach-abc-bia-ABCD.webp → sach-abc-bia.webp
+ */
+async function RemoveCoverSuffix(fileName) {
+    try {
+        // Tìm media item
+        const mediaItem = document.querySelector(`.media-item[data-file-name="${fileName}"]`);
+        if (!mediaItem) {
+            CreateMustClickOkModal('Không tìm thấy media item!');
+            return;
+        }
+
+        // Kiểm tra image type = 0 (Ảnh bìa trước)
+        const imageTypeSelect = mediaItem.querySelector('.image-type-select');
+        if (!imageTypeSelect || imageTypeSelect.value !== '0') {
+            CreateMustClickOkModal('Chức năng này chỉ dùng cho Ảnh bìa trước (Cover)!\n\nVui lòng chọn "Ảnh bìa trước (Cover)" trong dropdown.');
+            return;
+        }
+
+        // Xử lý filename
+        const oldNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
+        // Kiểm tra pattern "-bia-XXX" (XXX là chữ/số)
+        const pattern = /-bia-[A-Za-z0-9]+$/i;
+
+        if (!pattern.test(oldNameWithoutExt)) {
+            CreateMustClickOkModal('Filename không có pattern "-bia-XXX"!\n\nVí dụ cần: sach-abc-bia-ABCD.webp');
+            return;
+        }
+
+        // Loại bỏ suffix: "...-bia-ABCD" → "...-bia"
+        const newNameWithoutExt = oldNameWithoutExt.replace(pattern, '-bia');
+
+        if (newNameWithoutExt === oldNameWithoutExt) {
+            CreateMustClickOkModal('Không có gì thay đổi!');
+            return;
+        }
+
+        // // Confirm
+        // if (!confirm(`Loại bỏ suffix sau "-bia":\n\nCũ: ${oldNameWithoutExt}\nMới: ${newNameWithoutExt}\n\nXác nhận?`)) {
+        //     return;
+        // }
+
+        // Gọi API rename
+        ShowCircleLoader();
+        const resultText = await PostJSON('/SanPham/RenameMedia', {
+            sanPhamId: sanPhamId,
+            oldFileName: fileName,
+            newFileNameWithoutExt: newNameWithoutExt
+        });
+        RemoveCircleLoader();
+
+        const result = JSON.parse(resultText);
+        if (result.State === 0) {
+            // Success - refresh chỉ media-item này
+            const extension = fileName.substring(fileName.lastIndexOf('.'));
+            const newFileName = newNameWithoutExt + extension;
+            await RefreshMediaItem(fileName, newFileName);
+            //CreateMustClickOkModal('✓ Loại bỏ suffix thành công!');
+        } else {
+            CreateMustClickOkModal('✗ Loại bỏ suffix thất bại: ' + result.Message);
+        }
+
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi: ' + error.message);
+    }
+}
+
+/**
+ * Tự động đổi tên TẤT CẢ ảnh dựa trên PageNumber từ Claude AI hoặc Alt Text (batch processing)
+ * Ưu tiên: PageNumber từ Claude AI → Parse từ Alt Text
+ */
+async function AutoRenameAllImagesFromAltText() {
+    try {
+        // Lấy tất cả media items (chỉ ảnh)
+        const allMediaItems = document.querySelectorAll('.media-item');
+        const imageItems = Array.from(allMediaItems).filter(item =>
+            item.querySelector('.image-type-select') !== null
+        );
+
+        if (imageItems.length === 0) {
+            CreateMustClickOkModal('Không có ảnh nào để xử lý!');
+            return;
+        }
+
+        // Xác định những ảnh nào có thể rename
+        const renameableItems = [];
+        for (const item of imageItems) {
+            const fileName = item.dataset.fileName;
+            const oldNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
+            // Check filename có "trang-" không
+            if (!/trang-/i.test(oldNameWithoutExt)) continue;
+
+            let pageInfo = null;
+            let source = '';
+
+            // Ưu tiên 1: PageNumber từ Claude AI
+            if (item.dataset.pageNumber) {
+                pageInfo = item.dataset.pageNumber;
+                source = 'Claude AI';
+            } else {
+                // Fallback: Parse từ Alt Text
+                const altText = item.querySelector('.media-alt')?.value.trim();
+                if (!altText) continue;
+
+                const pageMatch = altText.match(/trang\s+(\d+)(?:\s*-\s*(\d+))?/i);
+                if (!pageMatch) continue;
+
+                pageInfo = pageMatch[2] ? `${pageMatch[1]}-${pageMatch[2]}` : pageMatch[1];
+                source = 'Alt Text';
+            }
+
+            renameableItems.push({
+                fileName: fileName,
+                pageInfo: pageInfo,
+                source: source
+            });
+        }
+
+        if (renameableItems.length === 0) {
+            CreateMustClickOkModal('Không có ảnh nào phù hợp để auto-rename!\n\nYêu cầu:\n- Có PageNumber từ Claude AI HOẶC Alt Text có "trang X"\n- Filename có pattern "trang-X"');
+            return;
+        }
+
+        // // Confirm
+        // if (!confirm(`Tìm thấy ${renameableItems.length} ảnh có thể auto-rename.\n\nTiếp tục?`)) {
+        //     return;
+        // }
+
+        // Tạo progress div
+        const progressDiv = document.createElement('div');
+        progressDiv.id = 'rename-progress';
+        progressDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10000;
+            min-width: 400px;
+            text-align: center;
+        `;
+        progressDiv.innerHTML = `
+            <h3 style="margin-top: 0;">🤖 Đang đổi tên file...</h3>
+            <div style="font-size: 24px; margin: 20px 0; font-weight: bold;" id="rename-progress-text">0/${renameableItems.length}</div>
+            <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div id="rename-progress-bar" style="background: #9C27B0; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <div style="margin-top: 15px; color: #666;" id="rename-progress-status">Đang chuẩn bị...</div>
+        `;
+        document.body.appendChild(progressDiv);
+
+        let successCount = 0;
+        let failCount = 0;
+        const results = [];
+
+        // Xử lý từng ảnh
+        for (let i = 0; i < renameableItems.length; i++) {
+            const item = renameableItems[i];
+            const fileName = item.fileName;
+            const pageInfo = item.pageInfo;
+            const source = item.source;
+            const oldNameWithoutExt = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+
+            // Update progress
+            document.getElementById('rename-progress-text').textContent = `${i + 1}/${renameableItems.length}`;
+            document.getElementById('rename-progress-bar').style.width = `${((i + 1) / renameableItems.length) * 100}%`;
+            document.getElementById('rename-progress-status').textContent = `Đang xử lý: ${fileName}`;
+
+            try {
+                // Tạo tên mới - cắt bỏ tất cả phần sau "trang-"
+                const newNameWithoutExt = oldNameWithoutExt.replace(/trang-.*$/i, `trang-${pageInfo}`);
+
+                if (newNameWithoutExt === oldNameWithoutExt) {
+                    failCount++;
+                    results.push(`❌ ${fileName}: Tên mới giống tên cũ`);
+                    continue;
+                }
+
+                // Gọi API
+                const resultText = await PostJSON('/SanPham/RenameMedia', {
+                    sanPhamId: sanPhamId,
+                    oldFileName: fileName,
+                    newFileNameWithoutExt: newNameWithoutExt
+                });
+
+                const result = JSON.parse(resultText);
+                if (result.State === 0) {
+                    successCount++;
+                    results.push(`✓ ${oldNameWithoutExt} → ${newNameWithoutExt} (${source})`);
+                } else {
+                    failCount++;
+                    results.push(`❌ ${fileName}: ${result.Message}`);
+                }
+            } catch (error) {
+                failCount++;
+                results.push(`❌ ${fileName}: ${error.message}`);
+            }
+
+            // Delay 1000ms
+            if (i < renameableItems.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        // Remove progress
+        document.body.removeChild(progressDiv);
+
+        // Reload media list
+        await LoadMediaList();
+
+        // Hiển thị kết quả
+        let summary = `✅ Hoàn thành!\n\n`;
+        summary += `Thành công: ${successCount}/${renameableItems.length}\n`;
+        if (failCount > 0) {
+            summary += `Thất bại: ${failCount}\n`;
+        }
+        summary += `\nChi tiết:\n${results.join('\n')}`;
+
+        if (failCount > 0) {
+            CreateMustClickOkModal(summary);
+        }
+    } catch (error) {
+        const progressDiv = document.getElementById('rename-progress');
+        if (progressDiv) {
+            document.body.removeChild(progressDiv);
+        }
+        CreateMustClickOkModal('Lỗi: ' + error.message);
     }
 }
 
@@ -1222,6 +1656,53 @@ async function GenerateAltTextForImage(fileName) {
             if (altTextarea) altTextarea.value = result.AltText || '';
             if (descriptionTextarea) descriptionTextarea.value = result.Description || '';
 
+            // Hiển thị PageNumber nếu có (chỉ có khi imageType = InsidePage)
+            if (result.PageNumber) {
+                // Lưu PageNumber vào data attribute để dùng cho AutoRename
+                mediaItem.dataset.pageNumber = result.PageNumber;
+
+                // Tìm hoặc tạo div để hiển thị PageNumber
+                let pageNumberDiv = mediaItem.querySelector('.page-number-display');
+                if (!pageNumberDiv) {
+                    // Tạo div mới ngay sau Description textarea
+                    pageNumberDiv = document.createElement('div');
+                    pageNumberDiv.className = 'page-number-display';
+                    pageNumberDiv.style.cssText = `
+                        margin-top: 8px;
+                        padding: 10px 15px;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        color: white;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        text-align: center;
+                        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                        transition: all 0.3s ease;
+                    `;
+                    // Insert sau Description textarea
+                    descriptionTextarea.parentNode.insertBefore(pageNumberDiv, descriptionTextarea.nextSibling);
+                }
+
+                // Update nội dung
+                pageNumberDiv.innerHTML = `📄 Claude AI đọc được: <strong>Trang ${result.PageNumber}</strong>`;
+
+                // Flash effect
+                pageNumberDiv.style.transform = 'scale(1.05)';
+                pageNumberDiv.style.boxShadow = '0 4px 16px rgba(102, 126, 234, 0.5)';
+                setTimeout(() => {
+                    pageNumberDiv.style.transform = 'scale(1)';
+                    pageNumberDiv.style.boxShadow = '0 2px 8px rgba(102, 126, 234, 0.3)';
+                }, 500);
+            } else {
+                // Xóa PageNumber khỏi data attribute
+                delete mediaItem.dataset.pageNumber;
+
+                // Xóa div PageNumber nếu không có (trường hợp imageType khác hoặc không detect được)
+                const existingPageNumberDiv = mediaItem.querySelector('.page-number-display');
+                if (existingPageNumberDiv) {
+                    existingPageNumberDiv.remove();
+                }
+            }
+
             // Flash effect để user biết đã update
             [titleTextarea, altTextarea, descriptionTextarea].forEach(el => {
                 if (el) {
@@ -1261,12 +1742,245 @@ async function GenerateAltTextForImage(fileName) {
     }
 }
 
+/**
+ * Lấy Alt Text cho TẤT CẢ ảnh (batch processing)
+ */
+async function GenerateAltTextForAllImages() {
+    try {
+        // Lấy tất cả media items có dropdown imageType (chỉ ảnh, không có video)
+        const allMediaItems = document.querySelectorAll('.media-item');
+        const imageItems = Array.from(allMediaItems).filter(item =>
+            item.querySelector('.image-type-select') !== null
+        );
+
+        if (imageItems.length === 0) {
+            CreateMustClickOkModal('Không có ảnh nào để xử lý!');
+            return;
+        }
+
+        // Confirm trước khi bắt đầu
+        // if (!confirm(`Bạn có muốn tạo Alt Text cho ${imageItems.length} ảnh?\n\nQuá trình này có thể mất vài phút.`)) {
+        //     return;
+        // }
+
+        // Tạo div hiển thị progress
+        const progressDiv = document.createElement('div');
+        progressDiv.id = 'alt-text-progress';
+        progressDiv.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10000;
+            min-width: 400px;
+            text-align: center;
+        `;
+        progressDiv.innerHTML = `
+            <h3 style="margin-top: 0;">🤖 Đang xử lý ảnh...</h3>
+            <div style="font-size: 24px; margin: 20px 0; font-weight: bold;" id="progress-text">0/${imageItems.length}</div>
+            <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
+                <div id="progress-bar" style="background: #4CAF50; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            </div>
+            <div style="margin-top: 15px; color: #666;" id="progress-status">Đang chuẩn bị...</div>
+        `;
+        document.body.appendChild(progressDiv);
+
+        let successCount = 0;
+        let failCount = 0;
+        const failedFiles = [];
+
+        // Xử lý từng ảnh tuần tự
+        for (let i = 0; i < imageItems.length; i++) {
+            const mediaItem = imageItems[i];
+            const fileName = mediaItem.dataset.fileName;
+            const imageTypeSelect = mediaItem.querySelector('.image-type-select');
+            const imageType = parseInt(imageTypeSelect.value);
+
+            // Update progress
+            const progressText = document.getElementById('progress-text');
+            const progressBar = document.getElementById('progress-bar');
+            const progressStatus = document.getElementById('progress-status');
+
+            progressText.textContent = `${i + 1}/${imageItems.length}`;
+            progressBar.style.width = `${((i + 1) / imageItems.length) * 100}%`;
+            progressStatus.textContent = `Đang xử lý: ${fileName}`;
+
+            try {
+                // Gọi API
+                const resultText = await PostJSON('/SanPham/GenerateImageAltText', {
+                    sanPhamId: sanPhamId,
+                    fileName: fileName,
+                    imageType: imageType
+                });
+
+                const result = JSON.parse(resultText);
+
+                if (result.State === 0) {
+                    // Success - update 3 textarea fields
+                    const titleTextarea = mediaItem.querySelector('.media-title');
+                    const altTextarea = mediaItem.querySelector('.media-alt');
+                    const descriptionTextarea = mediaItem.querySelector('.media-description');
+
+                    if (titleTextarea) titleTextarea.value = result.Title || '';
+                    if (altTextarea) altTextarea.value = result.AltText || '';
+                    if (descriptionTextarea) descriptionTextarea.value = result.Description || '';
+
+                    // Hiển thị PageNumber nếu có
+                    if (result.PageNumber) {
+                        // Lưu PageNumber vào data attribute
+                        mediaItem.dataset.pageNumber = result.PageNumber;
+
+                        let pageNumberDiv = mediaItem.querySelector('.page-number-display');
+                        if (!pageNumberDiv) {
+                            pageNumberDiv = document.createElement('div');
+                            pageNumberDiv.className = 'page-number-display';
+                            pageNumberDiv.style.cssText = `
+                                margin-top: 8px;
+                                padding: 10px 15px;
+                                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                color: white;
+                                border-radius: 8px;
+                                font-weight: 600;
+                                text-align: center;
+                                box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+                            `;
+                            descriptionTextarea.parentNode.insertBefore(pageNumberDiv, descriptionTextarea.nextSibling);
+                        }
+                        pageNumberDiv.innerHTML = `📄 Claude AI đọc được: <strong>Trang ${result.PageNumber}</strong>`;
+                    } else {
+                        // Xóa PageNumber khỏi data attribute
+                        delete mediaItem.dataset.pageNumber;
+
+                        const existingPageNumberDiv = mediaItem.querySelector('.page-number-display');
+                        if (existingPageNumberDiv) {
+                            existingPageNumberDiv.remove();
+                        }
+                    }
+
+                    // Flash effect
+                    [titleTextarea, altTextarea, descriptionTextarea].forEach(el => {
+                        if (el) {
+                            el.style.backgroundColor = '#d4edda';
+                            setTimeout(() => {
+                                el.style.backgroundColor = '';
+                            }, 1000);
+                        }
+                    });
+
+                    successCount++;
+                } else {
+                    failCount++;
+                    failedFiles.push(`${fileName}: ${result.Message}`);
+                }
+            } catch (error) {
+                failCount++;
+                failedFiles.push(`${fileName}: ${error.message}`);
+            }
+
+            // Delay 1000ms giữa các request để tránh overload
+            if (i < imageItems.length - 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+
+        // Remove progress div
+        document.body.removeChild(progressDiv);
+
+        // Hiển thị kết quả
+        let summaryMessage = `✅ Hoàn thành!\n\n`;
+        summaryMessage += `Thành công: ${successCount}/${imageItems.length}\n`;
+        if (failCount > 0) {
+            summaryMessage += `Thất bại: ${failCount}\n\n`;
+            summaryMessage += `Chi tiết lỗi:\n${failedFiles.join('\n')}`;
+        }
+        summaryMessage += `\n\nDữ liệu đã được tự động lưu vào database.`;
+
+        if (failCount > 0) {
+            CreateMustClickOkModal(summaryMessage);
+        }
+
+    } catch (error) {
+        // Remove progress div nếu có lỗi
+        const progressDiv = document.getElementById('alt-text-progress');
+        if (progressDiv) {
+            document.body.removeChild(progressDiv);
+        }
+
+        CreateMustClickOkModal('Lỗi: ' + error.message);
+    }
+}
+
+// ========================================
+// 🎨 Copy Ảnh Bìa Từ Sản Phẩm Lẻ Cùng Combo
+// ========================================
+
+/**
+ * Copy ảnh bìa từ các sản phẩm lẻ cùng combo vào sản phẩm combo
+ * Điều kiện: ShortName chứa "Combo" VÀ có ComboId
+ */
+async function CopyCoversFromComboProducts() {
+    const shortName = document.getElementById('sp-short-name').value.trim() || '';
+
+    // Kiểm tra ShortName có chứa "Combo"
+    if (!shortName.toLowerCase().includes('combo')) {
+        CreateMustClickOkModal('Chức năng này chỉ dùng cho sản phẩm Combo!\n\nTên ngắn phải chứa chữ "Combo".');
+        return;
+    }
+
+    let comboIdTemp = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+    if (comboIdTemp < 0) {
+        CreateMustClickOkModal('Sản phẩm không thuộc combo nào.');
+        return;
+    }
+
+    const confirmMsg = `Copy ảnh bìa từ các sản phẩm lẻ cùng combo?\n\n` +
+        `✅ Copy:\n` +
+        `• Ảnh bìa (file có chứa "-bia") từ sản phẩm lẻ cùng ComboId\n` +
+        `• Tự động convert sang WebP và tạo thumbnail 320\n\n` +
+        `⚠️ Lưu ý:\n` +
+        `• Không xóa ảnh cũ, chỉ thêm ảnh mới\n` +
+        `• Ảnh mới sẽ có DisplayOrder tiếp theo sau ảnh hiện có\n\n` +
+        `Xác nhận?`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    try {
+        ShowCircleLoader();
+        const resultText = await PostJSON('/SanPham/CopyCoversFromComboProducts', {
+            sanPhamId: parseInt(sanPhamId),
+            comboId: parseInt(comboIdTemp)
+        });
+        RemoveCircleLoader();
+
+        const result = JSON.parse(resultText);
+
+        if (result.State === 0) {
+            CreateMustClickOkModal(result.Message + '\n\nĐang tải lại ảnh...');
+
+            // Reload media list để hiển thị ảnh mới
+            setTimeout(() => {
+                LoadMediaList();
+            }, 1000);
+        } else {
+            CreateMustClickOkModal('❌ ' + result.Message);
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('Lỗi kết nối: ' + error.message);
+    }
+}
+
 // ========================================
 // 🧮 Tính Giá Bán Tự Động
 // ========================================
 
 async function CalculateSalePriceAuto() {
-    const sanPhamId = parseInt(document.getElementById('sp-id').value);
     const platform = document.getElementById('platform-select').value;
 
     if (!sanPhamId) {

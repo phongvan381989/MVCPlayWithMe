@@ -7,6 +7,7 @@ using MySqlConnector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -92,6 +93,19 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(list);
         }
 
+        /// <summary>
+        /// Lấy danh sách tất cả sản phẩm với thông tin cơ bản (Basic Info) để tối ưu performance
+        /// </summary>
+        /// <returns>Danh sách sản phẩm</returns>
+        public async Task<string> GetAllForSearchAsync()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new List<SanPhamSearchInfo>());
+            }
+                List<SanPhamSearchInfo> list = await SanPhamMySql.GetAllForSearchAsync();
+                return JsonConvert.SerializeObject(list);
+            }
         /// <summary>
         /// Thêm mới sản phẩm
         /// </summary>
@@ -1011,6 +1025,104 @@ namespace MVCPlayWithMe.Controllers
         }
 
         /// <summary>
+        /// Copy ảnh bìa từ các sản phẩm lẻ cùng combo vào sản phẩm combo
+        /// Điều kiện: ShortName chứa "Combo" VÀ có ComboId
+        /// Chỉ copy ảnh có tên chứa "-bia" từ sản phẩm lẻ (ShortName không chứa "Combo")
+        /// </summary>
+        [HttpPost]
+        public async Task<string> CopyCoversFromComboProducts(
+            int sanPhamId, int comboId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                // 4. Tạo folder media cho sản phẩm combo (nếu chưa có)
+                string comboFolderPath = Common.CreateAbsoluteSanPhamMediaFolderPath(sanPhamId.ToString());
+                string comboThumbnailForderPath = Common.GetAbsoluteThumbnailSanPhamMediaFolderPath(sanPhamId.ToString());
+
+                // 5. Lấy DisplayOrder hiện tại lớn nhất
+                List <SanPhamMedia> existingMedia = await SanPhamMediaMySql.GetAllBySanPhamComboIdAsync(comboId);
+                int nextDisplayOrder = await SanPhamMediaMySql.GetMaxDisplayOrderBySanPhamId(sanPhamId);
+
+                int copiedCount = 0;
+                List<string> copiedFrom = new List<string>();
+
+                // Copy ảnh bìa từ mỗi sản phẩm lẻ
+                foreach (var media in existingMedia)
+                {
+                    // Bỏ qua chính nó
+                    if(media.SanPhamId == sanPhamId)
+                    {
+                        continue;
+                    }
+
+                    // Lấy folder ảnh của sản phẩm lẻ
+                    string singleProductFolder = Common.GetAbsoluteSanPhamMediaFolderPath(media.SanPhamId.ToString());
+                    string singlgThumbnailProductFolder = Common.GetAbsoluteThumbnailSanPhamMediaFolderPath(media.SanPhamId.ToString());
+                    if (singleProductFolder == null || singlgThumbnailProductFolder == null)
+                    {
+                        continue; // Sản phẩm này không có ảnh, bỏ qua
+                    }
+
+                    // Copy ảnh
+                    System.IO.File.Copy(Path.Combine(singleProductFolder, media.FileName),
+                        Path.Combine(comboFolderPath, media.FileName), overwrite: true);
+
+                    // Copy ảnh thumbnail
+                    System.IO.File.Copy(Path.Combine(singlgThumbnailProductFolder, media.FileName),
+                        Path.Combine(comboThumbnailForderPath, media.FileName), overwrite: true);
+
+
+                    // Tạo metadata
+                    result = await SanPhamMediaMySql.InsertAsync(new SanPhamMedia
+                    {
+                        SanPhamId = sanPhamId,
+                        FileName = media.FileName,
+                        Title = media.Title,
+                        AltText = media.AltText,
+                        Description = media.Description,
+                        PosterImage = "",
+                        Width = media.Width,
+                        Height = media.Height,
+                        DisplayOrder = ++nextDisplayOrder
+                    });
+
+                    if(result.State != EMySqlResultState.OK)
+                    {
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    copiedCount++;
+                    copiedFrom.Add(media.FileName);
+                }
+
+                if (copiedCount == 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không tìm thấy ảnh bìa nào để copy từ các sản phẩm lẻ";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                result.State = EMySqlResultState.OK;
+                result.Message = $"✓ Đã copy {copiedCount} ảnh bìa từ: {string.Join(", ", copiedFrom)}";
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.ERROR;
+                result.Message = ex.Message;
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
         /// Copy sản phẩm hiện tại sang sản phẩm mới (không copy giá tiền, media, mapping, code, barcode,...)
         /// </summary>
         [HttpPost]
@@ -1386,7 +1498,8 @@ namespace MVCPlayWithMe.Controllers
                     Message = "Tạo Alt Text và lưu metadata thành công",
                     Title = aiResult.Title,
                     AltText = aiResult.AltText,
-                    Description = aiResult.Description
+                    Description = aiResult.Description,
+                    PageNumber = aiResult.PageNumber  // Chỉ có khi imageType = InsidePage
                 });
             }
             catch (Exception ex)

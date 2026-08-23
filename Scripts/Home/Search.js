@@ -1,4 +1,4 @@
-let inputSearch = document.getElementById("search-input-text-id");
+﻿let inputSearch = document.getElementById("search-input-text-id");
 inputSearch.addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
         event.preventDefault();
@@ -51,8 +51,8 @@ function StateOfItemSearchPage(page, listItem, maxpage, parameter) {
 
 let parameter = null;
 
-// Đảm bảo item trên 1 page chia hết số item trên 1 row
-itemOnPage = itemOnRow * rowOnPage;
+// // Đảm bảo item trên 1 page chia hết số item trên 1 row
+// itemOnPage = itemOnRow * rowOnPage;
 function SetMaxPage(countResult) {
     maxPage = Math.floor(countResult / itemOnPage);
     if (countResult % itemOnPage != 0)
@@ -76,11 +76,11 @@ async function Search() {
         EmptySomethingV1();
         return;
     }
-    // Lần đầu trình duyệt truy cập chưa có thông tin itemOnRow
-    // nên server trả về với mặc định itemOnRow = 6
-    if (itemOnRow < 6) {
-        listItem.splice(itemOnPage, listItem.length - itemOnPage);
-    }
+    // // Lần đầu trình duyệt truy cập chưa có thông tin itemOnRow
+    // // nên server trả về với mặc định itemOnRow = 6
+    // if (itemOnRow < 6) {
+    //     listItem.splice(itemOnPage, listItem.length - itemOnPage);
+    // }
 
     document.getElementById("empty-result").style.display = "none";
     document.getElementById("search-result").style.display = "block";
@@ -156,32 +156,32 @@ function SetItemSearchParameterFromTag(parameter) {
     parameter.keyword = keyword;
 }
 
-// Từ danh sách model tính được tổng số lượng model đã bán, model rẻ nhất, model đắt nhất
-function SetPriceAndQuantity(item) {
-    let cheapest = 100000000;
-    //let mostExpensive = 0;
-    let cheapestBookCoverPrice = 100000000;
-    let sumSoldQuantity = 0;
-    for (let i = 0; i < item.models.length; i++) {
-        let model = item.models[i];
-        sumSoldQuantity = sumSoldQuantity + model.soldQuantity;
-        // giá bìa rẻ nhất
-        if (cheapest > model.price) {
-            cheapest = model.price;
-            cheapestBookCoverPrice = model.bookCoverPrice;
-        }
+// // Từ danh sách model tính được tổng số lượng model đã bán, model rẻ nhất, model đắt nhất
+// function SetPriceAndQuantity(item) {
+//     let cheapest = 100000000;
+//     //let mostExpensive = 0;
+//     let cheapestBookCoverPrice = 100000000;
+//     let sumSoldQuantity = 0;
+//     for (let i = 0; i < item.models.length; i++) {
+//         let model = item.models[i];
+//         sumSoldQuantity = sumSoldQuantity + model.soldQuantity;
+//         // giá bìa rẻ nhất
+//         if (cheapest > model.price) {
+//             cheapest = model.price;
+//             cheapestBookCoverPrice = model.bookCoverPrice;
+//         }
 
-        //// giá bìa đắt nhất
-        //if (mostExpensive < model.price) {
-        //    mostExpensive = model.price;
-        //}
-    }
-    item.cheapest = cheapest;
-    item.cheapestBookCoverPrice = cheapestBookCoverPrice;
-    item.discount = 100 - Math.floor((cheapest / cheapestBookCoverPrice) * 100);
-    //item.mostExpensive = mostExpensive;
-    item.sumSoldQuantity = sumSoldQuantity;
-}
+//         //// giá bìa đắt nhất
+//         //if (mostExpensive < model.price) {
+//         //    mostExpensive = model.price;
+//         //}
+//     }
+//     item.cheapest = cheapest;
+//     item.cheapestBookCoverPrice = cheapestBookCoverPrice;
+//     item.discount = 100 - Math.floor((cheapest / cheapestBookCoverPrice) * 100);
+//     //item.mostExpensive = mostExpensive;
+//     item.sumSoldQuantity = sumSoldQuantity;
+// }
 
 function ShowSearchingResult(listItem) {
     // Làm trống
@@ -198,24 +198,27 @@ function ShowSearchingResult(listItem) {
         let itemElement = sample.cloneNode(true);
 
         // Set link chi tiết sản phẩm
-        itemElement.getElementsByClassName("product-item")[0].href = "/Item/" + GenerateSlugIdFromItem(item);
+        itemElement.getElementsByClassName("product-item")[0].href = "/san-pham/" + GenerateSlugId(item.Name, item.Id);
         // Hiển thị vì sample đang ẩn
         itemElement.style.display = "block";
-        if (item.imageSrc.length > 0) {
-            itemElement.getElementsByClassName("card-img-top")[0].src = Get320VersionOfImageSrc(item.imageSrc[0]);
+        if (item.CoverImageFileName) {
+            itemElement.getElementsByClassName("card-img-top")[0].src =
+                Get320VersionOfImageSrc(GetSanPhamMediaUrl(item.Id, item.CoverImageFileName));
         } else {
             itemElement.getElementsByClassName("card-img-top")[0].src = srcNoImageThumbnail;
         }
 
-        itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.name;
-        SetPriceAndQuantity(item);
+        itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.Name;
+        //SetPriceAndQuantity(item);
         //itemElement.getElementsByClassName("rating-quantity-sold-p")[0].innerHTML = "Đã bán " + item.sumSoldQuantity + " bộ";
-        itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML =
-            ConvertMoneyToTextWithIcon(item.cheapest);
-        itemElement.getElementsByClassName("price-original-detail")[0].innerHTML =
-            ConvertMoneyToTextWithIcon(item.cheapestBookCoverPrice);
 
-        itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML = "-" + item.discount + "%";
+        itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML =
+            ConvertMoneyToTextWithIcon(item.SalePrice);
+        itemElement.getElementsByClassName("price-original-detail")[0].innerHTML =
+            ConvertMoneyToTextWithIcon(item.BookCoverPrice);
+
+        itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML =
+            "-" + CalculateDiscountPercent(item.BookCoverPrice, item.SalePrice) + "%";
 
         table.appendChild(itemElement);
     }

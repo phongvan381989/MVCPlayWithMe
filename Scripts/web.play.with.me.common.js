@@ -1493,8 +1493,8 @@ function GenerateSlug(text) {
     return text;
 }
 
-function GenerateSlugIdFromItem(item) {
-    return GenerateSlug(item.name) + "-" + item.id;
+function GenerateSlugId(name, id) {
+    return GenerateSlug(name) + "-" + id;
 }
 
 function GetFormattedDate(date) {
@@ -1524,4 +1524,11 @@ function GetKhoThumbnailUrl_PNGFormat(sanPhamKhoId) {
 // Return first one (browser will try to load, show broken if not exists)
 // We could use onerror to fallback, but simpler to just use jpg as default
     return basePath + '0.png';
+}
+
+// Tính % giảm giá
+function CalculateDiscountPercent(bookCoverPrice, salePrice) {
+    if (bookCoverPrice <= 0) return 0;
+    const discount = ((bookCoverPrice - salePrice) / bookCoverPrice) * 100;
+    return Math.round(discount); // Làm tròn số nguyên
 }

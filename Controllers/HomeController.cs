@@ -26,17 +26,17 @@ namespace MVCPlayWithMe.Controllers
             {
                 await conn.OpenAsync();
 
-                ItemModelSearchParameter searchParameter = new ItemModelSearchParameter();
+                SanPhamSearchParameter searchParameter = new SanPhamSearchParameter();
                 searchParameter.name = keyword;
                 searchParameter.author = author;
                 searchParameter.translator = translator;
                 searchParameter.categoryId = categoryId;
                 searchParameter.publishingCompany = publishingCompany;
                 searchParameter.publisherId = publisherId ?? 0;
-                int count = await ItemModelMySql.SearchItemCountConnectOutAsync(searchParameter, conn);
+                int count = await SanPhamMySql.SearchSanPhamCountConnectOutAsync(searchParameter, conn);
                 ViewData["dataCountResult"] = count.ToString();
 
-                List<Item> lsSearchResult;
+                List<SanPhamBasicInfo> lsSearchResult;
                 int intPage = 1;
                 if (page != null)
                     intPage = page.Value;
@@ -49,7 +49,7 @@ namespace MVCPlayWithMe.Controllers
                 }
                 searchParameter.offset = itemOnRow * Common.rowOnPage;
                 searchParameter.start = (intPage - 1) * searchParameter.offset;
-                lsSearchResult = await ItemModelMySql.SearchItemPageConnectOutAsync(searchParameter, conn);
+                lsSearchResult = await SanPhamMySql.SearchSanPhamPageConnectOutAsync(searchParameter, conn);
                 ViewData["dataListItem"] = JsonConvert.SerializeObject(lsSearchResult);
             }
             return View();

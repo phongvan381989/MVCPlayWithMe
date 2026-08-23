@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.ItemModel;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
@@ -67,7 +68,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
                             // Đọc LastInsertId từ resultset
-                            if (rdr.Read())
+                            if (await rdr.ReadAsync())
                             {
                                 int lastId = rdr.GetInt32("LastId");
                                 sanPham.Id = lastId; // Set Id cho object
@@ -210,12 +211,10 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.CommandType = CommandType.Text;
                         cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        List<SanPham> list = await ExecuteReaderByIndexAsync(cmd);
+                        if (list != null && list.Count > 0)
                         {
-                            if (await rdr.ReadAsync())
-                            {
-                                sanPham = ConvertRowFromDataReader(rdr);
-                            }
+                            sanPham = list[0];
                         }
                     }
                 }
@@ -226,6 +225,70 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             }
 
             return sanPham;
+        }
+
+        /// <summary>
+        /// Lấy danh sách sản phẩm theo ComboId
+        /// </summary>
+        public static async Task<List<SanPham>> GetByComboIdAsync(int comboId)
+        {
+            List<SanPham> list = new List<SanPham>();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT * FROM tb_san_pham WHERE ComboId = @inComboId ORDER BY Id ASC", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = comboId;
+
+                        list = await ExecuteReaderByIndexAsync(cmd);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return list;
+        }
+
+        public static async Task<List<int>> GetIdsOnlyByComboIdAsync(int comboId)
+        {
+            List<int> list = new List<int>();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT Id FROM tb_san_pham WHERE ComboId = @inComboId ORDER BY Id ASC", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = comboId;
+
+                        using(MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            int idIndex = rdr.GetOrdinal("Id");
+                            while (rdr.Read())
+                            {
+                                list.Add(MyMySql.GetInt32(rdr, idIndex));
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return list;
         }
 
         /// <summary>
@@ -296,7 +359,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// <returns>Danh sách sản phẩm</returns>
         public static async Task<List<SanPham>> GetAllAsync()
         {
-            List<SanPham> list = new List<SanPham>();
+            List<SanPham> list = null;
 
             try
             {
@@ -308,13 +371,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     {
                         cmd.CommandType = CommandType.Text;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync())
-                            {
-                                list.Add(ConvertRowFromDataReader(rdr));
-                            }
-                        }
+                        list = await ExecuteReaderByIndexAsync(cmd);
                     }
                 }
             }
@@ -655,7 +712,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// <returns>Danh sách sản phẩm cùng combo, sắp xếp theo Id ASC</returns>
         public static async Task<List<SanPham>> GetListByComboIdAsync(int comboId)
         {
-            List<SanPham> list = new List<SanPham>();
+            List<SanPham> list = null;
 
             try
             {
@@ -668,13 +725,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.CommandType = CommandType.Text;
                         cmd.Parameters.Add("@inComboId", MySqlDbType.Int32).Value = comboId;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync())
-                            {
-                                list.Add(ConvertRowFromDataReader(rdr));
-                            }
-                        }
+                        list = await ExecuteReaderByIndexAsync(cmd);
                     }
                 }
             }
@@ -700,7 +751,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </returns>
         public static async Task<List<SanPham>> GetSanPhamWithVariantsAsync(int id)
         {
-            List<SanPham> variants = new List<SanPham>();
+            List<SanPham> list = null;
 
             try
             {
@@ -712,20 +763,14 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            while (await rdr.ReadAsync())
-                            {
-                                variants.Add(ConvertRowFromDataReader(rdr));
-                            }
-                        }
+                        list = await ExecuteReaderByIndexAsync(cmd);
                     }
-                    if(variants.Count == 0)
+                    if(list.Count == 0)
                     {
-                        return variants;
+                        return list;
                     }
 
-                    if (variants[0].CategoryId > 0)
+                    if (list[0].CategoryId > 0)
                     {
                         // Lấy tên của các category và publisher cho tất cả sản phẩm trong variants
                         // Chỉ cần lấy của 1 sản phẩm trong variants, vì tất cả sản phẩm cùng combo sẽ có cùng category
@@ -737,7 +782,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             "SELECT Name FROM webplaywithme.tbcategory WHERE Id = @inId;", conn))
                         {
                             cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = variants[0].CategoryId;
+                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = list[0].CategoryId;
 
                             using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
@@ -752,7 +797,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             "SELECT Name FROM webplaywithme.tbpublisher WHERE Id = @inId;", conn))
                         {
                             cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = variants[0].PublisherId;
+                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = list[0].PublisherId;
 
                             using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                             {
@@ -764,7 +809,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         }
 
                         // Gán tên category và publisher cho tất cả sản phẩm trong variants
-                        foreach (var sanPham in variants)
+                        foreach (var sanPham in list)
                         {
                             sanPham.CategoryName = categoryName;
                             sanPham.PublisherName = publisherName;
@@ -772,9 +817,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     }
 
                     // Lấy metadata
-                    if (variants.Count > 0)
+                    if (list.Count > 0)
                     {
-                        foreach (var sanPham in variants)
+                        foreach (var sanPham in list)
                         {
                             if (sanPham.Id == id)
                             {
@@ -790,7 +835,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 MyLogger.GetInstance().Warn(ex.ToString());
             }
 
-            return variants;
+            return list;
         }
 
         #region Update Quantity After Sale
@@ -879,5 +924,345 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         }
 
         #endregion
+
+        /// <summary>
+        /// Execute MySqlCommand và đọc kết quả theo INDEX
+        /// GetOrdinal() 1 lần để lấy index theo tên cột, sau đó dùng index để đọc nhiều rows
+        /// Tối ưu performance khi đọc nhiều rows (GetOrdinal chỉ gọi 1 lần thay vì mỗi row)
+        /// </summary>
+        /// <param name="cmd">MySqlCommand đã được setup (query + parameters)</param>
+        /// <returns>Danh sách SanPham</returns>
+        public static async Task<List<SanPham>> ExecuteReaderByIndexAsync(MySqlCommand cmd)
+        {
+            List<SanPham> list = new List<SanPham>();
+
+            try
+            {
+                using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                {
+                    // Lấy index của các cột 1 lần duy nhất (GetOrdinal)
+                    int idxId = rdr.GetOrdinal("Id");
+                    int idxCode = rdr.GetOrdinal("Code");
+                    int idxBarcode = rdr.GetOrdinal("Barcode");
+                    int idxName = rdr.GetOrdinal("Name");
+                    int idxShortName = rdr.GetOrdinal("ShortName");
+                    int idxComboId = rdr.GetOrdinal("ComboId");
+                    int idxCategoryId = rdr.GetOrdinal("CategoryId");
+                    int idxBookCoverPrice = rdr.GetOrdinal("BookCoverPrice");
+                    int idxAuthor = rdr.GetOrdinal("Author");
+                    int idxTranslator = rdr.GetOrdinal("Translator");
+                    int idxPublisherId = rdr.GetOrdinal("PublisherId");
+                    int idxPublishingCompany = rdr.GetOrdinal("PublishingCompany");
+                    int idxPublishingTime = rdr.GetOrdinal("PublishingTime");
+                    int idxProductLong = rdr.GetOrdinal("ProductLong");
+                    int idxProductWide = rdr.GetOrdinal("ProductWide");
+                    int idxProductHigh = rdr.GetOrdinal("ProductHigh");
+                    int idxProductWeight = rdr.GetOrdinal("ProductWeight");
+                    int idxPositionInWarehouse = rdr.GetOrdinal("PositionInWarehouse");
+                    int idxHardCover = rdr.GetOrdinal("HardCover");
+                    int idxMinAge = rdr.GetOrdinal("MinAge");
+                    int idxMaxAge = rdr.GetOrdinal("MaxAge");
+                    int idxParentId = rdr.GetOrdinal("ParentId");
+                    int idxRepublish = rdr.GetOrdinal("Republish");
+                    int idxDetail = rdr.GetOrdinal("Detail");
+                    int idxStatus = rdr.GetOrdinal("Status");
+                    int idxQuantity = rdr.GetOrdinal("Quantity");
+                    int idxPageNumber = rdr.GetOrdinal("PageNumber");
+                    int idxDiscount = rdr.GetOrdinal("Discount");
+                    int idxSalePrice = rdr.GetOrdinal("SalePrice");
+                    int idxLanguage = rdr.GetOrdinal("Language");
+                    int idxDate = rdr.GetOrdinal("Date");
+                    int idxSoldQuantity = rdr.GetOrdinal("SoldQuantity");
+                    int idxURL = rdr.GetOrdinal("URL");
+                    int idxSEOKeyword = rdr.GetOrdinal("SEOKeyword");
+
+                    // Đọc từng row bằng index (nhanh hơn lookup theo tên mỗi lần)
+                    while (await rdr.ReadAsync())
+                    {
+                        SanPham sanPham = new SanPham
+                        {
+                            Id = rdr.GetInt32(idxId),
+                            Code = rdr.IsDBNull(idxCode) ? null : rdr.GetString(idxCode),
+                            Barcode = rdr.IsDBNull(idxBarcode) ? null : rdr.GetString(idxBarcode),
+                            Name = rdr.IsDBNull(idxName) ? null : rdr.GetString(idxName),
+                            ShortName = rdr.IsDBNull(idxShortName) ? null : rdr.GetString(idxShortName),
+                            ComboId = rdr.IsDBNull(idxComboId) ? (int?)null : rdr.GetInt32(idxComboId),
+                            CategoryId = rdr.IsDBNull(idxCategoryId) ? (int?)null : rdr.GetInt32(idxCategoryId),
+                            BookCoverPrice = rdr.GetInt32(idxBookCoverPrice),
+                            Author = rdr.IsDBNull(idxAuthor) ? null : rdr.GetString(idxAuthor),
+                            Translator = rdr.IsDBNull(idxTranslator) ? null : rdr.GetString(idxTranslator),
+                            PublisherId = rdr.IsDBNull(idxPublisherId) ? (int?)null : rdr.GetInt32(idxPublisherId),
+                            PublishingCompany = rdr.IsDBNull(idxPublishingCompany) ? null : rdr.GetString(idxPublishingCompany),
+                            PublishingTime = rdr.IsDBNull(idxPublishingTime) ? (int?)null : rdr.GetInt32(idxPublishingTime),
+                            ProductLong = rdr.GetInt32(idxProductLong),
+                            ProductWide = rdr.GetInt32(idxProductWide),
+                            ProductHigh = rdr.GetInt32(idxProductHigh),
+                            ProductWeight = rdr.GetInt32(idxProductWeight),
+                            PositionInWarehouse = rdr.IsDBNull(idxPositionInWarehouse) ? null : rdr.GetString(idxPositionInWarehouse),
+                            HardCover = (ESanPhamCoverType)(rdr.IsDBNull(idxHardCover) ? (sbyte)0 : rdr.GetSByte(idxHardCover)),
+                            MinAge = rdr.IsDBNull(idxMinAge) ? (int?)null : rdr.GetInt32(idxMinAge),
+                            MaxAge = rdr.IsDBNull(idxMaxAge) ? (int?)null : rdr.GetInt32(idxMaxAge),
+                            ParentId = rdr.IsDBNull(idxParentId) ? (int?)null : rdr.GetInt32(idxParentId),
+                            Republish = rdr.IsDBNull(idxRepublish) ? (int?)null : rdr.GetInt32(idxRepublish),
+                            Detail = rdr.IsDBNull(idxDetail) ? null : rdr.GetString(idxDetail),
+                            Status = (ESanPhamStatus)(rdr.IsDBNull(idxStatus) ? (sbyte)0 : rdr.GetSByte(idxStatus)),
+                            Quantity = rdr.GetInt32(idxQuantity),
+                            PageNumber = rdr.IsDBNull(idxPageNumber) ? (int?)null : rdr.GetInt32(idxPageNumber),
+                            Discount = rdr.IsDBNull(idxDiscount) ? 0 : rdr.GetFloat(idxDiscount),
+                            SalePrice = rdr.GetInt32(idxSalePrice),
+                            Language = rdr.IsDBNull(idxLanguage) ? null : rdr.GetString(idxLanguage),
+                            Date = rdr.IsDBNull(idxDate) ? (DateTime?)null : rdr.GetDateTime(idxDate),
+                            SoldQuantity = rdr.IsDBNull(idxSoldQuantity) ? (int?)null : rdr.GetInt32(idxSoldQuantity),
+                            URL = rdr.IsDBNull(idxURL) ? null : rdr.GetString(idxURL),
+                            SEOKeyword = rdr.IsDBNull(idxSEOKeyword) ? null : rdr.GetString(idxSEOKeyword)
+                        };
+
+                        list.Add(sanPham);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"ExecuteReaderByIndexAsync error: {ex.Message}");
+                list.Clear();
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Lấy danh sách sản phẩm cho trang Search - chỉ các cột cần thiết
+        /// Không lấy Detail, Author, Translator, dimensions, v.v. để tối ưu performance
+        /// </summary>
+        /// <returns>Danh sách SanPhamSearchInfo</returns>
+        public static async Task<List<SanPhamSearchInfo>> GetAllForSearchAsync()
+        {
+            List<SanPhamSearchInfo> list = new List<SanPhamSearchInfo>();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    // SELECT chỉ các cột cần thiết
+                    string query = @"
+                        SELECT
+                            Id, Code, Barcode, Name, ShortName,
+                            ComboId, CategoryId, PublisherId,
+                            BookCoverPrice, Discount, SalePrice,
+                            Quantity, Status
+                        FROM tb_san_pham
+                        ORDER BY ComboId DESC";
+
+                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            // Lấy index các cột 1 lần
+                            int idxId = rdr.GetOrdinal("Id");
+                            int idxCode = rdr.GetOrdinal("Code");
+                            int idxBarcode = rdr.GetOrdinal("Barcode");
+                            int idxName = rdr.GetOrdinal("Name");
+                            int idxShortName = rdr.GetOrdinal("ShortName");
+                            int idxComboId = rdr.GetOrdinal("ComboId");
+                            int idxCategoryId = rdr.GetOrdinal("CategoryId");
+                            int idxPublisherId = rdr.GetOrdinal("PublisherId");
+                            int idxBookCoverPrice = rdr.GetOrdinal("BookCoverPrice");
+                            int idxDiscount = rdr.GetOrdinal("Discount");
+                            int idxSalePrice = rdr.GetOrdinal("SalePrice");
+                            int idxQuantity = rdr.GetOrdinal("Quantity");
+                            int idxStatus = rdr.GetOrdinal("Status");
+
+                            // Đọc từng row
+                            while (await rdr.ReadAsync())
+                            {
+                                SanPhamSearchInfo info = new SanPhamSearchInfo
+                                {
+                                    Id = rdr.GetInt32(idxId),
+                                    Code = rdr.IsDBNull(idxCode) ? null : rdr.GetString(idxCode),
+                                    Barcode = rdr.IsDBNull(idxBarcode) ? null : rdr.GetString(idxBarcode),
+                                    Name = rdr.IsDBNull(idxName) ? null : rdr.GetString(idxName),
+                                    ShortName = rdr.IsDBNull(idxShortName) ? null : rdr.GetString(idxShortName),
+                                    ComboId = rdr.IsDBNull(idxComboId) ? (int?)null : rdr.GetInt32(idxComboId),
+                                    CategoryId = rdr.IsDBNull(idxCategoryId) ? (int?)null : rdr.GetInt32(idxCategoryId),
+                                    PublisherId = rdr.IsDBNull(idxPublisherId) ? (int?)null : rdr.GetInt32(idxPublisherId),
+                                    BookCoverPrice = rdr.GetInt32(idxBookCoverPrice),
+                                    Discount = rdr.IsDBNull(idxDiscount) ? 0 : rdr.GetFloat(idxDiscount),
+                                    SalePrice = rdr.GetInt32(idxSalePrice),
+                                    Quantity = rdr.GetInt32(idxQuantity),
+                                    Status = rdr.GetSByte(idxStatus)
+                                };
+
+                                list.Add(info);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetAllForSearchAsync error: {ex.Message}");
+                list.Clear();
+            }
+
+            return list;
+        }
+
+        public static async Task<int> SearchSanPhamCountConnectOutAsync(SanPhamSearchParameter searchParameter, MySqlConnection conn)
+        {
+            int count = 0;
+            try
+            {
+                // Dùng dynamic SQL query để support filters mới
+                string sql = @"
+                    SELECT COUNT(DISTINCT sp.Id) as CountRecord
+                    FROM webplaywithme.tb_san_pham sp
+                    WHERE sp.Status = 0";
+
+                using (MySqlCommand cmd = new MySqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandType = CommandType.Text;
+
+                    // Add filters
+                    if (!string.IsNullOrEmpty(searchParameter.name))
+                    {
+                        sql += " AND sp.Name LIKE @inNamePara";
+                        cmd.Parameters.AddWithValue("@inNamePara", "%" + searchParameter.name + "%");
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.author))
+                    {
+                        sql += " AND sp.Author = @inAuthor";
+                        cmd.Parameters.AddWithValue("@inAuthor", searchParameter.author);
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.translator))
+                    {
+                        sql += " AND sp.Translator = @inTranslator";
+                        cmd.Parameters.AddWithValue("@inTranslator", searchParameter.translator);
+                    }
+                    if (searchParameter.categoryId.HasValue)
+                    {
+                        sql += " AND sp.CategoryId = @inCategoryId";
+                        cmd.Parameters.AddWithValue("@inCategoryId", searchParameter.categoryId.Value);
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.publishingCompany))
+                    {
+                        sql += " AND sp.PublishingCompany = @inPublishingCompany";
+                        cmd.Parameters.AddWithValue("@inPublishingCompany", searchParameter.publishingCompany);
+                    }
+                    if (searchParameter.publisherId > 0)
+                    {
+                        sql += " AND sp.PublisherId = @inPublisherId";
+                        cmd.Parameters.AddWithValue("@inPublisherId", searchParameter.publisherId);
+                    }
+
+                    cmd.CommandText = sql;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync()) count = MyMySql.GetInt32(rdr, "CountRecord");
+                    }
+                }
+
+            }
+            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
+            return count;
+        }
+
+        public static async Task<List<SanPhamBasicInfo>> SearchSanPhamPageConnectOutAsync(SanPhamSearchParameter searchParameter, MySqlConnection conn)
+        {
+            List<SanPhamBasicInfo> ls = new List<SanPhamBasicInfo>();
+            try
+            {
+                // Dùng dynamic SQL query để support filters mới
+                // Query trả về sản phẩm (tb_san_pham)
+                string sql = @"
+                    SELECT
+                        sp.Id,
+                        sp.Name,
+                        sp.ShortName,
+                        sp.BookCoverPrice,
+                        sp.SalePrice,
+                        sp.Quantity,
+                        sp.Status,
+                        (SELECT FileName
+                            FROM tb_san_pham_media
+                            WHERE SanPhamId = sp.Id
+                            AND MediaType = 'image'
+                            ORDER BY DisplayOrder ASC
+                            LIMIT 1) AS CoverImageFileName
+                    FROM tb_san_pham sp
+                    WHERE sp.Status = 0";
+
+                using (MySqlCommand cmd = new MySqlCommand())
+                {
+                    cmd.Connection = conn;
+                    cmd.CommandType = CommandType.Text;
+
+                    // Add filters
+                    if (!string.IsNullOrEmpty(searchParameter.name))
+                    {
+                        sql += " AND sp.Name LIKE @inNamePara";
+                        cmd.Parameters.Add("@inNamePara", MySqlDbType.VarChar).Value = "%" + searchParameter.name + "%";
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.author))
+                    {
+                        sql += " AND sp.Author = @inAuthor";
+                        cmd.Parameters.Add("@inAuthor", MySqlDbType.VarChar).Value = searchParameter.author;
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.translator))
+                    {
+                        sql += " AND sp.Translator = @inTranslator";
+                        cmd.Parameters.Add("@inTranslator", MySqlDbType.VarChar).Value = searchParameter.translator;
+                    }
+                    if (searchParameter.categoryId.HasValue)
+                    {
+                        sql += " AND sp.CategoryId = @inCategoryId";
+                        cmd.Parameters.Add("@inCategoryId", MySqlDbType.Int64).Value = searchParameter.categoryId.Value;
+                    }
+                    if (!string.IsNullOrEmpty(searchParameter.publishingCompany))
+                    {
+                        sql += " AND sp.PublishingCompany = @inPublishingCompany";
+                        cmd.Parameters.AddWithValue("@inPublishingCompany", MySqlDbType.VarChar).Value = searchParameter.publishingCompany;
+                    }
+                    if (searchParameter.publisherId > 0)
+                    {
+                        sql += " AND sp.PublisherId = @inPublisherId";
+                        cmd.Parameters.AddWithValue("@inPublisherId", MySqlDbType.Int64).Value = searchParameter.publisherId;
+                    }
+
+                    sql += " ORDER BY sp.Id DESC LIMIT @inStart, @inOffset";
+                    cmd.Parameters.Add("@inStart", MySqlDbType.Int32).Value = searchParameter.start;
+                    cmd.Parameters.Add("@inOffset", MySqlDbType.Int32).Value = searchParameter.offset;
+
+                    cmd.CommandText = sql;
+
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            SanPhamBasicInfo info = new SanPhamBasicInfo
+                            {
+                                Id = rdr.GetInt32("Id"),
+                                Name = MyMySql.GetString(rdr, "Name"),
+                                ShortName = MyMySql.GetString(rdr, "ShortName"),
+                                BookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice"),
+                                SalePrice = MyMySql.GetInt32(rdr, "SalePrice"),
+                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
+                                Status = MyMySql.GetInt32(rdr, "Status"),
+                                CoverImageFileName = MyMySql.GetString(rdr, "CoverImageFileName")
+                            };
+
+                            ls.Add(info);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); ls.Clear(); }
+            return ls;
+        }
     }
 }

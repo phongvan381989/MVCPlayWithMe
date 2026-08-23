@@ -1,4 +1,4 @@
-.product-item {
+﻿.product-item {
     text-decoration: none;
     display: block;
     cursor: pointer;
@@ -7,10 +7,10 @@
     background: white;
 }
 
-    .product-item:hover {
-        background: #e1e1e1;
-        border: 1px solid #d0d0d0;
-    }
+.product-item:hover {
+    background: #e1e1e1;
+    border: 1px solid #d0d0d0;
+}
 
 .image-wrapper {
     max-width: 100%;
@@ -22,13 +22,15 @@
     border-top-left-radius: 10px;
 }
 
-.product-name > h3 {
+.product-name-h3 {
     font-weight: 400;
     font-size: 14px;
     color: rgb(56, 56, 61);
     margin: 0px;
+    padding-left:2px;
+    padding-right:2px;
     word-break: break-word;
-    width: 180px;
+/*    width: 180px;*/
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -36,4 +38,61 @@
     -webkit-line-clamp: 2; /* number of lines to show */
     line-height: 1.5em;
     max-height: 3em;
+}
+
+
+#biggestContainer_body_wraper_item {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+/*    gap: 0px;*/
+    column-gap:0px;
+    row-gap:5px;
+    width: 100%;
+    /*max-width: 1200px;*/ /* Cap tối đa 6 columns (6 × 200px) */
+    margin: 0 auto;
+}
+
+.product-for-selector-sample {
+/*    width: 200px;*/
+    border-radius: 10px;
+    padding: 2px;
+    display: none
+}
+
+.price-sell-detail {
+    color: red;
+    font-size: medium;
+}
+
+.price-original-detail {
+    color: gray;
+    font-size: smaller;
+    text-decoration: line-through;
+}
+
+.price-discount-percent-detail {
+    color: red;
+    font-size: small;
+}
+
+.price-sell-original-discount-percent{
+    margin-top:3px;
+    margin-bottom:5px;
+}
+
+@media (min-width: 800px) {
+    #biggestContainer_body_wraper_item {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 5px;
+        width: 100%;
+        margin: 0 auto;
+    }
+
+    .product-for-selector-sample {
+        /*    width: 200px;*/
+        border-radius: 10px;
+        padding: 5px;
+        display: none
+    }
 }

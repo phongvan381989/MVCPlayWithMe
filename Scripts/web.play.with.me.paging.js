@@ -3,7 +3,7 @@
 // số sản phẩm trong kết quả tìm kiếm
 let countItem;
 // itemOnPage: Số lượng item mỗi trang
-let itemOnPage = 20;
+let itemOnPage = 30;
 // maxPage: Số trang lớn nhất, 1 là trang đầu tiên, maxPage là trang cuối cùng
 let maxPage;
 // currentPage: Trang hiện tại

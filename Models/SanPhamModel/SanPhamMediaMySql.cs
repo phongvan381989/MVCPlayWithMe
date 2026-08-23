@@ -50,33 +50,75 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int sanPhamIdIndex = rdr.GetOrdinal("SanPhamId");
-                        int mediaTypeIndex = rdr.GetOrdinal("MediaType");
-                        int fileNameIndex = rdr.GetOrdinal("FileName");
-                        int titleIndex = rdr.GetOrdinal("Title");
-                        int altTextIndex = rdr.GetOrdinal("AltText");
-                        int descriptionIndex = rdr.GetOrdinal("Description");
-                        int posterImageIndex = rdr.GetOrdinal("PosterImage");
-                        int widthIndex = rdr.GetOrdinal("Width");
-                        int heightIndex = rdr.GetOrdinal("Height");
-                        int displayOrderIndex = rdr.GetOrdinal("DisplayOrder");
-                        while (await rdr.ReadAsync())
+                        list = await MapDataReaderToSanPhamMediaList(rdr);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                list.Clear();
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Lấy DisplayOrder lớn nhất của 1 sản phẩm
+        /// Return -1 nếu sản phẩm chưa có media nào
+        /// </summary>
+        public static async Task<int> GetMaxDisplayOrderBySanPhamId(int sanPhamId)
+        {
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT COALESCE(MAX(DisplayOrder), 0) FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId",
+                        conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+
+                        object result = await cmd.ExecuteScalarAsync();
+                        return result != null ? Convert.ToInt32(result) : -1;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                return -1;
+            }
+        }
+
+        /// <summary>
+        /// Lấy tất cả media của 1 combo id, sắp xếp theo DisplayOrder
+        /// </summary>
+        public static async Task<List<SanPhamMedia>> GetAllBySanPhamComboIdAsync(int comboId)
+        {
+            List<SanPhamMedia> list = new List<SanPhamMedia>();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        @"SELECT m.*
+                        FROM tb_san_pham_media m
+                        LEFT JOIN tb_san_pham sp ON m.SanPhamId = sp.Id
+                        WHERE sp.ComboId = @comboId
+                        AND (
+                        (m.MediaType = 'image' AND m.DisplayOrder = 0) OR
+                        (m.MediaType = 'video' AND m.DisplayOrder = 1));",
+                        conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@comboId", comboId);
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            list.Add(new SanPhamMedia
-                            {
-                                Id = MyMySql.GetInt32(rdr, idIndex),
-                                SanPhamId = MyMySql.GetInt32(rdr, sanPhamIdIndex),
-                                MediaType = MyMySql.GetString(rdr, mediaTypeIndex),
-                                FileName = MyMySql.GetString(rdr, fileNameIndex),
-                                Title = MyMySql.GetString(rdr, titleIndex),
-                                AltText = MyMySql.GetString(rdr, altTextIndex),
-                                Description = MyMySql.GetString(rdr, descriptionIndex),
-                                PosterImage = MyMySql.GetString(rdr, posterImageIndex),
-                                Width = (uint)MyMySql.GetInt32(rdr, widthIndex),
-                                Height = (uint)MyMySql.GetInt32(rdr, heightIndex),
-                                DisplayOrder = MyMySql.GetInt32(rdr, displayOrderIndex)
-                            });
+                            list = await MapDataReaderToSanPhamMediaList(rdr);
                         }
                     }
                 }
@@ -107,16 +149,16 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         conn))
                     {
                         cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.AddWithValue("@sanPhamId", media.SanPhamId);
-                        cmd.Parameters.AddWithValue("@mediaType", media.MediaType ?? "image");
-                        cmd.Parameters.AddWithValue("@fileName", media.FileName);
-                        cmd.Parameters.AddWithValue("@title", media.Title ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@altText", media.AltText ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@description", media.Description ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@posterImage", media.PosterImage ?? (object)DBNull.Value);
-                        cmd.Parameters.AddWithValue("@width", media.Width);
-                        cmd.Parameters.AddWithValue("@height", media.Height);
-                        cmd.Parameters.AddWithValue("@displayOrder", media.DisplayOrder);
+                        cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32).Value = media.SanPhamId;
+                        cmd.Parameters.Add("@mediaType", MySqlDbType.VarChar).Value = media.MediaType ?? "image";
+                        cmd.Parameters.Add("@fileName", MySqlDbType.VarChar).Value = media.FileName;
+                        cmd.Parameters.Add("@title", MySqlDbType.VarChar).Value = media.Title ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@altText", MySqlDbType.VarChar).Value = media.AltText ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@description", MySqlDbType.VarChar).Value = media.Description ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@posterImage", MySqlDbType.VarChar).Value = media.PosterImage ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@width", MySqlDbType.Int32).Value = media.Width;
+                        cmd.Parameters.Add("@height", MySqlDbType.Int32).Value = media.Height;
+                        cmd.Parameters.Add("@displayOrder", MySqlDbType.Int32).Value = media.DisplayOrder;
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
                         if (rowsAffected > 0)
@@ -349,6 +391,46 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     return new MySqlResultState(EMySqlResultState.ERROR, ex.Message);
                 }
             }
+        }
+
+        /// <summary>
+        /// Helper: Map MySqlDataReader sang List<SanPhamMedia>
+        /// </summary>
+        private static async Task<List<SanPhamMedia>> MapDataReaderToSanPhamMediaList(MySqlDataReader rdr)
+        {
+            List<SanPhamMedia> list = new List<SanPhamMedia>();
+
+            int idIndex = rdr.GetOrdinal("Id");
+            int sanPhamIdIndex = rdr.GetOrdinal("SanPhamId");
+            int mediaTypeIndex = rdr.GetOrdinal("MediaType");
+            int fileNameIndex = rdr.GetOrdinal("FileName");
+            int titleIndex = rdr.GetOrdinal("Title");
+            int altTextIndex = rdr.GetOrdinal("AltText");
+            int descriptionIndex = rdr.GetOrdinal("Description");
+            int posterImageIndex = rdr.GetOrdinal("PosterImage");
+            int widthIndex = rdr.GetOrdinal("Width");
+            int heightIndex = rdr.GetOrdinal("Height");
+            int displayOrderIndex = rdr.GetOrdinal("DisplayOrder");
+
+            while (await rdr.ReadAsync())
+            {
+                list.Add(new SanPhamMedia
+                {
+                    Id = MyMySql.GetInt32(rdr, idIndex),
+                    SanPhamId = MyMySql.GetInt32(rdr, sanPhamIdIndex),
+                    MediaType = MyMySql.GetString(rdr, mediaTypeIndex),
+                    FileName = MyMySql.GetString(rdr, fileNameIndex),
+                    Title = MyMySql.GetString(rdr, titleIndex),
+                    AltText = MyMySql.GetString(rdr, altTextIndex),
+                    Description = MyMySql.GetString(rdr, descriptionIndex),
+                    PosterImage = MyMySql.GetString(rdr, posterImageIndex),
+                    Width = (uint)MyMySql.GetInt32(rdr, widthIndex),
+                    Height = (uint)MyMySql.GetInt32(rdr, heightIndex),
+                    DisplayOrder = MyMySql.GetInt32(rdr, displayOrderIndex)
+                });
+            }
+
+            return list;
         }
     }
 }

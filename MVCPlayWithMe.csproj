@@ -397,6 +397,7 @@
     <Compile Include="Models\SanPhamModel\SanPhamMedia.cs" />
     <Compile Include="Models\SanPhamModel\SanPhamMediaMySql.cs" />
     <Compile Include="Models\SanPhamModel\SanPhamMySql.cs" />
+    <Compile Include="Models\SanPhamModel\SanPhamSearchParameter.cs" />
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\CommonLazadaAPI.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\LazadaAuthenAPI.cs" />

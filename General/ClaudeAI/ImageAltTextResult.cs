@@ -59,6 +59,13 @@ namespace MVCPlayWithMe.General.ClaudeAI
         public string Description { get; set; }
 
         /// <summary>
+        /// Số trang (chỉ có khi imageType = InsidePage)
+        /// Format: "5" (1 trang) hoặc "2-3" (2 trang spread)
+        /// Null nếu không detect được hoặc không phải ảnh trang trong
+        /// </summary>
+        public string PageNumber { get; set; }
+
+        /// <summary>
         /// Thông báo lỗi nếu có
         /// </summary>
         public string Error { get; set; }
@@ -126,6 +133,9 @@ namespace MVCPlayWithMe.General.ClaudeAI
                 byte[] imageBytes = File.ReadAllBytes(imagePath);
                 string base64Image = Convert.ToBase64String(imageBytes);
 
+                // Detect MIME type thực tế từ file bytes (không dựa vào extension)
+                string mediaType = DetectImageMediaType(imageBytes);
+
                 // Tạo Anthropic client
                 var client = new Anthropic.SDK.AnthropicClient(apiKey);
 
@@ -146,7 +156,7 @@ namespace MVCPlayWithMe.General.ClaudeAI
                                 Source = new Anthropic.SDK.Messaging.ImageSource
                                 {
                                     Type = Anthropic.SDK.Messaging.SourceType.base64,
-                                    MediaType = "image/webp",
+                                    MediaType = mediaType,  // Dùng MIME type detect được
                                     Data = base64Image
                                 }
                             },
@@ -207,6 +217,7 @@ namespace MVCPlayWithMe.General.ClaudeAI
                 result.Title = jsonResult.ContainsKey("title") ? jsonResult["title"] : "";
                 result.AltText = jsonResult.ContainsKey("altText") ? jsonResult["altText"] : "";
                 result.Description = jsonResult.ContainsKey("description") ? jsonResult["description"] : "";
+                result.PageNumber = jsonResult.ContainsKey("pageNumber") ? jsonResult["pageNumber"] : null;
             }
             catch (Exception ex)
             {
@@ -225,13 +236,23 @@ namespace MVCPlayWithMe.General.ClaudeAI
         /// <summary>
         /// Phần JSON format chung cho tất cả prompts
         /// </summary>
-        private static string GetJsonFormatSection()
+        private static string GetJsonFormatSection(bool includePageNumber = false)
         {
+            if (includePageNumber)
+            {
+                return @"{
+                            ""title"": ""[Tiêu đề ngắn gọn]"",
+                            ""altText"": ""[Alt text tối ưu SEO]"",
+                            ""description"": ""[Mô tả chi tiết]"",
+                            ""pageNumber"": ""[Số trang - VD: '5' hoặc '2-3', null nếu không thấy]""
+                        }";
+            }
+
             return @"{
-    ""title"": ""[Tiêu đề ngắn gọn]"",
-    ""altText"": ""[Alt text tối ưu SEO]"",
-    ""description"": ""[Mô tả chi tiết]""
-}";
+                        ""title"": ""[Tiêu đề ngắn gọn]"",
+                        ""altText"": ""[Alt text tối ưu SEO]"",
+                        ""description"": ""[Mô tả chi tiết]""
+                    }";
         }
 
         /// <summary>
@@ -336,9 +357,11 @@ Yêu cầu cho Description (20-40 từ):
 - KHÔNG lặp lại thông tin đã có (tên, tác giả) - chỉ mô tả visual{commonReqs}";
 
                 case BookImageType.InsidePage:
+                    // Inside Page cần detect page number
+                    string insidePageJsonFormat = GetJsonFormatSection(includePageNumber: true);
                     return $@"Hãy phân tích ảnh TRANG TRONG SÁCH này và trả về JSON với format sau:{bookInfo}
 
-{jsonFormat}
+{insidePageJsonFormat}
 
 Yêu cầu cho Title (5-10 từ):
 - CHỈ mô tả nội dung chính của trang: chủ đề/bài học/cảnh minh họa
@@ -364,7 +387,16 @@ Yêu cầu cho AltText (ẢNH TRANG TRONG - SEO):
 Yêu cầu cho Description (20-40 từ):
 - Mô tả chi tiết nội dung NHÌN THẤY: văn bản (OCR nếu đọc được), hình minh họa, bố cục, màu sắc, số trang
 - KHÔNG lặp lại ""Trang trong cuốn..."" - đi thẳng vào mô tả visual
-- Ví dụ: ""Trang sách minh họa màu nước với cảnh các bạn nhỏ cùng chơi trong vườn hoa, có đoạn văn về tình bạn ở góc dưới""{commonReqs}";
+- Ví dụ: ""Trang sách minh họa màu nước với cảnh các bạn nhỏ cùng chơi trong vườn hoa, có đoạn văn về tình bạn ở góc dưới""
+
+QUAN TRỌNG - Yêu cầu cho PageNumber:
+- Đọc CHÍNH XÁC số trang xuất hiện trong ảnh (thường ở góc trên/dưới trang)
+- Format trả về:
+  * Nếu 1 trang: ""5"" (chỉ số, không có chữ ""trang"")
+  * Nếu 2 trang liền nhau (spread): ""2-3"" (dạng range)
+  * Nếu KHÔNG THẤY số trang: null (không phải string ""null"", mà JSON null)
+- Ví dụ pageNumber hợp lệ: ""5"", ""12"", ""2-3"", ""10-11"", null
+- KHÔNG thêm chữ ""trang"", ""page"", chỉ GHI SỐ{commonReqs}";
 
                 case BookImageType.BackCover:
                     return $@"Hãy phân tích ảnh MẶT SAU SÁCH này và trả về JSON với format sau:{bookInfo}
@@ -490,6 +522,56 @@ Yêu cầu cho Description (20-40 từ):
                 // Log error nhưng không throw để không ảnh hưởng main flow
                 MyLogger.GetInstance().Warn($"InsertLogAsync error (non-critical): {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Detect MIME type thực tế của ảnh từ file bytes (magic number)
+        /// </summary>
+        /// <param name="imageBytes">Byte array của ảnh</param>
+        /// <returns>MIME type string (image/webp, image/jpeg, image/png, image/gif)</returns>
+        private static string DetectImageMediaType(byte[] imageBytes)
+        {
+            if (imageBytes == null || imageBytes.Length < 12)
+            {
+                return "image/webp"; // Fallback mặc định
+            }
+
+            // WebP: RIFF....WEBP (bytes 0-3: RIFF, bytes 8-11: WEBP)
+            if (imageBytes.Length >= 12 &&
+                imageBytes[0] == 0x52 && imageBytes[1] == 0x49 &&
+                imageBytes[2] == 0x46 && imageBytes[3] == 0x46 &&
+                imageBytes[8] == 0x57 && imageBytes[9] == 0x45 &&
+                imageBytes[10] == 0x42 && imageBytes[11] == 0x50)
+            {
+                return "image/webp";
+            }
+
+            // JPEG: FF D8 FF
+            if (imageBytes[0] == 0xFF && imageBytes[1] == 0xD8 && imageBytes[2] == 0xFF)
+            {
+                return "image/jpeg";
+            }
+
+            // PNG: 89 50 4E 47 0D 0A 1A 0A
+            if (imageBytes.Length >= 8 &&
+                imageBytes[0] == 0x89 && imageBytes[1] == 0x50 &&
+                imageBytes[2] == 0x4E && imageBytes[3] == 0x47 &&
+                imageBytes[4] == 0x0D && imageBytes[5] == 0x0A &&
+                imageBytes[6] == 0x1A && imageBytes[7] == 0x0A)
+            {
+                return "image/png";
+            }
+
+            // GIF: 47 49 46 38 (GIF8)
+            if (imageBytes.Length >= 4 &&
+                imageBytes[0] == 0x47 && imageBytes[1] == 0x49 &&
+                imageBytes[2] == 0x46 && imageBytes[3] == 0x38)
+            {
+                return "image/gif";
+            }
+
+            // Fallback: Nếu không detect được, trả về webp
+            return "image/webp";
         }
     }
 

@@ -356,32 +356,21 @@ function CreateContainerSmallItem(media, i, hasVideo) {
     // Vì nếu có video thì nó sẽ ở vị trí đầu tiên
     if (i == 0 && hasVideo) {
         // Dùng poster image thay vì video tag (performance tốt hơn)
-        const picture = document.createElement("picture");
-        picture.style.display = "flex";
-        picture.style.justifyContent = "center";
-        picture.style.alignItems = "center";
-        picture.style.width = "100%";
-        picture.style.height = "100%";
-
         // Poster image: video_poster.webp (320px) từ thư mục _320
         const posterSrc = media.PosterImage
             ? GetSanPhamMediaUrl(sanPhamObject.Id, media.PosterImage)
             : srcNoImageThumbnail;
 
-        const sourceWebp = document.createElement("source");
-        sourceWebp.srcset = Get320VersionOfImageSrc(posterSrc);
-        sourceWebp.type = "image/webp";
-
         const img = document.createElement("img");
-        img.src = srcNoImageThumbnail;  // Fallback
+        img.src = Get320VersionOfImageSrc(posterSrc);
         img.alt = "Video " + sanPhamObject.Name;
+        // img.loading = "lazy";
         img.style.objectFit = "contain";
         img.style.maxWidth = "100%";
         img.style.maxHeight = "100%";
+        img.style.display = "block";
 
-        picture.appendChild(sourceWebp);
-        picture.appendChild(img);
-        container.appendChild(picture);
+        container.appendChild(img);
         container.style.position = "relative";
 
         // Video icon overlay
@@ -397,31 +386,21 @@ function CreateContainerSmallItem(media, i, hasVideo) {
         container.appendChild(videoIcon);
     }
     else {
-        // Tạo picture element để hỗ trợ WebP
-        const picture = document.createElement("picture");
-        picture.style.display = "flex";
-        picture.style.justifyContent = "center";
-        picture.style.alignItems = "center";
-        picture.style.width = "100%";
-        picture.style.height = "100%";
-
-        // WebP source (ưu tiên WebP nếu browser hỗ trợ)
-        const sourceWebp = document.createElement("source");
+        // Tạo img element với thumbnail 320px
         const thumbnail320 = Get320VersionOfImageSrc(GetSanPhamMediaUrl(sanPhamObject.Id, media.FileName));
-        sourceWebp.srcset = thumbnail320;
-        sourceWebp.type = "image/webp";
 
-        // Fallback img (srcNoImageThumbnail.png nếu browser không hỗ trợ WebP)
         const img = document.createElement("img");
-        img.src = srcNoImageThumbnail;  // Fallback về NoImageThumbnail.png
+        img.src = thumbnail320;
         img.alt = GenerateAlt(media, true, i);
+        if (i > 3) {
+            img.loading = "lazy";
+        }
         img.style.objectFit = "contain";
         img.style.maxWidth = "100%";
         img.style.maxHeight = "100%";
+        img.style.display = "block";
 
-        picture.appendChild(sourceWebp);
-        picture.appendChild(img);
-        container.appendChild(picture);
+        container.appendChild(img);
     }
 
     container.addEventListener("mouseenter", function (event) {
@@ -515,15 +494,12 @@ function ShowMediumItemFromIndex(i) {
         mediumPicture.style.display = "none";
     }
     else {
-        // Get image URL và WebP URL
+        // Get image URL
         const imageUrl = GetSanPhamMediaUrl(sanPhamObject.Id, sanPhamObject.MediaList[i].FileName);
 
-        // Set WebP source (browser hỗ trợ WebP sẽ dùng này)
-        const mediumImageSource = document.getElementById("medium_image_source");
-        mediumImageSource.srcset = imageUrl;
-
-        // Set alt text cho medium image (SEO + Accessibility)
-        const mediumImage = document.getElementById("medium_image");
+        // Set src và alt cho medium image (SEO + Accessibility)
+        const mediumImage = document.getElementById("medium_picture");
+        mediumImage.src = imageUrl;
         mediumImage.alt = GenerateAlt(sanPhamObject.MediaList[i], false, i);
 
         if (mediumVideo.src != null) {
@@ -590,11 +566,45 @@ function ShowProductDescription() {
         return html;
     });
 
+    // Xử lý newlines dư thừa
+    // 1. Xóa newlines trước thẻ <p> và </p>
+    detailHtml = detailHtml.replace(/\n+(<\/?p[^>]*>)/gi, '$1');
+
+    // 2. Giảm 3+ newlines liên tiếp xuống còn 2
+    detailHtml = detailHtml.replace(/\n{3,}/g, '\n\n');
+
     // Thêm mô tả mới
-    let div = document.createElement("div");
-    div.className = "irIKAp";
-    div.innerHTML = detailHtml;
-    detailContainer.appendChild(div);
+    // let div = document.createElement("div");
+    // div.className = "irIKAp";
+    // div.innerHTML = detailHtml;
+    detailContainer.innerHTML = detailHtml;
+}
+
+// Convert độ tuổi từ tháng → năm và format thành text
+// VD: "2-5 tuổi", "3 tuổi trở lên", "Không giới hạn"
+function GetAgeRangeText(minAge, maxAge) {
+    // Null/undefined/-1 check
+    if ((minAge == null || minAge === -1) && (maxAge == null || maxAge === -1)) {
+        return "";
+    }
+
+    // Convert tháng → năm (làm tròn xuống)
+    const minYears = (minAge != null && minAge !== -1) ? Math.floor(minAge / 12) : -1;
+    const maxYears = (maxAge != null && maxAge !== -1) ? Math.floor(maxAge / 12) : -1;
+
+    if (minAge === -1) {
+        return `Đến ${maxYears} tuổi`;
+    }
+
+    if (maxAge === -1) {
+        return `Từ ${minYears} tuổi`;
+    }
+
+    if (minYears === maxYears) {
+        return `${minYears} tuổi`;
+    }
+
+    return `${minYears}-${maxYears} tuổi`;
 }
 
 function ShowProductSpecifications() {
@@ -661,14 +671,26 @@ function ShowProductSpecifications() {
         AddSpecRow("Nhà phát hành", sanPhamObject.PublisherName, `/Search?publisherId=${sanPhamObject.PublisherId}`);
     }
 
+    // Năm xuất bản — chỉ hiển thị nếu cách năm hiện tại <= 3
     if (sanPhamObject.PublishingTime) {
-        AddSpecRow("Năm xuất bản", sanPhamObject.PublishingTime.toString());
+        const currentYear = new Date().getFullYear();
+        const publishingYear = parseInt(sanPhamObject.PublishingTime);
+
+        if (currentYear - publishingYear <= 3) {
+            AddSpecRow("Năm xuất bản", sanPhamObject.PublishingTime.toString());
+        }
     }
 
     AddSpecRow("Ngôn ngữ", sanPhamObject.Language);
 
-    // Kích thước (chỉ hiển thị nếu có ít nhất 1 giá trị > 0)
-    if (sanPhamObject.ProductLong > 0 || sanPhamObject.ProductWide > 0 || sanPhamObject.ProductHigh > 0) {
+    // Tuổi phù hợp
+    const ageRangeText = GetAgeRangeText(sanPhamObject.MinAge, sanPhamObject.MaxAge);
+    if (ageRangeText) {
+        AddSpecRow("Tuổi phù hợp", ageRangeText);
+    }
+
+    // Kích thước (chỉ hiển thị nếu các giá trị > 1)
+    if (sanPhamObject.ProductLong > 0 && sanPhamObject.ProductWide > 0 && sanPhamObject.ProductHigh > 0) {
         let dimensions = `${sanPhamObject.ProductLong} × ${sanPhamObject.ProductWide} × ${sanPhamObject.ProductHigh} mm`;
         AddSpecRow("Kích thước", dimensions);
     }
@@ -953,7 +975,7 @@ async function VariantClick(variantId) {
     if (!sanPhamObject) return;
 
     // Cập nhật URL không reload page (dùng replaceState để không tạo history mới)
-    let newSlug = GenerateSlug(sanPhamObject.Name) + "-" + variantId;
+    let newSlug = GenerateSlugId(sanPhamObject.Name, variantId);
     let newUrl = "/San-Pham/" + newSlug;
     window.history.replaceState({ sanPhamId: variantId }, sanPhamObject.Name, newUrl);
     document.title = sanPhamObject.Name;
@@ -1201,7 +1223,7 @@ window.addEventListener('DOMContentLoaded', async function () {
     }
 
     // PhotoSwipe: Attach click event vào medium image/video để mở lightbox
-    const mediumImageEl = document.getElementById('medium_image');
+    const mediumImageEl = document.getElementById('medium_picture');
     if (mediumImageEl) {
         mediumImageEl.addEventListener('click', function() {
             openPhotoSwipe(selectedIndex);

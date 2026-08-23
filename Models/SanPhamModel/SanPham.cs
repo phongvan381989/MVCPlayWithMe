@@ -339,4 +339,25 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public int Status { get; set; }
         public string CoverImageFileName { get; set; } // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
     }
+
+    /// <summary>
+    /// DTO lightweight cho trang Search - chỉ lấy thông tin cần thiết cho filter và hiển thị
+    /// Không lấy các field dài như Detail, Author, Translator, dimensions, v.v.
+    /// </summary>
+    public class SanPhamSearchInfo
+    {
+        public int Id { get; set; }
+        public string Code { get; set; }
+        public string Barcode { get; set; }
+        public string Name { get; set; }
+        public string ShortName { get; set; }
+        public int? ComboId { get; set; }
+        public int? CategoryId { get; set; }
+        public int? PublisherId { get; set; }
+        public int BookCoverPrice { get; set; }
+        public float Discount { get; set; }
+        public int SalePrice { get; set; }
+        public int Quantity { get; set; }
+        public int Status { get; set; }
+    }
 }

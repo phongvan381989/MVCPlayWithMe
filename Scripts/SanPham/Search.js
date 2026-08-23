@@ -22,21 +22,21 @@
     // Load data từ server 1 lần duy nhất
     async function LoadDataFromServer() {
             const tbody = document.getElementById('sanpham-tbody');
-    tbody.innerHTML = '<tr><td colspan="7" class="no-data">Đang tải dữ liệu...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9" class="no-data">Đang tải dữ liệu...</td></tr>';
 
     try {
-                const resultText = await PostJSON('/SanPham/GetAllSanPham', { });
+        const resultText = await PostJSON('/SanPham/GetAllForSearchAsync', { });
     allSanPhamList = JSON.parse(resultText);
 
     if (!allSanPhamList || allSanPhamList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Không có sản phẩm nào.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="no-data">Không có sản phẩm nào.</td></tr>';
     return;
                 }
 
     // Render lần đầu
     RenderSanPhamList();
             } catch (error) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data" style="color: red;">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="no-data" style="color: red;">Lỗi tải dữ liệu: ' + error.message + '</td></tr>';
             }
         }
 
@@ -45,7 +45,7 @@
             const tbody = document.getElementById('sanpham-tbody');
 
     if (!allSanPhamList || allSanPhamList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Không có sản phẩm nào.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="no-data">Không có sản phẩm nào.</td></tr>';
     return;
             }
 
@@ -99,7 +99,7 @@
             });
 
     if (filteredList.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="8" class="no-data">Không tìm thấy sản phẩm nào.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="no-data">Không tìm thấy sản phẩm nào.</td></tr>';
     return;
             }
 
@@ -113,6 +113,7 @@
     <td>${sp.ShortName || ''}</td>
     <td>${FormatCurrency(sp.BookCoverPrice || 0)}</td>
     <td>${sp.Discount || 0}%</td>
+    <td>${FormatCurrency(sp.SalePrice || 0)}</td>
     <td>${sp.Quantity || 0}</td>
     <td>${FormatStatus(sp.Status)}</td>
     <td>

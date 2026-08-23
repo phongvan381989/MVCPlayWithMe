@@ -352,6 +352,39 @@
                 <button type="button" onclick="UploadFiles()" style="margin-top: 10px;">Upload</button>
             </div>
 
+            <div style="margin: 20px 0; padding: 15px; background: #fff3e0; border-left: 4px solid #FF9800; border-radius: 4px;">
+                <h4 style="margin-top: 0; color: #FF9800;">🎨 Copy Ảnh Bìa Từ Sản Phẩm Lẻ Cùng Combo</h4>
+                <p style="margin: 8px 0; color: #666;">
+                    <strong>Điều kiện:</strong> Sản phẩm có tên ngắn chứa "Combo" VÀ có ComboId.<br>
+                    <strong>Chức năng:</strong> Tự động copy ảnh bìa (có DisplayOrder nhỏ nhất) từ các sản phẩm lẻ cùng combo vào sản phẩm combo này.
+                </p>
+                <button type="button"
+                        onclick="CopyCoversFromComboProducts()"
+                        style="background: #FF9800; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                    🎨 Copy Ảnh Bìa Từ Sản Phẩm Lẻ
+                </button>
+            </div>
+
+            <div style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-left: 4px solid #2196F3; border-radius: 4px;">
+                <h4 style="margin-top: 0; color: #2196F3;">🤖 Claude AI - Tạo Alt Text & Auto Đổi Tên</h4>
+                <p style="margin: 8px 0; color: #666;">
+                    <strong>Bước 1:</strong> Tạo Title, Alt Text, Description cho tất cả ảnh bằng Claude AI.<br>
+                    <strong>Bước 2:</strong> Auto đổi tên file dựa trên thông tin AI trả về hoặc trang trong Alt Text (VD: "trang 2-3" → "trang-2-3").
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button type="button"
+                            onclick="GenerateAltTextForAllImages()"
+                            style="background: #2196F3; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                        🤖 Lấy Alt Text Tất Cả Ảnh
+                    </button>
+                    <button type="button"
+                            onclick="AutoRenameAllImagesFromAltText()"
+                            style="background: #9C27B0; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                        🤖 Auto Đổi Tên Tất Cả Ảnh
+                    </button>
+                </div>
+            </div>
+
             <div id="media-container" class="media-container">
                 <!-- Media items will be loaded here -->
             </div>

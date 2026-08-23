@@ -29,10 +29,10 @@ function CreateSelectedModel() {
 
         let listA = clone.getElementsByClassName("item-url");
         listA[0].title = obj.sanPhamBasicInfo.Name;
-        listA[0].href = "/san-pham/" + GenerateSlug(obj.sanPhamBasicInfo.Name) + "-" + obj.sanPhamId;
+        listA[0].href = "/san-pham/" + GenerateSlugId(obj.sanPhamBasicInfo.Name, obj.sanPhamId);
 
         listA[1].title = obj.sanPhamBasicInfo.Name;
-        listA[1].href = "/san-pham/" + GenerateSlug(obj.sanPhamBasicInfo.Name) + "-" + obj.sanPhamId;
+        listA[1].href = "/san-pham/" + GenerateSlugId(obj.sanPhamBasicInfo.Name, obj.sanPhamId);
 
         clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.sanPhamBasicInfo.Name;
         //clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;

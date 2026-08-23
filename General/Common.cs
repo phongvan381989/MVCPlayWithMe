@@ -257,7 +257,20 @@ namespace MVCPlayWithMe.General
         }
 
         /// <summary>
-        /// Tạo thư mục media cho sản phẩm (tb_san_pham)
+        /// Lấy đường dẫn tuyệt đối thư mục chứa media thumbnail của sản phẩm (tb_san_pham) hoặc null nếu không có
+        /// </summary>
+        public static string GetAbsoluteThumbnailSanPhamMediaFolderPath(string sanPhamId)
+        {
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + Common.tail320 + pathSeperator;
+            if (!Directory.Exists(path))
+            {
+                path = null;
+            }
+            return path;
+        }
+
+        /// <summary>
+        /// Tạo thư mục media cho sản phẩm  gồm cả thư mục 320(tb_san_pham)
         /// </summary>
         public static string CreateAbsoluteSanPhamMediaFolderPath(string sanPhamId)
         {
@@ -2429,6 +2442,55 @@ namespace MVCPlayWithMe.General
         /// </summary>
         /// <param name="originalImagePath">Đường dẫn ảnh gốc (JPG/PNG)</param>
         /// <returns>Tuple (width, height, fileName) - kích thước và tên file WebP, hoặc (0, 0, "") nếu fail</returns>
+        /// <summary>
+        /// Detect MIME type thực tế của ảnh từ file bytes (magic number)
+        /// </summary>
+        /// <param name="imageBytes">Byte array của ảnh</param>
+        /// <returns>MIME type string (image/webp, image/jpeg, image/png, image/gif)</returns>
+        private static string DetectImageMediaType(byte[] imageBytes)
+        {
+            if (imageBytes == null || imageBytes.Length < 12)
+            {
+                return "image/unknown";
+            }
+
+            // WebP: RIFF....WEBP (bytes 0-3: RIFF, bytes 8-11: WEBP)
+            if (imageBytes.Length >= 12 &&
+                imageBytes[0] == 0x52 && imageBytes[1] == 0x49 &&
+                imageBytes[2] == 0x46 && imageBytes[3] == 0x46 &&
+                imageBytes[8] == 0x57 && imageBytes[9] == 0x45 &&
+                imageBytes[10] == 0x42 && imageBytes[11] == 0x50)
+            {
+                return "image/webp";
+            }
+
+            // JPEG: FF D8 FF
+            if (imageBytes[0] == 0xFF && imageBytes[1] == 0xD8 && imageBytes[2] == 0xFF)
+            {
+                return "image/jpeg";
+            }
+
+            // PNG: 89 50 4E 47 0D 0A 1A 0A
+            if (imageBytes.Length >= 8 &&
+                imageBytes[0] == 0x89 && imageBytes[1] == 0x50 &&
+                imageBytes[2] == 0x4E && imageBytes[3] == 0x47 &&
+                imageBytes[4] == 0x0D && imageBytes[5] == 0x0A &&
+                imageBytes[6] == 0x1A && imageBytes[7] == 0x0A)
+            {
+                return "image/png";
+            }
+
+            // GIF: 47 49 46 38 (GIF8)
+            if (imageBytes.Length >= 4 &&
+                imageBytes[0] == 0x47 && imageBytes[1] == 0x49 &&
+                imageBytes[2] == 0x46 && imageBytes[3] == 0x38)
+            {
+                return "image/gif";
+            }
+
+            return "image/unknown";
+        }
+
         public static (uint width, uint height, string fileName) ConvertSanPhamImageToWebP_Thumbnail(
             string originalImagePath)
         {
@@ -2436,23 +2498,69 @@ namespace MVCPlayWithMe.General
             {
                 string directory = Path.GetDirectoryName(originalImagePath);
                 string fileNameWithoutExt = Path.GetFileNameWithoutExtension(originalImagePath);
-                //string ext = Path.GetExtension(originalImagePath).ToLower();
-
+                string ext = Path.GetExtension(originalImagePath).ToLower();
 
                 // Path cho WebP full size (1000x1000, 80%)
                 string webpFullPath = Path.Combine(directory, fileNameWithoutExt + webpExtension);
-                if (!Path.GetFullPath(webpFullPath).Equals(Path.GetFullPath(originalImagePath), StringComparison.OrdinalIgnoreCase))
+
+                // Check xem có cần convert không
+                bool needConvert = false;
+                string tempOriginalPath = null;
+
+                if (ext == ".webp")
                 {
-                    bool convertSuccess = ConvertToWebP(originalImagePath, webpFullPath, 1000, 80);
+                    // File đã có extension .webp → check MIME type thực tế
+                    byte[] imageBytes = File.ReadAllBytes(originalImagePath);
+                    string actualMediaType = DetectImageMediaType(imageBytes);
+
+                    if (actualMediaType != "image/webp")
+                    {
+                        // Nội dung KHÔNG phải WebP (JPEG/PNG/GIF có extension .webp)
+                        // → Cần convert, nhưng phải rename temp vì output path trùng input path
+                        MyLogger.GetInstance().Info($"File has .webp extension but content is {actualMediaType}, converting: {originalImagePath}");
+
+                        tempOriginalPath = originalImagePath + ".temp";
+                        File.Move(originalImagePath, tempOriginalPath);
+                        needConvert = true;
+                    }
+                    else
+                    {
+                        // Nội dung là WebP → bỏ qua convert
+                        MyLogger.GetInstance().Info($"File is already WebP, skip convert: {originalImagePath}");
+                        needConvert = false;
+                    }
+                }
+                else
+                {
+                    // Extension khác .webp (jpg, png, gif...) → convert bình thường
+                    needConvert = true;
+                }
+
+                if (needConvert)
+                {
+                    string sourceImagePath = tempOriginalPath ?? originalImagePath;
+                    bool convertSuccess = ConvertToWebP(sourceImagePath, webpFullPath, 1000, 80);
 
                     if (!convertSuccess)
                     {
-                        MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP_Thumbnail failed to convert image to WebP: {originalImagePath}");
+                        MyLogger.GetInstance().Warn($"ConvertSanPhamImageToWebP_Thumbnail failed to convert image to WebP: {sourceImagePath}");
+
+                        // Rollback nếu đã rename temp
+                        if (tempOriginalPath != null && File.Exists(tempOriginalPath))
+                        {
+                            File.Move(tempOriginalPath, originalImagePath);
+                        }
+
                         return (0, 0, string.Empty);
                     }
 
-                    // Xóa ảnh gốc sau khi convert thành công
-                    if (File.Exists(originalImagePath))
+                    // Xóa file gốc/temp sau khi convert thành công
+                    if (tempOriginalPath != null && File.Exists(tempOriginalPath))
+                    {
+                        File.Delete(tempOriginalPath);
+                        MyLogger.GetInstance().Info($"Deleted temp file after convert: {tempOriginalPath}");
+                    }
+                    else if (File.Exists(originalImagePath) && !originalImagePath.Equals(webpFullPath, StringComparison.OrdinalIgnoreCase))
                     {
                         File.Delete(originalImagePath);
                         MyLogger.GetInstance().Info($"Deleted original image: {originalImagePath}");
