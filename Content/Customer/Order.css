@@ -288,9 +288,9 @@
     font-size: 1rem;
 }
 
-    .order-btn:hover {
-        background: #d73211;
-    }
+.order-btn:hover {
+    background: #d73211;
+}
 
 /* Empty state khi không có đơn hàng */
 .empty-order-state {

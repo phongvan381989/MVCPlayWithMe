@@ -101,9 +101,9 @@ namespace MVCPlayWithMe.Controllers
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
-                return JsonConvert.SerializeObject(new List<SanPhamSearchInfo>());
+                return JsonConvert.SerializeObject(new List<AdminSanPhamSearchInfo>());
             }
-                List<SanPhamSearchInfo> list = await SanPhamMySql.GetAllForSearchAsync();
+                List<AdminSanPhamSearchInfo> list = await SanPhamMySql.GetAllForSearchAsync();
                 return JsonConvert.SerializeObject(list);
             }
         /// <summary>

@@ -1067,5 +1067,125 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(result);
         }
+
+        /// <summary>
+        /// Populate Slug cho tbcategory và tbpublisher
+        /// URL: /Dev/PopulateSlugs
+        /// Chạy 1 lần để migrate existing data
+        /// </summary>
+        [HttpPost]
+        public async Task<string> PopulateSlugs()
+        {
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            var log = new StringBuilder();
+            int categoryCount = 0;
+            int publisherCount = 0;
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    // ============================================
+                    // 1. Populate Category Slugs
+                    // ============================================
+                    log.AppendLine("=== Populating Category Slugs ===");
+
+                    string sqlCategories = "SELECT Id, Name FROM tbcategory";
+                    var categoryUpdates = new List<(int id, string name, string slug)>();
+
+                    using (var cmd = new MySqlCommand(sqlCategories, conn))
+                    using (var rdr = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            int id = rdr.GetInt32(0);
+                            string name = rdr.GetString(1);
+                            string slug = SlugHelper.GenerateCategorySlug(name);
+                            categoryUpdates.Add((id, name, slug));
+                        }
+                    }
+
+                    // Update category slugs
+                    foreach (var (id, name, slug) in categoryUpdates)
+                    {
+                        string updateSql = "UPDATE tbcategory SET Slug = @slug WHERE Id = @id";
+                        using (var updateCmd = new MySqlCommand(updateSql, conn))
+                        {
+                            updateCmd.Parameters.AddWithValue("@slug", slug);
+                            updateCmd.Parameters.AddWithValue("@id", id);
+                            await updateCmd.ExecuteNonQueryAsync();
+                        }
+
+                        log.AppendLine($"  [{id}] '{name}' → '{slug}'");
+                        categoryCount++;
+                    }
+
+                    log.AppendLine($"\nUpdated {categoryCount} categories\n");
+
+                    // ============================================
+                    // 2. Populate Publisher Slugs
+                    // ============================================
+                    log.AppendLine("=== Populating Publisher Slugs ===");
+
+                    string sqlPublishers = "SELECT Id, Name FROM tbpublisher";
+                    var publisherUpdates = new List<(int id, string name, string slug)>();
+
+                    using (var cmd = new MySqlCommand(sqlPublishers, conn))
+                    using (var rdr = await cmd.ExecuteReaderAsync())
+                    {
+                        while (await rdr.ReadAsync())
+                        {
+                            int id = rdr.GetInt32(0);
+                            string name = rdr.GetString(1);
+                            string slug = SlugHelper.GeneratePublisherSlug(name);
+                            publisherUpdates.Add((id, name, slug));
+                        }
+                    }
+
+                    // Update publisher slugs
+                    foreach (var (id, name, slug) in publisherUpdates)
+                    {
+                        string updateSql = "UPDATE tbpublisher SET Slug = @slug WHERE Id = @id";
+                        using (var updateCmd = new MySqlCommand(updateSql, conn))
+                        {
+                            updateCmd.Parameters.AddWithValue("@slug", slug);
+                            updateCmd.Parameters.AddWithValue("@id", id);
+                            await updateCmd.ExecuteNonQueryAsync();
+                        }
+
+                        log.AppendLine($"  [{id}] '{name}' → '{slug}'");
+                        publisherCount++;
+                    }
+
+                    log.AppendLine($"\nUpdated {publisherCount} publishers\n");
+                }
+
+                result.State = EMySqlResultState.OK;
+                result.Message = $"Success! Updated {categoryCount} categories, {publisherCount} publishers";
+                result.myJson = new
+                {
+                    categoryCount = categoryCount,
+                    publisherCount = publisherCount,
+                    log = log.ToString()
+                };
+
+                MyLogger.GetInstance().Info($"PopulateSlugs completed: {categoryCount} categories, {publisherCount} publishers");
+            }
+            catch (Exception ex)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Lỗi: " + ex.Message;
+                MyLogger.GetInstance().Error("PopulateSlugs error: " + ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
     }
 }

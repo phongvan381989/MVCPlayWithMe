@@ -9,7 +9,12 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 {
     public class SanPhamSearchParameter
     {
-        public int? publisherId { get; set; }
+        public static int itemsPerPage = 30;
+
+        /// <summary>
+        /// Lọc theo nhà xuất bản (slug: "kim-dong", "tre")
+        /// </summary>
+        public string publisher { get; set; }
 
         public string name { get; set; }
 
@@ -24,12 +29,12 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public string translator { get; set; }
 
         /// <summary>
-        /// Lọc theo danh mục (CategoryId)
+        /// Lọc theo danh mục (slug: "sach-thieu-nhi", "truyen-tranh")
         /// </summary>
-        public int? categoryId { get; set; }
+        public string category { get; set; }
 
         /// <summary>
-        /// Lọc theo nhà xuất bản (tìm kiếm chính xác)
+        /// Lọc theo công ty xuất bản (free-form text)
         /// </summary>
         public string publishingCompany { get; set; }
 
@@ -40,6 +45,10 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         // Số lượng record trả về từ câu truy vấn
         // Chính là số đối tượng hiển thị trên 1 page khi tìm kiếm
         public int offset { get; set; }
+
+        public int? lastId;
+        public int? limit;
+        public int? page;
 
         public SanPhamSearchParameter()
         {

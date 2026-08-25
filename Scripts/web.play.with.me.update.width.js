@@ -6,16 +6,6 @@
 // Số items hiển thị trên 1 hàng (đọc từ CSS Grid layout)
 let itemOnRow = 6; // Default fallback
 
-function SetCookie(name, value, days) {
-    var expires = "";
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-        expires = "; expires=" + date.toUTCString();
-    }
-    document.cookie = name + "=" + (value || "") + expires + "; path=/";
-}
-
 // ĐỌC số items/row từ CSS Grid layout thực tế
 function calculateItemsOnRow() {
     const container = document.getElementById("biggestContainer_body_wraper_item");

@@ -199,8 +199,27 @@
             </div>
         </div>
 
+        <div class="fmx09gx8" style="margin-top: 20px; border: 2px solid #ff6b6b; padding: 15px; border-radius: 8px; background: #fff5f5;">
+            <div class="gmxk9381" style="color: #ff6b6b; font-weight: bold;">
+                🔧 POPULATE SLUGS - Migration Tool
+            </div>
+            <div style="padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; margin: 10px 0;">
+                <strong>⚠️ Chú ý:</strong> Tool này sẽ UPDATE slug cho TẤT CẢ categories và publishers!
+                <ul style="margin: 10px 0 0 20px; padding: 0;">
+                    <li>Categories: Lấy phần sau dấu ">" cuối cùng, thêm "Sách ", generate slug</li>
+                    <li>Publishers: Bỏ prefix "Nhà xuất bản ", generate slug</li>
+                    <li>Chạy <strong>1 LẦN DUY NHẤT</strong> để migrate data</li>
+                </ul>
+            </div>
+            <button type="button" onclick="PopulateSlugs()"
+                    title="Populate Slug cho tbCategories và tbPublishers. Click để xem log chi tiết."
+                    style="background: #ee4d2d; color: white; font-weight: bold; padding: 12px 24px;">
+                🚀 Populate Slugs (Categories + Publishers)
+            </button>
+            <div id="populate-slugs-result" style="display: none; margin-top: 15px; padding: 15px; border-radius: 4px; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 500px; overflow-y: auto;"></div>
+        </div>
+
     </div>
-    <script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>
     <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
     <script src="~/Scripts/Dev/Index.js?v=20260610"></script>
 </body>

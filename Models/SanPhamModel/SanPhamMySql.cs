@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using System.Web.UI;
 using System.Xml.Linq;
 
 namespace MVCPlayWithMe.Models.SanPhamModel
@@ -1035,9 +1036,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// Không lấy Detail, Author, Translator, dimensions, v.v. để tối ưu performance
         /// </summary>
         /// <returns>Danh sách SanPhamSearchInfo</returns>
-        public static async Task<List<SanPhamSearchInfo>> GetAllForSearchAsync()
+        public static async Task<List<AdminSanPhamSearchInfo>> GetAllForSearchAsync()
         {
-            List<SanPhamSearchInfo> list = new List<SanPhamSearchInfo>();
+            List<AdminSanPhamSearchInfo> list = new List<AdminSanPhamSearchInfo>();
 
             try
             {
@@ -1079,7 +1080,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             // Đọc từng row
                             while (await rdr.ReadAsync())
                             {
-                                SanPhamSearchInfo info = new SanPhamSearchInfo
+                                AdminSanPhamSearchInfo info = new AdminSanPhamSearchInfo
                                 {
                                     Id = rdr.GetInt32(idxId),
                                     Code = rdr.IsDBNull(idxCode) ? null : rdr.GetString(idxCode),
@@ -1111,74 +1112,37 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return list;
         }
 
-        public static async Task<int> SearchSanPhamCountConnectOutAsync(SanPhamSearchParameter searchParameter, MySqlConnection conn)
-        {
-            int count = 0;
-            try
-            {
-                // Dùng dynamic SQL query để support filters mới
-                string sql = @"
-                    SELECT COUNT(DISTINCT sp.Id) as CountRecord
-                    FROM webplaywithme.tb_san_pham sp
-                    WHERE sp.Status = 0";
-
-                using (MySqlCommand cmd = new MySqlCommand())
-                {
-                    cmd.Connection = conn;
-                    cmd.CommandType = CommandType.Text;
-
-                    // Add filters
-                    if (!string.IsNullOrEmpty(searchParameter.name))
-                    {
-                        sql += " AND sp.Name LIKE @inNamePara";
-                        cmd.Parameters.AddWithValue("@inNamePara", "%" + searchParameter.name + "%");
-                    }
-                    if (!string.IsNullOrEmpty(searchParameter.author))
-                    {
-                        sql += " AND sp.Author = @inAuthor";
-                        cmd.Parameters.AddWithValue("@inAuthor", searchParameter.author);
-                    }
-                    if (!string.IsNullOrEmpty(searchParameter.translator))
-                    {
-                        sql += " AND sp.Translator = @inTranslator";
-                        cmd.Parameters.AddWithValue("@inTranslator", searchParameter.translator);
-                    }
-                    if (searchParameter.categoryId.HasValue)
-                    {
-                        sql += " AND sp.CategoryId = @inCategoryId";
-                        cmd.Parameters.AddWithValue("@inCategoryId", searchParameter.categoryId.Value);
-                    }
-                    if (!string.IsNullOrEmpty(searchParameter.publishingCompany))
-                    {
-                        sql += " AND sp.PublishingCompany = @inPublishingCompany";
-                        cmd.Parameters.AddWithValue("@inPublishingCompany", searchParameter.publishingCompany);
-                    }
-                    if (searchParameter.publisherId > 0)
-                    {
-                        sql += " AND sp.PublisherId = @inPublisherId";
-                        cmd.Parameters.AddWithValue("@inPublisherId", searchParameter.publisherId);
-                    }
-
-                    cmd.CommandText = sql;
-
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync()) count = MyMySql.GetInt32(rdr, "CountRecord");
-                    }
-                }
-
-            }
-            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
-            return count;
-        }
-
-        public static async Task<List<SanPhamBasicInfo>> SearchSanPhamPageConnectOutAsync(SanPhamSearchParameter searchParameter, MySqlConnection conn)
+        /// <summary>
+        /// Search sản phẩm với keyset pagination (Load More pattern)
+        /// Dùng sp.Id < @lastId ORDER BY DESC để cursor-based pagination
+        /// Fetch limit+1 items để check hasMore
+        /// </summary>
+        public static async Task<(List<SanPhamBasicInfo> items, bool hasMore)> SearchSanPhamWithCursorAsync(
+            SanPhamSearchParameter searchParameter,
+            MySqlConnection conn)
         {
             List<SanPhamBasicInfo> ls = new List<SanPhamBasicInfo>();
+            bool hasMore = false;
+
+            // Keyset pagination
+            int lastId;
+            int limit;
+
+            if (searchParameter.page.HasValue && searchParameter.page.Value > 0)
+            {
+                // Page mode: Load tất cả items từ page 1 đến page N
+                lastId = 0;
+                limit = SanPhamSearchParameter.itemsPerPage * searchParameter.page.Value; // Page 1: 30, Page 2: 60, Page 3: 90, ...
+            }
+            else
+            {
+                // Keyset mode: Load More với lastId cursor
+                lastId = searchParameter.lastId ?? 0;
+                limit = searchParameter.limit ?? SanPhamSearchParameter.itemsPerPage;
+            }
+
             try
             {
-                // Dùng dynamic SQL query để support filters mới
-                // Query trả về sản phẩm (tb_san_pham)
                 string sql = @"
                     SELECT
                         sp.Id,
@@ -1188,13 +1152,20 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         sp.SalePrice,
                         sp.Quantity,
                         sp.Status,
-                        (SELECT FileName
-                            FROM tb_san_pham_media
-                            WHERE SanPhamId = sp.Id
-                            AND MediaType = 'image'
-                            ORDER BY DisplayOrder ASC
-                            LIMIT 1) AS CoverImageFileName
+                        media.FileName AS CoverImageFileName,
+                        media.AltText AS CoverImageAltText,
+                        media.Title AS CoverImageTitle
                     FROM tb_san_pham sp
+                    LEFT JOIN tbcategory cat ON sp.CategoryId = cat.Id
+                    LEFT JOIN tbpublisher pub ON sp.PublisherId = pub.Id
+                    LEFT JOIN LATERAL (
+                        SELECT FileName, AltText, Title
+                        FROM tb_san_pham_media
+                        WHERE SanPhamId = sp.Id
+                          AND MediaType = 'image'
+                        ORDER BY DisplayOrder ASC
+                        LIMIT 1
+                    ) media ON true
                     WHERE sp.Status = 0";
 
                 using (MySqlCommand cmd = new MySqlCommand())
@@ -1218,51 +1189,84 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         sql += " AND sp.Translator = @inTranslator";
                         cmd.Parameters.Add("@inTranslator", MySqlDbType.VarChar).Value = searchParameter.translator;
                     }
-                    if (searchParameter.categoryId.HasValue)
+                    if (!string.IsNullOrEmpty(searchParameter.category))
                     {
-                        sql += " AND sp.CategoryId = @inCategoryId";
-                        cmd.Parameters.Add("@inCategoryId", MySqlDbType.Int64).Value = searchParameter.categoryId.Value;
+                        sql += " AND cat.Name = @inCategory";
+                        cmd.Parameters.Add("@inCategory", MySqlDbType.VarChar).Value = searchParameter.category;
                     }
                     if (!string.IsNullOrEmpty(searchParameter.publishingCompany))
                     {
                         sql += " AND sp.PublishingCompany = @inPublishingCompany";
-                        cmd.Parameters.AddWithValue("@inPublishingCompany", MySqlDbType.VarChar).Value = searchParameter.publishingCompany;
+                        cmd.Parameters.Add("@inPublishingCompany", MySqlDbType.VarChar).Value = searchParameter.publishingCompany;
                     }
-                    if (searchParameter.publisherId > 0)
+                    if (!string.IsNullOrEmpty(searchParameter.publisher))
                     {
-                        sql += " AND sp.PublisherId = @inPublisherId";
-                        cmd.Parameters.AddWithValue("@inPublisherId", MySqlDbType.Int64).Value = searchParameter.publisherId;
+                        sql += " AND pub.Name = @inPublisher";
+                        cmd.Parameters.Add("@inPublisher", MySqlDbType.VarChar).Value = searchParameter.publisher;
                     }
 
-                    sql += " ORDER BY sp.Id DESC LIMIT @inStart, @inOffset";
-                    cmd.Parameters.Add("@inStart", MySqlDbType.Int32).Value = searchParameter.start;
-                    cmd.Parameters.Add("@inOffset", MySqlDbType.Int32).Value = searchParameter.offset;
+                    // Keyset cursor: sp.Id < @lastId (vì ORDER BY DESC)
+                    if (lastId > 0)
+                    {
+                        sql += " AND sp.Id < @inLastId";
+                        cmd.Parameters.Add("@inLastId", MySqlDbType.Int32).Value = lastId;
+                    }
+
+                    // Fetch limit+1 để check hasMore
+                    sql += " ORDER BY sp.Id DESC LIMIT @inLimit";
+                    cmd.Parameters.Add("@inLimit", MySqlDbType.Int32).Value = limit + 1;
 
                     cmd.CommandText = sql;
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
+                        // Cache column ordinals (1 lần)
+                        int ordId = rdr.GetOrdinal("Id");
+                        int ordName = rdr.GetOrdinal("Name");
+                        int ordShortName = rdr.GetOrdinal("ShortName");
+                        int ordBookCoverPrice = rdr.GetOrdinal("BookCoverPrice");
+                        int ordSalePrice = rdr.GetOrdinal("SalePrice");
+                        int ordQuantity = rdr.GetOrdinal("Quantity");
+                        int ordStatus = rdr.GetOrdinal("Status");
+                        int ordCoverImageFileName = rdr.GetOrdinal("CoverImageFileName");
+                        int ordCoverImageAltText = rdr.GetOrdinal("CoverImageAltText");
+                        int ordCoverImageTitle = rdr.GetOrdinal("CoverImageTitle");
+
                         while (await rdr.ReadAsync())
                         {
                             SanPhamBasicInfo info = new SanPhamBasicInfo
                             {
-                                Id = rdr.GetInt32("Id"),
-                                Name = MyMySql.GetString(rdr, "Name"),
-                                ShortName = MyMySql.GetString(rdr, "ShortName"),
-                                BookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice"),
-                                SalePrice = MyMySql.GetInt32(rdr, "SalePrice"),
-                                Quantity = MyMySql.GetInt32(rdr, "Quantity"),
-                                Status = MyMySql.GetInt32(rdr, "Status"),
-                                CoverImageFileName = MyMySql.GetString(rdr, "CoverImageFileName")
+                                Id = rdr.GetInt32(ordId),                      // Index access
+                                Name = MyMySql.GetString(rdr, ordName),        // Index access
+                                ShortName = MyMySql.GetString(rdr, ordShortName),
+                                BookCoverPrice = MyMySql.GetInt32(rdr, ordBookCoverPrice),
+                                SalePrice = MyMySql.GetInt32(rdr, ordSalePrice),
+                                Quantity = MyMySql.GetInt32(rdr, ordQuantity),
+                                Status = MyMySql.GetInt32(rdr, ordStatus),
+                                CoverImageFileName = MyMySql.GetString(rdr, ordCoverImageFileName),
+                                CoverImageAltText = MyMySql.GetString(rdr, ordCoverImageAltText),
+                                CoverImageTitle = MyMySql.GetString(rdr, ordCoverImageTitle)
                             };
-
                             ls.Add(info);
                         }
                     }
                 }
+
+                // Check hasMore: nếu fetch được limit+1 items → còn items phía sau
+                if (ls.Count > limit)
+                {
+                    hasMore = true;
+                    ls.RemoveAt(ls.Count - 1); // Xóa item thừa
+                }
             }
-            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); ls.Clear(); }
-            return ls;
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls.Clear();
+                hasMore = false;
+            }
+
+            return (ls, hasMore);
         }
     }
 }

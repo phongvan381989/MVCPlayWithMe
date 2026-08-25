@@ -8,32 +8,57 @@
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/Home/Search.css?v=20260610">
 </head>
-<body onload="Search()">
+<body>
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
 
-        <div>
+        <div id="div-test-container">
             <div id="empty-result" style="display:none">
                 <p>Kết quả trống</p>
             </div>
             <div id="search-result" style="display:none">
-                @Html.Partial("~/Views/Shared/Home/Item.cshtml"@*, item*@)
-                <text id="list-item-data" style="display:none">@ViewData["dataListItem"]</text>
-                <div id="biggestContainer_body_wraper_item"
-                     data-count-result=@ViewData["dataCountResult"]>
+                <div class="product-for-selector-sample">
+                    <a class="product-item" href="#">
+                        <div class="image-wrapper">
+                            <img class="card-img-top" alt="Card image">
+                        </div>
+                        <div class="product-infor">
+                            <div class="product-name">
+                                <h3 class="product-name-h3"></h3>
+                            </div>
+                            @*<div class="rating-quantity-sold">
+                                <p class="rating-quantity-sold-p" style="color:black; font-size:x-small"></p>
+                            </div>*@
+                            <div class="price-sell-original-discount-percent">
+                                <span class="price-sell-detail">
+                                </span>
+                                <span class="price-original-detail"></span>
+                                <span class="price-discount-percent-detail"> %</span>
+                            </div>
+                        </div>
+                    </a>
                 </div>
-                @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
-                @Html.Partial("~/Views/Shared/GoToPage.cshtml")
+                <div id="biggestContainer_body_wraper_item">
+                </div>
+
+                @* Load More section - thay thế numbered pagination *@
+                <div id="load-more-section" style="display:none; padding:1rem; text-align:center;">
+                    <button id="btnLoadMore" class="pwm-btn-common" style="display:none;">
+                        <span id="btn-text">Xem thêm sản phẩm</span>
+                        <span id="btn-spinner" style="display:none;">⏳ Đang tải...</span>
+                    </button>
+                    <p id="end-message" style="display:none; color:#999; font-size:14px;">
+                        🎉 Đã xem hết tất cả sản phẩm
+                    </p>
+                </div>
             </div>
         </div>
 
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
-    @*<script src="~/Scripts/web.play.with.me.update.width.js?v=20260610"></script>*@
-    <script src="~/Scripts/web.play.with.me.common.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260823"></script>
     <script src="~/Scripts/cart-manager.js"></script>
-    <script src="~/Scripts/web.play.with.me.paging.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
-    <script src="~/Scripts/Home/Search.js?v=20260610"></script>
+    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260823"></script>
+    <script src="~/Scripts/Home/Search.js?v=20260823_loadmore"></script>
 </body>
 </html>

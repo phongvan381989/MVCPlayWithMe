@@ -5,7 +5,7 @@
 #biggestContainer {
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
+/*    flex-wrap: wrap;*/
     background: #f9f9f9 /*rgb(255, 255, 255)*/;
     justify-content: flex-start;
     /*padding-left: 5px;s
@@ -15,7 +15,7 @@
     margin-left: auto;
     min-height: 100%;
     /*margin-top: 10px;*/
-    width:100%;
+    width: 100%;
     max-width: 1200px; /* Cap tối đa 6 columns (6 × 200px) */
 }
 #result-find-id{

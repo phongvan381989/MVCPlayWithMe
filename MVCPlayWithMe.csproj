@@ -341,6 +341,7 @@
     <Compile Include="General\MySqlResultState.cs" />
     <Compile Include="General\OrderStatus.cs" />
     <Compile Include="General\PriceCalculator.cs" />
+    <Compile Include="General\SlugHelper.cs" />
     <Compile Include="General\UnixTimestampConverter.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

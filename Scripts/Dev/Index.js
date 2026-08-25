@@ -304,3 +304,94 @@ async function GenerateSitemap() {
 
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Sinh sitemap.xml thành công!", "Có lỗi khi sinh sitemap.xml");
 }
+
+/**
+ * Populate Slugs cho tbCategories và tbPublishers
+ * Migration tool - chạy 1 lần duy nhất
+ */
+async function PopulateSlugs() {
+    const resultDiv = document.getElementById('populate-slugs-result');
+
+    // Confirm
+    if (!confirm('⚠️ BẠN CHẮC CHẮN MUỐN POPULATE SLUGS?\n\nĐiều này sẽ UPDATE slug cho TẤT CẢ categories và publishers trong database!\n\nChỉ nên chạy 1 LẦN DUY NHẤT để migrate data.')) {
+        return;
+    }
+
+    // Show loading
+    resultDiv.style.display = 'block';
+    resultDiv.style.background = '#d1ecf1';
+    resultDiv.style.border = '1px solid #bee5eb';
+    resultDiv.style.color = '#0c5460';
+    resultDiv.textContent = '⏳ Processing... Please wait...';
+
+    ShowCircleLoader();
+
+    try {
+        const response = await fetch('/Dev/PopulateSlugs', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const text = await response.text();
+        const result = JSON.parse(text);
+
+        RemoveCircleLoader();
+
+        if (result.State === 0) {
+            // Success
+            resultDiv.style.background = '#d4edda';
+            resultDiv.style.border = '1px solid #c3e6cb';
+            resultDiv.style.color = '#155724';
+            resultDiv.innerHTML = `<strong>✅ SUCCESS!</strong>
+
+${result.Message}
+
+=== DETAILED LOG ===
+${result.myJson.log}
+
+=== SUMMARY ===
+Categories updated: ${result.myJson.categoryCount}
+Publishers updated: ${result.myJson.publisherCount}
+
+=== NEXT STEPS ===
+1. Verify slugs trong DB:
+   SELECT Id, Name, Slug FROM tbCategories ORDER BY Name LIMIT 20;
+   SELECT Id, Name, Slug FROM tbPublishers ORDER BY Name LIMIT 20;
+
+2. Check duplicates (nên trả về empty!):
+   SELECT Slug, COUNT(*) FROM tbCategories GROUP BY Slug HAVING COUNT(*) > 1;
+   SELECT Slug, COUNT(*) FROM tbPublishers GROUP BY Slug HAVING COUNT(*) > 1;
+
+3. Create indexes (nếu chưa có):
+   CREATE UNIQUE INDEX idx_category_slug ON tbCategories(Slug);
+   CREATE UNIQUE INDEX idx_publisher_slug ON tbPublishers(Slug);
+
+4. Test frontend:
+   /Home/Search?category=sach-thieu-nhi&publisher=kim-dong
+`;
+
+            // Show success modal
+            CreateMustClickOkModal('✅ Populate Slugs thành công!\n\nKiểm tra kết quả bên dưới và verify trong DB.', null);
+
+        } else {
+            // Error
+            resultDiv.style.background = '#f8d7da';
+            resultDiv.style.border = '1px solid #f5c6cb';
+            resultDiv.style.color = '#721c24';
+            resultDiv.textContent = `❌ ERROR!\n\n${result.Message}`;
+
+            CreateMustClickOkModal('❌ Lỗi khi populate slugs!\n\n' + result.Message, null);
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+
+        resultDiv.style.background = '#f8d7da';
+        resultDiv.style.border = '1px solid #f5c6cb';
+        resultDiv.style.color = '#721c24';
+        resultDiv.textContent = `❌ EXCEPTION!\n\n${error.message}`;
+
+        CreateMustClickOkModal('❌ Lỗi kết nối!\n\n' + error.message, null);
+    }
+}

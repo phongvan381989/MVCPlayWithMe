@@ -201,15 +201,15 @@ namespace MVCPlayWithMe.General
         //    return GetListCustomerInforCookieFromCookieValue(cookie.cookieValue);
         //}
 
-        public static CookieResultState GetItemOnRowCookie(HttpContextBase httpContext)
-        {
-            CookieResultState cookie = new CookieResultState();
-            if (httpContext.Request.Cookies[Common.itemOnRowSearchPage] != null)
-            {
-                cookie.cookieValue = httpContext.Request.Cookies[Common.itemOnRowSearchPage].Value;
-            }
-            return cookie;
-        }
+        //public static CookieResultState GetItemOnRowCookie(HttpContextBase httpContext)
+        //{
+        //    CookieResultState cookie = new CookieResultState();
+        //    if (httpContext.Request.Cookies[Common.itemOnRowSearchPage] != null)
+        //    {
+        //        cookie.cookieValue = httpContext.Request.Cookies[Common.itemOnRowSearchPage].Value;
+        //    }
+        //    return cookie;
+        //}
 
         //public static CookieResultState GetOrderListCookie(HttpContextBase httpContext)
         //{
