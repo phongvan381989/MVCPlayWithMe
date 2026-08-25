@@ -22,30 +22,6 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public async Task<ActionResult> Search()
         {
-            //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-            //{
-            //    await conn.OpenAsync();
-
-            //    SanPhamSearchParameter searchParameter = new SanPhamSearchParameter();
-            //    searchParameter.name = keyword;
-            //    searchParameter.author = author;
-            //    searchParameter.translator = translator;
-            //    searchParameter.categoryId = categoryId;
-            //    searchParameter.publishingCompany = publishingCompany;
-            //    searchParameter.publisherId = publisherId ?? 0;
-            //    int count = await SanPhamMySql.SearchSanPhamCountConnectOutAsync(searchParameter, conn);
-            //    ViewData["dataCountResult"] = count.ToString();
-
-            //    List<SanPhamBasicInfo> lsSearchResult;
-            //    int intPage = 1;
-            //    if (page != null)
-            //        intPage = page.Value;
-
-            //    searchParameter.offset = Common.itemsOnPage;
-            //    searchParameter.start = (intPage - 1) * searchParameter.offset;
-            //    lsSearchResult = await SanPhamMySql.SearchSanPhamPageConnectOutAsync(searchParameter, conn);
-            //    ViewData["dataListItem"] = JsonConvert.SerializeObject(lsSearchResult);
-            //}
             return View();
         }
 
@@ -114,34 +90,6 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(result);
         }
-
-        // DEPRECATED: Numbered pagination - replaced by Load More pattern
-        //[HttpGet]
-        //public async Task<string> SearchPage(string keyword, int page)
-        //{
-        //    SanPhamSearchParameter searchParameter = new SanPhamSearchParameter();
-        //    searchParameter.name = keyword;
-
-        //    searchParameter.offset = Common.itemsOnPage;
-        //    searchParameter.start = (page - 1) * searchParameter.offset;
-        //    List<SanPhamBasicInfo> lsSearchResult = null;
-        //    using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-        //    {
-        //        try
-        //        {
-        //            await conn.OpenAsync();
-        //            lsSearchResult = await SanPhamMySql.SearchSanPhamPageConnectOutAsync(searchParameter, conn);
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            MyLogger.GetInstance().Warn(ex.ToString());
-        //            //result.State = EMySqlResultState.EXCEPTION;
-        //            //Common.SetResultException(ex, result);
-        //            lsSearchResult.Clear();
-        //        }
-        //    }
-        //    return JsonConvert.SerializeObject(lsSearchResult);
-        //}
 
         [HttpGet]
         public async Task<ActionResult> Item(string slugId)

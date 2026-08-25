@@ -552,9 +552,6 @@ function ShowProductDescription() {
         let imgSrc = GetSanPhamMediaUrl(sanPhamObject.Id, filename);
         let alt = media ? (media.AltText || sanPhamObject.Name) : filename;
         let caption = media ? (media.Description || media.Title || "") : "";
-        // if (DEBUG) {
-        //     console.log("ShowProductDescription media: " + JSON.stringify(media));
-        // }
 
         // Build HTML với figure + figcaption
         let html = '<figure class="product-detail-image">';
