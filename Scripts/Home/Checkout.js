@@ -450,7 +450,7 @@ function ShowErrorWhenLoadCart(error) {
     console.error('❌ Error in Checkout:', error);
 
     // Hiển thị lỗi cho user
-    document.getElementsByClassName("cart-empty")[0].style.display = "block";
+    document.getElementsByClassName("cart-empty")[0].style.display = "flex";
     document.getElementsByClassName("main-container")[0].style.display = "none";
 
     CreateMustClickOkModal('Có lỗi khi tải giỏ hàng. Vui lòng thử lại sau.', null);
@@ -461,7 +461,7 @@ async function ShowCheckoutCartList() {
     document.getElementsByClassName("model-container")[0].innerHTML = "";
 
     if (listCartObject == null || listCartObject.length == 0) {
-        document.getElementsByClassName("cart-empty")[0].style.display = "block";
+        document.getElementsByClassName("cart-empty")[0].style.display = "flex";
         document.getElementsByClassName("main-container")[0].style.display = "none";
         return;
     }

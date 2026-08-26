@@ -20,7 +20,7 @@
     display: flex;
     align-items: center;
     font-size: 1.125rem;
-    color: #ee4d2d;
+    color: red;
     margin-bottom: 20px;
     text-transform: capitalize;
     flex: 1 1 auto;
@@ -35,7 +35,7 @@
 .icon-location-marker {
     width: 12px;
     height: 16px;
-    color: #ee4d2d;
+    color: red;
     fill: currentColor;
     display: inline-block;
 }
@@ -76,7 +76,7 @@ h2 {
 .address-default {
     padding: 2px 5px;
     margin: 5px;
-    color: #ee4d2d;
+    color: red;
     border-radius: 1px;
     border: 0.5px solid;
     font-size: 10px;
@@ -185,7 +185,7 @@ button.change-address-btn {
 }
 .M-AAFK {
     margin-right: 10px;
-    color: #ee4d2d;
+    color: red;
 }
 .vWt6ZL {
     color: rgba(0,0,0,.54);
@@ -300,7 +300,7 @@ button.change-address-btn {
 .final-money {
     font-size: 20px;
     font-weight: 500;
-    color: #ee4d2d;
+    color: red;
 }
 
 /*.money-title {
@@ -308,7 +308,7 @@ button.change-address-btn {
 }*/
 
 .order-btn {
-    background: #ee4d2d;
+    background: #764ba2;
     color: #fff;
     display: flex;
     align-items: center;
@@ -334,8 +334,13 @@ button.change-address-btn {
 }
 
 .cart-empty {
-    display: none;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    min-height: 100vh; /* Bắt buộc: để chiều cao bằng 100% màn hình */
+    margin: 0; /* Xóa khoảng trống mặc định của body */
+    text-align: center; /* Căn giữa đoạn văn bản bên trong */
 }
 
 /* Dấu "x" giữa giá và số lượng (VD: ₫29.800 x 2) */

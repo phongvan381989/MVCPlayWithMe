@@ -811,7 +811,7 @@ function ShowPriceAndReadyMaxQuantity() {
         maxQuantityElement.style.color = ""; // Reset về màu mặc định
     } else {
         maxQuantityElement.textContent = "HẾT HÀNG";
-        maxQuantityElement.style.color = "#ee4d2d";
+        maxQuantityElement.style.color = "red";
     }
 
     // Reset số lượng đặt về 1

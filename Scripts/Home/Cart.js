@@ -57,7 +57,7 @@ function CreateSelectedModel() {
             maxQuantityElement.style.color = ""; // Reset màu mặc định
         } else {
             maxQuantityElement.innerHTML = "HẾT HÀNG";
-            maxQuantityElement.style.color = "#ee4d2d"; // Màu đỏ
+            maxQuantityElement.style.color = "red"; // Màu đỏ
 
             // Hết hàng → disable +- số lượng
             let quantityContainer = clone.getElementsByClassName("shopee-input-quantity")[0];
@@ -184,7 +184,7 @@ function ShowCartList() {
     document.getElementsByClassName("WC0us-")[0].innerHTML = "";
 
     if (listCartObject == null || listCartObject.length == 0) {
-        document.getElementsByClassName("cart-empty")[0].style.display = "block";
+        document.getElementsByClassName("cart-empty")[0].style.display = "flex";
         document.getElementsByClassName("main-container")[0].style.display = "none";
         return;
     }
@@ -208,7 +208,7 @@ function ShowErrorWhenLoadCart(error) {
     console.error('❌ Error in LoadCart:', error);
 
     // Hiển thị lỗi cho user
-    document.getElementsByClassName("cart-empty")[0].style.display = "block";
+    document.getElementsByClassName("cart-empty")[0].style.display = "flex";
     document.getElementsByClassName("main-container")[0].style.display = "none";
 
     CreateMustClickOkModal('Có lỗi khi tải giỏ hàng. Vui lòng thử lại sau.', null);
@@ -545,7 +545,7 @@ async function DeleteSanPhamOnCartElement(element) {
 
     // Giỏ hàng trống
     if (listCartObject.length == 0) {
-        document.getElementsByClassName("cart-empty")[0].style.display = "block";
+        document.getElementsByClassName("cart-empty")[0].style.display = "flex";
         document.getElementsByClassName("main-container")[0].style.display = "none";
         return;
     }

@@ -245,8 +245,8 @@ function UpdateStatusButtonUI(activeButton) {
     let allButtons = document.getElementsByClassName("nvsflAB87");
     for (let btn of allButtons) {
         if (btn === activeButton) {
-            btn.style.color = "#ee4d2d";
-            btn.style.borderBottom = "2px solid #ee4d2d";
+            btn.style.color = "#764ba2";
+            btn.style.borderBottom = "2px solid #764ba2";
         } else {
             btn.style.color = "initial";
             btn.style.borderBottom = "none";

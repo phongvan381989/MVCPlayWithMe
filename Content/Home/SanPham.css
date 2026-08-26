@@ -229,7 +229,7 @@ h1 {
 #price {
     font-size: 1.5rem; /* Tăng từ 1.2rem lên 1.5rem */
     font-weight: 500;
-    color: #ee4d2d;
+    color: red;
 }
 
 #discount {
@@ -237,7 +237,7 @@ h1 {
     font-size: 0.875rem; /* Tăng từ 0.75rem lên 0.875rem */
     color: #fff;
     text-transform: uppercase;
-    background: #ee4d2d;
+    background: red;
     border-radius: 2px;
     padding: 3px 6px; /* Tăng padding từ 2px 4px lên 3px 6px */
     font-weight: 600;
@@ -519,8 +519,8 @@ h1 {
     fill: currentColor;
     position: relative;
     margin-right: 10px;
-    color: #ee4d2d;
-    stroke: #ee4d2d;
+    color: #764ba2;
+    stroke: #764ba2;
     font-size: 1.25rem;
 }
 
@@ -607,7 +607,7 @@ h2 {
     height: 30px;
     width: 97px;
     fill: #fff;
-    background-color: #ee4d2d;
+    background-color: #EE4D2D;
 }
 
 /* Style cho ảnh trong mô tả sản phẩm */
@@ -682,7 +682,7 @@ h2 {
 }
 
 .spec-link:hover {
-    color: #ee4d2d;
+    color: #764ba2;
     text-decoration: underline;
 }
 

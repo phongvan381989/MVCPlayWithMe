@@ -414,7 +414,7 @@ function CreateMediaItemElement(metadata, index) {
                 <button onclick="ViewBigImage('${GetSanPhamMediaUrl(sanPhamId, metadata.FileName)}')"
                         style="background-color: #f136f4;">Xem ảnh lớn</button>
                 <button onclick="DeleteMediaFile('${metadata.FileName}')"
-                        style="background-color: #f44336;">Xóa</button>
+                        style="background-color: #764ba2;">Xóa</button>
             </div>
         `;
 

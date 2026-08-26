@@ -45,7 +45,7 @@ td {
     position: relative;
     overflow: visible;
     outline: 0;
-    background: #ee4d2d;
+    background: #764ba2;
     height: 40px;
     padding: 0 20px;
     min-width: 70px;
@@ -70,7 +70,7 @@ td {
     position: relative;
     overflow: visible;
     outline: 0;
-    background: #ee4d2d;
+    background: #764ba2;
     height: 40px;
     padding: 0 20px;
     min-width: 70px;
@@ -206,14 +206,14 @@ td {
     margin-right: 10px;
 }
 
-.sample-address-container .default-address {
-    color: #ee4d2d;
-    border-color: #ee4d2d;
-    margin: 10px 4px 10px 4px;
-    border-radius: 1px;
-    padding: 2px 4px;
-    border: 0.5px solid;
-}
+    .sample-address-container .default-address {
+        color: red;
+        border-color: red;
+        margin: 10px 4px 10px 4px;
+        border-radius: 1px;
+        padding: 2px 4px;
+        border: 0.5px solid;
+    }
 
 .sample-address-container .htlhtxbv {
     display: flex;

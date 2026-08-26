@@ -135,7 +135,7 @@
             switch (status) {
                 case 0: return '<span style="color: #4CAF50;">✓ Đang kinh doanh</span>';
     case 1: return '<span style="color: #FF9800;">⚠ Tạm hết hàng</span>';
-    case 2: return '<span style="color: #f44336;">✗ Ngừng kinh doanh</span>';
+    case 2: return '<span style="color: #764ba2;">✗ Ngừng kinh doanh</span>';
     default: return '<span style="color: #999;">Không xác định</span>';
             }
         }

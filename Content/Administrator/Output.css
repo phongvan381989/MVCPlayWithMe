@@ -1,4 +1,4 @@
-body {
+﻿body {
     background-color: #f5f5f5;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -152,7 +152,7 @@ body {
 }
 
 .badge-shopee {
-    background: #ee4d2d;
+    background: #764ba2;
     color: white;
 }
 

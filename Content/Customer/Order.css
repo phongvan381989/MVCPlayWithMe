@@ -91,7 +91,7 @@
 }
 
     .nvsflAB87:hover {
-        color: #ee4d2d !important;
+        color: red !important;
     }
 
 .order-header {
@@ -112,7 +112,7 @@
 
 .fxASnxvd {
     line-height: 24px;
-    color: #ee4d2d;
+    color: red;
     text-align: right;
     text-transform: uppercase;
     white-space: nowrap;
@@ -160,7 +160,7 @@
 
 .M-AAFK {
     margin-right: 10px;
-    color: #ee4d2d;
+    color: red;
 }
 
 .vWt6ZL {
@@ -206,7 +206,7 @@
     height: 30px;
     font-size: 20px;
     font-weight: 500;
-    color: #ee4d2d;
+    color: red;
 }
 
 /*#note_anonymous, #xvbxw3636 {
@@ -270,26 +270,6 @@
     justify-content: flex-end;
     align-items: center;
     margin: 15px;
-}
-
-.order-btn {
-    background: #ee4d2d;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-transform: capitalize;
-    max-width: 250px;
-    min-width: 8.25rem;
-    height: 48px;
-    border: 1px solid rgba(0,0,0,.09);
-    border-radius: 2px;
-    cursor: pointer;
-    font-size: 1rem;
-}
-
-.order-btn:hover {
-    background: #d73211;
 }
 
 /* Empty state khi không có đơn hàng */

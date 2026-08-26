@@ -37,7 +37,7 @@
     flex-direction: row-reverse;
     /*padding: 16px 0px 10px;*/
     /*height: auto;*/
-/*    position: relative;*/
+    position: relative;
     /*z-index: 2;*/
     /*-webkit-box-align: center;*/
     align-items: center;
@@ -56,6 +56,7 @@
     background-color: white;
     border-radius: 8px;
     padding-bottom:1rem;
+    margin-top: 10px;
 }
 
 #biggestContainer_top div[class="search_wrapper"] {
@@ -429,7 +430,7 @@ sup {
     position: relative;
     overflow: visible;
     outline: 0;
-    background: #ee4d2d;
+    background: #764ba2;
     width: 100%;
     height: 40px;
     margin-top: 20px;
@@ -449,7 +450,7 @@ sup {
 }
 
 .pwm-btn-common {
-    padding: 13px 36px;
+    padding: 0 36px;
     margin: 5px 22px 5px 15px;
     text-transform: capitalize;
     font-weight: 500;
@@ -460,17 +461,28 @@ sup {
     position: relative;
     overflow: visible;
     outline: 0;
-    background: #ee4d2d;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     cursor: pointer;
     border: 0;
-    line-height: 1.5;
+    line-height: 1;
     letter-spacing: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     color: #fff;
-    transition: opacity .2s ease;
+    transition: all 0.3s ease;
     user-select: none;
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
+}
+
+.pwm-btn-common:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.pwm-btn-common:active {
+    transform: translateY(0);
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
 }
 

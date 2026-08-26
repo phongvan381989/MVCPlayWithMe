@@ -185,7 +185,7 @@ a {
 
 .M-AAFK {
     margin-right: 10px;
-    color: #ee4d2d;
+    color: red;
 }
 
 .vWt6ZL {
@@ -273,7 +273,7 @@ a {
     justify-content: center;*/
     text-align: center;
 /*    width: 20%;*/
-    color: #ee4d2d;
+    color: red;
     padding:5px;
 }
 
@@ -325,7 +325,7 @@ a {
     line-height: 28px;
     margin-left: 5px;
     margin-top:10px;
-    color: #ee4d2d;
+    color: red;
 }
 
 .pay-container {
@@ -350,7 +350,7 @@ a {
     position: relative;
     overflow: visible;
     outline: 0;
-    background: #ee4d2d;
+    background: #764ba2;
     cursor: pointer;
     border: 0;
     line-height: 1.5;
@@ -393,8 +393,13 @@ a {
 }
 
 .cart-empty {
-    display: none;
-    text-align: center;
+    display: flex;
+    flex-direction:column;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+    min-height: 100vh; /* Bắt buộc: để chiều cao bằng 100% màn hình */
+    margin: 0; /* Xóa khoảng trống mặc định của body */
+    text-align: center; /* Căn giữa đoạn văn bản bên trong */
 }
 
 .sample-selected-model {
