@@ -1,4 +1,4 @@
-table {
+﻿table {
     max-width: 600px;
     width: 100%;
     border-collapse: collapse;
@@ -124,19 +124,21 @@ td {
     line-height: 1.5rem;
     text-transform: capitalize;
     color: #333;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .account-header-container {
-    border-bottom: 0.0625rem solid #efefef;
-    padding: 1.125rem;
+    border-bottom: 1px solid rgba(0,0,0,.14);
+    padding: 15px;
     display: flex;
     align-items: center;
 }
 
 .lpxAGdgh {
-    width: 100%;
     display: flex;
     justify-content: flex-end;
+    flex: 1;
 }
 
 .radio-sex {
@@ -173,10 +175,12 @@ td {
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
     background: #fff;
     border-radius: 3px;
+    margin-right: 5px;
 }
 
 .sample-address-container {
     display: none;
+    border-bottom: 1px solid rgba(0,0,0,.14);
 }
 
 .sample-address-container input {
@@ -189,13 +193,13 @@ td {
     padding: 10px;
     margin-bottom: 15px;
     margin-top: 15px;
-    border-bottom: 1px solid rgba(0,0,0,.14);
+/*    border-bottom: 1px solid rgba(0,0,0,.14);*/
     width: 100%;
 }
 
 .sample-address-container .address div {
-    margin-top: 5px;
-    margin-bottom: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
 }
 
 .sample-address-container .address span {
@@ -205,7 +209,7 @@ td {
 .sample-address-container .default-address {
     color: #ee4d2d;
     border-color: #ee4d2d;
-    margin: 0 4px 4px 0;
+    margin: 10px 4px 10px 4px;
     border-radius: 1px;
     padding: 2px 4px;
     border: 0.5px solid;

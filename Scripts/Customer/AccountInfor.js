@@ -1,19 +1,12 @@
 ﻿let customerObj = null; // Đối tượng khách hàng server trả về
 let listCustomerAddressObj;
 let currentIndexAddressUpdateObject = -1; // index cần cập nhật
-LoadSomething();
 
 async function GetCustomer() {
     const searchParams = new URLSearchParams();
     let query = "/Customer/GetCustomer";
 
     return await RequestHttpPostPromise(searchParams, query);
-}
-
-// Sau khi load page, cần thêm thông tin
-async function LoadSomething() {
-
-    await LoadCustomer();
 }
 
 // Hiển thị thông tin tài khoản
@@ -329,3 +322,10 @@ async function FinishChangePassword() {
         return;
     }
 }
+
+window.addEventListener('DOMContentLoaded', async function () {
+    await LoadCustomer();
+    document.getElementsByClassName("birthday-time")[0].value =
+        new Date().toISOString().split('T')[0];
+});
+

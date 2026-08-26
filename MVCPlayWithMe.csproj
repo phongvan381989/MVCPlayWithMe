@@ -799,7 +799,6 @@
     <Content Include="Scripts\web.play.with.me.mapping.of.item.model.js" />
     <Content Include="Scripts\web.play.with.me.oder.admin.js" />
     <Content Include="Scripts\web.play.with.me.order.js" />
-    <Content Include="Scripts\web.play.with.me.update.width.js" />
     <Content Include="Scripts\web.play.with.me.product.upload.js" />
     <Content Include="Scripts\web.play.with.me.paging.js" />
     <Content Include="Web.config">

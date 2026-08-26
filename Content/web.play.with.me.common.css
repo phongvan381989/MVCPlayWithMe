@@ -31,18 +31,19 @@
     margin-top:10px;
     margin-bottom: 10px;*/
 }
-#biggestContainer_top div[class="first"] {
+#biggestContainer_top_first {
     /*justify-content: flex-end;*/
-    display: block;
+    display: flex;
     flex-direction: row-reverse;
     /*padding: 16px 0px 10px;*/
     /*height: auto;*/
-    position: relative;
+/*    position: relative;*/
     /*z-index: 2;*/
     /*-webkit-box-align: center;*/
     align-items: center;
     /*height: 50px;*/
     margin-bottom: 10px;
+    flex-wrap:wrap;
 }
 
 #biggestContainer_top div[class="logo-menu"] {
@@ -207,6 +208,7 @@
     flex: 1 1 0%;
     outline: none;
     background: transparent;
+    min-width:150px;
 }
 
 .cart-count {

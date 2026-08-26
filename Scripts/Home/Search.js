@@ -25,7 +25,6 @@ let currentSearchParams = {
 let inputSearch = document.getElementById("search-input-text-id");
 let btnLoadMore = document.getElementById("btnLoadMore");
 let btnText = document.getElementById("btn-text");
-let btnSpinner = document.getElementById("btn-spinner");
 let endMessage = document.getElementById("end-message");
 let loadMoreSection = document.getElementById("load-more-section");
 
@@ -257,12 +256,6 @@ function AppendItems(listItem) {
         let item = listItem[i];
         let itemElement = CreateProductCard(item, sample);
         table.appendChild(itemElement);
-
-        // Log chiều cao
-        console.log('AppendItems - Item ' + i + ':', {
-            divTestContainer: document.getElementById('div-test-container').offsetHeight + 'px',
-            bodyWrapper: table.offsetHeight + 'px'
-        });
     }
 
     // Scroll to first new item (smooth UX)

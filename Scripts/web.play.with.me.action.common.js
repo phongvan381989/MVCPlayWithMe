@@ -68,11 +68,6 @@ async function UpdateCartCount() {
 
 // Với khách mọi page đều phải thực hiện sau khi load
 async function CommonAction() {
-
-
-    if (DEBUG) {
-        console.log("CommonAction CALL");
-    }
     let biggest = document.getElementById("biggestContainer_top");
     if (biggest == null) {
         return;
