@@ -85,7 +85,18 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 if (!TikiMySql.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+                {
+                    // Đơn đã đóng và bị hủy.
+                    // Shopee sẽ tăng số lượng dù có thể đơn đang ở bưu cục nên cần phải cập nhật
+                    // Ngủ 10 giây để đảm bảo cập nhật sau Shopee
+                    if (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.PACKED)
+                    {
+                        Thread.Sleep(10000);
+
+                        //return false;
+                    }
                     return;
+                }
 
                 // Có trường hợp nhận được event: UNPAID, CANCELLED rồi nhận lại event: UNPAID.
                 // Hoặc UNPAID không nhân được do lỗi, nhận được READY_TO_SHIP rồi lại nhận được UNPAID

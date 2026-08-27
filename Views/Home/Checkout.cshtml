@@ -15,6 +15,9 @@
 <body>
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+
+        <h1 class="sr-only">Thanh toán</h1>
+
         <div class="sample-model">
             <div class="model-wrapper">
                 <div class="EOqcX3">
@@ -54,8 +57,8 @@
                             <h2>Địa chỉ nhận hàng</h2>
                         </div>
                         <div class="address-content">
-                            <div class="address-name-phone">Tên (+84) SDT</div>
-                            <div class="address-address">địa chỉ</div>
+                            <div class="address-name-phone">@*Tên (+84) SDT*@</div>
+                            <div class="address-address">@*địa chỉ*@</div>
                             <div class="address-default">Mặc định</div>
                             <button type="button" class="change-address-btn">Thay đổi</button>
                         </div>
@@ -119,23 +122,23 @@
             <div class="payment-infor">
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Tổng tiền hàng</div>
-                    <div class="money-padding model-money-sum">₫405.080</div>
+                    <div class="money-padding model-money-sum">@*₫405.080*@</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Phí vận chuyển</div>
-                    <div class="money-padding shipee-fee">₫39.150</div>
+                    <div class="money-padding shipee-fee">@*₫39.150*@</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Giảm giá phí vận chuyển</div>
-                    <div class="money-padding free-shipee-fee">-₫39.150</div>
+                    <div class="money-padding free-shipee-fee">@*-₫39.150*@</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Giảm giá tổng tiền hàng</div>
-                    <div class="money-padding discount-final-money">-₫39.150</div>
+                    <div class="money-padding discount-final-money">@*-₫39.150*@</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <div class="money-title">Tổng thanh toán</div>
-                    <div class="money-padding final-money">₫0</div>
+                    <div class="money-padding final-money">@*₫0*@</div>
                 </div>
                 <div class="checkout-money-flex-end">
                     <button type="button" class="order-btn" onclick="CheckOutOrder()">Đặt hàng</button>

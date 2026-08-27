@@ -5,7 +5,7 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    @Html.Partial("~/Views/Shared/Head.cshtml")
+    @Html.Partial("~/Views/Shared/Head_GA.cshtml")
     <link rel="stylesheet" href="~/Content/Home/Search.css?v=20260610">
 </head>
 <body>
@@ -17,11 +17,14 @@
             <span class="separator">|</span>
             <div class="free-instant-ship-message">⚡ Giao nhanh 2h nội thành</div>
         </div>
+
+        <h1 id="page-title" class="sr-only">Tiệm sách voi bé nhỏ</h1>
+
         <div id="empty-result" style="display:none">
             <p>Kết quả trống</p>
         </div>
         <div id="search-result" style="display:none">
-            <div class="product-for-selector-sample">
+            <article class="product-for-selector-sample">
                 <a class="product-item" href="#">
                     <div class="image-wrapper">
                         <img class="card-img-top" alt="Card image">
@@ -37,11 +40,11 @@
                             <span class="price-sell-detail">
                             </span>
                             <span class="price-original-detail"></span>
-                            <span class="price-discount-percent-detail"> %</span>
+                            <span class="price-discount-percent-detail"></span>
                         </div>
                     </div>
                 </a>
-            </div>
+            </article>
             <div id="biggestContainer_body_wraper_item">
             </div>
 

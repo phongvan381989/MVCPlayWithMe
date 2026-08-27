@@ -1080,7 +1080,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     // Đơn hủy và chưa Đã Đóng
                     (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.BOOKED) ||
 
-                    // Đơn hủy, nhưng đang trên đường vận chuyển đợi nhận hàng hoàn mới thay đổi tồn kho.
+                    // Đơn hoàn hàng.
                     (status == ECommerceOrderStatus.RETURNED))
                 {
                     result = await UpdateOutputAndProductTableFromOrder_BookingConnectOutAsync(

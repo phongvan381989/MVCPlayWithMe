@@ -394,7 +394,7 @@ a {
 
 .cart-empty {
     display: flex;
-    flex-direction:column;
+    flex-direction: column;
     justify-content: center; /* Căn giữa theo chiều ngang */
     align-items: center; /* Căn giữa theo chiều dọc */
     min-height: 100vh; /* Bắt buộc: để chiều cao bằng 100% màn hình */

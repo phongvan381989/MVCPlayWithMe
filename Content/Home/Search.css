@@ -20,11 +20,13 @@
     border-radius: 10px;
     height: 100%;
     background: white;
+    padding: 1px;
+    border: 1px solid #d0d0d0;
 }
 
 .product-item:hover {
     background: #e1e1e1;
-    border: 1px solid #d0d0d0;
+    border: 1px solid #764ba2;
 }
 
 .image-wrapper {

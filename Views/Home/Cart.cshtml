@@ -13,6 +13,9 @@
 <body>
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
+
+        <h1 class="sr-only">Giỏ hàng</h1>
+
         <div class="sample-selected-model">
             <div class="zoXdNN selected-model" data-model-id="">
                 <div class="checkbox-name-header">
@@ -20,12 +23,16 @@
                         <input class="stardust-checkbox__input model-checkbox-input" type="checkbox" onclick="ClickModelCheckBox(this)">
                     </div>
                     <div class="eUrDQm">
-                        <a class="item-url" title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
-                            <img class="WanNdG" src="https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lkkyikcwkaui58" alt="product image">
+                        <a class="item-url">
+                           @*title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn"
+                           href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">*@
+                            <img class="WanNdG" @*src="https://down-vn.img.susercontent.com/file/vn-11134207-7r98o-lkkyikcwkaui58" alt="product image"*@>
                         </a>
                         <div class="TyNN8t">
-                            <a class="JB57cn item-url" title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn" href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn-i.137637267.11045712091?xptdk=77506fc9-816a-4d32-837d-3c81356a5dee">
-                                Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn
+                            <a class="JB57cn item-url">
+                               @*title="Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn"
+                               href="/Sách-Ehon-Kĩ-Năng-Sống-Cho-Bé-(1-6-tuổi)-Miu-Bé-Nhỏ-Lẻ-tùy-chọn"*@
+                                @*Sách Ehon Kĩ Năng Sống Cho Bé (1-6 tuổi) - Miu Bé Nhỏ - Lẻ tùy chọn*@
                             </a>
                         </div>
                     </div>
@@ -33,8 +40,8 @@
                 <div class="price-quantity-sum-delete-header">
                     <div class="G7E4B7">
                         <div style="text-align:center;">
-                            <span class="vWt6ZL">₫39.000</span>
-                            <span class="M-AAFK">₫29.800</span>
+                            <span class="vWt6ZL">@*₫39.000*@</span>
+                            <span class="M-AAFK">@*₫29.800*@</span>
                         </div>
                     </div>
                     <div class="MRh9G6">
@@ -53,11 +60,11 @@
                             </button>
                         </div>
                         <div class="max-quantity" style="padding-top:5px;">
-                            4992 sản phẩm có sẵn
+                            @*4992 sản phẩm có sẵn*@
                         </div>
                     </div>
                     <div class="ofQLuG">
-                        <span>₫119.200</span>
+                        <span>@*₫119.200*@</span>
                     </div>
                     <div class="mhcjog">
                         <button type="button" class="fX1Y2g" onclick="DeleteSanPhamOnCartElement(this)">Xóa</button>

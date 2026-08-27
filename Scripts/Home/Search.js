@@ -40,6 +40,17 @@ async function Search() {
     // Get search parameters từ URL
     SetSearchParametersFromUrl();
 
+    // Update H1 dynamically
+    const keyword = currentSearchParams.keyword || "";
+    const h1 = document.getElementById("page-title");
+    if (h1) {
+        if (keyword) {
+            h1.textContent = `Kết quả tìm kiếm: "${keyword}"`;
+        } else {
+            h1.textContent = "Tiệm sách voi bé nhỏ";
+        }
+    }
+
     // Get target page from URL
     const targetPage = parseInt(GetValueFromUrlName("page")) || 1;
 
