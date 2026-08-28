@@ -534,8 +534,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Trường hợp item chỉ có 1 modelId, modelId khác -1 hàm dưới chưa xóa dữ liệu tương ứng trong bảng tbShopeeItem
         // Kết quả là có 1 item không có model nào trong DB
-        // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel
-        public static async Task<MySqlResultState> ShopeeDeleteModelOnDBAsync(long modelId)
+        // Xóa trên tbshopeemapping, tbpwmmappingother, tbshopeemodel =>disable
+        public static async Task<MySqlResultState> ShopeeDisableModelOnDBAsync(long modelId)
         {
             MySqlResultState resultState = new MySqlResultState();
             if (modelId == -1)
@@ -1198,7 +1198,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
                 if (list[list.Count() - 1].dbItemId != dbItemId)
                 {
-                    commonItem = new CommonItem();
+                    commonItem = new CommonItem();// mặc định là eType = Common.eShopee;
                     list.Add(commonItem);
                 }
             }

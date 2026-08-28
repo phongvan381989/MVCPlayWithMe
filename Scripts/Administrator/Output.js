@@ -86,6 +86,39 @@ function ResetSearch() {
     document.getElementById('no-results').style.display = 'none';
 }
 
+async function UpdateInventoryForOrder() {
+    const code = document.getElementById('input-code').value.trim();
+    const ecommerce = parseInt(document.getElementById('select-ecommerce').value);
+
+    if (!code) {
+        alert('Vui lòng nhập mã đơn hàng!');
+        return;
+    }
+
+    if (!confirm(`Xác nhận cập nhật tồn kho cho đơn hàng "${code}" trên sàn ${ecommerceMap[ecommerce].name}?`)) {
+        return;
+    }
+
+    try {
+        // Gọi API bằng PostJSON
+        const responseText = await PostJSON('/Product/UpdateInventoryForOrder', {
+            code: code,
+            ecommerce: ecommerce
+        });
+
+        const result = JSON.parse(responseText);
+
+        if (result.State === 0) {
+            alert('✅ ' + result.Message);
+        } else {
+            alert('❌ ' + result.Message);
+        }
+    } catch (error) {
+        alert('❌ Lỗi kết nối đến server!');
+        console.error(error);
+    }
+}
+
 // Focus vào input khi load trang
 window.addEventListener('DOMContentLoaded', function() {
     document.getElementById('input-code').focus();

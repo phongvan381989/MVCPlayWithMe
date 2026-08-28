@@ -1053,7 +1053,7 @@ namespace MVCPlayWithMe.Models.ItemModel
 
                         object scalarResult = await cmd.ExecuteScalarAsync();
                         result.myAnythingLong = Convert.ToInt64(scalarResult);
-                        result.myAnything = (int)result.myAnythingLong;
+                        result.myAnything = Convert.ToInt32(result.myAnythingLong);
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }

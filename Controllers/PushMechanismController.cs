@@ -86,14 +86,19 @@ namespace MVCPlayWithMe.Controllers
 
                 if (!TikiMySql.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
                 {
-                    // Đơn đã đóng và bị hủy.
-                    // Shopee sẽ tăng số lượng dù có thể đơn đang ở bưu cục nên cần phải cập nhật
-                    // Ngủ 10 giây để đảm bảo cập nhật sau Shopee
-                    if (status == ECommerceOrderStatus.UNBOOKED && oldStatus == ECommerceOrderStatus.PACKED)
+
+                    if (orderStatusPush.status == "CANCELLED" && oldStatus == ECommerceOrderStatus.PACKED)
                     {
+                        // Đơn đã đóng và bị hủy.
+                        // Shopee sẽ tăng số lượng dù có thể đơn đang ở bưu cục mà chưa được quét
+                        // do chọn "Gửi bưu cục"nên cần phải cập nhật lại.
+                        // Ngủ 10 giây để đảm bảo cập nhật sau Shopee
                         Thread.Sleep(10000);
 
-                        //return false;
+                        // Lấy sản phẩm trong đơn
+                        MyLogger.GetInstance().Info("Update quantity at customer cancel and order has pakcked");
+                        // Không quan tâm thành công hay thất bại, nếu xịt thì phải chịu
+                        await ProductController.UpdateQuantityOfProductsInOrder(EECommerceType.SHOPEE, orderStatusPush.ordersn, conn);
                     }
                     return;
                 }

@@ -6,12 +6,15 @@ using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySqlConnector;
@@ -2071,10 +2074,11 @@ namespace MVCPlayWithMe.Controllers
             return listProductIdUpdateFail;
         }
 
-        private static async Task UpdateStatusOfNeedUpdateQuantityConnectOutAsync(
-            MySqlConnection conn,
+        private static async Task UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(
+            EECommerceType eECommerceType,
+            List<int> listProductIdChanged,
             List<CommonItem> listCommonItem,
-            List<int> listProductIdChanged)
+            MySqlConnection conn)
         {
             // Danh sách sản phẩm chưa cập nhật số lượng thành công
             List<int> listProductIdUpdateFail = GetListProductIdUpdateFail(listCommonItem, listProductIdChanged);
@@ -2089,7 +2093,7 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
 
-            await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, conn);
+            await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, eECommerceType, conn);
         }
         public static async Task<List<CommonItem>> GetListNeedUpdateQuantityAndUpdate_CoreAsync()
         {
@@ -2101,22 +2105,32 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     // Danh sách sản phẩm trong kho có thay đổi số lượng cần cập nhật
-                    List<int> listProductId = await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn);
+                    List<int> tikiProductIdList =
+                        await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.TIKI);
+
+                    List<int> shopeeProductIdList =
+                        await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.SHOPEE);
+
+                    List<int> lazadaProductIdList =
+                        await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.LAZADA);
 
                     List<CommonItem> shopeeList = await ShopeeGetListNeedUpdateQuantityAndUpdateAsync(conn);
                     List<CommonItem> tikiList = await TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
                     List<CommonItem> lazadaList = await LazadaGetListNeedUpdateQuantityAndUpdateAsync(conn);
 
 
-                    ls.AddRange(tikiList);
-                    ls.AddRange(shopeeList);
-                    ls.AddRange(lazadaList);
+                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
+                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.SHOPEE, shopeeProductIdList, shopeeList, conn);
+                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.LAZADA, lazadaProductIdList, lazadaList, conn);
 
-                    await UpdateStatusOfNeedUpdateQuantityConnectOutAsync(conn, ls, listProductId);
+                    ls.AddRange(shopeeList);
+                    ls.AddRange(tikiList);
+                    ls.AddRange(lazadaList);
                 }
                 catch (Exception ex)
                 {
                     MyLogger.GetInstance().Warn(ex.ToString());
+                    ls.Clear();
                 }
             }
             // Lấy danh sách sản phẩm
@@ -2240,7 +2254,7 @@ namespace MVCPlayWithMe.Controllers
                     if (f.failed_reason == "model ID not exist in sku")
                     {
                         // Xóa bỏ mọi thứ liên quan đến model_id vĩnh viễn khỏi cơ sở dữ liệu => Disable
-                        await ShopeeMySql.ShopeeDeleteModelOnDBAsync(f.model_id);
+                        await ShopeeMySql.ShopeeDisableModelOnDBAsync(f.model_id);
                     }
                     else if (f.failed_reason.Contains(st.item_id.ToString() + " status is abnormal"))
                     {
@@ -2266,7 +2280,6 @@ namespace MVCPlayWithMe.Controllers
             {
                 Common.SetResultException(ex, result);
             }
-
         }
 
         // Cập nhật số lượng sản phẩm của 1 model từ itemId, modelId
@@ -2439,43 +2452,53 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        private async Task UpdateQuantityToTMDTFromListCommonItemConnectOutAsync(List<CommonItem> listCommonItem,
+        private async Task UpdateQuantityToTMDTFromListCommonItemConnectOutAsync(
+            EECommerceType eECommerceType,
+            List<CommonItem> listCommonItem,
             MySqlConnection conn
             )
         {
-            List<CommonItem> lazadaList = new List<CommonItem>();
-            foreach (CommonItem commonItem in listCommonItem)
+            if (eECommerceType == EECommerceType.TIKI)
             {
-                if (commonItem.eType == Common.eTiki)
+                foreach (CommonItem commonItem in listCommonItem)
                 {
                     await TikiUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
                 }
-                else if (commonItem.eType == Common.eShopee)
+            }
+            else if (eECommerceType == EECommerceType.SHOPEE)
+            {
+                foreach (CommonItem commonItem in listCommonItem)
                 {
                     await ShopeeUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
                 }
-                else if (commonItem.eType == Common.eLazada)
+            }
+            else if (eECommerceType == EECommerceType.LAZADA)
+            {
+                List<CommonItem> lazadaList = new List<CommonItem>();
+                foreach (CommonItem commonItem in listCommonItem)
                 {
                     lazadaList.Add(commonItem);
                 }
+                await LazadaUpdateQuantity_CoreAsync(lazadaList);
             }
-
-            await LazadaUpdateQuantity_CoreAsync(lazadaList);
         }
 
         // Cập nhật số lượng lên sàn và cập nhật trạng thái sản phẩm ở tbNeedUpdateQuantity
         private async Task UpdateQuantityToTMDT_DbFromListCommonItemAsync(
+            EECommerceType eECommerceType,
             List<CommonItem> listCommonItem,
-            List<int> listProductId)
+            List<int> productIdList)
         {
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    await UpdateQuantityToTMDTFromListCommonItemConnectOutAsync(listCommonItem, conn);
+                    await UpdateQuantityToTMDTFromListCommonItemConnectOutAsync(eECommerceType, listCommonItem, conn);
+
                     // Cập nhật lên sàn ok, ta cập nhật trạng thái status = 0 ở tbNeedUpdateQuantity
-                    await UpdateStatusOfNeedUpdateQuantityConnectOutAsync(conn, listCommonItem, listProductId);
+
+                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(eECommerceType, productIdList, listCommonItem, conn);
                 }
             }
             catch (Exception ex)
@@ -2518,7 +2541,29 @@ namespace MVCPlayWithMe.Controllers
                     listProductId = await ComboMySql.GetProductIdsOfComboAsync(productOrComboId);
 
                 }
-                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(ls, listProductId);
+
+                List<CommonItem> shopeeList = new List<CommonItem>();
+                List<CommonItem> tikiList = new List<CommonItem>();
+                List<CommonItem> lazadaList = new List<CommonItem>();
+                foreach (CommonItem commonItem in ls)
+                {
+                    if (commonItem.eType == Common.eTiki)
+                    {
+                        tikiList.Add(commonItem);
+                    }
+                    else if (commonItem.eType == Common.eShopee)
+                    {
+                        shopeeList.Add(commonItem);
+                    }
+                    else if (commonItem.eType == Common.eLazada)
+                    {
+                        lazadaList.Add(commonItem);
+                    }
+                }
+
+                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.TIKI, tikiList, listProductId);
+                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.SHOPEE, tikiList, listProductId);
+                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.LAZADA, tikiList, listProductId);
             }
 
             return JsonConvert.SerializeObject(ls);
@@ -4640,6 +4685,113 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
             return result;
+        }
+
+        // Cập nhật tồn kho lên sàn những sản phẩm trong đơn
+        public static async Task<MySqlResultState> UpdateQuantityOfProductsInOrder(
+            EECommerceType eECommerceType,
+            string orderCode,
+            MySqlConnection conn)
+        {
+            MySqlResultState reuslt = new MySqlResultState();
+            try
+            {
+                if (eECommerceType == EECommerceType.SHOPEE)
+                {
+                    // Lấy sản phẩm trong đơn
+                    ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderCode);
+                    if (shopeeOrderDetail != null)
+                    {
+                        CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
+                        await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+
+                        // Lấy danh sách commonItem để cập nhật số lượng
+                        List<CommonItem> commonItems = new List<CommonItem>();
+                        for (int i = 0; i < commonOrder.listItemId.Count; i++)
+                        {
+                            CommonItem commonItem = null;
+                            Boolean isExist = false;
+                            foreach (CommonItem objItem in commonItems)
+                            {
+                                if (objItem.itemId == commonOrder.listItemId[i])
+                                {
+                                    isExist = true;
+                                    commonItem = objItem;
+                                    break;
+                                }
+                            }
+                            if (!isExist)
+                            {
+                                commonItem = new CommonItem();
+                                commonItem.itemId = commonOrder.listItemId[i];
+                                commonItems.Add(commonItem);
+                            }
+
+                            CommonModel commonModel = new CommonModel();
+                            commonModel.modelId = commonOrder.listModelId[i];
+                            commonModel.mapping = commonOrder.listMapping[i];
+                            commonItem.models.Add(commonModel);
+                        }
+
+                        foreach (var commonItem in commonItems)
+                        {
+                            await ShopeeUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, reuslt);
+            }
+            return reuslt;
+        }
+
+        [HttpPost]
+        public async Task<string> UpdateInventoryForOrder(string code = null, int? ecommerce = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            // Nếu không có parameters từ form, đọc từ JSON body
+            if (code == null || ecommerce == null)
+            {
+                using (var reader = new System.IO.StreamReader(Request.InputStream))
+                {
+                    string body = await reader.ReadToEndAsync();
+                    var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+                    code = jsonData["code"]?.ToString();
+                    ecommerce = Convert.ToInt32(jsonData["ecommerce"]);
+                }
+            }
+
+            if (string.IsNullOrEmpty(code))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Mã đơn hàng không được để trống";
+                return JsonConvert.SerializeObject(result);
+            }
+
+            EECommerceType ecomType = (EECommerceType)ecommerce;
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    await UpdateQuantityOfProductsInOrder(ecomType, code, conn);
+                }
+
+                return JsonConvert.SerializeObject(result);
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+                return JsonConvert.SerializeObject(result);
+            }
         }
     }
 }

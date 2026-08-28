@@ -593,7 +593,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             if (eType == Common.eShopee)
             {
                 long id = Common.ConvertStringToInt64(modelId);
-                resultState = await ShopeeMySql.ShopeeDeleteModelOnDBAsync(id);
+                resultState = await ShopeeMySql.ShopeeDisableModelOnDBAsync(id);
             }
             return JsonConvert.SerializeObject(resultState);
         }

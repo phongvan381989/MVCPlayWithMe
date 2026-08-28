@@ -882,7 +882,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                 using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Select_Product_From_Id", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@inId", id);
+                    cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value =  id;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
                         while (await rdr.ReadAsync()) product = ConvertRowFromDataMySql(rdr);
@@ -924,34 +924,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         public static async Task<MySqlResultState> AddNewProAsync(Product pro)
         {
             MySqlResultState result = new MySqlResultState();
-            MySqlParameter[] paras = new MySqlParameter[27];
-            paras[0] = new MySqlParameter("@inproCode", pro.code);
-            paras[1] = new MySqlParameter("@inbarcode", pro.barcode);
-            paras[2] = new MySqlParameter("@inproductName", pro.name);
-            paras[3] = new MySqlParameter("@incomboId", pro.comboId);
-            paras[4] = new MySqlParameter("@incategoryId", pro.categoryId);
-            paras[5] = new MySqlParameter("@inbookCoverPrice", pro.bookCoverPrice);
-            paras[6] = new MySqlParameter("@inauthor", pro.author);
-            paras[7] = new MySqlParameter("@intranslator", pro.translator);
-            paras[8] = new MySqlParameter("@inpublisherId", pro.publisherId);
-            paras[9] = new MySqlParameter("@inpublishingCompany", pro.publishingCompany);
-            paras[10] = new MySqlParameter("@inpublishingTime", pro.publishingTime);
-            paras[11] = new MySqlParameter("@inproductLong", pro.productLong);
-            paras[12] = new MySqlParameter("@inproductWide", pro.productWide);
-            paras[13] = new MySqlParameter("@inproductHigh", pro.productHigh);
-            paras[14] = new MySqlParameter("@inproductWeight", pro.productWeight);
-            paras[15] = new MySqlParameter("@inpositionInWarehouse", pro.positionInWarehouse);
-            paras[16] = new MySqlParameter("@inhardCover", pro.hardCover);
-            paras[17] = new MySqlParameter("@inminAge", pro.minAge);
-            paras[18] = new MySqlParameter("@inmaxAge", pro.maxAge);
-            paras[19] = new MySqlParameter("@inparentId", pro.parentId);
-            paras[20] = new MySqlParameter("@inrepublish", pro.republish);
-            paras[21] = new MySqlParameter("@indetail", pro.detail);
-            paras[22] = new MySqlParameter("@inproStatus", pro.status);
-            paras[23] = new MySqlParameter("@inpageNumber", pro.pageNumber);
-            paras[24] = new MySqlParameter("@inQuantity", pro.quantity);
-            paras[25] = new MySqlParameter("@inDiscount", pro.discount);
-            paras[26] = new MySqlParameter("@inLanguage", pro.language);
+
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 try
@@ -960,11 +933,41 @@ namespace MVCPlayWithMe.Models.ProductModel
                     using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Insert", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddRange(paras);
 
-                        result.myAnything = (int) await cmd.ExecuteScalarAsync();
-                        if (result.myAnything == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
-                        else if (result.myAnything == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                        // Add parameters với explicit MySqlDbType + NULL handling
+                        cmd.Parameters.Add("@inproCode", MySqlDbType.VarChar).Value = pro.code ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inbarcode", MySqlDbType.VarChar).Value = pro.barcode ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inproductName", MySqlDbType.VarChar).Value = pro.name ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@incomboId", MySqlDbType.Int32).Value = pro.comboId;
+                        cmd.Parameters.Add("@incategoryId", MySqlDbType.Int32).Value = pro.categoryId;
+                        cmd.Parameters.Add("@inbookCoverPrice", MySqlDbType.Int32).Value = pro.bookCoverPrice;
+                        cmd.Parameters.Add("@inauthor", MySqlDbType.VarChar).Value = pro.author ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@intranslator", MySqlDbType.VarChar).Value = pro.translator ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inpublisherId", MySqlDbType.Int32).Value = pro.publisherId;
+                        cmd.Parameters.Add("@inpublishingCompany", MySqlDbType.VarChar).Value = pro.publishingCompany ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inpublishingTime", MySqlDbType.Int32).Value = pro.publishingTime;
+                        cmd.Parameters.Add("@inproductLong", MySqlDbType.Int32).Value = pro.productLong;
+                        cmd.Parameters.Add("@inproductWide", MySqlDbType.Int32).Value = pro.productWide;
+                        cmd.Parameters.Add("@inproductHigh", MySqlDbType.Int32).Value = pro.productHigh;
+                        cmd.Parameters.Add("@inproductWeight", MySqlDbType.Int32).Value = pro.productWeight;
+                        cmd.Parameters.Add("@inpositionInWarehouse", MySqlDbType.VarChar).Value = pro.positionInWarehouse ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inhardCover", MySqlDbType.Int32).Value = pro.hardCover;
+                        cmd.Parameters.Add("@inminAge", MySqlDbType.Int32).Value = pro.minAge;
+                        cmd.Parameters.Add("@inmaxAge", MySqlDbType.Int32).Value = pro.maxAge;
+                        cmd.Parameters.Add("@inparentId", MySqlDbType.Int32).Value = pro.parentId;
+                        cmd.Parameters.Add("@inrepublish", MySqlDbType.Int32).Value = pro.republish;
+                        cmd.Parameters.Add("@indetail", MySqlDbType.VarChar).Value = pro.detail ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inproStatus", MySqlDbType.Int32).Value = pro.status;
+                        cmd.Parameters.Add("@inpageNumber", MySqlDbType.Int32).Value = pro.pageNumber;
+                        cmd.Parameters.Add("@inQuantity", MySqlDbType.Int32).Value = pro.quantity;
+                        cmd.Parameters.Add("@inDiscount", MySqlDbType.Float).Value = pro.discount;
+                        cmd.Parameters.Add("@inLanguage", MySqlDbType.VarChar).Value = pro.language ?? (object)DBNull.Value;
+
+                        var scalar = await cmd.ExecuteScalarAsync();
+                        result.myAnythingLong = scalar != null ? Convert.ToInt64(scalar) : 0;
+                        if (result.myAnythingLong == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
+                        else if (result.myAnythingLong == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
+                        result.myAnything = Convert.ToInt32(result.myAnythingLong);
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -1194,7 +1197,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                         result.myAnythingLong = Convert.ToInt64(scalarResult);
                         if (result.myAnythingLong == -2) { result.State = EMySqlResultState.EXIST; result.Message = "Code is exist"; }
                         else if (result.myAnythingLong == -3) { result.State = EMySqlResultState.EXIST; result.Message = "Barcode is exist"; }
-                        result.myAnything = (int)result.myAnythingLong;
+                        result.myAnything = Convert.ToInt32(result.myAnythingLong);
                     }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -2129,30 +2132,80 @@ namespace MVCPlayWithMe.Models.ProductModel
             }
         }
 
-        public static async Task UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(List<int> listProId, MySqlConnection conn)
+        public static async Task UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(
+            List<int> listProId,
+            EECommerceType eECommerceType,
+            MySqlConnection conn)
         {
+            if (listProId == null || listProId.Count == 0) return;
+
+            string eName = GetNameOfColumntbNeedUpdateQuantity(eECommerceType);
             try
             {
-                using (MySqlCommand cmd = new MySqlCommand("UPDATE tbNeedUpdateQuantity SET Status = 0 WHERE ProductId=@inProductId;", conn))
+                // Build IN clause: ProductId IN (1,2,3,...)
+                string inClause = string.Join(",", listProId);
+                string sql = $"UPDATE tbNeedUpdateQuantity SET {eName} = 0 WHERE ProductId IN ({inClause})";
+
+                using (MySqlCommand cmd = new MySqlCommand(sql, conn))
                 {
                     cmd.CommandType = CommandType.Text;
-                    cmd.Parameters.AddWithValue("@inProductId", 0);
-                    foreach (int id in listProId)
-                    {
-                        cmd.Parameters[0].Value = id;
-                        await cmd.ExecuteNonQueryAsync();
-                    }
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
         }
 
-        public static async Task<List<int>> GetListProductOfNeedUpdateQuantityConnectOutAsync(MySqlConnection conn)
+        public static async Task UpdateOneStatusOfNeedUpdateQuantityConnectOutAsync(
+            List<int> listProId,
+            EECommerceType eECommerceType,
+            MySqlConnection conn)
         {
-            List<int> listProductId = new List<int>();
+            if (listProId == null || listProId.Count == 0) return;
+
+            string eName = GetNameOfColumntbNeedUpdateQuantity(eECommerceType);
             try
             {
-                using (MySqlCommand cmd = new MySqlCommand("SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `Status`=1;", conn))
+                // Build IN clause: ProductId IN (1,2,3,...)
+                string inClause = string.Join(",", listProId);
+                string sql = $"UPDATE tbNeedUpdateQuantity SET {eName} = 1 WHERE ProductId IN ({inClause})";
+
+                using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
+        }
+
+        public static string GetNameOfColumntbNeedUpdateQuantity(EECommerceType eECommerceType)
+        {
+            string eName = "Shopee";
+            if (eECommerceType == EECommerceType.TIKI)
+            {
+                eName = "Tiki";
+            }
+            else if (eECommerceType == EECommerceType.LAZADA)
+            {
+                eName = "Lazada";
+            }
+            else if (eECommerceType == EECommerceType.PLAY_WITH_ME)
+            {
+                eName = "PWM";
+            }
+
+            return eName;
+        }
+
+        public static async Task<List<int>> GetListProductOfNeedUpdateQuantityConnectOutAsync(MySqlConnection conn,
+            EECommerceType eECommerceType)
+        {
+            List<int> listProductId = new List<int>();
+
+            string eName = GetNameOfColumntbNeedUpdateQuantity(eECommerceType);
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand($"SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `{eName}` = 1;", conn))
                 {
                     cmd.CommandType = CommandType.Text;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
