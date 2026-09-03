@@ -39,6 +39,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public int? ComboId { get; set; }
 
+        public string ComboName { get; set; } = string.Empty;
+
         /// <summary>
         /// Phân loại sản phẩm ví dụ: Sách ehon, máy đọc truyện. Không xác định lấy giá trị mặc định -1
         /// </summary>
@@ -56,7 +58,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// Không xác định lấy giá trị mặc định -1
         /// </summary>
         public int? PublisherId { get; set; }
-        public string PublisherName { get; set; }
+        public string PublisherName { get; set; } = string.Empty;
 
         /// <summary>
         /// Cột này hợp lý hơn phải là cột Id nhà xuất bản, maping với cột Id trong bảng tb_publishing_company.

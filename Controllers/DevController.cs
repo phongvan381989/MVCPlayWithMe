@@ -1037,11 +1037,14 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 using (MySqlDataReader rdr = await cmd.ExecuteReaderAsync())
                 {
+                    int idIndex = rdr.GetOrdinal("Id");
+                    int nameIndex = rdr.GetOrdinal("Name");
+                    int updatedDateIndex = rdr.GetOrdinal("UpdatedDate");
                     while (await rdr.ReadAsync())
                     {
-                        int id = rdr.GetInt32("Id");
-                        string name = MyMySql.GetString(rdr, "Name");
-                        DateTime? updatedDate = MyMySql.GetDateTime(rdr, "UpdatedDate");
+                        int id = rdr.GetInt32(idIndex);
+                        string name = MyMySql.GetString(rdr, nameIndex);
+                        DateTime? updatedDate = MyMySql.GetDateTime(rdr, updatedDateIndex);
                         products.Add((id, name, updatedDate));
                     }
                 }

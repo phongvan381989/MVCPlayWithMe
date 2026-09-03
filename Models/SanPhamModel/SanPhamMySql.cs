@@ -764,57 +764,11 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = id;
 
-                        list = await ExecuteReaderByIndexAsync(cmd);
+                        list = await ExecuteReaderByIndexAsync(cmd, true);
                     }
                     if(list.Count == 0)
                     {
                         return list;
-                    }
-
-                    if (list[0].CategoryId > 0)
-                    {
-                        // Lấy tên của các category và publisher cho tất cả sản phẩm trong variants
-                        // Chỉ cần lấy của 1 sản phẩm trong variants, vì tất cả sản phẩm cùng combo sẽ có cùng category
-                        string categoryName = string.Empty;
-                        string publisherName = string.Empty;
-
-
-                        using (MySqlCommand cmd = new MySqlCommand(
-                            "SELECT Name FROM webplaywithme.tbcategory WHERE Id = @inId;", conn))
-                        {
-                            cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = list[0].CategoryId;
-
-                            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                            {
-                                while (await rdr.ReadAsync())
-                                {
-                                    categoryName = MyMySql.GetString(rdr, "Name");
-                                }
-                            }
-                        }
-
-                        using (MySqlCommand cmd = new MySqlCommand(
-                            "SELECT Name FROM webplaywithme.tbpublisher WHERE Id = @inId;", conn))
-                        {
-                            cmd.CommandType = CommandType.Text;
-                            cmd.Parameters.Add("@inId", MySqlDbType.Int32).Value = list[0].PublisherId;
-
-                            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                            {
-                                while (await rdr.ReadAsync())
-                                {
-                                    publisherName = MyMySql.GetString(rdr, "Name");
-                                }
-                            }
-                        }
-
-                        // Gán tên category và publisher cho tất cả sản phẩm trong variants
-                        foreach (var sanPham in list)
-                        {
-                            sanPham.CategoryName = categoryName;
-                            sanPham.PublisherName = publisherName;
-                        }
                     }
 
                     // Lấy metadata
@@ -933,7 +887,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         /// <param name="cmd">MySqlCommand đã được setup (query + parameters)</param>
         /// <returns>Danh sách SanPham</returns>
-        public static async Task<List<SanPham>> ExecuteReaderByIndexAsync(MySqlCommand cmd)
+        public static async Task<List<SanPham>> ExecuteReaderByIndexAsync(MySqlCommand cmd,
+            Boolean readComboPublisherCategoryName = false)
         {
             List<SanPham> list = new List<SanPham>();
 
@@ -976,6 +931,15 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     int idxSoldQuantity = rdr.GetOrdinal("SoldQuantity");
                     int idxURL = rdr.GetOrdinal("URL");
                     int idxSEOKeyword = rdr.GetOrdinal("SEOKeyword");
+                    int idxComboName = 0;
+                    int idxPublisherName = 0;
+                    int idxCategoryName = 0;
+                    if (readComboPublisherCategoryName)
+                    {
+                        idxComboName = rdr.GetOrdinal("ComboName");
+                        idxPublisherName = rdr.GetOrdinal("PublisherName");
+                        idxCategoryName = rdr.GetOrdinal("CategoryName");
+                    }    
 
                     // Đọc từng row bằng index (nhanh hơn lookup theo tên mỗi lần)
                     while (await rdr.ReadAsync())
@@ -1017,6 +981,12 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             URL = rdr.IsDBNull(idxURL) ? null : rdr.GetString(idxURL),
                             SEOKeyword = rdr.IsDBNull(idxSEOKeyword) ? null : rdr.GetString(idxSEOKeyword)
                         };
+                        if (readComboPublisherCategoryName)
+                        {
+                            sanPham.ComboName = rdr.IsDBNull(idxComboName) ? null : rdr.GetString(idxComboName);
+                            sanPham.PublisherName = rdr.IsDBNull(idxPublisherName) ? null : rdr.GetString(idxPublisherName);
+                            sanPham.CategoryName = rdr.IsDBNull(idxCategoryName) ? null : rdr.GetString(idxCategoryName);
+                        }
 
                         list.Add(sanPham);
                     }

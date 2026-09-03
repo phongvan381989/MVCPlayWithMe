@@ -332,6 +332,10 @@ function EmptySomething() {
 function SetSearchParametersFromUrl() {
     // Optimize: chỉ parse URL 1 lần thay vì 6 lần
     const urlParams = new URLSearchParams(window.location.search);
+    if (DEBUG) {
+        console.log("SetSearchParametersFromUrl CALL");
+        console.log("urlParams: " + urlParams);
+    }
 
     currentSearchParams.keyword = urlParams.get("keyword") || "";
     currentSearchParams.author = urlParams.get("author") || "";
@@ -339,7 +343,9 @@ function SetSearchParametersFromUrl() {
     currentSearchParams.publishingCompany = urlParams.get("publishingCompany") || "";
     currentSearchParams.category = urlParams.get("category") || null;
     currentSearchParams.publisher = urlParams.get("publisher") || null;
-
+    if (DEBUG) {
+        console.log("currentSearchParams: " + JSON.stringify(currentSearchParams));
+    }
     // Set input field value
     if (inputSearch) {
         inputSearch.value = currentSearchParams.keyword;

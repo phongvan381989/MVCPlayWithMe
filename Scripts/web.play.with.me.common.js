@@ -1,4 +1,4 @@
-﻿var DEBUG = true;
+﻿const DEBUG = false;
 var thumbnailWidth = 150;
 var thumbnailHeight = 150;
 var avatarVideoHeight = 120;

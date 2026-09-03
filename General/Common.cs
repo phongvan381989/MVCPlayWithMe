@@ -2355,7 +2355,6 @@ namespace MVCPlayWithMe.General
 
             // Bỏ các ký tự đặc biệt không an toàn cho URL (giữ chữ, số, dấu tiếng Việt, dấu ngoặc, dấu gạch ngang)
             // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , . +
-            text = Regex.Replace(text, @"[/\?#&=<>""'%[]{}|^`@!$*;:,.+]", "");
 
             // Bỏ dấu - thừa (nếu có nhiều dấu - liên tiếp)
             text = Regex.Replace(text, @"-+", "-");

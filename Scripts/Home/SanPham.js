@@ -653,19 +653,19 @@ function ShowProductSpecifications() {
 
     // Thêm các thông tin chi tiết (với links)
     if (sanPhamObject.Author) {
-        AddSpecRow("Tác giả", sanPhamObject.Author, `/Search?author=${encodeURIComponent(sanPhamObject.Author)}`);
+        AddSpecRow("Tác giả", sanPhamObject.Author, `/Home/Search?author=${encodeURIComponent(sanPhamObject.Author)}`);
     }
     if (sanPhamObject.Translator) {
-        AddSpecRow("Người dịch", sanPhamObject.Translator, `/Search?translator=${encodeURIComponent(sanPhamObject.Translator)}`);
+        AddSpecRow("Người dịch", sanPhamObject.Translator, `/Home/Search?translator=${encodeURIComponent(sanPhamObject.Translator)}`);
     }
     if (sanPhamObject.CategoryName && sanPhamObject.CategoryId) {
-        AddSpecRow("Danh mục", sanPhamObject.CategoryName, `/Search?categoryId=${sanPhamObject.CategoryId}`);
+        AddSpecRow("Danh mục", sanPhamObject.CategoryName, `/Home/Search?category=${sanPhamObject.CategoryName}`);
     }
     if (sanPhamObject.PublishingCompany) {
-        AddSpecRow("Nhà xuất bản", sanPhamObject.PublishingCompany, `/Search?publishingCompany=${encodeURIComponent(sanPhamObject.PublishingCompany)}`);
+        AddSpecRow("Nhà xuất bản", sanPhamObject.PublishingCompany, `/Home/Search?publishingCompany=${encodeURIComponent(sanPhamObject.PublishingCompany)}`);
     }
     if (sanPhamObject.PublisherName && sanPhamObject.PublisherId) {
-        AddSpecRow("Nhà phát hành", sanPhamObject.PublisherName, `/Search?publisherId=${sanPhamObject.PublisherId}`);
+        AddSpecRow("Nhà phát hành", sanPhamObject.PublisherName, `/Home/Search?publisher=${sanPhamObject.PublisherName}`);
     }
 
     // Năm xuất bản — chỉ hiển thị nếu cách năm hiện tại <= 3
