@@ -97,13 +97,13 @@ async function HomePageShowItem() {
         return;
     }
 
-    // Tính chiều cao item-medium-media
-    if (scrWidth >= 800) {
-        document.getElementById("item-medium-media").style.height = "600px";
-    }
-    else {
-        document.getElementById("item-medium-media").style.height = scrWidth + "px";
-    }
+    // // Tính chiều cao item-medium-media
+    // if (scrWidth >= 800) {
+    //     document.getElementById("item-medium-media").style.height = "600px";
+    // }
+    // else {
+    //     document.getElementById("item-medium-media").style.height = scrWidth + "px";
+    // }
 
     //// Mỗi video, image item sẽ chiếm 100(width) + 5(margin lef) + 5(margin lef) + 2(border) = 112 px
     //// Tính số item có thể hiển thị

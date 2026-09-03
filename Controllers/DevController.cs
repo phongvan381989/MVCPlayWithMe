@@ -990,6 +990,7 @@ namespace MVCPlayWithMe.Controllers
 
         /// <summary>
         /// Sinh file sitemap.xml tĩnh từ danh sách sản phẩm trong DB
+        /// Chạy manual hoặc tự động mỗi ngày lúc 4h sáng
         /// </summary>
         [HttpPost]
         public async Task<string> GenerateSitemap()
@@ -1002,61 +1003,11 @@ namespace MVCPlayWithMe.Controllers
 
             try
             {
-                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-                {
-                    await conn.OpenAsync();
+                string sitemapPath = Server.MapPath("~/sitemap.xml");
+                int productCount = await GenerateSitemapBackground(sitemapPath);
 
-                    // Lấy danh sách item active
-                    List<MVCPlayWithMe.Models.Item> items = new List<Models.Item>();// await itemModelsqler.GetListItemActiveAsync(); // temporary comment
-
-                    // Tạo XML sitemap
-                    string baseUrl = "https://voibenho.com";
-                    StringBuilder xml = new StringBuilder();
-                    xml.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
-                    xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
-
-                    // Trang chủ
-                    xml.AppendLine("  <url>");
-                    xml.AppendLine("    <loc>" + baseUrl + "/</loc>");
-                    xml.AppendLine("    <lastmod>" + DateTime.Now.ToString("yyyy-MM-dd") + "</lastmod>");
-                    xml.AppendLine("    <changefreq>daily</changefreq>");
-                    xml.AppendLine("    <priority>1.0</priority>");
-                    xml.AppendLine("  </url>");
-
-                    // Trang chính sách
-                    xml.AppendLine("  <url>");
-                    xml.AppendLine("    <loc>" + baseUrl + "/Policy/Index</loc>");
-                    xml.AppendLine("    <lastmod>" + DateTime.Now.ToString("yyyy-MM-dd") + "</lastmod>");
-                    xml.AppendLine("    <changefreq>monthly</changefreq>");
-                    xml.AppendLine("    <priority>0.6</priority>");
-                    xml.AppendLine("  </url>");
-
-                    // Chi tiết từng sản phẩm
-                    foreach (var item in items)
-                    {
-                        if (item != null && item.id > 0 && !string.IsNullOrWhiteSpace(item.name))
-                        {
-                            string slug = Common.GenerateSlug(item.name);
-                            string slugId = slug + "-" + item.id;
-
-                            xml.AppendLine("  <url>");
-                            xml.AppendLine("    <loc>" + baseUrl + "/item/" + System.Web.HttpUtility.UrlPathEncode(slugId) + "</loc>");
-                            xml.AppendLine("    <lastmod>" + DateTime.Now.ToString("yyyy-MM-dd") + "</lastmod>");
-                            xml.AppendLine("    <changefreq>weekly</changefreq>");
-                            xml.AppendLine("    <priority>0.8</priority>");
-                            xml.AppendLine("  </url>");
-                        }
-                    }
-
-                    xml.AppendLine("</urlset>");
-
-                    // Lưu file vào root folder
-                    string sitemapPath = Server.MapPath("~/sitemap.xml");
-                    System.IO.File.WriteAllText(sitemapPath, xml.ToString(), Encoding.UTF8);
-
-                    result.Message = "Đã sinh sitemap.xml với " + items.Count + " sản phẩm";
-                    MyLogger.GetInstance().Info("Generated sitemap.xml with " + items.Count + " items");
-                }
+                result.Message = "Đã sinh sitemap.xml với " + productCount + " sản phẩm";
+                MyLogger.GetInstance().Info("Generated sitemap.xml with " + productCount + " products");
             }
             catch (Exception ex)
             {
@@ -1066,6 +1017,101 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Static method để generate sitemap - gọi từ background thread
+        /// </summary>
+        public static async Task<int> GenerateSitemapBackground(string sitemapPath)
+        {
+            int productCount = 0;
+
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+
+                // Lấy danh sách sản phẩm đang kinh doanh (Status = 0)
+                List<(int id, string name, DateTime? updatedDate)> products = new List<(int, string, DateTime?)>();
+
+                string query = "SELECT Id, Name, UpdatedDate FROM tb_san_pham WHERE Status = 0 ORDER BY Id";
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                using (MySqlDataReader rdr = await cmd.ExecuteReaderAsync())
+                {
+                    while (await rdr.ReadAsync())
+                    {
+                        int id = rdr.GetInt32("Id");
+                        string name = MyMySql.GetString(rdr, "Name");
+                        DateTime? updatedDate = MyMySql.GetDateTime(rdr, "UpdatedDate");
+                        products.Add((id, name, updatedDate));
+                    }
+                }
+
+                productCount = products.Count;
+
+                // Tạo XML sitemap
+                string baseUrl = "https://voibenho.com";
+                StringBuilder xml = new StringBuilder();
+                xml.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
+                xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+
+                // Trang chủ (hiện tại = /Home/Search không tham số, nội dung tĩnh)
+                xml.AppendLine("  <url>");
+                xml.AppendLine("    <loc>" + baseUrl + "/</loc>");
+                // Không có <lastmod> vì trang chủ ít thay đổi → Google tự quyết định crawl
+                xml.AppendLine("    <changefreq>monthly</changefreq>");
+                xml.AppendLine("    <priority>1.0</priority>");
+                xml.AppendLine("  </url>");
+
+                // Các trang chính sách
+                string[] policyPages = new[]
+                {
+                    "InforCustomerPolicy",
+                    "GuaranteePolicy",
+                    "ReturnRefundPolicy",
+                    "CheckPolicy",
+                    "ComplaintPolicy",
+                    "PayPolicy",
+                    "OrderPolicy",
+                    "ObligationPolicy",
+                    "TransportPolicy",
+                    "IntroducePolicy"
+                };
+
+                foreach (string policyPage in policyPages)
+                {
+                    xml.AppendLine("  <url>");
+                    xml.AppendLine("    <loc>" + baseUrl + "/Policy/" + policyPage + "</loc>");
+                    xml.AppendLine("    <lastmod>2026-09-01</lastmod>");
+                    xml.AppendLine("    <changefreq>monthly</changefreq>");
+                    xml.AppendLine("    <priority>0.6</priority>");
+                    xml.AppendLine("  </url>");
+                }
+
+                // Chi tiết từng sản phẩm
+                foreach (var product in products)
+                {
+                    if (!string.IsNullOrWhiteSpace(product.name))
+                    {
+                        string slug = Common.GenerateSlug(product.name);
+                        string slugId = slug + "-" + product.id;
+                        string lastmod = product.updatedDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd");
+
+                        xml.AppendLine("  <url>");
+                        xml.AppendLine("    <loc>" + baseUrl + "/San-Pham/" + System.Web.HttpUtility.UrlPathEncode(slugId) + "</loc>");
+                        xml.AppendLine("    <lastmod>" + lastmod + "</lastmod>");
+                        xml.AppendLine("    <changefreq>weekly</changefreq>");
+                        xml.AppendLine("    <priority>0.8</priority>");
+                        xml.AppendLine("  </url>");
+                    }
+                }
+
+                xml.AppendLine("</urlset>");
+
+                // Lưu file vào root folder
+                System.IO.File.WriteAllText(sitemapPath, xml.ToString(), Encoding.UTF8);
+            }
+
+            return productCount;
         }
 
         /// <summary>

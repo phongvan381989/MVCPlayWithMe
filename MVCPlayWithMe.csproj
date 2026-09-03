@@ -718,6 +718,7 @@
     <None Include="packages.config" />
     <None Include="Properties\PublishProfiles\CustomProfile.pubxml" />
     <None Include="Properties\PublishProfiles\CustomProfile1.pubxml" />
+    <Content Include="google1b434a460e372117.html" />
     <Content Include="ILLink\ILLink.Descriptors.LibraryBuild.xml" />
     <Content Include="robots.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

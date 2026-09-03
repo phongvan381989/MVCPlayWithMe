@@ -309,7 +309,7 @@ namespace MVCPlayWithMe.Controllers
                 return AuthenticationFail();
             }
 
-            ViewData["title"] = "Quản lý đơn hàng";
+            ViewData["title"] = "Quản lý đơn hàng Voi bé nhỏ";
             return View();
         }
 

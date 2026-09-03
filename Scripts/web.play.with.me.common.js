@@ -908,14 +908,6 @@ async function AuthenFail() {
     window.location.href = "/Home/Search";
 }
 
-// Set min width khi hiển thị trên màn hình nhỏ
-// ele: đối tượng html
-function SetMinWidth(ele, minValue) {
-    if (scrWidth <= minValue) {
-        ele.style.minWidth = scrWidth + "px";
-    }
-}
-
 // ele là <datalist>
 // list là danh sách dữ liệu có cấu trúc: id, name
 function SetDataListOfIdName(ele, list) {

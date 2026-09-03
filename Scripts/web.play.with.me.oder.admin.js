@@ -5,8 +5,6 @@ let currentOrder; // Đơn hàng đang view chi tiết trên modal
 // Get the modal
 let modal = document.getElementById("order-detail-modal");
 
-SetMinWidth(document.getElementsByClassName("order-content-modal")[0], 600);
-
 InitializeModalInOrderPage();
 InitializeEnterPress();
 InitializeSomething();

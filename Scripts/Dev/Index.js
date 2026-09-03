@@ -296,13 +296,40 @@ async function LazadaRefreshAccessToken() {
 }
 
 async function GenerateSitemap() {
-    const searchParams = new URLSearchParams();
-    let query = "/Dev/GenerateSitemap";
-    ShowCircleLoader();
-    let responseDB = await RequestHttpPostPromise(searchParams, query);
-    RemoveCircleLoader();
+    const resultDiv = document.getElementById('generate-sitemap-result');
 
-    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Sinh sitemap.xml thành công!", "Có lỗi khi sinh sitemap.xml");
+    try {
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = '#fff3cd';
+        resultDiv.style.border = '1px solid #ffc107';
+        resultDiv.style.color = '#856404';
+        resultDiv.innerHTML = '⏳ Đang sinh sitemap.xml...';
+
+        const responseText = await PostJSON('/Dev/GenerateSitemap', {});
+        const result = JSON.parse(responseText);
+
+        if (result.State === 0) {
+            resultDiv.style.background = '#d4edda';
+            resultDiv.style.border = '1px solid #28a745';
+            resultDiv.style.color = '#155724';
+            resultDiv.innerHTML = '✅ ' + result.Message + '\n\n📍 File: ~/sitemap.xml\n🔗 URL: https://voibenho.com/sitemap.xml';
+            alert('✅ ' + result.Message);
+        } else {
+            resultDiv.style.background = '#f8d7da';
+            resultDiv.style.border = '1px solid #dc3545';
+            resultDiv.style.color = '#721c24';
+            resultDiv.innerHTML = '❌ Lỗi: ' + result.Message;
+            alert('❌ Lỗi: ' + result.Message);
+        }
+    } catch (error) {
+        resultDiv.style.display = 'block';
+        resultDiv.style.background = '#f8d7da';
+        resultDiv.style.border = '1px solid #dc3545';
+        resultDiv.style.color = '#721c24';
+        resultDiv.innerHTML = '❌ Lỗi kết nối: ' + error.message;
+        alert('❌ Lỗi kết nối đến server!');
+        console.error(error);
+    }
 }
 
 /**

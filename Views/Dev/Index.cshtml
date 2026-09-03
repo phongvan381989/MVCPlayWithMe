@@ -189,14 +189,27 @@
                     Refresh Access Token
                 </button>
             </div>
+        </div>
 
-            <div class="fmx09gx8">
-                <div class="gmxk9381"> Sinh / cập nhật sitemap.xml</div>
-                <button type="button" onclick="GenerateSitemap()"
-                        title="Sinh file sitemap.xml tĩnh từ danh sách sản phẩm trong DB">
-                    Sinh / Cập Nhật sitemap.xml
-                </button>
+        <div class="fmx09gx8" style="margin-top: 20px; border: 2px solid #4CAF50; padding: 15px; border-radius: 8px; background: #f1f8f4;">
+            <div class="gmxk9381" style="color: #2e7d32; font-weight: bold;">
+                🗺️ SITEMAP.XML - SEO
             </div>
+            <div style="padding: 10px; background: #e8f5e9; border: 1px solid #a5d6a7; border-radius: 4px; margin: 10px 0;">
+                <strong>ℹ️ Thông tin:</strong>
+                <ul style="margin: 10px 0 0 20px; padding: 0;">
+                    <li>Sinh file sitemap.xml cho Google crawl</li>
+                    <li>Bao gồm: Trang chủ + 10 trang Policy + Tất cả sản phẩm (Status = 0)</li>
+                    <li>URL: <code>/San-Pham/{'{slug-id}'}</code></li>
+                    <li>Tự động chạy <strong>mỗi ngày lúc 4h sáng</strong></li>
+                </ul>
+            </div>
+            <button type="button" onclick="GenerateSitemap()"
+                    title="Sinh file sitemap.xml tĩnh từ danh sách sản phẩm trong DB"
+                    style="background: #4CAF50; color: white; font-weight: bold; padding: 12px 24px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                🚀 Sinh / Cập Nhật sitemap.xml Ngay
+            </button>
+            <div id="generate-sitemap-result" style="display: none; margin-top: 15px; padding: 15px; border-radius: 4px; font-family: monospace; font-size: 12px;"></div>
         </div>
 
         <div class="fmx09gx8" style="margin-top: 20px; border: 2px solid #ff6b6b; padding: 15px; border-radius: 8px; background: #fff5f5;">

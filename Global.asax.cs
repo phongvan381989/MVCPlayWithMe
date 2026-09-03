@@ -113,10 +113,27 @@ namespace MVCPlayWithMe
                             //{
                             //    DealAction.CheckAndCreateDeal_Background(false);
                             //}
-                            Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
+                            //Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút trước lần lặp tiếp theo
 
                             // Lấy sản phẩm mới / mới cập nhật trên sàn và lưu db
                             //CommonOpenPlatform.GetNewItemAndInsertIfDontExist(3).GetAwaiter().GetResult();
+                        }
+
+                        // Generate sitemap.xml mỗi ngày lúc 4h sáng
+                        if (dateNow.Hour == 4 && dateNow.Minute < 25)
+                        {
+                            try
+                            {
+                                string sitemapPath = System.Web.Hosting.HostingEnvironment.MapPath("~/sitemap.xml");
+                                int productCount = Controllers.DevController.GenerateSitemapBackground(sitemapPath).GetAwaiter().GetResult();
+                                MyLogger.GetInstance().Info($"Auto-generated sitemap.xml at 4AM with {productCount} products");
+                            }
+                            catch (Exception exSitemap)
+                            {
+                                MyLogger.GetInstance().Error($"Error auto-generating sitemap: {exSitemap}");
+                            }
+
+                            Thread.Sleep(10 * 60 * 1000); // Tạm dừng 10 phút để không chạy lại trong cùng 1 giờ
                         }
                     }
                     catch (Exception ex)

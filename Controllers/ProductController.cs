@@ -2095,6 +2095,7 @@ namespace MVCPlayWithMe.Controllers
 
             await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, eECommerceType, conn);
         }
+
         public static async Task<List<CommonItem>> GetListNeedUpdateQuantityAndUpdate_CoreAsync()
         {
             List<CommonItem> ls = new List<CommonItem>();
@@ -2107,25 +2108,31 @@ namespace MVCPlayWithMe.Controllers
                     // Danh sách sản phẩm trong kho có thay đổi số lượng cần cập nhật
                     List<int> tikiProductIdList =
                         await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.TIKI);
+                    if(tikiProductIdList.Count > 0)
+                    {
+                        List<CommonItem> tikiList = await TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                        await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
+                        ls.AddRange(tikiList);
+                    }
 
                     List<int> shopeeProductIdList =
                         await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.SHOPEE);
+                    if (shopeeProductIdList.Count > 0)
+                    {
+                        List<CommonItem> shopeeList = await ShopeeGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                        await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.SHOPEE, shopeeProductIdList, shopeeList, conn);
+                        ls.AddRange(shopeeList);
+                    }
 
                     List<int> lazadaProductIdList =
                         await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.LAZADA);
 
-                    List<CommonItem> shopeeList = await ShopeeGetListNeedUpdateQuantityAndUpdateAsync(conn);
-                    List<CommonItem> tikiList = await TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
-                    List<CommonItem> lazadaList = await LazadaGetListNeedUpdateQuantityAndUpdateAsync(conn);
-
-
-                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
-                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.SHOPEE, shopeeProductIdList, shopeeList, conn);
-                    await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.LAZADA, lazadaProductIdList, lazadaList, conn);
-
-                    ls.AddRange(shopeeList);
-                    ls.AddRange(tikiList);
-                    ls.AddRange(lazadaList);
+                    if (lazadaProductIdList.Count > 0)
+                    {
+                        List<CommonItem> lazadaList = await LazadaGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                        await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.LAZADA, lazadaProductIdList, lazadaList, conn);
+                        ls.AddRange(lazadaList);
+                    }
                 }
                 catch (Exception ex)
                 {

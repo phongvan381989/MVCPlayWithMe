@@ -1,19 +1,30 @@
 User-agent: *
-Disallow: /
+
+# ALLOW - Trang public (SEO)
+Allow: /$
+Allow: /San-Pham/
+Allow: /Policy/
+
+# DISALLOW - Admin & API
 Disallow: /Administrator/
-Disallow: /Customer/
 Disallow: /Product/
 Disallow: /ItemModel/
 Disallow: /Category/
 Disallow: /Publisher/
 Disallow: /Combo/
 Disallow: /Dev/
-Disallow: /PushMechanism/
+Disallow: /ProductECommerce/
 Disallow: /OpenPlatform/
+Disallow: /PushMechanism/
+
+# DISALLOW - Customer area
+Disallow: /Customer/
+
+# DISALLOW - Checkout & Cart & Item
+Disallow: /Item/
 Disallow: /Home/Checkout
 Disallow: /Home/Cart
 Disallow: /Home/Search
 Disallow: /Home/Error
-Disallow: /ProductECommerce/
 
 Sitemap: https://voibenho.com/sitemap.xml
