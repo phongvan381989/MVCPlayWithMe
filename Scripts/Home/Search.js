@@ -283,7 +283,7 @@ function CreateProductCard(item, sample) {
     let itemElement = sample.cloneNode(true);
 
     // Set link chi tiết sản phẩm
-    itemElement.getElementsByClassName("product-item")[0].href = "/san-pham/" + GenerateSlugId(item.Name, item.Id);
+    itemElement.getElementsByClassName("product-item")[0].href = "/San-Pham/" + GenerateSlugId(item.Name, item.Id);
 
     // Hiển thị vì sample đang ẩn
     itemElement.style.display = "block";

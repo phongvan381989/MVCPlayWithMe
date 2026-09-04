@@ -3,6 +3,7 @@ using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
@@ -1993,6 +1994,51 @@ namespace MVCPlayWithMe.Controllers
             return listCommonItem;
         }
 
+        // Tương tự GetListNeedUpdateQuantity của sàn và thêm cập nhật trạng thái PWM = 0 ở tbneedupdatequantity
+        public static async Task VBNGetListNeedUpdateQuantityAndUpdateAsync(MySqlConnection conn)
+        {
+            // Cập nhật số lượng cho voibenho
+            List<int> vbnProductIdList =
+                await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.PLAY_WITH_ME);
+            if (vbnProductIdList.Count > 0)
+            {
+                List<SanPham> listSP = await SanPhamMySql.GetListNeedUpdateQuantityConnectOutAsync(conn);
+                if(listSP.Count == 0)
+                {
+                    return;
+                }
+
+                List<SanPham> failedSPs = await SanPhamMySql.BulkUpdateQuantityAsync(conn, listSP);
+
+                // Danh sách sản phẩm kho chưa cập nhật số lượng thành công
+                List<int> listProductIdUpdateFail = new List<int>();
+
+                foreach (var sp in failedSPs)
+                {
+                    foreach (var mapping in sp.Mappings)
+                    {
+                        if (vbnProductIdList.Contains(mapping.SanPhamKhoId) &&
+                            !listProductIdUpdateFail.Contains(mapping.SanPhamKhoId))
+                        {
+                            listProductIdUpdateFail.Add(mapping.SanPhamKhoId);
+                        }
+                    }
+                }
+
+                // Danh sách sản phẩm cập nhật thành công
+                List<int> listProductIdUpdateSuccess = new List<int>();
+                foreach (var id in vbnProductIdList)
+                {
+                    if (!listProductIdUpdateFail.Contains(id))
+                    {
+                        listProductIdUpdateSuccess.Add(id);
+                    }
+                }
+
+                await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, EECommerceType.PLAY_WITH_ME, conn);
+            }
+        }
+
         /// <summary>
         /// Tìm product id cập nhật số lượng thất bại qua thông tin sàn trả về
         /// </summary>
@@ -2133,6 +2179,9 @@ namespace MVCPlayWithMe.Controllers
                         await UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.LAZADA, lazadaProductIdList, lazadaList, conn);
                         ls.AddRange(lazadaList);
                     }
+
+                    // Cập nhật số lượng cho voibenho
+                    await VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
                 }
                 catch (Exception ex)
                 {
@@ -2220,10 +2269,12 @@ namespace MVCPlayWithMe.Controllers
                     List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfProductAsync(id, conn);
                     List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfProductAsync(id, conn);
                     List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfProductAsync(id, conn);
+                    List<CommonItem> vbnList = await SanPhamMySql.GetListMappingOfProductAsync(id, conn);
 
                     ls.AddRange(tikiList);
                     ls.AddRange(shopeeList);
                     ls.AddRange(lazadaList);
+                    ls.AddRange(vbnList);
                 }
             }
             catch (Exception ex)

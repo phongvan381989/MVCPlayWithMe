@@ -366,7 +366,7 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        private void TikiTestSomething1()
+        private async Task TikiTestSomething1()
         {
             //MySqlConnection conn = new MySqlConnection(MyMySql.connStr);
             //conn.Open();
@@ -391,7 +391,6 @@ namespace MVCPlayWithMe.Controllers
             //tikiSqler.UpdateCancelledStatusTbItemOfEcommerceOderAsync(commonOrder, EECommerceType.SHOPEE, conn);
             //conn.Close();
         }
-
         private async Task RecursionGetCategoryOfTiki(int id,
             string parrentName,
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiCategory> ls)
@@ -783,12 +782,18 @@ namespace MVCPlayWithMe.Controllers
             //    "https://down-zl-sg.vod.susercontent.com/api/v4/11110105/mms/vn-11110105-6khw6-m29dapkxu0tu36.16000081730883931.mp4",
             //    Common.absoluteForCreateMediaFolderPath + "/0.mp4");
 
+            //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            //{
+            //    await conn.OpenAsync();
+            //    result = await LazadaProductAPI.LazadaUploadVideoAsync(
+            //        "Ehon Buồn ngủ", @"C:\Users\phong\TUNM\Works\WebPlayWithMe\MVCPlayWithMe\MVCPlayWithMe\Media\Temporary\ForCreate\0.mp4",
+            //        conn);
+            //}
+
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                result = await LazadaProductAPI.LazadaUploadVideoAsync(
-                    "Ehon Buồn ngủ", @"C:\Users\phong\TUNM\Works\WebPlayWithMe\MVCPlayWithMe\MVCPlayWithMe\Media\Temporary\ForCreate\0.mp4",
-                    conn);
+                await ProductController.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -1052,7 +1057,7 @@ namespace MVCPlayWithMe.Controllers
                 productCount = products.Count;
 
                 // Tạo XML sitemap
-                string baseUrl = "https://voibenho.com";
+                string baseUrl = Common.httpsVoiBeNho;//"https://voibenho.com";
                 StringBuilder xml = new StringBuilder();
                 xml.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");

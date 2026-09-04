@@ -177,6 +177,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             Quantity = 0;
             Discount = 0;
             SalePrice = 0;
+            Mappings = new List<SanPhamMapping>();
+            MediaList = new List<SanPhamMedia>();
         }
 
         // Constructor đầy đủ
@@ -325,6 +327,37 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public List<SanPhamMedia> MediaList { get; set; } = new List<SanPhamMedia>();
 
         public List<SanPhamMapping> Mappings { get; set; } = new List<SanPhamMapping>();
+
+        public int GetQuantityFromMappings()
+        {
+            if(Mappings == null || Mappings.Count == 0)
+            {
+                return 0;
+            }
+
+            int quantity = Int32.MaxValue;
+            foreach(var mapping in Mappings)
+            {
+                if (mapping.SanPhamKhoQuantity <= 0 || mapping.Quantity <= 0)
+                {
+                    quantity = 0;
+                }
+                else
+                {
+                    int quantityTemp = mapping.SanPhamKhoQuantity / mapping.Quantity;
+                    if (quantityTemp < quantity)
+                    {
+                        quantity = quantityTemp;
+                    }
+                }
+            }
+            if (quantity < 0)
+            {
+                quantity = 0;
+            }
+
+            return quantity;
+        }
     }
 
     /// <summary>

@@ -277,7 +277,7 @@ function PreviewProduct() {
     const slugId = GenerateSlugId(name, sanPhamId);
 
     // Mở tab mới với URL preview
-    const previewUrl = `/san-pham/${slugId}`;
+    const previewUrl = `/San-Pham/${slugId}`;
     window.open(previewUrl, '_blank');
 }
 

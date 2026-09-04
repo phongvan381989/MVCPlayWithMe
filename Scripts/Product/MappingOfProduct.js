@@ -1,4 +1,4 @@
-// mảng sản phẩm cần cập nhật
+﻿// mảng sản phẩm cần cập nhật
 let listCommonItem = [];
 
 async function GetListCommonItemMappingFromProductId() {
@@ -13,6 +13,9 @@ async function GetListCommonItemMappingFromProductId() {
 
     if (responseDB.responseText != "null") {
         listCommonItem = JSON.parse(responseDB.responseText);
+        if (DEBUG_ADMIN) {
+            console.log("GetListCommonItemMappingFromProductId responseText:" + responseDB.responseText);
+        }
     }
     else {
         listCommonItem = [];

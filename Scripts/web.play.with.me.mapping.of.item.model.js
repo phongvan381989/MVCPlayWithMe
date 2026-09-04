@@ -301,6 +301,9 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
                 else if (item.eType == eLazada) {
                     url = "/ProductECommerce/Item?eType=LAZADA&id=" + item.itemId;
                 }
+                else if (item.eType == ePlayWithMe) {
+                    url = "/SanPham/UpdateDelete?id=" + item.itemId;
+                }
                 if (url !== "") {
                     window.open(url);
                 }

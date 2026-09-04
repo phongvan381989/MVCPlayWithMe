@@ -1,4 +1,5 @@
 ﻿const DEBUG = false;
+const DEBUG_ADMIN = true;
 var thumbnailWidth = 150;
 var thumbnailHeight = 150;
 var avatarVideoHeight = 120;
@@ -17,6 +18,7 @@ var ePlayWithMe = "PLAYWITHME";
 var eTiki = "TIKI";
 var eShopee = "SHOPEE";
 var eLazada = "LAZADA";
+var httpsVoiBeNho = "https://voibenho.com";
 
 var intAll = -1;
 var intPlayWithMe = 0;
@@ -33,6 +35,137 @@ var sanPhamMediaFolderPath = MediaFolderPath + "/SanPham/";
 var tikiConstDiscount = 5;
 
 var messageRetryLater = "Vui lòng thử lại sau.";
+
+// ========================================
+// LOCALSTORAGE CACHE UTILITIES
+// ========================================
+
+function SetCache(cacheKey, data) {
+    try {
+        const cacheData = {
+            data: data
+        };
+
+        localStorage.setItem(cacheKey, JSON.stringify(cacheData));
+
+        if (DEBUG_ADMIN) {
+            const sizeKB = (JSON.stringify(cacheData).length / 1024).toFixed(2);
+            console.log(`✅ Cached: ${cacheKey} (${sizeKB} KB)`);
+        }
+
+        return true;
+    } catch (e) {
+        console.error("❌ Cannot save to localStorage:", e.message);
+        // localStorage full hoặc bị block (private mode)
+        return false;
+    }
+}
+
+function GetCache(cacheKey) {
+    try {
+        const cached = localStorage.getItem(cacheKey);
+        if (!cached) return null;
+
+        const cacheData = JSON.parse(cached);
+
+        if (DEBUG_ADMIN) {
+            console.log(`✅ Cache hit: ${cacheKey}`);
+        }
+
+        return cacheData.data;
+    } catch (e) {
+        console.error("❌ Get cache error:", e.message);
+        // Corrupted cache → remove it
+        localStorage.removeItem(cacheKey);
+        return null;
+    }
+}
+
+function ClearCache(cacheKey) {
+    localStorage.removeItem(cacheKey);
+    if (DEBUG_ADMIN) console.log(`🗑️ Cleared cache: ${cacheKey}`);
+}
+
+function ClearAllVBNCache() {
+    const keys = Object.keys(localStorage);
+    let count = 0;
+
+    keys.forEach(key => {
+        if (key.startsWith('vbn_cache_')) {
+            localStorage.removeItem(key);
+            count++;
+        }
+    });
+
+    if (DEBUG_ADMIN) console.log(`🗑️ Cleared ${count} cache entries`);
+    return count;
+}
+
+// Backward compatibility alias
+function ClearAllSanPhamCache() {
+    return ClearAllVBNCache();
+}
+
+// Debug: Hiển thị tất cả cache
+function ShowCacheStatus() {
+    console.log("=== VBN Cache Status ===");
+
+    const keys = Object.keys(localStorage);
+    let totalSize = 0;
+
+    keys.forEach(key => {
+        if (key.startsWith('vbn_cache_')) {
+            const value = localStorage.getItem(key);
+            const sizeKB = (value.length / 1024).toFixed(2);
+            totalSize += value.length;
+
+            try {
+                const cacheData = JSON.parse(value);
+
+                console.log(`${key}:`);
+                console.log(`  Size: ${sizeKB} KB`);
+                console.log(`  Items: ${Array.isArray(cacheData.data) ? cacheData.data.length : 'N/A'}`);
+            } catch (e) {
+                console.log(`${key}: ❌ Corrupted`);
+            }
+        }
+    });
+
+    const totalKB = (totalSize / 1024).toFixed(2);
+    const totalMB = (totalSize / 1024 / 1024).toFixed(2);
+    const percentUsed = ((totalSize / (5 * 1024 * 1024)) * 100).toFixed(1);
+
+    console.log(`\n📊 Total cache size: ${totalKB} KB (${totalMB} MB)`);
+    console.log(`📊 localStorage used: ${percentUsed}% of 5 MB`);
+}
+
+// Làm mới tất cả cached data (gọi khi click nút Refresh)
+// CHỈ cập nhật cache, KHÔNG render HTML → phải F5 để load data mới
+async function RefreshAllCachedData() {
+    if (!confirm('Làm mới TẤT CẢ danh sách từ server?\n\n(Combo, Category, Publisher, Author, Translator, Product Names, Publishing Company)\n\nSau khi làm mới, vui lòng F5 trang để tải dữ liệu mới.')) {
+        return;
+    }
+
+    try {
+        // Xóa tất cả cache
+        const clearedCount = ClearAllVBNCache();
+        console.log(`🗑️ Cleared ${clearedCount} cache entries`);
+
+        // Chỉ load data vào cache, KHÔNG render HTML
+        await FetchListCombo(true);
+        await FetchListCategory(true);
+        await FetchListPublisher(true);
+        await FetchListPublishingCompany(true);
+        await FetchListProductName(true);
+        await FetchListAuthor(true);
+        await FetchListTranslator(true);
+
+        alert('✅ Đã làm mới cache!\n\nVui lòng F5 trang để tải dữ liệu mới.');
+    } catch (error) {
+        alert('❌ Lỗi khi làm mới: ' + error.message);
+        console.error(error);
+    }
+}
 
 function isEmptyOrSpaces(str) {
     return str == null || str.match(/^[ |	]*$/) !== null;
@@ -420,7 +553,7 @@ function RequestHttpPostPromise(searchParams, url) {
             reject("Network Error or Connection Refused (Status: " + this.status + ") (StatusText: " + this.statusText + ") ");
         }
 
-        if (DEBUG) {
+        if (DEBUG_ADMIN) {
             let lastQuery = url + "?" + searchParams.toString();
             console.log(lastQuery);
         }
@@ -445,7 +578,7 @@ function RequestHttpPotstPromiseUploadFile(file, url) {
             reject(this.statusText);
         }
 
-        if (DEBUG) {
+        if (DEBUG_ADMIN) {
             console.log(url);
         }
         xhttp.open("POST", url);
@@ -455,7 +588,7 @@ function RequestHttpPotstPromiseUploadFile(file, url) {
 }
 
 function RequestHttpPostUpFilePromise(xhttp, url, file) {
-    if (DEBUG) {
+    if (DEBUG_ADMIN) {
         console.log(url);
     }
     return new Promise(function (resolve, reject) {
@@ -503,7 +636,7 @@ function RequestHttpGetPromise(searchParams, url) {
         }
 
         let lastQuery = url + "?" + searchParams.toString();
-        if (DEBUG) {
+        if (DEBUG_ADMIN) {
             console.log(lastQuery);
         }
         xhttp.open("GET", lastQuery);
@@ -945,144 +1078,364 @@ function SetDataListOfString(ele, list) {
     }
 }
 
-async function GetListProductName() {
-    if (document.getElementById("product-name-id") == null) {
-        return;
-    }
-    document.getElementById("product-name-id").disabled = true;
-    const searchParams = new URLSearchParams();
+// ========================================
+// DATA LAYER - Fetch functions (không phụ thuộc HTML)
+// ========================================
 
+async function FetchListProductName(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_productnames';
+
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: ProductNames");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: ProductNames");
+
+    const searchParams = new URLSearchParams();
     let query = "/Product/GetListProductName";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-product-name");
-        SetDataListOfIdName(ele, list);
-        document.getElementById("product-name-id").disabled = false;
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
     }
+
+    return null;
 }
 
-async function GetListCombo() {
-    if (document.getElementById("combo-id") == null) {
+// ========================================
+// UI LAYER - Render functions (backward compatible)
+// ========================================
+
+async function GetListProductName(forceRefresh = false) {
+    const elementId = 'product-name-id';
+    const datalistId = 'list-product-name';
+
+    if (document.getElementById(elementId) == null) {
         return;
     }
-    document.getElementById("combo-id").disabled = true;
-    const searchParams = new URLSearchParams();
 
+    document.getElementById(elementId).disabled = true;
+
+    const list = await FetchListProductName(forceRefresh);
+
+    if (list) {
+        let ele = document.getElementById(datalistId);
+        SetDataListOfIdName(ele, list);
+    }
+
+    document.getElementById(elementId).disabled = false;
+}
+
+async function FetchListCombo(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_combos';
+
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: Combos");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: Combos");
+
+    const searchParams = new URLSearchParams();
     let query = "/Combo/GetListCombo";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = [];
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-combo");
-        SetDataListOfIdName(ele, list);
-        document.getElementById("combo-id").disabled = false;
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
     }
+
+    return [];
 }
 
-async function GetListCategory() {
-    if (document.getElementById("category-id") == null) {
+async function GetListCombo(forceRefresh = false) {
+    const elementId = 'combo-id';
+    const datalistId = 'list-combo';
+
+    if (document.getElementById(elementId) == null) {
         return;
     }
-    document.getElementById("category-id").disabled = true;
-    const searchParams = new URLSearchParams();
 
+    document.getElementById(elementId).disabled = true;
+
+    const list = await FetchListCombo(forceRefresh);
+
+    if (list && list.length > 0) {
+        let ele = document.getElementById(datalistId);
+        SetDataListOfIdName(ele, list);
+    }
+
+    document.getElementById(elementId).disabled = false;
+}
+
+async function FetchListCategory(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_categories';
+
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: Categories");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: Categories");
+
+    const searchParams = new URLSearchParams();
     let query = "/Category/GetListCategory";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-category");
-        SetDataListOfIdName(ele, list);
-        document.getElementById("category-id").disabled = false;
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
     }
+
+    return null;
 }
 
-async function GetListAuthor() {
-    if (document.getElementById("author-id") == null) {
+async function GetListCategory(forceRefresh = false) {
+    const elementId = 'category-id';
+    const datalistId = 'list-category';
+
+    if (document.getElementById(elementId) == null) {
         return;
     }
-    document.getElementById("author-id").disabled = true;
-    const searchParams = new URLSearchParams();
 
+    document.getElementById(elementId).disabled = true;
+
+    const list = await FetchListCategory(forceRefresh);
+
+    if (list) {
+        let ele = document.getElementById(datalistId);
+        SetDataListOfIdName(ele, list);
+    }
+
+    document.getElementById(elementId).disabled = false;
+}
+
+async function FetchListAuthor(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_authors';
+
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: Authors");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: Authors");
+
+    const searchParams = new URLSearchParams();
     let query = "/Product/GetListAuthor";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-author");
-        SetDataListOfString(ele, list);
-        document.getElementById("author-id").disabled = false;
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
     }
+
+    return null;
 }
 
-async function GetListTranslator() {
-    if (document.getElementById("translator-id") == null) {
+async function GetListAuthor(forceRefresh = false) {
+    const elementId = 'author-id';
+    const datalistId = 'list-author';
+
+    if (document.getElementById(elementId) == null) {
         return;
     }
-    document.getElementById("translator-id").disabled = true;
-    const searchParams = new URLSearchParams();
 
+    document.getElementById(elementId).disabled = true;
+
+    const list = await FetchListAuthor(forceRefresh);
+
+    if (list) {
+        let ele = document.getElementById(datalistId);
+        SetDataListOfString(ele, list);
+    }
+
+    document.getElementById(elementId).disabled = false;
+}
+
+async function FetchListTranslator(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_translators';
+
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: Translators");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: Translators");
+
+    const searchParams = new URLSearchParams();
     let query = "/Product/GetListTranslator";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-translator");
-        SetDataListOfString(ele, list);
-        document.getElementById("translator-id").disabled = false;
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
     }
+
+    return null;
 }
 
-async function GetListPubliserCore() {
+async function GetListTranslator(forceRefresh = false) {
+    const elementId = 'translator-id';
+    const datalistId = 'list-translator';
+
+    if (document.getElementById(elementId) == null) {
+        return;
+    }
+
+    document.getElementById(elementId).disabled = true;
+
+    const list = await FetchListTranslator(forceRefresh);
+
+    if (list) {
+        let ele = document.getElementById(datalistId);
+        SetDataListOfString(ele, list);
+    }
+
+    document.getElementById(elementId).disabled = false;
+}
+
+async function FetchListPublisher(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_publishers';
+
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: Publishers");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: Publishers");
+
     const searchParams = new URLSearchParams();
     let query = "/Publisher/GetListPublisher";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = [];
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
     }
-    return list;
+
+    return [];
 }
 
-async function GetListPublisher() {
+// Backward compatibility alias
+async function GetListPubliserCore(forceRefresh = false) {
+    return await FetchListPublisher(forceRefresh);
+}
+
+async function GetListPublisher(forceRefresh = false) {
     if (document.getElementById("publisher-id") == null) {
         return;
     }
+
     document.getElementById("publisher-id").disabled = true;
 
-    let list = await GetListPubliserCore();
-    if (list.length > 0) {
+    const list = await FetchListPublisher(forceRefresh);
+
+    if (list && list.length > 0) {
         let ele = document.getElementById("list-Publisher");
         SetDataListOfIdName(ele, list);
-        document.getElementById("publisher-id").disabled = false;
     }
+
+    document.getElementById("publisher-id").disabled = false;
 }
 
-async function GetListPublishingCompany() {
-    if (document.getElementById("publishing-company-id") == null) {
-        return;
-    }
-    document.getElementById("publishing-company-id").disabled = true;
-    const searchParams = new URLSearchParams();
+async function FetchListPublishingCompany(forceRefresh = false) {
+    const cacheKey = 'vbn_cache_publishingcompanies';
 
+    if (forceRefresh) {
+        ClearCache(cacheKey);
+    }
+
+    if (!forceRefresh) {
+        const cachedData = GetCache(cacheKey);
+        if (cachedData) {
+            if (DEBUG_ADMIN) console.log("📦 Loaded from cache: PublishingCompanies");
+            return cachedData;
+        }
+    }
+
+    if (DEBUG_ADMIN) console.log("🌐 Loading from server: PublishingCompanies");
+
+    const searchParams = new URLSearchParams();
     let query = "/Product/GetListPublishingCompany";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
     if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-publishing-company");
+        const list = JSON.parse(responseDB.responseText);
+        SetCache(cacheKey, list);
+        return list;
+    }
+
+    return null;
+}
+
+async function GetListPublishingCompany(forceRefresh = false) {
+    const elementId = 'publishing-company-id';
+    const datalistId = 'list-publishing-company';
+
+    if (document.getElementById(elementId) == null) {
+        return;
+    }
+
+    document.getElementById(elementId).disabled = true;
+
+    const list = await FetchListPublishingCompany(forceRefresh);
+
+    if (list) {
+        let ele = document.getElementById(datalistId);
         SetDataListOfString(ele, list);
     }
-    document.getElementById("publishing-company-id").disabled = false;
+
+    document.getElementById(elementId).disabled = false;
 }
 
 async function GetTaxAndFeeCore(eEcommerceName) {
@@ -1145,6 +1498,10 @@ function GetTMDTItemUrlFromCommonItem(commonItem) {
     // Item là Lazada
     else if (commonItem.eType == eLazada) {
         itemUrl = GetLazadaItemUrl(commonItem.itemId);
+    }
+    //Item là Voi bé nhỏ
+    else if (commonItem.eType == ePlayWithMe) {
+        itemUrl = httpsVoiBeNho + "/San-Pham/" + GenerateSlugId(commonItem.name, commonItem.itemId);
     }
     return itemUrl;
 }
