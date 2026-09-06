@@ -1,4 +1,4 @@
-// mảng sản phẩm cần cập nhật
+﻿// mảng sản phẩm cần cập nhật
 let listCommonItem = [];
 
 async function GetListCommonItemMappingFromComboId() {
@@ -20,3 +20,7 @@ async function GetListCommonItemMappingFromComboId() {
     let table = document.getElementById("myTable");
     ShowListCommonItem(listCommonItem, table, false);
 }
+
+window.onload = async function () {
+    await GetListCommonItemMappingFromComboId();
+};

@@ -106,6 +106,17 @@ function ShowWhyUpdateFail(listCommonItemTemp) {
                 //}
             }
         }
+        else if (item.eType == eLazada) {
+        }
+        else if (item.eType == ePlayWithMe) {
+            if (item.models && item.models.length > 0) {
+                if (item.models[0].whyUpdateFail) {
+                    eleWhyUpdateFail.innerHTML = item.models[0].whyUpdateFail;
+                } else {
+                    eleWhyUpdateFail.innerHTML = "Xong";
+                }
+            }
+        }
     }
 
     return updateOk;
@@ -203,6 +214,14 @@ async function UpdateQuantityOfOneItemModel(eType, itemId, modelId, ele) {
         }
         else {
             ele.innerHTML = "Xong";
+        }
+    }
+    else if (eType == ePlayWithMe) {
+        if (result.State !== 0) {
+            ele.innerHTML = result.Message;
+        }
+        else {
+            ele.innerHTML = "Xong"
         }
     }
     return new Promise(function (resolve, reject) {

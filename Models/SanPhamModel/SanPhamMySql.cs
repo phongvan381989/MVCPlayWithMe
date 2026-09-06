@@ -881,6 +881,40 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return result;
         }
 
+        // Từ id sản phẩm, lấy được danh sách mapping và tính tồn kho mới.
+        public static async Task<MySqlResultState> UpdateQuantityAsync(
+           int spId)
+        {
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    SanPham sanPham = new SanPham();
+                    sanPham.Mappings = await SanPhamMappingMySql.GetListBySanPhamBanId_ConnectOutAsync(spId, conn);
+                    sanPham.GetQuantityFromMappings();
+
+                    string updateQuery = "UPDATE tb_san_pham SET Quantity = @quantity WHERE Id = @sanPhamId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn))
+                    {
+                        cmd.Parameters.Add("@sanPhamId", MySqlDbType.Int32).Value = spId;
+                        cmd.Parameters.Add("@quantity", MySqlDbType.Int32).Value = sanPham.Quantity;
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
         #endregion
 
         /// <summary>
@@ -1285,7 +1319,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                     sanPham.Mappings.Add(mapping);
 
-                    sanPham.Quantity = sanPham.GetQuantityFromMappings();
+                    sanPham.GetQuantityFromMappings();
                 }
             }
         }
@@ -1315,14 +1349,14 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// Cập nhật tồn kho (Quantity) cho nhiều sản phẩm - Không dùng transaction
         /// </summary>
         /// <param name="conn">MySqlConnection đã được mở</param>
-        /// <param name="sanPhams">List sản phẩm cần cập nhật quantity (Id + Quantity)</param>
+        /// <param name="commonItems">List sản phẩm cần cập nhật quantity (Id + Quantity)</param>
         /// <returns>Danh sách các sản phẩm cập nhật lỗi (empty nếu tất cả thành công)</returns>
         public static async Task<List<SanPham>> BulkUpdateQuantityAsync(MySqlConnection conn,
-            List<SanPham> sanPhams)
+            List<SanPham> commonItems)
         {
             List<SanPham> failedSPs = new List<SanPham>();
 
-            if (sanPhams == null || sanPhams.Count == 0)
+            if (commonItems == null || commonItems.Count == 0)
             {
                 return failedSPs;
             }
@@ -1338,7 +1372,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
                     int successCount = 0;
 
-                    foreach (var sp in sanPhams)
+                    foreach (var sp in commonItems)
                     {
                         try
                         {
@@ -1371,7 +1405,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             {
                 MyLogger.GetInstance().Error($"BulkUpdateQuantity error: {ex}");
                 // Nếu có lỗi chung (command setup), thêm tất cả chưa failed vào danh sách
-                foreach (var sp in sanPhams)
+                foreach (var sp in commonItems)
                 {
                     if (!failedSPs.Contains(sp))
                     {
@@ -1383,24 +1417,62 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return failedSPs;
         }
 
-        public static async Task<List<CommonItem>> GetListMappingOfProductAsync(int productId, MySqlConnection conn)
+        /// Cập nhật tồn kho (Quantity) cho nhiều sản phẩm - Không dùng transaction
+        /// </summary>
+        /// <param name="conn">MySqlConnection đã được mở</param>
+        /// <param name="sanPhams">List sản phẩm cần cập nhật quantity (Id + Quantity)</param>
+        /// <returns>Danh sách các sản phẩm cập nhật lỗi (empty nếu tất cả thành công)</returns>
+        public static async Task BulkUpdateQuantityAsync(MySqlConnection conn,
+            List<CommonItem> commonItems)
         {
-            List<SanPham> listSP = new List<SanPham>();
             try
             {
-                using (MySqlCommand cmd = new MySqlCommand("sp_tbSanPham_Get_From_Mapping_Product_Id", conn))
+                string updateQuery = "UPDATE tb_san_pham SET Quantity = @quantity WHERE Id = @id";
+
+                using (MySqlCommand cmd = new MySqlCommand(updateQuery, conn))
                 {
-                    cmd.Parameters.AddWithValue("@inProductId", productId);
-                    cmd.CommandType = CommandType.StoredProcedure;
-                    await SanPhamReadRow(listSP, cmd);
+                    cmd.Parameters.Add("@id", MySqlDbType.Int32);
+                    cmd.Parameters.Add("@quantity", MySqlDbType.Int32);
+
+                    int successCount = 0;
+
+                    foreach (var cm in commonItems)
+                    {
+                        try
+                        {
+                            cmd.Parameters[0].Value = cm.itemId;
+                            cmd.Parameters[1].Value = cm.models[0].GetQuantityFromListMapping();
+
+                            int rows = await cmd.ExecuteNonQueryAsync();
+
+                            if (rows > 0)
+                            {
+                                successCount++;
+                            }
+                            else
+                            {
+                                // Không có row nào được update (Id không tồn tại)
+                                cm.models[0].whyUpdateFail = "Product not found in database";
+                                MyLogger.GetInstance().Warn($"BulkUpdateQuantity: Product Id={cm.itemId} not found in database");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // Update lỗi cho sản phẩm này
+                            cm.models[0].whyUpdateFail = ex.Message;
+                            MyLogger.GetInstance().Error($"BulkUpdateQuantity failed for product Id={cm.itemId}: {ex.Message}");
+                        }
+                    }
                 }
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Warn(ex.ToString());
-                listSP.Clear();
+                MyLogger.GetInstance().Error($"BulkUpdateQuantity error: {ex}");
             }
+        }
 
+        public static List<CommonItem> ConvertSanPhamsToCommonItems(List<SanPham> listSP)
+        {
             // Từ danh sách sản phẩm, chuyển thành danh sách CommonItem
             List<CommonItem> commonItems = new List<CommonItem>();
             foreach (var sp in listSP)
@@ -1434,6 +1506,48 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             }
 
             return commonItems;
+        }
+
+        public static async Task<List<CommonItem>> GetListMappingOfProductAsync(int productId, MySqlConnection conn)
+        {
+            List<SanPham> listSP = new List<SanPham>();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("sp_tbSanPham_Get_From_Mapping_Product_Id", conn))
+                {
+                    cmd.Parameters.AddWithValue("@inProductId", productId);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    await SanPhamReadRow(listSP, cmd);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listSP.Clear();
+            }
+
+            return ConvertSanPhamsToCommonItems(listSP);
+        }
+
+        public static async Task<List<CommonItem>> GetListMappingOfComboAsync(int comboId, MySqlConnection conn)
+        {
+            List<SanPham> listSP = new List<SanPham>();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("sp_tbSanPham_Get_From_Mapping_Combo_Id", conn))
+                {
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    await SanPhamReadRow(listSP, cmd);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                listSP.Clear();
+            }
+
+            return ConvertSanPhamsToCommonItems(listSP);
         }
     }
 }

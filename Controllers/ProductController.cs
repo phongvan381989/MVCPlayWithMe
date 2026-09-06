@@ -2379,6 +2379,15 @@ namespace MVCPlayWithMe.Controllers
             return result;
         }
 
+        // Cập nhật số lượng sản phẩm của 1 model từ itemId, modelId
+        private async Task<MySqlResultState> VBNUpdateQuantityOfOneItemModelAsync(int spId,
+            MySqlConnection conn)
+        {
+            MySqlResultState result = await SanPhamMySql.UpdateQuantityAsync(spId);
+
+            return result;
+        }
+
         private static async Task<List<CommonItem>> ShopeeGetListNeedUpdateQuantityAndUpdateAsync(MySqlConnection conn)
         {
             // Danh sách sản phẩm Shopee
@@ -2500,6 +2509,10 @@ namespace MVCPlayWithMe.Controllers
                     {
                         result = await LazadaUpdateQuantityOfOneItemModelAsync(itemId, modelId, conn);
                     }
+                    else if (eType == Common.ePlayWithMe)
+                    {
+                        result = await VBNUpdateQuantityOfOneItemModelAsync((int)itemId, conn);
+                    }
                 }
             }
             catch (Exception ex)
@@ -2538,6 +2551,10 @@ namespace MVCPlayWithMe.Controllers
                     lazadaList.Add(commonItem);
                 }
                 await LazadaUpdateQuantity_CoreAsync(lazadaList);
+            }
+            else if(eECommerceType == EECommerceType.PLAY_WITH_ME)
+            {
+                await SanPhamMySql.BulkUpdateQuantityAsync(conn, listCommonItem);
             }
         }
 
@@ -2597,12 +2614,12 @@ namespace MVCPlayWithMe.Controllers
                 {
                     // Lấy danh sách id sản phẩm đang kinh doanh thuộc combo Id
                     listProductId = await ComboMySql.GetProductIdsOfComboAsync(productOrComboId);
-
                 }
 
                 List<CommonItem> shopeeList = new List<CommonItem>();
                 List<CommonItem> tikiList = new List<CommonItem>();
                 List<CommonItem> lazadaList = new List<CommonItem>();
+                List<CommonItem> vbnList = new List<CommonItem>();
                 foreach (CommonItem commonItem in ls)
                 {
                     if (commonItem.eType == Common.eTiki)
@@ -2617,11 +2634,16 @@ namespace MVCPlayWithMe.Controllers
                     {
                         lazadaList.Add(commonItem);
                     }
+                    else if (commonItem.eType == Common.ePlayWithMe)
+                    {
+                        vbnList.Add(commonItem);
+                    }
                 }
 
                 await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.TIKI, tikiList, listProductId);
-                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.SHOPEE, tikiList, listProductId);
-                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.LAZADA, tikiList, listProductId);
+                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.SHOPEE, shopeeList, listProductId);
+                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.LAZADA, lazadaList, listProductId);
+                await UpdateQuantityToTMDT_DbFromListCommonItemAsync(EECommerceType.PLAY_WITH_ME, vbnList, listProductId);
             }
 
             return JsonConvert.SerializeObject(ls);

@@ -1,5 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MySqlConnector;
 using Newtonsoft.Json;
@@ -180,10 +181,12 @@ namespace MVCPlayWithMe.Controllers
                     List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfComboAsync(id, conn);
                     List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfComboAsync(id, conn);
                     List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfComboAsync(id, conn);
+                    List<CommonItem> vbnList = await SanPhamMySql.GetListMappingOfComboAsync(id, conn);
 
                     ls.AddRange(tikiList);
                     ls.AddRange(shopeeList);
                     ls.AddRange(lazadaList);
+                    ls.AddRange(vbnList);
                 }
             }
             catch (Exception ex)

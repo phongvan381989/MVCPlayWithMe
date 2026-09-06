@@ -328,11 +328,12 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
         public List<SanPhamMapping> Mappings { get; set; } = new List<SanPhamMapping>();
 
-        public int GetQuantityFromMappings()
+        public void GetQuantityFromMappings()
         {
             if(Mappings == null || Mappings.Count == 0)
             {
-                return 0;
+                Quantity = 0;
+                return;
             }
 
             int quantity = Int32.MaxValue;
@@ -356,7 +357,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 quantity = 0;
             }
 
-            return quantity;
+            Quantity = quantity;
         }
     }
 

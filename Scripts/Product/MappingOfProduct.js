@@ -53,3 +53,7 @@ function ShowResultWithFilter() {
     // Show table
     ShowListCommonItem(listCommonItemTem, table, false);
 }
+
+window.onload = async function () {
+    await GetListCommonItemMappingFromProductId();
+};
