@@ -1057,7 +1057,7 @@ namespace MVCPlayWithMe.Controllers
                 productCount = products.Count;
 
                 // Tạo XML sitemap
-                string baseUrl = Common.httpsVoiBeNho;//"https://voibenho.com";
+                string baseUrl = Common.httpsVoiBeNho;
                 StringBuilder xml = new StringBuilder();
                 xml.AppendLine("<?xml version=\"1.0\" encoding=\"utf-8\"?>");
                 xml.AppendLine("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");

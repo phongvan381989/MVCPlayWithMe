@@ -1501,7 +1501,7 @@ function GetTMDTItemUrlFromCommonItem(commonItem) {
     }
     //Item là Voi bé nhỏ
     else if (commonItem.eType == ePlayWithMe) {
-        itemUrl = httpsVoiBeNho + "/San-Pham/" + GenerateSlugId(commonItem.name, commonItem.itemId);
+        itemUrl = httpsVoiBeNho + GenerateSanPhamUrlForCustomer(commonItem.name, commonItem.itemId);
     }
     return itemUrl;
 }
@@ -1890,4 +1890,8 @@ function CalculateDiscountPercent(bookCoverPrice, salePrice) {
     if (bookCoverPrice <= 0) return 0;
     const discount = ((bookCoverPrice - salePrice) / bookCoverPrice) * 100;
     return Math.round(discount); // Làm tròn số nguyên
+}
+
+function GenerateSanPhamUrlForCustomer(name, id) {
+    return  "/San-Pham/" + GenerateSlugId(name, id);
 }

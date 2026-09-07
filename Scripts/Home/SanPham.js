@@ -343,6 +343,9 @@ async function HomePageShowSanPham() {
 
     ShowItemSomething();
 
+    // Generate Product JSON-LD cho SEO
+    GenerateProductJsonLD();
+
     // Init PhotoSwipeLightbox sau khi MediaList đã load (background preload - không block UI)
     initPhotoSwipeLightbox();  // KHÔNG await → chạy background
 }
@@ -780,9 +783,9 @@ function ShowItemSomething() {
 // Hiển thị giá bìa, giá bán và % chiết khấu
 // Disable +/- số lượng, nút thêm vào giỏ hàng, mua hàng
 function ShowPriceAndReadyMaxQuantity() {
-    // Giá bìa
+    // Giá bìa (wrap trong <del> tag cho SEO - Google hiểu đây là giá đã bị thay thế)
     document.getElementById("book-cover-price").innerHTML =
-        ConvertMoneyToTextWithIcon(sanPhamObject.BookCoverPrice);
+        "<del>" + ConvertMoneyToTextWithIcon(sanPhamObject.BookCoverPrice) + "</del>";
 
     // Giá bán thực tế
     document.getElementById("price").innerHTML =
@@ -801,7 +804,7 @@ function ShowPriceAndReadyMaxQuantity() {
         // Có giảm giá → hiển thị giá bìa và % giảm
         document.getElementById("book-cover-price").style.display = "";
         document.getElementById("discount").style.display = "";
-        document.getElementById("discount").innerHTML = discountPercent + "% GIẢM";
+        document.getElementById("discount").innerHTML = "-" + discountPercent + "%";
     }
 
     // Hiển thị số lượng tồn kho
@@ -972,8 +975,7 @@ async function VariantClick(variantId) {
     if (!sanPhamObject) return;
 
     // Cập nhật URL không reload page (dùng replaceState để không tạo history mới)
-    let newSlug = GenerateSlugId(sanPhamObject.Name, variantId);
-    let newUrl = "/San-Pham/" + newSlug;
+    let newUrl = GenerateSanPhamUrlForCustomer(sanPhamObject.Name, variantId);
     window.history.replaceState({ sanPhamId: variantId }, sanPhamObject.Name, newUrl);
     document.title = sanPhamObject.Name;
 
@@ -996,6 +998,9 @@ async function VariantClick(variantId) {
         selectedIndex = 0;
         ShowMediumItemFromIndex(selectedIndex);
     }
+
+    // Update Product JSON-LD cho variant mới
+    GenerateProductJsonLD();
 
     // Re-init PhotoSwipeLightbox với MediaList mới (background preload - không block UI)
     initPhotoSwipeLightbox();  // KHÔNG await → chạy background
@@ -1128,6 +1133,144 @@ async function addToCartServer(id, q, r) {
     }
     catch (ex) {
         console.error("add to cart error:", ex);
+    }
+}
+
+/**
+ * Generate và inject Product JSON-LD vào page cho SEO
+ * Được gọi sau khi sanPhamObject đã load xong
+ */
+function GenerateProductJsonLD() {
+    if (!sanPhamObject) {
+        console.warn("GenerateProductJsonLD: sanPhamObject is null");
+        return;
+    }
+
+    // Remove existing JSON-LD if any
+    const existingJsonLd = document.querySelector('script[type="application/ld+json"][data-product-jsonld]');
+    if (existingJsonLd) {
+        existingJsonLd.remove();
+    }
+
+    // Build JSON-LD object
+    const jsonLd = {
+        "@context": "https://schema.org/",
+        "@type": ["Product", "Book"],  // Kết hợp Product + Book để Google Rich Results hiển thị giá
+        "name": sanPhamObject.Name || "",
+        "description": sanPhamObject.Detail || "",
+        "url": httpsVoiBeNho + GenerateSanPhamUrlForCustomer(sanPhamObject.Name, sanPhamObject.Id),
+        "image": []
+    };
+
+    // Add images from MediaList
+    if (sanPhamObject.MediaList && sanPhamObject.MediaList.length > 0) {
+        sanPhamObject.MediaList.forEach((media, index) => {
+            if (!media.IsVideo) {
+                const imageUrl = GetSanPhamMediaUrl(sanPhamObject.Id, media.FileName);
+                jsonLd.image.push(httpsVoiBeNho + imageUrl);
+            }
+        });
+    }
+
+    // Fallback: No Image nếu không có ảnh nào
+    if (jsonLd.image.length === 0) {
+        jsonLd.image.push("https://voibenho.com/Media/NoImageThumbnail.png");
+    }
+
+    // ISBN (Barcode) - nếu có
+    if (sanPhamObject.Barcode) {
+        jsonLd.isbn = sanPhamObject.Barcode;
+    }
+
+    // SKU (Mã sản phẩm) - luôn có, dùng cho cả sách không có ISBN
+    if (sanPhamObject.Code) {
+        jsonLd.sku = sanPhamObject.Code;
+    }
+
+    // Author
+    if (sanPhamObject.Author) {
+        jsonLd.author = {
+            "@type": "Person",
+            "name": sanPhamObject.Author
+        };
+    }
+
+    // Publisher (PublishingCompany)
+    if (sanPhamObject.PublishingCompany) {
+        jsonLd.publisher = {
+            "@type": "Organization",
+            "name": sanPhamObject.PublishingCompany
+        };
+    }
+
+    // Book format (HardCover: 1 = Bìa cứng, 0 = Bìa mềm)
+    if (sanPhamObject.HardCover !== undefined && sanPhamObject.HardCover !== null) {
+        jsonLd.bookFormat = sanPhamObject.HardCover == 1
+            ? "https://schema.org/Hardcover"
+            : "https://schema.org/Paperback";
+    }
+
+    // Language - Map từ text sang language code
+    if (sanPhamObject.Language) {
+        const lang = sanPhamObject.Language.toLowerCase().trim();
+        if (lang.includes("song ngữ") || lang.includes("song ngu")) {
+            jsonLd.inLanguage = ["vi", "en"]; // Bilingual
+        } else if (lang.includes("tiếng anh") || lang.includes("tieng anh") || lang === "english") {
+            jsonLd.inLanguage = "en";
+        } else if (lang.includes("tiếng việt") || lang.includes("tieng viet") || lang === "vietnamese") {
+            jsonLd.inLanguage = "vi";
+        } else {
+            // Default: Tiếng Việt nếu không match
+            jsonLd.inLanguage = "vi";
+        }
+    } else {
+        // Fallback: Tiếng Việt nếu không có Language
+        jsonLd.inLanguage = "vi";
+    }
+
+    // Number of pages
+    if (sanPhamObject.PageNumber) {
+        jsonLd.numberOfPages = sanPhamObject.PageNumber;
+    }
+
+    // Offers (Price)
+    jsonLd.offers = {
+        "@type": "Offer",
+        "priceCurrency": "VND",
+        "price": String(sanPhamObject.SalePrice || 0),  // String theo chuẩn Google
+        "availability": (sanPhamObject.Quantity > 0)
+            ? "https://schema.org/InStock"
+            : "https://schema.org/OutOfStock",
+        "itemCondition": "https://schema.org/NewCondition",
+        "seller": {
+            "@type": "Organization",
+            "name": "Voi Bé Nhỏ"
+        }
+    };
+
+    // Giá bìa (ListPrice) - chỉ thêm khi có giảm giá
+    if (sanPhamObject.BookCoverPrice && sanPhamObject.BookCoverPrice > sanPhamObject.SalePrice) {
+        jsonLd.offers.priceSpecification = [
+            {
+                "@type": "UnitPriceSpecification",
+                "priceType": "https://schema.org/ListPrice",
+                "price": String(sanPhamObject.BookCoverPrice),
+                "priceCurrency": "VND"
+            }
+        ];
+    }
+
+    // Create script tag
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.setAttribute('data-product-jsonld', 'true'); // Marker để remove khi cần
+    script.textContent = JSON.stringify(jsonLd, null, 2);
+
+    // Inject vào <head>
+    document.head.appendChild(script);
+
+    if (DEBUG) {
+        console.log("✅ Product JSON-LD injected:", jsonLd);
     }
 }
 

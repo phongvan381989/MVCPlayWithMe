@@ -208,18 +208,13 @@ h1 {
     padding: 5px 0; /* Thêm padding trên dưới */
 }
 
-.items-center {
-    display: flex;
-    align-items: center;
-}
-
 #book-cover-price {
     font-size: 1rem; /* Tăng từ 0.8rem lên 1rem */
     font-weight: 600; /* Đậm hơn */
     text-decoration: line-through;
     color: #b8b8b8; /* Mờ hơn (từ #929292 lên #b8b8b8) */
-    margin-left: 10px;
-    margin-right: 10px;
+/*    margin-left: 10px;
+    margin-right: 10px;*/
     display: flex;
     align-items: center;
     /*margin-right: 10px;*/
@@ -227,22 +222,21 @@ h1 {
 }
 
 #price {
+    margin-left: 10px;
+    margin-right: 5px;
     font-size: 1.5rem; /* Tăng từ 1.2rem lên 1.5rem */
     font-weight: 500;
     color: red;
 }
 
 #discount {
-    margin-left: 15px;
+    display: flex;
+    justify-content: center; /* Căn giữa theo chiều ngang */
+    align-items: center; /* Căn giữa theo chiều dọc */
+/*    margin-left: 5px;*/
     font-size: 0.875rem; /* Tăng từ 0.75rem lên 0.875rem */
-    color: #fff;
-    text-transform: uppercase;
-    background: red;
-    border-radius: 2px;
-    padding: 3px 6px; /* Tăng padding từ 2px 4px lên 3px 6px */
-    font-weight: 600;
-    line-height: 1;
-    white-space: nowrap;
+    color: red;
+
 }
 
 .variation-button {
