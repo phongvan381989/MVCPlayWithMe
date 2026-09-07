@@ -587,3 +587,9 @@ sup {
     white-space: nowrap;
     border-width: 0;
 }
+.mini-icon-botton {
+    width: 24px;
+    height: 24px;
+    margin-right: 8px;
+    object-fit: contain;
+}
