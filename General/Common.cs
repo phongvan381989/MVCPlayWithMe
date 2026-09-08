@@ -40,6 +40,7 @@ namespace MVCPlayWithMe.General
         public static readonly int offset = 20;
         public static readonly int rowOnPage = 6; // Số dòng item trên trang kết quả tìm kiếm
         public static readonly string httpsVoiBeNho = "https://voibenho.com";
+        public static readonly string titleVoiBeNho = "Tiệm sách Voi bé nhỏ";
 
         public static readonly string messageRetryLater = "Vui lòng thử lại sau.";
 

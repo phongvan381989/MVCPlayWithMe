@@ -22,12 +22,14 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public async Task<ActionResult> Search()
         {
+            ViewData["title"] = Common.titleVoiBeNho;
             return View();
         }
 
         [HttpGet]
         public ActionResult Error()
         {
+            ViewData["title"] = Common.titleVoiBeNho;
             return View();
         }
 
@@ -120,6 +122,7 @@ namespace MVCPlayWithMe.Controllers
 
             // Cập nhật title bên javascript
             //ViewBag.ItemId = id;
+            ViewData["title"] = Common.titleVoiBeNho;
             return View();
         }
 

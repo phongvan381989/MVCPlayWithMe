@@ -3,11 +3,26 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 using System.Web.Mvc;
+using MVCPlayWithMe.General;
 
 namespace MVCPlayWithMe.Controllers
 {
     public class PolicyController : BasicController
     {
+
+        public void ViewDataGetCommonInforOfVoiBeNho()
+        {
+            ViewData["webAddress"] = "voibenho.com";
+            ViewData["httpsWebAddress"] = Common.httpsVoiBeNho;
+            ViewData["hotline"] = "083 577 4489";
+            ViewData["postAddress"] = "Số 28, Ngõ 3, Khu Tập Thể Đo Lường, Tổ Dân Phố 3A, phường Đông Ngạc, Hà Nội";
+            ViewData["emailAddress"] = "playwithmebook@gmail.com";
+            ViewData["ceoName"] = "HOÀNG THỊ HUỆ";
+            ViewData["businessId"] = "01D-8014432";
+            ViewData["inHaNoiFee"] = Common.ConvertIntToVNDFormat(Common.standardShipFeeInHaNoi);
+            ViewData["outHaNoiFee"] = Common.ConvertIntToVNDFormat(Common.standardShipFeeOutHaNoi);
+        }
+
         // GET: Policy
         public ActionResult InforCustomerPolicy()
         {

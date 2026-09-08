@@ -29,6 +29,26 @@ let endMessage = document.getElementById("end-message");
 let loadMoreSection = document.getElementById("load-more-section");
 
 // ============================================
+// SEO: Dynamic Page Title
+// ============================================
+/**
+ * Cập nhật page title dựa trên keyword search (tối ưu SEO)
+ * - Trang chủ: "Tiệm sách Voi bé nhỏ"
+ * - Search: "Tìm kiếm {keyword} | Tiệm sách Voi bé nhỏ"
+ */
+function UpdatePageTitle() {
+    const keyword = currentSearchParams.keyword || '';
+
+    if (keyword.trim() !== '') {
+        // Search results - Focus vào keyword cho SEO
+        document.title = `Tìm kiếm "${keyword.trim()}" | ${titleVoiBeNho}`;
+    } else {
+        // Trang chủ
+        document.title = titleVoiBeNho;
+    }
+}
+
+// ============================================
 // Initial Load - 30 items (or load to specific page from URL)
 // ============================================
 async function Search() {
@@ -40,6 +60,9 @@ async function Search() {
     // Get search parameters từ URL
     SetSearchParametersFromUrl();
 
+    // Update page title cho SEO
+    UpdatePageTitle();
+
     // Update H1 dynamically
     const keyword = currentSearchParams.keyword || "";
     const h1 = document.getElementById("page-title");
@@ -47,7 +70,7 @@ async function Search() {
         if (keyword) {
             h1.textContent = `Kết quả tìm kiếm: "${keyword}"`;
         } else {
-            h1.textContent = "Tiệm sách voi bé nhỏ";
+            h1.textContent = titleVoiBeNho;
         }
     }
 
@@ -332,7 +355,7 @@ function EmptySomething() {
 function SetSearchParametersFromUrl() {
     // Optimize: chỉ parse URL 1 lần thay vì 6 lần
     const urlParams = new URLSearchParams(window.location.search);
-    if (DEBUG) {
+    if (DEBUG_ADMIN) {
         console.log("SetSearchParametersFromUrl CALL");
         console.log("urlParams: " + urlParams);
     }
@@ -415,9 +438,8 @@ if (btnLoadMore) {
 
 // Browser back/forward
 window.addEventListener("popstate", (e) => {
-    if (e.state) {
-        Search();
-    }
+    // Luôn gọi Search() để sync UI với URL (bao gồm cả back về trang chủ)
+    Search();
 });
 
 // Initial load khi page load

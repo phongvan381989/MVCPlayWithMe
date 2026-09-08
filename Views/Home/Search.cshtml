@@ -5,8 +5,34 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+    <meta charset="utf-8">
+    <title>@ViewData["title"]</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+
+    @{
+        // SEO: Chỉ noindex search results, KHÔNG noindex trang chủ
+        bool isSearchPage = Request.QueryString["keyword"] != null ||
+                            Request.QueryString["author"] != null ||
+                            Request.QueryString["translator"] != null ||
+                            Request.QueryString["category"] != null ||
+                            Request.QueryString["publishingCompany"] != null ||
+                            Request.QueryString["publisher"] != null ||
+                            Request.QueryString["page"] != null;
+    }
+    @if (isSearchPage)
+    {
+        <meta name="robots" content="noindex, follow">
+    }
+
+    @if (!Context.IsDebuggingEnabled)
+    {
+        @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
+    }
+    <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
+    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
     <link rel="stylesheet" href="~/Content/Home/Search.css?v=20260610">
+    <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <div id="biggestContainer">

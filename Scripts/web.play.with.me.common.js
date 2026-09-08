@@ -19,6 +19,7 @@ var eTiki = "TIKI";
 var eShopee = "SHOPEE";
 var eLazada = "LAZADA";
 var httpsVoiBeNho = "https://voibenho.com";
+var titleVoiBeNho = "Tiệm sách Voi bé nhỏ";
 
 var intAll = -1;
 var intPlayWithMe = 0;

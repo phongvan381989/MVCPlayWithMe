@@ -29,7 +29,7 @@ namespace MVCPlayWithMe.Controllers
                 return AuthenticationFail();
             }
 
-            await ViewDataGetListItemNameAsync();
+            //await ViewDataGetListItemNameAsync();
             //ViewDataGetListProductName();
             //ViewDataGetListCombo();
 
