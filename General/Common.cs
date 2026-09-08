@@ -74,7 +74,7 @@ namespace MVCPlayWithMe.General
         public static readonly string customerInforKey = "cusinfor";
         public static readonly string orderIdList = "orderList"; // danh sách mã đơn hàng đối với khách vãng lai
         public static readonly int standardShipFeeInHaNoi = 15000; // Phí ship tiêu chuẩn trong Hà Nội
-        public static readonly int standardShipFeeOutHaNoi = 30000; // Phí ship tiêu chuẩn ngoài Hà Nội
+        public static readonly int standardShipFeeOutHaNoi = 25000; // Phí ship tiêu chuẩn ngoài Hà Nội
         #endregion
 
         public enum EECommerceType
