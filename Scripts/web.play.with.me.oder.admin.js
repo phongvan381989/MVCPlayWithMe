@@ -687,7 +687,7 @@ async function ShowOneOrderOnModal(order) {
                     window.open(url);
                 }
                 else if (order.ecommerceName == ePlayWithMe) {
-                    let url = "/ItemModel/UpdateDelete?id=" + order.listItemId[i].toString()
+                    let url = "/SanPham/UpdateDelete?id=" + order.listItemId[i].toString()
                     window.open(url);
                 }
             }

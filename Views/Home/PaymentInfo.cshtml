@@ -1,4 +1,4 @@
-@model MVCPlayWithMe.Models.Order.Order
+﻿@model MVCPlayWithMe.Models.Order.Order
 @{
     ViewBag.Title = "Thông tin thanh toán";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -600,7 +600,7 @@
     function downloadQR() {
         var link = document.createElement('a');
         link.href = document.getElementById('qrCodeImage').src;
-        link.download = 'qr-thanh-toan-@orderCode.jpg';
+        //link.download = 'qr-thanh-toan-@orderCode.jpg';
         link.click();
         showToast('📥 Đang tải QR Code...');
     }

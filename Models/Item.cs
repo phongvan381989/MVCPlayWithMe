@@ -1,5 +1,4 @@
 ﻿using MVCPlayWithMe.General;
-using MVCPlayWithMe.Models.ItemModel;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -108,22 +107,6 @@ namespace MVCPlayWithMe.Models
             //{
             //    imageSrc.Add(Common.srcNoImageThumbnail);
             //}
-        }
-
-        public async Task SetShopeeItemId()
-        {
-            if (models.Count > 0)
-            {
-                MySqlResultState result = await ItemModelMySql.GetTMDTShopeeItemIdFromModelIdAsync(models[0].id);
-                if (result.State == EMySqlResultState.OK)
-                {
-                    shopeeItemId = result.myAnythingLong;
-                }
-                else
-                {
-                    shopeeItemId = 0;
-                }
-            }
         }
     }
 }

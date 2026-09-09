@@ -1453,20 +1453,6 @@ async function GetTaxAndFeeCore(eEcommerceName) {
     return taxAndFee;
 }
 
-async function GetListItem() {
-    const searchParams = new URLSearchParams();
-
-    let query = "/ItemModel/GetListItem";
-
-    let responseDB = await RequestHttpPostPromise(searchParams, query);
-    let list = null;
-    if (responseDB.responseText != "null") {
-        list = JSON.parse(responseDB.responseText);
-        let ele = document.getElementById("list-item-name");
-        SetDataListOfIdName(ele, list);
-    }
-}
-
 function GetShopeeItemUrl(itemid) {
     return "https://shopee.vn/product/137637267/" + itemid;
 }

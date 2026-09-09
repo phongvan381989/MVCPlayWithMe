@@ -122,70 +122,70 @@ function AddQuantityInfor(modelObj, container) {
 
 // Thêm nút sinh model trên web voibenho
 function AddBornModelForVoiBeNhoButton(itemObj, modelObj, container) {
-    let btn = document.createElement("BUTTON");
-    btn.title = "Sinh model sản phẩm tương ứng trên web voibenho";
-    let btnContent = document.createTextNode("Sinh model");
-    btn.itemObj = itemObj;
-    btn.modelObj = modelObj;
+    // let btn = document.createElement("BUTTON");
+    // btn.title = "Sinh model sản phẩm tương ứng trên web voibenho";
+    // let btnContent = document.createTextNode("Sinh model");
+    // btn.itemObj = itemObj;
+    // btn.modelObj = modelObj;
 
-    btn.onclick = function () {
-        if (this.modelObj.pWMMappingModelId != -1 && this.modelObj.pWMMappingModelId != 0) {
-            if (confirm("Bạn CHẮC CHẮN muốn XÓA model sản phẩm đã sinh và sinh mới?") == false) {
-                return;
-            }
-        }
-        ShopeeBornModelForVoiBeNho(JSON.stringify(this.itemObj),
-            this.modelObj.modelId,
-            this.modelObj.pWMMappingModelId, this);
-    }
-    btn.appendChild(btnContent);
-    //btn.className = "margin-vertical";
-    //btn.style.cssFloat = "right";
+    // btn.onclick = function () {
+    //     if (this.modelObj.pWMMappingModelId != -1 && this.modelObj.pWMMappingModelId != 0) {
+    //         if (confirm("Bạn CHẮC CHẮN muốn XÓA model sản phẩm đã sinh và sinh mới?") == false) {
+    //             return;
+    //         }
+    //     }
+    //     ShopeeBornModelForVoiBeNho(JSON.stringify(this.itemObj),
+    //         this.modelObj.modelId,
+    //         this.modelObj.pWMMappingModelId, this);
+    // }
+    // btn.appendChild(btnContent);
+    // //btn.className = "margin-vertical";
+    // //btn.style.cssFloat = "right";
 
-    const div = document.createElement("div");
-    //div.style.display = "flex";
-    //div.style.flexDirection = "row-reverse";
+    // const div = document.createElement("div");
+    // //div.style.display = "flex";
+    // //div.style.flexDirection = "row-reverse";
 
-    // Đã sinh ra model tương ứng trên web voibenho
-    if (modelObj.pWMMappingModelId != -1 && modelObj.pWMMappingModelId != 0) {
-        const p = document.createElement("p");
-        p.innerHTML = "Đã sinh trên voibenho";
-        p.title = "Xem sản phẩm tương ứng trên voibenho";
-        p.style.cursor = "pointer";
-        p.onclick = async function () {
-            if (vbnItemId == 0) {
-                const searchParams = new URLSearchParams();
-                searchParams.append("modelId", modelObj.pWMMappingModelId);
-                let query = "/ItemModel/GetVBNItemIdFromModelId";
+    // // Đã sinh ra model tương ứng trên web voibenho
+    // if (modelObj.pWMMappingModelId != -1 && modelObj.pWMMappingModelId != 0) {
+    //     const p = document.createElement("p");
+    //     p.innerHTML = "Đã sinh trên voibenho";
+    //     p.title = "Xem sản phẩm tương ứng trên voibenho";
+    //     p.style.cursor = "pointer";
+    //     p.onclick = async function () {
+    //         if (vbnItemId == 0) {
+    //             const searchParams = new URLSearchParams();
+    //             searchParams.append("modelId", modelObj.pWMMappingModelId);
+    //             let query = "/ItemModel/GetVBNItemIdFromModelId";
 
-                let responseDB = await RequestHttpPostPromise(searchParams, query);
+    //             let responseDB = await RequestHttpPostPromise(searchParams, query);
 
-                if (responseDB.responseText != "null") {
-                    let result = JSON.parse(responseDB.responseText);
-                    //if (DEBUG) {
-                    //    console.log(JSON.stringify(result));
-                    //}
-                    if (result.State == 0) {
-                        vbnItemId = result.myAnything;
-                    }
-                    else {
-                        CreateMustClickOkModal(result.Message, null);
-                        return;
-                    }
-                }
-            }
-            if (vbnItemId != 0) {
-                let url = "/ItemModel/UpdateDelete?id=" + vbnItemId.toString();
-                window.open(url);
-            }
-            else {
-                CreateMustClickOkModal("Không lấy được thông tin sản phẩm. Thử lại sau.", null);
-            }
-        }
-        div.appendChild(p);
-    }
-    div.appendChild(btn);
-    container.appendChild(div);
+    //             if (responseDB.responseText != "null") {
+    //                 let result = JSON.parse(responseDB.responseText);
+    //                 //if (DEBUG) {
+    //                 //    console.log(JSON.stringify(result));
+    //                 //}
+    //                 if (result.State == 0) {
+    //                     vbnItemId = result.myAnything;
+    //                 }
+    //                 else {
+    //                     CreateMustClickOkModal(result.Message, null);
+    //                     return;
+    //                 }
+    //             }
+    //         }
+    //         if (vbnItemId != 0) {
+    //             let url = "/ItemModel/UpdateDelete?id=" + vbnItemId.toString();
+    //             window.open(url);
+    //         }
+    //         else {
+    //             CreateMustClickOkModal("Không lấy được thông tin sản phẩm. Thử lại sau.", null);
+    //         }
+    //     }
+    //     div.appendChild(p);
+    // }
+    // div.appendChild(btn);
+    // container.appendChild(div);
 }
 
 // Thêm nút Cập nhật giá bìa 
@@ -271,10 +271,12 @@ function AddModelToScreenEEcommerce(itemObj, modelObj, modelIndex) {
         div.style.alignItems = "center";
         modelContainer.appendChild(div);
     }
+    // Tạm thời ẩn
     // Thêm nút sinh model trên web voibenho khi là sản phẩm Shopee
-    if (GetEEcommerceTypeFromUrl() == eShopee) {
-        AddBornModelForVoiBeNhoButton(itemObj, modelObj, modelContainer);
-    }
+    // if (GetEEcommerceTypeFromUrl() == eShopee) {
+    //     AddBornModelForVoiBeNhoButton(itemObj, modelObj, modelContainer);
+    // }
+
     // Thêm nút cập nhật giá bìa
     //if (GetEEcommerceTypeFromUrl() == eTiki) {
     //    AddUpdateBookCoverPriceButton(itemObj, modelContainer);
@@ -425,45 +427,45 @@ async function UpdateQuantityPrice_SpecialPrice() {
     return GetEasyPromise();
 }
 
-async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId, btnElement) {
-    ShowCircleLoader();
-    const searchParams = new URLSearchParams();
-    searchParams.append("strCommonItem", strCommonItem);
-    searchParams.append("shopeeModelId", shopeeModelId);
-    searchParams.append("pWMMappingModelId", pWMMappingModelId);
-    let url = "/ProductECommerce/ShopeeBornModelForVoiBeNho";
+// async function ShopeeBornModelForVoiBeNho(strCommonItem, shopeeModelId, pWMMappingModelId, btnElement) {
+//     ShowCircleLoader();
+//     const searchParams = new URLSearchParams();
+//     searchParams.append("strCommonItem", strCommonItem);
+//     searchParams.append("shopeeModelId", shopeeModelId);
+//     searchParams.append("pWMMappingModelId", pWMMappingModelId);
+//     let url = "/ProductECommerce/ShopeeBornModelForVoiBeNho";
 
-    try {
-        let responseDB = await RequestHttpPostPromise(searchParams, url);
-        let result = JSON.parse(responseDB.responseText);
-        if (result.State != 0) {
-            await CreateMustClickOkModal(result.Message, null);
-        }
-        else {
-            alert("Sinh model sản phẩm thành công.");
-            // Nếu chưa có dòng "Đã sinh trên voibenho" thì thêm, ngược lại xóa bỏ dòng cũ thêm
-            // "Đã sinh trên voibenho" mới. Dòng mới không click được để đến trang
-            // thông tin sản phẩm trên voibenho
-            let parrent = btnElement.parentElement;
-            // Xóa dòng cũ
-            if (parrent.children.length == 2) {
-                parrent.children[0].remove();
-            }
-            // Thêm dòng mới
-            const p = document.createElement("p");
-            p.innerHTML = "Đã sinh trên voibenho";
-            p.title = "Load lại trang để xem sản phẩm tương ứng trên voibenho";
-            parrent.insertBefore(p, parrent.children[0]);
-        }
-    }
-    catch (err) {
-        await CreateMustClickOkModal("Sinh model sản phẩm lỗi. " + err.Message, null);
-        RemoveCircleLoader();
-        return;
-    }
+//     try {
+//         let responseDB = await RequestHttpPostPromise(searchParams, url);
+//         let result = JSON.parse(responseDB.responseText);
+//         if (result.State != 0) {
+//             await CreateMustClickOkModal(result.Message, null);
+//         }
+//         else {
+//             alert("Sinh model sản phẩm thành công.");
+//             // Nếu chưa có dòng "Đã sinh trên voibenho" thì thêm, ngược lại xóa bỏ dòng cũ thêm
+//             // "Đã sinh trên voibenho" mới. Dòng mới không click được để đến trang
+//             // thông tin sản phẩm trên voibenho
+//             let parrent = btnElement.parentElement;
+//             // Xóa dòng cũ
+//             if (parrent.children.length == 2) {
+//                 parrent.children[0].remove();
+//             }
+//             // Thêm dòng mới
+//             const p = document.createElement("p");
+//             p.innerHTML = "Đã sinh trên voibenho";
+//             p.title = "Load lại trang để xem sản phẩm tương ứng trên voibenho";
+//             parrent.insertBefore(p, parrent.children[0]);
+//         }
+//     }
+//     catch (err) {
+//         await CreateMustClickOkModal("Sinh model sản phẩm lỗi. " + err.Message, null);
+//         RemoveCircleLoader();
+//         return;
+//     }
 
-    RemoveCircleLoader();
-}
+//     RemoveCircleLoader();
+// }
 
 async function UpdateBookCoverPriceToEEcommerce(strCommonItem) {
     const searchParams = new URLSearchParams();

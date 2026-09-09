@@ -1,6 +1,5 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
-using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;

@@ -1,7 +1,6 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
-using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.SanPhamModel;
@@ -93,64 +92,6 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        [HttpGet]
-        public async Task<ActionResult> Item(string slugId)
-        {
-            //// Parse ID từ slugId (format: slug-123)
-            //int id = ParseIdFromSlugId(slugId);
-            //if (id <= 0)
-            //{
-            //    return RedirectToAction("Error");
-            //}
-
-            //// Lấy item để kiểm tra tồn tại
-            //Item item = await ItemModelMySql.GetItemFromIdAsync(id);
-            //if (item == null)
-            //{
-            //    return RedirectToAction("Error");
-            //}
-
-            //// Tạo slug chuẩn từ tên item
-            //string correctSlug = Common.GenerateSlug(item.name);
-            //string correctSlugId = correctSlug + "-" + id;
-
-            //// Nếu slug không đúng, redirect về URL chuẩn (SEO 301)
-            //if (!string.Equals(slugId, correctSlugId, StringComparison.OrdinalIgnoreCase))
-            //{
-            //    return RedirectToActionPermanent("Item", new { slugId = correctSlugId });
-            //}
-
-            // Cập nhật title bên javascript
-            //ViewBag.ItemId = id;
-            ViewData["title"] = Common.titleVoiBeNho;
-            return View();
-        }
-
-        /// <summary>
-        /// Redirect từ URL cũ /Home/Item/123 sang URL mới /item/slug-123
-        /// </summary>
-        //[HttpGet]
-        //public async Task<ActionResult> ItemRedirect(int id)
-        //{
-        //    try
-        //    {
-        //        Item item = await ItemModelMySql.GetItemFromIdAsync(id);
-        //        if (item == null)
-        //        {
-        //            return RedirectToAction("Error");
-        //        }
-
-        //        string slug = Common.GenerateSlug(item.name);
-        //        string slugId = slug + "-" + id;
-
-        //        return RedirectToActionPermanent("Item", new { slugId = slugId });
-        //    }
-        //    catch
-        //    {
-        //        return RedirectToAction("Error");
-        //    }
-        //}
-
         /// <summary>
         /// Parse ID từ slugId
         /// VD: "doraemon-tap-1-123" -> 123
@@ -178,17 +119,6 @@ namespace MVCPlayWithMe.Controllers
                 return id;
 
             return -1;
-        }
-
-        [HttpPost]
-        public async Task<string> GetItemFromId(int id)
-        {
-            Item item = await ItemModelMySql.GetItemFromIdAsync(id);
-            if (item != null)
-            {
-                item.SetShopeeItemId();
-            }
-            return JsonConvert.SerializeObject(item);
         }
 
         /// <summary>

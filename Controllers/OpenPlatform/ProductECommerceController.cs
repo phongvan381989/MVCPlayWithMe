@@ -1,6 +1,5 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
-using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
@@ -1210,93 +1209,94 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            CommonItem commonItem = JsonConvert.DeserializeObject<CommonItem>(strCommonItem);
+            //CommonItem commonItem = JsonConvert.DeserializeObject<CommonItem>(strCommonItem);
 
-            // Check xem item đã được sinh ra trên voibenho
-            int itemId = 0;
-            itemId = await ItemModelMySql.GetItemIdFromNameAsync(commonItem.name);
+            //// Check xem item đã được sinh ra trên voibenho
+            //int itemId = 0;
+            //itemId = await ItemModelMySql.GetItemIdFromNameAsync(commonItem.name);
 
-            // Chưa sinh item tương ứng trên web voibenho.
-            if (itemId <= 0)
-            {
-                // Sinh item trên web voibenho
-                int status = 0;
-                if (commonItem.item_status == "NORMAL")
-                    status = 0;
-                else
-                    status = 1;
-                itemId = (int)await ItemModelMySql.AddItemAsync(commonItem.name, status, commonItem.detail);
+            //// Chưa sinh item tương ứng trên web voibenho.
+            //if (itemId <= 0)
+            //{
+            //    // Sinh item trên web voibenho
+            //    int status = 0;
+            //    if (commonItem.item_status == "NORMAL")
+            //        status = 0;
+            //    else
+            //        status = 1;
+            //    itemId = (int)await ItemModelMySql.AddItemAsync(commonItem.name, status, commonItem.detail);
 
-                // Lưu ảnh vào thư mục \Media\Item\ItemId\
-                SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
-            }
-            else
-            {
-                string path = Common.GetAbsoluteItemMediaFolderPath(itemId);
-                if (path == null) // Chưa lưu image/video của item
-                {
-                    SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
-                }
-            }
+            //    // Lưu ảnh vào thư mục \Media\Item\ItemId\
+            //    SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
+            //}
+            //else
+            //{
+            //    string path = Common.GetAbsoluteItemMediaFolderPath(itemId);
+            //    if (path == null) // Chưa lưu image/video của item
+            //    {
+            //        SaveShopeeItemMediaToVoiBeNhoItem(commonItem, itemId);
+            //    }
+            //}
 
-            // Lấy được đối tượng common model shopee
-            CommonModel commonModel = null;
-            foreach(var m in commonItem.models)
-            {
-                if(m.modelId == shopeeModelId)
-                {
-                    commonModel = m;
-                    break;
-                }
-            }
+            //// Lấy được đối tượng common model shopee
+            //CommonModel commonModel = null;
+            //foreach(var m in commonItem.models)
+            //{
+            //    if(m.modelId == shopeeModelId)
+            //    {
+            //        commonModel = m;
+            //        break;
+            //    }
+            //}
 
-            // Nếu model đã có trên voibenho, xóa dữ liệu ở tbMapping, tbpwmmappingother, tbModel
-            // Từ giá bìa, giá bán tính toán chiết khấu làm tròn , giá bán theo chiết khấu
-            float discount = 100 - commonModel.price * 100/ commonModel.market_price;
-            int price = (int)((100 - discount) * commonModel.market_price / 100);
-            //price = price / 1000 * 1000; // Lấy đơn vị tròn 1000 vnđ
-            MySqlResultState resultState = await ItemModelMySql.BornModelFromShopeeModelAsync(itemId, pWMMappingModelId,
-                commonModel.name, 5, discount, price, commonModel.market_price, commonItem.itemId, commonModel.modelId);
+            //// Nếu model đã có trên voibenho, xóa dữ liệu ở tbMapping, tbpwmmappingother, tbModel
+            //// Từ giá bìa, giá bán tính toán chiết khấu làm tròn , giá bán theo chiết khấu
+            //float discount = 100 - commonModel.price * 100/ commonModel.market_price;
+            //int price = (int)((100 - discount) * commonModel.market_price / 100);
+            ////price = price / 1000 * 1000; // Lấy đơn vị tròn 1000 vnđ
+            //MySqlResultState resultState = await ItemModelMySql.BornModelFromShopeeModelAsync(itemId, pWMMappingModelId,
+            //    commonModel.name, 5, discount, price, commonModel.market_price, commonItem.itemId, commonModel.modelId);
 
-            if(resultState.State != EMySqlResultState.OK)
-            {
-                return JsonConvert.SerializeObject(resultState);
-            }
-            // Xóa dữ liệu media cũ ở Media\Item\itemId\Model nếu có
-            Common.DeleteImageModelInclude320(itemId, pWMMappingModelId);
+            //if(resultState.State != EMySqlResultState.OK)
+            //{
+            //    return JsonConvert.SerializeObject(resultState);
+            //}
+            //// Xóa dữ liệu media cũ ở Media\Item\itemId\Model nếu có
+            //Common.DeleteImageModelInclude320(itemId, pWMMappingModelId);
 
-            // Thêm dữ liệu media ở Media\Item\itemId\Model
-            // Lấy model Id
-            int newModelId = 0;
-            newModelId = resultState.myAnything;
-            // Thêm dữ liệu media  ở Media\Item\itemId\Model nếu có
-            {
-                string path = Common.GetAbsoluteModelMediaFolderPath(itemId);
-                if(path == null)
-                {
-                    path = Common.CreateAbsoluteModelMediaFolderPath(itemId);
-                }
-                if (!string.IsNullOrEmpty(commonModel.imageSrc))
-                {
-                    DownloadImageAddWaterMarkAndReduce(commonModel.imageSrc, Path.Combine(path,
-                        newModelId.ToString() + ".jfif"), false);
-                }
-            }
+            //// Thêm dữ liệu media ở Media\Item\itemId\Model
+            //// Lấy model Id
+            //int newModelId = 0;
+            //newModelId = resultState.myAnything;
+            //// Thêm dữ liệu media  ở Media\Item\itemId\Model nếu có
+            //{
+            //    string path = Common.GetAbsoluteModelMediaFolderPath(itemId);
+            //    if(path == null)
+            //    {
+            //        path = Common.CreateAbsoluteModelMediaFolderPath(itemId);
+            //    }
+            //    if (!string.IsNullOrEmpty(commonModel.imageSrc))
+            //    {
+            //        DownloadImageAddWaterMarkAndReduce(commonModel.imageSrc, Path.Combine(path,
+            //            newModelId.ToString() + ".jfif"), false);
+            //    }
+            //}
 
-            // Insert dữ liệu cho tbMapping từ mapping của model shopee
-            if (commonModel.mapping.Count > 0)
-            {
-                List<int> mappingOnlyProductId = new List<int>();
-                List<int> mappingOnlyQuantity = new List<int>();
+            //// Insert dữ liệu cho tbMapping từ mapping của model shopee
+            //if (commonModel.mapping.Count > 0)
+            //{
+            //    List<int> mappingOnlyProductId = new List<int>();
+            //    List<int> mappingOnlyQuantity = new List<int>();
 
-                foreach(var m in commonModel.mapping)
-                {
-                    mappingOnlyProductId.Add(m.product.id);
-                    mappingOnlyQuantity.Add(m.quantity);
-                }
-                resultState = await ItemModelMySql.UpdateMappingAsync(newModelId, mappingOnlyProductId, mappingOnlyQuantity);
-            }
+            //    foreach(var m in commonModel.mapping)
+            //    {
+            //        mappingOnlyProductId.Add(m.product.id);
+            //        mappingOnlyQuantity.Add(m.quantity);
+            //    }
+            //    resultState = await ItemModelMySql.UpdateMappingAsync(newModelId, mappingOnlyProductId, mappingOnlyQuantity);
+            //}
 
+            MySqlResultState resultState = new MySqlResultState(EMySqlResultState.INVALID, "Chức năng đang được phát triển vì đã xóa bỏ cơ chế ItemModel. Vui lòng thử lại sau.");
             return JsonConvert.SerializeObject(resultState);
         }
         #endregion

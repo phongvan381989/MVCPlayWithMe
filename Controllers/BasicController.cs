@@ -6,7 +6,6 @@ using System.IO;
 using System;
 using Newtonsoft.Json;
 using MVCPlayWithMe.Models.Customer;
-using MVCPlayWithMe.Models.ItemModel;
 using MVCPlayWithMe.Models.ProductModel;
 using MySqlConnector;
 using System.Threading.Tasks;
@@ -32,7 +31,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Nhận và lưu image/video khi upload cho sản phẩm
-        // trong kho hoặc item (ProductControler và ItemModelControler)
+        // trong kho hoặc item (ProductControler)
         public MySqlResultState SaveImageVideo(string path)
         {
             MySqlResultState result = new MySqlResultState();
