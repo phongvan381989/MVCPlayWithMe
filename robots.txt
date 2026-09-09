@@ -1,4 +1,4 @@
-User-agent: *
+﻿User-agent: *
 
 # ALLOW - Trang public (SEO)
 Allow: /$
@@ -16,6 +16,7 @@ Disallow: /Dev/
 Disallow: /ProductECommerce/
 Disallow: /OpenPlatform/
 Disallow: /PushMechanism/
+Disallow: /TikiDealDiscount/
 
 # DISALLOW - Customer area
 Disallow: /Customer/
@@ -26,5 +27,7 @@ Disallow: /Home/Checkout
 Disallow: /Home/Cart
 Disallow: /Home/Search
 Disallow: /Home/Error
+Disallow: /Home/Item
+Disallow: /Home/PaymentInfo
 
 Sitemap: https://voibenho.com/sitemap.xml

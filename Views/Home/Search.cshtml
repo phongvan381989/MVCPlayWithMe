@@ -38,11 +38,13 @@
     <div id="biggestContainer">
         @Html.Partial("~/Views/Shared/biggestContainer_Top.cshtml")
 
-        <div class="free-instant-ship">
-            <div class="free-instant-ship-message">🚚 Miễn phí vận chuyển đơn 200K+</div>
-            <span class="separator">|</span>
-            <div class="free-instant-ship-message">⚡ Hỏa tốc nội thành Hà Nội</div>
-        </div>
+        <a href="/Policy/TransportPolicy" class="free-instant-ship-link">
+            <div class="free-instant-ship">
+                <div class="free-instant-ship-message">🚚 Miễn phí vận chuyển đơn thường 200K+</div>
+                <span class="separator">|</span>
+                <div class="free-instant-ship-message">⚡ Hỏa tốc nội thành Hà Nội</div>
+            </div>
+        </a>
 
         <h1 id="page-title" class="sr-only">Tiệm sách voi bé nhỏ</h1>
 

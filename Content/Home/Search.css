@@ -102,6 +102,19 @@
     margin-top:3px;
     margin-bottom:5px;
 }
+/* Free ship link wrapper - SEO + Accessibility */
+.free-instant-ship-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+    cursor: pointer;
+}
+
+.free-instant-ship-link:hover .free-instant-ship {
+    background: linear-gradient(135deg, #7b8ff0 0%, #8a5bb8 100%);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
 /* Free ship message - Mobile: 2 dòng, Desktop: 1 dòng */
 .free-instant-ship {
     padding: 2px 10px;
@@ -116,6 +129,7 @@
     gap: 4px;
 /*    justify-content:center;*/
     align-items: center;
+    transition: all 0.2s ease;
 }
 
 .free-instant-ship-message {
