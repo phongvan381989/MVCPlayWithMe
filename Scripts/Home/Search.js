@@ -355,7 +355,7 @@ function EmptySomething() {
 function SetSearchParametersFromUrl() {
     // Optimize: chỉ parse URL 1 lần thay vì 6 lần
     const urlParams = new URLSearchParams(window.location.search);
-    if (DEBUG_ADMIN) {
+    if (DEBUG) {
         console.log("SetSearchParametersFromUrl CALL");
         console.log("urlParams: " + urlParams);
     }
