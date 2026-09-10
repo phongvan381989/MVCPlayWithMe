@@ -836,7 +836,6 @@
     <Content Include="Views\Product\Search.cshtml" />
     <Content Include="Views\Shared\Product\SearchParameter.cshtml" />
     <Content Include="Views\Shared\Product\SearchResult.cshtml" />
-    <Content Include="Views\Home\Item.cshtml" />
     <Content Include="Views\Shared\biggestContainer_Bottom.cshtml" />
     <Content Include="Views\Shared\Home\SelectedModal.cshtml" />
     <Content Include="Views\Shared\Home\OverMaxModal.cshtml" />

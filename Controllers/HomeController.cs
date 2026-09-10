@@ -42,7 +42,7 @@ namespace MVCPlayWithMe.Controllers
         /// page: Trang hiện tại (optional, dùng để track/log)
         /// </summary>
         [HttpGet]
-        public async Task<string> HomeSearch(string keyword,
+        public async Task<JsonResult> HomeSearch(string keyword,
             string author,
             string translator,
             string category,
@@ -89,7 +89,7 @@ namespace MVCPlayWithMe.Controllers
                 Common.SetResultException(ex, result);
             }
 
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         /// <summary>
@@ -161,23 +161,23 @@ namespace MVCPlayWithMe.Controllers
         /// JavaScript sẽ tự tìm sản phẩm chính theo ID
         /// </summary>
         [HttpPost]
-        public async Task<string> GetSanPhamWithVariants(int id)
+        public async Task<JsonResult> GetSanPhamWithVariants(int id)
         {
             // Gọi 1 stored procedure duy nhất để lấy danh sách variants (bao gồm sản phẩm chính)
             List<SanPham> variants = await SanPhamMySql.GetSanPhamWithVariantsAsync(id);
 
             if (variants == null || variants.Count == 0)
             {
-                return "null";
+                return Json(null, JsonRequestBehavior.AllowGet);
             }
 
             // Return list, JavaScript sẽ tự tìm sản phẩm chính
-            return JsonConvert.SerializeObject(variants);
+            return Json(variants, JsonRequestBehavior.AllowGet);
         }
 
         // Nguyên tắc: real luôn luôn = 0 trong db, sản phẩm nào được chọn trên giao diện sẽ gửi riêng
         [HttpPost]
-        public async Task<string> AddSanPhamToCart(int sanPhamId, int quantity/*, int real*/)
+        public async Task<JsonResult> AddSanPhamToCart(int sanPhamId, int quantity/*, int real*/)
         {
             MySqlResultState result = new MySqlResultState();
             Customer customer = await AuthentCustomerAsync();
@@ -185,7 +185,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 result.State = EMySqlResultState.AUTHEN_FAIL;
                 result.Message = "Không lấy được thông tin khách hàng.";
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             //// Làm mới dữ liệu trước đó real = 0
@@ -196,11 +196,11 @@ namespace MVCPlayWithMe.Controllers
             cart.quantity = quantity;
             //cart.real = real;
             result = await CustomerMySql.AddCartAsync(customer.id, cart);
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
-        public async Task<string> CartPageLoadCart()
+        public async Task<JsonResult> CartPageLoadCart()
         {
             Customer cus = await AuthentCustomerAsync();
             List<Cart> ls = null;
@@ -227,10 +227,10 @@ namespace MVCPlayWithMe.Controllers
             else
             {
                 ls = lslocalStorage;
-            }    
+            }
             await OrderMySql.GetCartsSanPhamBasicInfoAsync(ls);
 
-            return JsonConvert.SerializeObject(ls);
+            return Json(ls, JsonRequestBehavior.AllowGet);
         }
 
         public ActionResult Cart()
@@ -240,13 +240,13 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> CheckoutPageLoadCart()
+        public async Task<JsonResult> CheckoutPageLoadCart()
         {
             // Đọc cart từ request body (JSON)
             List<Cart> lslocalStorage = await Common.ReadJsonFromRequestBody<List<Cart>>(Request);
             await OrderMySql.GetCartsSanPhamBasicInfoAsync(lslocalStorage);
 
-            return JsonConvert.SerializeObject(lslocalStorage);
+            return Json(lslocalStorage, JsonRequestBehavior.AllowGet);
         }
 
         // Danh sách sản phẩm đã chọn mua, phí vận chuyển,
@@ -267,10 +267,10 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> GetAdministrativeAddress()
+        public async Task<JsonResult> GetAdministrativeAddress()
         {
             List<AdministrativeAddress> ls = await AdministrativeAddressMySql.GetListAdministrativeAddressAsync();
-            return JsonConvert.SerializeObject(ls);
+            return Json(ls, JsonRequestBehavior.AllowGet);
         }
 
         // Check id model đúng, check số lượng cần mua có đủ, check giá bìa, giá bán thực tế có chính xác
@@ -473,12 +473,12 @@ namespace MVCPlayWithMe.Controllers
             return lsOrderPayFromDb;
         }
 
-        private async Task<string> RoolBackWhenOrderError(MySqlTransaction transaction, MySqlResultState result)
+        private async Task<JsonResult> RoolBackWhenOrderError(MySqlTransaction transaction, MySqlResultState result)
         {
             // ROLLBACK nếu có lỗi
             await transaction.RollbackAsync();
             result.Message = "Không tạo được đơn hàng. Vui lòng thử lại sau.";
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         private async Task GetSanPhamBasicInfosFromDBAsync(
@@ -596,7 +596,7 @@ namespace MVCPlayWithMe.Controllers
         }
         // Cần kiểm tra vì khách có thể f12 trên web, sửa javascipt, html
         [HttpPost]
-        public async Task<string> CheckOrderOnSever(string cart, string customerInfor,
+        public async Task<JsonResult> CheckOrderOnSever(string cart, string customerInfor,
             string listOrderPay, string noteToShop, SByte paymentMethod)
         {
             MyLogger.GetInstance().Info("CheckOrderOnSever START");
@@ -614,7 +614,7 @@ namespace MVCPlayWithMe.Controllers
                 result.State = EMySqlResultState.EMPTY;
                 result.Message = "Giỏ hàng trống.";
                 MyLogger.GetInstance().Warn("CheckCartAsync: Giỏ hàng trống");
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             // Lấy dữ liệu từ db 1 lần để so sánh
@@ -625,7 +625,7 @@ namespace MVCPlayWithMe.Controllers
             await GetSanPhamBasicInfosFromDBAsync(sanPhamBasicInfos, lsBuyedCart, result);
             if (result.State != EMySqlResultState.OK)
             {
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             if (sanPhamBasicInfos.Count == 0)
@@ -634,7 +634,7 @@ namespace MVCPlayWithMe.Controllers
                 result.Message = "Thông tin giỏ hàng đã thay đổi. Vui lòng tải lại trang.";
 
                 MyLogger.GetInstance().Warn($"🚨 Cant get SanPhamBasicInfos from DB. SanPhamBasicInfos.Count == 0");
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             string messageWhenValidationFail = "Thông tin giỏ hàng đã thay đổi. Vui lòng tải lại trang.";
@@ -642,7 +642,7 @@ namespace MVCPlayWithMe.Controllers
             CheckCartValidation(lsBuyedCart, sanPhamBasicInfos, messageWhenValidationFail, result);
             if (result.State != EMySqlResultState.OK)
             {
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             // ===== LAYER 2: TÍNH LẠI VÀ VALIDATE TỔNG TIỀN =====
@@ -668,7 +668,7 @@ namespace MVCPlayWithMe.Controllers
                 totalMoneyDiscount, finalAmount, messageWhenValidationFail, result);
             if (result.State != EMySqlResultState.OK)
             {
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             // ===== TẤT CẢ VALIDATION PASSED - TIẾP TỤC TẠO ĐƠN HÀNG =====
@@ -694,7 +694,7 @@ namespace MVCPlayWithMe.Controllers
             catch (Exception ex)
             {
                 Common.SetResultException(ex, result);
-                return JsonConvert.SerializeObject(result);
+                return Json(result, JsonRequestBehavior.AllowGet);
             }
 
             // VietQR URL (chỉ generate khi payment = BANK_TRANSFER)
@@ -814,7 +814,7 @@ namespace MVCPlayWithMe.Controllers
 
                         result.State = EMySqlResultState.ERROR;
                         result.Message = "Không tạo được đơn hàng. Vui lòng thử lại sau.";
-                        return JsonConvert.SerializeObject(result);
+                        return Json(result, JsonRequestBehavior.AllowGet);
                     }
                 }
             }
@@ -843,14 +843,14 @@ namespace MVCPlayWithMe.Controllers
                     TotalAmount = finalAmount
                 };
 
-                return JsonConvert.SerializeObject(responseWithQR);
+                return Json(responseWithQR, JsonRequestBehavior.AllowGet);
             }
 
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
-        public async Task<string> DeleteSanPhamOnCart(int sanPhamId)
+        public async Task<JsonResult> DeleteSanPhamOnCart(int sanPhamId)
         {
             Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
@@ -862,11 +862,11 @@ namespace MVCPlayWithMe.Controllers
             {
                 result = await OrderMySql.DeleteSanPhamOnCartAsync(cus.id, sanPhamId);
             }
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
-        public async Task<string> UpdateSanPhamQuantityOnCart(int sanPhamId, int quantity)
+        public async Task<JsonResult> UpdateSanPhamQuantityOnCart(int sanPhamId, int quantity)
         {
             Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
@@ -878,14 +878,14 @@ namespace MVCPlayWithMe.Controllers
             {
                 result = await OrderMySql.UpdateSanPhamQuantityOnCartAsync(cus.id, sanPhamId, quantity);
             }
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         /// <summary>
         /// Reset real = 0 cho tất cả items trong cart (khi vào Cart page từ trang khác)
         /// </summary>
         [HttpPost]
-        public async Task<string> RefreshRealOfCart()
+        public async Task<JsonResult> RefreshRealOfCart()
         {
             Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
@@ -899,7 +899,7 @@ namespace MVCPlayWithMe.Controllers
                 result = await OrderMySql.RefreshRealOfCartAsync(cus.id);
             }
 
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         ///// <summary>
@@ -936,23 +936,23 @@ namespace MVCPlayWithMe.Controllers
         //}
 
         [HttpPost]
-        public async Task<string> CheckoutPageLoadRealCart()
+        public async Task<JsonResult> CheckoutPageLoadRealCart()
         {
             Customer cus = await AuthentCustomerAsync();
 
             if (cus == null)
             {
                 // Guest: trả về empty, frontend dùng localStorage
-                return JsonConvert.SerializeObject(new List<Cart>());
+                return Json(new List<Cart>(), JsonRequestBehavior.AllowGet);
             }
 
             // Logged-in: lấy cart với real=1 từ database
             List<Cart> realCart = await OrderMySql.GetRealCartAsync(cus.id);
-            return JsonConvert.SerializeObject(realCart);
+            return Json(realCart, JsonRequestBehavior.AllowGet);
         }
 
         [HttpPost]
-        public async Task<string> BatchUpdateCartQuantities()
+        public async Task<JsonResult> BatchUpdateCartQuantities()
         {
             Customer cus = await AuthentCustomerAsync();
             MySqlResultState result = new MySqlResultState();
@@ -978,7 +978,7 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
 
-            return JsonConvert.SerializeObject(result);
+            return Json(result, JsonRequestBehavior.AllowGet);
         }
 
         /// <summary>
@@ -986,19 +986,19 @@ namespace MVCPlayWithMe.Controllers
         /// </summary>
         /// <returns>JSON array của OrderSimplePromotion</returns>
         [HttpPost]
-        public async Task<string> GetActiveOrderSimplePromotions()
+        public async Task<JsonResult> GetActiveOrderSimplePromotions()
         {
             // Không cần check đăng nhập, vì promotion áp dụng cho tất cả khách hàng
 
             try
             {
                 List<OrderSimplePromotion> promotions = await OrderSimplePromotionMySql.GetActivePromotionsAsync();
-                return JsonConvert.SerializeObject(promotions);
+                return Json(promotions, JsonRequestBehavior.AllowGet);
             }
             catch (Exception ex)
             {
                 MyLogger.GetInstance().Warn($"GetActiveOrderSimplePromotions failed: {ex.Message}");
-                return "[]"; // Trả về mảng rỗng nếu có lỗi
+                return Json(new List<OrderSimplePromotion>(), JsonRequestBehavior.AllowGet); // Trả về mảng rỗng nếu có lỗi
             }
         }
     }

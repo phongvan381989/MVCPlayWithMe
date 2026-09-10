@@ -24,7 +24,7 @@ Disallow: /Customer/
 Disallow: /Home/Checkout
 Disallow: /Home/Cart
 Disallow: /Home/Search
-Disallow: /Home/Erro
+Disallow: /Home/Error
 Disallow: /Home/PaymentInfo
 
 Sitemap: https://voibenho.com/sitemap.xml
