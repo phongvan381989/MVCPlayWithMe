@@ -1500,7 +1500,7 @@ namespace MVCPlayWithMe.Models.Order
                     using (MySqlCommand cmd = new MySqlCommand("st_tbOrder_Get_By_OrderCode", conn))
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
-                        cmd.Parameters.AddWithValue("@inOrderCode", orderCode);
+                        cmd.Parameters.Add("@inOrderCode", MySqlDbType.VarChar).Value = orderCode;
                         orderList = await ReadOrder(cmd);
                     }
 

@@ -390,6 +390,7 @@ a {
 /*    padding: 5px;*/
     width:100%;
     display:none;
+    min-height: 100vh;
 }
 
 .cart-empty {

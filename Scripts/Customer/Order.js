@@ -90,7 +90,7 @@ function InitializeSearchPlaceholder() {
     if (CheckAnonymousCustomer()) {
         searchInput.placeholder = "Gõ 5 chữ cuối SDT, mã đơn, tên người nhận";
     } else {
-        searchInput.placeholder = "Gõ 3 ký tự: mã đơn, tên, SDT";
+        searchInput.placeholder = "Tìm theo SDT, mã đơn, tên người nhận";
     }
 }
 
@@ -112,7 +112,7 @@ async function OrderSearch() {
 
     // Min length khác nhau: khách vãng lai 5 ký tự, khách đăng nhập 3 ký tự
     let isAnonymous = CheckAnonymousCustomer();
-    let minLength = isAnonymous ? 5 : 3;
+    let minLength = isAnonymous ? 5 : 1;
 
     if (searchValue.length < minLength) {
         CreateMustClickOkModal(`Nhập ít nhất ${minLength} ký tự`, null);
@@ -348,12 +348,23 @@ function ShowResultOrder(orders) {
 
         let clone = sample.cloneNode(true);
 
+        // Trạng thái chờ thanh toán/ đã thanh toán/ hoàn tiền
+        if (orderObj.OrderPayStatus === EOrderPayStatus.PENDING) {
+            clone.getElementsByClassName("last-order-pay-status")[0].innerHTML = "Chờ thanh toán";
+        }
+        else if (orderObj.OrderPayStatus === EOrderPayStatus.PAID) {
+            clone.getElementsByClassName("last-order-pay-status")[0].innerHTML = "Đã thanh toán";
+        }
+        else if (orderObj.OrderPayStatus === EOrderPayStatus.REFUNDED) {
+            clone.getElementsByClassName("last-order-pay-status")[0].innerHTML = "Hoàn tiền";
+        }
+
         // Mã đơn
-        clone.getElementsByClassName("order-code")[0].innerHTML = "MÃ . " + orderObj.OrderCode;
+        clone.getElementsByClassName("order-code")[0].innerHTML = orderObj.OrderCode;
 
         // Trạng thái đơn
         // lấy đầu tiên vì query đã sort
-        clone.getElementsByClassName("fxASnxvd")[0].innerHTML =
+        clone.getElementsByClassName("last-order-status")[0].innerHTML =
             orderObj.lsOrderTrack[0].strStatus;
 
         // Thông tin nhận hàng
@@ -421,8 +432,19 @@ function ShowResultOrder(orders) {
         }
 
         // Phương thức thanh toán
-        if (orderObj.PaymentMethod == 1) {
-            clone.getElementsByClassName("payment-method-text")[0].innerHTML = "Chuyển khoản ngân hàng";
+        if (orderObj.PaymentMethod == EPaymentMethod.BANK_TRANSFER) {
+            let paymentMethodContainer = clone.getElementsByClassName("hjhgui88")[0];
+            paymentMethodContainer.innerHTML = `
+                <span class="KoRB7y payment-method-text">Chuyển khoản ngân hàng</span>
+                <button type="button" class="btn-view-qr"
+                    style="margin: 10px; padding: 6px 12px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;"
+                    onclick="ShowPaymentQRCode('${orderObj.OrderCode}')">
+                    📱 Xem QR thanh toán
+                </button>
+            `;
+        }
+        else {
+            clone.getElementsByClassName("payment-method-text")[0].innerHTML = "Thanh toán khi nhận hàng";
         }
 
         // CHi tiết thanh toán
@@ -473,6 +495,192 @@ function ShowResultOrder(orders) {
         clone.style.display = "block";
         container.append(clone);
     }
+}
+
+// =============================================
+// Hiển thị QR thanh toán cho đơn hàng chuyển khoản
+// =============================================
+
+/**
+ * Gọi API lấy thông tin QR code và hiển thị modal
+ * @param {string} orderCode - Mã đơn hàng
+ */
+async function ShowPaymentQRCode(orderCode) {
+    ShowCircleLoader();
+
+    try {
+        const responseText = await PostJSON('/Customer/GetOrderPaymentQRCode', {
+            orderCode: orderCode
+        });
+
+        RemoveCircleLoader();
+
+        const result = JSON.parse(responseText);
+
+        if (result.State !== 0) {
+            await CreateMustClickOkModal(result.Message || "Không thể lấy thông tin QR code", null);
+            return;
+        }
+
+        // Hiển thị modal với QR code
+        const paymentInfo = {
+            orderCode: result.OrderCode,
+            qrCodeUrl: result.QRCodeUrl,
+            bankAccount: result.BankAccount,
+            totalAmount: result.TotalAmount
+        };
+
+        await CreateBankTransferPaymentModal(paymentInfo);
+
+    } catch (error) {
+        RemoveCircleLoader();
+        console.error("ShowPaymentQRCode error:", error);
+        await CreateMustClickOkModal("Có lỗi xảy ra. Vui lòng thử lại sau.", null);
+    }
+}
+
+/**
+ * Hiển thị modal thanh toán chuyển khoản với QR code VietQR
+ * @param {object} paymentInfo - Thông tin thanh toán {orderCode, qrCodeUrl, bankAccount, totalAmount}
+ */
+async function CreateBankTransferPaymentModal(paymentInfo) {
+    return new Promise((resolve) => {
+        const { orderCode, qrCodeUrl, bankAccount, totalAmount } = paymentInfo;
+
+        // Tạo copy icons bằng CreateCopyIcon từ web.play.with.me.common.js
+        const copyIconAccount = CreateCopyIcon({
+            size: '16',
+            color: '#007bff',
+            title: 'Copy số tài khoản',
+            className: 'copy-icon-account'
+        });
+
+        const copyIconContent = CreateCopyIcon({
+            size: '16',
+            color: '#007bff',
+            title: 'Copy nội dung CK',
+            className: 'copy-icon-content'
+        });
+
+        let container = document.createElement("div");
+        container.className = "container-my-modal-must-click-ok";
+        container.innerHTML = `
+            <div tabindex='0' class='my-modal-must-click-ok'>
+                <div class='modal-content-selected'>
+                    <div style='text-align: center; margin-bottom: 20px;'>
+                        <div style='font-size: 1.2rem; color: #333; margin-bottom: 10px;'>
+                            📦 Thông tin thanh toán
+                        </div>
+                        <div style='font-size: 0.95rem; color: #666; margin-bottom: 5px;'>
+                            Mã đơn hàng: <strong style='color: #007bff;'>${orderCode}</strong>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Section -->
+                    <div style='text-align: center; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 8px; margin-bottom: 20px;'>
+                        <h4 style='color: white; margin: 0 0 15px 0; font-size: 1rem;'>
+                            📱 Quét mã QR để thanh toán
+                        </h4>
+                        <div style='background: white; padding: 5px; border-radius: 6px; display: inline-block;'>
+                            <img src='${qrCodeUrl}' alt='QR Code' style='max-width: 280px; width: 100%; height: auto;' />
+                        </div>
+                        <p style='color: white; font-size: 0.85rem; margin: 12px 0 0 0;'>
+                            Mở app ngân hàng → Quét QR → Xác nhận
+                        </p>
+                    </div>
+
+                    <!-- Bank Info -->
+                    <div style='background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 15px;'>
+                        <h5 style='font-size: 0.95rem; margin: 0 0 12px 0; color: #495057;'>
+                            🏦 Hoặc chuyển khoản thủ công:
+                        </h5>
+                        <div style='background: white; padding: 12px; border-radius: 4px;'>
+                            <div style='display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e9ecef; font-size: 0.85rem;'>
+                                <span style='color: #6c757d;'>Ngân hàng:</span>
+                                <span style='font-weight: 500;'>${bankAccount.BankName}</span>
+                            </div>
+                            <div style='display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e9ecef; font-size: 0.85rem;'>
+                                <span style='color: #6c757d;'>Số TK:</span>
+                                <div style='display: flex; align-items: center; gap: 6px;'>
+                                    <span style='font-weight: 600;'>${bankAccount.AccountNumber}</span>
+                                    ${copyIconAccount}
+                                </div>
+                            </div>
+                            <div style='display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e9ecef; font-size: 0.85rem;'>
+                                <span style='color: #6c757d;'>Chủ TK:</span>
+                                <span style='font-weight: 500;'>${bankAccount.AccountHolder}</span>
+                            </div>
+                            <div style='display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e9ecef; font-size: 0.85rem;'>
+                                <span style='color: #6c757d;'>Số tiền:</span>
+                                <span style='font-weight: 700; color: #28a745;'>${totalAmount.toLocaleString()}đ</span>
+                            </div>
+                            <div style='display: flex; justify-content: space-between; align-items: center; padding: 6px 0; font-size: 0.85rem;'>
+                                <span style='color: #6c757d;'>Nội dung CK:</span>
+                                <div style='display: flex; align-items: center; gap: 6px;'>
+                                    <span style='font-weight: 700; color: #007bff;'>${orderCode}</span>
+                                    ${copyIconContent}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Warning -->
+                    <div style='background: #fff3cd; border: 1px solid #ffc107; padding: 12px; border-radius: 4px; margin-bottom: 20px;'>
+                        <div style='font-size: 0.8rem; color: #856404;'>
+                            <strong>⚠️ Lưu ý:</strong>
+                            <ul style='margin: 8px 0 0 18px; padding: 0;'>
+                                <li>Chuyển <strong>đúng số tiền</strong>: ${totalAmount.toLocaleString()}đ</li>
+                                <li>Nội dung CK: <strong>${orderCode}</strong></li>
+                                <li>Đơn hàng sẽ được xử lý sau khi nhận được thanh toán</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Close Button -->
+                    <div style='text-align: center;'>
+                        <button class='btn-close' style='
+                            padding: 10px 20px;
+                            background: #6c757d;
+                            color: white;
+                            border: none;
+                            border-radius: 4px;
+                            cursor: pointer;
+                            font-size: 0.95rem;
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                        '>Đóng</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        document.getElementsByTagName("body")[0].appendChild(container);
+
+        let modal = container.getElementsByClassName("my-modal-must-click-ok")[0];
+        modal.focus();
+
+        // Add copy event listeners
+        container.getElementsByClassName("copy-icon-account")[0].addEventListener("click", function() {
+            CopyWithVisualFeedback(bankAccount.AccountNumber, this, {
+                type: 'icon',
+                successColor: '#28a745'
+            });
+        });
+
+        container.getElementsByClassName("copy-icon-content")[0].addEventListener("click", function () {
+            CopyWithVisualFeedback(orderCode, this, {
+                type: 'icon',
+                successColor: '#28a745'
+            });
+        });
+
+        // Close button
+        container.getElementsByClassName("btn-close")[0].addEventListener("click", function () {
+            container.remove();
+            resolve("closed");
+        });
+    });
 }
 
 // =============================================

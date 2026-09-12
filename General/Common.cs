@@ -2346,17 +2346,26 @@ namespace MVCPlayWithMe.General
         /// VD: "Sách Doraemon Tập 1 - Bìa Mềm" -> "Sách-Doraemon-Tập-1-Bìa-Mềm"
         /// Giống Shopee: giữ nguyên dấu tiếng Việt, chữ hoa
         /// </summary>
+        /// <summary>
+        /// Generate SEO-friendly slug từ text (bỏ dấu tiếng Việt, lowercase, chỉ giữ chữ-số-dấu gạch ngang)
+        /// VD: "Bộ Sách Doraemon Tập 1" → "bo-sach-doraemon-tap-1"
+        /// </summary>
         public static string GenerateSlug(string text)
         {
             if (string.IsNullOrWhiteSpace(text))
                 return string.Empty;
 
+            // Bỏ dấu tiếng Việt
+            text = RemoveVietnameseDiacritics(text);
+
+            // Lowercase
+            text = text.ToLower().Trim();
+
             // Thay khoảng trắng thành -
             text = Regex.Replace(text, @"\s+", "-");
 
-            // Bỏ các ký tự đặc biệt không an toàn cho URL (giữ chữ, số, dấu tiếng Việt, dấu ngoặc, dấu gạch ngang)
-            // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , . +
-            text = Regex.Replace(text, @"[/\\?#&=<>""'%\[\]{}|^`@!$*;:,.+]", "");
+            // Bỏ ký tự đặc biệt, chỉ giữ chữ cái, số, dấu gạch ngang
+            text = Regex.Replace(text, @"[^a-z0-9\-]", "");
 
             // Bỏ dấu - thừa (nếu có nhiều dấu - liên tiếp)
             text = Regex.Replace(text, @"-+", "-");
@@ -2869,6 +2878,38 @@ namespace MVCPlayWithMe.General
             }
 
             return new string(result);
+        }
+        #endregion
+
+        #region String Utilities
+        /// <summary>
+        /// Loại bỏ dấu tiếng Việt (chuyển về không dấu)
+        /// VD: "Nội dung chuyển khoản" → "Noi dung chuyen khoan"
+        /// </summary>
+        /// <param name="text">Chuỗi cần chuyển đổi</param>
+        /// <returns>Chuỗi không dấu</returns>
+        public static string RemoveVietnameseDiacritics(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return text;
+
+            // Normalize và loại bỏ dấu (tách dấu ra khỏi chữ cái)
+            var normalized = text.Normalize(System.Text.NormalizationForm.FormD);
+            var sb = new System.Text.StringBuilder();
+
+            foreach (char c in normalized)
+            {
+                // Bỏ các ký tự dấu (combining marks)
+                if (System.Globalization.CharUnicodeInfo.GetUnicodeCategory(c) != System.Globalization.UnicodeCategory.NonSpacingMark)
+                {
+                    sb.Append(c);
+                }
+            }
+
+            // Thay đ/Đ (không bị normalize)
+            return sb.ToString()
+                .Replace("đ", "d")
+                .Replace("Đ", "D");
         }
         #endregion
     }

@@ -1,0 +1,113 @@
+﻿@{
+    var bankAccount = ViewBag.BankAccount as MVCPlayWithMe.Models.BankAccount.BankAccount;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="~/Content/Policy/PaymentQR.css?v=20260910">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div style=" width: 100%; background-color: white; padding: 5px; min-height: 100vh;">
+            <div class="container">
+                <div class="header">
+                    <h1>🏦 Lấy mã QR thanh toán</h1>
+                    <p>Nhập mã đơn hàng hoặc số tiền để lấy mã QR</p>
+                </div>
+
+                @if (bankAccount != null)
+                {
+                    <div class="card">
+                        <div class="bank-info">
+                            <div class="bank-row">
+                                <span class="bank-label">Ngân hàng</span>
+                                <span class="bank-value">@bankAccount.BankName</span>
+                            </div>
+                            <div class="bank-row">
+                                <span class="bank-label">Số TK</span>
+                                <div class="bank-value">
+                                    <span id="account-number-display">@bankAccount.AccountNumber</span>
+                                    <span id="copy-icon-account"></span>
+                                </div>
+                            </div>
+                            <div class="bank-row">
+                                <span class="bank-label">Chủ TK</span>
+                                <span class="bank-value">@bankAccount.AccountHolder</span>
+                            </div>
+                        </div>
+
+                        <form id="qrForm" onsubmit="generateQR(event)">
+                            <div class="form-group">
+                                <label class="form-label" for="orderCode">Nội dung chuyển khoản</label>
+                                <input type="text"
+                                       id="orderCode"
+                                       class="form-input"
+                                       placeholder="VD: 260910-12345"
+                                       autocomplete="off"
+                                       maxlength="100">
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label" for="amount">Số tiền (VNĐ)</label>
+                                <input type="text"
+                                       id="amount"
+                                       class="form-input"
+                                       placeholder="VD: 150,000"
+                                       autocomplete="off"
+                                       inputmode="numeric">
+                            </div>
+
+                            <button type="submit" class="btn-generate" id="btnGenerate">
+                                ✨ Lấy mã QR
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="card qr-result" id="qrResult">
+                        <div class="card-title">✅ Mã QR thanh toán</div>
+
+                        <div class="qr-wrapper">
+                            <img id="qrImage" class="qr-image" alt="QR Code">
+                            <div class="qr-instruction">
+                                📱 Quét mã QR bằng app ngân hàng để thanh toán
+                            </div>
+                        </div>
+
+                        <div class="payment-details">
+                            <div class="detail-row">
+                                <span class="detail-label">Số tiền</span>
+                                <span class="detail-value amount-highlight" id="displayAmount"></span>
+                            </div>
+                            <div class="detail-row" id="orderCodeRow" style="display: none;">
+                                <span class="detail-label">Nội dung CK</span>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="detail-value" id="displayOrderCode"></span>
+                                    <span id="copy-icon-ordercode-qr"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="btn-new-qr" onclick="resetForm()">
+                            🔄 Tạo mã QR mới
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <div class="card">
+                        <div style="text-align: center; color: #dc3545; padding: 20px;">
+                            ⚠️ Không tìm thấy thông tin tài khoản ngân hàng
+                        </div>
+                    </div>
+                }
+            </div>
+            </div>
+        @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
+    </div>
+    <script src="~/Scripts/web.play.with.me.common.js?v=20260910"></script>
+    <script src="~/Scripts/Policy/PaymentQR.js?v=20260910"></script>
+</body>
+</html>

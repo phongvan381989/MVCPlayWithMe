@@ -1818,17 +1818,27 @@ function RemoveVietnameseDiacritics(str) {
 // Tạo slug SEO-friendly từ tên sản phẩm (giữ nguyên tiếng Việt + chữ hoa/thường, chỉ thay space)
 // VD: "Sách Doraemon Tập 1 - Bìa Mềm" -> "Sách-Doraemon-Tập-1-Bìa-Mềm"
 // Giống Shopee: giữ nguyên dấu tiếng Việt, chữ hoa
+/**
+ * Generate SEO-friendly slug từ text (bỏ dấu tiếng Việt, lowercase, chỉ giữ chữ-số-dấu gạch ngang)
+ * VD: "Bộ Sách Doraemon Tập 1" → "bo-sach-doraemon-tap-1"
+ * Match với Common.GenerateSlug() trong C#
+ */
 function GenerateSlug(text) {
     if (!text || typeof text !== 'string' || text.trim() === '') {
         return '';
     }
 
+    // Bỏ dấu tiếng Việt
+    text = RemoveVietnameseDiacritics(text);
+
+    // Lowercase
+    text = text.toLowerCase().trim();
+
     // Thay khoảng trắng thành -
     text = text.replace(/\s+/g, '-');
 
-    // Bỏ các ký tự đặc biệt không an toàn cho URL (giữ chữ, số, dấu tiếng Việt, dấu ngoặc, dấu gạch ngang)
-    // Chỉ bỏ: / \ ? # & = < > " ' % [ ] { } | ^ ` @ ! $ * ; : , . +
-    text = text.replace(/[/\\?#&=<>"'%\[\]{}|^`@!$*;:,.+]/g, '');
+    // Bỏ ký tự đặc biệt, chỉ giữ chữ cái, số, dấu gạch ngang
+    text = text.replace(/[^a-z0-9\-]/g, '');
 
     // Bỏ dấu - thừa (nếu có nhiều dấu - liên tiếp)
     text = text.replace(/-+/g, '-');
@@ -1881,4 +1891,94 @@ function CalculateDiscountPercent(bookCoverPrice, salePrice) {
 
 function GenerateSanPhamUrlForCustomer(name, id) {
     return  "/San-Pham/" + GenerateSlugId(name, id);
+}
+
+// ========================================
+// COPY UTILITIES - Tạo icon & copy với visual feedback
+// ========================================
+
+/**
+ * Tạo SVG copy icon
+ * @param {Object} options - Tùy chọn {
+ *   size: '16' (default) | '18' | số khác,
+ *   color: '#007bff' (default) | màu khác,
+ *   title: 'Copy' (default) | text khác,
+ *   className: '' (optional) | CSS class
+ * }
+ * @returns {string} HTML string của SVG icon
+ */
+function CreateCopyIcon(options = {}) {
+    const size = options.size || '16';
+    const color = options.color || 'white';
+    const title = options.title || 'Copy';
+    const className = options.className || 'copy-icon';
+
+    return `<span class="${className}" style="cursor: pointer; color: ${color}; user-select: none; display: inline-flex; align-items: center; opacity: 0.9;" title="${title}">
+        <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 115.77 122.88" fill="currentColor">
+            <path d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"/>
+        </svg>
+    </span>`;
+}
+
+/**
+ * Copy text vào clipboard với visual feedback (đổi màu icon/button)
+ * @param {string} text - Text cần copy
+ * @param {HTMLElement} element - Icon/button element để hiển thị feedback
+ * @param {Object} options - Tùy chọn {
+ *   type: 'icon' (default) | 'button',
+ *   successColor: '#28a745' (default),
+ *   successIcon: null (default, chỉ đổi màu) | '✅' (thay SVG thành emoji),
+ *   successText: null (default, không thay đổi text) | 'Đã copy',
+ *   duration: 1500 (ms),
+ *   originalColor: null (auto detect) | màu gốc
+ * }
+ */
+function CopyWithVisualFeedback(text, element, options = {}) {
+    const type = options.type || 'icon';
+    const successColor = options.successColor || '#28a745';
+    const successIcon = options.successIcon || null;
+    const successText = options.successText || null;
+    const duration = options.duration || 1500;
+
+    navigator.clipboard.writeText(text).then(function() {
+        // Icon type: chỉ đổi màu (hoặc thay icon nếu có successIcon)
+        if (type === 'icon') {
+            const originalHTML = element.innerHTML;
+            const originalColor = element.style.color;
+            const originalOpacity = element.style.opacity;
+
+            // Chỉ thay icon nếu có successIcon option
+            if (successIcon) {
+                element.innerHTML = successIcon;
+            }
+            element.style.color = successColor;
+            element.style.opacity = '1';
+
+            setTimeout(function() {
+                element.innerHTML = originalHTML;
+                element.style.color = originalColor;
+                element.style.opacity = originalOpacity;
+            }, duration);
+        }
+        // Button type: thay text
+        else if (type === 'button') {
+            const originalHTML = element.innerHTML;
+            const originalBg = element.style.background || window.getComputedStyle(element).background;
+
+            if (successText) {
+                element.innerHTML = successText;
+            }
+            element.style.background = successColor;
+            element.classList.add('copied');
+
+            setTimeout(function() {
+                element.innerHTML = originalHTML;
+                element.style.background = originalBg;
+                element.classList.remove('copied');
+            }, duration);
+        }
+    }, function(err) {
+        console.error('Copy failed:', err);
+        alert('Không thể copy. Vui lòng copy thủ công.');
+    });
 }

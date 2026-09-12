@@ -154,39 +154,34 @@ async function CheckoutPageLoadCart() {
 }
 
 /**
- * Copy text vào clipboard
- * @param {string} text - Text cần copy
- * @param {HTMLElement} iconElement - Icon element để hiển thị animation
- */
-function copyToClipboard(text, iconElement) {
-    navigator.clipboard.writeText(text).then(() => {
-        // Hiển thị thông báo đã copy - đổi SVG thành checkmark
-        const originalHTML = iconElement.innerHTML;
-        const originalColor = iconElement.style.color;
-
-        // Thay SVG bằng checkmark emoji
-        iconElement.innerHTML = '✅';
-        iconElement.style.color = '#28a745';
-        iconElement.style.fontSize = '1.2rem';
-
-        setTimeout(() => {
-            iconElement.innerHTML = originalHTML;
-            iconElement.style.color = originalColor || '#007bff';
-            iconElement.style.fontSize = '';
-        }, 1500);
-    }).catch(err => {
-        console.error('Lỗi khi copy:', err);
-        alert('Không thể copy. Vui lòng copy thủ công.');
-    });
-}
-
-/**
  * Hiển thị modal thanh toán chuyển khoản với QR code VietQR
  * @param {object} paymentInfo - Thông tin thanh toán {orderCode, qrCodeUrl, bankAccount, totalAmount}
  */
 async function CreateBankTransferPaymentModal(paymentInfo) {
     return new Promise((resolve) => {
         const { orderCode, qrCodeUrl, bankAccount, totalAmount } = paymentInfo;
+
+        // Tạo copy icons bằng CreateCopyIcon từ web.play.with.me.common.js
+        const copyIconOrderCode = CreateCopyIcon({
+            size: '18',
+            color: '#007bff',
+            title: 'Copy mã đơn hàng',
+            className: 'copy-icon-ordercode'
+        });
+
+        const copyIconAccount = CreateCopyIcon({
+            size: '16',
+            color: '#007bff',
+            title: 'Copy số tài khoản',
+            className: 'copy-icon-account'
+        });
+
+        const copyIconContent = CreateCopyIcon({
+            size: '16',
+            color: '#007bff',
+            title: 'Copy nội dung CK',
+            className: 'copy-icon-content'
+        });
 
         let container = document.createElement("div");
         container.className = "container-my-modal-must-click-ok";
@@ -199,11 +194,7 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
                         </div>
                         <div style='font-size: 1rem; color: #333; margin-bottom: 5px; display: flex; align-items: center; justify-content: center; gap: 8px;'>
                             📦 Mã đơn hàng: <strong style='color: #007bff;'>${orderCode}</strong>
-                            <span class='copy-icon-ordercode' style='cursor: pointer; color: #007bff; user-select: none; display: inline-flex; align-items: center;' title='Copy mã đơn hàng'>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 115.77 122.88" fill="currentColor">
-                                    <path d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"/>
-                                </svg>
-                            </span>
+                            ${copyIconOrderCode}
                         </div>
                     </div>
 
@@ -234,11 +225,7 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
                                 <span style='color: #6c757d;'>Số TK:</span>
                                 <div style='display: flex; align-items: center; gap: 6px;'>
                                     <span style='font-weight: 600;'>${bankAccount.AccountNumber}</span>
-                                    <span class='copy-icon-account' style='cursor: pointer; color: #007bff; user-select: none; display: inline-flex; align-items: center;' title='Copy số tài khoản'>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 115.77 122.88" fill="currentColor">
-                                            <path d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"/>
-                                        </svg>
-                                    </span>
+                                    ${copyIconAccount}
                                 </div>
                             </div>
                             <div style='display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #e9ecef; font-size: 0.85rem;'>
@@ -253,11 +240,7 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
                                 <span style='color: #6c757d;'>Nội dung CK:</span>
                                 <div style='display: flex; align-items: center; gap: 6px;'>
                                     <span style='font-weight: 700; color: #007bff;'>${orderCode}</span>
-                                    <span class='copy-icon-content' style='cursor: pointer; color: #007bff; user-select: none; display: inline-flex; align-items: center;' title='Copy nội dung CK'>
-                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 115.77 122.88" fill="currentColor">
-                                            <path d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"/>
-                                        </svg>
-                                    </span>
+                                    ${copyIconContent}
                                 </div>
                             </div>
                         </div>
@@ -307,15 +290,15 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
 
         // Add copy event listeners
         container.getElementsByClassName("copy-icon-ordercode")[0].addEventListener("click", function() {
-            copyToClipboard(orderCode, this);
+            CopyWithVisualFeedback(orderCode, this);
         });
 
         container.getElementsByClassName("copy-icon-account")[0].addEventListener("click", function() {
-            copyToClipboard(bankAccount.AccountNumber, this);
+            CopyWithVisualFeedback(bankAccount.AccountNumber, this);
         });
 
         container.getElementsByClassName("copy-icon-content")[0].addEventListener("click", function() {
-            copyToClipboard(orderCode, this);
+            CopyWithVisualFeedback(orderCode, this);
         });
 
         container.getElementsByClassName("btn-view-order")[0].addEventListener("click", function () {
@@ -338,6 +321,13 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
  */
 async function CreateOrderSuccessModal(orderCode) {
     return new Promise((resolve) => {
+        const copyIconOrderCodeCod = CreateCopyIcon({
+            size: '18',
+            color: '#007bff',
+            title: 'Copy mã đơn hàng',
+            className: 'copy-icon-ordercode-cod'
+        });
+
         // Tạo modal container
         let container = document.createElement("div");
         container.className = "container-my-modal-must-click-ok";
@@ -350,11 +340,7 @@ async function CreateOrderSuccessModal(orderCode) {
                         </div>
                         <div style='font-size: 1.1rem; color: #333; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 8px;'>
                             📦 Mã đơn hàng: <strong>${orderCode}</strong>
-                            <span class='copy-icon-ordercode-cod' style='cursor: pointer; color: #007bff; user-select: none; display: inline-flex; align-items: center;' title='Copy mã đơn hàng'>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 115.77 122.88" fill="currentColor">
-                                    <path d="M89.62,13.96v7.73h12.19h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02v0.02 v73.27v0.01h-0.02c-0.01,3.84-1.57,7.33-4.1,9.86c-2.51,2.5-5.98,4.06-9.82,4.07v0.02h-0.02h-61.7H40.1v-0.02 c-3.84-0.01-7.34-1.57-9.86-4.1c-2.5-2.51-4.06-5.98-4.07-9.82h-0.02v-0.02V92.51H13.96h-0.01v-0.02c-3.84-0.01-7.34-1.57-9.86-4.1 c-2.5-2.51-4.06-5.98-4.07-9.82H0v-0.02V13.96v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07V0h0.02h61.7 h0.01v0.02c3.85,0.01,7.34,1.57,9.86,4.1c2.5,2.51,4.06,5.98,4.07,9.82h0.02V13.96L89.62,13.96z M79.04,21.69v-7.73v-0.02h0.02 c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v64.59v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h12.19V35.65 v-0.01h0.02c0.01-3.85,1.58-7.34,4.1-9.86c2.51-2.5,5.98-4.06,9.82-4.07v-0.02h0.02H79.04L79.04,21.69z M105.18,108.92V35.65v-0.02 h0.02c0-0.91-0.39-1.75-1.01-2.37c-0.61-0.61-1.46-1-2.37-1v0.02h-0.01h-61.7h-0.02v-0.02c-0.91,0-1.75,0.39-2.37,1.01 c-0.61,0.61-1,1.46-1,2.37h0.02v0.01v73.27v0.02h-0.02c0,0.91,0.39,1.75,1.01,2.37c0.61,0.61,1.46,1,2.37,1v-0.02h0.01h61.7h0.02 v0.02c0.91,0,1.75-0.39,2.37-1.01c0.61-0.61,1-1.46,1-2.37h-0.02V108.92L105.18,108.92z"/>
-                                </svg>
-                            </span>
+                            ${copyIconOrderCodeCod}
                         </div>
                         <div style='font-size: 0.95rem; color: #666; margin-bottom: 5px;'>
                             Cảm ơn bạn đã mua hàng tại shop!
@@ -393,7 +379,7 @@ async function CreateOrderSuccessModal(orderCode) {
 
         // Add copy event listener for COD order code
         container.getElementsByClassName("copy-icon-ordercode-cod")[0].addEventListener("click", function() {
-            copyToClipboard(orderCode, this);
+            CopyWithVisualFeedback(orderCode, this);
         });
 
         // Button "Xem đơn hàng"

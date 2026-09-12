@@ -1,11 +1,103 @@
-﻿<!DOCTYPE html>
+﻿
+<!DOCTYPE html>
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+    <style>
+        .bank-account-section {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 20px 0;
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .bank-account-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bank-info-grid {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 8px;
+            padding: 20px;
+            color: #333;
+        }
+
+        .bank-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .bank-info-row:last-child {
+            border-bottom: none;
+        }
+
+        .bank-info-label {
+            color: #6c757d;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .bank-info-value {
+            color: #212529;
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-btn-bank {
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .copy-btn-bank:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .copy-btn-bank.copied {
+            background: #28a745;
+        }
+
+        .bank-note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 15px;
+            color: #856404;
+            font-size: 13px;
+        }
+
+        @@media (max-width: 576px) {
+            .bank-info-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+        }
+    </style>
 </head>
 <body>
     <div id="biggestContainer">
-        <div style=" width: 100%; background-color: white; padding: 5px; min-height: 100vh;">
+        <div style=" width: 100%; background-color: white; padding: 10px; min-height: 100vh;">
             <h1 style="margin-bottom:2px;">Thông tin liên hệ và chính sách Tiệm sách và đồ chơi Voi bé nhỏ</h1>
 
 
@@ -13,10 +105,10 @@
 
             <p><span style="font-size:14px"> Mong muốn của Tiệm sách là đem lại thật nhiều niềm vui, kiến thức, tình yêu với sách cho các bạn nhỏ và lan tỏa thói quen đọc sách tới mọi người. Buổi tối, sau một ngày làm việc, học tập hay khi có thời gian rảnh rỗi cả gia đình cùng ngồi nghỉ ngơi và đọc sách. Bố mẹ đọc sách cho con là một cách để gắn kết yêu thương. Cả nhà mình cùng nhau đọc sách mỗi ngày bố mẹ nhé!</span></p>
 
-            <p><span style="font-size:14px">Gửi muôn vàn tri thức</span></p>
-            <p><span style="font-size:14px">Gửi muôn vàn yêu thương</span></p>
-            <p><span style="font-size:14px">Cả nhà gắn kết hơn</span></p>
-            <p><span style="font-size:14px">Cùng nhau mình đọc sách</span></p>
+            <p><span style="font-size:14px;font-style: italic;">Gửi muôn vàn tri thức</span></p>
+            <p><span style="font-size:14px;font-style: italic;">Gửi muôn vàn yêu thương</span></p>
+            <p><span style="font-size:14px;font-style: italic;">Cả nhà gắn kết hơn</span></p>
+            <p><span style="font-size:14px;font-style: italic;">Cùng nhau mình đọc sách</span></p>
 
             <br />
             <h3 style="margin-top: 30px; margin-bottom: 15px;">Chính sách hướng dẫn</h3>
@@ -61,13 +153,27 @@
                         &#x2022; Nghĩa vụ các bên trong giao dịch
                     </a>
                 </p>
+                <p style="margin-bottom: 10px;">
+                    <a href="/Policy/PaymentQR" style="color: #05a; text-decoration: none; font-size: 14px;">
+                        &#x2022; Tài khoản thanh toán
+                    </a>
+                </p>
             </div>
-
         </div>
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
     <script src="~/Scripts/web.play.with.me.common.js"></script>
     <script src="~/Scripts/cart-manager.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+    <script>
+        // Copy bank info với feedback - dùng hàm chung từ web.play.with.me.common.js
+        function copyBankInfo(text, button) {
+            CopyWithVisualFeedback(text, button, {
+                type: 'button',
+                successText: '✅ Đã copy',
+                duration: 2000
+            });
+        }
+    </script>
 </body>
 </html>

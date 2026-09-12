@@ -675,6 +675,7 @@
     <Content Include="Content\Home\SanPham.css" />
     <Content Include="Content\Home\Search.css" />
     <Content Include="Content\photoswipe.css" />
+    <Content Include="Content\Policy\PaymentQR.css" />
     <Content Include="Content\ProductECommerce\Index.css" />
     <Content Include="Content\ProductECommerce\Item.css" />
     <Content Include="Content\ProductECommerce\Order.css" />
@@ -762,6 +763,7 @@
     <Content Include="Scripts\modernizr-2.8.3.js" />
     <Content Include="Scripts\photoswipe-lightbox.umd.min.js" />
     <Content Include="Scripts\photoswipe.umd.min.js" />
+    <Content Include="Scripts\Policy\PaymentQR.js" />
     <Content Include="Scripts\ProductECommerce\Index.js" />
     <Content Include="Scripts\ProductECommerce\item.js" />
     <Content Include="Scripts\ProductECommerce\ItemOnDB.js" />
@@ -892,8 +894,8 @@
     <Content Include="Views\Administrator\PendingPayments.cshtml" />
     <Content Include="Views\Administrator\OrderList.cshtml" />
     <Content Include="Views\Administrator\OrderDetail.cshtml" />
-    <Content Include="Views\Home\PaymentInfo.cshtml" />
     <Content Include="Views\Administrator\Output.cshtml" />
+    <Content Include="Views\Policy\PaymentQR.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

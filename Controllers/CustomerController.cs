@@ -487,5 +487,105 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(result);
         }
+
+        /// <summary>
+        /// Lấy thông tin thanh toán chuyển khoản (QR code + bank info) cho đơn hàng cụ thể
+        /// Dùng cho trang /Customer/Order để hiển thị QR code khi click vào đơn hàng chuyển khoản
+        /// </summary>
+        /// <param name="orderCode">Mã đơn hàng (VD: 260804-12345)</param>
+        [HttpPost]
+        public async Task<JsonResult> GetOrderPaymentQRCode(string orderCode = null)
+        {
+            // Đọc từ JSON body nếu không có parameter
+            if (orderCode == null)
+            {
+                using (var reader = new System.IO.StreamReader(Request.InputStream))
+                {
+                    string body = await reader.ReadToEndAsync();
+                    var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+                    orderCode = jsonData["orderCode"]?.ToString();
+                }
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                // Validate input
+                if (string.IsNullOrWhiteSpace(orderCode))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "OrderCode không hợp lệ";
+                    return Json(result, JsonRequestBehavior.AllowGet);
+                }
+
+                // Lấy đơn hàng từ OrderCode
+                result = await OrderMySql.GetOrderByOrderCodeAsync(orderCode);
+                if (result.State != EMySqlResultState.OK)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không tìm thấy đơn hàng";
+                    return Json(result, JsonRequestBehavior.AllowGet);
+                }
+
+
+                // Lấy bank account
+                var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
+                if (bankAccount == null)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Không tìm thấy thông tin tài khoản ngân hàng";
+                    return Json(result, JsonRequestBehavior.AllowGet);
+                }
+
+                Order order = result.myJson as Order;
+                // Lấy số tiền cuối cùng từ lsOrderPay
+                int totalAmount = 0;
+                if (order.lsOrderPay != null && order.lsOrderPay.Count > 0)
+                {
+                    var finalPay = order.lsOrderPay.FirstOrDefault(p => p.type == EOrderPayType.FINAL);
+                    if (finalPay != null)
+                    {
+                        totalAmount = finalPay.value;
+                    }
+                }
+
+                // Generate QR code
+                string qrCodeUrl = bankAccount.GenerateVietQR(
+                    amount: totalAmount,
+                    orderCode: orderCode,
+                    template: "compact2"
+                );
+
+                // Return response tương tự như CheckOrderOnSever
+                var response = new
+                {
+                    State = (int)EMySqlResultState.OK,
+                    Message = "Lấy thông tin QR thành công",
+                    OrderCode = orderCode,
+                    PaymentMethod = order.PaymentMethod,
+                    QRCodeUrl = qrCodeUrl,
+                    BankAccount = new
+                    {
+                        bankAccount.BankName,
+                        bankAccount.AccountNumber,
+                        bankAccount.AccountHolder,
+                        bankAccount.Branch
+                    },
+                    TotalAmount = totalAmount
+                };
+
+                MyLogger.GetInstance().Info($"🏦 GetOrderPaymentQRCode: OrderCode={orderCode}, Amount={totalAmount}");
+
+                return Json(response, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = $"Lỗi: {ex.Message}";
+                MyLogger.GetInstance().Error($"GetOrderPaymentQRCode error: {ex}");
+                return Json(result, JsonRequestBehavior.AllowGet);
+            }
+        }
     }
 }
