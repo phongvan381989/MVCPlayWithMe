@@ -2376,6 +2376,16 @@ namespace MVCPlayWithMe.General
             return text;
         }
 
+        public static string GenerateSlugId(string name, int id)
+        {
+            return $"{GenerateSlug(name)}-{id}";
+        }
+
+        public static string GenerateSanPhamUrlForCustomer(string name, int id)
+        {
+            return $"/San-Pham/{GenerateSlugId(name, id)}";
+        }
+
         /// <summary>
         /// Convert ảnh sang WebP, resize và nén với chất lượng chỉ định
         /// </summary>

@@ -1488,7 +1488,7 @@ function GetTMDTItemUrlFromCommonItem(commonItem) {
     }
     //Item là Voi bé nhỏ
     else if (commonItem.eType == ePlayWithMe) {
-        itemUrl = httpsVoiBeNho + GenerateSanPhamUrlForCustomer(commonItem.name, commonItem.itemId);
+        itemUrl = GenerateSanPhamUrlForCustomer(commonItem.name, commonItem.itemId);
     }
     return itemUrl;
 }
@@ -1890,7 +1890,7 @@ function CalculateDiscountPercent(bookCoverPrice, salePrice) {
 }
 
 function GenerateSanPhamUrlForCustomer(name, id) {
-    return  "/San-Pham/" + GenerateSlugId(name, id);
+    return "/San-Pham/" + GenerateSlugId(name, id);
 }
 
 // ========================================

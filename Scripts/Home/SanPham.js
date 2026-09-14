@@ -6,15 +6,28 @@ let metadataHasVideo; // true nếu sản phẩm có video, ngược false
 
 //  hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery,
 //  từ 38 trở đi dùng hiện thị cho phần mô tả sản phẩm
-let displayOrderHarcode = 38;
+let displayOrderThreshold = 38;
 
-let limitQuantity = "Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này";
+let limitQuantityMessage = "Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này";
 let dontSelectVariation = "Vui lòng chọn phân loại sản phẩm";
 
 // Get the modal thông báo đã thêm vào giỏ hàng thành công
 let modal = document.getElementById("myModal");
 // Get the modal nhắc số lượng trong giỏ vượt quá tồn kho
 let modalOverMax = document.getElementById("myModal-over-max");
+
+// Helper: Escape HTML entities để prevent XSS
+function escapeHtml(text) {
+    if (!text) return "";
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return String(text).replace(/[&<>"']/g, m => map[m]);
+}
 
 function InitializeTickOkModal() {
     // Get the <span> element that closes the modal
@@ -60,31 +73,13 @@ async function LoadMediaList(sanPhamId) {
     }
 }
 
-// Helper: Preload image để lấy actual dimensions
-function preloadImage(src) {
-    return new Promise((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => {
-            resolve({
-                width: img.naturalWidth,
-                height: img.naturalHeight
-            });
-        };
-        img.onerror = () => {
-            // Nếu load fail, dùng fallback dimensions
-            resolve({ width: 1200, height: 1200 });
-        };
-        img.src = src;
-    });
-}
-
 // Cache dataSource (preloaded images) - rebuild khi đổi variant
 let photoSwipeDataSource = null;
 
 // Từ thứ tự ảnh trong metadata sinh alt
-function GenerateAlt(media, isThumbnail, i) {
+function GenerateAltText(media, isThumbnail, i) {
     if (DEBUG) {
-        console.log("GenerateAlt call");
+        console.log("GenerateAltText call");
         console.log("media: " + JSON.stringify(media));
         console.log("isThumbnail: " + isThumbnail);
         console.log("i: " + i);
@@ -141,7 +136,7 @@ function buildPhotoSwipeDataSource() {
                 src: mediaSrc,
                 width: width,
                 height: height,
-                alt: GenerateAlt(media, false, i)
+                alt: GenerateAltText(media, false, i)
             });
         } else {
             // Video: dùng width/height từ DB (kích thước video thực tế)
@@ -278,73 +273,49 @@ function openPhotoSwipe(startIndex) {
     });
 }
 
-async function HomePageShowSanPham() {
-    ShowCircleLoader();
-    //if (DEBUG) {
-    //    console.log("current url: " + window.location.href);
-    //    console.log("current id on url: " + GetIdFromCurrentSlugIdUrl());
-    //}
-
-    let currentId = GetIdFromCurrentSlugIdUrl();
-    //if (DEBUG) {
-    //    console.log("currentId: " + currentId);
-    //}
-    let responseDB = await GetSanPhamWithVariants(currentId);
-    RemoveCircleLoader();
-
-    if (responseDB.responseText != "null") {
-        // Parse danh sách variants (bao gồm cả sản phẩm chính)
-        variantsList = JSON.parse(responseDB.responseText);
-
-        // Tìm sản phẩm chính trong list
-        sanPhamObject = variantsList.find(v => v.Id === parseInt(currentId));
-
-        //if(DEBUG)
-        //{
-        //    console.log("sanPhamObject: " + JSON.stringify(sanPhamObject));
-        //}
-
-        if (!sanPhamObject || sanPhamObject.Status != 0) {
-            ShowDoesntFindId();
-            return;
-        }
-    }
-    else {
+function HomePageShowSanPham() {
+    // ✅ SSR: Data đã được load từ server, KHÔNG cần fetch API
+    if (!window.serverData || !window.serverData.variants || window.serverData.variants.length === 0) {
         ShowDoesntFindId();
         return;
     }
 
-    document.title = sanPhamObject.Name;
+    // Lấy data từ server (đã render trong View)
+    variantsList = window.serverData.variants;
+    const currentId = window.serverData.currentId;
 
-    // Tách media hiển thị ở phần mô tả sản phẩm
-    // DisplayOrder < 38: hiển thị trong gallery
-    // DisplayOrder >= 38: hiển thị trong phần mô tả chi tiết
-    if (sanPhamObject && sanPhamObject.MediaList) {
-        const allMedia = sanPhamObject.MediaList;
-        sanPhamObject.MediaList = allMedia.filter(m => (m.DisplayOrder || 0) < displayOrderHarcode);
-        sanPhamObject.MediaListForDescription = allMedia.filter(m => (m.DisplayOrder || 0) >= displayOrderHarcode);
-    } else {
-        sanPhamObject.MediaListForDescription = [];
+    // Tìm sản phẩm hiện tại trong variants (không cần duplicate data)
+    sanPhamObject = variantsList.find(v => v.Id === currentId);
+
+    if (!sanPhamObject) {
+        ShowDoesntFindId();
+        return;
+    }
+
+    if (DEBUG_ADMIN) {
+        console.log("✅ SSR - Data from server:");
+        console.log("sanPhamObject: " + JSON.stringify(sanPhamObject));
+        console.log("variantsList count: " + variantsList.length);
+    }
+
+    // Kiểm tra trạng thái (đã kiểm tra ở server, đây là double-check)
+    if (!sanPhamObject || sanPhamObject.Status != 0) {
+        ShowDoesntFindId();
+        return;
     }
 
     ShowRightLeftArrow();
 
-    ShowSmallItem();
+    // ✅ SSR: Thumbnails đã render từ server, chỉ cần attach event listeners
+    AttachThumbnailEventListeners();
 
     // Chọn item đầu tiên
     if (sanPhamObject.MediaList.length > 0) {
-        //ShowMediumMediaFromSelectedSmallItem(document.getElementById("item-small-media-container").children[0]);
         selectedIndex = 0;
-        ShowMediumItemFromIndex(selectedIndex);
     }
 
-    // Hiển thị phân loại (variants) nếu có
-    ShowVariations();
-
-    ShowItemSomething();
-
-    // Generate Product JSON-LD cho SEO
-    GenerateProductJsonLD();
+    // ✅ SSR: Variations đã render từ server, chỉ cần attach event listeners
+    AttachVariantsEventListeners();
 
     // Init PhotoSwipeLightbox sau khi MediaList đã load (background preload - không block UI)
     initPhotoSwipeLightbox();  // KHÔNG await → chạy background
@@ -394,7 +365,7 @@ function CreateContainerSmallItem(media, i, hasVideo) {
 
         const img = document.createElement("img");
         img.src = thumbnail320;
-        img.alt = GenerateAlt(media, true, i);
+        img.alt = GenerateAltText(media, true, i);
         if (i > 3) {
             img.loading = "lazy";
         }
@@ -416,6 +387,59 @@ function CreateContainerSmallItem(media, i, hasVideo) {
     return container;
 }
 
+// Attach event listeners cho SSR thumbnails (không re-render)
+function AttachThumbnailEventListeners() {
+    let itemSmallMediaContainer = document.getElementById("item-small-media-container");
+    let thumbnails = itemSmallMediaContainer.querySelectorAll(".small-media");
+
+    thumbnails.forEach(function(thumbnail) {
+        thumbnail.addEventListener("mouseenter", function(event) {
+            ShowMediumMediaFromSelectedSmallItem(event.currentTarget);
+        });
+        thumbnail.addEventListener("mousedown", function(event) {
+            ShowMediumMediaFromSelectedSmallItem(event.currentTarget);
+        });
+    });
+}
+
+// Attach event listeners cho SSR variations (không re-render)
+function AttachVariantsEventListeners() {
+    let variationContainer = document.getElementById("item-variation-container");
+    let variantButtons = variationContainer.querySelectorAll(".variation-button");
+
+    // Không có variants hoặc chỉ có 1 sản phẩm → ẩn container
+    if (variantButtons.length === 0) {
+        variationContainer.style.display = "none";
+        return;
+    }
+
+    variantButtons.forEach(function(button) {
+        let variantId = parseInt(button.getAttribute("data-variant-id"));
+
+        // Tất cả variation đều click được (kể cả hết hàng)
+        button.addEventListener("click", function() {
+            VariantClick(variantId);
+        });
+
+        // Còn hàng → có hover effect (không có class out-of-stock)
+        if (!button.classList.contains("out-of-stock")) {
+            button.addEventListener("mouseenter", function() {
+                // Chỉ hover nếu không phải variant đang chọn
+                if (variantId !== sanPhamObject.Id) {
+                    this.style.borderColor = "rgba(255, 0, 0, 0.5)";
+                }
+            });
+
+            button.addEventListener("mouseleave", function() {
+                // Reset về border mặc định nếu không phải variant đang chọn
+                if (variantId !== sanPhamObject.Id) {
+                    this.style.borderColor = "rgba(0, 0, 0, .09)";
+                }
+            });
+        }
+    });
+}
+
 function ShowSmallItem() {
     let itemSmallMediaContainer = document.getElementById("item-small-media-container");
     // Xóa item cũ nếu có
@@ -432,12 +456,6 @@ function ShowSmallItem() {
 }
 
 function ShowRightLeftArrow() {
-    // if (sanPhamObject.MediaList.length <= 1) {
-    //     document.getElementById("left_arrow").innerHTML = "";
-    //     document.getElementById("right_arrow").innerHTML = "";
-    //     return;
-    // }
-
     // Add mũi tên di chuyển sang trái
     let leftArrow = document.getElementById("left_arrow");
     leftArrow.innerHTML = '<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,50 30,30 30,70" style="fill:lime;" /></svg>';
@@ -483,35 +501,14 @@ function ShowRightLeftArrow() {
 
 // Show medium item từ index
 function ShowMediumItemFromIndex(i) {
-    let mediumPicture = document.getElementById("medium_picture");
-    let mediumVideo = document.getElementById("medium_video");
 
-    if (sanPhamObject.MediaList[i].MediaType != "image") {
-        if (isEmptyOrSpaces(mediumVideo.src)) {
-            mediumVideo.src = GetSanPhamMediaUrl(sanPhamObject.Id, sanPhamObject.MediaList[i].FileName);
-        }
+    // Get image URL
+    const imageUrl = GetSanPhamMediaUrl(sanPhamObject.Id, sanPhamObject.MediaList[i].FileName);
 
-        mediumVideo.play();
-        mediumVideo.style.display = "block";
-
-        mediumPicture.style.display = "none";
-    }
-    else {
-        // Get image URL
-        const imageUrl = GetSanPhamMediaUrl(sanPhamObject.Id, sanPhamObject.MediaList[i].FileName);
-
-        // Set src và alt cho medium image (SEO + Accessibility)
-        const mediumImage = document.getElementById("medium_picture");
-        mediumImage.src = imageUrl;
-        mediumImage.alt = GenerateAlt(sanPhamObject.MediaList[i], false, i);
-
-        if (mediumVideo.src != null) {
-            mediumVideo.pause();
-        }
-
-        mediumPicture.style.display = "flex";
-        mediumVideo.style.display = "none";
-    }
+    // Set src và alt cho medium image (SEO + Accessibility)
+    const mediumImage = document.getElementById("medium_picture");
+    mediumImage.src = imageUrl;
+    mediumImage.alt = GenerateAltText(sanPhamObject.MediaList[i], false, i);
 
     ChangeBorderColorOfSelectedSmallItem();
     ScrollToSelectedSmallItem();
@@ -556,11 +553,11 @@ function ShowProductDescription() {
         let alt = media ? (media.AltText || sanPhamObject.Name) : filename;
         let caption = media ? (media.Description || media.Title || "") : "";
 
-        // Build HTML với figure + figcaption
+        // Build HTML với figure + figcaption (escape HTML để prevent XSS)
         let html = '<figure class="product-detail-image">';
-        html += `<img src="${imgSrc}" alt="${alt}" loading="lazy">`;
+        html += `<img src="${escapeHtml(imgSrc)}" alt="${escapeHtml(alt)}" loading="lazy">`;
         if (caption) {
-            html += `<figcaption>${caption}</figcaption>`;
+            html += `<figcaption>${escapeHtml(caption)}</figcaption>`;
         }
         html += '</figure>';
         return html;
@@ -720,7 +717,7 @@ function ShowProductSpecifications() {
     }
 }
 
-// Thay đổi medium media khi di chuyển bên trên small item
+// Thay đổi medium media khi di chuyển chuột bên trên small item
 function ShowMediumMediaFromSelectedSmallItem(newSelectedItem) {
     if (selectedIndex == parseInt(newSelectedItem.getAttribute("data-index")))
         return;
@@ -964,6 +961,27 @@ function ShowVariations() {
     variationContainer.appendChild(variantButtonsContainer);
 }
 
+// Tách media cho gallery và description
+function DivideMediaForGalleryAndDescription() {
+    // Khởi tạo MediaListForDescription nếu chưa có
+    if (!sanPhamObject.MediaListForDescription) {
+        sanPhamObject.MediaListForDescription = [];
+    }
+
+    // Loop ngược từ cuối về đầu
+    for (let i = sanPhamObject.MediaList.length - 1; i >= 0; i--) {
+        if (sanPhamObject.MediaList[i].DisplayOrder >= displayOrderThreshold) {
+            // Thêm vào MediaListForDescription
+            sanPhamObject.MediaListForDescription.push(sanPhamObject.MediaList[i]);
+            // Xóa khỏi MediaList
+            sanPhamObject.MediaList.splice(i, 1);
+        } else {
+            // DisplayOrder đã sắp xếp tăng dần → break khi gặp item < threshold
+            break;
+        }
+    }
+}
+
 // Xử lý khi click chọn variant
 async function VariantClick(variantId) {
     if (sanPhamObject.Id === variantId) {
@@ -988,7 +1006,11 @@ async function VariantClick(variantId) {
         // Load ảnh của variant mới
         ShowCircleLoader();
         sanPhamObject.MediaList = await LoadMediaList(variantId);
+        DivideMediaForGalleryAndDescription();
         RemoveCircleLoader();
+
+        // Tách MediaListForDescription ra để dùng cho mô tả chi tiết (không cần preload)
+
     }
 
     ShowSmallItem();
@@ -1015,9 +1037,11 @@ function Increase() {
     if (currentValue < sanPhamObject.Quantity) {
         input.value = currentValue + 1;
         messageDiv.style.display = "none";  // Ẩn thông báo
+        messageDiv.textContent = "";
     } else {
         // Hiển thị thông báo inline
         messageDiv.style.display = "block";
+        messageDiv.textContent = limitQuantityMessage;
         input.value = sanPhamObject.Quantity;
     }
 }
@@ -1276,8 +1300,10 @@ function GenerateProductJsonLD() {
 
 // Load sản phẩm khi page load
 window.addEventListener('DOMContentLoaded', async function () {
+
+    HomePageShowSanPham();
+
     InitializeTickOkModal();
-    await HomePageShowSanPham();
 
     // Keyboard navigation cho ảnh sản phẩm
     document.addEventListener('keydown', function(event) {
@@ -1366,13 +1392,6 @@ window.addEventListener('DOMContentLoaded', async function () {
     const mediumImageEl = document.getElementById('medium_picture');
     if (mediumImageEl) {
         mediumImageEl.addEventListener('click', function() {
-            openPhotoSwipe(selectedIndex);
-        });
-    }
-
-    const mediumVideoEl = document.getElementById('medium_video');
-    if (mediumVideoEl) {
-        mediumVideoEl.addEventListener('click', function() {
             openPhotoSwipe(selectedIndex);
         });
     }

@@ -18,6 +18,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
     public class SanPham
     {
+        public const int displayOrderThreshold = 38;
         public int Id { get; set; }
 
         /// <summary>
@@ -165,6 +166,10 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public string SEOKeyword { get; set; }
 
+        /// <summary>
+        /// Nội dung thẻ <meta name="description" content="..."> phục vụ SEO
+        public string MetaDescription { get; set; }
+
         // Constructor mặc định
         public SanPham()
         {
@@ -177,8 +182,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             Quantity = 0;
             Discount = 0;
             SalePrice = 0;
-            Mappings = new List<SanPhamMapping>();
-            MediaList = new List<SanPhamMedia>();
+            //Mappings = new List<SanPhamMapping>();
+            //MediaList = new List<SanPhamMedia>();
         }
 
         // Constructor đầy đủ
@@ -324,7 +329,16 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return $"{minYears}-{maxYears} tuổi";
         }
 
+
+        // Chứa media của sản phẩm, bao gồm cả ảnh và video. Sắp xếp theo DisplayOrder tăng dần.
+        // và có DisplayOrder < ngưỡng 38
         public List<SanPhamMedia> MediaList { get; set; } = new List<SanPhamMedia>();
+
+        // Tách media hiển thị ở phần mô tả sản phẩm
+        // DisplayOrder < 38: hiển thị trong gallery
+        // DisplayOrder >= 38: hiển thị trong phần mô tả chi tiết
+        // KHông phải sản phẩm nào cũng có ảnh ở mô tả
+        public List<SanPhamMedia> MediaListForDescription { get; set; } = new List<SanPhamMedia>();
 
         public List<SanPhamMapping> Mappings { get; set; } = new List<SanPhamMapping>();
 
@@ -358,6 +372,25 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             }
 
             Quantity = quantity;
+        }
+
+        // Tách media cho gallery và description
+        public void DivideMediaForGalleryAndDescription()
+        {
+            for (int i = MediaList.Count - 1; i >= 0; i--)
+            {
+                if (MediaList[i].DisplayOrder >= MVCPlayWithMe.Models.SanPhamModel.SanPham.displayOrderThreshold)
+                {
+                    // Thêm vào MediaListForDescription
+                    MediaListForDescription.Add(MediaList[i]);
+                    // Xóa khỏi mediaList
+                    MediaList.RemoveAt(i);
+                }
+                else
+                {
+                    break;
+                }
+            }
         }
     }
 

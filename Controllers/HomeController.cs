@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.General;
+﻿using Anthropic.SDK.Common;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
@@ -8,6 +9,7 @@ using MySqlConnector;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -124,6 +126,7 @@ namespace MVCPlayWithMe.Controllers
         /// <summary>
         /// Trang chi tiết sản phẩm cho người mua (tb_san_pham)
         /// URL format: /Home/SanPham/ten-sach-123
+        /// Server-side rendering để tối ưu SEO
         /// </summary>
         [HttpGet]
         public async Task<ActionResult> SanPham(string slugId)
@@ -135,22 +138,84 @@ namespace MVCPlayWithMe.Controllers
                 return RedirectToAction("Error");
             }
 
-            //// Lấy sản phẩm để kiểm tra tồn tại
-            //SanPham sanPham = await SanPhamMySql.GetByIdAsync(id);
-            //if (sanPham == null)
-            //{
-            //    return RedirectToAction("Error");
-            //}
+            // Load sản phẩm cùng variants (cùng ComboId)
+            List<SanPham> variants = await SanPhamMySql.GetSanPhamWithVariantsAsync(id);
+            SanPham sanPham = variants?.FirstOrDefault(v => v.Id == id);
 
-            //// Tạo slug chuẩn từ tên sản phẩm
-            //string correctSlug = Common.GenerateSlug(sanPham.Name);
-            //string correctSlugId = correctSlug + "-" + id;
+            if (sanPham == null || sanPham.Status != (int)ESanPhamStatus.DANG_KINH_DOANH)
+            {
+                return RedirectToAction("Error");
+            }
 
-            //// Nếu slug không đúng, redirect về URL chuẩn (SEO 301)
-            //if (!string.Equals(slugId, correctSlugId, StringComparison.OrdinalIgnoreCase))
-            //{
-            //    return RedirectToActionPermanent("SanPham", new { slugId = correctSlugId });
-            //}
+            // Tạo slug chuẩn từ tên sản phẩm
+            string correctSlugId = Common.GenerateSlugId(sanPham.Name, id);
+
+            // Nếu slug không đúng, redirect về URL chuẩn (SEO 301)
+            if (!string.Equals(slugId, correctSlugId, StringComparison.OrdinalIgnoreCase))
+            {
+                return RedirectToActionPermanent("SanPham", new { slugId = correctSlugId });
+            }
+
+            List<SanPhamMedia> mediaList = sanPham.MediaList;
+            SanPhamMedia firstImage = null;
+            string ogImageAlt = string.Empty;
+            if (mediaList != null && mediaList.Count > 0)
+            {
+                if (mediaList[0].MediaType == "image")
+                {
+                    firstImage = mediaList[0];
+                    ogImageAlt = GenerateAltText(sanPham, firstImage, false, 0);
+                }
+                else
+                {
+                    if(mediaList.Count > 1)
+                    firstImage = mediaList[1];
+                    ogImageAlt = GenerateAltText(sanPham, firstImage, false, 1);
+                }
+            }
+
+            // Ảnh đại diện cho OG image (ảnh đầu tiên trong gallery)
+            string ogImageUrl = firstImage?.FileName != null
+                ? $"{Common.httpsVoiBeNho}{Common.SanPhamMediaFolderPath}{id}/{firstImage.FileName}"
+                : $"{Common.httpsVoiBeNho}/Media/NoImageThumbnail.png";
+
+            // Kích thước ảnh cho Open Graph (lấy từ DB, fallback 1000×1000)
+            uint ogImageWidth = firstImage?.Width ?? 1000;
+            uint ogImageHeight = firstImage?.Height ?? 1000;
+
+            // Generate meta description tối ưu SEO (160 ký tự)
+            string metaDescription = GenerateMetaDescription(sanPham);
+
+            // Generate Product JSON-LD cho Google Rich Results
+            string productJsonLD = GenerateProductJsonLD(sanPham);
+
+            // Generate SSR HTML cho SEO (JavaScript vẫn dùng khi switch variant)
+            string specificationsHtml = GenerateSpecificationsHtml(sanPham);
+            string descriptionHtml = ProcessDescriptionHtml(sanPham);
+            string thumbnailGalleryHtml = GenerateThumbnailGalleryHtml(sanPham);
+            string variationsHtml = GenerateVariationsHtml(variants, sanPham.Id);
+
+            // Canonical URL (match custom route: San-Pham/{slugId})
+            string canonicalUrl = $"{Common.httpsVoiBeNho}/San-Pham/{correctSlugId}";
+
+            // Pass data vào ViewBag
+            ViewBag.SanPham = sanPham;
+            ViewBag.Variants = variants;
+            //ViewBag.GalleryMedia = galleryMedia;
+            //ViewBag.DescriptionMedia = descriptionMedia;
+            ViewBag.Title = sanPham.Name;
+            ViewBag.MetaDescription = metaDescription;
+            ViewBag.OgImageUrl = ogImageUrl;
+            ViewBag.OgImageWidth = ogImageWidth;
+            ViewBag.OgImageHeight = ogImageHeight;
+            ViewBag.CanonicalUrl = canonicalUrl;
+            ViewBag.ProductJsonLD = productJsonLD;
+            ViewBag.SpecificationsHtml = specificationsHtml;
+            ViewBag.DescriptionHtml = descriptionHtml;
+            ViewBag.ThumbnailGalleryHtml = thumbnailGalleryHtml;
+            ViewBag.VariationsHtml = variationsHtml;
+            ViewBag.titleVoiBeNho = Common.titleVoiBeNho;
+            ViewBag.ogImageAlt = ogImageAlt;
 
             return View();
         }
@@ -1000,6 +1065,581 @@ namespace MVCPlayWithMe.Controllers
                 MyLogger.GetInstance().Warn($"GetActiveOrderSimplePromotions failed: {ex.Message}");
                 return Json(new List<OrderSimplePromotion>(), JsonRequestBehavior.AllowGet); // Trả về mảng rỗng nếu có lỗi
             }
+        }
+
+        /// <summary>
+        /// Generate Product JSON-LD cho SEO (Google Rich Results)
+        /// Kết hợp @type Product + Book để hiển thị giá trong kết quả tìm kiếm
+        /// </summary>
+        private string GenerateProductJsonLD(SanPham sanPham)
+        {
+            if (sanPham == null)
+                return "{}";
+
+            // Build JSON-LD object (dùng anonymous type để serialize)
+            var jsonLd = new
+            {
+                context = "https://schema.org/",
+                type = new[] { "Product", "Book" },  // Kết hợp Product + Book
+                name = sanPham.Name ?? "",
+                description = !string.IsNullOrWhiteSpace(sanPham.Detail) ? sanPham.Detail : sanPham.Name,
+                url = $"{Common.httpsVoiBeNho}{Common.GenerateSanPhamUrlForCustomer(sanPham.Name, sanPham.Id)}",
+                image = GetProductImages(sanPham),
+                isbn = sanPham.Barcode,  // ISBN (nếu có)
+                sku = sanPham.Code ?? sanPham.Code ?? sanPham.Id.ToString(),
+                author = !string.IsNullOrWhiteSpace(sanPham.Author) ? new { type = "Person", name = sanPham.Author } : null,
+                publisher = !string.IsNullOrWhiteSpace(sanPham.PublishingCompany)
+                    ? new { type = "Organization", name = sanPham.PublishingCompany }
+                    : null,
+                bookFormat = sanPham.HardCover == ESanPhamCoverType.BIA_CUNG
+                    ? "https://schema.org/Hardcover"
+                    : "https://schema.org/Paperback",
+                inLanguage = GetLanguageCode(sanPham.Language),
+                numberOfPages = sanPham.PageNumber > 0 ? (int?)sanPham.PageNumber : null,
+                offers = new
+                {
+                    type = "Offer",
+                    priceCurrency = "VND",
+                    price = sanPham.SalePrice.ToString(),
+                    availability = sanPham.Quantity > 0
+                        ? "https://schema.org/InStock"
+                        : "https://schema.org/OutOfStock",
+                    itemCondition = "https://schema.org/NewCondition",
+                    priceValidUntil = DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd"),  // Giá hợp lệ trong 1 tháng
+                    url = $"{Common.httpsVoiBeNho}{Common.GenerateSanPhamUrlForCustomer(sanPham.Name, sanPham.Id)}",
+                    seller = new
+                    {
+                        type = "Organization",
+                        name = "Voi Bé Nhỏ"
+                    },
+                    // Giá bìa (ListPrice) - chỉ thêm khi có giảm giá
+                    priceSpecification = sanPham.BookCoverPrice > sanPham.SalePrice
+                        ? new[]
+                        {
+                            new
+                            {
+                                type = "UnitPriceSpecification",
+                                priceType = "https://schema.org/ListPrice",
+                                price = sanPham.BookCoverPrice.ToString(),
+                                priceCurrency = "VND"
+                            }
+                        }
+                        : null
+                }
+            };
+
+            // Serialize với @context/@type format đúng (replace @ prefix)
+            string json = JsonConvert.SerializeObject(jsonLd, Newtonsoft.Json.Formatting.None, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore  // Bỏ qua field null
+            });
+
+            // Replace "context" → "@context", "type" → "@type"
+            json = json.Replace("\"context\":", "\"@context\":")
+                       .Replace("\"type\":", "\"@type\":");
+
+            return json;
+        }
+
+        /// <summary>
+        /// Lấy danh sách URL ảnh cho JSON-LD (tất cả ảnh, không bao gồm video)
+        /// </summary>
+        private string[] GetProductImages(SanPham sanPham)
+        {
+            if (sanPham.MediaList == null || sanPham.MediaList.Count == 0)
+            {
+                return new[] { $"{Common.httpsVoiBeNho}/Media/NoImageThumbnail.png" };
+            }
+
+            var imageUrls = sanPham.MediaList
+                .Where(m => m.MediaType == "image")
+                .Select(m => $"{Common.httpsVoiBeNho}{Common.SanPhamMediaFolderPath}{sanPham.Id}/{m.FileName}")
+                .ToArray();
+
+            return imageUrls.Length > 0
+                ? imageUrls
+                : new[] { $"{Common.httpsVoiBeNho}/Media/NoImageThumbnail.png" };
+        }
+
+        /// <summary>
+        /// Map từ text ngôn ngữ sang language code (vi/en/["vi","en"])
+        /// </summary>
+        private object GetLanguageCode(string language)
+        {
+            if (string.IsNullOrWhiteSpace(language))
+                return "vi";  // Default: Tiếng Việt
+
+            string lang = language.ToLower().Trim();
+
+            if (lang.Contains("song ngữ") || lang.Contains("song ngu"))
+                return new[] { "vi", "en" };  // Bilingual
+
+            if (lang.Contains("tiếng anh") || lang.Contains("tieng anh") || lang == "english")
+                return "en";
+
+            if (lang.Contains("tiếng việt") || lang.Contains("tieng viet") || lang == "vietnamese")
+                return "vi";
+
+            return "vi";  // Fallback
+        }
+
+        /// <summary>
+        /// Convert độ tuổi từ tháng → năm và format thành text
+        /// VD: "2-5 tuổi", "Từ 3 tuổi", "Đến 6 tuổi", "4 tuổi", ""
+        /// </summary>
+        private string GetAgeRangeText(int? minAge, int? maxAge)
+        {
+            // 1. Cả hai null hoặc -1 → ""
+            if ((!minAge.HasValue || minAge.Value == -1) && (!maxAge.HasValue || maxAge.Value == -1))
+            {
+                return "";
+            }
+
+            // 2. Convert tháng → năm (làm tròn xuống)
+            int minYears = (minAge.HasValue && minAge.Value != -1) ? (int)Math.Floor(minAge.Value / 12.0) : -1;
+            int maxYears = (maxAge.HasValue && maxAge.Value != -1) ? (int)Math.Floor(maxAge.Value / 12.0) : -1;
+
+            // 3. Chỉ có max → "Đến X tuổi"
+            if (!minAge.HasValue || minAge.Value == -1)
+            {
+                return $"Đến {maxYears} tuổi";
+            }
+
+            // 4. Chỉ có min → "Từ X tuổi"
+            if (!maxAge.HasValue || maxAge.Value == -1)
+            {
+                return $"Từ {minYears} tuổi";
+            }
+
+            // 5. Min = Max → "X tuổi"
+            if (minYears == maxYears)
+            {
+                return $"{minYears} tuổi";
+            }
+
+            // 6. Min khác Max → "X-Y tuổi"
+            return $"{minYears}-{maxYears} tuổi";
+        }
+
+        /// <summary>
+        /// Generate HTML cho bảng Specifications (THÔNG TIN CHI TIẾT)
+        /// SSR cho initial load, JavaScript vẫn dùng để render khi switch variant
+        /// </summary>
+        /// <summary>
+        /// Generate thumbnail gallery HTML cho SSR (chỉ images, không video)
+        /// JavaScript sẽ re-render khi switch variant
+        /// </summary>
+        private string GenerateThumbnailGalleryHtml(SanPham sanPham)
+        {
+            if (sanPham == null || sanPham.MediaList == null || sanPham.MediaList.Count == 0)
+                return "";
+
+            var html = new StringBuilder();
+
+            // Filter chỉ lấy images (video sẽ dùng iframe embed trong description)
+            var imageList = sanPham.MediaList.Where(m => m.MediaType == "image").ToList();
+
+            for (int i = 0; i < imageList.Count; i++)
+            {
+                SanPhamMedia media = imageList[i];
+
+                // Tạo thumbnail URL với thư mục _320
+                string thumbnailSrc = $"{Common.SanPhamMediaFolderPath}{sanPham.Id}_320/{media.FileName}";
+
+                // Generate alt text cho thumbnail (isThumbnail = true)
+                string alt = GenerateAltText(sanPham, media, isThumbnail: true, i);
+
+                // Tạo <div class="small-media" data-index="{i}"> với border màu đỏ cho thumbnail đầu tiên (selected)
+                html.Append($"<div class=\"small-media\" data-index=\"{i}\"");
+
+                // Thumbnail đầu tiên có border màu đỏ (match JavaScript ChangeBorderColorOfSelectedSmallItem)
+                if (i == 0)
+                {
+                    html.Append(" style=\"border-color: rgb(255, 0, 0);\"");
+                }
+
+                html.Append(">");
+
+                // <img> với lazy loading cho thumbnail sau 3 ảnh đầu
+                html.Append("<img ");
+                html.Append($"src=\"{HttpUtility.HtmlAttributeEncode(thumbnailSrc)}\" ");
+                html.Append($"alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" ");
+
+                if (i > 3)
+                {
+                    html.Append("loading=\"lazy\" ");
+                }
+
+                html.Append("style=\"object-fit:contain; max-width:100%; max-height:100%; display:block;\"");
+                html.Append(">");
+
+                html.Append("</div>");
+            }
+
+            return html.ToString();
+        }
+
+        private string GenerateVariationsHtml(List<SanPham> variants, int currentVariantId)
+        {
+            if (variants == null || variants.Count <= 1)
+                return ""; // Không có variants hoặc chỉ 1 sản phẩm → không hiển thị
+
+            var html = new StringBuilder();
+
+            // Tiêu đề phân loại
+            html.Append("<div class=\"variation-title\">Phân loại</div>");
+
+            // Container chứa các button variant
+            html.Append("<div class=\"variation-buttons-container\">");
+
+            foreach (var variant in variants)
+            {
+                // <button class="variation-button [out-of-stock]" data-variant-id="{id}">
+                html.Append("<button class=\"variation-button");
+
+                // Hết hàng → thêm class out-of-stock
+                if (variant.Quantity <= 0)
+                {
+                    html.Append(" out-of-stock");
+                }
+
+                html.Append("\" data-variant-id=\"");
+                html.Append(variant.Id);
+                html.Append("\"");
+
+                // Variant đang chọn → inline style border-color + color đỏ (match ApplyVariantHighlight)
+                if (variant.Id == currentVariantId)
+                {
+                    html.Append(" style=\"border-color: rgb(255, 0, 0); color: rgb(255, 0, 0);\"");
+                }
+
+                html.Append(">");
+
+                // Text: ShortName hoặc Name
+                string displayName = !string.IsNullOrWhiteSpace(variant.ShortName) ? variant.ShortName : variant.Name;
+                html.Append(HttpUtility.HtmlEncode(displayName));
+
+                // Variant đang chọn → thêm SVG tick icon (match ApplyVariantHighlight)
+                if (variant.Id == currentVariantId)
+                {
+                    html.Append("<div id=\"check-container\">");
+                    html.Append("<svg viewBox=\"0 0 12 12\" class=\"icon-tick-bold\">");
+                    html.Append("<polyline fill=\"none\" points=\"1.5 6 4.5 9 10.5 3\" stroke-width=\"2\" stroke=\"currentColor\"></polyline>");
+                    html.Append("</svg>");
+                    html.Append("</div>");
+                }
+
+                html.Append("</button>");
+            }
+
+            html.Append("</div>");
+
+            return html.ToString();
+        }
+
+        private string GenerateSpecificationsHtml(SanPham sanPham)
+        {
+            if (sanPham == null)
+                return "";
+
+            var html = new StringBuilder();
+
+            // Helper: Thêm 1 spec row
+            void AddSpecRow(string label, string value, string url = null)
+            {
+                if (string.IsNullOrWhiteSpace(value))
+                    return;
+
+                html.Append("<div class=\"spec-row\">");
+                html.Append($"<div class=\"spec-label\">{HttpUtility.HtmlEncode(label)}</div>");
+                html.Append("<div class=\"spec-value\">");
+
+                if (!string.IsNullOrWhiteSpace(url))
+                {
+                    html.Append($"<a href=\"{HttpUtility.HtmlAttributeEncode(url)}\" class=\"spec-link\">{HttpUtility.HtmlEncode(value)}</a>");
+                }
+                else
+                {
+                    html.Append(HttpUtility.HtmlEncode(value));
+                }
+
+                html.Append("</div>");
+                html.Append("</div>");
+            }
+
+            // Tác giả
+            if (!string.IsNullOrWhiteSpace(sanPham.Author))
+            {
+                AddSpecRow("Tác giả", sanPham.Author, $"/Home/Search?author={HttpUtility.UrlEncode(sanPham.Author)}");
+            }
+
+            // Người dịch
+            if (!string.IsNullOrWhiteSpace(sanPham.Translator))
+            {
+                AddSpecRow("Người dịch", sanPham.Translator, $"/Home/Search?translator={HttpUtility.UrlEncode(sanPham.Translator)}");
+            }
+
+            // Danh mục
+            if (!string.IsNullOrWhiteSpace(sanPham.CategoryName) && sanPham.CategoryId > 0)
+            {
+                AddSpecRow("Danh mục", sanPham.CategoryName, $"/Home/Search?category={HttpUtility.UrlEncode(sanPham.CategoryName)}");
+            }
+
+            // Nhà xuất bản
+            if (!string.IsNullOrWhiteSpace(sanPham.PublishingCompany))
+            {
+                AddSpecRow("Nhà xuất bản", sanPham.PublishingCompany, $"/Home/Search?publishingCompany={HttpUtility.UrlEncode(sanPham.PublishingCompany)}");
+            }
+
+            // Nhà phát hành
+            if (!string.IsNullOrWhiteSpace(sanPham.PublisherName) && sanPham.PublisherId > 0)
+            {
+                AddSpecRow("Nhà phát hành", sanPham.PublisherName, $"/Home/Search?publisher={HttpUtility.UrlEncode(sanPham.PublisherName)}");
+            }
+
+            // Năm xuất bản (chỉ hiển thị nếu cách năm hiện tại <= 3)
+            if (sanPham.PublishingTime.HasValue)
+            {
+                int currentYear = DateTime.Now.Year;
+                int publishingYear = sanPham.PublishingTime.Value;
+
+                if (currentYear - publishingYear <= 3)
+                {
+                    AddSpecRow("Năm xuất bản", publishingYear.ToString());
+                }
+            }
+
+            // Ngôn ngữ
+            if (!string.IsNullOrWhiteSpace(sanPham.Language))
+            {
+                AddSpecRow("Ngôn ngữ", sanPham.Language);
+            }
+
+            // Tuổi phù hợp
+            string ageRangeText = GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
+            if (!string.IsNullOrWhiteSpace(ageRangeText))
+            {
+                AddSpecRow("Tuổi phù hợp", ageRangeText);
+            }
+
+            // Kích thước
+            if (sanPham.ProductLong > 0 && sanPham.ProductWide > 0 && sanPham.ProductHigh > 0)
+            {
+                string dimensions = $"{sanPham.ProductLong} × {sanPham.ProductWide} × {sanPham.ProductHigh} mm";
+                AddSpecRow("Kích thước", dimensions);
+            }
+
+            // Trọng lượng
+            if (sanPham.ProductWeight > 0)
+            {
+                AddSpecRow("Trọng lượng", $"{sanPham.ProductWeight} gram");
+            }
+
+            // Số trang
+            if (sanPham.PageNumber > 0)
+            {
+                AddSpecRow("Số trang", sanPham.PageNumber.ToString());
+            }
+
+            // Hình thức (Bìa cứng/mềm)
+            string coverType = sanPham.HardCover == ESanPhamCoverType.BIA_CUNG ? "Bìa cứng" : "Bìa mềm";
+            AddSpecRow("Hình thức", coverType);
+
+
+            // Mã ISBN/Code
+            string code = !string.IsNullOrWhiteSpace(sanPham.Code) ? sanPham.Code : sanPham.Barcode;
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                AddSpecRow("Mã", code);
+            }
+
+            return html.ToString();
+        }
+
+        /// <summary>
+        /// Process Description HTML - parse {{image:filename}} thành &lt;figure&gt; tags
+        /// SSR cho initial load, JavaScript vẫn dùng để render khi switch variant
+        /// </summary>
+        private string ProcessDescriptionHtml(SanPham sanPham)
+        {
+            if (sanPham == null || string.IsNullOrWhiteSpace(sanPham.Detail))
+                return "";
+
+            string detailHtml = sanPham.Detail;
+
+            // Parse {{image:filename}} → <figure> HTML
+            detailHtml = System.Text.RegularExpressions.Regex.Replace(
+                detailHtml,
+                @"\{\{image:([^}]+)\}\}",
+                match =>
+                {
+                    string filename = match.Groups[1].Value;
+
+                    // Tìm metadata trong MediaListForDescription
+                    SanPhamMedia media = null;
+                    if (sanPham.MediaListForDescription != null && sanPham.MediaListForDescription.Count > 0)
+                    {
+                        media = sanPham.MediaListForDescription.FirstOrDefault(m => m.FileName == filename);
+                    }
+
+                    // Build image URL
+                    string imgSrc = $"{Common.SanPhamMediaFolderPath}{sanPham.Id}/{filename}";
+                    string alt = media != null
+                        ? (!string.IsNullOrWhiteSpace(media.AltText) ? media.AltText : sanPham.Name)
+                        : filename;
+                    string caption = media?.Description ?? media?.Title ?? "";
+
+                    // Build HTML
+                    var figureHtml = new StringBuilder();
+                    figureHtml.Append("<figure class=\"product-detail-image\">");
+                    figureHtml.Append($"<img src=\"{HttpUtility.HtmlAttributeEncode(imgSrc)}\" alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" loading=\"lazy\">");
+
+                    if (!string.IsNullOrWhiteSpace(caption))
+                    {
+                        figureHtml.Append($"<figcaption>{HttpUtility.HtmlEncode(caption)}</figcaption>");
+                    }
+
+                    figureHtml.Append("</figure>");
+
+                    return figureHtml.ToString();
+                }
+            );
+
+            // Xử lý newlines dư thừa
+            // 1. Xóa newlines trước thẻ <p> và </p>
+            detailHtml = System.Text.RegularExpressions.Regex.Replace(detailHtml, @"\n+(</?p[^>]*>)", "$1", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+            // 2. Giảm 3+ newlines liên tiếp xuống còn 2
+            detailHtml = System.Text.RegularExpressions.Regex.Replace(detailHtml, @"\n{3,}", "\n\n");
+
+            return detailHtml;
+        }
+
+        private string GenerateMetaDescription(SanPham sanPham)
+        {
+            if (sanPham == null)
+                return "Mua sách online giá tốt tại Voi Bé Nhỏ";
+
+            StringBuilder metaDesc = new StringBuilder();
+
+            // CHIẾN LƯỢC: Giảm mạnh (>= 20%) → Giá lên đầu để tăng CTR
+            bool hasStrongDiscount = sanPham.Discount >= 20;
+
+            if (hasStrongDiscount)
+            {
+                // ===== GIÁ Ở ĐẦU (Giảm >= 20%) =====
+
+                // 1. Giá + Giảm giá (nổi bật ngay từ đầu)
+                metaDesc.Append($"Giá {sanPham.SalePrice:N0}đ (giảm {(int)sanPham.Discount}%)");
+
+                // 2. Tên sách
+                metaDesc.Append($" - {sanPham.Name}");
+
+                // 3. Độ tuổi (nếu có)
+                string ageRangeText = GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
+                if (!string.IsNullOrWhiteSpace(ageRangeText))
+                {
+                    metaDesc.Append($" ({ageRangeText})");
+                }
+
+                // 4. Thể loại (nếu có và còn chỗ)
+                if (!string.IsNullOrWhiteSpace(sanPham.CategoryName) && metaDesc.Length < 120)
+                {
+                    metaDesc.Append($" - {sanPham.CategoryName}");
+                }
+
+                // 5. Nhà phát hành (nếu có và còn chỗ)
+                if (!string.IsNullOrWhiteSpace(sanPham.PublisherName) && metaDesc.Length < 110)
+                {
+                    metaDesc.Append($" - {sanPham.PublisherName}");
+                }
+
+                // 6. Tồn kho (nếu còn chỗ và > 0)
+                if (sanPham.Quantity > 0 && metaDesc.Length < 140)
+                {
+                    metaDesc.Append($". Còn {sanPham.Quantity} cuốn");
+                }
+            }
+            else
+            {
+                // ===== TÊN Ở ĐẦU (Giảm < 20% hoặc không giảm) =====
+
+                // 1. Tên sách (bắt buộc)
+                metaDesc.Append(sanPham.Name);
+
+                // 2. Độ tuổi (nếu có)
+                string ageRangeText = GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
+                if (!string.IsNullOrWhiteSpace(ageRangeText))
+                {
+                    metaDesc.Append($" ({ageRangeText})");
+                }
+
+                // 3. Thể loại (nếu có)
+                if (!string.IsNullOrWhiteSpace(sanPham.CategoryName))
+                {
+                    metaDesc.Append($" - {sanPham.CategoryName}");
+                }
+
+                // 4. Nhà phát hành (nếu có)
+                if (!string.IsNullOrWhiteSpace(sanPham.PublisherName))
+                {
+                    metaDesc.Append($" - {sanPham.PublisherName}");
+                }
+
+                // 5. Giá (bắt buộc)
+                metaDesc.Append($". Giá {sanPham.SalePrice:N0}đ");
+
+                // 6. Giảm giá (nếu có)
+                if (sanPham.Discount > 0)
+                {
+                    metaDesc.Append($" (giảm {(int)sanPham.Discount}%)");
+                }
+
+                // 7. Tồn kho (nếu còn chỗ và > 0)
+                if (sanPham.Quantity > 0 && metaDesc.Length < 140)
+                {
+                    metaDesc.Append($". Còn {sanPham.Quantity} cuốn");
+                }
+            }
+
+            // Giới hạn 160 ký tự
+            string result = metaDesc.Length > 160
+                ? metaDesc.ToString().Substring(0, 157) + "..."
+                : metaDesc.ToString();
+
+            return result;
+        }
+
+        // Từ thứ tự ảnh trong metadata sinh alt
+        private string GenerateAltText(SanPham sanPhamObject,
+            SanPhamMedia media,
+            bool isThumbnail, int i)
+        {
+            Boolean metadataHasVideo = sanPhamObject.MediaList[0].MediaType != "image" ? true : false;
+            string alt = "";
+            if (isThumbnail)
+            {
+                if (!string.IsNullOrEmpty(media.Title))
+                {
+                    alt = media.Title;
+                }
+                else
+                {
+                    alt = sanPhamObject.Name + " - Trang " + (metadataHasVideo ? i : (i + 1)); // Có video thì video có thứ tự i = 0 nên ảnh sẽ từ 1,2,3 ngược lại ảnh sẽ từ 0,1,2
+                }
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(media.AltText))
+                {
+                    alt = media.AltText;
+                }
+                else
+                {
+                    alt = sanPhamObject.Name + " - Trang " + (metadataHasVideo ? i : (i + 1)); // Có video thì video có thứ tự i = 0 nên ảnh sẽ từ 1,2,3 ngược lại ảnh sẽ từ 0,1,2
+                }
+            }
+            return alt;
         }
     }
 }

@@ -1100,8 +1100,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     if (!string.IsNullOrWhiteSpace(product.name))
                     {
-                        string slug = Common.GenerateSlug(product.name);
-                        string slugId = slug + "-" + product.id;
+                        string slugId = Common.GenerateSlugId(product.name, product.id);
                         string lastmod = product.updatedDate?.ToString("yyyy-MM-dd") ?? DateTime.Now.ToString("yyyy-MM-dd");
 
                         xml.AppendLine("  <url>");

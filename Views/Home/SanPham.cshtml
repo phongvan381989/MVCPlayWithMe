@@ -1,11 +1,48 @@
-﻿@{
+﻿@using MVCPlayWithMe.Models.SanPhamModel
+@using MVCPlayWithMe.General
+@{
     Layout = null;
+    var sanPham = ViewBag.SanPham as SanPham;
+    var variants = ViewBag.Variants as List<SanPham>;
 }
 
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+
+    <!-- SEO Meta Tags -->
+    <title>@ViewBag.Title</title>
+    <meta name="description" content="@ViewBag.MetaDescription">
+    <link rel="canonical" href="@ViewBag.CanonicalUrl">
+
+    <!-- Open Graph / Facebook / Zalo -->
+    <meta property="og:type" content="product">
+    <meta property="og:title" content="@ViewBag.Title">
+    <meta property="og:description" content="@ViewBag.MetaDescription">
+    <meta property="og:image" content="@ViewBag.OgImageUrl">
+    <meta property="og:image:width" content="@ViewBag.OgImageWidth">
+    <meta property="og:image:height" content="@ViewBag.OgImageHeight">
+    <meta property="og:image:alt" content="@ViewBag.Title">
+    <meta property="og:url" content="@ViewBag.CanonicalUrl">
+    <meta property="og:site_name" content="@ViewBag.titleVoiBeNho">
+    <meta property="og:locale" content="vi_VN">
+    <meta property="article:publisher" content="https://www.facebook.com/voibenho">
+
+    <!-- Facebook Product (cho Facebook Shop/Catalog) -->
+    <meta property="product:price:amount" content="@sanPham.SalePrice">
+    <meta property="product:price:currency" content="VND">
+    <meta property="product:availability" content="@(sanPham.Quantity > 0 ? "in stock" : "out of stock")">
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@ViewBag.Title">
+    <meta name="twitter:description" content="@ViewBag.MetaDescription">
+    <meta name="twitter:image" content="@ViewBag.OgImageUrl">
+
+    <!-- Product Schema.org JSON-LD (Generated from server) -->
+    <script type="application/ld+json">@Html.Raw(ViewBag.ProductJsonLD)</script>
+
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260701">
     <link rel="stylesheet" href="~/Content/Home/SanPham.css?v=20260710d">
 
@@ -19,30 +56,62 @@
             <div id="item-media-wrapper">
                 <div id="item_media_arrow_wrapper">
                     <div id="item-medium-media" title="Giữ kéo chuột để xem ảnh khác">
-                        <img id="medium_picture" src="/Media/NoImageThumbnail.png" alt="No Image">
-                        <video id="medium_video" class="class_medium_video" controls autoplay muted="muted"></video>
+                        @{
+                            // SSR hero image cho SEO (chỉ images - video sẽ embed iframe trong description)
+                            var firstMedia = sanPham.MediaList?.FirstOrDefault(m => m.MediaType == "image");
+                            string heroSrc = "/Media/NoImageThumbnail.png";
+                            string heroAlt = "No Image";
+                            int heroWidth = 1000;
+                            int heroHeight = 1000;
+
+                            if (firstMedia != null)
+                            {
+                                heroSrc = $"{MVCPlayWithMe.General.Common.SanPhamMediaFolderPath}{sanPham.Id}/{firstMedia.FileName}";
+                                heroAlt = ViewBag.ogImageAlt;
+                                heroWidth = (int)(firstMedia.Width > 0 ? firstMedia.Width : 1000);
+                                heroHeight = (int)(firstMedia.Height > 0 ? firstMedia.Height : 1000);
+                            }
+                        }
+                        @* SSR hero image - video embeds (YouTube/Facebook/TikTok) sẽ trong description *@
+                        <img id="medium_picture"
+                             src="@heroSrc"
+                             alt="@heroAlt"
+                             width="@heroWidth"
+                             height="@heroHeight">
                     </div>
                     <div id="left_arrow" title="Ảnh trước"></div>
                     <div id="right_arrow" title="Ảnh sau"></div>
                 </div>
                 <div id="item-small-media-container">
+                    @* SSR thumbnail gallery cho initial load (chỉ images) - JavaScript re-render khi switch variant *@
+                    @Html.Raw(ViewBag.ThumbnailGalleryHtml)
                 </div>
             </div>
             <div id="item-something-wrapper">
                 <div id="item-name" style="width:100%">
-                    <h1 id="item-name-h1"></h1>
+                    <h1 id="item-name-h1">@sanPham.Name</h1>
                 </div>
                 <div id="item-vote">
 
                 </div>
                 <div id="item-price">
-                    <div id="price"><sup>₫</sup>87.750</div>
-                    <div id="book-cover-price"><del><sup>₫</sup>117.000</del></div>
-                    <div id="discount">25% giảm</div>
+                    @{
+                        var salePrice = sanPham.SalePrice;
+                        var bookCoverPrice = sanPham.BookCoverPrice;
+                        // Tính discount runtime (match JavaScript logic)
+                        var discountPercent = bookCoverPrice > 0
+                            ? (int)Math.Round(100.0 * (bookCoverPrice - salePrice) / bookCoverPrice)
+                            : 0;
+                    }
+                    <div id="price"><sup>₫</sup>@salePrice.ToString("N0")</div>
+                    @if (bookCoverPrice > salePrice)
+                    {
+                        <div id="book-cover-price"><del><sup>₫</sup>@bookCoverPrice.ToString("N0")</del></div>
+                        <div id="discount">@discountPercent% giảm</div>
+                    }
                 </div>
                 <div class="_7VDqtl">
-                    <div id="item-variation-container">
-
+                    <div id="item-variation-container">@Html.Raw(ViewBag.VariationsHtml)
                     </div>
 
                     <div id="item-order">
@@ -59,11 +128,11 @@
                                     </button>
                                 </div>
                             </div>
-                            <div id="max-quatity">4992 sản phẩm có sẵn</div>
+                            <div id="max-quatity">@sanPham.Quantity sản phẩm có sẵn</div>
                         </div>
                     </div>
 
-                    <div class="I-H1Co">Số lượng bạn chọn đã đạt mức tối đa của sản phẩm này</div>
+                    <div class="I-H1Co"></div>
                 </div>
                 <div class="p-UZsF">
                     <button type="button" class="btn-add-to-cart" onclick="AddToCart()">
@@ -94,8 +163,7 @@
             <div class="product-specifications">
                 <section class="U9rGd1">
                     <h2 class="Iv7FJp">THÔNG TIN CHI TIẾT</h2>
-                    <div class="specifications-table">
-                        <!-- JavaScript sẽ populate data vào đây -->
+                    <div class="specifications-table">@Html.Raw(ViewBag.SpecificationsHtml)
                     </div>
                 </section>
             </div>
@@ -103,7 +171,8 @@
                 <section class="U9rGd1">
                     <h2 class="Iv7FJp">MÔ TẢ SẢN PHẨM</h2>
                     <div class="MCCLkq">
-                        <div class="f7AU53"></div>
+                        <div class="f7AU53">@Html.Raw(ViewBag.DescriptionHtml)
+                        </div>
                     </div>
                 </section>
             </div>
@@ -117,6 +186,16 @@
         @Html.Partial("~/Views/Shared/DoesntFindId.cshtml")
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
+
+    <!-- Pass server data vào JavaScript -->
+    <script>
+        // Data từ server (SSR) - JavaScript dùng cho tương tác, KHÔNG fetch API
+        window.serverData = {
+            variants: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(variants)),
+            currentId: @sanPham.Id
+        };
+    </script>
+
     <script src="~/Scripts/web.play.with.me.common.js?v=20260701"></script>
     <script src="~/Scripts/cart-manager.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260701"></script>
@@ -124,6 +203,6 @@
     <script src="~/Scripts/photoswipe.umd.min.js?v=538"></script>
     <script src="~/Scripts/photoswipe-lightbox.umd.min.js?v=538"></script>
 
-    <script src="~/Scripts/Home/SanPham.js?v=20260710b"></script>
+    <script src="~/Scripts/Home/SanPham.js?v=20260912"></script>
 </body>
 </html>

@@ -14,8 +14,7 @@ namespace MVCPlayWithMe.Helpers
             if (itemId <= 0 || string.IsNullOrWhiteSpace(itemName))
                 return "#";
 
-            string slug = Common.GenerateSlug(itemName);
-            string slugId = slug + "-" + itemId;
+            string slugId = Common.GenerateSlugId(itemName, itemId);
 
             return urlHelper.RouteUrl("ItemDetail", new { slugId = slugId });
         }

@@ -6,7 +6,19 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+    <meta charset="utf-8">
+    <title>@ViewData["title"]</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+    <meta name="robots" content="noindex, follow">
+    @if (!Context.IsDebuggingEnabled)
+    {
+        @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
+    }
+    <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
+    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
+    <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
+
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
     <link rel="stylesheet" href="~/Content/Home/Cart.css?v=20260717">
 </head>
