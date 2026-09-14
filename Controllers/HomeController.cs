@@ -322,11 +322,32 @@ namespace MVCPlayWithMe.Controllers
             ViewData["title"] = "Thanh Toán";
 
             // Load bank account info để hiển thị cho payment method = BANK_TRANSFER
-            var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
-            ViewBag.BankAccount = bankAccount;
+            ViewBag.BankAccount = await Common.GetBankAccountAsync();
 
             // Pass orderDeadline để hiển thị hạn thanh toán
             ViewBag.OrderDeadline = Common.orderDeadline;
+
+            // ✅ SSR: Load promotions sẵn (thay vì gọi API từ JS)
+            List<OrderSimplePromotion> promotions = new List<OrderSimplePromotion>();
+            try
+            {
+                promotions = await OrderSimplePromotionMySql.GetActivePromotionsAsync();
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"Checkout load promotions failed: {ex.Message}");
+                // promotions = empty list
+            }
+            ViewBag.Promotions = promotions;
+
+            // ✅ SSR: Load addresses cho logged-in user (anonymous user sẽ dùng localStorage)
+            List<Address> addresses = new List<Address>();
+            var customer = await AuthentCustomerAsync();
+            if (customer != null)
+            {
+                addresses = await CustomerMySql.GetListAddressAsync(customer.id);
+            }
+            ViewBag.Addresses = addresses;
 
             return View();
         }
@@ -770,7 +791,7 @@ namespace MVCPlayWithMe.Controllers
             if (paymentMethod == (int)EPaymentMethod.BANK_TRANSFER)
             {
                 // Lấy bank account và generate VietQR với OrderCode
-                bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
+                bankAccount = await Common.GetBankAccountAsync();
 
                 if (bankAccount != null)
                 {

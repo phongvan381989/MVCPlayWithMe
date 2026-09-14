@@ -1,6 +1,6 @@
-﻿let listCartObject;
+﻿let listCartObject = [];
 
-let listCustomerInforObject; // list customer object server trả về
+let listCustomerInforObject = []; // list customer object server trả về
 
 let currentIndexInforObject = -1; // index địa chỉ nhận hàng hiện tại. Chưa chọn địa chỉ nhận hàng thì dùng thông tin mặc định khi load trang
 
@@ -8,7 +8,7 @@ let currentIndexInforUpdateObject = -1; // index địa chỉ nhận hàng cập
 
 let funcOfChangeAddress = null; // Hàm xử lý sự kiện click nút change-address-btn
 
-let listOrderSimplePromotionsObject = null; // Danh sách promotion đang hoạt động
+let listOrderSimplePromotionsObject = []; // Danh sách promotion đang hoạt động
 
 let listOrderPay = null; // Danh sách các loại thanh toán: tổng tiền hàng, phí ship, tổng thanh toán,....
 
@@ -23,7 +23,7 @@ if (sessionStorage.getItem('fromCheckout') === 'pending') {
  * Lưu mã đơn hàng và thời gian đặt đơn vào localStorage cho khách vãng lai
  * @param {string} orderCode - Mã đơn hàng (format: YYMMDD-XXXXX)
  */
-function SaveGuestOrderToLocalStorage(orderCode) {
+function SaveGuestOrderCodeToLocalStorage(orderCode) {
     try {
         const storageKey = 'guestOrders';
 
@@ -54,90 +54,23 @@ function SaveGuestOrderToLocalStorage(orderCode) {
             // Lưu vào localStorage
             localStorage.setItem(storageKey, JSON.stringify(orders));
 
-            if (DEBUG) {
-                console.log('✓ Đã lưu mã đơn hàng vào localStorage:', orderCode);
-            }
         }
     } catch (error) {
-        if (DEBUG) {
-            console.error('Lỗi khi lưu mã đơn hàng:', error);
-        }
+        CreateMustClickOkModal("Có lỗi xảy ra vui lòng thử lại.");
     }
 }
-
-/**
- * Lấy danh sách đơn hàng của khách vãng lai từ localStorage
- * @returns {Array} Mảng các đơn hàng [{orderCode, orderDate, createdAt}]
- */
-function GetGuestOrdersFromLocalStorage() {
-    try {
-        const storageKey = 'guestOrders';
-        const existingData = localStorage.getItem(storageKey);
-        if (existingData) {
-            return JSON.parse(existingData);
-        }
-        return [];
-    } catch (error) {
-        console.error('Lỗi khi lấy danh sách đơn hàng:', error);
-        return [];
-    }
-}
-
-// ========== PROMOTION APIs ==========
-
-/**
- * Lấy danh sách promotion đang hoạt động
- * @returns {Promise<Array>} Mảng OrderSimplePromotion
- */
-async function GetActiveOrderSimplePromotions() {
-    try {
-        const searchParams = new URLSearchParams();
-        const query = "/Home/GetActiveOrderSimplePromotions";
-
-        const response = await RequestHttpPostPromise(searchParams, query);
-        const promotions = JSON.parse(response.responseText);
-
-        if (DEBUG) {
-            console.log("✓ Load promotions:", promotions);
-        }
-
-        return promotions;
-    } catch (error) {
-        console.warn("Lỗi khi lấy promotions:", error);
-        return [];
-    }
-}
-
-// /**
-//  * Tính tổng giảm giá cho đơn hàng
-//  * @param {number} totalProductAmount - Tổng tiền hàng (không bao gồm ship)
-//  * @returns {Promise<{discount: number, descriptions: string[]}>}
-//  */
-// async function CalculateDiscount(totalProductAmount) {
-//     try {
-//         const searchParams = new URLSearchParams();
-//         searchParams.append("totalProductAmount", totalProductAmount);
-//         const query = "/Home/CalculateDiscount";
-
-//         const response = await RequestHttpPostPromise(searchParams, query);
-//         const result = JSON.parse(response.responseText);
-
-//         if (DEBUG) {
-//             console.log(`✓ Giảm giá cho ${totalProductAmount}đ: ${result.discount}đ`);
-//         }
-
-//         return result;
-//     } catch (error) {
-//         console.warn("Lỗi khi tính giảm giá:", error);
-//         return { discount: 0, descriptions: [] };
-//     }
-// }
 
 /**
  * Load promotions khi trang load
+ * ✅ SSR: Đọc từ window.serverData thay vì gọi API
  */
-async function LoadPromotions() {
-    listOrderSimplePromotionsObject = await GetActiveOrderSimplePromotions();
+function LoadPromotions() {
+    if (window.serverData && window.serverData.promotions) {
+        // ✅ Đọc từ server data (SSR)
+        listOrderSimplePromotionsObject = window.serverData.promotions;
+    } else {
+        listOrderSimplePromotionsObject = [];
+    }
 }
 
 async function CheckoutPageLoadCart() {
@@ -145,9 +78,6 @@ async function CheckoutPageLoadCart() {
     let guestCart = CartManager.getCart();
 
     guestCart = guestCart.filter(item => item.real === 1); // Chỉ lấy những sản phẩm thực sự chọn mua (real=1)
-    if (DEBUG) {
-        console.log("CheckoutPageLoadCart guestCart: " + JSON.stringify(guestCart));
-    }
 
     // Gửi cart data dưới dạng JSON body
     return await PostJSON('/Home/CheckoutPageLoadCart', guestCart);
@@ -253,7 +183,7 @@ async function CreateBankTransferPaymentModal(paymentInfo) {
                             <ul style='margin: 8px 0 0 18px; padding: 0;'>
                                 <li>Chuyển <strong>đúng số tiền</strong>: ${totalAmount.toLocaleString()}đ</li>
                                 <li>Nội dung CK: <strong>${orderCode}</strong></li>
-                                <li>Hạn thanh toán: <strong>${ORDER_DEADLINE_HOURS} giờ</strong></li>
+                                <li>Hạn thanh toán: <strong>${window.serverData?.orderDeadline || 48} giờ</strong></li>
                             </ul>
                         </div>
                     </div>
@@ -398,33 +328,38 @@ async function CreateOrderSuccessModal(orderCode) {
     });
 }
 
-function CreateCheckoutSelectedModel(containerModel, sample) {
+// ✅ Sửa để dùng Template API
+function CreateCheckoutSelectedModel(containerModel, template) {
     let length = listCartObject.length;
 
     // Sinh bản sao
     for (let i = 0; i < length; i++) {
         let obj = listCartObject[i];
 
-        let clone = sample.cloneNode(true);
-        clone.setAttribute("data-model-id", obj.id.toString());
+        // ✅ Clone từ template.content (DocumentFragment)
+        let clone = template.content.cloneNode(true);
 
-        // Cập nhật dữ liệu bản sao
-        clone.getElementsByClassName("rTOisL")[0].src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(obj.sanPhamBasicInfo.Id, obj.sanPhamBasicInfo.CoverImageFileName));
-        clone.getElementsByClassName("rTOisL")[0].alt = obj.sanPhamBasicInfo.Name;
-        clone.getElementsByClassName("item-name")[0].innerHTML = obj.sanPhamBasicInfo.Name;
+        // ⚠️ Vì clone là DocumentFragment, phải lấy element root để set attribute
+        let itemElement = clone.querySelector(".model-wrapper");
+        itemElement.setAttribute("data-model-id", obj.id.toString());
+
+        // Cập nhật dữ liệu bản sao (dùng querySelector thay vì getElementsByClassName)
+        clone.querySelector(".rTOisL").src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(obj.sanPhamBasicInfo.Id, obj.sanPhamBasicInfo.CoverImageFileName));
+        clone.querySelector(".rTOisL").alt = obj.sanPhamBasicInfo.Name;
+        clone.querySelector(".item-name").innerHTML = obj.sanPhamBasicInfo.Name;
 
         if (obj.sanPhamBasicInfo.BookCoverPrice > obj.sanPhamBasicInfo.SalePrice) {
-            clone.getElementsByClassName("vWt6ZL")[0].style.display = "";
-            clone.getElementsByClassName("vWt6ZL")[0].innerHTML =
+            clone.querySelector(".vWt6ZL").style.display = "";
+            clone.querySelector(".vWt6ZL").innerHTML =
                 ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.BookCoverPrice);
         }
         else {
-            clone.getElementsByClassName("vWt6ZL")[0].style.display = "none";
+            clone.querySelector(".vWt6ZL").style.display = "none";
         }
-        clone.getElementsByClassName("M-AAFK")[0].innerHTML =
+        clone.querySelector(".M-AAFK").innerHTML =
             ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.SalePrice);
 
-        clone.getElementsByClassName("quantity-model")[0].innerHTML = obj.quantity;
+        clone.querySelector(".quantity-model").innerHTML = obj.quantity;
 
         containerModel.appendChild(clone);
     }
@@ -433,8 +368,6 @@ function CreateCheckoutSelectedModel(containerModel, sample) {
 }
 
 function ShowErrorWhenLoadCart(error) {
-    console.error('❌ Error in Checkout:', error);
-
     // Hiển thị lỗi cho user
     document.getElementsByClassName("cart-empty")[0].style.display = "flex";
     document.getElementsByClassName("main-container")[0].style.display = "none";
@@ -442,7 +375,7 @@ function ShowErrorWhenLoadCart(error) {
     CreateMustClickOkModal('Có lỗi khi tải giỏ hàng. Vui lòng thử lại sau.', null);
 }
 
-async function ShowCheckoutCartList() {
+function ShowCheckoutCartList() {
     // Làm mới nội dung
     document.getElementsByClassName("model-container")[0].innerHTML = "";
 
@@ -454,10 +387,10 @@ async function ShowCheckoutCartList() {
     // Có những sản phẩm số lượng trong kho nhỏ hơn số lượng khách đã chọn,
     // nhưng được tính lại phía server
 
-    // Lấy mẫu
-    let sample = document.getElementsByClassName("sample-model")[0].firstElementChild;
-    let containerModel = document.getElementsByClassName("model-container")[0];
-    CreateCheckoutSelectedModel(containerModel, sample);
+    // ✅ Lấy template element (HTML5 <template>)
+    const template = document.getElementById("checkout-item-template");
+    const containerModel = document.querySelector(".model-container");
+    CreateCheckoutSelectedModel(containerModel, template);
 
     document.getElementsByClassName("cart-empty")[0].style.display = "none";
     document.getElementsByClassName("main-container")[0].style.display = "block";
@@ -471,9 +404,10 @@ async function LoadCheckoutCart() {
         CartManager.setRealZeroOrClear();
 
         listCartObject = JSON.parse(responseText);
+        return true;
 
     } catch (error) {
-        ShowErrorWhenLoadCart(error);
+        return false;
     }
 }
 
@@ -565,14 +499,6 @@ function ShowCheckoutMoney() {
     document.getElementsByClassName("final-money")[0].innerHTML =
         ConvertMoneyToTextWithIcon(finalAmount);
 
-    // Debug log
-    if (DEBUG && totalDiscount < 0) {
-        console.log("🎁 Khuyến mãi:");
-        if (shipFeeDiscount < 0) console.log(`  ✓ Miễn phí ship: ${shipFeeDiscount.toLocaleString()}đ`);
-        if (totalMoneyDiscount < 0) console.log(`  ✓ Giảm tiền hàng: ${totalMoneyDiscount.toLocaleString()}đ`);
-        console.log(`  💰 Tổng giảm: ${totalDiscount.toLocaleString()}đ`);
-    }
-
     // Tạo list thanh toán: tổng tiền hàng, phí ship, tổng thanh toán
     /// 0: Tổng tiền hàng
     /// 1: Phí ship
@@ -623,20 +549,17 @@ function ChangeAddressClickEvent(element) {
     element.addEventListener('click', funcOfChangeAddress);
 }
 
-async function LoadCustomerInfor() {
+function LoadCustomerInfor() {
     if (CheckAnonymousCustomer()) {// Khách vãng lai
         // Lấy từ localStorage
         listCustomerInforObject = GetListCustomerInforFromLocalStorage();
     }
     else {
-        let res = await GetListAddress();
-        if (JSON.parse(res.responseText) == null) {
-            await CreateMustClickOkModal("Không lấy được dữ liệu. Vui lòng thử lại sau.", null);
-            // Trả về định dạng giống truy vấn httpPost
-            return GetEasyPromise();
-        }
-        else {
-            listCustomerInforObject = JSON.parse(res.responseText);
+        // ✅ SSR: Đọc từ window.serverData thay vì gọi API
+        if (window.serverData && window.serverData.addresses) {
+            listCustomerInforObject = window.serverData.addresses;
+        } else {
+            listCustomerInforObject = [];
         }
     }
 
@@ -934,11 +857,6 @@ async function CheckOutOrder() {
         guestCart = guestCart.filter(item => !purchasedSanPhamIds.includes(item.sanPhamId));
 
         CartManager.saveCart(guestCart);
-
-        if (DEBUG) {
-            console.log(`🛒 Đã xóa ${beforeCount - guestCart.length} sản phẩm khỏi cart`);
-            console.log(`   Purchased IDs: ${purchasedSanPhamIds.join(', ')}`);
-        }
     }
 
     // Lấy orderCode từ response
@@ -946,7 +864,7 @@ async function CheckOutOrder() {
 
     // Lưu mã đơn và thời gian đặt đơn vào localStorage cho khách vãng lai
     if (CheckAnonymousCustomer()) {
-        SaveGuestOrderToLocalStorage(orderCode);
+        SaveGuestOrderCodeToLocalStorage(orderCode);
     }
 
     // Nếu thanh toán bằng chuyển khoản, hiển thị modal với QR code
@@ -967,23 +885,17 @@ async function CheckOutOrder() {
 
 // Initial load
 window.addEventListener('DOMContentLoaded', async function () {
-    if (DEBUG) {
-        console.log("🚀 DOMContentLoaded - Initial load");
-    }
+    LoadCustomerInfor(),  // Load địa chỉ để tính phí ship
+    LoadPromotions()      // Load chương trình giảm giá
 
-    // Load tất cả data song song (nhanh hơn 2x)
-    await Promise.all([
-        LoadCustomerInfor(),  // Load địa chỉ để tính phí ship
-        LoadCheckoutCart(),           // Load giỏ hàng
-        LoadPromotions()      // Load chương trình giảm giá
-    ]);
-
-    if (DEBUG) {
-        console.log("✓ Loaded: Customer Info, Cart, Promotions");
+    let isOk = await LoadCheckoutCart();           // Load giỏ hàng
+    if (!isOk) {
+        ShowErrorWhenLoadCart(error);
+        return;
     }
 
     // Hiển thị cart sau khi đã load xong tất cả data
-    await ShowCheckoutCartList();
+    ShowCheckoutCartList();
 
     // Toggle bank transfer info khi chọn payment method
     const paymentCod = document.getElementById('payment-cod');

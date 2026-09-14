@@ -3,6 +3,7 @@ using MediaToolkit;
 using MediaToolkit.Model;
 using MediaToolkit.Options;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.BankAccount;
 using MySqlConnector;
 using Newtonsoft.Json;
 using RestSharp;
@@ -60,6 +61,8 @@ namespace MVCPlayWithMe.General
         public static readonly int minQuantityOfDealTiki = 2;
 
         public static readonly RestClient client = new RestClient();
+
+        private static BankAccount bankAccount;
 
         // Cookie const
         #region Cookie
@@ -190,6 +193,15 @@ namespace MVCPlayWithMe.General
                 sb.Insert(length - 3, ',');
             }
             return sb.ToString();
+        }
+
+        public static async Task<BankAccount> GetBankAccountAsync()
+        {
+            if (bankAccount == null)
+            {
+                bankAccount = await BankAccountMySql.GetActiveBankAccountAsync();
+            }
+            return bankAccount;
         }
 
         /// <summary>

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MVCPlayWithMe.Models
+namespace MVCPlayWithMe.Models.Order
 {
     /// <summary>
     /// 0 = Giảm phí ship khi tổng tiền hàng >= MinOrderValue

@@ -394,17 +394,13 @@ a {
 }
 
 .cart-empty {
-    display: flex;
+    display: none;
     flex-direction: column;
     justify-content: center; /* Căn giữa theo chiều ngang */
     align-items: center; /* Căn giữa theo chiều dọc */
     min-height: 100vh; /* Bắt buộc: để chiều cao bằng 100% màn hình */
     margin: 0; /* Xóa khoảng trống mặc định của body */
     text-align: center; /* Căn giữa đoạn văn bản bên trong */
-}
-
-.sample-selected-model {
-    display: none;
 }
 
 @media (min-width: 800px) {

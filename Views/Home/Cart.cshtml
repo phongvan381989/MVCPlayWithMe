@@ -28,7 +28,8 @@
 
         <h1 class="sr-only">Giỏ hàng</h1>
 
-        <div class="sample-selected-model">
+        <!-- ✅ HTML5 <template> - không render, chỉ dùng để clone -->
+        <template id="cart-item-template">
             <div class="zoXdNN selected-model" data-model-id="">
                 <div class="checkbox-name-header">
                     <div class="mcsiKT">
@@ -36,7 +37,7 @@
                     </div>
                     <div class="eUrDQm">
                         <a class="item-url">
-                           
+
                             <img class="WanNdG">
                         </a>
                         <div class="TyNN8t">
@@ -78,32 +79,34 @@
                     </div>
                 </div>
             </div>
-        </div>
-        <div class="cart-empty">
-            <strong>Bạn chưa chọn sản phẩm nào.</strong>
-            <p>Quay về <a href="/" title="">trang chọn sản phẩm</a></p>
-        </div>
-        <div class="main-container">
-            <div class="contianer-selected-model">
+        </template>
+        <div style="min-height:100vh;">
+            <div class="cart-empty">
+                <strong>Bạn chưa chọn sản phẩm nào.</strong>
+                <p>Quay về <a href="/" title="">trang chọn sản phẩm</a></p>
             </div>
-            <div class="s1Gxkq">
-                <div class="s1Gxkq-sum">
-                    <div class="mcsiKT">
-                        <input class="stardust-checkbox__input all-model-checkbox-input" type="checkbox" onclick="ClickAllModelCheckBox(this)">
-                    </div>
-                    <button type="button" class="iGlIrs">Chọn Tất Cả (50)</button>
+            <div class="main-container">
+                <div class="contianer-selected-model">
                 </div>
-                <div class="pay-container">
-                    <div class="aiyQAr">
-                        <div class="A-CcKC">
-                            Tổng thanh toán
+                <div class="s1Gxkq">
+                    <div class="s1Gxkq-sum">
+                        <div class="mcsiKT">
+                            <input class="stardust-checkbox__input all-model-checkbox-input" type="checkbox" onclick="ClickAllModelCheckBox(this)">
                         </div>
-                        <div class="A-CcKC A-CcKC-SanPham">
-                            (0 Sản phẩm):
-                        </div>
-                        <div class="WC0us-"><sup>₫</sup>417.200</div>
+                        <button type="button" class="iGlIrs">Chọn Tất Cả (50)</button>
                     </div>
-                    <button type="button" class="shopee-button-solid" onclick="BuyNow()"><span class="TTXpRG">Mua Hàng</span></button>
+                    <div class="pay-container">
+                        <div class="aiyQAr">
+                            <div class="A-CcKC">
+                                Tổng thanh toán
+                            </div>
+                            <div class="A-CcKC A-CcKC-SanPham">
+                                (0 Sản phẩm):
+                            </div>
+                            <div class="WC0us-"><sup>₫</sup>417.200</div>
+                        </div>
+                        <button type="button" class="shopee-button-solid" onclick="BuyNow()"><span class="TTXpRG">Mua Hàng</span></button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -47,7 +47,7 @@ async function GetOrder() {
 
 /**
  * Lấy danh sách OrderCode từ localStorage (cho khách vãng lai)
- * localStorage key: "guestOrders" (theo format của SaveGuestOrderToLocalStorage trong Checkout.js)
+ * localStorage key: "guestOrders"
  * Format: [{ orderCode: "260804-12345", orderDate: "2026-08-04T10:30:00.000Z", createdAt: 1722764400000 }, ...]
  * @returns {Array<string>} Danh sách OrderCode
  */

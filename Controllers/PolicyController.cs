@@ -96,8 +96,7 @@ namespace MVCPlayWithMe.Controllers
             ViewData["title"] = "Giới thiệu tiệm sách và đồ chơi voi bé nhỏ";
 
             // Load bank account info để hiển thị tài khoản thanh toán
-            var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
-            ViewBag.BankAccount = bankAccount;
+            ViewBag.BankAccount = await Common.GetBankAccountAsync();
 
             return View();
         }
@@ -112,8 +111,7 @@ namespace MVCPlayWithMe.Controllers
             ViewData["title"] = "Tạo mã QR thanh toán";
 
             // Load bank account info
-            var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
-            ViewBag.BankAccount = bankAccount;
+            ViewBag.BankAccount = await Common.GetBankAccountAsync();
 
             return View();
         }
@@ -149,7 +147,7 @@ namespace MVCPlayWithMe.Controllers
             try
             {
                 // Lấy bank account
-                var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
+                var bankAccount = await Common.GetBankAccountAsync();
                 if (bankAccount == null)
                 {
                     return Json(new

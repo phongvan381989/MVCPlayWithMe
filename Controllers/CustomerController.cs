@@ -528,9 +528,8 @@ namespace MVCPlayWithMe.Controllers
                     return Json(result, JsonRequestBehavior.AllowGet);
                 }
 
-
                 // Lấy bank account
-                var bankAccount = await MVCPlayWithMe.Models.BankAccount.BankAccountMySql.GetActiveBankAccountAsync();
+                var bankAccount = await Common.GetBankAccountAsync();
                 if (bankAccount == null)
                 {
                     result.State = EMySqlResultState.ERROR;

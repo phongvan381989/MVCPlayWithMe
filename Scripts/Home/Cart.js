@@ -8,50 +8,53 @@ let isSending = false; // ✅ Flag để prevent concurrent requests
 let debounceTime = 2000; // 2 giây debounce
 
 function CreateSelectedModel() {
-    // Lấy mẫu
-    let sample = document.getElementsByClassName("sample-selected-model")[0].firstElementChild;
-    let containerModel = document.getElementsByClassName("contianer-selected-model")[0];
-    // if (DEBUG) {
-    //     console.log("CreateSelectedModel containerModel: " + containerModel.tagName);
-    // }
+    // ✅ Lấy template element (HTML5 <template>)
+    const template = document.getElementById("cart-item-template");
+    const containerModel = document.querySelector(".contianer-selected-model");
 
     let length = listCartObject.length;
     lengthOfActive = length;
     // Sinh bản sao
     for (let i = 0; i < length; i++) {
         let obj = listCartObject[i];
-        let clone = sample.cloneNode(true);
-        clone.setAttribute("data-model-id", obj.sanPhamId.toString());
-        // Cập nhật dữ liệu bản sao
-        clone.getElementsByClassName("model-checkbox-input")[0].checked = Boolean(obj.real);
-        clone.getElementsByClassName("WanNdG")[0].src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(obj.sanPhamBasicInfo.Id, obj.sanPhamBasicInfo.CoverImageFileName));
-        clone.getElementsByClassName("WanNdG")[0].alt = obj.sanPhamBasicInfo.Name;
 
-        let listA = clone.getElementsByClassName("item-url");
+        // ✅ Clone từ template.content (DocumentFragment)
+        let clone = template.content.cloneNode(true);
+
+        // ⚠️ Vì clone là DocumentFragment, phải lấy element root để set attribute
+        let itemElement = clone.querySelector(".zoXdNN");
+        itemElement.setAttribute("data-model-id", obj.sanPhamId.toString());
+
+        // Cập nhật dữ liệu bản sao (dùng querySelector thay vì getElementsByClassName)
+        clone.querySelector(".model-checkbox-input").checked = Boolean(obj.real);
+        clone.querySelector(".WanNdG").src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(obj.sanPhamBasicInfo.Id, obj.sanPhamBasicInfo.CoverImageFileName));
+        clone.querySelector(".WanNdG").alt = obj.sanPhamBasicInfo.Name;
+
+        let listA = clone.querySelectorAll(".item-url");
         listA[0].title = obj.sanPhamBasicInfo.Name;
         listA[0].href = GenerateSanPhamUrlForCustomer(obj.sanPhamBasicInfo.Name, obj.sanPhamId);
 
         listA[1].title = obj.sanPhamBasicInfo.Name;
         listA[1].href = GenerateSanPhamUrlForCustomer(obj.sanPhamBasicInfo.Name, obj.sanPhamId);
 
-        clone.getElementsByClassName("JB57cn")[0].innerHTML = obj.sanPhamBasicInfo.Name;
-        //clone.getElementsByClassName("dcPz7Y")[0].innerHTML = obj.modelName;
+        clone.querySelector(".JB57cn").innerHTML = obj.sanPhamBasicInfo.Name;
+        //clone.querySelector(".dcPz7Y").innerHTML = obj.modelName;
 
         if (obj.sanPhamBasicInfo.BookCoverPrice > obj.sanPhamBasicInfo.SalePrice) {
-            clone.getElementsByClassName("vWt6ZL")[0].style.display = "";
-            clone.getElementsByClassName("vWt6ZL")[0].innerHTML =
+            clone.querySelector(".vWt6ZL").style.display = "";
+            clone.querySelector(".vWt6ZL").innerHTML =
                 ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.BookCoverPrice);
         }
         else {
-            clone.getElementsByClassName("vWt6ZL")[0].style.display = "none";
+            clone.querySelector(".vWt6ZL").style.display = "none";
         }
-        clone.getElementsByClassName("M-AAFK")[0].innerHTML =
+        clone.querySelector(".M-AAFK").innerHTML =
             ConvertMoneyToTextWithIcon(obj.sanPhamBasicInfo.SalePrice);
 
-        clone.getElementsByClassName("v3H4Zf")[0].value = obj.quantity;
+        clone.querySelector(".v3H4Zf").value = obj.quantity;
 
         // Hiển thị số lượng tồn kho hoặc "Hết hàng"
-        let maxQuantityElement = clone.getElementsByClassName("max-quantity")[0];
+        let maxQuantityElement = clone.querySelector(".max-quantity");
         if (obj.sanPhamBasicInfo.Quantity > 0) {
             maxQuantityElement.innerHTML = obj.sanPhamBasicInfo.Quantity + " sản phẩm có sẵn";
             maxQuantityElement.style.color = ""; // Reset màu mặc định
@@ -60,19 +63,19 @@ function CreateSelectedModel() {
             maxQuantityElement.style.color = "red"; // Màu đỏ
 
             // Hết hàng → disable +- số lượng
-            let quantityContainer = clone.getElementsByClassName("shopee-input-quantity")[0];
-            //let checkBox = clone.getElementsByClassName("mcsiKT")[0];
+            let quantityContainer = clone.querySelector(".shopee-input-quantity");
+            //let checkBox = clone.querySelector(".mcsiKT");
 
             quantityContainer.classList.add("disabled");
             //checkBox.classList.add("disabled");
-            clone.getElementsByClassName("model-checkbox-input")[0].disabled = true;
+            clone.querySelector(".model-checkbox-input").disabled = true;
 
             lengthOfActive--;
 
             obj.real = 0; // cập nhật lại nếu
         }
 
-        clone.getElementsByClassName("ofQLuG")[0].innerHTML =
+        clone.querySelector(".ofQLuG").innerHTML =
             ConvertMoneyToTextWithIcon(obj.quantity * obj.sanPhamBasicInfo.SalePrice);
 
         containerModel.appendChild(clone);
@@ -205,8 +208,6 @@ function ShowCartList() {
 }
 
 function ShowErrorWhenLoadCart(error) {
-    console.error('❌ Error in LoadCart:', error);
-
     // Hiển thị lỗi cho user
     document.getElementsByClassName("cart-empty")[0].style.display = "flex";
     document.getElementsByClassName("main-container")[0].style.display = "none";
@@ -262,7 +263,6 @@ async function LoadCart() {
         // Sau khi load cart với dữ liệu đầy đủ, set real = 0 với khách vãng lai và xóa cart với khách đăng nhập
         CartManager.setRealZeroOrClear();
 
-
         listCartObject = JSON.parse(responseText);
         ShowCartList();
     } catch (error) {
@@ -273,9 +273,6 @@ async function LoadCart() {
 
 // Khi back từ checkout page, reload cart để tránh dữ liệu cũ và so sánh với cart được load từ bfcache
 async function LoadCartBFCache() {
-    if (DEBUG) {
-        console.log("LoadCartBFCache called");
-    }
     try {
         let responseText = await CartPageLoadCart();
 
@@ -380,21 +377,6 @@ function GetMaxQuantityInputInCartPage(model) {
     let obj = listCartObject.find(item => item.sanPhamId === id);
     return obj.sanPhamBasicInfo.Quantity;
 }
-
-// // Cập nhật số lượng khi +/- 1 hoặc thay đổi input số lượng
-// // Cập nhật localStorage và listCartCookieObject
-// // Khách đăng nhập vẫn sẽ có cart ở localStorage
-// async function UpdateSanPhamQuantityOnCart(sanPhamId, quantity) {
-//     // if (DEBUG) {
-//     //     console.log("UpdateSanPhamQuantityOnCart call");
-//     // }
-//     const searchParams = new URLSearchParams();
-//     searchParams.append("sanPhamId", sanPhamId);
-//     searchParams.append("quantity", quantity);
-//     let query = "/Home/UpdateSanPhamQuantityOnCart";
-
-//     return await RequestHttpPostPromise(searchParams, query);
-// }
 
 // Cập nhật listCartCookieObject, localStorage khi thay đổi số lượng muốn mua
 // Batch debounce: Thu thập changes và gửi 1 request duy nhất
@@ -507,9 +489,7 @@ async function DeleteSanPhamOnCartElement(element) {
     let model = element.closest('.selected-model');
     let id = parseInt(model.getAttribute("data-model-id"));
     let length = listCartObject.length;
-    if (DEBUG) {
-        console.log("DeleteSanPhamOnCartElement called id: " + id);
-    }
+
     for (let i = 0; i < length; i++) {
         if (listCartObject[i].sanPhamId == id) {
             // Là khách vãng lai

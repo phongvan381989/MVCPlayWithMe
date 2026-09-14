@@ -284,7 +284,6 @@ namespace MVCPlayWithMe.Models.BankAccount
             }
             return result;
         }
-
         #endregion
     }
 }
