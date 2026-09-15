@@ -23,7 +23,75 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public async Task<ActionResult> Search()
         {
-            ViewData["title"] = Common.titleVoiBeNho;
+            // ✅ SEO: Dynamic title dựa vào keyword (giống UpdatePageTitle() trong Search.js)
+            string keyword = Request.QueryString["keyword"];
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                ViewData["title"] = $"Tìm kiếm \"{keyword.Trim()}\" | {Common.titleVoiBeNho}";
+            }
+            else
+            {
+                ViewData["title"] = Common.titleVoiBeNho;
+            }
+
+            // ✅ SSR: Load ALL items từ page 1 → current page (keyset pagination)
+            const int MAX_SSR_PAGE = 5;  // Giới hạn SSR ở 5 pages đầu (max 150 items)
+            const int ITEMS_PER_PAGE = 30;
+
+            List<SanPhamBasicInfo> initialProducts = new List<SanPhamBasicInfo>();
+            bool hasMore = false;
+            int currentPage = 1;
+
+            // Parse page number từ QueryString
+            string pageParam = Request.QueryString["page"];
+            if (!string.IsNullOrEmpty(pageParam))
+            {
+                int.TryParse(pageParam, out currentPage);
+            }
+            if (currentPage < 1) currentPage = 1;
+
+            // ✅ SSR: Load data cho page 1 đến min(currentPage, MAX_SSR_PAGE)
+            // Nếu page > 5: load 150 items (page 1-5), client sẽ Load More phần còn thiếu
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    // ✅ Clamp to MAX_SSR_PAGE (page 8 → load 150 items, client fetch thêm)
+                    int ssrPage = Math.Min(currentPage, MAX_SSR_PAGE);
+                    int totalItemsToLoad = ssrPage * ITEMS_PER_PAGE;
+
+                    SanPhamSearchParameter searchParameter = new SanPhamSearchParameter
+                    {
+                        name = Request.QueryString["keyword"],
+                        author = Request.QueryString["author"],
+                        translator = Request.QueryString["translator"],
+                        category = Request.QueryString["category"],
+                        publishingCompany = Request.QueryString["publishingCompany"],
+                        publisher = Request.QueryString["publisher"],
+                        lastId = 0,  // ✅ Start from beginning (keyset)
+                        limit = totalItemsToLoad,  // ✅ 30/60/90/120/150 items
+                        page = null  // ❌ Không dùng page (offset pagination)
+                    };
+
+                    var (lsSearchResult, hasMoreResults) = await SanPhamMySql.SearchSanPhamWithCursorAsync(
+                        searchParameter,
+                        conn);
+
+                    initialProducts = lsSearchResult;
+                    hasMore = hasMoreResults;
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"Search SSR load failed: {ex.Message}");
+            }
+
+            ViewBag.InitialProducts = initialProducts;
+            ViewBag.HasMore = hasMore;
+            ViewBag.CurrentPage = currentPage;
+
             return View();
         }
 

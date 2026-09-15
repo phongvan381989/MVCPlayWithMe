@@ -329,6 +329,7 @@ button.change-address-btn {
     /*    padding: 5px;*/
     width: 100%;
     display: none;
+    min-height: 100vh;
 }
 
 .cart-empty {
@@ -360,5 +361,6 @@ button.change-address-btn {
         display: none;
         padding: 5px;
         width: 100%;
+        min-height: 100vh;
     }
 }

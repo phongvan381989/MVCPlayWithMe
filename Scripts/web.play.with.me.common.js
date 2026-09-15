@@ -554,7 +554,7 @@ function RequestHttpPostPromise(searchParams, url) {
             reject("Network Error or Connection Refused (Status: " + this.status + ") (StatusText: " + this.statusText + ") ");
         }
 
-        if (DEBUG_ADMIN) {
+        if (DEBUG) {
             let lastQuery = url + "?" + searchParams.toString();
             console.log(lastQuery);
         }

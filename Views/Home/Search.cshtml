@@ -1,5 +1,50 @@
-﻿@{
+﻿@using MVCPlayWithMe.Models.SanPhamModel
+@using MVCPlayWithMe.General
+@{
     Layout = null;
+    var initialProducts = ViewBag.InitialProducts as List<SanPhamBasicInfo> ?? new List<SanPhamBasicInfo>();
+    var hasMore = ViewBag.HasMore ?? false;
+    var currentPage = ViewBag.CurrentPage ?? 1;
+    var keyword = Request.QueryString["keyword"] ?? "";
+
+    // ✅ H1 title (giống logic trong Search.js)
+    var h1Title = string.IsNullOrWhiteSpace(keyword)
+        ? Common.titleVoiBeNho
+        : $"Kết quả tìm kiếm: \"{keyword.Trim()}\"";
+}
+
+@functions {
+    // Helper: Format tiền với icon
+    string FormatMoney(decimal money)
+    {
+        return string.Format("{0:N0}", money) + "₫";
+    }
+
+    // Helper: Tính % discount
+    int CalculateDiscountPercent(decimal original, decimal sale)
+    {
+        if (original <= 0) return 0;
+        return (int)Math.Round((original - sale) / original * 100);
+    }
+
+    // Helper: Tạo URL 320px version
+    string Get320ImageUrl(int spId, string filename)
+    {
+        return $"/Media/SanPham/{spId}_320/{filename}";
+    }
+
+    // Helper: Tính kích thước 320px từ kích thước gốc (giữ aspect ratio)
+    (int width, int height) Get320Dimensions(int originalWidth, int originalHeight)
+    {
+        if (originalWidth == 0 || originalHeight == 0)
+            return (320, 480); // Fallback 2:3 ratio
+
+        // Resize: width = 320, height scale theo tỷ lệ
+        int width = 320;
+        int height = (int)Math.Round(originalHeight * (320.0 / originalWidth));
+
+        return (width, height);
+    }
 }
 
 <!DOCTYPE html>
@@ -31,7 +76,7 @@
     <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
     <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
     <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
-    <link rel="stylesheet" href="~/Content/Home/Search.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/Home/Search.css?v=20260910">
     <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
 </head>
 <body>
@@ -46,42 +91,78 @@
             </div>
         </a>
 
-        <h1 id="page-title" class="sr-only">Tiệm sách voi bé nhỏ</h1>
+        <h1 id="page-title" class="sr-only">@h1Title</h1>
 
-        <div id="empty-result" style="display:none">
+        <div id="empty-result">
             <p>Kết quả trống</p>
         </div>
-        <div id="search-result" style="display:none">
-            <article class="product-for-selector-sample">
-                <a class="product-item" href="#">
-                    <div class="image-wrapper">
-                        <img class="card-img-top" alt="Card image">
-                    </div>
-                    <div class="product-infor">
-                        <div class="product-name">
-                            <h3 class="product-name-h3"></h3>
+        <div id="search-result">
+            <!-- ✅ HTML5 <template> - cho Load More (JS render) -->
+            <template id="product-card-template">
+                <article>
+                    <a class="product-item" href="#">
+                        <div class="image-wrapper">
+                            <img class="card-img-top" alt="Card image" width="320" height="480">
                         </div>
-                        @*<div class="rating-quantity-sold">
-                            <p class="rating-quantity-sold-p" style="color:black; font-size:x-small"></p>
-                        </div>*@
-                        <div class="price-sell-original-discount-percent">
-                            <span class="price-sell-detail">
-                            </span>
-                            <span class="price-original-detail"></span>
-                            <span class="price-discount-percent-detail"></span>
+                        <div class="product-infor">
+                            <div class="product-name">
+                                <h3 class="product-name-h3"></h3>
+                            </div>
+                            <div class="price-sell-original-discount-percent">
+                                <span class="price-sell-detail">
+                                </span>
+                                <span class="price-original-detail"></span>
+                                <span class="price-discount-percent-detail"></span>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </article>
+                    </a>
+                </article>
+            </template>
+
+            <!-- ✅ SSR: Server render HTML sẵn -->
             <div id="biggestContainer_body_wraper_item">
+                @foreach (var product in initialProducts)
+                {
+                    var (imgWidth, imgHeight) = Get320Dimensions(product.CoverImageWidth, product.CoverImageHeight);
+
+                    @* DEBUG: Check dimensions *@
+                    @* Original: @product.CoverImageWidth x @product.CoverImageHeight → Calculated: @imgWidth x @imgHeight *@
+
+                    <article>
+                        <a class="product-item" href="/San-Pham/@(Common.GenerateSlugId(product.Name, product.Id))">
+                            <div class="image-wrapper">
+                                <img class="card-img-top"
+                                     src="@Get320ImageUrl(product.Id, product.CoverImageFileName)"
+                                     alt="@(product.CoverImageAltText ?? ("Bìa sách " + product.Name))"
+                                     title="@(product.CoverImageTitle ?? product.Name)"
+                                     width="@imgWidth"
+                                     height="@imgHeight"
+                                     loading="lazy">
+                            </div>
+                            <div class="product-infor">
+                                <div class="product-name">
+                                    <h3 class="product-name-h3">@product.Name</h3>
+                                </div>
+                                <div class="price-sell-original-discount-percent">
+                                    <span class="price-sell-detail">@FormatMoney(product.SalePrice)</span>
+                                    @if (product.BookCoverPrice > product.SalePrice)
+                                    {
+                                        <span class="price-original-detail">@FormatMoney(product.BookCoverPrice)</span>
+                                        <span class="price-discount-percent-detail">-@CalculateDiscountPercent(product.BookCoverPrice, product.SalePrice)%</span>
+                                    }
+                                </div>
+                            </div>
+                        </a>
+                    </article>
+                }
             </div>
 
             @* Load More section - thay thế numbered pagination *@
-            <div id="load-more-section" style="display:none; padding:1rem; text-align:center;">
-                <button id="btnLoadMore" class="pwm-btn-common" style="display:none;">
+            <div id="load-more-section">
+                <button id="btnLoadMore" class="pwm-btn-common">
                     <span id="btn-text">Xem thêm sản phẩm</span>
                 </button>
-                <p id="end-message" style="display:none; color:#999; font-size:14px;">
+                <p id="end-message">
                     🎉 Đã xem hết tất cả sản phẩm
                 </p>
             </div>
@@ -89,6 +170,17 @@
 
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
+
+    <!-- ✅ SSR: Chỉ pass metadata (HTML đã render sẵn, không cần pass products) -->
+    <script>
+        window.serverData = {
+            hasMore: @hasMore.ToString().ToLower(),
+            currentPage: @currentPage,
+            lastId: @(initialProducts.Count > 0 ? initialProducts[initialProducts.Count - 1].Id : 0),
+            loadedCount: @initialProducts.Count
+        };
+    </script>
+
     <script src="~/Scripts/web.play.with.me.common.js?v=20260823"></script>
     <script src="~/Scripts/cart-manager.js"></script>
     <script src="~/Scripts/web.play.with.me.action.common.js?v=20260823"></script>

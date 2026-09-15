@@ -26,7 +26,6 @@ let inputSearch = document.getElementById("search-input-text-id");
 let btnLoadMore = document.getElementById("btnLoadMore");
 let btnText = document.getElementById("btn-text");
 let endMessage = document.getElementById("end-message");
-let loadMoreSection = document.getElementById("load-more-section");
 
 // ============================================
 // SEO: Dynamic Page Title
@@ -36,7 +35,7 @@ let loadMoreSection = document.getElementById("load-more-section");
  * - Trang chủ: "Tiệm sách Voi bé nhỏ"
  * - Search: "Tìm kiếm {keyword} | Tiệm sách Voi bé nhỏ"
  */
-function UpdatePageTitle() {
+function UpdatePageTitle_H1() {
     const keyword = currentSearchParams.keyword || '';
 
     if (keyword.trim() !== '') {
@@ -46,25 +45,8 @@ function UpdatePageTitle() {
         // Trang chủ
         document.title = titleVoiBeNho;
     }
-}
-
-// ============================================
-// Initial Load - 30 items (or load to specific page from URL)
-// ============================================
-async function Search() {
-    // Reset state
-    lastId = 0;
-    loadedCount = 0;
-    hasMore = false;
-
-    // Get search parameters từ URL
-    SetSearchParametersFromUrl();
-
-    // Update page title cho SEO
-    UpdatePageTitle();
 
     // Update H1 dynamically
-    const keyword = currentSearchParams.keyword || "";
     const h1 = document.getElementById("page-title");
     if (h1) {
         if (keyword) {
@@ -73,25 +55,117 @@ async function Search() {
             h1.textContent = titleVoiBeNho;
         }
     }
+}
+
+async function LoadAndRenderSearchingResultCore(searchParams) {
+    ShowCircleLoader();
+    let table = document.getElementById("biggestContainer_body_wraper_item");
+    table.innerHTML = "";
+    try {
+        let response = await fetch("/Home/HomeSearch?" + searchParams.toString());
+        let responseText = await response.text();
+        let result = JSON.parse(responseText);
+
+        if (result.State !== 0) {
+            console.error("Load more failed:", result.Message);
+            CreateMustClickOkModal("Có lỗi xảy ra, vui lòng thử lại sau.");
+            return;
+        }
+
+        let items = result.myJson.lsSearch || [];
+        console.log("LoadAndRenderSearchingResultCore call - items: " + JSON.stringify(items));
+
+        if (items.length > 0) {
+            // ✅ Lấy template element (HTML5 <template>)
+            let template = document.getElementById("product-card-template");
+
+            for (let i = 0; i < items.length; i++) {
+                let item = items[i];
+                let itemElement = CreateProductCard(item, template);
+                table.appendChild(itemElement);
+            }
+
+            // Update state
+            loadedCount += items.length;
+            hasMore = result.myJson.hasMore || false;
+            lastId = items[items.length - 1].Id;
+        }
+
+        if (loadedCount > 0) {
+            DisplayEmptyResult(false);
+            UpdateLoadMoreUI();
+        }
+        else {
+            DisplayEmptyResult(true);
+        }
+
+    } catch (error) {
+        console.error("search error:", error);
+        CreateMustClickOkModal("Có lỗi xảy ra, vui lòng thử lại sau.");
+        DisplayEmptyResult(true);
+    } finally {
+        RemoveCircleLoader();
+    }
+}
+
+// ============================================
+// Initial Load - 30 items (or load to specific page from URL)
+// ============================================
+async function Search(checkHasServerData) {
+    // Reset state
+    lastId = 0;
+    loadedCount = 0;
+    hasMore = false;
+
+    // Get search parameters từ URL
+    SetSearchParametersFromUrl();
 
     // Get target page from URL
     const targetPage = parseInt(GetValueFromUrlName("page")) || 1;
 
-    // Clear grid
-    document.getElementById("biggestContainer_body_wraper_item").innerHTML = "";
+    // ✅ SSR: HTML đã render sẵn ở server, chỉ cần update state
+    const hasServerData = window.serverData &&
+                          typeof window.serverData.loadedCount === 'number';
 
-    // Hide/show UI
-    document.getElementById("empty-result").style.display = "none";
-    document.getElementById("search-result").style.display = "none";
-    loadMoreSection.style.display = "none";
+    console.log("Search call - window.serverData: " + JSON.stringify(window.serverData));
+    console.log("Search call - checkHasServerData: " + JSON.stringify(checkHasServerData));
+    if (hasServerData && checkHasServerData) {
+        // ✅ Server đã render HTML sẵn, chỉ cần update state từ metadata
+        loadedCount = window.serverData.loadedCount;
+        hasMore = window.serverData.hasMore;
+        lastId = window.serverData.lastId;
 
-    // Show loading
-    ShowCircleLoader();
+        if (loadedCount === 0) {
+            DisplayEmptyResult(true);
+            return;
+        }
 
-    try {
+        if (DEBUG) {
+            console.log("✓ SSR HTML:", loadedCount, "products already rendered (page", window.serverData.currentPage, ")");
+        }
+
+        // ✅ Auto Load More nếu targetPage > loaded pages (e.g., page 8 nhưng chỉ load 5)
+        const loadedPages = Math.ceil(loadedCount / ITEMS_PER_PAGE);
+        if (targetPage > loadedPages && hasMore) {
+            // Fetch phần còn thiếu (page 6, 7, 8...)
+            await AutoLoadRemainingPages(targetPage, loadedPages);
+        }
+
+        // ✅ Auto scroll to target page position (sau khi load xong)
+        if (targetPage > 1) {
+            ScrollToPagePosition(targetPage);
+        }
+
+        UpdateLoadMoreUI();
+    }
+    else {
+        console.log("Load data SPA");
+        // Update page title, h1 cho SEO
+        UpdatePageTitle_H1();
+
         // Gọi API: Load tất cả items từ page 1 đến target page (1 lần gọi duy nhất)
         const searchParams = new URLSearchParams();
-        SetSearchParametersToUrlParams(searchParams);
+        SetNewSearchParametersFromCurrent(searchParams);
 
         if (targetPage > 1) {
             // Load all items up to target page
@@ -101,66 +175,85 @@ async function Search() {
             searchParams.append("limit", ITEMS_PER_PAGE.toString());
         }
 
+        await LoadAndRenderSearchingResultCore(searchParams);
+
+        // ✅ Auto scroll to target page position (sau khi load xong)
+        if (targetPage > 1 && loadedCount > 0) {
+            ScrollToPagePosition(targetPage);
+        }
+    }
+}
+
+// ============================================
+// Auto Load Remaining Pages (cho targetPage > SSR page)
+// ============================================
+/**
+ * Auto fetch items còn thiếu khi targetPage > loaded pages
+ * VD: URL /?page=8, SSR load 150 items (page 1-5)
+ * → Fetch thêm 90 items (page 6-8) trong 1 lần
+ */
+async function AutoLoadRemainingPages(targetPage, loadedPages) {
+    if (isLoading || !hasMore) {
+        return;
+    }
+
+    const remainingPages = targetPage - loadedPages;
+    const remainingItems = remainingPages * ITEMS_PER_PAGE;
+
+    if (DEBUG) {
+        console.log(`Auto loading ${remainingPages} more pages (${remainingItems} items)...`);
+    }
+
+    isLoading = true;
+    ShowCircleLoader();
+
+    try {
+        // ✅ Fetch tất cả items còn thiếu trong 1 lần (thay vì gọi nhiều lần)
+        const searchParams = new URLSearchParams();
+        SetNewSearchParametersFromCurrent(searchParams);
+        searchParams.append("lastId", lastId.toString());
+        searchParams.append("limit", remainingItems.toString());  // VD: 90 items cho page 6-8
+
         let response = await fetch("/Home/HomeSearch?" + searchParams.toString());
         let responseText = await response.text();
         let result = JSON.parse(responseText);
 
-        RemoveCircleLoader();
-
         if (result.State !== 0) {
-            CreateMustClickOkModal("Có lỗi xảy ra, vui lòng thử lại sau.");
-            EmptySomething();
+            console.error("Auto load remaining pages failed:", result.Message);
+            // Không show error modal, vì user vẫn thấy 150 items đầu
             return;
         }
 
         let items = result.myJson.lsSearch || [];
 
-        if (!items || items.length === 0) {
-            EmptySomething();
-            return;
-        }
-
-        // Update state
-        loadedCount = result.myJson.loadedCount || items.length;
-        hasMore = result.myJson.hasMore || false;
-
         if (items.length > 0) {
+            // Append items vào grid
+            AppendItems(items);
+
+            // Update state
+            loadedCount += items.length;
+            hasMore = result.myJson.hasMore || false;
             lastId = items[items.length - 1].Id;
-        }
 
-        // Show results
-        document.getElementById("search-result").style.display = "block";
-        ShowSearchingResult(items);
-
-        // Update progress UI
-        UpdateProgressUI();
-
-        // Auto scroll to target page position
-        if (targetPage > 1) {
-            ScrollToPagePosition(targetPage);
+            if (DEBUG) {
+                console.log(`✓ Auto loaded ${items.length} items, total: ${loadedCount}`);
+            }
         }
 
     } catch (error) {
-        console.error("Search error:", error);
+        console.error("Auto load remaining pages error:", error);
+        // Không show error modal, user vẫn có 150 items
+    } finally {
         RemoveCircleLoader();
-        CreateMustClickOkModal("Có lỗi xảy ra, vui lòng thử lại sau.");
-        EmptySomething();
+        isLoading = false;
     }
 }
 
 // ============================================
-// Load More - 20 items
+// Load More
 // ============================================
 async function LoadMore() {
     if (isLoading || !hasMore) {
-        return;
-    }
-
-    // Check if keyword changed in input box
-    const currentKeywordInInput = inputSearch ? (inputSearch.value || "") : "";
-    if (currentKeywordInInput !== currentSearchParams.keyword) {
-        // Keyword changed - trigger new search instead of load more
-        await HomeSearch();
         return;
     }
 
@@ -172,7 +265,7 @@ async function LoadMore() {
     try {
         // Gọi API: load thêm items với lastId
         const searchParams = new URLSearchParams();
-        SetSearchParametersToUrlParams(searchParams);
+        SetNewSearchParametersFromCurrent(searchParams);
         searchParams.append("lastId", lastId.toString());
         searchParams.append("limit", ITEMS_PER_PAGE.toString());
 
@@ -201,8 +294,7 @@ async function LoadMore() {
             const currentPage = Math.ceil(loadedCount / ITEMS_PER_PAGE);
             UpdateURLWithPage(currentPage);
 
-            // Update progress UI
-            UpdateProgressUI();
+            UpdateLoadMoreUI();
         }
 
     } catch (error) {
@@ -220,7 +312,7 @@ async function LoadMore() {
 // ============================================
 function UpdateURLWithPage(page) {
     const searchParams = new URLSearchParams();
-    SetSearchParametersToUrlParams(searchParams);
+    SetNewSearchParametersFromCurrent(searchParams);
     searchParams.append("page", page.toString());
 
     window.history.replaceState(
@@ -256,10 +348,7 @@ function ScrollToPagePosition(page) {
 // ============================================
 // UI Updates
 // ============================================
-function UpdateProgressUI() {
-    // Show load more section
-    loadMoreSection.style.display = "block";
-
+function UpdateLoadMoreUI() {
     if (hasMore) {
         // Còn items → show button
         btnLoadMore.style.display = "inline-block";
@@ -271,24 +360,14 @@ function UpdateProgressUI() {
     }
 }
 
-function ShowSearchingResult(listItem) {
-    let table = document.getElementById("biggestContainer_body_wraper_item");
-    let sample = document.getElementsByClassName("product-for-selector-sample")[0];
-
-    for (let i = 0; i < listItem.length; i++) {
-        let item = listItem[i];
-        let itemElement = CreateProductCard(item, sample);
-        table.appendChild(itemElement);
-    }
-}
-
 function AppendItems(listItem) {
     let table = document.getElementById("biggestContainer_body_wraper_item");
-    let sample = document.getElementsByClassName("product-for-selector-sample")[0];
+    // ✅ Lấy template element (HTML5 <template>)
+    let template = document.getElementById("product-card-template");
 
     for (let i = 0; i < listItem.length; i++) {
         let item = listItem[i];
-        let itemElement = CreateProductCard(item, sample);
+        let itemElement = CreateProductCard(item, template);
         table.appendChild(itemElement);
     }
 
@@ -302,51 +381,78 @@ function AppendItems(listItem) {
     }
 }
 
-function CreateProductCard(item, sample) {
-    let itemElement = sample.cloneNode(true);
+function CreateProductCard(item, template) {
+    // ✅ Clone từ template.content (DocumentFragment)
+    let clone = template.content.cloneNode(true);
+
+    // ⚠️ Vì clone là DocumentFragment, phải lấy <article> element để set attributes
+    let itemElement = clone.querySelector("article");
 
     // Set link chi tiết sản phẩm
-    itemElement.getElementsByClassName("product-item")[0].href = GenerateSanPhamUrlForCustomer(item.Name, item.Id);
-
-    // Hiển thị vì sample đang ẩn
-    itemElement.style.display = "block";
+    clone.querySelector(".product-item").href = GenerateSanPhamUrlForCustomer(item.Name, item.Id);
 
     // Set ảnh
-    let imgElement = itemElement.getElementsByClassName("card-img-top")[0];
+    let imgElement = clone.querySelector(".card-img-top");
     if (item.CoverImageFileName) {
         imgElement.src = Get320VersionOfImageSrc(GetSanPhamMediaUrl(item.Id, item.CoverImageFileName));
         // Alt text: ưu tiên AltText, fallback sang "Bìa sách [tên]"
         imgElement.alt = item.CoverImageAltText || ("Bìa sách " + item.Name);
         // Title: tooltip khi hover
         imgElement.title = item.CoverImageTitle || item.Name;
+
+        // ✅ Set dimensions để prevent CLS (tính từ kích thước gốc)
+        if (item.CoverImageWidth && item.CoverImageHeight) {
+            const width = 320;
+            const height = Math.round(item.CoverImageHeight * (320 / item.CoverImageWidth));
+            imgElement.width = width;
+            imgElement.height = height;
+
+            console.log(`✓ Set dimensions: ${width}×${height} (from ${item.CoverImageWidth}×${item.CoverImageHeight})`);
+        } else {
+            // Fallback: aspect ratio 2:3
+            imgElement.width = 320;
+            imgElement.height = 480;
+            if (DEBUG) {
+                console.warn(`⚠ Missing dimensions for ${item.Name}, using fallback 320×480`);
+            }
+        }
+
         // Lazy loading: browser tự động load ảnh trong viewport ngay, defer ảnh ngoài viewport
         imgElement.loading = "lazy";
     } else {
         imgElement.src = srcNoImageThumbnail;
         imgElement.alt = "Ảnh sách " + item.Name + " đang cập nhật";
         imgElement.title = item.Name;
+        imgElement.width = 320;
+        imgElement.height = 480; // Fallback 2:3
     }
 
     // Set tên
-    itemElement.getElementsByClassName("product-name-h3")[0].innerHTML = item.Name;
+    clone.querySelector(".product-name-h3").innerHTML = item.Name;
 
     // Set giá
-    itemElement.getElementsByClassName("price-sell-detail")[0].innerHTML =
+    clone.querySelector(".price-sell-detail").innerHTML =
         ConvertMoneyToTextWithIcon(item.SalePrice);
     if (item.BookCoverPrice > item.SalePrice) {
-        itemElement.getElementsByClassName("price-original-detail")[0].innerHTML =
+        clone.querySelector(".price-original-detail").innerHTML =
             ConvertMoneyToTextWithIcon(item.BookCoverPrice);
-        itemElement.getElementsByClassName("price-discount-percent-detail")[0].innerHTML =
+        clone.querySelector(".price-discount-percent-detail").innerHTML =
             "-" + CalculateDiscountPercent(item.BookCoverPrice, item.SalePrice) + "%";
     }
 
-    return itemElement;
+    // ✅ Return DocumentFragment (appendChild sẽ chỉ thêm children vào DOM)
+    return clone;
 }
 
-function EmptySomething() {
-    document.getElementById("empty-result").style.display = "flex";  // Changed to flex for centering
-    document.getElementById("search-result").style.display = "none";
-    loadMoreSection.style.display = "none";
+function DisplayEmptyResult(isEmpty) {
+    if (isEmpty) {
+        document.getElementById("empty-result").style.display = "flex";  // Changed to flex for centering
+        document.getElementById("search-result").style.display = "none";
+    }
+    else {
+        document.getElementById("empty-result").style.display = "none";  // Changed to flex for centering
+        document.getElementById("search-result").style.display = "block";
+    }
 }
 
 // ============================================
@@ -375,7 +481,7 @@ function SetSearchParametersFromUrl() {
     }
 }
 
-function SetSearchParametersToUrlParams(searchParams) {
+function SetNewSearchParametersFromCurrent(searchParams) {
     if (currentSearchParams.keyword) {
         searchParams.append("keyword", currentSearchParams.keyword);
     }
@@ -396,16 +502,39 @@ function SetSearchParametersToUrlParams(searchParams) {
     }
 }
 
+function EmptyCurrentSearchParams() {
+    if (currentSearchParams.keyword) {
+        currentSearchParams.keyword = '';
+    }
+    if (currentSearchParams.author) {
+        currentSearchParams.author = '';
+    }
+    if (currentSearchParams.translator) {
+        currentSearchParams.translator = '';
+    }
+    if (currentSearchParams.category) {
+        currentSearchParams.category = '';
+    }
+    if (currentSearchParams.publishingCompany) {
+        currentSearchParams.publishingCompany = '';
+    }
+    if (currentSearchParams.publisher) {
+        currentSearchParams.publisher = '';
+    }
+}
+
 // ============================================
 // Search Button Click
 // ============================================
 async function HomeSearch() {
     // Update search parameters from input
+    EmptyCurrentSearchParams();
     currentSearchParams.keyword = inputSearch.value || "";
 
-    // Update URL (không reload page, không có page parameter = page 1)
+    // Update URL
     const searchParams = new URLSearchParams();
-    SetSearchParametersToUrlParams(searchParams);
+    SetNewSearchParametersFromCurrent(searchParams);
+    searchParams.append("page", 1);
 
     window.history.pushState(
         { keyword: currentSearchParams.keyword },
@@ -413,8 +542,17 @@ async function HomeSearch() {
         "/Home/Search?" + searchParams.toString()
     );
 
-    // Trigger new search (will load page 1)
-    await Search();
+    UpdatePageTitle_H1();
+
+    // Reset state
+    lastId = 0;
+    loadedCount = 0;
+    hasMore = false;
+
+    searchParams.append("lastId", lastId.toString());
+    searchParams.append("limit", ITEMS_PER_PAGE.toString());
+    await LoadAndRenderSearchingResultCore(searchParams);
+
 }
 
 // ============================================
@@ -437,12 +575,15 @@ if (btnLoadMore) {
 }
 
 // Browser back/forward
-window.addEventListener("popstate", (e) => {
-    // Luôn gọi Search() để sync UI với URL (bao gồm cả back về trang chủ)
-    Search();
+window.addEventListener("popstate", async (e) => {
+    console.log("popstate call ");
+    console.log("event.persisted: " + event.persisted);
+    await Search(false);
+
 });
 
 // Initial load khi page load
 window.addEventListener('DOMContentLoaded', async function () {
-    await Search();
+    console.log("DOMContentLoaded call ");
+    await Search(true);
 });

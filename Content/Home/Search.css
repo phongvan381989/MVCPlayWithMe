@@ -1,7 +1,7 @@
 ﻿/* Empty result - centered on screen */
 #empty-result {
     min-height: 100vh;
-    display: flex;
+    display: none;
     justify-content: center;
     align-items: center;
     text-align: center;
@@ -11,6 +11,10 @@
     font-size: 18px;
     color: #999;
     margin: 0;
+}
+
+#search-result{
+    min-height:100vh;
 }
 
 .product-item {
@@ -35,9 +39,17 @@
 }
 
 .card-img-top {
+    width: 100%;      /* Responsive - scale theo container */
+    height: auto;     /* Maintain aspect ratio from width/height attributes */
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
 }
+/* ⚠️ Chrome DevTools warning về lazy images là FALSE POSITIVE - code đã đúng!
+ * - HTML có width/height attributes ✅
+ * - Không có CLS (layout shift) ✅
+ * - Chrome bug: coi CSS width:100% là "override dimensions" (sai!)
+ * - Reference: https://issues.chromium.org/issues/349096842
+ */
 
 .product-name-h3 {
     font-weight: 400;
@@ -75,12 +87,7 @@
     margin: 0 auto;
 }
 
-.product-for-selector-sample {
-/*    width: 200px;*/
-    border-radius: 10px;
-    padding: 2px;
-    display: none;
-}
+/* ✅ Xóa .product-for-selector-sample - dùng <template> không cần CSS ẩn */
 
 .price-sell-detail {
     color: red;
@@ -141,6 +148,17 @@
     display: none;
 }
 
+#load-more-section {
+    padding: 1rem;
+    text-align: center;
+}
+
+#end-message {
+    display: none;
+    color: #999;
+    font-size: 14px;
+}
+
 @media (min-width: 800px) {
     /* Desktop: separator hiển thị giữa 2 message */
     .separator {
@@ -148,7 +166,6 @@
         color: rgba(255,255,255,0.5);
         margin: 0 5px;
     }
-
     /* Desktop: free ship message - 1 dòng ngang */
     .free-instant-ship {
         flex-direction: row;
@@ -168,11 +185,5 @@
             max-width: 280px;
             margin: 0 auto;
         }
-
-    .product-for-selector-sample {
-        /*    width: 200px;*/
-        border-radius: 10px;
-        padding: 5px;
-        display: none
-    }
+    /* ✅ Xóa .product-for-selector-sample - dùng <template> không cần CSS ẩn */
 }

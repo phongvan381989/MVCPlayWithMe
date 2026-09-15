@@ -409,6 +409,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         public string CoverImageFileName { get; set; } // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
         public string CoverImageAltText { get; set; }  // Alt text cho SEO/accessibility
         public string CoverImageTitle { get; set; }     // Title attribute (tooltip)
+        public int CoverImageWidth { get; set; }
+        public int CoverImageHeight { get; set; }
     }
 
     /// <summary>

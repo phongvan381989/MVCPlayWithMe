@@ -1161,12 +1161,14 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         sp.Status,
                         media.FileName AS CoverImageFileName,
                         media.AltText AS CoverImageAltText,
-                        media.Title AS CoverImageTitle
+                        media.Title AS CoverImageTitle,
+                        media.Width AS CoverImageWidth,
+                        media.Height AS CoverImageHeight
                     FROM tb_san_pham sp
                     LEFT JOIN tbcategory cat ON sp.CategoryId = cat.Id
                     LEFT JOIN tbpublisher pub ON sp.PublisherId = pub.Id
                     LEFT JOIN LATERAL (
-                        SELECT FileName, AltText, Title
+                        SELECT FileName, AltText, Title, Width, Height
                         FROM tb_san_pham_media
                         WHERE SanPhamId = sp.Id
                           AND MediaType = 'image'
@@ -1238,6 +1240,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         int ordCoverImageFileName = rdr.GetOrdinal("CoverImageFileName");
                         int ordCoverImageAltText = rdr.GetOrdinal("CoverImageAltText");
                         int ordCoverImageTitle = rdr.GetOrdinal("CoverImageTitle");
+                        int ordCoverImageWidth = rdr.GetOrdinal("CoverImageWidth");
+                        int ordCoverImageHeight = rdr.GetOrdinal("CoverImageHeight");
 
                         while (await rdr.ReadAsync())
                         {
@@ -1252,7 +1256,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                 Status = MyMySql.GetInt32(rdr, ordStatus),
                                 CoverImageFileName = MyMySql.GetString(rdr, ordCoverImageFileName),
                                 CoverImageAltText = MyMySql.GetString(rdr, ordCoverImageAltText),
-                                CoverImageTitle = MyMySql.GetString(rdr, ordCoverImageTitle)
+                                CoverImageTitle = MyMySql.GetString(rdr, ordCoverImageTitle),
+                                CoverImageWidth = MyMySql.GetInt32(rdr, ordCoverImageWidth),
+                                CoverImageHeight = MyMySql.GetInt32(rdr, ordCoverImageHeight)
                             };
                             ls.Add(info);
                         }
