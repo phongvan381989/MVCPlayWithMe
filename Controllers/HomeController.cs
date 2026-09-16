@@ -1564,11 +1564,11 @@ namespace MVCPlayWithMe.Controllers
                 {
                     string filename = match.Groups[1].Value;
 
-                    // Tìm metadata trong MediaListForDescription
+                    // Tìm metadata
                     SanPhamMedia media = null;
-                    if (sanPham.MediaListForDescription != null && sanPham.MediaListForDescription.Count > 0)
+                    if (sanPham.MediaList != null && sanPham.MediaList.Count > 0)
                     {
-                        media = sanPham.MediaListForDescription.FirstOrDefault(m => m.FileName == filename);
+                        media = sanPham.MediaList.FirstOrDefault(m => m.FileName == filename);
                     }
 
                     // Build image URL

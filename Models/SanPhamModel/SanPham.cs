@@ -334,12 +334,6 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         // và có DisplayOrder < ngưỡng 38
         public List<SanPhamMedia> MediaList { get; set; } = new List<SanPhamMedia>();
 
-        // Tách media hiển thị ở phần mô tả sản phẩm
-        // DisplayOrder < 38: hiển thị trong gallery
-        // DisplayOrder >= 38: hiển thị trong phần mô tả chi tiết
-        // KHông phải sản phẩm nào cũng có ảnh ở mô tả
-        public List<SanPhamMedia> MediaListForDescription { get; set; } = new List<SanPhamMedia>();
-
         public List<SanPhamMapping> Mappings { get; set; } = new List<SanPhamMapping>();
 
         public void GetQuantityFromMappings()
@@ -372,25 +366,6 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             }
 
             Quantity = quantity;
-        }
-
-        // Tách media cho gallery và description
-        public void DivideMediaForGalleryAndDescription()
-        {
-            for (int i = MediaList.Count - 1; i >= 0; i--)
-            {
-                if (MediaList[i].DisplayOrder >= MVCPlayWithMe.Models.SanPhamModel.SanPham.displayOrderThreshold)
-                {
-                    // Thêm vào MediaListForDescription
-                    MediaListForDescription.Add(MediaList[i]);
-                    // Xóa khỏi mediaList
-                    MediaList.RemoveAt(i);
-                }
-                else
-                {
-                    break;
-                }
-            }
         }
     }
 

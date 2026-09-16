@@ -78,12 +78,6 @@ let photoSwipeDataSource = null;
 
 // Từ thứ tự ảnh trong metadata sinh alt
 function GenerateAltText(media, isThumbnail, i) {
-    if (DEBUG) {
-        console.log("GenerateAltText call");
-        console.log("media: " + JSON.stringify(media));
-        console.log("isThumbnail: " + isThumbnail);
-        console.log("i: " + i);
-    }
     let alt = "";
     if (isThumbnail) {
         if (media.Title) {
@@ -112,10 +106,6 @@ function buildPhotoSwipeDataSource() {
 
     const dataSource = [];
 
-    // if (DEBUG) {
-    //     console.log('Building PhotoSwipe dataSource from DB for', sanPhamObject.MediaList.length, 'media items...');
-    // }
-
     //for (const media of sanPhamObject.MediaList)
     for (let i = 0; i < sanPhamObject.MediaList.length; i++)
     {
@@ -128,10 +118,7 @@ function buildPhotoSwipeDataSource() {
 
         if (media.MediaType === 'image') {
             // Image: dùng width/height từ DB (không cần preload!)
-            // if (DEBUG) {
-            //     console.log("Image from DB:", media.FileName, `${width}x${height}`);
-            // }
-            
+
             dataSource.push({
                 src: mediaSrc,
                 width: width,
@@ -140,9 +127,6 @@ function buildPhotoSwipeDataSource() {
             });
         } else {
             // Video: dùng width/height từ DB (kích thước video thực tế)
-            //if (DEBUG) {
-            //    console.log("Video from DB:", media.FileName, `${width}x${height}`);
-            //}
             dataSource.push({
                 html: `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;">
                          <video controls style="max-width:100%;max-height:100%;object-fit:contain;">
@@ -154,10 +138,6 @@ function buildPhotoSwipeDataSource() {
             });
         }
     }
-
-    //if (DEBUG) {
-    //    console.log('✅ DataSource built from DB! PhotoSwipe ready with', dataSource.length, 'items');
-    //}
 
     return dataSource;
 }
@@ -290,12 +270,6 @@ function HomePageShowSanPham() {
     if (!sanPhamObject) {
         ShowDoesntFindId();
         return;
-    }
-
-    if (DEBUG_ADMIN) {
-        console.log("✅ SSR - Data from server:");
-        console.log("sanPhamObject: " + JSON.stringify(sanPhamObject));
-        console.log("variantsList count: " + variantsList.length);
     }
 
     // Kiểm tra trạng thái (đã kiểm tra ở server, đây là double-check)
@@ -515,9 +489,6 @@ function ShowMediumItemFromIndex(i) {
 }
 
 function ShowProductDescription() {
-    //if (DEBUG) {
-    //    console.log("ShowProductDescription CALL: " );
-    //}
     let detailContainer = document.getElementsByClassName("f7AU53")[0];
     let productDetailSection = document.getElementsByClassName("product-detail")[0];
 
@@ -538,14 +509,10 @@ function ShowProductDescription() {
 
     // Regex pattern: {{image:filename.ext}}
     detailHtml = detailHtml.replace(/\{\{image:([^}]+)\}\}/g, function (match, filename) {
-        // if (DEBUG) {
-        //     console.log("match: " + match);
-        //     console.log("filename: " + filename);
-        // }
         // Tìm metadata của image này trong MediaList
         let media = null;
-        if (sanPhamObject.MediaListForDescription && sanPhamObject.MediaListForDescription.length > 0) {
-            media = sanPhamObject.MediaListForDescription.find(m => m.FileName === filename);
+        if (sanPhamObject.MediaList && sanPhamObject.MediaList.length > 0) {
+            media = sanPhamObject.MediaList.find(m => m.FileName === filename);
         }
 
         // Build image URL
@@ -961,27 +928,6 @@ function ShowVariations() {
     variationContainer.appendChild(variantButtonsContainer);
 }
 
-// Tách media cho gallery và description
-function DivideMediaForGalleryAndDescription() {
-    // Khởi tạo MediaListForDescription nếu chưa có
-    if (!sanPhamObject.MediaListForDescription) {
-        sanPhamObject.MediaListForDescription = [];
-    }
-
-    // Loop ngược từ cuối về đầu
-    for (let i = sanPhamObject.MediaList.length - 1; i >= 0; i--) {
-        if (sanPhamObject.MediaList[i].DisplayOrder >= displayOrderThreshold) {
-            // Thêm vào MediaListForDescription
-            sanPhamObject.MediaListForDescription.push(sanPhamObject.MediaList[i]);
-            // Xóa khỏi MediaList
-            sanPhamObject.MediaList.splice(i, 1);
-        } else {
-            // DisplayOrder đã sắp xếp tăng dần → break khi gặp item < threshold
-            break;
-        }
-    }
-}
-
 // Xử lý khi click chọn variant
 async function VariantClick(variantId) {
     if (sanPhamObject.Id === variantId) {
@@ -1006,11 +952,7 @@ async function VariantClick(variantId) {
         // Load ảnh của variant mới
         ShowCircleLoader();
         sanPhamObject.MediaList = await LoadMediaList(variantId);
-        DivideMediaForGalleryAndDescription();
         RemoveCircleLoader();
-
-        // Tách MediaListForDescription ra để dùng cho mô tả chi tiết (không cần preload)
-
     }
 
     ShowSmallItem();

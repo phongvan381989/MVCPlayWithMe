@@ -781,7 +781,6 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             if (sanPham.Id == id)
                             {
                                 sanPham.MediaList = await SanPhamMediaMySql.GetListBySanPhamId_ConnectOutAsync(sanPham.Id, conn);
-                                sanPham.DivideMediaForGalleryAndDescription();
                                 break;
                             }
                         }
