@@ -97,6 +97,22 @@ namespace MVCPlayWithMe.General
             }
         }
 
+        public static uint GetUInt32(MySqlDataReader rdr, int indexColumn)
+        {
+            if (Convert.IsDBNull(rdr[indexColumn]))
+                return 0;
+
+            try
+            {
+                return rdr.GetUInt32(indexColumn);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetUInt32 failed for column index {indexColumn}: {ex.Message}");
+                return 0;
+            }
+        }
+
         public static float GetFloat(MySqlDataReader rdr, string columnName)
         {
             if (Convert.IsDBNull(rdr[columnName]))

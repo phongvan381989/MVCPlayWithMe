@@ -424,8 +424,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     AltText = MyMySql.GetString(rdr, altTextIndex),
                     Description = MyMySql.GetString(rdr, descriptionIndex),
                     PosterImage = MyMySql.GetString(rdr, posterImageIndex),
-                    Width = (uint)MyMySql.GetInt32(rdr, widthIndex),
-                    Height = (uint)MyMySql.GetInt32(rdr, heightIndex),
+                    Width = MyMySql.GetUInt32(rdr, widthIndex),
+                    Height = MyMySql.GetUInt32(rdr, heightIndex),
                     DisplayOrder = MyMySql.GetInt32(rdr, displayOrderIndex)
                 });
             }
