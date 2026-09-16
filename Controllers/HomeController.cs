@@ -1194,12 +1194,10 @@ namespace MVCPlayWithMe.Controllers
                         ? "https://schema.org/InStock"
                         : "https://schema.org/OutOfStock",
                     itemCondition = "https://schema.org/NewCondition",
-                    priceValidUntil = DateTime.Now.AddMonths(1).ToString("yyyy-MM-dd"),  // Giá hợp lệ trong 1 tháng
-                    url = $"{Common.httpsVoiBeNho}{Common.GenerateSanPhamUrlForCustomer(sanPham.Name, sanPham.Id)}",
                     seller = new
                     {
                         type = "Organization",
-                        name = "Voi Bé Nhỏ"
+                        name = Common.titleVoiBeNho
                     },
                     // Giá bìa (ListPrice) - chỉ thêm khi có giảm giá
                     priceSpecification = sanPham.BookCoverPrice > sanPham.SalePrice
