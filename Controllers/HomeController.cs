@@ -98,7 +98,7 @@ namespace MVCPlayWithMe.Controllers
         [HttpGet]
         public ActionResult Error()
         {
-            ViewData["title"] = Common.titleVoiBeNho;
+            ViewData["title"] = $"404 - Không tìm thấy trang | {Common.titleVoiBeNho}";
             return View();
         }
 

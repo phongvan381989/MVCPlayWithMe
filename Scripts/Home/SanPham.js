@@ -902,9 +902,6 @@ function ShowVariations() {
         // Hết hàng → thêm class để styling khác biệt
         if (variant.Quantity <= 0) {
             variantBtn.classList.add("out-of-stock");
-            // if (DEBUG) {
-            //     console.log(`Variant ${variant.Name} hết hàng (Quantity: ${variant.Quantity})`);
-            // }
         } else {
             // Còn hàng → có hover effect
             variantBtn.addEventListener("mouseenter", function () {
@@ -1234,10 +1231,6 @@ function GenerateProductJsonLD() {
 
     // Inject vào <head>
     document.head.appendChild(script);
-
-    if (DEBUG) {
-        console.log("✅ Product JSON-LD injected:", jsonLd);
-    }
 }
 
 // Load sản phẩm khi page load

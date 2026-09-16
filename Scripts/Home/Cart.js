@@ -104,9 +104,6 @@ async function SendBatchUpdate() {
 
     // ✅ Đợi nếu đang gửi request khác
     if (isSending) {
-        if (DEBUG) {
-            console.log('⏳ Already sending, will retry later...');
-        }
 
         // Schedule lại
         if (batchTimer) {
@@ -124,10 +121,6 @@ async function SendBatchUpdate() {
     // ✅ Set flag để prevent concurrent
     isSending = true;
 
-    if (DEBUG) {
-        console.log('📦 Sending batch update:', pendingUpdates);
-    }
-
     // Snapshot và clear (prevent duplicate sends)
     const toSend = { ...pendingUpdates };
     pendingUpdates = {};
@@ -144,9 +137,6 @@ async function SendBatchUpdate() {
 
             await CreateMustClickOkModal('Không thể cập nhật giỏ hàng. Vui lòng thử lại.', null);
         } else {
-            // if (DEBUG) {
-            //     console.log('✅ Batch update success:', result.Message);
-            // }
         }
     } catch (error) {
         console.error('❌ Batch update error:', error);
@@ -158,29 +148,10 @@ async function SendBatchUpdate() {
     } finally {
         // ✅ Clear flag
         isSending = false;
-
-        // // ✅ Gửi tiếp nếu còn pending (accumulated trong lúc gửi)
-        // if (Object.keys(pendingUpdates).length > 0) {
-        //     if (DEBUG) {
-        //         console.log('📦 Has pending updates, scheduling next batch...');
-        //     }
-
-        //     if (batchTimer) {
-        //         clearTimeout(batchTimer);
-        //     }
-
-        //     batchTimer = setTimeout(async () => {
-        //         batchTimer = null;
-        //         await SendBatchUpdate();
-        //     }, debounceTime);
-        // }
     }
 }
 
 function ShowCartList() {
-    if (DEBUG) {
-        console.log('ShowCartList listCartObject: ' + JSON.stringify(listCartObject));
-    }
     // Làm mới nội dung
     document.getElementsByClassName("contianer-selected-model")[0].innerHTML = "";
     document.getElementsByClassName("A-CcKC-SanPham")[0].innerHTML = "";
@@ -217,15 +188,9 @@ function ShowErrorWhenLoadCart(error) {
 
 // Helper: Đợi pending batch sync hoàn thành (dùng trước BuyNow)
 async function WaitForPendingBatchSync() {
-    if (DEBUG) {
-        console.log('⏳ Force syncing pending updates before checkout...');
-    }
 
     // ✅ Đợi request đang gửi (nếu có)
     while (isSending) {
-        if (DEBUG) {
-            console.log('⏳ Waiting for current request to finish...');
-        }
         await new Promise(resolve => setTimeout(resolve, 100)); // Poll mỗi 100ms
     }
 
@@ -239,18 +204,11 @@ async function WaitForPendingBatchSync() {
 
         await SendBatchUpdate();
     }
-
-    if (DEBUG) {
-        console.log('✅ All updates synced!');
-    }
 }
 
 async function CartPageLoadCart() {
     // Lấy guest cart từ localStorage (nếu có)
     let guestCart = CartManager.getCart();
-    if (DEBUG) {
-        console.log("CartPageLoadCart guestCart: " + JSON.stringify(guestCart));
-    }
 
 // Gửi cart data dưới dạng JSON body
     return await PostJSON('/Home/CartPageLoadCart', guestCart);
@@ -601,17 +559,9 @@ window.addEventListener('pageshow', async function (event) {
             // ✅ Back từ Checkout page → Reload fresh data
             sessionStorage.removeItem('fromCheckout');
 
-            if (DEBUG) {
-                console.log("🔙 pageshow - Back từ Checkout page → Reload cart");
-                console.log("listCartObject: " + JSON.stringify(listCartObject));
-            }
-
             await LoadCartBFCache();
         } else {
             // Back từ page khác (product, search, etc.) → Dùng cached data (nhanh hơn)
-            if (DEBUG) {
-                console.log("🔙 pageshow - Back từ page khác → Dùng bfcache");
-            }
             await LoadCart();
         }
     }

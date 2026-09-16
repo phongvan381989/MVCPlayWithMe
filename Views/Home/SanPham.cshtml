@@ -12,7 +12,6 @@
     @Html.Partial("~/Views/Shared/Head_GA.cshtml")
 
     <!-- SEO Meta Tags -->
-    <title>@ViewBag.Title</title>
     <meta name="description" content="@ViewBag.MetaDescription">
     <link rel="canonical" href="@ViewBag.CanonicalUrl">
 
@@ -28,6 +27,7 @@
     <meta property="og:site_name" content="@ViewBag.titleVoiBeNho">
     <meta property="og:locale" content="vi_VN">
     <meta property="article:publisher" content="https://www.facebook.com/voibenho">
+    <meta property="fb:pages" content="@Common.idFacebookPageTiemSachVBN" />
 
     <!-- Facebook Product (cho Facebook Shop/Catalog) -->
     <meta property="product:price:amount" content="@sanPham.SalePrice">
