@@ -389,6 +389,27 @@ namespace MVCPlayWithMe.Models.SanPhamModel
     }
 
     /// <summary>
+    /// DTO lightweight cho thông tin cơ bản sản phẩm dùng feed (dùng cho Facebook feed, Google feed)
+    /// </summary>
+    public class SanPhamForFeedInfo
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        //public string ShortName { get; set; }
+        //public int BookCoverPrice { get; set; }
+        public int SalePrice { get; set; }
+        public int Quantity { get; set; }
+        //public int Status { get; set; }
+        public string Detail { get; set; }
+        public string CategoryName { get; set; }
+        public string CoverImageFileName { get; set; } // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
+        public string CoverImageAltText { get; set; }  // Alt text cho SEO/accessibility
+        public string CoverImageTitle { get; set; }     // Title attribute (tooltip)
+        public int CoverImageWidth { get; set; }
+        public int CoverImageHeight { get; set; }
+    }
+
+    /// <summary>
     /// DTO lightweight cho trang Search - chỉ lấy thông tin cần thiết cho filter và hiển thị
     /// Không lấy các field dài như Detail, Author, Translator, dimensions, v.v.
     /// </summary>

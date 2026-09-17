@@ -244,8 +244,8 @@ namespace MVCPlayWithMe.Controllers
 
             // Ảnh đại diện cho OG image (ảnh đầu tiên trong gallery)
             string ogImageUrl = firstImage?.FileName != null
-                ? $"{Common.httpsVoiBeNho}{Common.SanPhamMediaFolderPath}{id}/{firstImage.FileName}"
-                : $"{Common.httpsVoiBeNho}/Media/NoImageThumbnail.png";
+                ? Common.GenerateAbsoluteSanPhamMediaUrl(firstImage.FileName, id)
+                : Common.GenerateAbsoluteNoImageUrl();
 
             // Kích thước ảnh cho Open Graph (lấy từ DB, fallback 1000×1000)
             uint ogImageWidth = firstImage?.Width ?? 1000;
@@ -1172,7 +1172,7 @@ namespace MVCPlayWithMe.Controllers
                 type = new[] { "Product", "Book" },  // Kết hợp Product + Book
                 name = sanPham.Name ?? "",
                 description = !string.IsNullOrWhiteSpace(sanPham.Detail) ? sanPham.Detail : sanPham.Name,
-                url = $"{Common.httpsVoiBeNho}{Common.GenerateSanPhamUrlForCustomer(sanPham.Name, sanPham.Id)}",
+                url = Common.GenerateAbsoluteSanPhamUrlForCustomer(sanPham.Name, sanPham.Id),
                 image = GetProductImages(sanPham),
                 isbn = sanPham.Barcode,  // ISBN (nếu có)
                 sku = sanPham.Code ?? sanPham.Code ?? sanPham.Id.ToString(),
@@ -1235,17 +1235,17 @@ namespace MVCPlayWithMe.Controllers
         {
             if (sanPham.MediaList == null || sanPham.MediaList.Count == 0)
             {
-                return new[] { $"{Common.httpsVoiBeNho}/Media/NoImageThumbnail.png" };
+                return new[] { Common.GenerateAbsoluteNoImageUrl() };
             }
 
             var imageUrls = sanPham.MediaList
                 .Where(m => m.MediaType == "image")
-                .Select(m => $"{Common.httpsVoiBeNho}{Common.SanPhamMediaFolderPath}{sanPham.Id}/{m.FileName}")
+                .Select(m => Common.GenerateAbsoluteSanPhamMediaUrl(m.FileName, sanPham.Id))
                 .ToArray();
 
             return imageUrls.Length > 0
                 ? imageUrls
-                : new[] { $"{Common.httpsVoiBeNho}/Media/NoImageThumbnail.png" };
+                : new[] { Common.GenerateAbsoluteNoImageUrl() };
         }
 
         /// <summary>

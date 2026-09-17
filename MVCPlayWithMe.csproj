@@ -323,6 +323,7 @@
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\DevController.cs" />
+    <Compile Include="Controllers\FeedController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiDealDiscountController.cs" />
     <Compile Include="Controllers\PushMechanismController.cs" />
     <Compile Include="Controllers\HomeController.cs" />

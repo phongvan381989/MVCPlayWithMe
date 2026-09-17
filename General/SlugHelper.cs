@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -73,32 +73,7 @@ namespace MVCPlayWithMe.General
                     text = text.Substring("nhà xuất bản ".Length);
             }
 
-            // Convert Vietnamese chars → ASCII
-            var result = new StringBuilder();
-            foreach (char c in text)
-            {
-                if (VietnameseMap.TryGetValue(c, out char mapped))
-                {
-                    result.Append(mapped);
-                }
-                else if (char.IsLetterOrDigit(c))
-                {
-                    result.Append(c);
-                }
-                else if (char.IsWhiteSpace(c) || c == '-')
-                {
-                    result.Append('-');
-                }
-                // Ignore other special chars
-            }
-
-            // Clean up: multiple dashes → single dash
-            string slug = Regex.Replace(result.ToString(), "-+", "-");
-
-            // Trim leading/trailing dashes
-            slug = slug.Trim('-');
-
-            return slug;
+            return Common.GenerateSlug(text);
         }
 
         /// <summary>

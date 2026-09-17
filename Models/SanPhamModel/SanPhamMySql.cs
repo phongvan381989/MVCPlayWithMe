@@ -1118,6 +1118,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return list;
         }
 
+
+
         /// <summary>
         /// Search sản phẩm với keyset pagination (Load More pattern)
         /// Dùng sp.Id < @lastId ORDER BY DESC để cursor-based pagination
@@ -1281,7 +1283,103 @@ namespace MVCPlayWithMe.Models.SanPhamModel
             return (ls, hasMore);
         }
 
-        public static async Task SanPhamReadRow(List<SanPham> list, MySqlCommand cmd)
+        /// <summary>
+        // Lấy sản phẩm tất cả/có chọn lọc/...để feed cho facebook, zalo, google shopping, v.v.
+        /// </summary>
+        public static async Task<List<SanPhamForFeedInfo>> GetSanPhamForFeedInfoAsync(
+            //SanPhamSearchParameter searchParameter,
+            //MySqlConnection conn
+            )
+        {
+            List<SanPhamForFeedInfo> ls = new List<SanPhamForFeedInfo>();
+            string sql = @"
+                SELECT
+                    sp.Id,
+                    sp.Name,
+                    sp.SalePrice,
+                    sp.Quantity,
+                    sp.Detail,
+                    cat.Name AS CategoryName,
+                    media.FileName AS CoverImageFileName,
+                    media.AltText AS CoverImageAltText,
+                    media.Title AS CoverImageTitle,
+                    media.Width AS CoverImageWidth,
+                    media.Height AS CoverImageHeight
+                FROM tb_san_pham sp
+                LEFT JOIN tbcategory cat ON sp.CategoryId = cat.Id
+                LEFT JOIN LATERAL (
+                    SELECT FileName, AltText, Title, Width, Height
+                    FROM tb_san_pham_media
+                    WHERE SanPhamId = sp.Id
+                        AND MediaType = 'image'
+                    ORDER BY DisplayOrder ASC
+                    LIMIT 1
+                ) media ON true
+                WHERE sp.Status = 0";
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand())
+                    {
+                        cmd.Connection = conn;
+                        cmd.CommandType = CommandType.Text;
+                        cmd.CommandText = sql;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            // Cache column ordinals (1 lần)
+                            int ordId = rdr.GetOrdinal("Id");
+                            int ordName = rdr.GetOrdinal("Name");
+                            //int ordShortName = rdr.GetOrdinal("ShortName");
+                            //int ordBookCoverPrice = rdr.GetOrdinal("BookCoverPrice");
+                            int ordSalePrice = rdr.GetOrdinal("SalePrice");
+                            int ordQuantity = rdr.GetOrdinal("Quantity");
+                            //int ordStatus = rdr.GetOrdinal("Status");
+                            int ordCoverImageFileName = rdr.GetOrdinal("CoverImageFileName");
+                            int ordCoverImageAltText = rdr.GetOrdinal("CoverImageAltText");
+                            int ordCoverImageTitle = rdr.GetOrdinal("CoverImageTitle");
+                            int ordCoverImageWidth = rdr.GetOrdinal("CoverImageWidth");
+                            int ordCoverImageHeight = rdr.GetOrdinal("CoverImageHeight");
+                            int ordDetail = rdr.GetOrdinal("Detail");
+                            int ordCategoryName = rdr.GetOrdinal("CategoryName");
+
+                            while (await rdr.ReadAsync())
+                            {
+                                SanPhamForFeedInfo info = new SanPhamForFeedInfo
+                                {
+                                    Id = rdr.GetInt32(ordId),                      // Index access
+                                    Name = MyMySql.GetString(rdr, ordName),        // Index access
+                                                                                   //ShortName = MyMySql.GetString(rdr, ordShortName),
+                                                                                   //BookCoverPrice = MyMySql.GetInt32(rdr, ordBookCoverPrice),
+                                    SalePrice = MyMySql.GetInt32(rdr, ordSalePrice),
+                                    Quantity = MyMySql.GetInt32(rdr, ordQuantity),
+                                    //Status = MyMySql.GetInt32(rdr, ordStatus),
+                                    Detail = MyMySql.GetString(rdr, ordDetail),
+                                    CategoryName = MyMySql.GetString(rdr, ordCategoryName),
+                                    CoverImageFileName = MyMySql.GetString(rdr, ordCoverImageFileName),
+                                    CoverImageAltText = MyMySql.GetString(rdr, ordCoverImageAltText),
+                                    CoverImageTitle = MyMySql.GetString(rdr, ordCoverImageTitle),
+                                    CoverImageWidth = MyMySql.GetInt32(rdr, ordCoverImageWidth),
+                                    CoverImageHeight = MyMySql.GetInt32(rdr, ordCoverImageHeight)
+                                };
+                                ls.Add(info);
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                ls.Clear();
+            }
+
+            return ls;
+        }
+
+        public static async Task SanPhamReadBasicRow(List<SanPham> list, MySqlCommand cmd)
         {
             using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
             {
@@ -1340,7 +1438,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 using (MySqlCommand cmd = new MySqlCommand("sp_tbSanPham_Get_Need_Update_Quantity", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    await SanPhamReadRow(listSP, cmd);
+                    await SanPhamReadBasicRow(listSP, cmd);
                 }
             }
             catch (Exception ex)
@@ -1522,7 +1620,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 {
                     cmd.Parameters.AddWithValue("@inProductId", productId);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    await SanPhamReadRow(listSP, cmd);
+                    await SanPhamReadBasicRow(listSP, cmd);
                 }
             }
             catch (Exception ex)
@@ -1543,7 +1641,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 {
                     cmd.Parameters.AddWithValue("@inComboId", comboId);
                     cmd.CommandType = CommandType.StoredProcedure;
-                    await SanPhamReadRow(listSP, cmd);
+                    await SanPhamReadBasicRow(listSP, cmd);
                 }
             }
             catch (Exception ex)

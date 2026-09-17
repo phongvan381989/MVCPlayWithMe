@@ -4,6 +4,7 @@ using MediaToolkit.Model;
 using MediaToolkit.Options;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.BankAccount;
+using MVCPlayWithMe.Models.SanPhamModel;
 using MySqlConnector;
 using Newtonsoft.Json;
 using RestSharp;
@@ -289,6 +290,22 @@ namespace MVCPlayWithMe.General
             // Tạo thư mục 320
             Directory.CreateDirectory(absoluteSanPhamMediaFolderPath + sanPhamId + tail320);
             return path;
+        }
+
+        // Lấy đường dẫn tuyệt đối tới file media của sản phẩm theo name, id sản phẩm (tb_san_pham)
+        public static string GenerateAbsoluteSanPhamMediaUrl(string name, int id)
+        {
+            return $"{Common.httpsVoiBeNho}{Common.SanPhamMediaFolderPath}{id}/{name}";
+        }
+        // Lấy đường dẫn tuyệt đối tới file ảnh fallback
+        public static string GenerateAbsoluteNoImageUrl()
+        {
+            return $"{Common.httpsVoiBeNho}{Common.srcNoImageThumbnail}";
+        }
+
+        public static string GenerateAbsoluteFallbackImageUrl()
+        {
+            return $"{Common.httpsVoiBeNho}/Media/800_800LOGO.png";
         }
 
         ///// </summary>
@@ -2397,6 +2414,41 @@ namespace MVCPlayWithMe.General
         public static string GenerateSanPhamUrlForCustomer(string name, int id)
         {
             return $"/San-Pham/{GenerateSlugId(name, id)}";
+        }
+
+        public static string GenerateAbsoluteSanPhamUrlForCustomer(string name, int id)
+        {
+            return $"{Common.httpsVoiBeNho}/San-Pham/{GenerateSlugId(name, id)}";
+        }
+
+        /// <summary>
+        /// Lấy phần cuối cùng của Category
+        /// - Nếu có dấu ">", lấy phần sau dấu ">" cuối cùng
+        /// - Thêm prefix "Sách " nếu chưa có
+        /// Example: "Sách tiếng Việt>Sách văn học>Truyện cổ tích" → "Sách Truyện cổ tích"
+        /// </summary>
+        public static string GenerateCategoryFromTikiCategory(string categoryName)
+        {
+            if (string.IsNullOrWhiteSpace(categoryName))
+                return string.Empty;
+
+            string processedName = categoryName.Trim();
+
+            // Nếu có dấu ">", lấy phần sau dấu ">" cuối cùng
+            if (processedName.Contains(">"))
+            {
+                int lastIndex = processedName.LastIndexOf('>');
+                processedName = processedName.Substring(lastIndex + 1).Trim();
+            }
+
+            // Thêm prefix "Sách " nếu chưa có
+            if (!processedName.StartsWith("Sách ", StringComparison.OrdinalIgnoreCase) &&
+                !processedName.StartsWith("Sách", StringComparison.OrdinalIgnoreCase))
+            {
+                processedName = "Sách " + processedName;
+            }
+
+            return GenerateSlug(processedName);
         }
 
         /// <summary>
