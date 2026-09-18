@@ -171,32 +171,6 @@ namespace MVCPlayWithMe.General
 
         public static string srcCertificateFolderPath;
 
-        public static string ConvertIntToVNDFormat(int money)
-        {
-            // Thêm ','
-            StringBuilder sb = new StringBuilder();
-            sb.Append(money.ToString());
-            int length = sb.Length;
-            if (length > 9)
-            {
-                sb.Insert(length - 3, ',');
-                sb.Insert(length - 6, ',');
-                sb.Insert(length - 9, ',');
-
-            }
-            else if (length > 6)
-            {
-                sb.Insert(length - 3, ',');
-                sb.Insert(length - 6, ',');
-
-            }
-            else if (length > 3)
-            {
-                sb.Insert(length - 3, ',');
-            }
-            return sb.ToString();
-        }
-
         public static async Task<BankAccount> GetBankAccountAsync()
         {
             if (bankAccount == null)
@@ -297,6 +271,32 @@ namespace MVCPlayWithMe.General
         {
             return $"{Common.httpsVoiBeNho}{Common.SanPhamMediaFolderPath}{id}/{name}";
         }
+
+        // Lấy đường dẫn tương đối đến file media của sản phẩm theo name, id sản phẩm (tb_san_pham)
+        public static string GenerateRelativeSanPhamMediaUrl(string name, int id)
+        {
+            return $"{Common.SanPhamMediaFolderPath}{id}/{name}";
+        }
+
+        // Lấy đường dẫn tương đối đến file media version 320 của sản phẩm theo name, id sản phẩm (tb_san_pham)
+        public static string GenerateV320RelativeSanPhamMediaUrl(string name, int id)
+        {
+            return $"{Common.SanPhamMediaFolderPath}{id}{Common.tail320}/{name}";
+        }
+
+        // Helper: Tính kích thước 320px từ kích thước gốc mục đích giữ aspect ratio để set width, height cho thẻ img load="lazy"
+        public static (uint width, uint height) Get320Dimensions(uint originalWidth, uint originalHeight)
+        {
+            if (originalWidth == 0 || originalHeight == 0)
+                return (320, 480); // Fallback 2:3 ratio
+
+            // Resize: width = 320, height scale theo tỷ lệ
+            uint width = 320;
+            uint height = (uint)Math.Round(originalHeight * (320.0 / originalWidth));
+
+            return (width, height);
+        }
+
         // Lấy đường dẫn tuyệt đối tới file ảnh fallback
         public static string GenerateAbsoluteNoImageUrl()
         {
@@ -1173,7 +1173,7 @@ namespace MVCPlayWithMe.General
                     {
                         image.Format = MagickFormat.Jpg; // Chuyển sang định dạng JPG
                         //image.Quality = 90; // Đặt chất lượng JPG (90%)
-                        image.Quality = 100;
+                        image.Quality = 85;
                     }
                     image.Write(output);
                 }
@@ -1351,6 +1351,45 @@ namespace MVCPlayWithMe.General
         public static int FloorMoney(int money)
         {
             return money / 100 * 100;
+        }
+
+        public static string ConvertIntToVNDFormat(int money)
+        {
+            // Thêm ','
+            StringBuilder sb = new StringBuilder();
+            sb.Append(money.ToString());
+            int length = sb.Length;
+            if (length > 9)
+            {
+                sb.Insert(length - 3, ',');
+                sb.Insert(length - 6, ',');
+                sb.Insert(length - 9, ',');
+
+            }
+            else if (length > 6)
+            {
+                sb.Insert(length - 3, ',');
+                sb.Insert(length - 6, ',');
+
+            }
+            else if (length > 3)
+            {
+                sb.Insert(length - 3, ',');
+            }
+            return sb.ToString();
+        }
+
+        // Helper: Format tiền với icon
+        public static string FormatMoney(decimal money)
+        {
+            return string.Format("{0:N0}", money) + "₫";
+        }
+
+        // Helper: Tính % discount
+        public static int CalculateDiscountPercent(int original, int sale)
+        {
+            if (original <= 0) return 0;
+            return (int)Math.Round((double)(original - sale) / original * 100);
         }
         #endregion
 

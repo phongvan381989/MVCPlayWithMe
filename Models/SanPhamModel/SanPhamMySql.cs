@@ -1258,8 +1258,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                 CoverImageFileName = MyMySql.GetString(rdr, ordCoverImageFileName),
                                 CoverImageAltText = MyMySql.GetString(rdr, ordCoverImageAltText),
                                 CoverImageTitle = MyMySql.GetString(rdr, ordCoverImageTitle),
-                                CoverImageWidth = MyMySql.GetInt32(rdr, ordCoverImageWidth),
-                                CoverImageHeight = MyMySql.GetInt32(rdr, ordCoverImageHeight)
+                                CoverImageWidth = MyMySql.GetUInt32(rdr, ordCoverImageWidth),
+                                CoverImageHeight = MyMySql.GetUInt32(rdr, ordCoverImageHeight)
                             };
                             ls.Add(info);
                         }

@@ -73,7 +73,6 @@ async function LoadAndRenderSearchingResultCore(searchParams) {
         }
 
         let items = result.myJson.lsSearch || [];
-        console.log("LoadAndRenderSearchingResultCore call - items: " + JSON.stringify(items));
 
         if (items.length > 0) {
             // ✅ Lấy template element (HTML5 <template>)
@@ -81,7 +80,7 @@ async function LoadAndRenderSearchingResultCore(searchParams) {
 
             for (let i = 0; i < items.length; i++) {
                 let item = items[i];
-                let itemElement = CreateProductCard(item, template);
+                let itemElement = CreateProductCard(item, template, i >= 10);  // Lazy load items from index 10 onwards
                 table.appendChild(itemElement);
             }
 
@@ -127,8 +126,6 @@ async function Search(checkHasServerData) {
     const hasServerData = window.serverData &&
                           typeof window.serverData.loadedCount === 'number';
 
-    console.log("Search call - window.serverData: " + JSON.stringify(window.serverData));
-    console.log("Search call - checkHasServerData: " + JSON.stringify(checkHasServerData));
     if (hasServerData && checkHasServerData) {
         // ✅ Server đã render HTML sẵn, chỉ cần update state từ metadata
         loadedCount = window.serverData.loadedCount;
@@ -138,10 +135,6 @@ async function Search(checkHasServerData) {
         if (loadedCount === 0) {
             DisplayEmptyResult(true);
             return;
-        }
-
-        if (DEBUG) {
-            console.log("✓ SSR HTML:", loadedCount, "products already rendered (page", window.serverData.currentPage, ")");
         }
 
         // ✅ Auto Load More nếu targetPage > loaded pages (e.g., page 8 nhưng chỉ load 5)
@@ -159,7 +152,6 @@ async function Search(checkHasServerData) {
         UpdateLoadMoreUI();
     }
     else {
-        console.log("Load data SPA");
         // Update page title, h1 cho SEO
         UpdatePageTitle_H1();
 
@@ -200,10 +192,6 @@ async function AutoLoadRemainingPages(targetPage, loadedPages) {
     const remainingPages = targetPage - loadedPages;
     const remainingItems = remainingPages * ITEMS_PER_PAGE;
 
-    if (DEBUG) {
-        console.log(`Auto loading ${remainingPages} more pages (${remainingItems} items)...`);
-    }
-
     isLoading = true;
     ShowCircleLoader();
 
@@ -234,15 +222,10 @@ async function AutoLoadRemainingPages(targetPage, loadedPages) {
             loadedCount += items.length;
             hasMore = result.myJson.hasMore || false;
             lastId = items[items.length - 1].Id;
-
-            if (DEBUG) {
-                console.log(`✓ Auto loaded ${items.length} items, total: ${loadedCount}`);
-            }
         }
 
     } catch (error) {
         console.error("Auto load remaining pages error:", error);
-        // Không show error modal, user vẫn có 150 items
     } finally {
         RemoveCircleLoader();
         isLoading = false;
@@ -340,7 +323,6 @@ function ScrollToPagePosition(page) {
                 behavior: 'smooth',
                 block: 'start'
             });
-            console.log(`Scrolled to page ${page}, item index ${firstItemIndex}`);
         }, 300);  // Delay để DOM render xong
     }
 }
@@ -367,7 +349,7 @@ function AppendItems(listItem) {
 
     for (let i = 0; i < listItem.length; i++) {
         let item = listItem[i];
-        let itemElement = CreateProductCard(item, template);
+        let itemElement = CreateProductCard(item, template, i >= 5);
         table.appendChild(itemElement);
     }
 
@@ -381,7 +363,7 @@ function AppendItems(listItem) {
     }
 }
 
-function CreateProductCard(item, template) {
+function CreateProductCard(item, template, isLoadingLazy) {
     // ✅ Clone từ template.content (DocumentFragment)
     let clone = template.content.cloneNode(true);
 
@@ -407,18 +389,17 @@ function CreateProductCard(item, template) {
             imgElement.width = width;
             imgElement.height = height;
 
-            console.log(`✓ Set dimensions: ${width}×${height} (from ${item.CoverImageWidth}×${item.CoverImageHeight})`);
         } else {
             // Fallback: aspect ratio 2:3
             imgElement.width = 320;
             imgElement.height = 480;
-            if (DEBUG) {
-                console.warn(`⚠ Missing dimensions for ${item.Name}, using fallback 320×480`);
-            }
         }
 
-        // Lazy loading: browser tự động load ảnh trong viewport ngay, defer ảnh ngoài viewport
-        imgElement.loading = "lazy";
+        // ✅ Lazy loading: conditional dựa trên parameter
+        if (isLoadingLazy) {
+            imgElement.loading = "lazy";
+            imgElement.decoding = "async";
+        }
     } else {
         imgElement.src = srcNoImageThumbnail;
         imgElement.alt = "Ảnh sách " + item.Name + " đang cập nhật";
@@ -461,10 +442,6 @@ function DisplayEmptyResult(isEmpty) {
 function SetSearchParametersFromUrl() {
     // Optimize: chỉ parse URL 1 lần thay vì 6 lần
     const urlParams = new URLSearchParams(window.location.search);
-    if (DEBUG) {
-        console.log("SetSearchParametersFromUrl CALL");
-        console.log("urlParams: " + urlParams);
-    }
 
     currentSearchParams.keyword = urlParams.get("keyword") || "";
     currentSearchParams.author = urlParams.get("author") || "";
@@ -472,9 +449,7 @@ function SetSearchParametersFromUrl() {
     currentSearchParams.publishingCompany = urlParams.get("publishingCompany") || "";
     currentSearchParams.category = urlParams.get("category") || null;
     currentSearchParams.publisher = urlParams.get("publisher") || null;
-    if (DEBUG) {
-        console.log("currentSearchParams: " + JSON.stringify(currentSearchParams));
-    }
+
     // Set input field value
     if (inputSearch) {
         inputSearch.value = currentSearchParams.keyword;
@@ -576,14 +551,11 @@ if (btnLoadMore) {
 
 // Browser back/forward
 window.addEventListener("popstate", async (e) => {
-    console.log("popstate call ");
-    console.log("event.persisted: " + event.persisted);
     await Search(false);
 
 });
 
 // Initial load khi page load
 window.addEventListener('DOMContentLoaded', async function () {
-    console.log("DOMContentLoaded call ");
     await Search(true);
 });

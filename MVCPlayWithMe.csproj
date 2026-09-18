@@ -672,7 +672,6 @@
     <Content Include="Content\Home\Cart.css" />
     <Content Include="Content\Home\Checkout.css" />
     <Content Include="Content\Home\Error.css" />
-    <Content Include="Content\Home\Item.css" />
     <Content Include="Content\Home\SanPham.css" />
     <Content Include="Content\Home\Search.css" />
     <Content Include="Content\photoswipe.css" />

@@ -10,18 +10,21 @@
     <title>@ViewData["title"]</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
     <meta name="robots" content="noindex, follow">
+
+    <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
+    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
+    <link rel="stylesheet" href="~/Content/Home/Cart.css?v=20260717">
+
     @if (!Context.IsDebuggingEnabled)
     {
         @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
         @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
     }
-    <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
-    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
+
     <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
 
-    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css">
-    <link rel="stylesheet" href="~/Content/Home/Cart.css?v=20260717">
 </head>
 <body>
     <div id="biggestContainer">
@@ -115,9 +118,9 @@
     </div>
 
 
-    <script src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
-    <script src="~/Scripts/cart-manager.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
-    <script src="~/Scripts/Home/Cart.js?v=20260610"></script>
+    <script defer src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
+    <script defer src="~/Scripts/cart-manager.js"></script>
+    <script defer src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
+    <script defer src="~/Scripts/Home/Cart.js?v=20260610"></script>
 </body>
 </html>

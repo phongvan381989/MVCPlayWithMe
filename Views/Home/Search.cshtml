@@ -13,40 +13,6 @@
         : $"Kết quả tìm kiếm: \"{keyword.Trim()}\"";
 }
 
-@functions {
-    // Helper: Format tiền với icon
-    string FormatMoney(decimal money)
-    {
-        return string.Format("{0:N0}", money) + "₫";
-    }
-
-    // Helper: Tính % discount
-    int CalculateDiscountPercent(decimal original, decimal sale)
-    {
-        if (original <= 0) return 0;
-        return (int)Math.Round((original - sale) / original * 100);
-    }
-
-    // Helper: Tạo URL 320px version
-    string Get320ImageUrl(int spId, string filename)
-    {
-        return $"/Media/SanPham/{spId}_320/{filename}";
-    }
-
-    // Helper: Tính kích thước 320px từ kích thước gốc (giữ aspect ratio)
-    (int width, int height) Get320Dimensions(int originalWidth, int originalHeight)
-    {
-        if (originalWidth == 0 || originalHeight == 0)
-            return (320, 480); // Fallback 2:3 ratio
-
-        // Resize: width = 320, height scale theo tỷ lệ
-        int width = 320;
-        int height = (int)Math.Round(originalHeight * (320.0 / originalWidth));
-
-        return (width, height);
-    }
-}
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
@@ -69,16 +35,19 @@
         <meta name="robots" content="noindex, follow">
     }
 
-    @if (!Context.IsDebuggingEnabled)
-    {
-        @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
-        @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
-    }
     <meta property="fb:pages" content="@Common.idFacebookPageTiemSachVBN" />
     <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
     <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
     <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
     <link rel="stylesheet" href="~/Content/Home/Search.css?v=20260910">
+
+    @* ✅ Tracking scripts ở CUỐI HEAD (sau CSS) - optimal placement *@
+    @if (!Context.IsDebuggingEnabled)
+    {
+        @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
+        @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
+    }
+
     <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
 </head>
 <body>
@@ -123,39 +92,40 @@
 
             <!-- ✅ SSR: Server render HTML sẵn -->
             <div id="biggestContainer_body_wraper_item">
+                @{
+                    var productIndex = 0;  // Track index for lazy loading
+                }
                 @foreach (var product in initialProducts)
                 {
-                    var (imgWidth, imgHeight) = Get320Dimensions(product.CoverImageWidth, product.CoverImageHeight);
-
-                    @* DEBUG: Check dimensions *@
-                    @* Original: @product.CoverImageWidth x @product.CoverImageHeight → Calculated: @imgWidth x @imgHeight *@
+                    var (imgWidth, imgHeight) = Common.Get320Dimensions(product.CoverImageWidth, product.CoverImageHeight);
 
                     <article>
                         <a class="product-item" href="/San-Pham/@(Common.GenerateSlugId(product.Name, product.Id))">
                             <div class="image-wrapper">
+                                @* ✅ 10 sản phẩm đầu KHÔNG lazy (above fold desktop/mobile), còn lại lazy + async decode *@
                                 <img class="card-img-top"
-                                     src="@Get320ImageUrl(product.Id, product.CoverImageFileName)"
+                                     src="@Common.GenerateV320RelativeSanPhamMediaUrl(product.CoverImageFileName, product.Id)"
                                      alt="@(product.CoverImageAltText ?? ("Bìa sách " + product.Name))"
                                      title="@(product.CoverImageTitle ?? product.Name)"
                                      width="@imgWidth"
-                                     height="@imgHeight"
-                                     loading="lazy">
+                                     height="@imgHeight"@(productIndex >= 10 ? " loading=\"lazy\" decoding=\"async\"" : "")>
                             </div>
                             <div class="product-infor">
                                 <div class="product-name">
                                     <h3 class="product-name-h3">@product.Name</h3>
                                 </div>
                                 <div class="price-sell-original-discount-percent">
-                                    <span class="price-sell-detail">@FormatMoney(product.SalePrice)</span>
+                                    <span class="price-sell-detail">@Common.FormatMoney(product.SalePrice)</span>
                                     @if (product.BookCoverPrice > product.SalePrice)
                                     {
-                                        <span class="price-original-detail">@FormatMoney(product.BookCoverPrice)</span>
-                                        <span class="price-discount-percent-detail">-@CalculateDiscountPercent(product.BookCoverPrice, product.SalePrice)%</span>
+                                        <span class="price-original-detail">@Common.FormatMoney(product.BookCoverPrice)</span>
+                                        <span class="price-discount-percent-detail">-@Common.CalculateDiscountPercent(product.BookCoverPrice, product.SalePrice)%</span>
                                     }
                                 </div>
                             </div>
                         </a>
                     </article>
+                    productIndex++;
                 }
             </div>
 

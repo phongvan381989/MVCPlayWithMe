@@ -95,10 +95,48 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
+        /// <summary>
+        /// Error page - Được gọi từ Global.asax.cs Application_Error()
+        /// HTTP status code đã được set trong Application_Error
+        /// </summary>
         [HttpGet]
-        public ActionResult Error()
+        public ActionResult Error(int? statusCode)
         {
-            ViewData["title"] = $"404 - Không tìm thấy trang | {Common.titleVoiBeNho}";
+            // Status code đã được set trong Application_Error
+            // Lấy từ parameter hoặc Response.StatusCode
+            int code = statusCode ?? Response.StatusCode;
+
+            // Set ViewData based on status code
+            switch (code)
+            {
+                case 404:
+                    ViewData["title"] = $"404 - Không tìm thấy trang | {Common.titleVoiBeNho}";
+                    ViewData["message"] = "Không tìm thấy đường dẫn này";
+                    break;
+
+                case 500:
+                    ViewData["title"] = $"500 - Lỗi server | {Common.titleVoiBeNho}";
+                    ViewData["message"] = "Có lỗi xảy ra, vui lòng thử lại sau";
+                    break;
+
+                case 403:
+                    ViewData["title"] = $"403 - Forbidden | {Common.titleVoiBeNho}";
+                    ViewData["message"] = "Bạn không có quyền truy cập";
+                    break;
+
+                case 400:
+                    ViewData["title"] = $"400 - Bad Request | {Common.titleVoiBeNho}";
+                    ViewData["message"] = "Yêu cầu không hợp lệ";
+                    break;
+
+                default:
+                    ViewData["title"] = $"Lỗi | {Common.titleVoiBeNho}";
+                    ViewData["message"] = "Có lỗi xảy ra";
+                    break;
+            }
+
+            ViewData["statusCode"] = code;
+
             return View();
         }
 
@@ -1331,10 +1369,13 @@ namespace MVCPlayWithMe.Controllers
                 SanPhamMedia media = imageList[i];
 
                 // Tạo thumbnail URL với thư mục _320
-                string thumbnailSrc = $"{Common.SanPhamMediaFolderPath}{sanPham.Id}_320/{media.FileName}";
+                string thumbnailSrc = Common.GenerateV320RelativeSanPhamMediaUrl(media.FileName, sanPham.Id);
 
                 // Generate alt text cho thumbnail (isThumbnail = true)
                 string alt = GenerateAltText(sanPham, media, isThumbnail: true, i);
+
+                // Tính kích thước thumbnail từ kích thước gốc (giữ aspect ratio)
+                var (thumbWidth, thumbHeight) = Common.Get320Dimensions(media.Width, media.Height);
 
                 // Tạo <div class="small-media" data-index="{i}"> với border màu đỏ cho thumbnail đầu tiên (selected)
                 html.Append($"<div class=\"small-media\" data-index=\"{i}\"");
@@ -1347,17 +1388,18 @@ namespace MVCPlayWithMe.Controllers
 
                 html.Append(">");
 
-                // <img> với lazy loading cho thumbnail sau 3 ảnh đầu
+                // <img> với lazy loading cho thumbnails sau 4 ảnh đầu
                 html.Append("<img ");
                 html.Append($"src=\"{HttpUtility.HtmlAttributeEncode(thumbnailSrc)}\" ");
                 html.Append($"alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" ");
+                html.Append($"width=\"{thumbWidth}\" height=\"{thumbHeight}\" ");  // ✅ Dynamic size giữ aspect ratio
 
+                // 4 thumbnails đầu không lazy (visible on mobile), còn lại lazy
                 if (i > 3)
                 {
-                    html.Append("loading=\"lazy\" ");
+                    html.Append("loading=\"lazy\" decoding=\"async\" ");
                 }
 
-                html.Append("style=\"object-fit:contain; max-width:100%; max-height:100%; display:block;\"");
                 html.Append(">");
 
                 html.Append("</div>");
@@ -1579,7 +1621,7 @@ namespace MVCPlayWithMe.Controllers
                     // Build HTML
                     var figureHtml = new StringBuilder();
                     figureHtml.Append("<figure class=\"product-detail-image\">");
-                    figureHtml.Append($"<img src=\"{HttpUtility.HtmlAttributeEncode(imgSrc)}\" alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" loading=\"lazy\">");
+                    figureHtml.Append($"<img src=\"{HttpUtility.HtmlAttributeEncode(imgSrc)}\" alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" width=\"{media.Width}\" heigth=\"{media.Height}\" loading=\"lazy\">");
 
                     if (!string.IsNullOrWhiteSpace(caption))
                     {
@@ -1728,5 +1770,23 @@ namespace MVCPlayWithMe.Controllers
             }
             return alt;
         }
+
+        //// Test 500 error
+        //public ActionResult Test500()
+        //{
+        //    throw new Exception("Test 500 error");
+        //}
+
+        //// Test 403 error
+        //public ActionResult Test403()
+        //{
+        //    throw new UnauthorizedAccessException("Test 403 error");
+        //}
+
+        //// Test 400 error
+        //public ActionResult Test400()
+        //{
+        //    throw new HttpRequestValidationException("Test 400 error");
+        //}
     }
 }

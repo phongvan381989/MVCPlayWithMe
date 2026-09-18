@@ -1,5 +1,4 @@
 ﻿.address-model {
-    /*margin-bottom: 70px;*/
     margin-top: 15px;
     width: 100%;
 }
@@ -87,7 +86,6 @@ h2 {
 button.change-address-btn {
     color: #4080ee;
     text-transform: capitalize;
-    /*margin-left: 2.5rem;*/
     cursor: pointer;
     background: none;
     border: 0;
@@ -136,18 +134,6 @@ button.change-address-btn {
     align-items: center;
 }
 
-/*.model-container {
-    background: #fff;
-    box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
-    border-radius: 3px;
-    padding: 10px 5px;
-    display: flex;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 14px;
-    color: #222;
-    min-height: 55px;
-}*/
 .model-wrapper {
     background: #fff;
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.09);
@@ -193,11 +179,6 @@ button.change-address-btn {
     text-decoration: line-through;
 }
 .G7E4B7 {
-    /*    flex-direction: column;*/
-    /*    width: 30%;*/
-/*    display: flex;
-    align-items: center;
-    justify-content: center;*/
     padding: 5px;
 }
 
@@ -230,27 +211,21 @@ button.change-address-btn {
 .gQuJxM {
     padding: 5px 10px;
     width: 100%;
-/*    height: 40px;*/
     box-sizing: border-box;
     background-color: initial;
     outline: none;
     font-size: .875rem;
-/*    min-width: 0;*/
     color: #222;
     border: 1px solid rgba(0,0,0,.14);
     border-radius: 2px;
 }
 
 .payment-method {
-/*    display: flex;*/
     align-items: center;
     min-height: 90px;
     padding: 10px 5px;
-    /*    padding-left: 30px;
-    padding-right: 10px;*/
     box-sizing: border-box;
     background-color: white;
-/*    margin: 15px 0px;*/
     border-radius: 3px;
 }
 
@@ -259,11 +234,9 @@ button.change-address-btn {
 }
 
 .SzEjHI {
-/*    width: 200px;*/
     font-size: 1.25rem;
     color: #222;
     padding: 10px 0px;
-/*    flex: 1;*/
 }
 
 .KoRB7y {
@@ -273,10 +246,6 @@ button.change-address-btn {
 .hjhgui88{
     padding:10px 0px;
 }
-
-/*.jh-bank-transfer {
-    display:none;
-}*/
 
 .payment-infor {
     background: #fffefb;
@@ -303,10 +272,6 @@ button.change-address-btn {
     color: red;
 }
 
-/*.money-title {
-    width: 120px;
-}*/
-
 .order-btn {
     background: #764ba2;
     color: #fff;
@@ -323,10 +288,7 @@ button.change-address-btn {
     outline: none;
 }
 
-/* ✅ Xóa .sample-model - dùng <template> không cần CSS ẩn */
-
 .main-container {
-    /*    padding: 5px;*/
     width: 100%;
     display: none;
     min-height: 100vh;
@@ -335,18 +297,16 @@ button.change-address-btn {
 .cart-empty {
     display: none;
     flex-direction: column;
-    justify-content: center; /* Căn giữa theo chiều ngang */
-    align-items: center; /* Căn giữa theo chiều dọc */
-    min-height: 100vh; /* Bắt buộc: để chiều cao bằng 100% màn hình */
-    margin: 0; /* Xóa khoảng trống mặc định của body */
-    text-align: center; /* Căn giữa đoạn văn bản bên trong */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    text-align: center;
 }
 
-/* Dấu "x" giữa giá và số lượng (VD: ₫29.800 x 2) */
 .quantity-model-x {
     font-size: 0.85rem;
     color: #888;
-/*    margin: 0 4px;*/
     font-weight: 400;
 }
 

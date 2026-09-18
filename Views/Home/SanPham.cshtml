@@ -12,11 +12,6 @@
     <meta charset="utf-8">
     <title>@ViewData["title"]</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
-    @if (!Context.IsDebuggingEnabled)
-    {
-        @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
-        @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
-    }
 
     <!-- SEO Meta Tags -->
     <meta name="description" content="@ViewBag.MetaDescription">
@@ -50,16 +45,22 @@
     <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
     <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
     <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260701">
+    <link rel="stylesheet" href="~/Content/Home/SanPham.css?v=20260710d">
+
+    @if (!Context.IsDebuggingEnabled)
+    {
+        @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
+        @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
+    }
+
     <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
 
     <!-- Product Schema.org JSON-LD (Generated from server) -->
     <script type="application/ld+json">@Html.Raw(ViewBag.ProductJsonLD)</script>
 
-    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260701">
-    <link rel="stylesheet" href="~/Content/Home/SanPham.css?v=20260710d">
-
-    <!-- PhotoSwipe CSS (local v5.3.8) -->
-    <link rel="stylesheet" href="~/Content/photoswipe.css?v=538">
+    <!-- PhotoSwipe CSS (local v5.3.8) - Async load: non-critical, chỉ cần khi user click ảnh -->
+    <link rel="stylesheet" href="~/Content/photoswipe.css?v=538" media="print" onload="this.media='all'">
 </head>
 <body>
     <div id="biggestContainer">
@@ -208,13 +209,13 @@
         };
     </script>
 
-    <script src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
-    <script src="~/Scripts/cart-manager.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js?v=20260701"></script>
+    <script defer src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
+    <script defer src="~/Scripts/cart-manager.js"></script>
+    <script defer src="~/Scripts/web.play.with.me.action.common.js?v=20260701"></script>
     <!-- PhotoSwipe JS (local v5.3.8) -->
-    <script src="~/Scripts/photoswipe.umd.min.js?v=538"></script>
-    <script src="~/Scripts/photoswipe-lightbox.umd.min.js?v=538"></script>
+    <script defer src="~/Scripts/photoswipe.umd.min.js?v=538"></script>
+    <script defer src="~/Scripts/photoswipe-lightbox.umd.min.js?v=538"></script>
 
-    <script src="~/Scripts/Home/SanPham.js?v=20260916"></script>
+    <script defer src="~/Scripts/Home/SanPham.js?v=20260916"></script>
 </body>
 </html>

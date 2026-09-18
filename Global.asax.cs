@@ -165,9 +165,60 @@ namespace MVCPlayWithMe
 
             // Chờ thread hoàn tất công việc
             _backgroundThread?.Join();
-            
+
             MyLogger.GetInstance().Info("Background thread stopped.");
 #endif
+        }
+
+        /// <summary>
+        /// Xử lý tất cả errors của application
+        /// Đảm bảo Google bot nhận đúng HTTP status code (404, 500...)
+        /// </summary>
+        protected void Application_Error()
+        {
+            var exception = Server.GetLastError();
+            var httpException = exception as HttpException;
+
+            // Log error với stack trace
+            if (exception != null)
+            {
+                MyLogger.GetInstance().Error($"Application Error: {exception.Message}", exception);
+            }
+
+            // Clear error để tránh IIS custom error page ghi đè
+            Server.ClearError();
+
+            // Xác định HTTP status code
+            int statusCode = 500; // Default: Internal Server Error
+            if (httpException != null)
+            {
+                statusCode = httpException.GetHttpCode();
+            }
+            else if (exception is HttpRequestValidationException)
+            {
+                statusCode = 400; // Bad Request (dangerous input)
+            }
+            else if (exception is UnauthorizedAccessException)
+            {
+                statusCode = 403; // Forbidden
+            }
+
+            // ✅ Set HTTP status code (quan trọng cho SEO!)
+            Response.StatusCode = statusCode;
+
+            // ✅ Bypass IIS custom errors để giữ status code
+            Response.TrySkipIisCustomErrors = true;
+
+            // Route tới Error action với status code
+            var routeData = new RouteData();
+            routeData.Values.Add("controller", "Home");
+            routeData.Values.Add("action", "Error");
+            routeData.Values.Add("statusCode", statusCode);
+
+            // Execute Error action (server-side, không đổi URL)
+            IController controller = new Controllers.HomeController();
+            var requestContext = new RequestContext(new HttpContextWrapper(Context), routeData);
+            controller.Execute(requestContext);
         }
 
     }

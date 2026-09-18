@@ -1,5 +1,33 @@
 ﻿@{
     Layout = null;
+
+    // Lấy status code và message từ ViewData (set bởi HomeController.Error())
+    int statusCode = (int)(ViewData["statusCode"] ?? 404);
+    string message = ViewData["message"] as string ?? "Không tìm thấy đường dẫn này";
+
+    // Icon khác nhau cho từng loại lỗi
+    string iconPath = "/Media/404.svg";
+    string iconAlt = "Error";
+
+    switch (statusCode)
+    {
+        case 404:
+            iconPath = "/Media/404.svg";
+            iconAlt = "404 Not Found";
+            break;
+        case 500:
+            iconPath = "/Media/500.svg"; // Tạo icon này nếu có
+            iconAlt = "500 Server Error";
+            break;
+        case 403:
+            iconPath = "/Media/403.svg"; // Tạo icon này nếu có
+            iconAlt = "403 Forbidden";
+            break;
+        default:
+            iconPath = "/Media/error.svg"; // Fallback icon
+            iconAlt = "Error";
+            break;
+    }
 }
 
 <!DOCTYPE html>
@@ -12,9 +40,22 @@
 <body>
     <div class="container-page-404">
         <div class="page-404">
-            <img src="/Media/404.svg" alt="" class="icon-404">
-            <strong class="title-404">Không tìm thấy đường dẫn này</strong>
-            <p>Quay về <a href="/" title="">trang chọn sản phẩm</a></p>
+            <!-- Icon error (fallback về 404.svg nếu icon khác không tồn tại) -->
+            <img src="@iconPath"
+                 alt="@iconAlt"
+                 class="icon-404"
+                 onerror="this.src='/Media/404.svg';">
+
+            <!-- Message động từ Controller -->
+            <strong class="title-404">@message</strong>
+
+            @if (Context.IsDebuggingEnabled)
+            {
+                <!-- Chỉ hiện error code khi debug mode -->
+                <p style="color: #999; font-size: 14px; margin-top: 10px;">Error code: @statusCode</p>
+            }
+
+            <p>Quay về <a href="/" title="Trang chủ">trang chọn sản phẩm</a></p>
         </div>
     </div>
 </body>

@@ -1,5 +1,4 @@
-﻿/* Empty result - centered on screen */
-#empty-result {
+﻿#empty-result {
     min-height: 100vh;
     display: none;
     justify-content: center;
@@ -39,17 +38,11 @@
 }
 
 .card-img-top {
-    width: 100%;      /* Responsive - scale theo container */
-    height: auto;     /* Maintain aspect ratio from width/height attributes */
+    width: 100%;
+    height: auto;
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
 }
-/* ⚠️ Chrome DevTools warning về lazy images là FALSE POSITIVE - code đã đúng!
- * - HTML có width/height attributes ✅
- * - Không có CLS (layout shift) ✅
- * - Chrome bug: coi CSS width:100% là "override dimensions" (sai!)
- * - Reference: https://issues.chromium.org/issues/349096842
- */
 
 .product-name-h3 {
     font-weight: 400;
@@ -59,35 +52,28 @@
     padding-left:2px;
     padding-right:2px;
     word-break: break-word;
-/*    width: 180px;*/
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2; /* number of lines to show */
+    -webkit-line-clamp: 2;
     line-height: 1.5em;
     max-height: 3em;
 }
 
-
 #biggestContainer_body_wraper_item {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-/*    gap: 0px;*/
     column-gap:0px;
     row-gap:5px;
     width: 100%;
-    /*max-width: 1200px;*/ /* Cap tối đa 6 columns (6 × 200px) */
     margin: 0 auto;
 }
 
-/* Prevent items from growing too large when few results */
 #biggestContainer_body_wraper_item > * {
     max-width: 250px;
     margin: 0 auto;
 }
-
-/* ✅ Xóa .product-for-selector-sample - dùng <template> không cần CSS ẩn */
 
 .price-sell-detail {
     color: red;
@@ -109,7 +95,6 @@
     margin-top:3px;
     margin-bottom:5px;
 }
-/* Free ship link wrapper - SEO + Accessibility */
 .free-instant-ship-link {
     text-decoration: none;
     color: inherit;
@@ -122,19 +107,15 @@
     box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
 }
 
-/* Free ship message - Mobile: 2 dòng, Desktop: 1 dòng */
 .free-instant-ship {
     padding: 2px 10px;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     text-align: center;
     font-size: 14px;
-    /* Mobile: hiển thị child elements theo column (xuống dòng) */
     display: flex;
-/*    flex-wrap:wrap;*/
     flex-direction: column;
     gap: 4px;
-/*    justify-content:center;*/
     align-items: center;
     transition: all 0.2s ease;
 }
@@ -143,7 +124,6 @@
     margin:0 30px;
 }
 
-/* Separator - ẩn trên mobile, hiện trên desktop */
 .separator {
     display: none;
 }
@@ -160,13 +140,11 @@
 }
 
 @media (min-width: 800px) {
-    /* Desktop: separator hiển thị giữa 2 message */
     .separator {
         display: inline;
         color: rgba(255,255,255,0.5);
         margin: 0 5px;
     }
-    /* Desktop: free ship message - 1 dòng ngang */
     .free-instant-ship {
         flex-direction: row;
         justify-content: center;
@@ -180,10 +158,8 @@
         width: 100%;
         margin: 0 auto;
     }
-        /* Prevent items from growing too large on desktop */
         #biggestContainer_body_wraper_item > * {
             max-width: 280px;
             margin: 0 auto;
         }
-    /* ✅ Xóa .product-for-selector-sample - dùng <template> không cần CSS ẩn */
 }

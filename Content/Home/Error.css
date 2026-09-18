@@ -1,4 +1,4 @@
-.icon-404 {
+﻿.icon-404 {
     max-width: 196px;
     margin: 40px auto 16px;
     display: block;
@@ -15,7 +15,6 @@
 
 .page-404 {
     min-height: initial;
-    /*background: #f7f7f7;*/
     width: 100%;
     float: left;
     font-size: 16px;

@@ -30,33 +30,17 @@
     margin-right: 8px;
 }
 
-    .stardust-checkbox__box:before {
-        position: absolute;
-        content: "";
-        height: 5px;
-        width: 9px;
-        border-left: 2px solid #fff;
-        border-bottom: 2px solid #fff;
-        transform: rotate(-45deg);
-        left: 3px;
-        top: 3px;
-    }
-
-/*.BjIo5w {
-    display: flex;
-    align-items: center;
-    box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-    overflow: hidden;
-    border-radius: 3px;
-    height: 55px;*/
-    /*font-size: 16px;*/
-    /*background: #fff;
-    margin-bottom: 20px;
-    margin-right: 5px;
-    margin-left: 5px;
-    color: #888;
-    padding: 0 5px;
-}*/
+.stardust-checkbox__box:before {
+    position: absolute;
+    content: "";
+    height: 5px;
+    width: 9px;
+    border-left: 2px solid #fff;
+    border-bottom: 2px solid #fff;
+    transform: rotate(-45deg);
+    left: 3px;
+    top: 3px;
+}
 
 .checkbox-name-header{
     display: flex;
@@ -72,9 +56,6 @@
 
 .mcsiKT {
     padding: 0 5px 0 5px;
-/*    display: flex;*/
-/*    flex-direction: row-reverse;*/
-/*    min-width: 40px;*/
     box-sizing: border-box;
 }
 
@@ -129,20 +110,11 @@
 
 .eUrDQm {
     display: flex;
-/*    width: 90%;*/
-/*    position: relative;*/
-/*    flex-direction: column;*/
 }
-
-/*.LAQKxn {
-    display: flex;
-}*/
 
 a {
     cursor: pointer;
 }
-
-/* ❌ XÓA duplicate này - đã có ở line 80-84 */
 
 .TyNN8t {
     line-height: 16px;
@@ -151,7 +123,6 @@ a {
     flex: 1;
     flex-direction: column;
     padding: 5px 5px 0 10px;
-    /*font-size: 14px;*/
 }
 
 .JB57cn {
@@ -169,18 +140,13 @@ a {
 }
 
 .contianer-selected-model {
-/*    display:none;*/
     box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-    /*border-radius: 0.125rem;*/
     overflow: hidden;
     border-radius: 3px;
     font-size: 14px;
     background: #fff;
     margin-bottom: 20px;
-/*    margin-right: 5px;
-    margin-left: 5px;*/
     color: #888;
-/*    padding: 0 5px;*/
 }
 
 .M-AAFK {
@@ -195,8 +161,6 @@ a {
 }
 
 .G7E4B7 {
-/*    flex-direction: column;*/
-/*    width: 30%;*/
     display: flex;
     align-items: center;
     justify-content: center;
@@ -208,7 +172,6 @@ a {
     align-items: center;
     justify-content: center;
     flex-direction: column;
-/*    width: 35%;*/
     padding: 5px;
 }
 
@@ -217,7 +180,6 @@ a {
     align-items: center;
 }
 
-/* Disabled state khi sản phẩm hết hàng */
 .shopee-input-quantity.disabled {
     opacity: 0.5;
     pointer-events: none;
@@ -268,17 +230,12 @@ a {
 }
 
 .ofQLuG {
-    /*display: flex;
-    align-items: center;
-    justify-content: center;*/
     text-align: center;
-/*    width: 20%;*/
     color: red;
     padding:5px;
 }
 
 .mhcjog {
-/*    width: 15%;*/
     text-transform: capitalize;
     display: flex;
     align-items: center;
@@ -290,8 +247,6 @@ a {
     cursor: pointer;
     border: 1px solid rgba(0,0,0,.09);
     border-radius: 2px;
-    /*    background: none;
-    border: 0;*/
 }
 
 .iGlIrs {
@@ -317,7 +272,6 @@ a {
     font-size: 16px;
     color: #222;
     line-height: 19px;
-/*    margin: 5px 0px;*/
 }
 
 .WC0us- {
@@ -346,7 +300,6 @@ a {
     box-sizing: border-box;
     font-size: 1rem;
     border-radius: 2px;
-/*    width: 13.125rem;*/
     position: relative;
     overflow: visible;
     outline: 0;
@@ -374,9 +327,8 @@ a {
     border: 1px solid rgba(0,0,0,.09);
     background: #fff;
     padding: 30px 0px;
-/*    margin: 5px 5px 20px 5px;*/
     z-index: 2;
-    position: -webkit-sticky; /* Safari */
+    position: -webkit-sticky;
     position: sticky;
     bottom: 0px;
 }
@@ -387,7 +339,6 @@ a {
 }
 
 .main-container {
-/*    padding: 5px;*/
     width:100%;
     display:none;
     min-height: 100vh;
@@ -396,11 +347,11 @@ a {
 .cart-empty {
     display: none;
     flex-direction: column;
-    justify-content: center; /* Căn giữa theo chiều ngang */
-    align-items: center; /* Căn giữa theo chiều dọc */
-    min-height: 100vh; /* Bắt buộc: để chiều cao bằng 100% màn hình */
-    margin: 0; /* Xóa khoảng trống mặc định của body */
-    text-align: center; /* Căn giữa đoạn văn bản bên trong */
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    text-align: center;
 }
 
 @media (min-width: 800px) {
@@ -413,7 +364,6 @@ a {
 
     .contianer-selected-model {
         box-shadow: 0 1px 1px 0 rgba(0,0,0,.05);
-        /*border-radius: 0.125rem;*/
         overflow: hidden;
         border-radius: 3px;
         font-size: 14px;
@@ -427,9 +377,6 @@ a {
 
     .mcsiKT {
         padding: 0 10px 0 10px;
-        /*        display: flex;
-        flex-direction: row-reverse;*/
-        /*        min-width: 40px;*/
         box-sizing: border-box;
     }
 
@@ -440,7 +387,6 @@ a {
         flex: 1;
         flex-direction: column;
         padding: 5px 20px 0 10px;
-        /*font-size: 14px;*/
     }
 
     .s1Gxkq {
@@ -451,7 +397,7 @@ a {
         padding: 30px 5px;
         margin: 5px 5px 20px 5px;
         z-index: 2;
-        position: -webkit-sticky; /* Safari */
+        position: -webkit-sticky;
         position: sticky;
         bottom: 0px;
     }

@@ -68,6 +68,7 @@ namespace MVCPlayWithMe.Controllers
                     sb.AppendLine($"<g:link>{productUrl}</g:link>");
                     sb.AppendLine($"<g:image_link>{imageUrl}</g:image_link>");
                     sb.AppendLine($"<g:availability>{(sp.Quantity > 0 ? "in stock" : "out of stock")}</g:availability>");
+                    sb.AppendLine($"<g:quantity>{sp.Quantity}</g:quantity>");
                     sb.AppendLine("<g:condition>new</g:condition>");
                     sb.AppendLine($"<g:price>{price}</g:price>");
                     sb.AppendLine("<g:brand>Voibenho</g:brand>");

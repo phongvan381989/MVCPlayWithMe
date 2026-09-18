@@ -98,6 +98,19 @@ function GenerateAltText(media, isThumbnail, i) {
     return alt;
 }
 
+// Helper: Tính kích thước thumbnail 320px từ kích thước gốc (giữ aspect ratio)
+// Match với C# Common.Get320Dimensions()
+function Get320Dimensions(originalWidth, originalHeight) {
+    if (!originalWidth || !originalHeight || originalWidth === 0 || originalHeight === 0) {
+        return { width: 320, height: 480 }; // Fallback 2:3 ratio
+    }
+
+    const width = 320;
+    const height = Math.round(originalHeight * (320.0 / originalWidth));
+
+    return { width: width, height: height };
+}
+
 // Build dataSource từ DB (không cần preload - đã có Width/Height)
 function buildPhotoSwipeDataSource() {
     if (!sanPhamObject || !sanPhamObject.MediaList || sanPhamObject.MediaList.length === 0) {
@@ -312,11 +325,14 @@ function CreateContainerSmallItem(media, i, hasVideo) {
         const img = document.createElement("img");
         img.src = Get320VersionOfImageSrc(posterSrc);
         img.alt = "Video " + sanPhamObject.Name;
+
+        // Tính kích thước thumbnail từ kích thước gốc (giữ aspect ratio, tránh CLS)
+        const dimensions = Get320Dimensions(media.Width, media.Height);
+        img.width = dimensions.width;
+        img.height = dimensions.height;
+
+        // Styles đã có trong CSS .small-media img (max-width, max-height, object-fit, display)
         // img.loading = "lazy";
-        img.style.objectFit = "contain";
-        img.style.maxWidth = "100%";
-        img.style.maxHeight = "100%";
-        img.style.display = "block";
 
         container.appendChild(img);
         container.style.position = "relative";
@@ -340,14 +356,16 @@ function CreateContainerSmallItem(media, i, hasVideo) {
         const img = document.createElement("img");
         img.src = thumbnail320;
         img.alt = GenerateAltText(media, true, i);
+
+        // Tính kích thước thumbnail từ kích thước gốc (giữ aspect ratio, tránh CLS)
+        const dimensions = Get320Dimensions(media.Width, media.Height);
+        img.width = dimensions.width;
+        img.height = dimensions.height;
+
         if (i > 3) {
             img.loading = "lazy";
+            img.decoding = "async";
         }
-        img.style.objectFit = "contain";
-        img.style.maxWidth = "100%";
-        img.style.maxHeight = "100%";
-        img.style.display = "block";
-
         container.appendChild(img);
     }
 
@@ -483,6 +501,8 @@ function ShowMediumItemFromIndex(i) {
     const mediumImage = document.getElementById("medium_picture");
     mediumImage.src = imageUrl;
     mediumImage.alt = GenerateAltText(sanPhamObject.MediaList[i], false, i);
+    mediumImage.width = sanPhamObject.MediaList[i].Width;
+    mediumImage.Height = sanPhamObject.MediaList[i].Height;
 
     ChangeBorderColorOfSelectedSmallItem();
     ScrollToSelectedSmallItem();
