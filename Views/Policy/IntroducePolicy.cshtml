@@ -3,161 +3,72 @@
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head_GA.cshtml")
-    <style>
-        .bank-account-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 12px;
-            padding: 25px;
-            margin: 20px 0;
-            color: white;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-
-        .bank-account-title {
-            font-size: 18px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .bank-info-grid {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 8px;
-            padding: 20px;
-            color: #333;
-        }
-
-        .bank-info-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .bank-info-row:last-child {
-            border-bottom: none;
-        }
-
-        .bank-info-label {
-            color: #6c757d;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .bank-info-value {
-            color: #212529;
-            font-weight: 600;
-            font-size: 15px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .copy-btn-bank {
-            padding: 4px 10px;
-            background: #667eea;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .copy-btn-bank:hover {
-            background: #5568d3;
-            transform: translateY(-1px);
-        }
-
-        .copy-btn-bank.copied {
-            background: #28a745;
-        }
-
-        .bank-note {
-            background: #fff3cd;
-            border: 1px solid #ffc107;
-            border-radius: 6px;
-            padding: 12px;
-            margin-top: 15px;
-            color: #856404;
-            font-size: 13px;
-        }
-
-        @@media (max-width: 576px) {
-            .bank-info-row {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/Policy/Policy.css">
 </head>
 <body>
     <div id="biggestContainer">
-        <div style=" width: 100%; background-color: white; padding: 10px; min-height: 100vh;">
-            <h1 style="margin-bottom:2px;">Thông tin liên hệ và chính sách Tiệm sách và đồ chơi Voi bé nhỏ</h1>
+        <div class="policy-container" style="padding: 10px;">
+            <h1>Thông tin liên hệ và chính sách Tiệm sách và đồ chơi Voi bé nhỏ</h1>
 
+            <p><span class="policy-text">Cảm ơn các bố mẹ đã ghé thăm Tiệm sách & Đồ chơi Voi bé nhỏ!</span></p>
 
-            <p style="color:black"></p><p><span style="font-size:14px">Cảm ơn các bố mẹ đã ghé thăm Tiệm sách & Đồ chơi Voi bé nhỏ!</span></p>
+            <p><span class="policy-text"> Mong muốn của Tiệm sách là đem lại thật nhiều niềm vui, kiến thức, tình yêu với sách cho các bạn nhỏ và lan tỏa thói quen đọc sách tới mọi người. Buổi tối, sau một ngày làm việc, học tập hay khi có thời gian rảnh rỗi cả gia đình cùng ngồi nghỉ ngơi và đọc sách. Bố mẹ đọc sách cho con là một cách để gắn kết yêu thương. Cả nhà mình cùng nhau đọc sách mỗi ngày bố mẹ nhé!</span></p>
 
-            <p><span style="font-size:14px"> Mong muốn của Tiệm sách là đem lại thật nhiều niềm vui, kiến thức, tình yêu với sách cho các bạn nhỏ và lan tỏa thói quen đọc sách tới mọi người. Buổi tối, sau một ngày làm việc, học tập hay khi có thời gian rảnh rỗi cả gia đình cùng ngồi nghỉ ngơi và đọc sách. Bố mẹ đọc sách cho con là một cách để gắn kết yêu thương. Cả nhà mình cùng nhau đọc sách mỗi ngày bố mẹ nhé!</span></p>
-
-            <p><span style="font-size:14px;font-style: italic;">Gửi muôn vàn tri thức</span></p>
-            <p><span style="font-size:14px;font-style: italic;">Gửi muôn vàn yêu thương</span></p>
-            <p><span style="font-size:14px;font-style: italic;">Cả nhà gắn kết hơn</span></p>
-            <p><span style="font-size:14px;font-style: italic;">Cùng nhau mình đọc sách</span></p>
+            <p><span class="policy-text" style="font-style: italic;">Gửi muôn vàn tri thức</span></p>
+            <p><span class="policy-text" style="font-style: italic;">Gửi muôn vàn yêu thương</span></p>
+            <p><span class="policy-text" style="font-style: italic;">Cả nhà gắn kết hơn</span></p>
+            <p><span class="policy-text" style="font-style: italic;">Cùng nhau mình đọc sách</span></p>
 
             <br />
-            <h3 style="margin-top: 30px; margin-bottom: 15px;">Chính sách hướng dẫn</h3>
-            <div style="padding-left: 20px;">
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/InforCustomerPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách bảo mật thông tin
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/GuaranteePolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách bảo hành
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/ReturnRefundPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách đổi trả, hoàn tiền
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/CheckPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách kiểm hàng
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/TransportPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách vận chuyển
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/ComplaintPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách xử lý khiếu nại
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/PayPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Chính sách thanh toán
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/ObligationPolicy" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Nghĩa vụ các bên trong giao dịch
-                    </a>
-                </p>
-                <p style="margin-bottom: 10px;">
-                    <a href="/Policy/PaymentQR" style="color: #05a; text-decoration: none; font-size: 14px;">
-                        &#x2022; Tài khoản thanh toán
-                    </a>
-                </p>
+            <div class="policy-links-section">
+                <h3>Chính sách hướng dẫn</h3>
+                <div class="policy-links-list">
+                    <p>
+                        <a href="/Policy/InforCustomerPolicy">
+                            &#x2022; Chính sách bảo mật thông tin
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/GuaranteePolicy">
+                            &#x2022; Chính sách bảo hành
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/ReturnRefundPolicy">
+                            &#x2022; Chính sách đổi trả, hoàn tiền
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/CheckPolicy">
+                            &#x2022; Chính sách kiểm hàng
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/TransportPolicy">
+                            &#x2022; Chính sách vận chuyển
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/ComplaintPolicy">
+                            &#x2022; Chính sách xử lý khiếu nại
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/PayPolicy">
+                            &#x2022; Chính sách thanh toán
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/ObligationPolicy">
+                            &#x2022; Nghĩa vụ các bên trong giao dịch
+                        </a>
+                    </p>
+                    <p>
+                        <a href="/Policy/PaymentQR">
+                            &#x2022; Tài khoản thanh toán
+                        </a>
+                    </p>
+                </div>
             </div>
         </div>
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")

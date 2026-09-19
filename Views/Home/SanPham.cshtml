@@ -43,10 +43,10 @@
     <meta name="twitter:image" content="@ViewBag.OgImageUrl">
 
     <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
-    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
-    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260701">
-    <link rel="stylesheet" href="~/Content/Home/SanPham.css?v=20260710d">
+
+    @* ✅ Bundled CSS: Minified + Combined + Auto-versioned *@
+    @Styles.Render("~/bundles/css/common")
+    @Styles.Render("~/bundles/css/sanpham")
 
     @if (!Context.IsDebuggingEnabled)
     {
@@ -54,12 +54,8 @@
         @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
     }
 
-    <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
-
-    <!-- Product Schema.org JSON-LD (Generated from server) -->
     <script type="application/ld+json">@Html.Raw(ViewBag.ProductJsonLD)</script>
 
-    <!-- PhotoSwipe CSS (local v5.3.8) - Async load: non-critical, chỉ cần khi user click ảnh -->
     <link rel="stylesheet" href="~/Content/photoswipe.css?v=538" media="print" onload="this.media='all'">
 </head>
 <body>
@@ -209,13 +205,13 @@
         };
     </script>
 
-    <script defer src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
-    <script defer src="~/Scripts/cart-manager.js"></script>
-    <script defer src="~/Scripts/web.play.with.me.action.common.js?v=20260701"></script>
-    <!-- PhotoSwipe JS (local v5.3.8) -->
+    @* ✅ Bundled JS: Minified + Combined + Auto-versioned *@
+    <script defer src="@Scripts.Url("~/bundles/js/common")"></script>
+
+    @* PhotoSwipe JS: Không bundle (defer riêng, chỉ cần cho lightbox) *@
     <script defer src="~/Scripts/photoswipe.umd.min.js?v=538"></script>
     <script defer src="~/Scripts/photoswipe-lightbox.umd.min.js?v=538"></script>
 
-    <script defer src="~/Scripts/Home/SanPham.js?v=20260916"></script>
+    <script defer src="@Scripts.Url("~/bundles/js/sanpham")"></script>
 </body>
 </html>

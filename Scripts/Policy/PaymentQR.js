@@ -3,10 +3,6 @@
  * Trang: /Policy/PaymentQR
  */
 
-/**
- * Generate QR code từ form data
- * @param {Event} event - Form submit event
- */
 async function generateQR(event) {
     event.preventDefault();
 
@@ -77,9 +73,6 @@ async function generateQR(event) {
     }
 }
 
-/**
- * Reset form về trạng thái ban đầu
- */
 function resetForm() {
     document.getElementById('orderCode').value = '';
     document.getElementById('amount').value = '';
@@ -87,11 +80,6 @@ function resetForm() {
     document.getElementById('qrResult').classList.remove('show');
 }
 
-
-/**
- * Auto format số tiền khi nhập
- * Dùng ConvertMoneyToText từ web.play.with.me.common.js để format với dấu phẩy
- */
 function initAmountFormatting() {
     const amountInput = document.getElementById('amount');
     if (amountInput) {
@@ -123,9 +111,6 @@ function initAmountFormatting() {
     }
 }
 
-/**
- * Initialize copy icon cho số tài khoản
- */
 function initCopyAccountNumber() {
     const iconContainer = document.getElementById('copy-icon-account');
     const accountDisplay = document.getElementById('account-number-display');
@@ -151,9 +136,6 @@ function initCopyAccountNumber() {
     }
 }
 
-/**
- * Initialize copy icon cho order code trong QR result
- */
 function initCopyOrderCodeQR() {
     const iconContainer = document.getElementById('copy-icon-ordercode-qr');
     const orderCodeDisplay = document.getElementById('displayOrderCode');

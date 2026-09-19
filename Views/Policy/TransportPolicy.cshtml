@@ -2,23 +2,24 @@
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+    <link rel="stylesheet" href="~/Content/Policy/Policy.css">
 </head>
 <body>
     <div id="biggestContainer">
-        <div style="width: 100%; background-color: white; padding: 5px; min-height: 100vh; ">
-            <h1 style="margin-bottom:2px;">Chính sách vận chuyển</h1>
+        <div class="policy-container">
+            <h1>Chính sách vận chuyển</h1>
 
-            <p><span style="font-size:14px"><strong>1. Đối tác vận chuyển: </strong>Hàng hóa bán ra tại website @ViewData["webAddress"] được vận chuyển bởi bên thứ 3 uy tín: Shopee Express, Viettel Post, Vietnam Post...</span></p>
+            <p><span class="policy-text"><strong>1. Đối tác vận chuyển: </strong>Hàng hóa bán ra tại website @ViewData["webAddress"] được vận chuyển bởi bên thứ 3 uy tín: Shopee Express, Viettel Post, Vietnam Post...</span></p>
 
-            <p><strong><span style="font-size:14px">2. Phí vận chuyển:</span></strong></p>
+            <p><strong><span class="policy-text">2. Phí vận chuyển:</span></strong></p>
 
-            <p style="margin-left:30px"><span style="font-size:14px;">+ Đơn thường đi Hà Nội: @ViewData["inHaNoiFee"]đ/đơn.</span></p>
+            <p style="margin-left:30px"><span class="policy-text">+ Đơn thường đi Hà Nội: @ViewData["inHaNoiFee"]đ/đơn.</span></p>
 
-            <p style="margin-left:30px"><span style="font-size:14px;">+ Đơn thường đi các tỉnh/thành phố khác: @ViewData["outHaNoiFee"]đ/đơn.</span></p>
+            <p style="margin-left:30px"><span class="policy-text">+ Đơn thường đi các tỉnh/thành phố khác: @ViewData["outHaNoiFee"]đ/đơn.</span></p>
 
-            <p style="margin-left:30px"><span style="font-size:14px;">+ Miễn phí vận chuyển "Tổng tiền hàng" đơn thường từ 200,000đ.</span> <span style="color: red;"> Không áp dụng với đơn giao hỏa tốc/giao ngay trong ngày.</span></p>
+            <p style="margin-left:30px"><span class="policy-text">+ Miễn phí vận chuyển "Tổng tiền hàng" đơn thường từ 200,000đ.</span> <span class="policy-highlight"> Không áp dụng với đơn giao hỏa tốc/giao ngay trong ngày.</span></p>
 
-            <p style="margin-left:30px"><span style="font-size:14px;">+ Hỗ trợ gọi shipper giao hỏa tốc trong nội thành Hà Nội.</span> <span style="color: red;"> @ViewData["webAddress"] hỗ trợ gọi shipper bên vận chuyển ngay khi có đơn, bên mua trả toàn bộ phí ship.</span></p>
+            <p style="margin-left:30px"><span class="policy-text">+ Hỗ trợ gọi shipper giao hỏa tốc trong nội thành Hà Nội.</span> <span class="policy-highlight"> @ViewData["webAddress"] hỗ trợ gọi shipper bên vận chuyển ngay khi có đơn, bên mua trả toàn bộ phí ship.</span></p>
 
             <p><span style="font-size:14px"><strong>3. Thời gian&nbsp; xử lý đơn hàng và giao hàng: </strong></span></p>
 

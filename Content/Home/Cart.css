@@ -120,7 +120,8 @@ a {
     line-height: 16px;
     overflow: hidden;
     display: flex;
-    flex: 1;
+    justify-content: center;
+/*    flex: 1;*/
     flex-direction: column;
     padding: 5px 5px 0 10px;
 }
@@ -131,7 +132,8 @@ a {
     margin-bottom: 5px;
     max-height: 32px;
     text-overflow: ellipsis;
-    word-break: break-all;
+    word-break: keep-all; /* Giữ từ nguyên, chỉ break tại khoảng trắng */
+    overflow-wrap: break-word; /* Chỉ break từ QUÁ DÀI (emergency) */
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 2;
@@ -384,7 +386,8 @@ a {
         line-height: 16px;
         overflow: hidden;
         display: flex;
-        flex: 1;
+        justify-content: center;
+/*        flex: 1;*/
         flex-direction: column;
         padding: 5px 20px 0 10px;
     }

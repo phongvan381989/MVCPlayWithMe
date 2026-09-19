@@ -1,0 +1,168 @@
+/* ========================================
+   POLICY PAGES - SHARED STYLES
+   ======================================== */
+
+/* Container chung cho policy pages */
+.policy-container {
+    width: 100%;
+    background-color: white;
+    padding: 5px;
+    min-height: 100vh;
+}
+
+/* Heading chính của policy page */
+.policy-container h1 {
+    margin-bottom: 2px;
+}
+
+/* Các đoạn văn bản chính */
+.policy-container p {
+    text-align: justify;
+}
+
+/* Các span/text thường dùng */
+.policy-text {
+    font-size: 14px;
+    font-family: Arial, Helvetica, sans-serif;
+    color: #384158;
+}
+
+/* Link trong policy */
+.policy-link {
+    color: #05a;
+    text-decoration: none;
+}
+
+.policy-link:hover {
+    text-decoration: underline;
+}
+
+/* Text highlight màu đỏ */
+.policy-highlight {
+    color: red;
+}
+
+/* ========================================
+   INTRODUCE POLICY - BANK ACCOUNT SECTION
+   ======================================== */
+
+.bank-account-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 25px;
+    margin: 20px 0;
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.bank-account-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.bank-info-grid {
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 20px;
+    color: #333;
+}
+
+.bank-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.bank-info-row:last-child {
+    border-bottom: none;
+}
+
+.bank-info-label {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.bank-info-value {
+    color: #212529;
+    font-weight: 600;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.copy-btn-bank {
+    padding: 4px 10px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+
+.copy-btn-bank:hover {
+    background: #5568d3;
+    transform: translateY(-1px);
+}
+
+.copy-btn-bank.copied {
+    background: #28a745;
+}
+
+.bank-note {
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 6px;
+    padding: 12px;
+    margin-top: 15px;
+    color: #856404;
+    font-size: 13px;
+}
+
+@media (max-width: 576px) {
+    .bank-info-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+}
+
+/* ========================================
+   INTRODUCE POLICY - POLICY LINKS LIST
+   ======================================== */
+
+.policy-links-section {
+    margin-top: 30px;
+}
+
+.policy-links-section h3 {
+    margin-top: 30px;
+    margin-bottom: 15px;
+}
+
+.policy-links-list {
+    padding-left: 20px;
+}
+
+.policy-links-list p {
+    margin-bottom: 10px;
+}
+
+.policy-links-list a {
+    color: #05a;
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.policy-links-list a:hover {
+    text-decoration: underline;
+}

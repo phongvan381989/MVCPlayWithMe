@@ -2,6 +2,15 @@
     box-sizing: border-box;
 }
 
+.nvonvusv454 {
+    width: 100%;
+    display:flex;
+    justify-content:center;
+    background-color: white;
+/*    padding: 5px;*/
+    min-height: 100vh;
+}
+
 .container {
     max-width: 600px;
     padding: 5px;

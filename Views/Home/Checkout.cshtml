@@ -17,18 +17,14 @@
     <meta name="robots" content="noindex, follow">
 
     <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
-    <link rel="stylesheet" href="~/Content/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/Content/web.play.with.me.common.css?v=20260610">
-    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260610">
-    <link rel="stylesheet" href="~/Content/Home/Checkout.css?v=20260610">
+    @Styles.Render("~/bundles/css/common")
+    @Styles.Render("~/bundles/css/checkout")
 
     @if (!Context.IsDebuggingEnabled)
     {
         @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
         @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
     }
-
-    <script defer src="~/Scripts/bootstrap.bundle.min.js"></script>
 </head>
 <body>
     <div id="biggestContainer">
@@ -186,6 +182,6 @@
         };
     </script>
 
-    <script defer src="~/Scripts/Home/Checkout.js?v=20260610"></script>
+    <script defer  src="@Scripts.Url("~/bundles/js/checkout")"></script>
 </body>
 </html>

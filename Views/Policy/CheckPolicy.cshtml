@@ -2,23 +2,24 @@
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head_GA.cshtml")
+    <link rel="stylesheet" href="~/Content/Policy/Policy.css">
 </head>
 <body>
     <div id="biggestContainer">
-        <div style="width: 100%; background-color: white; padding: 5px; min-height: 100vh; ">
-            <h1 style="margin-bottom:2px;">Chính sách kiểm hàng</h1>
+        <div class="policy-container">
+            <h1>Chính sách kiểm hàng</h1>
             <br />
-            <p style="text-align:justify"><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><span style="color:#384158">- Trước khi nhận hàng và thanh toán, khách hàng được quyền kiểm tra sản phẩm. Không hỗ trợ thử hàng.</span></span></span></p>
+            <p><span class="policy-text">- Trước khi nhận hàng và thanh toán, khách hàng được quyền kiểm tra sản phẩm. Không hỗ trợ thử hàng.</span></p>
 
-            <p style="text-align:justify"><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><span style="color:#384158">- Khách hàng vui lòng mở gói hàng kiểm tra để đảm bảo đơn hàng được giao đúng mẫu mã, số lượng như đơn hàng đã đặt. Không thử hay dùng thử sản phẩm.</span></span></span></p>
+            <p><span class="policy-text">- Khách hàng vui lòng mở gói hàng kiểm tra để đảm bảo đơn hàng được giao đúng mẫu mã, số lượng như đơn hàng đã đặt. Không thử hay dùng thử sản phẩm.</span></p>
 
-            <p style="text-align:justify"><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><span style="color:#384158">- Sau khi đồng ý với món hàng được giao đến, khách hàng thanh toán với nhân viên giao hàng (trường hợp đơn hàng được ship COD) và nhận hàng.</span></span></span></p>
+            <p><span class="policy-text">- Sau khi đồng ý với món hàng được giao đến, khách hàng thanh toán với nhân viên giao hàng (trường hợp đơn hàng được ship COD) và nhận hàng.</span></p>
 
-            <p style="text-align:justify"><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><strong><span style="color:#384158">Lưu ý:&nbsp;</span></strong></span></span></p>
+            <p><span class="policy-text"><strong>Lưu ý:&nbsp;</strong></span></p>
 
-            <p style="text-align:justify"><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><span style="color:#384158">- Khi khách hàng kiểm tra đơn hàng, nhân viên giao nhận buộc phải đợi khách hàng kiểm tra hàng hóa bên trong gói hàng. Trường hợp nhân viên từ chối kiểm tra hàng hóa, khách hàng vui lòng liên hệ với @ViewData["webAddress"] qua hotline/Zalo: @ViewData["hotline"] để được hỗ trợ.</span></span></span></p>
+            <p><span class="policy-text">- Khi khách hàng kiểm tra đơn hàng, nhân viên giao nhận buộc phải đợi khách hàng kiểm tra hàng hóa bên trong gói hàng. Trường hợp nhân viên từ chối kiểm tra hàng hóa, khách hàng vui lòng liên hệ với @ViewData["webAddress"] qua hotline/Zalo: @ViewData["hotline"] để được hỗ trợ.</span></p>
 
-            <p style="text-align:justify"><span style="font-size:14px"><span style="font-family:Arial,Helvetica,sans-serif"><span style="color:#384158">- Khách hàng tránh dùng vật sắc nhọn để mở gói hàng để tránh gây hư hỏng cho sản phẩm bên trong. Đối với những trường hợp sản phẩm bị hư hỏng do lỗi từ phía khách hàng, @ViewData["webAddress"] &nbsp;rất tiếc không thể hỗ trợ khách hàng đổi/trả/bảo hành sản phẩm.</span></span></span></p>
+            <p><span class="policy-text">- Khách hàng tránh dùng vật sắc nhọn để mở gói hàng để tránh gây hư hỏng cho sản phẩm bên trong. Đối với những trường hợp sản phẩm bị hư hỏng do lỗi từ phía khách hàng, @ViewData["webAddress"] &nbsp;rất tiếc không thể hỗ trợ khách hàng đổi/trả/bảo hành sản phẩm.</span></p>
 
         </div>
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")

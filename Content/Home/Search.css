@@ -51,7 +51,8 @@
     margin: 0px;
     padding-left:2px;
     padding-right:2px;
-    word-break: break-word;
+    word-break: keep-all;        /* Giữ từ nguyên, chỉ break tại khoảng trắng */
+    overflow-wrap: break-word;   /* Chỉ break từ QUÁ DÀI (emergency) */
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
