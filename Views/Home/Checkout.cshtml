@@ -165,13 +165,6 @@
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
 
-    <script defer src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
-    <script defer src="~/Scripts/web.play.with.me.customer.infor.cookie.js?v=20260610"></script>
-    <script defer src="~/Scripts/web.play.with.me.address.js?v=20260610"></script>
-    <script defer src="~/Scripts/cart-manager.js"></script>
-    <script defer src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
-    <script defer src="~/Scripts/Customer/CommonOrder.js?v=20260610"></script>
-
     <!-- ✅ SSR: Pass server data vào JavaScript (không cần gọi API) -->
     <script>
         // Data từ server (SSR) - JavaScript dùng cho tương tác, KHÔNG fetch API
@@ -181,7 +174,16 @@
             addresses: @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(addresses))
         };
     </script>
+    @*<script defer src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
+        <script defer src="~/Scripts/cart-manager.js"></script>
+        <script defer src="~/Scripts/web.play.with.me.action.common.js?v=20260610"></script>
 
-    <script defer  src="@Scripts.Url("~/bundles/js/checkout")"></script>
+        <script defer src="~/Scripts/web.play.with.me.customer.infor.cookie.js?v=20260610"></script>
+        <script defer src="~/Scripts/web.play.with.me.address.js?v=20260610"></script>
+        <script defer src="~/Scripts/Customer/CommonOrder.js?v=20260610"></script>
+        <script defer src="~/Scripts/Home/Checkout.js?v=20260610"></script>*@
+
+    <script defer src="@Scripts.Url("~/bundles/js/common")"></script>
+    <script defer src="@Scripts.Url("~/bundles/js/checkout")"></script>
 </body>
 </html>

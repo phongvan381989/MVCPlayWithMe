@@ -6,9 +6,10 @@
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260610">
+    @*<link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css?v=20260610">
     <link rel="stylesheet" href="~/Content/web.play.with.me.modal.input.css?v=20260610">
-    <link rel="stylesheet" href="~/Content/Customer/AccountInfor.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/Customer/AccountInfor.css?v=20260610">*@
+    @Styles.Render("~/bundles/css/customer/account_infor")
 </head>
 <body>
     <div id="biggestContainer">
@@ -145,11 +146,13 @@
         @Html.Partial("~/Views/Shared/biggestContainer_Bottom.cshtml")
     </div>
 
-    <script src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
-    <script src="~/Scripts/cart-manager.js"></script>
-    <script src="~/Scripts/web.play.with.me.action.common.js"></script>
-    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js?v=20260610"></script>
-    <script src="~/Scripts/web.play.with.me.address.js?v=20260610"></script>
-    <script src="~/Scripts/Customer/AccountInfor.js?v=20260610"></script>
+    @*<script src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
+        <script src="~/Scripts/cart-manager.js"></script>
+        <script src="~/Scripts/web.play.with.me.action.common.js"></script>
+        <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js?v=20260610"></script>
+        <script src="~/Scripts/web.play.with.me.address.js?v=20260610"></script>
+        <script src="~/Scripts/Customer/AccountInfor.js?v=20260610"></script>*@
+    <script defer src="@Scripts.Url("~/bundles/js/common")"></script>
+    <script defer src="@Scripts.Url("~/bundles/js/customer/account_infor")"></script>
 </body>
 </html>

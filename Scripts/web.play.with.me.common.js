@@ -973,9 +973,6 @@ function CreateChildOfAccountElementV2(parrent, href, title) {
     childA.href = href;
     childA.title = title;
     childA.innerHTML = title;
-    //if (func != null) {
-    //    childA.onclick = function () { func(); };
-    //}
 
     childDiv.appendChild(childA);
     parrent.appendChild(childDiv);

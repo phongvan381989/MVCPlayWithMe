@@ -1,17 +1,31 @@
 ﻿// Khách vãng lai hay đăng nhập để hiển thị hành động tương ứng trên
 // menu Tài Khoản góc trên phải màn hình
 // Hàm này phải gọi mỗi khi load page
-function ShowAccoutAction() {
+function ShowAccountAction() {
     let ele = document.getElementsByClassName("dropdown-content")[0];
     if (ele == null) { // Đăng nhập với vai trò admin
         return;
     }
 
-    document.getElementsByTagName("BODY")[0].addEventListener("touchmove", function (event) {
-        if (window.getComputedStyle(ele, null).display == "block") {
-            ele.style.display = "none";
+    // ✅ Remove listener cũ trước khi add listener mới (tránh duplicate)
+    if (window.dropdownClickOutsideListener) {
+        document.removeEventListener("click", window.dropdownClickOutsideListener);
+    }
+
+    // ✅ Click outside to close: Đóng dropdown khi click/tap bên ngoài
+    window.dropdownClickOutsideListener = function (event) {
+        const accountContainer = document.querySelector('.top-account-container');
+
+        // Nếu click KHÔNG vào account container (bao gồm cả dropdown)
+        if (accountContainer && !accountContainer.contains(event.target)) {
+            // Và dropdown đang hiển thị
+            if (ele.offsetParent !== null) {
+                ele.style.display = "none";
+            }
         }
-    });
+    };
+
+    document.addEventListener("click", window.dropdownClickOutsideListener);
 
     ele.innerHTML = "";
 
@@ -92,7 +106,7 @@ async function CommonAction() {
         document.getElementById("left_container").style.display = "none";
     }
 
-    ShowAccoutAction();
+    ShowAccountAction();
     if (href.includes("/HOME/CHECKOUT") ||
         href.includes("/HOME/CART")) {
         // remove cart icon
@@ -104,4 +118,9 @@ async function CommonAction() {
     }
 }
 
-CommonAction();
+// ✅ Guard flag: Chỉ chạy CommonAction() 1 lần duy nhất
+// Tránh duplicate execution khi back/forward (bfcache) hoặc script load nhiều lần
+if (typeof window.commonActionExecuted === 'undefined') {
+    window.commonActionExecuted = true;
+    CommonAction();
+}

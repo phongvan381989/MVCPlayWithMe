@@ -6,6 +6,12 @@ public class NUglifyJsMinifier : IBundleTransform
 {
     public void Process(BundleContext context, BundleResponse response)
     {
+        // Nếu EnableOptimizations = false (đang Debug), DỪNG NGAY KHÔNG LÀM GÌ CẢ
+        if (!BundleTable.EnableOptimizations)
+        {
+            return;
+        }
+
         // Sử dụng NUglify để nén JS (hỗ trợ đầy đủ ES6+)
         var result = Uglify.Js(response.Content);
 
