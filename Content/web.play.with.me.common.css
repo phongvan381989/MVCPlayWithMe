@@ -33,6 +33,7 @@
     padding: 5px 5px;
     width: 100%;
     display: none;
+    box-sizing: border-box;
     /*margin-left:5px;
     margin-right:5px;
     margin-top:10px;

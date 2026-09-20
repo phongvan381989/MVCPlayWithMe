@@ -25,6 +25,8 @@
     background: white;
     padding: 1px;
     border: 1px solid #d0d0d0;
+    box-sizing: border-box; /* ✅ Padding/border tính trong width */
+    max-width: 100%; /* ✅ Không vượt quá parent */
 }
 
 .product-item:hover {
@@ -33,6 +35,7 @@
 }
 
 .image-wrapper {
+    width: 100%; /* ✅ Chiếm hết width của parent */
     max-width: 100%;
     height: auto;
 }
@@ -40,8 +43,10 @@
 .card-img-top {
     width: 100%;
     height: auto;
+    max-width: 100%; /* ✅ Đảm bảo không tràn */
     border-top-right-radius: 10px;
     border-top-left-radius: 10px;
+    display: block; /* ✅ Bỏ khoảng trắng dưới image */
 }
 
 .product-name-h3 {
@@ -64,16 +69,20 @@
 
 #biggestContainer_body_wraper_item {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    column-gap:0px;
-    row-gap:5px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr)); /* ✅ Tự co lại khi viewport nhỏ */
+    column-gap: 5px;
+    row-gap: 5px;
     width: 100%;
     margin: 0 auto;
+    padding: 0 5px;
+    box-sizing: border-box;
 }
 
 #biggestContainer_body_wraper_item > * {
-    max-width: 250px;
+    max-width: 100%; /* ✅ Không vượt quá width của grid cell */
+    width: 100%; /* ✅ Chiếm hết grid cell */
     margin: 0 auto;
+    box-sizing: border-box;
 }
 
 .price-sell-detail {
@@ -101,6 +110,7 @@
     color: inherit;
     display: block;
     cursor: pointer;
+    margin-bottom: 5px;
 }
 
 .free-instant-ship-link:hover .free-instant-ship {
@@ -119,6 +129,7 @@
     gap: 4px;
     align-items: center;
     transition: all 0.2s ease;
+    border-radius: 5px;
 }
 
 .free-instant-ship-message {
@@ -154,13 +165,17 @@
 
     #biggestContainer_body_wraper_item {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 5px;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); /* ✅ Tự co lại nếu cần */
+        gap: 8px;
         width: 100%;
         margin: 0 auto;
+        padding: 0 5px;
+        box-sizing: border-box;
     }
         #biggestContainer_body_wraper_item > * {
-            max-width: 280px;
+            max-width: 280px; /* ✅ Giới hạn max, nhưng vẫn co lại nếu cần */
+            width: 100%;
             margin: 0 auto;
+            box-sizing: border-box;
         }
 }

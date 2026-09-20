@@ -96,7 +96,7 @@ namespace MVCPlayWithMe.Controllers
                         Thread.Sleep(10000);
 
                         // Lấy sản phẩm trong đơn
-                        MyLogger.GetInstance().Info("Update quantity at customer cancel and order has pakcked");
+                        MyLogger.GetInstance().Info("Update quantity at customer cancel and order has pakcked" + orderStatusPush.ordersn);
                         // Không quan tâm thành công hay thất bại, nếu xịt thì phải chịu
                         await ProductController.UpdateQuantityOfProductsInOrder(EECommerceType.SHOPEE, orderStatusPush.ordersn, conn);
                     }

@@ -767,7 +767,7 @@ function ConvertMoneyToText(money) {
 // Convert số tiền sang text dạng: ₫123,456,700
 function ConvertMoneyToTextWithIcon(money) {
     let text = ConvertMoneyToText(money);
-    return text + "₫";
+    return text + "đ";
 }
 
 // Convert text dạng: 123,456,700 sang số tiền

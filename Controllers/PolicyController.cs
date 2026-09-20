@@ -22,8 +22,8 @@ namespace MVCPlayWithMe.Controllers
             ViewData["emailAddress"] = "playwithmebook@gmail.com";
             ViewData["ceoName"] = "HOÀNG THỊ HUỆ";
             ViewData["businessId"] = "01D-8014432";
-            ViewData["inHaNoiFee"] = Common.ConvertIntToVNDFormat(Common.standardShipFeeInHaNoi);
-            ViewData["outHaNoiFee"] = Common.ConvertIntToVNDFormat(Common.standardShipFeeOutHaNoi);
+            ViewData["inHaNoiFee"] = Common.ConvertMoneyToTextWithIcon(Common.standardShipFeeInHaNoi);
+            ViewData["outHaNoiFee"] = Common.ConvertMoneyToTextWithIcon(Common.standardShipFeeOutHaNoi);
         }
 
         // GET: Policy

@@ -1357,7 +1357,12 @@ namespace MVCPlayWithMe.General
         // Helper: Format tiền với icon
         public static string ConvertIntToVNDFormat(decimal money)
         {
-            return string.Format("{0:N0}", money) + "₫";
+            return string.Format("{0:N0}", money);
+        }
+
+        public static string ConvertMoneyToTextWithIcon(decimal money)
+        {
+            return $"{ConvertIntToVNDFormat(money)}đ";
         }
 
         // Helper: Tính % discount

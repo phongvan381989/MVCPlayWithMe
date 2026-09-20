@@ -110,10 +110,10 @@
                             ? (int)Math.Round(100.0 * (bookCoverPrice - salePrice) / bookCoverPrice)
                             : 0;
                     }
-                    <div id="price">@Common.ConvertIntToVNDFormat(salePrice)</div>
+                    <div id="price">@Common.ConvertMoneyToTextWithIcon(salePrice)</div>
                     @if (bookCoverPrice > salePrice)
                     {
-                        <div id="book-cover-price"><del>@Common.ConvertIntToVNDFormat(bookCoverPrice)</del></div>
+                        <div id="book-cover-price"><del>@Common.ConvertMoneyToTextWithIcon(bookCoverPrice)</del></div>
                         <div id="discount">-@discountPercent%</div>
                     }
                 </div>
