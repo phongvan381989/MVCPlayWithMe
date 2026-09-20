@@ -88,8 +88,6 @@
                              width="@heroWidth"
                              height="@heroHeight">
                     </div>
-                    <div id="left_arrow" title="Ảnh trước"></div>
-                    <div id="right_arrow" title="Ảnh sau"></div>
                 </div>
                 <div id="item-small-media-container">
                     @* SSR thumbnail gallery cho initial load (chỉ images) - JavaScript re-render khi switch variant *@
@@ -112,11 +110,11 @@
                             ? (int)Math.Round(100.0 * (bookCoverPrice - salePrice) / bookCoverPrice)
                             : 0;
                     }
-                    <div id="price"><sup>₫</sup>@salePrice.ToString("N0")</div>
+                    <div id="price">@Common.ConvertIntToVNDFormat(salePrice)</div>
                     @if (bookCoverPrice > salePrice)
                     {
-                        <div id="book-cover-price"><del><sup>₫</sup>@bookCoverPrice.ToString("N0")</del></div>
-                        <div id="discount">@discountPercent% giảm</div>
+                        <div id="book-cover-price"><del>@Common.ConvertIntToVNDFormat(bookCoverPrice)</del></div>
+                        <div id="discount">-@discountPercent%</div>
                     }
                 </div>
                 <div class="_7VDqtl">

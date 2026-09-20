@@ -9,10 +9,6 @@
     margin-bottom: 10px;
 }
 
-#item_media_arrow_wrapper {
-    position: relative;
-}
-
 #item-medium-media {
     display: flex;
     justify-content: center;
@@ -124,47 +120,6 @@
     max-height: 100%;
     object-fit: contain;
     display: block;
-}
-
-#left_arrow {
-    position: absolute;
-    left: 0px;
-    top: 0px;
-    height: 100%;
-    width: 40px;
-    display: flex;
-    align-items: center;
-    z-index: 1;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-#right_arrow {
-    position: absolute;
-    right: 0px;
-    top: 0px;
-    height: 100%;
-    width: 40px;
-    display: flex;
-    align-items: center;
-    z-index: 1;
-    user-select: none;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
-/* Bỏ hover effect của div, chỉ áp dụng cho SVG */
-#left_arrow svg,
-#right_arrow svg {
-    cursor: pointer;
-    transition: fill-opacity 0.2s ease;
-}
-
-#left_arrow svg:hover,
-#right_arrow svg:hover {
-    fill-opacity: 0.8 !important;
 }
 
 h1 {

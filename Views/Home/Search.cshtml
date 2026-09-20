@@ -113,10 +113,10 @@
                                     <h3 class="product-name-h3">@product.Name</h3>
                                 </div>
                                 <div class="price-sell-original-discount-percent">
-                                    <span class="price-sell-detail">@Common.FormatMoney(product.SalePrice)</span>
+                                    <span class="price-sell-detail">@Common.ConvertIntToVNDFormat(product.SalePrice)</span>
                                     @if (product.BookCoverPrice > product.SalePrice)
                                     {
-                                        <span class="price-original-detail">@Common.FormatMoney(product.BookCoverPrice)</span>
+                                        <span class="price-original-detail">@Common.ConvertIntToVNDFormat(product.BookCoverPrice)</span>
                                         <span class="price-discount-percent-detail">-@Common.CalculateDiscountPercent(product.BookCoverPrice, product.SalePrice)%</span>
                                     }
                                 </div>

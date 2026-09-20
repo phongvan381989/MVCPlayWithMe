@@ -291,8 +291,6 @@ function HomePageShowSanPham() {
         return;
     }
 
-    ShowRightLeftArrow();
-
     // ✅ SSR: Thumbnails đã render từ server, chỉ cần attach event listeners
     AttachThumbnailEventListeners();
 
@@ -445,50 +443,6 @@ function ShowSmallItem() {
     for (let i = 0; i < sanPhamObject.MediaList.length; i++) {
         itemSmallMediaContainer.appendChild(CreateContainerSmallItem(sanPhamObject.MediaList[i], i, metadataHasVideo));
     }
-}
-
-function ShowRightLeftArrow() {
-    // Add mũi tên di chuyển sang trái
-    let leftArrow = document.getElementById("left_arrow");
-    leftArrow.innerHTML = '<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,50 30,30 30,70" style="fill:lime;" /></svg>';
-
-    // Attach click event vào SVG chứ không phải div
-    let leftArrowSvg = leftArrow.querySelector("svg");
-    leftArrowSvg.addEventListener("click", function (event) {
-        event.preventDefault(); // Ngăn scroll jump
-        if (sanPhamObject.MediaList.length == 0 || sanPhamObject.MediaList.length == 1) {
-            return;
-        }
-
-        if (selectedIndex == 0) {
-            selectedIndex = sanPhamObject.MediaList.length - 1;
-        }
-        else {
-            selectedIndex--;
-        }
-        ShowMediumItemFromIndex(selectedIndex);
-    });
-
-    // Add mũi tên di chuyển sang phải
-    let rightArrow = document.getElementById("right_arrow");
-    rightArrow.innerHTML = '<svg class="arrow-icon" xmlns="http://www.w3.org/2000/svg" version="1.1" height="100" width="40" fill-opacity="0.4"><polygon points="10,30 30,50 10,70" style="fill:lime;" /></svg>';
-
-    // Attach click event vào SVG chứ không phải div
-    let rightArrowSvg = rightArrow.querySelector("svg");
-    rightArrowSvg.addEventListener("click", function (event) {
-        event.preventDefault(); // Ngăn scroll jump
-        if (sanPhamObject.MediaList.length == 0 || sanPhamObject.MediaList.length == 1) {
-            return;
-        }
-        if (selectedIndex == sanPhamObject.MediaList.length - 1) {
-            selectedIndex = 0;
-        }
-        else {
-            selectedIndex++;
-        }
-
-        ShowMediumItemFromIndex(selectedIndex);
-    });
 }
 
 // Show medium item từ index

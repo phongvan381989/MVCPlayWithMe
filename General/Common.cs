@@ -1348,39 +1348,14 @@ namespace MVCPlayWithMe.General
         }
 
         #region Xử lý tiền
+        // Làm tròn xuống tiền về bội số của 100. VD: 12345 -> 12300
         public static int FloorMoney(int money)
         {
             return money / 100 * 100;
         }
 
-        public static string ConvertIntToVNDFormat(int money)
-        {
-            // Thêm ','
-            StringBuilder sb = new StringBuilder();
-            sb.Append(money.ToString());
-            int length = sb.Length;
-            if (length > 9)
-            {
-                sb.Insert(length - 3, ',');
-                sb.Insert(length - 6, ',');
-                sb.Insert(length - 9, ',');
-
-            }
-            else if (length > 6)
-            {
-                sb.Insert(length - 3, ',');
-                sb.Insert(length - 6, ',');
-
-            }
-            else if (length > 3)
-            {
-                sb.Insert(length - 3, ',');
-            }
-            return sb.ToString();
-        }
-
         // Helper: Format tiền với icon
-        public static string FormatMoney(decimal money)
+        public static string ConvertIntToVNDFormat(decimal money)
         {
             return string.Format("{0:N0}", money) + "₫";
         }

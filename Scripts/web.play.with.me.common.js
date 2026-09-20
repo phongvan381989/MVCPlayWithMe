@@ -759,24 +759,9 @@ function ConvertToInt(value) {
 
 // Convert số tiền sang text dạng: 123,456,700 hoặc -123,456,700
 function ConvertMoneyToText(money) {
-    // Xử lý số âm
-    let isNegative = money < 0;
-    let absValue = Math.abs(money); // Lấy giá trị tuyệt đối
-
-    let text = absValue.toString();
-    let textMoney = "";
-    let length = text.length;
-    for (let i = length - 1; i >= 0; i--) {
-        textMoney = text.charAt(i) + textMoney;
-        if ((i == length - 3 && length > 3) ||
-            (i == length - 6 && length > 6) ||
-            (i == length - 9 && length > 9)) {
-            textMoney = "," + textMoney;
-        }
-    }
-
-    // Thêm dấu - nếu là số âm
-    return isNegative ? "-" + textMoney : textMoney;
+    // ✅ Dùng toLocaleString() - đơn giản, chuẩn quốc tế, handle mọi số lớn
+    // Tự động thêm dấu phẩy mỗi 3 chữ số từ phải sang trái
+    return money.toLocaleString('en-US');
 }
 
 // Convert số tiền sang text dạng: ₫123,456,700
