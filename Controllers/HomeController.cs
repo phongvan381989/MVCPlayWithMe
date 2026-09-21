@@ -1596,43 +1596,52 @@ namespace MVCPlayWithMe.Controllers
 
             string detailHtml = sanPham.Detail;
 
-            // Parse {{image:filename}} → <figure> HTML
-            detailHtml = System.Text.RegularExpressions.Regex.Replace(
-                detailHtml,
-                @"\{\{image:([^}]+)\}\}",
-                match =>
-                {
-                    string filename = match.Groups[1].Value;
-
-                    // Tìm metadata
-                    SanPhamMedia media = null;
-                    if (sanPham.MediaList != null && sanPham.MediaList.Count > 0)
+            try
+            {
+                // Parse {{image:filename}} → <figure> HTML
+                detailHtml = System.Text.RegularExpressions.Regex.Replace(
+                    detailHtml,
+                    @"\{\{image:([^}]+)\}\}",
+                    match =>
                     {
-                        media = sanPham.MediaList.FirstOrDefault(m => m.FileName == filename);
+                        string filename = match.Groups[1].Value;
+
+                        // Tìm metadata
+                        SanPhamMedia media = null;
+                        if (sanPham.MediaList != null && sanPham.MediaList.Count > 0)
+                        {
+                            media = sanPham.MediaList.FirstOrDefault(m => m.FileName == filename);
+                        }
+
+                        // Build image URL
+                        string imgSrc = $"{Common.SanPhamMediaFolderPath}{sanPham.Id}/{filename}";
+                        string alt = media != null
+                            ? (!string.IsNullOrWhiteSpace(media.AltText) ? media.AltText : sanPham.Name)
+                            : filename;
+                        string caption = media?.Description ?? media?.Title ?? "";
+
+                        // Build HTML
+                        var figureHtml = new StringBuilder();
+                        figureHtml.Append("<figure class=\"product-detail-image\">");
+                        figureHtml.Append($"<img src=\"{HttpUtility.HtmlAttributeEncode(imgSrc)}\" alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" width=\"{media.Width}\" heigth=\"{media.Height}\" loading=\"lazy\">");
+
+                        if (!string.IsNullOrWhiteSpace(caption))
+                        {
+                            figureHtml.Append($"<figcaption>{HttpUtility.HtmlEncode(caption)}</figcaption>");
+                        }
+
+                        figureHtml.Append("</figure>");
+
+                        return figureHtml.ToString();
                     }
-
-                    // Build image URL
-                    string imgSrc = $"{Common.SanPhamMediaFolderPath}{sanPham.Id}/{filename}";
-                    string alt = media != null
-                        ? (!string.IsNullOrWhiteSpace(media.AltText) ? media.AltText : sanPham.Name)
-                        : filename;
-                    string caption = media?.Description ?? media?.Title ?? "";
-
-                    // Build HTML
-                    var figureHtml = new StringBuilder();
-                    figureHtml.Append("<figure class=\"product-detail-image\">");
-                    figureHtml.Append($"<img src=\"{HttpUtility.HtmlAttributeEncode(imgSrc)}\" alt=\"{HttpUtility.HtmlAttributeEncode(alt)}\" width=\"{media.Width}\" heigth=\"{media.Height}\" loading=\"lazy\">");
-
-                    if (!string.IsNullOrWhiteSpace(caption))
-                    {
-                        figureHtml.Append($"<figcaption>{HttpUtility.HtmlEncode(caption)}</figcaption>");
-                    }
-
-                    figureHtml.Append("</figure>");
-
-                    return figureHtml.ToString();
-                }
-            );
+                );
+            }
+            catch(Exception ex)
+            {
+                // Log the exception if needed
+                System.Diagnostics.Debug.WriteLine($"Error occurred while processing description for product {sanPham.Id}: {ex.Message}");
+                detailHtml = sanPham.Detail;
+            }
 
             // Xử lý newlines dư thừa
             // 1. Xóa newlines trước thẻ <p> và </p>

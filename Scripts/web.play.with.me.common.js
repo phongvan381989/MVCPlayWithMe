@@ -1964,3 +1964,77 @@ function CopyWithVisualFeedback(text, element, options = {}) {
         alert('Không thể copy. Vui lòng copy thủ công.');
     });
 }
+
+
+// Tạo icon copy và gắn sự kiện
+/**
+ * Tạo copy icon bên cạnh element chứa text
+ * @param {string} elementId - ID của element chứa text cần copy
+ * @param {object} options - Tùy chọn: { size, color, title, successColor }
+ *
+ * Usage: <span id="myText">Hello World</span>
+ *        InitIconCopyAction('myText')
+ *        → <span id="myText">Hello World</span> [📋]
+ */
+function InitIconCopyAction(elementId, options = {}) {
+    const element = document.getElementById(elementId);
+
+    if (!element) {
+        return;
+    }
+
+    // ✅ Check xem đã init chưa (tránh duplicate)
+    if (element.dataset.copyIconAdded === 'true') {
+        return;
+    }
+
+    // Tạo container cho copy icon
+    const iconWrapper = document.createElement('span');
+    iconWrapper.className = 'common-copy-icon-wrapper';
+    iconWrapper.style.cssText = 'margin-left: 8px; cursor: pointer; display: inline-block; vertical-align: middle;';
+
+    // Tạo copy icon
+    iconWrapper.innerHTML = CreateCopyIcon({
+        size: options.size || '16',
+        color: options.color || 'White',
+        title: options.title || 'Copy',
+        className: 'common-copy-icon'
+    });
+
+    // ✅ Insert icon BÊN CẠNH element (sau element)
+    element.parentNode.insertBefore(iconWrapper, element.nextSibling);
+
+    // Click handler để copy text
+    const copyIcon = iconWrapper.querySelector('.common-copy-icon');
+    const handleCopy = function() {
+        const text = element.textContent.trim();
+        if (!text) {
+            if (DEBUG) console.warn(`#${elementId} has no text to copy`);
+            return;
+        }
+        CopyWithVisualFeedback(text, this, {
+            type: 'icon',
+            successColor: options.successColor || '#28a745'
+        });
+    };
+
+    copyIcon.addEventListener('click', handleCopy);
+
+    // ✅ Đánh dấu đã init
+    element.dataset.copyIconAdded = 'true';
+    element._copyIconWrapper = iconWrapper;
+    element._copyHandler = handleCopy;
+}
+
+function AutoInitBottomPhoneCopyIcon() {
+    let target = { id: 'bottom-phone-number', title: 'Copy số điện thoại' };
+    const element = document.getElementById(target.id);
+    if (element) {
+        InitIconCopyAction(target.id, {
+            title: target.title,
+            size: '16',
+            color: '#007bff'
+        });
+    }
+}
+AutoInitBottomPhoneCopyIcon();

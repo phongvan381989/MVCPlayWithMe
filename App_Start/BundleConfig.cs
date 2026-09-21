@@ -139,7 +139,6 @@ namespace MVCPlayWithMe
 
             var jsPaymentQR = new ScriptBundle("~/bundles/js/policy/paymentQR");
             jsPaymentQR.Include(
-                "~/Scripts/web.play.with.me.common.js",
                 "~/Scripts/Policy/PaymentQR.js");
             ChangeJsMinifierToNUglify(jsPaymentQR);
             bundles.Add(jsPaymentQR);
