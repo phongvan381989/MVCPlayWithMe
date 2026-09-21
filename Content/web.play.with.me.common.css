@@ -178,7 +178,7 @@
 .search-button {
             cursor: pointer;
             border: 0px;
-            width: 92px;
+            width: 80px;
             height: 38px;
             padding: 4px;
             border-radius: 0px 8px 8px 0px;
@@ -214,10 +214,11 @@
     line-height: 150%;
     border-top-left-radius: 8px;
     border-bottom-left-radius: 8px;
-    flex: 1 1 0%;
     outline: none;
     background: transparent;
-    min-width:150px;
+/*    min-width:100px;*/
+    width: 0px;
+    flex: 1 1 0%;
 }
 
 .cart-count {
