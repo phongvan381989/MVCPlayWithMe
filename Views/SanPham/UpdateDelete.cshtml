@@ -42,13 +42,7 @@
                 <label for="sp-sale-price">Giá bán thực tế: <span style="color:red">*</span></label>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="number" class="config-max-width margin-vertical" id="sp-sale-price" value="0" required style="flex: 1;" />
-                    <select id="platform-select" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
-                        <option value="PLAYWITHME" selected>PLAY WITH ME</option>
-                        <option value="SHOPEE">SHOPEE</option>
-                        <option value="TIKI">TIKI</option>
-                        <option value="LAZADA">LAZADA</option>
-                    </select>
-                    <button type="button" onclick="CalculateSalePriceAuto()" title="Tính giá bán tự động từ mapping, cập nhật giá bìa, chiết khấu nhập hàng nếu cần"
+                    <button type="button" onclick="CalculateSalePriceAuto()" title="Tính giá bán tự động từ mapping, cập nhật vào db. Cập nhật giá bìa, chiết khấu nhập hàng nếu cần"
                             style="padding: 8px 16px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;">
                         🧮 Tính Giá Tự Động
                     </button>

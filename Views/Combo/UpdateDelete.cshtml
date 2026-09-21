@@ -39,48 +39,48 @@
                 <div class="fkagvoa08fv">
                     <div style="padding:10px 0px 10px 0px;"> Thông tin chung của các sản phẩm thuộc combo. Để đơn giản ta lấy thông tin của 1 sản phẩm trong combo</div>
                     @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonInfor()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonInfor()"
                             title="Cập nhật thông tin chung cho các sản phẩm thuộc combo. Giá bìa nhạy cảm, nếu các sản phẩm đang không có giá bìa bằng nhau
                             sẽ không cập nhật">
                         Cập Nhật Thông Tin Chung
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonHardCover()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonHardCover()"
                             title="Cập nhật chỉ thông tin Bìa chung">
                         Cập Nhật Bìa Chung
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonAge()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonAge()"
                             title="Cập nhật chỉ thông tin tuổi chung">
                         Cập Nhật Tuổi Chung
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonLanguage()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonLanguage()"
                             title="Cập nhật chỉ thông tin tuổi chung">
                         Cập Nhật Ngôn Ngữ Chung
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonDimension()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonDimension()"
                             title="Cập nhật chỉ kích thước dài, rộng, cao, nặng chung">
                         Cập Nhật Dài, Rông, Cao, Nặng Chung
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonCategory()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonCategory()"
                             title="Cập nhật thể loại">
                         Cập Nhật Thể Loại
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonPageNumber()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonPageNumber()"
                             title="Cập nhật số trang chung">
                         Cập Nhật Số Trang
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonPublishingTime()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonPublishingTime()"
                             title="Cập nhật năm xuất bản chung">
                         Cập Nhật Năm Xuất Bản
                     </button>
 
-                    <button type="button" style="margin-right:20px;" onclick="UpdateCommonBookCoverPrice()"
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonBookCoverPrice()"
                             title="Cập nhật giá bìa chung">
                         Cập Nhật Giá Bìa Chung
                     </button>
@@ -89,20 +89,25 @@
             <div style="margin-bottom: 10px;">
                 @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
-                <button type="button" style="margin-left: 30px;"
-                        title="Tạo sản phẩm riêng lẻ, không cha và chưa đăng bán trên sàn thương mại điện tử."
+                <button type="button" class="hxvniuf87fso"
+                        title="Tạo sản phẩm riêng lẻ, không cha và chưa đăng bán trên sàn thương mại điện tử ứng với lựa chọn trên."
                         onclick="CreateProductOfComboOnECommerce()">
                     Tạo Sản Phẩm Trên Sàn TMDT
                 </button>
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+
+                <button type="button" class="hxvniuf87fso" title="Cập nhật tồn kho lên tất cả các sàn, web"
+                        onclick="UpdateQuantityToECommercePromise(true)">
+                    Cập Nhật Tồn Kho Lên Các Sàn
+                </button>
             </div>
             <br />
             <div id="button_group_id">
-                <button type="button" style="margin-right:20px;" onclick="UpdateCombo()"
+                <button type="button" class="hxvniuf87fso" onclick="UpdateCombo()"
                         title="Cập nhật tên combo, không cập nhật thông tin chung cho các sản phẩm thuộc combo">
                     Cập Nhật
                 </button>
-                <button type="button" style="margin-right:20px;" onclick="DeleteCombo()">Xóa</button>
+                <button type="button" class="hxvniuf87fso" onclick="DeleteCombo()">Xóa</button>
                 <button type="button" onclick="MappingOfCombo()" title="Danh sách sản phẩm trên sàn TMDT mapping với combo">Mapping</button>
             </div>
         </div>

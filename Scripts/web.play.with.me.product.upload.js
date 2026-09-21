@@ -291,8 +291,9 @@ function SetProductInfomation(product) {
     document.getElementById("parent-id").value = product.parentName;
     document.getElementById("detail").value = product.detail;
 
-    InitializeImageList(product.imageSrc);
-    InitializeVideoList(product.videoSrc);
+    // Không load ảnh video khi vừa load trang
+    // InitializeImageList(product.imageSrc);
+    // InitializeVideoList(product.videoSrc);
 }
 
 async function UpdateProductPromise() {
@@ -439,6 +440,12 @@ async function UpdateImage_Video() {
     //window.scrollTo(0, 0);
     //await Sleep(1000)
     //window.location.reload();
+}
+
+// Chỉ load ảnh khi click vào nút xem ảnh, video. Tránh load ảnh video khi không cần thiết
+function ShowImage_VideoOfProduct() {
+    InitializeImageList(product.imageSrc);
+    InitializeVideoList(product.videoSrc);
 }
 
 async function UpdateName() {
@@ -850,5 +857,38 @@ async function AddNewProsFromCSVPromise() {
     catch (error) {
         RemoveCircleLoader();
         CreateMustClickOkModal("Tạo sản phẩm lỗi. " + error, null);
+    }
+}
+
+async function UpdateQuantityToECommercePromise(isCombo) {
+    let id = GetValueFromUrlName("id");
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("isCombo", isCombo);
+    searchParams.append("id", id);
+
+    let url = "/Product/UpdateQuantityToTMDTFromProductComboId";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpPostPromise(searchParams, url);
+        RemoveCircleLoader();
+
+        // Cập nhật nhanh nên không hiển thị kết quả cập nhật, cập nhật bên MappingOf để biết
+        // if (responseDB.responseText != "null") {
+        //     let listCommonItemTemp = JSON.parse(responseDB.responseText);
+        //     // listCommonItem và listCommonItemTemp chỉ khác nhau trường result
+        //     let updateOk = ShowWhyUpdateFail(listCommonItemTemp);
+        //     if (updateOk) {
+        //         alert("Cập nhật thành công.")
+        //     }
+        //     else {
+        //         CreateMustClickOkModal("Cập nhật có lỗi, vui lòng kiểm tra và thử lại.", null);
+        //     }
+        // }
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật lỗi.", null);
+        return;
     }
 }

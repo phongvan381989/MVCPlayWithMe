@@ -12,9 +12,14 @@
                 <br />
                 <button type="button" onclick="MappingOfProduct()"
                         title="Xem sản phẩm liên kết trên sàn Tiki, Shopee, Lazada">
-                    Sản Phẩm Liên Kết Trên Sàn
+                    Xem Sản Phẩm Liên Kết Trên Sàn
                 </button>
-                <button type="button" style="margin-left: 30px;" onclick="UpdateProductPromise()">Cập Nhật</button>
+
+                <button type="button" style="margin-left: 30px;" title="Cập nhật tồn kho lên tất cả các sàn, web"
+                        onclick="UpdateQuantityToECommercePromise(false)">Cập Nhật Tồn Kho Lên Các Sàn</button>
+
+                <button type="button" style="margin-left: 30px;" title="Cập nhật thông tin sản phẩm"
+                        onclick="UpdateProductPromise()">Cập Nhật</button>
                 <button type="button" style="margin-left: 30px;"
                         title="Sản phẩm chỉ có thế xóa khi đang không liên kết với sản phẩm nào trên
                         Shopee, Tiki, Lazada, web voibenho, trong đơn hàng đã được bán, thông tin nhập xuất thực tế,..."
@@ -40,6 +45,12 @@
                             title="Tải ảnh lên sàn. Hiện tại hỗ trợ SHOPEE, Lazada"
                             onclick="UploadImageOnECommerce()">
                         Tải Ảnh Lên Sàn
+                    </button>
+
+                    <button type="button" style="margin-left: 30px;"
+                            title="Thống kê đơn hàng từ trước đến nay"
+                            onclick="GetOutputOfProduct()">
+                        Thống kê đơn hàng
                     </button>
                 </div>
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")

@@ -164,6 +164,27 @@ namespace MVCPlayWithMe.Controllers
         //    return tikiList;
         //}
 
+        public static async Task<List<CommonItem>> GetListMappingOfComboCoreAsync(int id, MySqlConnection conn)
+        {
+            List<CommonItem> ls = new List<CommonItem>();
+            try
+            {
+                List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfComboAsync(id, conn);
+                List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfComboAsync(id, conn);
+                List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfComboAsync(id, conn);
+                List<CommonItem> vbnList = await SanPhamMySql.GetListMappingOfComboAsync(id, conn);
+                ls.AddRange(tikiList);
+                ls.AddRange(shopeeList);
+                ls.AddRange(lazadaList);
+                ls.AddRange(vbnList);
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return ls;
+        }
+
         [HttpPost]
         public async Task <string> GetListMappingOfCombo(int id)
         {
@@ -178,15 +199,7 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    List<CommonItem> tikiList = await TikiMySql.TikiGetListMappingOfComboAsync(id, conn);
-                    List<CommonItem> shopeeList = await ShopeeMySql.ShopeeGetListMappingOfComboAsync(id, conn);
-                    List<CommonItem> lazadaList = await LazadaMySql.LazadaGetListMappingOfComboAsync(id, conn);
-                    List<CommonItem> vbnList = await SanPhamMySql.GetListMappingOfComboAsync(id, conn);
-
-                    ls.AddRange(tikiList);
-                    ls.AddRange(shopeeList);
-                    ls.AddRange(lazadaList);
-                    ls.AddRange(vbnList);
+                    ls = await GetListMappingOfComboCoreAsync(id, conn);
                 }
             }
             catch (Exception ex)

@@ -4,9 +4,15 @@
     </div>
     <div>
         @Html.Partial("~/Views/Shared/ImageSelect.cshtml")
+
         <button type="button" onclick="UpdateImage_Video()" class="diplay-none-when-create"
                 style="float: right; display:none">
             Cập nhật ảnh và video
+        </button>
+
+        <button type="button" onclick="ShowImage_VideoOfProduct()" class="diplay-none-when-create"
+                style="margin-right: 20px; float: right; display:none;">
+            Hiện ảnh/video
         </button>
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>

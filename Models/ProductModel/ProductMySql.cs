@@ -2389,7 +2389,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                         list.Add(new Output
                         {
                             id = rdr.GetInt32(idIndex),
-                            code = rdr.GetString(codeIndex),
+                            code = rdr.IsDBNull(codeIndex) ? null : rdr.GetString(codeIndex),
                             eCommmerce = rdr.GetInt32(eCommmerceIndex),
                             productId = rdr.GetInt32(productIdIndex),
                             quantity = rdr.GetInt32(quantityIndex),

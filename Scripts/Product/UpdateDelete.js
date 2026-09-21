@@ -72,8 +72,6 @@ function MappingOfProduct() {
     window.open("MappingOfProduct?id=" + id);
 }
 
-GetOutputOfProduct();
-
 function ECommerceTypeChange() {
     let index = GetIntECommerceType();
     if (DEBUG) {

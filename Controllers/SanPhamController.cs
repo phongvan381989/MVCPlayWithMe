@@ -1219,12 +1219,11 @@ namespace MVCPlayWithMe.Controllers
         /// Tính giá bán thực tế từ mapping sản phẩm kho + TaxAndFee
         /// </summary>
         /// <param name="sanPhamId">ID sản phẩm bán (tb_san_pham)</param>
-        /// <param name="platform">Tên sàn: PLAYWITHME, SHOPEE, TIKI, LAZADA</param>
         [HttpPost]
-        public async Task<string> CalculateAndUpdateSalePrice(int sanPhamId, string platform = "PLAYWITHME")
+        public async Task<string> CalculateAndUpdateSalePrice(int sanPhamId)
         {
             MySqlResultState result = new MySqlResultState();
-
+            string platform = "PLAYWITHME";
             try
             {
                 // 1. Load mappings với sản phẩm kho

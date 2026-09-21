@@ -1981,8 +1981,6 @@ async function CopyCoversFromComboProducts() {
 // ========================================
 
 async function CalculateSalePriceAuto() {
-    const platform = document.getElementById('platform-select').value;
-
     if (!sanPhamId) {
         CreateMustClickOkModal('Không xác định được ID sản phẩm');
         return;
@@ -1992,8 +1990,7 @@ async function CalculateSalePriceAuto() {
         ShowCircleLoader();
 
         const resultText = await PostJSON('/SanPham/CalculateAndUpdateSalePrice', {
-            sanPhamId: sanPhamId,
-            platform: platform
+            sanPhamId: sanPhamId
         });
 
         RemoveCircleLoader();

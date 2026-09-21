@@ -110,7 +110,7 @@
     color: inherit;
     display: block;
     cursor: pointer;
-    margin-bottom: 5px;
+    margin: 0 5px 5px 5px;
 }
 
 .free-instant-ship-link:hover .free-instant-ship {
@@ -172,10 +172,10 @@
         padding: 0 5px;
         box-sizing: border-box;
     }
-        #biggestContainer_body_wraper_item > * {
-            max-width: 280px; /* ✅ Giới hạn max, nhưng vẫn co lại nếu cần */
-            width: 100%;
-            margin: 0 auto;
-            box-sizing: border-box;
-        }
+    #biggestContainer_body_wraper_item > * {
+        max-width: 280px; /* ✅ Giới hạn max, nhưng vẫn co lại nếu cần */
+        width: 100%;
+        margin: 0 auto;
+        box-sizing: border-box;
+    }
 }
