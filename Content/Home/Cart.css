@@ -328,7 +328,7 @@ a {
     border-radius: 3px;
     border: 1px solid rgba(0,0,0,.09);
     background: #fff;
-    padding: 30px 0px;
+    padding: 10px 0px;
     z-index: 2;
     position: -webkit-sticky;
     position: sticky;
@@ -397,7 +397,7 @@ a {
         border-radius: 3px;
         border: 1px solid rgba(0,0,0,.09);
         background: #fff;
-        padding: 30px 5px;
+        padding: 15px 5px;
         margin: 5px 5px 20px 5px;
         z-index: 2;
         position: -webkit-sticky;
