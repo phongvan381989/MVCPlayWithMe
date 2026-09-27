@@ -264,8 +264,9 @@
     background: #e1e1e1;
 }
 
-.config-max-width{
+.config-max-width {
     width: 100%;
+    box-sizing:border-box;
 }
 
 /* để các phần tử không sát màn hình*/

@@ -360,10 +360,11 @@
             </div>
 
             <div style="margin: 20px 0; padding: 15px; background: #f0f7ff; border-left: 4px solid #2196F3; border-radius: 4px;">
-                <h4 style="margin-top: 0; color: #2196F3;">🤖 Claude AI - Tạo Alt Text & Auto Đổi Tên</h4>
+                <h4 style="margin-top: 0; color: #2196F3;">🤖 Claude AI - Chức Năng Riêng Lẻ</h4>
                 <p style="margin: 8px 0; color: #666;">
-                    <strong>Bước 1:</strong> Tạo Title, Alt Text, Description cho tất cả ảnh bằng Claude AI.<br>
-                    <strong>Bước 2:</strong> Auto đổi tên file dựa trên thông tin AI trả về hoặc trang trong Alt Text (VD: "trang 2-3" → "trang-2-3").
+                    <strong>Sử dụng khi cần chạy từng bước riêng:</strong><br>
+                    • <strong>Lấy Alt Text:</strong> Tạo Title, Alt Text, Description cho tất cả ảnh bằng Claude AI<br>
+                    • <strong>Đổi Tên:</strong> Auto đổi tên file dựa trên số trang từ AI hoặc Alt Text
                 </p>
                 <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button type="button"
@@ -377,6 +378,31 @@
                         🤖 Auto Đổi Tên Tất Cả Ảnh
                     </button>
                 </div>
+            </div>
+
+            <div style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border: 2px solid #667eea; border-radius: 8px; box-shadow: 0 2px 12px rgba(102, 126, 234, 0.15);">
+                <h3 style="margin-top: 0; color: #667eea; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 28px;">⚡</span>
+                    <span>Làm Tất Cả Trong 1 Click</span>
+                </h3>
+                <p style="margin: 12px 0; color: #555; line-height: 1.6;">
+                    <strong>Tự động thực hiện 4 bước tuần tự:</strong>
+                </p>
+                <ol style="margin: 10px 0; padding-left: 20px; color: #666; line-height: 1.8;">
+                    <li><strong>📋 Chép Ảnh:</strong> Copy ảnh từ sản phẩm kho (chỉ khi có đúng 1 mapping) → Xóa ảnh cũ, convert sang WebP</li>
+                    <li><strong>💰 Tính Giá Bán:</strong> Tự động tính giá bán, giá bìa, chiết khấu từ mapping sản phẩm kho</li>
+                    <li><strong>🤖 Lấy Alt Text:</strong> Gọi Claude AI để tạo Title, Alt Text, Description cho <strong>TẤT CẢ</strong> ảnh (AI tự detect số trang)</li>
+                    <li><strong>🏷️ Đổi Tên File:</strong> Auto đổi tên <strong>TẤT CẢ</strong> ảnh theo số trang AI đọc được (VD: "trang 2-3" → "trang-2-3.webp")</li>
+                    <li><strong>🏷️ Đổi Trạng Thái:</strong> Đổi sang đang kinh doanh</li>
+                </ol>
+                <p style="margin: 12px 0 16px 0; padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px; color: #856404; font-size: 13px;">
+                    ⚠️ <strong>Lưu ý:</strong> Quá trình có thể mất vài phút (tùy số lượng ảnh). Không đóng tab trong khi xử lý.
+                </p>
+                <button type="button"
+                        onclick="DoAllTasksInOneClick()"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
+                    ⚡ Chạy Tất Cả 5 Bước
+                </button>
             </div>
 
             <div id="media-container" class="media-container">

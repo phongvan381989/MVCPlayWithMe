@@ -441,28 +441,20 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        /// <summary>
-        /// Đổi tên media (ảnh/video) của sản phẩm
-        /// Rename tất cả versions: file gốc (nếu còn), WebP full size, WebP thumbnail
-        /// </summary>
-        [HttpPost]
-        public async Task<string> RenameMedia(string sanPhamId, string oldFileName, string newFileNameWithoutExt)
+        public async Task<MySqlResultState> RenameMediaCore(int sanPhamId,
+            string oldFileName, string newFileNameWithoutExt)
         {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
 
             MySqlResultState result = new MySqlResultState();
 
             try
             {
-                string path = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId);
+                string path = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.ToString());
                 if (path == null)
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Không tìm thấy thư mục media.";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // Validate tên mới
@@ -470,7 +462,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Tên file mới không được để trống.";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // Lấy extension từ file cũ
@@ -482,15 +474,15 @@ namespace MVCPlayWithMe.Controllers
                 //if (string.IsNullOrWhiteSpace(newFileSlug))
                 //    newFileSlug = "renamed";
 
-                string newFileNameWithExt = newFileNameWithoutExt + extension;
+                string newFileName = newFileNameWithoutExt + extension;
 
                 // Kiểm tra tên mới có trùng với file khác không
-                string newFullPath = Path.Combine(path, newFileNameWithExt);
-                if (System.IO.File.Exists(newFullPath) && !oldFileName.Equals(newFileNameWithExt, StringComparison.OrdinalIgnoreCase))
+                string newFullPath = Path.Combine(path, newFileName);
+                if (System.IO.File.Exists(newFullPath) && !oldFileName.Equals(newFileName, StringComparison.OrdinalIgnoreCase))
                 {
                     result.State = EMySqlResultState.ERROR;
-                    result.Message = $"Tên file '{newFileNameWithExt}' đã tồn tại. Vui lòng chọn tên khác.";
-                    return JsonConvert.SerializeObject(result);
+                    result.Message = $"Tên file '{newFileName}' đã tồn tại. Vui lòng chọn tên khác.";
+                    return result;
                 }
 
                 // Rename file gốc
@@ -515,8 +507,8 @@ namespace MVCPlayWithMe.Controllers
                 string thumbFolder = Path.GetDirectoryName(path) + Common.tail320;
 
                 string oldThumbPath = Path.Combine(thumbFolder, oldFileName);
-                string newThumbPath = Path.Combine(thumbFolder, newFileNameWithExt);
-                if(!Common.ImageExtensions.Contains(extension))
+                string newThumbPath = Path.Combine(thumbFolder, newFileName);
+                if (!Common.ImageExtensions.Contains(extension))
                 {
                     oldThumbPath = Path.Combine(thumbFolder, Path.GetFileNameWithoutExtension(oldFileName) + "-video-poster.webp");
                     newThumbPath = Path.Combine(thumbFolder, newFileNameWithoutExt + "-video-poster.webp");
@@ -528,29 +520,41 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 // Update FileName trong database (nếu có metadata)
-                if (int.TryParse(sanPhamId, out int sanPhamIdInt))
-                {
-                    MySqlResultState dbResult = await SanPhamMediaMySql.UpdateFileNameAsync(sanPhamIdInt, oldFileName, newFileNameWithExt);
-                    if (dbResult.State == EMySqlResultState.OK)
-                    {
-                        //MyLogger.GetInstance().Info($"Updated metadata FileName: {oldFileName} → {newFileNameWithExt}");
-                    }
-                    else
-                    {
-                        MyLogger.GetInstance().Warn($"Failed to update metadata FileName: {dbResult.Message}");
-                    }
-                }
 
-                result.State = EMySqlResultState.OK;
-                result.Message = $"Đổi tên thành công: {oldFileName} → {newFileNameWithExt}";
-                MyLogger.GetInstance().Info($"Renamed: {oldFileName} → {newFileNameWithExt}");
+                result = await SanPhamMediaMySql.UpdateFileNameAsync(sanPhamId, oldFileName, newFileName);
+                if (result.State == EMySqlResultState.OK)
+                {
+                    //MyLogger.GetInstance().Info($"Updated metadata FileName: {oldFileName} → {newFileNameWithExt}");
+                }
+                else
+                {
+                    MyLogger.GetInstance().Warn($"Failed to update metadata FileName: {result.Message}");
+                }
+   
+
+                result.Message = $"Đổi tên thành công: {oldFileName} → {newFileName}";
             }
             catch (Exception ex)
             {
                 Common.SetResultException(ex, result);
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
+        }
+
+        /// <summary>
+        /// Đổi tên media (ảnh/video) của sản phẩm
+        /// Rename tất cả versions: file gốc (nếu còn), WebP full size, WebP thumbnail
+        /// </summary>
+        [HttpPost]
+        public async Task<string> RenameMedia(int sanPhamId, string oldFileName, string newFileNameWithoutExt)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await RenameMediaCore(sanPhamId, oldFileName, newFileNameWithoutExt));
         }
 
         /// <summary>
@@ -918,20 +922,8 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        /// <summary>
-        /// Chép toàn bộ ảnh từ sản phẩm kho sang sản phẩm bán
-        /// Không chép video
-        /// Xóa ảnh/video của sản phẩm bán cũ, copy ảnh mới và sinh phiên bản 320
-        /// Chỉ dùng khi có đúng 1 mapping
-        /// </summary>
-        [HttpPost]
-        public async Task<string> CopyImagesFromKhoProduct(string sanPhamName, int sanPhamBanId, int sanPhamKhoId)
+        private async Task<MySqlResultState> CopyImagesFromKhoProductCore(string sanPhamName, int sanPhamBanId, int sanPhamKhoId)
         {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
-
             MySqlResultState result = new MySqlResultState();
 
             try
@@ -942,7 +934,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Sản phẩm kho không có ảnh để copy";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // 2. Xóa toàn bộ ảnh cũ của sản phẩm bán (bao gồm cả folder _320)
@@ -977,11 +969,11 @@ namespace MVCPlayWithMe.Controllers
 
                         //string webpImage = Common.ConvertSanPhamImageToWebP(destFile);
                         var (width, height, webpImage) = Common.ConvertSanPhamImageToWebP_Thumbnail(destFile);
-                        if(width == 0 || height == 0)
+                        if (width == 0 || height == 0)
                         {
                             result.State = EMySqlResultState.ERROR;
                             result.Message = $"Failed to convert image to WebP: {destFile}";
-                            return JsonConvert.SerializeObject(result);
+                            return result;
                         }
 
                         uint mediaWidth = width;
@@ -1009,7 +1001,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Không tìm thấy ảnh nào để copy";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
                 result.State = EMySqlResultState.OK;
                 result.Message = $"Chép {copiedCount} ảnh thành công";
@@ -1021,7 +1013,24 @@ namespace MVCPlayWithMe.Controllers
                 result.Message = ex.Message;
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
+        }
+
+        /// <summary>
+        /// Chép toàn bộ ảnh từ sản phẩm kho sang sản phẩm bán
+        /// Không chép video
+        /// Xóa ảnh/video của sản phẩm bán cũ, copy ảnh mới và sinh phiên bản 320
+        /// Chỉ dùng khi có đúng 1 mapping
+        /// </summary>
+        [HttpPost]
+        public async Task<string> CopyImagesFromKhoProduct(string sanPhamName, int sanPhamBanId, int sanPhamKhoId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await CopyImagesFromKhoProductCore(sanPhamName, sanPhamBanId, sanPhamBanId));
         }
 
         /// <summary>
@@ -1215,12 +1224,7 @@ namespace MVCPlayWithMe.Controllers
 
         #region Price Calculation API Methods
 
-        /// <summary>
-        /// Tính giá bán thực tế từ mapping sản phẩm kho + TaxAndFee
-        /// </summary>
-        /// <param name="sanPhamId">ID sản phẩm bán (tb_san_pham)</param>
-        [HttpPost]
-        public async Task<string> CalculateAndUpdateSalePrice(int sanPhamId)
+        public async Task<MySqlResultState> CalculateAndUpdateSalePriceCore(int sanPhamId)
         {
             MySqlResultState result = new MySqlResultState();
             string platform = "PLAYWITHME";
@@ -1236,7 +1240,7 @@ namespace MVCPlayWithMe.Controllers
 
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Chưa có mapping sản phẩm kho. Vui lòng mapping trước khi tính giá. Sản phấm tạm thời dừng bán";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // 2. Load sản phẩm hiện tại
@@ -1245,7 +1249,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Không tìm thấy sản phẩm";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // 3. Tính tổng giá bìa và tổng giá nhập từ mapping
@@ -1284,7 +1288,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = $"Không tìm thấy TaxAndFee cho sàn {platform}";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // 9. Tính giá bán
@@ -1294,7 +1298,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Giá bán tính được <= 0. Kiểm tra lại dữ liệu.";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // 10. Update SalePrice vào tb_san_pham
@@ -1315,15 +1319,13 @@ namespace MVCPlayWithMe.Controllers
                     result.Message = $"Tính giá thành công! Giá bán: {salePrice:N0} đ{updateInfo}";
 
                     // Return thêm chi tiết
-                    return JsonConvert.SerializeObject(new
+                    result.myJson = new
                     {
-                        State = (int)result.State,
-                        Message = result.Message,
                         SalePrice = salePrice,
                         BookCoverPrice = tongGiaBia,
                         Discount = chietKhauThucTe,
                         Breakdown = breakdown
-                    });
+                    };
                 }
             }
             catch (Exception ex)
@@ -1333,7 +1335,22 @@ namespace MVCPlayWithMe.Controllers
                 result.Message = ex.Message;
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
+        }
+
+        /// <summary>
+        /// Tính giá bán thực tế từ mapping sản phẩm kho + TaxAndFee
+        /// </summary>
+        /// <param name="sanPhamId">ID sản phẩm bán (tb_san_pham)</param>
+        [HttpPost]
+        public async Task<string> CalculateAndUpdateSalePrice(int sanPhamId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await CalculateAndUpdateSalePriceCore(sanPhamId));
         }
 
         /// <summary>
@@ -1362,90 +1379,29 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
-        /// <summary>
-        /// Generate Title, Alt Text, Description cho ảnh sử dụng Claude AI
-        /// </summary>
-        [HttpPost]
-        public async Task<string> GenerateImageAltText(int? sanPhamId = null,
-            string fileName = null,
-            int? imageType = null)
+        public async Task<MySqlResultState> GenerateImageAltTextCore(int sanPhamId,
+            string fileName,
+            BookImageType bookImageType,
+            SanPham sanPham, string apiKey)
         {
             var result = new MySqlResultState();
 
             try
             {
-                // Parse JSON body nếu không có parameters
-                if (sanPhamId == null || fileName == null || imageType == null)
-                {
-                    using (var reader = new StreamReader(Request.InputStream))
-                    {
-                        string body = await reader.ReadToEndAsync();
-                        var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
-                        sanPhamId = Convert.ToInt32(jsonData["sanPhamId"]);
-                        fileName = jsonData["fileName"]?.ToString();
-                        imageType = Convert.ToInt32(jsonData["imageType"]);
-                    }
-                }
-
-                // Validate parameters
-                if (!sanPhamId.HasValue || string.IsNullOrEmpty(fileName) || !imageType.HasValue)
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = "Thiếu thông tin: sanPhamId, fileName hoặc imageType";
-                    return JsonConvert.SerializeObject(result);
-                }
-
-                // Lấy thông tin sản phẩm từ database
-                var sanPham = await SanPhamMySql.GetByIdAsync(sanPhamId.Value);
-                if (sanPham == null)
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = "Không tìm thấy sản phẩm";
-                    return JsonConvert.SerializeObject(result);
-                }
-
-                // Lấy API key từ Web.config
-                string apiKey = System.Configuration.ConfigurationManager.AppSettings["ClaudeAIAPIKey"];
-                if (string.IsNullOrEmpty(apiKey))
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = "Chưa cấu hình ClaudeAIAPIKey trong Web.config";
-                    return JsonConvert.SerializeObject(result);
-                }
-
                 // Xác định đường dẫn ảnh
                 // - InsidePage (1): dùng ảnh lớn (cần OCR)
                 // - Các loại khác: dùng thumbnail 320 (tiết kiệm chi phí)
                 string imagePath;
-                var bookImageType = (BookImageType)imageType.Value;
-
-                //if (bookImageType != BookImageType.InsidePage)
-                //{
-                //    // Ảnh trang trong - dùng ảnh lớn để OCR chính xác
-                //    imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + fileName;
-                //}
-                //else
-                //{
-                //    // Ảnh bìa/gáy/mặt sau - dùng thumbnail
-                //    string thumbnailFolder = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + "_320\\";
-                //    imagePath = thumbnailFolder + fileName;
-
-                //    // Fallback về ảnh lớn nếu thumbnail không tồn tại
-                //    if (!System.IO.File.Exists(imagePath))
-                //    {
-                //        imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + fileName;
-                //    }
-                //}
 
                 // Dùng ảnh lớn để OCR chính xác nếu cần
-                imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.Value.ToString()) + fileName;
+                imagePath = Common.GetAbsoluteSanPhamMediaFolderPath(sanPhamId.ToString()) + fileName;
 
                 // Kiểm tra file tồn tại
                 if (!System.IO.File.Exists(imagePath))
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = $"Không tìm thấy file ảnh: {fileName}";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // Lấy thông tin nhà xuất bản
@@ -1474,11 +1430,11 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = aiResult.Error;
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 // Insert/Update metadata vào tb_san_pham_media
-                var mediaList = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sanPhamId.Value);
+                var mediaList = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sanPhamId);
                 var existingMedia = mediaList.FirstOrDefault(m => m.FileName == fileName);
 
                 if (existingMedia != null)
@@ -1491,23 +1447,208 @@ namespace MVCPlayWithMe.Controllers
                 }
 
                 // Trả về kết quả thành công
-                return JsonConvert.SerializeObject(new
+                result.myJson = new
                 {
-                    State = (int)EMySqlResultState.OK,
-                    Message = "Tạo Alt Text và lưu metadata thành công",
                     Title = aiResult.Title,
                     AltText = aiResult.AltText,
                     Description = aiResult.Description,
                     PageNumber = aiResult.PageNumber  // Chỉ có khi imageType = InsidePage
-                });
+                };
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Warn($"GenerateImageAltText error: {ex}");
+                MyLogger.GetInstance().Warn($"GenerateImageAltTextCore error: {ex}");
                 result.State = EMySqlResultState.EXCEPTION;
                 result.Message = ex.Message;
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Generate Title, Alt Text, Description cho ảnh sử dụng Claude AI
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GenerateImageAltText(int? sanPhamId = null,
+            string fileName = null,
+            int? imageType = null)
+        {
+            var result = new MySqlResultState();
+
+            // Parse JSON body nếu không có parameters
+            if (sanPhamId == null || fileName == null || imageType == null)
+            {
+                using (var reader = new StreamReader(Request.InputStream))
+                {
+                    string body = await reader.ReadToEndAsync();
+                    var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+                    sanPhamId = Convert.ToInt32(jsonData["sanPhamId"]);
+                    fileName = jsonData["fileName"]?.ToString();
+                    imageType = Convert.ToInt32(jsonData["imageType"]);
+                }
+            }
+
+            // Validate parameters
+            if (!sanPhamId.HasValue || string.IsNullOrEmpty(fileName) || !imageType.HasValue)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Thiếu thông tin: sanPhamId, fileName hoặc imageType";
                 return JsonConvert.SerializeObject(result);
             }
+
+            // Lấy thông tin sản phẩm từ database
+            var sanPham = await SanPhamMySql.GetByIdAsync(sanPhamId.Value);
+            if (sanPham == null)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Không tìm thấy sản phẩm";
+                return JsonConvert.SerializeObject(result);
+            }
+
+            // Lấy API key từ Web.config
+            string apiKey = System.Configuration.ConfigurationManager.AppSettings["ClaudeAIAPIKey"];
+            if (string.IsNullOrEmpty(apiKey))
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Chưa cấu hình ClaudeAIAPIKey trong Web.config";
+                return JsonConvert.SerializeObject(result);
+            }
+
+            return JsonConvert.SerializeObject(await GenerateImageAltTextCore(sanPhamId.Value,
+                fileName, (BookImageType)imageType.Value, sanPham, apiKey));
+        }
+
+        /// <summary>
+        /// Thực hiện tất cả 5 bước trong 1 action: Chép ảnh + Tính giá + Lấy Alt Text + Đổi tên + Trạng thái
+        /// </summary>
+        [HttpPost]
+        public async Task<string> DoAllTasksInOneClick(string sanPhamName, int sanPhamBanId, int sanPhamKhoId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = new MySqlResultState();
+
+            int sanPhamId = sanPhamBanId;
+            try
+            {
+
+                // ==================== TASK 1: Chép Ảnh ====================
+                result = await CopyImagesFromKhoProductCore(sanPhamName, sanPhamBanId, sanPhamKhoId);
+
+                if(result.State != EMySqlResultState.OK)
+                {
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // ==================== TASK 2: Tính Giá Bán ====================
+                result = await CalculateAndUpdateSalePriceCore(sanPhamBanId);
+                if (result.State != EMySqlResultState.OK)
+                {
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // ==================== TASK 3: Lấy Alt Text ====================
+                {
+                    var mediaList = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sanPhamId);
+                    var imageItems = mediaList.Where(m => m.MediaType == "image").ToList();
+
+                    if (imageItems.Count == 0)
+                    {
+                        result.State = EMySqlResultState.EMPTY;
+                        result.Message = "Media trống";
+                    }
+                    else
+                    {
+                        var sanPham = await SanPhamMySql.GetByIdAsync(sanPhamId);
+                        {
+                            string publisherName = sanPham.PublishingCompany;
+                            string bookFormat = sanPham.HardCover == ESanPhamCoverType.BIA_CUNG ? "bìa cứng" : "bìa mềm";
+                            string apiKey = System.Configuration.ConfigurationManager.AppSettings["ClaudeAIAPIKey"];
+
+                            foreach (var c in imageItems)
+                            {
+                                BookImageType bookImageType = BookImageType.Cover;
+                                if(c.DisplayOrder != 0)
+                                {
+                                    bookImageType = BookImageType.InsidePage;
+                                }
+
+                                // Lấy altext lỗi vẫn tiếp tục
+                                await GenerateImageAltTextCore(sanPhamId,
+                                    c.FileName, bookImageType, sanPham, apiKey);
+                            }
+                        }
+                    }
+                }
+
+
+                // ==================== TASK 4: Đổi Tên Ảnh ====================
+                {
+                    var mediaList = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sanPhamId);
+                    var imageItems = mediaList.Where(m => m.MediaType == "image").ToList();
+
+                    foreach (var media in imageItems)
+                    {
+                            string fileName = media.FileName;
+                            string oldNameWithoutExt = Path.GetFileNameWithoutExtension(fileName);
+                            string newNameWithoutExt = null;
+
+                            // ========== CASE 1: ẢNH BÌA (DisplayOrder = 0) - Remove suffix "-bia-XXX" ==========
+                            if (media.DisplayOrder == 0)
+                            {
+                                // Pattern: -bia-[A-Za-z0-9]+$ (VD: "sach-abc-bia-xyzabc" -> "sach-abc-bia")
+                                var pattern = new System.Text.RegularExpressions.Regex(@"-bia-[A-Za-z0-9]+$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+                                if (pattern.IsMatch(oldNameWithoutExt))
+                                {
+                                    newNameWithoutExt = pattern.Replace(oldNameWithoutExt, "-bia");
+                                }
+                            }
+                            // ========== CASE 2: ẢNH TRANG - Rename theo page number ==========
+                            else if (System.Text.RegularExpressions.Regex.IsMatch(oldNameWithoutExt, @"trang-", System.Text.RegularExpressions.RegexOptions.IgnoreCase))
+                            {
+                                // Lấy PageNumber từ AltText
+                                string pageInfo = null;
+                                if (!string.IsNullOrEmpty(media.AltText))
+                                {
+                                    var pageMatch = System.Text.RegularExpressions.Regex.Match(media.AltText, @"trang\s+(\d+)(?:\s*-\s*(\d+))?", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                    if (pageMatch.Success)
+                                    {
+                                        pageInfo = pageMatch.Groups[2].Success ? $"{pageMatch.Groups[1].Value}-{pageMatch.Groups[2].Value}" : pageMatch.Groups[1].Value;
+                                    }
+                                }
+
+                                if (!string.IsNullOrEmpty(pageInfo))
+                                {
+                                    // Tạo tên mới: thay "trang-XXX" bằng "trang-{pageInfo}"
+                                    newNameWithoutExt = System.Text.RegularExpressions.Regex.Replace(oldNameWithoutExt, @"trang-.*$", $"trang-{pageInfo}", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+                                }
+                            }
+
+                            // Nếu không có gì thay đổi -> skip
+                            if (string.IsNullOrEmpty(newNameWithoutExt) || newNameWithoutExt == oldNameWithoutExt)
+                                continue;
+
+                            await RenameMediaCore(sanPhamBanId, fileName, newNameWithoutExt);
+                    }
+
+                }
+
+                // ==================== TASK 5: Cập nhật Status = 0 (Đang kinh doanh) ====================
+                result = await SanPhamMySql.UpdateStatusAsync(sanPhamBanId, ESanPhamStatus.DANG_KINH_DOANH);
+                if (result.State != EMySqlResultState.OK)
+                {
+                    return JsonConvert.SerializeObject(result);
+                }
+
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
         }
 
         #endregion

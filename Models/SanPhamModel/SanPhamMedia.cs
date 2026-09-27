@@ -50,6 +50,10 @@ namespace MVCPlayWithMe.Models.SanPhamModel
 
         /// <summary>
         /// Thứ tự hiển thị
+        /// ảnh bìa sẽ là 0
+        /// hardcode 38 để ưu tiên hiển thị sau các ảnh khác (1-37) trong gallery,
+        /// từ 38 trở đi dùng hiện thị cho phần mô tả sản phẩm
+        /// Video nếu có chỉ là 1 và display không quan trọng
         /// </summary>
         public int DisplayOrder { get; set; }
     }

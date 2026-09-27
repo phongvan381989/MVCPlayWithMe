@@ -1023,6 +1023,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                     cmd.Parameters.AddWithValue("@inHardCover", hardCover);
                     await cmd.ExecuteNonQueryAsync();
                 }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `HardCover` = @inHardCover WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inHardCover", hardCover);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
             return result;
@@ -1041,6 +1049,15 @@ namespace MVCPlayWithMe.Models.ProductModel
                     cmd.Parameters.AddWithValue("@inMaxAge", maxAge);
                     await cmd.ExecuteNonQueryAsync();
                 }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `MinAge` = @inMinAge, `MaxAge` = @inMaxAge WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inMinAge", minAge);
+                    cmd.Parameters.AddWithValue("@inMaxAge", maxAge);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
             return result;
@@ -1052,6 +1069,14 @@ namespace MVCPlayWithMe.Models.ProductModel
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `Language` = @inLanguage WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inLanguage", language);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `Language` = @inLanguage WHERE `ComboId` = @inComboId;", conn))
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inComboId", comboId);
@@ -1078,6 +1103,17 @@ namespace MVCPlayWithMe.Models.ProductModel
                     cmd.Parameters.AddWithValue("@inProductWeight", productWeight);
                     await cmd.ExecuteNonQueryAsync();
                 }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `ProductLong` = @inProductLong, `ProductWide` = @inProductWide, `ProductHigh` = @inProductHigh, `ProductWeight` = @inProductWeight WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inProductLong", productLong);
+                    cmd.Parameters.AddWithValue("@inProductWide", productWide);
+                    cmd.Parameters.AddWithValue("@inProductHigh", productHigh);
+                    cmd.Parameters.AddWithValue("@inProductWeight", productWeight);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
             return result;
@@ -1089,6 +1125,14 @@ namespace MVCPlayWithMe.Models.ProductModel
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `CategoryId` = @inCategoryId WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inCategoryId", categoryId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `CategoryId` = @inCategoryId WHERE `ComboId` = @inComboId;", conn))
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inComboId", comboId);
@@ -1112,6 +1156,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                     cmd.Parameters.AddWithValue("@inPageNumber", pageNumber);
                     await cmd.ExecuteNonQueryAsync();
                 }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `PageNumber` = @inPageNumber WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPageNumber", pageNumber);
+                    await cmd.ExecuteNonQueryAsync();
+                }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
             return result;
@@ -1123,6 +1175,15 @@ namespace MVCPlayWithMe.Models.ProductModel
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `PublishingTime` = @inPublishingTime WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPublishingTime", publishingTime);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+                // 
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `PublishingTime` = @inPublishingTime WHERE `ComboId` = @inComboId;", conn))
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.AddWithValue("@inComboId", comboId);
@@ -1882,6 +1943,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                         cmd.Parameters.AddWithValue("@inDetail", detail);
                         await cmd.ExecuteNonQueryAsync();
                     }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tb_san_pham SET Detail = @inDetail WHERE SanPhamKhoId = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inDetail", detail);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
             }
             catch (Exception ex) { Common.SetResultException(ex, result); }
@@ -2050,6 +2119,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                         cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
                         await cmd.ExecuteNonQueryAsync();
                     }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham`SET `PublishingCompany` = @inPublishingCompany WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
                 }
                 catch (Exception ex) { Common.SetResultException(ex, result); }
             }
@@ -2065,6 +2142,14 @@ namespace MVCPlayWithMe.Models.ProductModel
                 {
                     await conn.OpenAsync();
                     using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts`SET `Language` = @inLanguage WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inLanguage", language);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham`SET `Language` = @inLanguage WHERE `SanPhamKhoId` = @inId;", conn))
                     {
                         cmd.CommandType = CommandType.Text;
                         cmd.Parameters.AddWithValue("@inId", id);

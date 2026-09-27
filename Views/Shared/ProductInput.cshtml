@@ -30,7 +30,15 @@
 
     <label for="quantity">Tồn kho:</label><br>
     <input class="config-max-width margin-vertical disable-true-when-create" type="number" id="quantity" value="0">
-    <button type="button" onclick="UpdateQuantity()" class="diplay-none-when-create" style="float: right; display:none">Cập nhật</button>
+
+    <div class="diplay-none-when-create" style="float: right; display:none">
+        <button type="button" style="margin-left: 30px;" title="Cập nhật tồn kho lên tất cả các sàn, web"
+                onclick="UpdateQuantityToECommercePromise(false)">
+            Cập Nhật Tồn Kho Lên Các Sàn
+        </button>
+
+        <button type="button" onclick="UpdateQuantity()">Cập nhật</button>
+    </div>
     @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 
     <label for="code">Mã sản phẩm(bắt đầu bằng 89):</label><br>
