@@ -1212,6 +1212,31 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        public static async Task<MySqlResultState> UpdateCommonDetailWithComboAsync(int comboId, string detail, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `Detail` = @inDetail WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inDetail", detail);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `Detail` = @inDetail WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inDetail", detail);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex) { Common.SetResultException(ex, result); }
+            return result;
+        }
+
         public static async Task<MySqlResultState> UpdateProductAsync(Product pro)
         {
             MySqlResultState result = new MySqlResultState();

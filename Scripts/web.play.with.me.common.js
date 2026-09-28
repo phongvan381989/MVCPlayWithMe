@@ -1137,11 +1137,16 @@ async function FetchListCombo(forceRefresh = false) {
     if (DEBUG_ADMIN) console.log("🌐 Loading from server: Combos");
 
     const searchParams = new URLSearchParams();
-    let query = "/Combo/GetListCombo";
+    let query = "/Combo/GetActiveListCombo";
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     if (responseDB.responseText != "null") {
-        const list = JSON.parse(responseDB.responseText);
+        const fullList = JSON.parse(responseDB.responseText);
+        // Chỉ lấy id và name
+        const list = fullList.map(combo => ({
+            id: combo.id,
+            name: combo.name
+        }));
         SetCache(cacheKey, list);
         return list;
     }
@@ -1191,7 +1196,12 @@ async function FetchListCategory(forceRefresh = false) {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     if (responseDB.responseText != "null") {
-        const list = JSON.parse(responseDB.responseText);
+        const fullList = JSON.parse(responseDB.responseText);
+        // Chỉ lấy id và name
+        const list = fullList.map(category => ({
+            id: category.id,
+            name: category.name
+        }));
         SetCache(cacheKey, list);
         return list;
     }
@@ -1341,7 +1351,12 @@ async function FetchListPublisher(forceRefresh = false) {
 
     let responseDB = await RequestHttpPostPromise(searchParams, query);
     if (responseDB.responseText != "null") {
-        const list = JSON.parse(responseDB.responseText);
+        const fullList = JSON.parse(responseDB.responseText);
+        // Chỉ lấy id và name
+        const list = fullList.map(publisher => ({
+            id: publisher.id,
+            name: publisher.name
+        }));
         SetCache(cacheKey, list);
         return list;
     }

@@ -93,6 +93,24 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(list);
         }
 
+        // Lấy danh sách sản phẩm bán web của combo
+        [HttpPost]
+        public async Task<JsonResult> GetListSanPhamOfCombo(int id)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return Json(new List<SanPham>(), JsonRequestBehavior.AllowGet);
+            }
+
+            List<SanPham> list = await SanPhamMySql.GetListSanPhamOfComboAsync(id);
+            foreach(var sp in list)
+            {
+                sp.Mappings = await SanPhamMappingMySql.GetListBySanPhamBanIdAsync(sp.Id);
+                sp.MediaList = await SanPhamMediaMySql.GetListBySanPhamIdAsync(sp.Id);
+            }    
+            return Json(list, JsonRequestBehavior.AllowGet);
+        }
+
         /// <summary>
         /// Lấy danh sách tất cả sản phẩm với thông tin cơ bản (Basic Info) để tối ưu performance
         /// </summary>
@@ -1532,7 +1550,6 @@ namespace MVCPlayWithMe.Controllers
             int sanPhamId = sanPhamBanId;
             try
             {
-
                 // ==================== TASK 1: Chép Ảnh ====================
                 result = await CopyImagesFromKhoProductCore(sanPhamName, sanPhamBanId, sanPhamKhoId);
 

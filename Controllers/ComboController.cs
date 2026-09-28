@@ -33,7 +33,7 @@ namespace MVCPlayWithMe.Controllers
             return View();
         }
 
-        public async Task<string> CreateCombo(string name, string code)
+        public async Task<string> CreateCombo(string name, string code, Byte status)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -51,7 +51,7 @@ namespace MVCPlayWithMe.Controllers
             //    return JsonConvert.SerializeObject(result);
             //}
 
-            MySqlResultState result = await ComboMySql.CreateNewComboAsync(name, code);
+            MySqlResultState result = await ComboMySql.CreateNewComboAsync(name, code, status);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -68,7 +68,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> UpdateCombo(int id, string name, string code)
+        public async Task<string> UpdateCombo(int id, string name, string code, Byte status)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -80,7 +80,7 @@ namespace MVCPlayWithMe.Controllers
                 code = string.Empty;
             }
 
-            MySqlResultState result = await ComboMySql.UpdateComboAsync(id, name, code);
+            MySqlResultState result = await ComboMySql.UpdateComboAsync(id, name, code, status);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -112,6 +112,19 @@ namespace MVCPlayWithMe.Controllers
             }
 
             List<Combo> ls = await ComboMySql.GetListComboAsync();
+            return JsonConvert.SerializeObject(ls);
+        }
+
+        // Lấy commbo đang kinh doanh
+        [HttpPost]
+        public async Task<string> GetActiveListCombo()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new List<Combo>());
+            }
+
+            List<Combo> ls = await ComboMySql.GetActiveListComboAsync();
             return JsonConvert.SerializeObject(ls);
         }
 

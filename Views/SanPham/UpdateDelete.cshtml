@@ -400,8 +400,20 @@
                 </p>
                 <button type="button"
                         onclick="DoAllTasksInOneClick()"
+                        title="Chạy 5 bước cho sản phẩm hiện tại: Copy ảnh → Tính giá → Lấy Alt Text → Đổi tên → Đổi trạng thái"
                         style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 32px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); transition: all 0.3s ease;">
                     ⚡ Chạy Tất Cả 5 Bước
+                </button>
+
+                <p style="margin: 16px 0 12px 0; padding: 10px; background: #fff0f5; border-left: 4px solid #f5576c; border-radius: 4px; color: #c41e3a; font-size: 13px;">
+                    ℹ️ <strong>Batch Processing:</strong> Nút dưới sẽ tự động chạy 5 bước cho <strong>TẤT CẢ sản phẩm</strong> trong cùng combo (nếu có), NOTE:sản phẩm mapping với 1 sản phẩm trong kho, chưa có media nào. Thời gian: ~2-5 phút/sản phẩm.
+                </p>
+
+                <button type="button"
+                        onclick="DoAllTasksForComboProducts()"
+                        title="Tự động chạy 5 bước cho TẤT CẢ sản phẩm trong combo, NOTE:sản phẩm mapping với 1 sản phẩm trong kho, chưa có media nào (hoặc chỉ sản phẩm hiện tại nếu không thuộc combo nào)"
+                        style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; padding: 14px 32px; border: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 16px; box-shadow: 0 4px 12px rgba(240, 147, 251, 0.4); transition: all 0.3s ease;">
+                    🎁 Chạy Tất Cả 5 Bước Cho Các Sản Phẩm Cùng Combo
                 </button>
             </div>
 

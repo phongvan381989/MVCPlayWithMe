@@ -25,6 +25,13 @@
                            title="Tên combo mới cần chưa tồn tại">
                 </div>
                 <div>
+                    <label for="combo-status">Trạng Thái:</label>
+                    <select class="config-max-width margin-vertical" id="combo-status" title="Trạng thái combo">
+                        <option value="0">Đang kinh doanh</option>
+                        <option value="1">Ngừng kinh doanh</option>
+                    </select>
+                </div>
+                <div>
                     <table id="product-table" style="display:none;">
                         <tr>
                             <th style="display:none">Id</th>
@@ -39,6 +46,24 @@
                 <div class="fkagvoa08fv">
                     <div style="padding:10px 0px 10px 0px;"> Thông tin chung của các sản phẩm thuộc combo. Để đơn giản ta lấy thông tin của 1 sản phẩm trong combo</div>
                     @Html.Partial("~/Views/Shared/ProductInputCommon.cshtml")
+
+                    <div style="margin: 20px 0;">
+                        <label for="common-detail" style="font-weight: 600; color: #333; display: block; margin-bottom: 8px;">
+                            📝 Mô Tả Chung Cho Tất Cả Sản Phẩm:
+                        </label>
+                        <textarea id="common-detail"
+                                  class="config-max-width"
+                                  rows="8"
+                                  placeholder="Nhập mô tả chung (100-5000 ký tự) hoặc để trống để xóa mô tả của tất cả sản phẩm..."
+                                  style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;"
+                                  title="Mô tả sản phẩm (100-5000 ký tự). Để trống để xóa mô tả."></textarea>
+                        <div style="margin-top: 4px; font-size: 12px; color: #666;">
+                            <span id="detail-char-count">0</span> / 5000 ký tự
+                            <span id="detail-warning" style="color: #f44336; display: none; margin-left: 12px;">⚠️ Tối thiểu 100 ký tự</span>
+                            <span style="color: #999; margin-left: 12px;">💡 Để trống = xóa mô tả</span>
+                        </div>
+                    </div>
+
                     <button type="button" class="hxvniuf87fso" onclick="UpdateCommonInfor()"
                             title="Cập nhật thông tin chung cho các sản phẩm thuộc combo. Giá bìa nhạy cảm, nếu các sản phẩm đang không có giá bìa bằng nhau
                             sẽ không cập nhật">
@@ -84,6 +109,12 @@
                             title="Cập nhật giá bìa chung">
                         Cập Nhật Giá Bìa Chung
                     </button>
+
+                    <button type="button" class="hxvniuf87fso" onclick="UpdateCommonDetail()"
+                            title="Cập nhật mô tả chung cho tất cả sản phẩm trong combo"
+                            style="background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%); color: white; font-weight: 600;">
+                        📝 Cập Nhật Mô Tả Chung
+                    </button>
                 </div>
             </div>
             <div style="margin-bottom: 10px;">
@@ -102,6 +133,86 @@
                 </button>
             </div>
             <br />
+
+            <!-- ==================== VALIDATION CHECKER ==================== -->
+            <div style="margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #fff5e6 0%, #ffe6e6 100%); border: 2px solid #ff9800; border-radius: 8px; box-shadow: 0 2px 12px rgba(255, 152, 0, 0.15);">
+                <h3 style="margin-top: 0; color: #ff6f00; display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 24px;">🔍</span>
+                    <span>Kiểm Tra Thông Tin Còn Thiếu</span>
+                </h3>
+                <p style="margin: 12px 0 16px 0; color: #555; font-size: 14px;">
+                    Click vào nút để xem sản phẩm nào trong combo chưa có thông tin đầy đủ:
+                </p>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px;">
+                    <button type="button" onclick="CheckMissingBookCoverPrice()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có giá bìa hoặc giá bìa = 0">
+                        💰 Giá Bìa
+                    </button>
+                    <button type="button" onclick="CheckMissingHardCover()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có thông tin bìa cứng/mềm">
+                        📖 Loại Bìa
+                    </button>
+                    <button type="button" onclick="CheckMissingCategory()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có thể loại">
+                        📚 Thể Loại
+                    </button>
+                    <button type="button" onclick="CheckMissingAuthor()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có tác giả">
+                        ✍️ Tác Giả
+                    </button>
+                    <button type="button" onclick="CheckMissingPublisher()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có nhà phát hành">
+                        🏢 Nhà Phát Hành
+                    </button>
+                    <button type="button" onclick="CheckMissingPublishingCompany()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có nhà xuất bản">
+                        🏭 Nhà Xuất Bản
+                    </button>
+                    <button type="button" onclick="CheckMissingPublishingTime()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có năm xuất bản">
+                        📅 Năm Xuất Bản
+                    </button>
+                    <button type="button" onclick="CheckMissingLanguage()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có ngôn ngữ">
+                        🌐 Ngôn Ngữ
+                    </button>
+                    <button type="button" onclick="CheckMissingPageNumber()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có số trang hoặc số trang = 0">
+                        📄 Số Trang
+                    </button>
+                    <button type="button" onclick="CheckMissingDimension()" class="validation-btn"
+                            title="Kiểm tra sản phẩm thiếu thông tin dài/rộng/cao/nặng">
+                        📏 Kích Thước
+                    </button>
+                    <button type="button" onclick="CheckMissingAge()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có thông tin độ tuổi">
+                        👶 Độ Tuổi
+                    </button>
+                    <button type="button" onclick="CheckMissingDetail()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có mô tả hoặc mô tả quá ngắn">
+                        📝 Mô Tả
+                    </button>
+                    <button type="button" onclick="CheckMissingImages()" class="validation-btn"
+                            title="Kiểm tra sản phẩm chưa có ảnh">
+                        🖼️ Hình Ảnh
+                    </button>
+                    <button type="button" onclick="CheckAll()" class="validation-btn-all"
+                            title="Kiểm tra tất cả các trường và hiển thị báo cáo tổng hợp">
+                        ⚡ Kiểm Tra Tất Cả
+                    </button>
+                </div>
+
+                <!-- Kết quả hiển thị ở đây -->
+                <div id="validation-result" style="margin-top: 16px; display: none;">
+                    <div style="padding: 12px; background: white; border-left: 4px solid #2196F3; border-radius: 4px; margin-bottom: 12px;">
+                        <h4 id="validation-title" style="margin: 0 0 8px 0; color: #2196F3;"></h4>
+                        <p id="validation-summary" style="margin: 0 0 12px 0; color: #666; font-size: 14px;"></p>
+                        <div id="validation-list" style="max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+                </div>
+            </div>
+
             <div id="button_group_id">
                 <button type="button" class="hxvniuf87fso" onclick="UpdateCombo()"
                         title="Cập nhật tên combo, không cập nhật thông tin chung cho các sản phẩm thuộc combo">

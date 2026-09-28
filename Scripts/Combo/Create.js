@@ -1,4 +1,4 @@
-let listCombo = [];
+﻿let listCombo = [];
 
 async function CreateCombo() {
     let name = document.getElementById("combo-name").value.trim();
@@ -13,9 +13,12 @@ async function CreateCombo() {
         return;
     }
 
+    let status = document.getElementById("combo-status").value;
+
     const searchParams = new URLSearchParams();
     searchParams.append("name", CapitalizeWords(name));
     searchParams.append("code", code);
+    searchParams.append("status", status);
     let url = "/Combo/CreateCombo";
 
     ShowCircleLoader();
@@ -68,6 +71,7 @@ async function ShowListCombo() {
         let cell2 = row.insertCell(1);
         let cell3 = row.insertCell(2);
         let cell4 = row.insertCell(3);
+        let cell5 = row.insertCell(4);
 
         // Id
         cell1.innerHTML = combo.id;
@@ -90,5 +94,10 @@ async function ShowListCombo() {
             window.open("/Combo/UpdateDelete?id=" + id);
         };
         cell4.append(name);
+
+        // Status
+        let statusText = combo.status == 0 ? "Đang kinh doanh" : "Ngừng kinh doanh";
+        let statusColor = combo.status == 0 ? "#4CAF50" : "#f44336";
+        cell5.innerHTML = `<span style="color: ${statusColor}; font-weight: 600;">${statusText}</span>`;
     }
 }

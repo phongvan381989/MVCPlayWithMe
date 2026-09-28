@@ -2,6 +2,30 @@
 window.onload = async function () {
     await GetCombo();
     await GetSomeData();
+
+    // Setup character counter for detail textarea
+    const detailTextarea = document.getElementById('common-detail');
+    const charCount = document.getElementById('detail-char-count');
+    const warning = document.getElementById('detail-warning');
+
+    if (detailTextarea) {
+        detailTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            charCount.textContent = length;
+
+            if (length > 0 && length < 100) {
+                warning.style.display = 'inline';
+                charCount.style.color = '#f44336';
+            } else if (length > 5000) {
+                warning.style.display = 'inline';
+                warning.textContent = '⚠️ Vượt quá 5000 ký tự';
+                charCount.style.color = '#f44336';
+            } else {
+                warning.style.display = 'none';
+                charCount.style.color = length >= 100 ? '#4caf50' : '#666';
+            }
+        });
+    }
 };
 
 let combo = null;
@@ -91,6 +115,7 @@ async function GetCombo() {
         combo = JSON.parse(responseDB.responseText);
         document.getElementById("combo-name").value = combo.name;
         document.getElementById("combo-code").value = combo.code;
+        document.getElementById("combo-status").value = combo.status;
 
         ShowProductTable(combo.products);
 
@@ -108,11 +133,13 @@ async function UpdateCombo() {
     }
 
     let code = document.getElementById("combo-code").value.trim();
+    let status = document.getElementById("combo-status").value;
 
     const searchParams = new URLSearchParams();
     searchParams.append("id", GetValueFromUrlName("id"));
     searchParams.append("name", CapitalizeWords(name));
     searchParams.append("code", code);
+    searchParams.append("status", status);
     let query = "/Combo/UpdateCombo";
     ShowCircleLoader();
     let responseDB = await RequestHttpPostPromise(searchParams, query);
@@ -340,4 +367,232 @@ async function CreateProductOfComboOnECommerce() {
         CreateMustClickOkModal("Cập nhật lỗi.", null);
         return;
     }
+}
+
+async function UpdateCommonDetail() {
+    const detail = document.getElementById("common-detail").value.trim();
+
+    // Validation - chỉ check nếu có nhập
+    if (detail.length > 0) {
+        if (detail.length < 100) {
+            CreateMustClickOkModal("⚠️ Mô tả quá ngắn. Tối thiểu 100 ký tự.\n\nHiện tại: " + detail.length + " ký tự.");
+            document.getElementById("common-detail").focus();
+            return;
+        }
+
+        if (detail.length > 5000) {
+            CreateMustClickOkModal("⚠️ Mô tả quá dài. Tối đa 5000 ký tự.\n\nHiện tại: " + detail.length + " ký tự.");
+            document.getElementById("common-detail").focus();
+            return;
+        }
+    }
+
+    // Confirm - message khác nhau cho trống vs có nội dung
+    let confirmMessage = '';
+    if (detail === '') {
+        confirmMessage = `⚠️ Xóa mô tả của ${combo.products.length} sản phẩm trong combo?\n\n` +
+                        `Tất cả sản phẩm sẽ có mô tả trống.`;
+    } else {
+        confirmMessage = `Xác nhận cập nhật mô tả chung cho ${combo.products.length} sản phẩm trong combo?\n\n` +
+                        `Mô tả (${detail.length} ký tự):\n"${detail.substring(0, 100)}${detail.length > 100 ? '...' : ''}"`;
+    }
+
+    const confirmed = await new Promise(resolve => {
+        CreateMustClickOkModal(confirmMessage, () => resolve(true));
+    });
+
+    if (!confirmed) return;
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("comboId", GetValueFromUrlName("id"));
+    searchParams.append("detail", detail);
+
+    let query = "/Product/UpdateCommonDetailWithCombo";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpPostPromise(searchParams, query);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "✅ Cập nhật mô tả thành công!", "❌ Có lỗi xảy ra.");
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("❌ Lỗi khi cập nhật: " + error.message);
+    }
+}
+
+// ==================== VALIDATION CHECKER FUNCTIONS ====================
+
+function ShowValidationResult(title, missingProducts, fieldName) {
+    const resultDiv = document.getElementById('validation-result');
+    const titleEl = document.getElementById('validation-title');
+    const summaryEl = document.getElementById('validation-summary');
+    const listEl = document.getElementById('validation-list');
+
+    if (!combo || !combo.products || combo.products.length === 0) {
+        CreateMustClickOkModal('⚠️ Chưa có sản phẩm trong combo.');
+        return;
+    }
+
+    titleEl.textContent = title;
+
+    if (missingProducts.length === 0) {
+        summaryEl.innerHTML = `<span style="color: #4caf50; font-weight: 600;">✅ Tất cả ${combo.products.length} sản phẩm đều đã có ${fieldName}!</span>`;
+        listEl.innerHTML = '';
+    } else {
+        summaryEl.innerHTML = `<span style="color: #ff6f00; font-weight: 600;">⚠️ Có ${missingProducts.length}/${combo.products.length} sản phẩm chưa có ${fieldName}:</span>`;
+
+        let html = '<ul style="margin: 0; padding-left: 20px; list-style: none;">';
+        missingProducts.forEach((product, index) => {
+            html += `
+                <li class="missing-product-item" onclick="window.open('/Product/UpdateDelete?id=${product.id}')">
+                    <span style="font-weight: 600; color: #ff6f00;">${index + 1}.</span>
+                    <span style="flex: 1;">${product.name}</span>
+                    <span style="color: #999; font-size: 12px;">ID: ${product.id}</span>
+                </li>
+            `;
+        });
+        html += '</ul>';
+        listEl.innerHTML = html;
+    }
+
+    resultDiv.style.display = 'block';
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function CheckMissingBookCoverPrice() {
+    const missing = combo.products.filter(p => !p.bookCoverPrice || p.bookCoverPrice === 0);
+    ShowValidationResult('🔍 Kiểm Tra Giá Bìa', missing, 'giá bìa');
+}
+
+function CheckMissingHardCover() {
+    // hardCover có thể là 0 (bìa mềm) hoặc 1 (bìa cứng), coi như thiếu nếu undefined/null
+    const missing = combo.products.filter(p => p.hardCover === undefined || p.hardCover === null);
+    ShowValidationResult('🔍 Kiểm Tra Loại Bìa', missing, 'thông tin bìa');
+}
+
+function CheckMissingCategory() {
+    const missing = combo.products.filter(p => !p.categoryId || p.categoryId === -1);
+    ShowValidationResult('🔍 Kiểm Tra Thể Loại', missing, 'thể loại');
+}
+
+function CheckMissingAuthor() {
+    const missing = combo.products.filter(p => !p.author || p.author.trim() === '');
+    ShowValidationResult('🔍 Kiểm Tra Tác Giả', missing, 'tác giả');
+}
+
+function CheckMissingPublisher() {
+    const missing = combo.products.filter(p => !p.publisherId || p.publisherId === -1);
+    ShowValidationResult('🔍 Kiểm Tra Nhà Phát Hành', missing, 'nhà phát hành');
+}
+
+function CheckMissingPublishingCompany() {
+    const missing = combo.products.filter(p => !p.publishingCompany || p.publishingCompany.trim() === '');
+    ShowValidationResult('🔍 Kiểm Tra Nhà Xuất Bản', missing, 'nhà xuất bản');
+}
+
+function CheckMissingPublishingTime() {
+    const missing = combo.products.filter(p => !p.publishingTime || p.publishingTime === 0);
+    ShowValidationResult('🔍 Kiểm Tra Năm Xuất Bản', missing, 'năm xuất bản');
+}
+
+function CheckMissingLanguage() {
+    const missing = combo.products.filter(p => !p.language || p.language.trim() === '');
+    ShowValidationResult('🔍 Kiểm Tra Ngôn Ngữ', missing, 'ngôn ngữ');
+}
+
+function CheckMissingPageNumber() {
+    const missing = combo.products.filter(p => !p.pageNumber || p.pageNumber === 0);
+    ShowValidationResult('🔍 Kiểm Tra Số Trang', missing, 'số trang');
+}
+
+function CheckMissingDimension() {
+    const missing = combo.products.filter(p =>
+        !p.productLong || p.productLong === 0 ||
+        !p.productWide || p.productWide === 0 ||
+        !p.productHigh || p.productHigh === 0 ||
+        !p.productWeight || p.productWeight === 0
+    );
+    ShowValidationResult('🔍 Kiểm Tra Kích Thước', missing, 'kích thước (dài/rộng/cao/nặng)');
+}
+
+function CheckMissingAge() {
+    const missing = combo.products.filter(p =>
+        !p.minAge || p.minAge === 0 ||
+        !p.maxAge || p.maxAge === 0
+    );
+    ShowValidationResult('🔍 Kiểm Tra Độ Tuổi', missing, 'độ tuổi');
+}
+
+function CheckMissingDetail() {
+    const missing = combo.products.filter(p =>
+        !p.detail || p.detail.trim() === '' || p.detail.trim().length < 100
+    );
+    ShowValidationResult('🔍 Kiểm Tra Mô Tả', missing, 'mô tả (hoặc mô tả quá ngắn < 100 ký tự)');
+}
+
+function CheckMissingImages() {
+    const missing = combo.products.filter(p => !p.imageSrc || p.imageSrc.length === 0);
+    ShowValidationResult('🔍 Kiểm Tra Hình Ảnh', missing, 'hình ảnh');
+}
+
+function CheckAll() {
+    if (!combo || !combo.products || combo.products.length === 0) {
+        CreateMustClickOkModal('⚠️ Chưa có sản phẩm trong combo.');
+        return;
+    }
+
+    const checks = [
+        { name: 'Giá bìa', count: combo.products.filter(p => !p.bookCoverPrice || p.bookCoverPrice === 0).length },
+        { name: 'Loại bìa', count: combo.products.filter(p => p.hardCover === undefined || p.hardCover === null).length },
+        { name: 'Thể loại', count: combo.products.filter(p => !p.categoryId || p.categoryId === -1).length },
+        { name: 'Tác giả', count: combo.products.filter(p => !p.author || p.author.trim() === '').length },
+        { name: 'Nhà phát hành', count: combo.products.filter(p => !p.publisherId || p.publisherId === -1).length },
+        { name: 'Nhà xuất bản', count: combo.products.filter(p => !p.publishingCompany || p.publishingCompany.trim() === '').length },
+        { name: 'Năm xuất bản', count: combo.products.filter(p => !p.publishingTime || p.publishingTime === 0).length },
+        { name: 'Ngôn ngữ', count: combo.products.filter(p => !p.language || p.language.trim() === '').length },
+        { name: 'Số trang', count: combo.products.filter(p => !p.pageNumber || p.pageNumber === 0).length },
+        { name: 'Kích thước', count: combo.products.filter(p => !p.productLong || p.productLong === 0 || !p.productWide || p.productWide === 0 || !p.productHigh || p.productHigh === 0 || !p.productWeight || p.productWeight === 0).length },
+        { name: 'Độ tuổi', count: combo.products.filter(p => !p.minAge || p.minAge === 0 || !p.maxAge || p.maxAge === 0).length },
+        { name: 'Mô tả', count: combo.products.filter(p => !p.detail || p.detail.trim() === '' || p.detail.trim().length < 100).length },
+        { name: 'Hình ảnh', count: combo.products.filter(p => !p.imageSrc || p.imageSrc.length === 0).length }
+    ];
+
+    const resultDiv = document.getElementById('validation-result');
+    const titleEl = document.getElementById('validation-title');
+    const summaryEl = document.getElementById('validation-summary');
+    const listEl = document.getElementById('validation-list');
+
+    titleEl.textContent = '⚡ Báo Cáo Tổng Hợp Kiểm Tra';
+
+    const totalMissing = checks.reduce((sum, check) => sum + check.count, 0);
+
+    if (totalMissing === 0) {
+        summaryEl.innerHTML = `<span style="color: #4caf50; font-weight: 600; font-size: 16px;">✅ Hoàn hảo! Tất cả ${combo.products.length} sản phẩm đều đã có đầy đủ thông tin!</span>`;
+        listEl.innerHTML = '';
+    } else {
+        summaryEl.innerHTML = `<span style="color: #ff6f00; font-weight: 600;">⚠️ Tổng số: ${combo.products.length} sản phẩm - Phát hiện thiếu thông tin:</span>`;
+
+        let html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; margin-top: 12px;">';
+        checks.forEach(check => {
+            const percentage = Math.round((check.count / combo.products.length) * 100);
+            const color = check.count === 0 ? '#4caf50' : check.count < combo.products.length / 2 ? '#ff9800' : '#f44336';
+            const icon = check.count === 0 ? '✅' : '⚠️';
+
+            html += `
+                <div style="padding: 12px; background: white; border-left: 4px solid ${color}; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    <div style="font-weight: 600; color: ${color}; margin-bottom: 4px;">
+                        ${icon} ${check.name}
+                    </div>
+                    <div style="font-size: 13px; color: #666;">
+                        Thiếu: <strong>${check.count}</strong>/${combo.products.length} (${percentage}%)
+                    </div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        listEl.innerHTML = html;
+    }
+
+    resultDiv.style.display = 'block';
+    resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }

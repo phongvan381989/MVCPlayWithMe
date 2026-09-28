@@ -1174,8 +1174,7 @@ async function LoadProductNameList() {
 // Load danh sách combo cho datalist
 async function LoadComboList() {
     try {
-        const resultText = await PostJSON('/Combo/GetListCombo', {});
-        const combos = JSON.parse(resultText);
+        const combos = await FetchListCombo(false);
         const datalist = document.getElementById('list-combo-2');
         datalist.innerHTML = combos.map(c => `<option value="${c.name}">`).join('');
     } catch (error) {
@@ -2036,6 +2035,190 @@ async function DoAllTasksInOneClick() {
         CreateMustClickOkModal('✅ Hoàn thành tất cả 5 bước!\n\nTrang sẽ tự động tải lại...', function() {
             location.reload();
         });
+
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('❌ Lỗi nghiêm trọng: ' + error.message);
+    }
+}
+
+/**
+ * Chạy tất cả 5 bước cho các sản phẩm cùng combo
+ * - Nếu sản phẩm thuộc combo: chạy cho TẤT CẢ sản phẩm trong combo
+ * - Nếu không thuộc combo: chạy cho chính sản phẩm hiện tại
+ */
+async function DoAllTasksForComboProducts() {
+    try {
+        // Lấy comboId
+        const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+
+        let sanPhamsToProcess = [];
+        // if (DEBUG_ADMIN) {
+        //     ShowCircleLoader();
+        //     const resultText = await PostJSON('/SanPham/GetListSanPhamOfCombo', { id: comboId });
+        //     RemoveCircleLoader();
+        //     sanPhamsToProcess = JSON.parse(resultText);
+        //     console.log("sanPhamsToProcess: " + JSON.stringify(sanPhamsToProcess));
+        //     return;
+        // }
+
+        if (comboId > 0) {
+            // Có combo -> lấy tất cả sản phẩm trong combo
+            ShowCircleLoader();
+            const resultText = await PostJSON('/SanPham/GetListSanPhamOfCombo', { id: comboId });
+            RemoveCircleLoader();
+
+            sanPhamsToProcess = JSON.parse(resultText);
+
+            if (!sanPhamsToProcess || sanPhamsToProcess.length === 0) {
+                CreateMustClickOkModal('❌ Không tìm thấy sản phẩm nào trong combo này.');
+                return;
+            }
+
+            const confirmMsg = `🎁 Chạy 5 bước cho TẤT CẢ ${sanPhamsToProcess.length} sản phẩm trong combo "${document.getElementById('combo-id').value}"?\n\n` +
+                `✅ Các bước:\n` +
+                `1. Chép ảnh từ kho\n` +
+                `2. Tính giá bán\n` +
+                `3. Lấy Alt Text (Claude AI)\n` +
+                `4. Đổi tên ảnh\n` +
+                `5. Cập nhật trạng thái\n\n` +
+                `⏱️ Quá trình có thể mất ${sanPhamsToProcess.length * 2}-${sanPhamsToProcess.length * 5} phút.\n` +
+                `⚠️ Không đóng trang trong khi xử lý!`;
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+        } else {
+            // Không có combo -> chỉ chạy cho sản phẩm hiện tại
+            CreateMustClickOkModal('ℹ️ Sản phẩm không thuộc combo nào.\n\nSẽ chạy 5 bước cho sản phẩm hiện tại.', async function() {
+                await DoAllTasksInOneClick();
+            });
+            return;
+        }
+
+        // Tạo progress modal
+        const progressModal = document.createElement('div');
+        progressModal.id = 'combo-progress-modal';
+        progressModal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+
+        progressModal.innerHTML = `
+            <div style="background: white; padding: 40px; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.4); min-width: 600px; max-width: 800px; max-height: 80vh; overflow-y: auto;">
+                <h2 style="margin-top: 0; text-align: center; color: #f5576c;">🎁 Đang Xử Lý Combo</h2>
+                <div id="combo-progress-status" style="text-align: center; margin: 20px 0; font-size: 16px; color: #666;"></div>
+                <div id="combo-progress-container" style="margin-top: 30px;"></div>
+            </div>
+        `;
+
+        document.body.appendChild(progressModal);
+
+        const statusDiv = document.getElementById('combo-progress-status');
+        const container = document.getElementById('combo-progress-container');
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // Xử lý từng sản phẩm
+        for (let i = 0; i < sanPhamsToProcess.length; i++) {
+            const sanPham = sanPhamsToProcess[i];
+            const sanPhamId = sanPham.Id;
+            const sanPhamName = sanPham.Name;
+
+            statusDiv.innerHTML = `Đang xử lý ${i + 1}/${sanPhamsToProcess.length}: <strong>${sanPhamName}</strong>`;
+
+            // Tạo row cho sản phẩm này
+            const row = document.createElement('div');
+            row.style.cssText = `
+                display: flex;
+                align-items: center;
+                padding: 12px;
+                margin-bottom: 10px;
+                background: #f9f9f9;
+                border-radius: 8px;
+                border-left: 4px solid #2196F3;
+            `;
+            row.innerHTML = `
+                <div style="font-size: 24px; margin-right: 15px;">⏳</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; color: #333;">${sanPhamName}</div>
+                    <div style="font-size: 12px; color: #999; margin-top: 4px;">Đang xử lý...</div>
+                </div>
+            `;
+            container.appendChild(row);
+
+            try {
+                //NOTE:sản phẩm mapping với 1 sản phẩm trong kho, chưa có media nào
+                if (sanPham.Mappings.length > 1 || sanPham.MediaList.length > 0) {
+                    continue;
+                }
+
+                // Gọi DoAllTasksInOneClick cho sản phẩm này
+                const resultText = await PostJSON('/SanPham/DoAllTasksInOneClick', {
+                    sanPhamName: sanPhamName,
+                    sanPhamBanId: sanPhamId,
+                    sanPhamKhoId: sanPham.Mappings[0].SanPhamKhoId
+                });
+
+                const result = JSON.parse(resultText);
+
+                if (result.State === 0) {
+                    row.innerHTML = `
+                        <div style="font-size: 24px; margin-right: 15px;">✅</div>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #333;">${sanPhamName}</div>
+                            <div style="font-size: 12px; color: #4CAF50; margin-top: 4px;">Hoàn thành</div>
+                        </div>
+                    `;
+                    row.style.borderLeftColor = '#4CAF50';
+                    successCount++;
+                } else {
+                    throw new Error(result.Message);
+                }
+            } catch (error) {
+                row.innerHTML = `
+                    <div style="font-size: 24px; margin-right: 15px;">❌</div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; color: #333;">${sanPhamName}</div>
+                        <div style="font-size: 12px; color: #f44336; margin-top: 4px;">Lỗi: ${error.message}</div>
+                    </div>
+                `;
+                row.style.borderLeftColor = '#f44336';
+                failCount++;
+            }
+        }
+
+        // Hoàn thành
+        statusDiv.innerHTML = `<strong>🎉 Hoàn thành!</strong><br/>✅ Thành công: ${successCount} | ❌ Thất bại: ${failCount}`;
+
+        // Thêm nút đóng
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = '✓ Đóng & Reload Trang';
+        closeBtn.style.cssText = `
+            width: 100%;
+            margin-top: 20px;
+            padding: 14px;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 16px;
+        `;
+        closeBtn.onclick = function() {
+            location.reload();
+        };
+        container.appendChild(closeBtn);
 
     } catch (error) {
         RemoveCircleLoader();

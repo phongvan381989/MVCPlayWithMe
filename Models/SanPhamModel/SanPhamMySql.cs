@@ -388,6 +388,38 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         }
 
         /// <summary>
+        /// Lấy danh sách tất cả sản phẩm
+        /// </summary>
+        /// <returns>Danh sách sản phẩm</returns>
+        public static async Task<List<SanPham>> GetListSanPhamOfComboAsync(int id)
+        {
+            List<SanPham> list = null;
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "SELECT * FROM tb_san_pham WHERE ComboId =@comboId", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.Add("@comboId", MySqlDbType.Int32).Value = id;
+
+                        list = await ExecuteReaderByIndexAsync(cmd);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                list.Clear();
+            }
+
+            return list;
+        }
+
+        /// <summary>
         /// Cập nhật sản phẩm
         /// </summary>
         /// <param name="sanPham">Đối tượng sản phẩm cần update</param>
@@ -967,6 +999,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                     int idxSoldQuantity = rdr.GetOrdinal("SoldQuantity");
                     int idxURL = rdr.GetOrdinal("URL");
                     int idxSEOKeyword = rdr.GetOrdinal("SEOKeyword");
+                    int idxSanPhamKhoId = rdr.GetOrdinal("SanPhamKhoId");
                     int idxComboName = 0;
                     int idxPublisherName = 0;
                     int idxCategoryName = 0;
@@ -1015,7 +1048,8 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             Date = rdr.IsDBNull(idxDate) ? (DateTime?)null : rdr.GetDateTime(idxDate),
                             SoldQuantity = rdr.IsDBNull(idxSoldQuantity) ? (int?)null : rdr.GetInt32(idxSoldQuantity),
                             URL = rdr.IsDBNull(idxURL) ? null : rdr.GetString(idxURL),
-                            SEOKeyword = rdr.IsDBNull(idxSEOKeyword) ? null : rdr.GetString(idxSEOKeyword)
+                            SEOKeyword = rdr.IsDBNull(idxSEOKeyword) ? null : rdr.GetString(idxSEOKeyword),
+                            SanPhamKhoId = rdr.IsDBNull(idxSanPhamKhoId) ? (int?)null : rdr.GetInt32(idxSanPhamKhoId)
                         };
                         if (readComboPublisherCategoryName)
                         {

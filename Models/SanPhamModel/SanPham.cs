@@ -166,6 +166,9 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         /// </summary>
         public string SEOKeyword { get; set; }
 
+        // Lưu id sản phẩm kho đã sinh ra sản phẩm bán, mapping 1 - 1. 
+        public int? SanPhamKhoId { get; set; }
+
         /// <summary>
         /// Nội dung thẻ <meta name="description" content="..."> phục vụ SEO
         public string MetaDescription { get; set; }

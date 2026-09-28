@@ -20,6 +20,13 @@
             <label for="combo-name">Tên Combo:</label>
             <input class="config-max-width margin-vertical" id="combo-name" title="Tên combo thêm mới. Tên combo mới cần chưa tồn tại">
         </div>
+        <div>
+            <label for="combo-status">Trạng Thái:</label>
+            <select class="config-max-width margin-vertical" id="combo-status" title="Trạng thái combo">
+                <option value="0">Đang kinh doanh</option>
+                <option value="1">Ngừng kinh doanh</option>
+            </select>
+        </div>
         <br />
         <div>
             <button type="button" onclick="CreateCombo()" class="hxvniuf87fso">Thêm Mới</button>
@@ -34,6 +41,7 @@
                     <th>STT</th>
                     <th>Mã</th>
                     <th>Tên</th>
+                    <th>Trạng Thái</th>
                 </tr>
             </table>
         </div>

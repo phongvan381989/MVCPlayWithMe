@@ -45,9 +45,29 @@ namespace MVCPlayWithMe.Models
             return productIds;
         }
 
-        public static async Task<List<Combo>> GetListComboAsync()
+        public static async Task<List<Combo>> ReadListComboData(MySqlCommand cmd)
         {
             List<Combo> ls = new List<Combo>();
+            using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+            {
+                int idIndex = rdr.GetOrdinal("Id");
+                int nameIndex = rdr.GetOrdinal("Name");
+                int codeIndex = rdr.GetOrdinal("Code");
+                int statusIndex = rdr.GetOrdinal("Status");
+                while (await rdr.ReadAsync())
+                {
+                    ls.Add(new Combo(rdr.GetInt32(idIndex),
+                        rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
+                        rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex),
+                        rdr.GetByte(statusIndex)));
+                }
+            }
+            return ls;
+        }
+
+        public static async Task<List<Combo>> GetListComboAsync()
+        {
+            List<Combo> ls = null;
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 try
@@ -57,18 +77,31 @@ namespace MVCPlayWithMe.Models
                     {
                         cmd.CommandType = CommandType.StoredProcedure;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                        {
-                            int idIndex = rdr.GetOrdinal("Id");
-                            int nameIndex = rdr.GetOrdinal("Name");
-                            int codeIndex = rdr.GetOrdinal("Code");
-                            while (await rdr.ReadAsync())
-                            {
-                                ls.Add(new Combo(rdr.GetInt32(idIndex),
-                                    rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
-                                    rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
-                            }
-                        }
+                        ls = await ReadListComboData(cmd);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MyLogger.GetInstance().Warn(ex.ToString());
+                }
+            }
+            return ls;
+        }
+
+        public static async Task<List<Combo>> GetActiveListComboAsync()
+        {
+            List<Combo> ls = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                    "SELECT * FROM tbCombo WHERE Status = 0 ORDER BY Id DESC;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+
+                        ls = await ReadListComboData(cmd);
                     }
                 }
                 catch (Exception ex)
@@ -81,25 +114,14 @@ namespace MVCPlayWithMe.Models
 
         public static async Task<List<Combo>> GetListComboConnectOutAsync(MySqlConnection conn)
         {
-            List<Combo> ls = new List<Combo>();
+            List<Combo> ls = null;
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbCombo_Select_All", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        int idIndex = rdr.GetOrdinal("Id");
-                        int nameIndex = rdr.GetOrdinal("Name");
-                        int codeIndex = rdr.GetOrdinal("Code");
-                        while (await rdr.ReadAsync())
-                        {
-                            ls.Add(new Combo(rdr.GetInt32(idIndex),
-                                rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
-                                rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex)));
-                        }
-                    }
+                    ls = await ReadListComboData(cmd);
                 }
             }
             catch (Exception ex)
@@ -174,7 +196,8 @@ namespace MVCPlayWithMe.Models
                             {
                                 combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"),
                                     MyMySql.GetString(rdr, "TBComboName"),
-                                    MyMySql.GetString(rdr, "TBComboCode"));
+                                    MyMySql.GetString(rdr, "TBComboCode"),
+                                    MyMySql.GetByte(rdr, "TBComboStatus"));
                             }
                             int proIdTem = MyMySql.GetInt32(rdr, "Id");
                             if (proIdTem != -1)
@@ -206,6 +229,7 @@ namespace MVCPlayWithMe.Models
                                 product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
                                 product.discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat("Discount");
                                 product.language = MyMySql.GetString(rdr, "Language");
+                                product.detail = MyMySql.GetString(rdr, "Detail");
                                 product.SetFirstSrcImage();
                                 combo.products.Add(product);
                             }
@@ -222,11 +246,12 @@ namespace MVCPlayWithMe.Models
             return combo;
         }
 
-        public static async Task<MySqlResultState> CreateNewComboAsync(string name, string code)
+        public static async Task<MySqlResultState> CreateNewComboAsync(string name, string code, Byte status)
         {
-            MySqlParameter[] paras = new MySqlParameter[4];
+            MySqlParameter[] paras = new MySqlParameter[5];
             paras[0] = new MySqlParameter("@comboName", name);
             paras[1] = new MySqlParameter("@comboCode", code);
+            paras[2] = new MySqlParameter("@comboStatus", status);
             MyMySql.AddOutParameters(paras);
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Insert", paras);
         }
@@ -239,12 +264,13 @@ namespace MVCPlayWithMe.Models
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Delete_From_Id", paras);
         }
 
-        public static async Task<MySqlResultState> UpdateComboAsync(int id, string name, string code)
+        public static async Task<MySqlResultState> UpdateComboAsync(int id, string name, string code, Byte status)
         {
-            MySqlParameter[] paras = new MySqlParameter[5];
+            MySqlParameter[] paras = new MySqlParameter[6];
             paras[0] = new MySqlParameter("@comboId", id);
             paras[1] = new MySqlParameter("@comboName", name);
             paras[2] = new MySqlParameter("@comboCode", code);
+            paras[3] = new MySqlParameter("@statusCode", status);
             MyMySql.AddOutParameters(paras);
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Update", paras);
         }

@@ -634,8 +634,27 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        [HttpPost]
+        public async Task<string> UpdateCommonDetailWithCombo(
+                int comboId,
+                string detail
+            )
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await ProductMySql.UpdateCommonDetailWithComboAsync(comboId, detail, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
         /// <summary>
-        /// 
+        ///
         /// </summary>
         /// <param name="productId"></param>
         /// <param name="fileType">isImage hoặc isVideo</param>
