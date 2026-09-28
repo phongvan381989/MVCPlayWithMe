@@ -2309,3 +2309,65 @@ async function CalculateSalePriceAuto() {
         CreateMustClickOkModal('Lỗi kết nối: ' + error.Message);
     }
 }
+
+/**
+ * Set Tên và Tên Ngắn từ Combo
+ * - Tên Ngắn = Tên hiện tại
+ * - Tên Mới = "Sách " + Tên Combo + " " + Tên hiện tại
+ */
+async function SetNameFromCombo() {
+    // Lấy comboId
+    const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+
+    if (comboId === -1) {
+        CreateMustClickOkModal('⚠️ Chưa chọn combo hợp lệ!');
+        document.getElementById('combo-id').focus();
+        return;
+    }
+
+    try {
+        ShowCircleLoader();
+
+        // Gọi API - cập nhật TẤT CẢ sản phẩm thuộc combo
+        const responseText = await PostJSON('/SanPham/SetNameFromCombo', {
+            comboId: comboId
+        });
+
+        RemoveCircleLoader();
+
+        const result = JSON.parse(responseText);
+
+        if (result.State === 0) {
+            // Success - reload lại trang để hiển thị tên mới
+            CreateMustClickOkModal(
+                '✅ ' + result.Message + '\n\n' +
+                'Trang sẽ tự động tải lại...',
+                () => {
+                    location.reload();
+                }
+            );
+        } else {
+            CreateMustClickOkModal('❌ Lỗi: ' + result.Message);
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('❌ Lỗi nghiêm trọng: ' + error.message);
+    }
+}
+
+/**
+ * Mở trang Cập Nhật Combo trong tab mới
+ */
+function OpenComboUpdatePage() {
+    // Lấy comboId
+    const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+
+    if (comboId === -1) {
+        CreateMustClickOkModal('⚠️ Chưa chọn combo hợp lệ!');
+        document.getElementById('combo-id').focus();
+        return;
+    }
+
+    // Mở trang UpdateDelete của Combo trong tab mới
+    window.open('/Combo/UpdateDelete?id=' + comboId, '_blank');
+}

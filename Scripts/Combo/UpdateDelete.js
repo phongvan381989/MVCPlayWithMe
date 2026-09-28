@@ -531,7 +531,7 @@ function CheckMissingDetail() {
 }
 
 function CheckMissingImages() {
-    const missing = combo.products.filter(p => !p.imageSrc || p.imageSrc.length === 0);
+    const missing = combo.products.filter(p => !p.imageSrc || p.imageSrc.length <= 3);
     ShowValidationResult('🔍 Kiểm Tra Hình Ảnh', missing, 'hình ảnh');
 }
 

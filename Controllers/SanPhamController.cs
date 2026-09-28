@@ -254,6 +254,77 @@ namespace MVCPlayWithMe.Controllers
         }
 
         /// <summary>
+        /// Set Tên và Tên Ngắn từ Combo
+        /// - ShortName = Name (tên cũ)
+        /// - Name = "Sách " + ComboName + " " + Name (tên cũ)
+        /// </summary>
+        [HttpPost]
+        public async Task<string> SetNameFromCombo(int comboId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    // Lấy tên combo
+                    string comboName = "";
+                    using (MySqlCommand cmdCombo = new MySqlCommand("SELECT Name FROM tbcombo WHERE Id = @comboId", conn))
+                    {
+                        cmdCombo.Parameters.AddWithValue("@comboId", comboId);
+                        var comboResult = await cmdCombo.ExecuteScalarAsync();
+                        if (comboResult == null)
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = "Không tìm thấy combo.";
+                            return JsonConvert.SerializeObject(result);
+                        }
+                        comboName = comboResult.ToString();
+                    }
+
+                    // UPDATE TẤT CẢ sản phẩm thuộc combo: ShortName = Name, Name = "Sách " + ComboName + " " + Name
+                    string sql = @"
+                        UPDATE tb_san_pham
+                        SET ShortName = Name,
+                            Name = CONCAT('Sách ', @comboName, ' - ', Name)
+                        WHERE ComboId = @comboId";
+
+                    using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@comboName", comboName);
+                        cmd.Parameters.AddWithValue("@comboId", comboId);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                        if (rowsAffected > 0)
+                        {
+                            result.State = EMySqlResultState.OK;
+                            result.Message = $"Cập nhật tên thành công cho {rowsAffected} sản phẩm.";
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = "Không tìm thấy sản phẩm nào thuộc combo này.";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
         /// Cập nhật sản phẩm
         /// </summary>
         [HttpPost]
@@ -1574,10 +1645,17 @@ namespace MVCPlayWithMe.Controllers
                     {
                         result.State = EMySqlResultState.EMPTY;
                         result.Message = "Media trống";
+                        return JsonConvert.SerializeObject(result);
                     }
                     else
                     {
                         var sanPham = await SanPhamMySql.GetByIdAsync(sanPhamId);
+                        if(sanPham.Status == ESanPhamStatus.NGUNG_KINH_DOANH)
+                        {
+                            result.State = EMySqlResultState.INVALID;
+                            result.Message = "Sản phẩm ngừng kinh doanh";
+                            return JsonConvert.SerializeObject(result);
+                        }
                         {
                             string publisherName = sanPham.PublishingCompany;
                             string bookFormat = sanPham.HardCover == ESanPhamCoverType.BIA_CUNG ? "bìa cứng" : "bìa mềm";
