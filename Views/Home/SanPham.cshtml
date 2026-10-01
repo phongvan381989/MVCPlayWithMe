@@ -4,6 +4,7 @@
     Layout = null;
     var sanPham = ViewBag.SanPham as SanPham;
     var variants = ViewBag.Variants as List<SanPham>;
+    bool isOutOfStock = sanPham.Quantity <= 0;
 }
 
 <!DOCTYPE html>
@@ -124,25 +125,30 @@
                     <div id="item-order">
                         <div class="flex-items-center">
                             <div style="margin-right: 15px;">
-                                <div class="shopee-input-quantity">
-                                    <button type="button" class="xNxl-t" onclick="Decrease()">
+                                @{
+                                    string disabledClass = isOutOfStock ? "disabled" : "";
+                                }
+                                <div class="shopee-input-quantity @disabledClass">
+                                    <button type="button" class="xNxl-t" onclick="Decrease()" @(isOutOfStock ? "disabled" : "")>
                                         <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="4.5 4.5 3.5 4.5 0 4.5 0 5.5 3.5 5.5 4.5 5.5 10 5.5 10 4.5"></polygon></svg>
                                     </button>
                                     <input class="VWjjde" type="text" value="1" id="quantity-input"
-                                           oninput="ValidateInput(event)">
-                                    <button type="button" class="xNxl-t" onclick="Increase()">
+                                           oninput="ValidateInput(event)" @(isOutOfStock ? "disabled" : "")>
+                                    <button type="button" class="xNxl-t" onclick="Increase()" @(isOutOfStock ? "disabled" : "")>
                                         <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 10 10" x="0" y="0" class="shopee-svg-icon"><polygon points="10 4.5 5.5 4.5 5.5 0 4.5 0 4.5 4.5 0 4.5 0 5.5 4.5 5.5 4.5 10 5.5 10 5.5 5.5 10 5.5"></polygon></svg>
                                     </button>
                                 </div>
                             </div>
-                            <div id="max-quatity">@sanPham.Quantity sản phẩm có sẵn</div>
+                            <div id="max-quatity" style="@(isOutOfStock ? "color: red;" : "")">
+                                @(isOutOfStock ? "HẾT HÀNG" : sanPham.Quantity + " sản phẩm có sẵn")
+                            </div>
                         </div>
                     </div>
 
                     <div class="I-H1Co"></div>
                 </div>
                 <div class="p-UZsF">
-                    <button type="button" class="btn-add-to-cart" onclick="AddToCart()">
+                    <button type="button" class="btn-add-to-cart" onclick="AddToCart()" @(isOutOfStock ? "disabled" : "")>
                         <svg xmlns="http://www.w3.org/2000/svg" xmlns: xlink="http://www.w3.org/1999/xlink" version="1.1"
                              viewBox="0 0 15 15" x="0" y="0" class="icon-add-to-cart">
                             <g>
@@ -162,7 +168,7 @@
                         </svg>
                         <span>Thêm Vào Giỏ Hàng</span>
                     </button>
-                    <button type="button" class="btn-buy-now" onclick="GoToCartNow()">
+                    <button type="button" class="btn-buy-now" onclick="GoToCartNow()" @(isOutOfStock ? "disabled" : "")>
                         Mua ngay
                     </button>
                 </div>

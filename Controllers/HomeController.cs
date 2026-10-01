@@ -1473,6 +1473,11 @@ namespace MVCPlayWithMe.Controllers
 
             var html = new StringBuilder();
 
+            // Kiểm tra xem có phải combo/bộ không (bỏ kích thước, trọng lượng, số trang)
+            bool isComboOrSet = !string.IsNullOrWhiteSpace(sanPham.ShortName) &&
+                (sanPham.ShortName.IndexOf("combo", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                 sanPham.ShortName.IndexOf("bộ", StringComparison.OrdinalIgnoreCase) >= 0);
+
             // Helper: Thêm 1 spec row
             void AddSpecRow(string label, string value, string url = null)
             {
@@ -1526,13 +1531,13 @@ namespace MVCPlayWithMe.Controllers
                 AddSpecRow("Nhà phát hành", sanPham.PublisherName, $"/Home/Search?publisher={HttpUtility.UrlEncode(sanPham.PublisherName)}");
             }
 
-            // Năm xuất bản (chỉ hiển thị nếu cách năm hiện tại <= 3)
+            // Năm xuất bản (chỉ hiển thị nếu cách năm hiện tại <= 2)
             if (sanPham.PublishingTime.HasValue)
             {
                 int currentYear = DateTime.Now.Year;
                 int publishingYear = sanPham.PublishingTime.Value;
 
-                if (currentYear - publishingYear <= 3)
+                if (currentYear - publishingYear <= 2)
                 {
                     AddSpecRow("Năm xuất bản", publishingYear.ToString());
                 }
@@ -1551,23 +1556,27 @@ namespace MVCPlayWithMe.Controllers
                 AddSpecRow("Tuổi phù hợp", ageRangeText);
             }
 
-            // Kích thước
-            if (sanPham.ProductLong > 0 && sanPham.ProductWide > 0 && sanPham.ProductHigh > 0)
+            // Kích thước, Trọng lượng, Số trang — BỎ nếu là combo/bộ
+            if (!isComboOrSet)
             {
-                string dimensions = $"{sanPham.ProductLong} × {sanPham.ProductWide} × {sanPham.ProductHigh} mm";
-                AddSpecRow("Kích thước", dimensions);
-            }
+                // Kích thước
+                if (sanPham.ProductLong > 0 && sanPham.ProductWide > 0 && sanPham.ProductHigh > 0)
+                {
+                    string dimensions = $"{sanPham.ProductLong} × {sanPham.ProductWide} × {sanPham.ProductHigh} mm";
+                    AddSpecRow("Kích thước", dimensions);
+                }
 
-            // Trọng lượng
-            if (sanPham.ProductWeight > 0)
-            {
-                AddSpecRow("Trọng lượng", $"{sanPham.ProductWeight} gram");
-            }
+                // Trọng lượng
+                if (sanPham.ProductWeight > 0)
+                {
+                    AddSpecRow("Trọng lượng", $"{sanPham.ProductWeight} gram");
+                }
 
-            // Số trang
-            if (sanPham.PageNumber > 0)
-            {
-                AddSpecRow("Số trang", sanPham.PageNumber.ToString());
+                // Số trang
+                if (sanPham.PageNumber > 0)
+                {
+                    AddSpecRow("Số trang", sanPham.PageNumber.ToString());
+                }
             }
 
             // Hình thức (Bìa cứng/mềm)

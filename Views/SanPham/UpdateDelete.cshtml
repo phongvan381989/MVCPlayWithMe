@@ -26,6 +26,13 @@
             <div>
                 <label for="sp-short-name">Tên ngắn:</label>
                 <input class="config-max-width margin-vertical" id="sp-short-name" />
+
+                <button type="button"
+                        onclick="SetNameFromComboCategory()"
+                        title="🤖 Sinh tên tự động bằng GenerateNameCore&#10;&#10;📋 Logic:&#10;1. Lấy tên gốc (ShortName hoặc Name hiện tại)&#10;2. Nếu có Combo → thêm 'Combo - ' vào đầu&#10;3. Bỏ chữ 'combo' nếu có ở đầu tên&#10;4. Nếu Category = 'Sách...' → thêm 'Sách ' vào đầu&#10;5. ShortName = tên gốc, Name = tên mới&#10;&#10;📝 Ví dụ:&#10;• Tên gốc: 'Tập 1'&#10;• Combo: 'Doraemon'&#10;• Category: 'Sách thiếu nhi'&#10;→ ShortName: 'Tập 1'&#10;→ Name: 'Sách Doraemon - Tập 1'&#10;&#10;⚠️ Lưu ý:&#10;• Chỉ áp dụng cho 1 sản phẩm hiện tại&#10;• Có thể dùng Combo hoặc Category hoặc cả 2"
+                        style="margin-top: 8px; padding: 8px 16px; background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(156, 39, 176, 0.3); transition: all 0.3s ease;">
+                    🏷️ Sinh Tên Tự Động
+                </button>
             </div>
 
             <div>
@@ -72,21 +79,12 @@
                 <input list="list-combo" class="config-max-width margin-vertical" id="combo-id" placeholder="Chọn hoặc nhập tên combo" />
                 <datalist id="list-combo"></datalist>
 
-                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
-                    <button type="button"
-                            onclick="SetNameFromCombo()"
-                            title="Tự động cập nhật Tên và Tên Ngắn dựa trên Combo:&#10;• Tên Ngắn = Tên hiện tại&#10;• Tên Mới = 'Sách ' + Tên Combo + ' ' + Tên hiện tại&#10;&#10;Ví dụ:&#10;- Tên cũ: 'Doraemon Tập 1'&#10;- Combo: 'Doraemon'&#10;→ Tên ngắn: 'Doraemon Tập 1'&#10;→ Tên mới: 'Sách Doraemon Doraemon Tập 1'"
-                            style="padding: 8px 16px; background: linear-gradient(135deg, #9c27b0 0%, #7b1fa2 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(156, 39, 176, 0.3); transition: all 0.3s ease;">
-                        🏷️ Set Tên & Tên Ngắn Từ Combo
-                    </button>
-
-                    <button type="button"
-                            onclick="OpenComboUpdatePage()"
-                            title="Mở trang cập nhật thông tin Combo (mở tab mới)"
-                            style="padding: 8px 16px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3); transition: all 0.3s ease;">
-                        📝 Cập Nhật Combo
-                    </button>
-                </div>
+                <button type="button"
+                        onclick="OpenComboUpdatePage()"
+                        title="Mở trang cập nhật thông tin Combo (mở tab mới)"
+                        style="margin-top: 8px; padding: 8px 16px; background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; box-shadow: 0 2px 6px rgba(255, 152, 0, 0.3); transition: all 0.3s ease;">
+                    📝 Cập Nhật Combo
+                </button>
             </div>
 
             <div>

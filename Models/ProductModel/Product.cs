@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.SanPhamModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -133,16 +134,22 @@ namespace MVCPlayWithMe.Models.ProductModel
                 imageSrc.Add(src);
         }
 
-        // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
-        // Nếu sản phẩm là sách dựa vào category thì thêm chữ "Sách" ở đầu tên
+
         static public string GenerateName(Product product)
         {
-            // Tên đăng gồm: Sách Tên combo "-" tên sản phẩm.
-            string name = product.name;
-            if (!string.IsNullOrEmpty(product.comboName))
+            return GenerateNameCore(product.name, product.comboName, product.categoryName);
+        }
+
+        // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
+        // Nếu sản phẩm là sách dựa vào category thì thêm chữ "Sách" ở đầu tên
+        static public string GenerateNameCore(string name, string comboName, string categoryName)
+        {
+            // Tên đăng gồm: (Sách) Tên combo "-" tên sản phẩm.
+            if (!string.IsNullOrEmpty(comboName))
             {
-                name = product.comboName + " - " + product.name;
+                name = comboName + " - " + name;
             }
+
             // Bỏ chữ combo ở đầu tên nếu có
             // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
             if (name.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
@@ -156,7 +163,8 @@ namespace MVCPlayWithMe.Models.ProductModel
                 name = name.Trim();
             }
 
-            if (product.categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            if (!string.IsNullOrEmpty(categoryName) &&
+                categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
             {
                 // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
                 if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))

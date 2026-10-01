@@ -560,6 +560,11 @@ function ShowProductSpecifications() {
     // Clear nội dung cũ
     specificationsTable.innerHTML = "";
 
+    // Kiểm tra xem có phải combo/bộ không (bỏ kích thước, trọng lượng, số trang)
+    const isComboOrSet = sanPhamObject.ShortName &&
+        (sanPhamObject.ShortName.toLowerCase().includes('combo') ||
+         sanPhamObject.ShortName.toLowerCase().includes('bộ'));
+
     // Helper function để thêm spec row
     function AddSpecRow(label, value, url) {
         if (!value || value === "" || value === null || value === undefined) {
@@ -609,12 +614,12 @@ function ShowProductSpecifications() {
         AddSpecRow("Nhà phát hành", sanPhamObject.PublisherName, `/Home/Search?publisher=${sanPhamObject.PublisherName}`);
     }
 
-    // Năm xuất bản — chỉ hiển thị nếu cách năm hiện tại <= 3
+    // Năm xuất bản — chỉ hiển thị nếu cách năm hiện tại <= 2
     if (sanPhamObject.PublishingTime) {
         const currentYear = new Date().getFullYear();
         const publishingYear = parseInt(sanPhamObject.PublishingTime);
 
-        if (currentYear - publishingYear <= 3) {
+        if (currentYear - publishingYear <= 2) {
             AddSpecRow("Năm xuất bản", sanPhamObject.PublishingTime.toString());
         }
     }
@@ -627,20 +632,23 @@ function ShowProductSpecifications() {
         AddSpecRow("Tuổi phù hợp", ageRangeText);
     }
 
-    // Kích thước (chỉ hiển thị nếu các giá trị > 1)
-    if (sanPhamObject.ProductLong > 0 && sanPhamObject.ProductWide > 0 && sanPhamObject.ProductHigh > 0) {
-        let dimensions = `${sanPhamObject.ProductLong} × ${sanPhamObject.ProductWide} × ${sanPhamObject.ProductHigh} mm`;
-        AddSpecRow("Kích thước", dimensions);
-    }
+    // Kích thước, Trọng lượng, Số trang — BỎ nếu là combo/bộ
+    if (!isComboOrSet) {
+        // Kích thước (chỉ hiển thị nếu các giá trị > 0)
+        if (sanPhamObject.ProductLong > 0 && sanPhamObject.ProductWide > 0 && sanPhamObject.ProductHigh > 0) {
+            let dimensions = `${sanPhamObject.ProductLong} × ${sanPhamObject.ProductWide} × ${sanPhamObject.ProductHigh} mm`;
+            AddSpecRow("Kích thước", dimensions);
+        }
 
-    // Trọng lượng
-    if (sanPhamObject.ProductWeight > 0) {
-        AddSpecRow("Trọng lượng", sanPhamObject.ProductWeight + " gram");
-    }
+        // Trọng lượng
+        if (sanPhamObject.ProductWeight > 0) {
+            AddSpecRow("Trọng lượng", sanPhamObject.ProductWeight + " gram");
+        }
 
-    // Số trang
-    if (sanPhamObject.PageNumber) {
-        AddSpecRow("Số trang", sanPhamObject.PageNumber.toString());
+        // Số trang
+        if (sanPhamObject.PageNumber) {
+            AddSpecRow("Số trang", sanPhamObject.PageNumber.toString());
+        }
     }
 
     // Hình thức (Bìa cứng/mềm)

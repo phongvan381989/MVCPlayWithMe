@@ -2,6 +2,7 @@
 using MVCPlayWithMe.General.ClaudeAI;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.SanPhamModel;
+using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MySqlConnector;
 using Newtonsoft.Json;
@@ -254,12 +255,13 @@ namespace MVCPlayWithMe.Controllers
         }
 
         /// <summary>
-        /// Set Tên và Tên Ngắn từ Combo
-        /// - ShortName = Name (tên cũ)
-        /// - Name = "Sách " + ComboName + " " + Name (tên cũ)
+        /// Sinh tên tự động bằng GenerateNameCore
+        /// - Lấy tên hiện tại (ShortName hoặc Name)
+        /// - Gọi GenerateNameCore(name, comboName, categoryName)
+        /// - UPDATE: ShortName = Name cũ, Name = tên mới từ GenerateNameCore
         /// </summary>
         [HttpPost]
-        public async Task<string> SetNameFromCombo(int comboId)
+        public async Task<string> SetNameFromComboCategory(int sanPhamId, string comboName = null, string categoryName = null)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -274,44 +276,55 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
 
-                    // Lấy tên combo
-                    string comboName = "";
-                    using (MySqlCommand cmdCombo = new MySqlCommand("SELECT Name FROM tbcombo WHERE Id = @comboId", conn))
+                    // Lấy tên hiện tại của sản phẩm
+                    string currentName = "";
+
+                    using (MySqlCommand cmdGet = new MySqlCommand(
+                        "SELECT Name FROM tb_san_pham WHERE Id = @sanPhamId", conn))
                     {
-                        cmdCombo.Parameters.AddWithValue("@comboId", comboId);
-                        var comboResult = await cmdCombo.ExecuteScalarAsync();
-                        if (comboResult == null)
+                        cmdGet.Parameters.AddWithValue("@sanPhamId", sanPhamId);
+                        using (var reader = await cmdGet.ExecuteReaderAsync())
                         {
-                            result.State = EMySqlResultState.ERROR;
-                            result.Message = "Không tìm thấy combo.";
-                            return JsonConvert.SerializeObject(result);
+                            if (await reader.ReadAsync())
+                            {
+                                currentName = reader.GetString(0);
+                            }
+                            else
+                            {
+                                result.State = EMySqlResultState.ERROR;
+                                result.Message = "Không tìm thấy sản phẩm.";
+                                return JsonConvert.SerializeObject(result);
+                            }
                         }
-                        comboName = comboResult.ToString();
                     }
 
-                    // UPDATE TẤT CẢ sản phẩm thuộc combo: ShortName = Name, Name = "Sách " + ComboName + " " + Name
+
+                    // Sinh tên mới bằng GenerateNameCore
+                    string newName = Product.GenerateNameCore(currentName, comboName ?? "", categoryName ?? "");
+
+                    // UPDATE: ShortName = tên cũ, Name = tên mới
                     string sql = @"
                         UPDATE tb_san_pham
                         SET ShortName = Name,
-                            Name = CONCAT('Sách ', @comboName, ' - ', Name)
-                        WHERE ComboId = @comboId";
+                            Name = @newName
+                        WHERE Id = @sanPhamId";
 
                     using (MySqlCommand cmd = new MySqlCommand(sql, conn))
                     {
-                        cmd.Parameters.AddWithValue("@comboName", comboName);
-                        cmd.Parameters.AddWithValue("@comboId", comboId);
+                        cmd.Parameters.AddWithValue("@newName", newName);
+                        cmd.Parameters.AddWithValue("@sanPhamId", sanPhamId);
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
                         if (rowsAffected > 0)
                         {
                             result.State = EMySqlResultState.OK;
-                            result.Message = $"Cập nhật tên thành công cho {rowsAffected} sản phẩm.";
+                            result.Message = $"Cập nhật tên thành công!\n\nTên cũ: {currentName}\nTên mới: {newName}";
                         }
                         else
                         {
                             result.State = EMySqlResultState.ERROR;
-                            result.Message = "Không tìm thấy sản phẩm nào thuộc combo này.";
+                            result.Message = "Không thể cập nhật sản phẩm.";
                         }
                     }
                 }

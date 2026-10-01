@@ -1165,7 +1165,7 @@ async function LoadProductNameList() {
         const resultText = await PostJSON('/Product/GetListProductName', {});
         const products = JSON.parse(resultText);
         const datalist = document.getElementById('list-product-name');
-        datalist.innerHTML = products.map(p => `<option value="${p.Name}">`).join('');
+        datalist.innerHTML = products.map(p => `<option value="${p.name}">`).join('');
     } catch (error) {
         console.error('Error loading product names:', error);
     }
@@ -2315,22 +2315,24 @@ async function CalculateSalePriceAuto() {
  * - Tên Ngắn = Tên hiện tại
  * - Tên Mới = "Sách " + Tên Combo + " " + Tên hiện tại
  */
-async function SetNameFromCombo() {
-    // Lấy comboId
-    const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+async function SetNameFromComboCategory() {
+    // Lấy giá trị text của combo và category
+    const comboName = document.getElementById('combo-id').value.trim() || '';
+    const categoryName = document.getElementById('category-id').value.trim() || '';
 
-    if (comboId === -1) {
-        CreateMustClickOkModal('⚠️ Chưa chọn combo hợp lệ!');
-        document.getElementById('combo-id').focus();
+    if (!categoryName) {
+        CreateMustClickOkModal('⚠️ Vui lòng chọn Category để sinh tên!');
         return;
     }
 
     try {
         ShowCircleLoader();
 
-        // Gọi API - cập nhật TẤT CẢ sản phẩm thuộc combo
-        const responseText = await PostJSON('/SanPham/SetNameFromCombo', {
-            comboId: comboId
+        // Gọi API - sinh tên bằng GenerateNameCore
+        const responseText = await PostJSON('/SanPham/SetNameFromComboCategory', {
+            sanPhamId: parseInt(sanPhamId),
+            comboName: comboName,
+            categoryName: categoryName
         });
 
         RemoveCircleLoader();
@@ -2338,14 +2340,7 @@ async function SetNameFromCombo() {
         const result = JSON.parse(responseText);
 
         if (result.State === 0) {
-            // Success - reload lại trang để hiển thị tên mới
-            CreateMustClickOkModal(
-                '✅ ' + result.Message + '\n\n' +
-                'Trang sẽ tự động tải lại...',
-                () => {
-                    location.reload();
-                }
-            );
+            location.reload();
         } else {
             CreateMustClickOkModal('❌ Lỗi: ' + result.Message);
         }
