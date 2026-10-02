@@ -1325,13 +1325,13 @@ namespace MVCPlayWithMe.Controllers
             int maxYears = (maxAge.HasValue && maxAge.Value != -1) ? (int)Math.Floor(maxAge.Value / 12.0) : -1;
 
             // 3. Chỉ có max → "Đến X tuổi"
-            if (!minAge.HasValue || minAge.Value == -1)
+            if (!minAge.HasValue || minAge.Value == -1 || minAge.Value == 0)
             {
                 return $"Đến {maxYears} tuổi";
             }
 
             // 4. Chỉ có min → "Từ X tuổi"
-            if (!maxAge.HasValue || maxAge.Value == -1)
+            if (!maxAge.HasValue || maxAge.Value == -1 || maxAge.Value == 0)
             {
                 return $"Từ {minYears} tuổi";
             }

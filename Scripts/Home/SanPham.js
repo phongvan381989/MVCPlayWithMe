@@ -530,11 +530,11 @@ function GetAgeRangeText(minAge, maxAge) {
     const minYears = (minAge != null && minAge !== -1) ? Math.floor(minAge / 12) : -1;
     const maxYears = (maxAge != null && maxAge !== -1) ? Math.floor(maxAge / 12) : -1;
 
-    if (minAge === -1) {
+    if (minAge === -1 || minAge === 0) {
         return `Đến ${maxYears} tuổi`;
     }
 
-    if (maxAge === -1) {
+    if (maxAge === -1 || maxAge === 0) {
         return `Từ ${minYears} tuổi`;
     }
 

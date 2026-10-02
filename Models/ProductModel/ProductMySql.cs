@@ -2554,6 +2554,29 @@ namespace MVCPlayWithMe.Models.ProductModel
             return list;
         }
 
+        public static async Task<MySqlResultState> CreateSanPhamVoibenhoFromProductId(int id)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Create_SanPhamFromProduct", conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@inProductId", id);
+
+                        object scalarResult = await cmd.ExecuteScalarAsync();
+                        result.myAnythingLong = Convert.ToInt64(scalarResult);
+                        result.myAnything = Convert.ToInt32(result.myAnythingLong);
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
         #region Update Quantity After Sale
 
         /// <summary>

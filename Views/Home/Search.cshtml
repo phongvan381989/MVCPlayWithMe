@@ -29,14 +29,52 @@
                             Request.QueryString["publishingCompany"] != null ||
                             Request.QueryString["publisher"] != null ||
                             Request.QueryString["page"] != null;
+
+        // Meta content cho trang chủ
+        string metaTitle = string.IsNullOrWhiteSpace(keyword)
+            ? "Tiệm sách Voi bé nhỏ - Sách & Đồ chơi"
+            : $"Kết quả tìm kiếm: \"{keyword.Trim()}\" - Tiệm sách Voi bé nhỏ";
+
+        string metaDescription = string.IsNullOrWhiteSpace(keyword)
+            ? "Tiệm sách Voi bé nhỏ - Chuyên cung cấp sách & đồ chơi thiếu nhi chất lượng. Miễn phí vận chuyển đơn 200K+, hỏa tốc nội thành Hà Nội. Giao hàng toàn quốc."
+            : $"Tìm kiếm sách \"{keyword.Trim()}\" tại Tiệm sách Voi bé nhỏ.";
+
+        string ogImage = "https://voibenho.com/Media/800_800LOGO.png";
+        string ogUrl = "https://voibenho.com" + Request.Url.PathAndQuery;
     }
+
     @if (isSearchPage)
     {
         <meta name="robots" content="noindex, follow">
     }
 
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="@metaDescription">
+    <meta name="keywords" content="tiệm sách, sách thiếu nhi, sách văn học, sách kỹ năng sống, mua sách online, voi bé nhỏ, voibenho">
+    <link rel="canonical" href="@ogUrl">
+
+    <!-- Open Graph / Facebook / Zalo -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="@metaTitle">
+    <meta property="og:description" content="@metaDescription">
+    <meta property="og:image" content="@ogImage">
+    <meta property="og:image:width" content="800">
+    <meta property="og:image:height" content="800">
+    <meta property="og:image:alt" content="Logo Tiệm sách Voi bé nhỏ">
+    <meta property="og:url" content="@ogUrl">
+    <meta property="og:site_name" content="Tiệm sách Voi bé nhỏ">
+    <meta property="og:locale" content="vi_VN">
     <meta property="fb:pages" content="@Common.idFacebookPageTiemSachVBN" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="@metaTitle">
+    <meta name="twitter:description" content="@metaDescription">
+    <meta name="twitter:image" content="@ogImage">
+
+    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="~/Media/favico_centered_elephent.png">
+    <link rel="apple-touch-icon" href="~/Media/800_800LOGO.png">
 
     @Styles.Render("~/bundles/css/common")
     @Styles.Render("~/bundles/css/search")
@@ -45,6 +83,36 @@
     {
         @Html.Partial("~/Views/Shared/_GoogleAnalytics.cshtml")
         @Html.Partial("~/Views/Shared/_MetaPixel.cshtml")
+    }
+
+    @if (!isSearchPage)
+    {
+        <!-- Structured Data (JSON-LD) cho Google - Chỉ trang chủ -->
+        <script type="application/ld+json">
+        {
+            "@@context": "https://schema.org",
+            "@@type": "Organization",
+            "name": "Tiệm sách Voi bé nhỏ",
+            "alternateName": "voibenho.com",
+            "url": "https://voibenho.com",
+            "logo": "https://voibenho.com/Media/800_800LOGO.png",
+            "description": "Tiệm sách Voi bé nhỏ - Chuyên cung cấp sách thiếu nhi, văn học, kỹ năng sống chất lượng. Miễn phí vận chuyển đơn 200K+, hỏa tốc nội thành Hà Nội.",
+            "sameAs": [
+                "https://www.facebook.com/voibenho"
+            ],
+            "contactPoint": {
+                "@@type": "ContactPoint",
+                "contactType": "Customer Service",
+                "areaServed": "VN",
+                "availableLanguage": "Vietnamese"
+            },
+            "address": {
+                "@@type": "PostalAddress",
+                "addressCountry": "VN",
+                "addressLocality": "Hà Nội"
+            }
+        }
+        </script>
     }
 
 </head>

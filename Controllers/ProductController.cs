@@ -3288,6 +3288,7 @@ namespace MVCPlayWithMe.Controllers
             }
             return JsonConvert.SerializeObject(result);
         }
+
         // Nếu up sản phẩm thành công, ta lấy sản phẩm và insert vào db, mapping luôn
         // Item chỉ có 1 model
         private async Task ShopeeInsertNewItem_OneModelAndMapping(long ItemId, int productId,
@@ -4997,6 +4998,32 @@ namespace MVCPlayWithMe.Controllers
                 Common.SetResultException(ex, result);
                 return JsonConvert.SerializeObject(result);
             }
+        }
+
+        public async Task<string> CreateSanPhamVoibenhoFromProductId(int id)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            // Tạo sản phẩm mới
+            MySqlResultState result = await ProductMySql.CreateSanPhamVoibenhoFromProductId(id);
+
+            // tạo mapping cho sản phẩm mới
+            if (result.State == EMySqlResultState.OK)
+            {
+                SanPhamMapping mapping = new SanPhamMapping
+                {
+                    SanPhamBanId = result.myAnything,
+                    SanPhamKhoId = id,
+                    Quantity = 1,
+                };
+
+                result = await SanPhamMappingMySql.InsertAsync(mapping);
+            }
+
+            return JsonConvert.SerializeObject(result);
         }
     }
 }

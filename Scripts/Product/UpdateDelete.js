@@ -283,3 +283,25 @@ async function UploadImageOnECommerce() {
         return;
     }
 }
+
+async function CreateSanPhamVoibenhoFromProductId() {
+
+    // Lấy id
+    let id = GetValueFromUrlName("id");
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id);
+
+    let url = "/Product/CreateSanPhamVoibenhoFromProductId";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Tạo lỗi.", null);
+        return;
+    }
+}
