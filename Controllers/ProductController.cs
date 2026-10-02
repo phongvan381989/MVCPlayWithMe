@@ -634,6 +634,42 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        public async Task<string> UpdateCommonTranslatorWithCombo(
+                int comboId,
+                string translator
+            )
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await ProductMySql.UpdateCommonTranslatorWithComboAsync(comboId, translator, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        public async Task<string> UpdateCommonDiscountWithCombo(
+                int comboId,
+                double discount
+            )
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await ProductMySql.UpdateCommonDiscountWithComboAsync(comboId, discount, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
         [HttpPost]
         public async Task<string> UpdateCommonDetailWithCombo(
                 int comboId,

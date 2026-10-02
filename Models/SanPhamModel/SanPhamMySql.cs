@@ -66,6 +66,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.Add("@inSoldQuantity", MySqlDbType.Int32).Value = sanPham.SoldQuantity ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inURL", MySqlDbType.VarChar).Value = sanPham.URL ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inSEOKeyword", MySqlDbType.VarChar).Value = sanPham.SEOKeyword ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSanPhamKhoId", MySqlDbType.Int32).Value = sanPham.SanPhamKhoId;
 
                         // Execute và đọc LastInsertId từ SELECT
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
@@ -113,6 +114,11 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         {
             MySqlResultState result = new MySqlResultState();
 
+            if(!sanPham.SanPhamKhoId.HasValue)
+            {
+                sanPham.SanPhamKhoId = 0;
+            }
+
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -156,6 +162,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         cmd.Parameters.Add("@inSoldQuantity", MySqlDbType.Int32).Value = sanPham.SoldQuantity ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inURL", MySqlDbType.VarChar).Value = sanPham.URL ?? (object)DBNull.Value;
                         cmd.Parameters.Add("@inSEOKeyword", MySqlDbType.VarChar).Value = sanPham.SEOKeyword ?? (object)DBNull.Value;
+                        cmd.Parameters.Add("@inSanPhamKhoId", MySqlDbType.Int32).Value = sanPham.SanPhamKhoId;
 
                         // Execute và đọc LastInsertId từ SELECT
                         using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())

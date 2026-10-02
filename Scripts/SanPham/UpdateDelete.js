@@ -1945,7 +1945,7 @@ async function CopyCoversFromComboProducts() {
     const shortName = document.getElementById('sp-short-name').value.trim() || '';
 
     // Kiểm tra ShortName có chứa "Combo"
-    if (!shortName.toLowerCase().includes('combo')) {
+    if (!CheckSanPhamIsCombo(shortName)) {
         CreateMustClickOkModal('Chức năng này chỉ dùng cho sản phẩm Combo!\n\nTên ngắn phải chứa chữ "Combo".');
         return;
     }
@@ -2001,6 +2001,7 @@ async function CopyCoversFromComboProducts() {
 
 /**
  * Làm tất cả các task trong 1 click:
+.* 0: Nếu chưa có tên thì sinh tên, tên ngắn tự động
  * 1. Chép ảnh từ sản phẩm kho (nếu có đúng 1 mapping)
  * 2. Tính giá bán tự động
  * 3. Lấy Alt Text tất cả ảnh bằng AI
@@ -2009,6 +2010,15 @@ async function CopyCoversFromComboProducts() {
  */
 async function DoAllTasksInOneClick() {
     try {
+        // Lấy giá trị text của combo và category
+        const comboName = document.getElementById('combo-id').value.trim() || '';
+        const categoryName = document.getElementById('category-id').value.trim() || '';
+
+        if (!categoryName) {
+            CreateMustClickOkModal('⚠️ Vui lòng chọn Category để sinh tên!');
+            return;
+        }
+
         const mapping = currentMappingList[0];
         // Lấy tên sản phẩm để tạo slug
         const sanPhamName = document.getElementById('sp-name').value.trim() || 'san-pham';
@@ -2019,7 +2029,9 @@ async function DoAllTasksInOneClick() {
         const resultText = await PostJSON('/SanPham/DoAllTasksInOneClick', {
             sanPhamName: sanPhamName,
             sanPhamBanId: parseInt(sanPhamId),
-            sanPhamKhoId: mapping.SanPhamKhoId
+            sanPhamKhoId: mapping.SanPhamKhoId,
+            comboName: comboName,
+            categoryName: categoryName
         });
 
         RemoveCircleLoader();
@@ -2049,6 +2061,15 @@ async function DoAllTasksInOneClick() {
  */
 async function DoAllTasksForComboProducts() {
     try {
+        // Lấy giá trị text của combo và category
+        const comboName = document.getElementById('combo-id').value.trim() || '';
+        const categoryName = document.getElementById('category-id').value.trim() || '';
+
+        if (!categoryName) {
+            CreateMustClickOkModal('⚠️ Vui lòng chọn Category để sinh tên!');
+            return;
+        }
+
         // Lấy comboId
         const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
 
@@ -2158,15 +2179,19 @@ async function DoAllTasksForComboProducts() {
 
             try {
                 //NOTE:sản phẩm mapping với 1 sản phẩm trong kho, chưa có media nào
-                if (sanPham.Mappings.length > 1 || sanPham.MediaList.length > 0) {
+                if (sanPham.Mappings.length > 1 ||
+                    sanPham.MediaList.length > 0 ||
+                    sanPham.Mappings[0].SanPhamKhoId > 0) {
                     continue;
                 }
 
                 // Gọi DoAllTasksInOneClick cho sản phẩm này
                 const resultText = await PostJSON('/SanPham/DoAllTasksInOneClick', {
-                    sanPhamName: sanPhamName,
+                    sanPhamName: "", // Tên được cập nhật lại bên backend dựa trên comboName + categoryName
                     sanPhamBanId: sanPhamId,
-                    sanPhamKhoId: sanPham.Mappings[0].SanPhamKhoId
+                    sanPhamKhoId: sanPham.Mappings[0].SanPhamKhoId,
+                    comboName: comboName,
+                    categoryName: categoryName
                 });
 
                 const result = JSON.parse(resultText);
@@ -2365,4 +2390,60 @@ function OpenComboUpdatePage() {
 
     // Mở trang UpdateDelete của Combo trong tab mới
     window.open('/Combo/UpdateDelete?id=' + comboId, '_blank');
+}
+
+async function CreateNewComboProduct() {
+    // Lấy comboId
+    const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
+
+    if (comboId === -1 || comboId <= 0) {
+        CreateMustClickOkModal('⚠️ Chưa chọn combo hợp lệ!');
+        document.getElementById('combo-id').focus();
+        return;
+    }
+
+    const comboName = document.getElementById('combo-id').value.trim();
+    const categoryName = document.getElementById('category-id').value.trim() || '';
+
+    // Confirm với user
+    const confirmMsg = `🎁 Tạo sản phẩm combo mới từ "${comboName}","${categoryName}"?\n\n` +
+        `✅ Hệ thống sẽ:\n` +
+        `• Tạo sản phẩm bán mới (tb_san_pham)\n` +
+        `• Sinh mapping tới các sản phẩm trong combo\n` +
+        `• Tính giá tổng từ các sản phẩm\n` +
+        `• Chép ảnh đại diện từ sản phẩm trong combo\n` +
+        `• Chép thuộc tính (tác giả, kích thước, thể loại,...)\n\n` +
+        `⚠️ Lưu ý: Sản phẩm combo mới sẽ được tạo tự động!`;
+
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+
+    try {
+        // Gọi API
+        ShowCircleLoader();
+        const searchParams = new URLSearchParams();
+        searchParams.append("comboId", comboId);
+        searchParams.append("comboName", comboName);
+        searchParams.append("categoryName", categoryName);
+
+        const responseDB = await RequestHttpPostPromise(searchParams, '/SanPham/CreateNewComboProduct');
+        RemoveCircleLoader();
+
+        // Parse response
+        const result = JSON.parse(responseDB.responseText);
+
+        if (result.State === 0) {
+            // Thành công - hiển thị thông báo và reload
+            CreateMustClickOkModal('✅ Tạo sản phẩm combo thành công!\n\n' + (result.Message || ''), function () {
+                window.open('/SanPham/UpdateDelete?id=' + result.myAnything, '_self');
+            });
+        } else {
+            // Lỗi
+            CreateMustClickOkModal('❌ Có lỗi xảy ra:\n\n' + (result.Message || 'Vui lòng thử lại.'));
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal('❌ Lỗi kết nối:\n\n' + error.message);
+    }
 }

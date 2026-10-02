@@ -561,9 +561,7 @@ function ShowProductSpecifications() {
     specificationsTable.innerHTML = "";
 
     // Kiểm tra xem có phải combo/bộ không (bỏ kích thước, trọng lượng, số trang)
-    const isComboOrSet = sanPhamObject.ShortName &&
-        (sanPhamObject.ShortName.toLowerCase().includes('combo') ||
-         sanPhamObject.ShortName.toLowerCase().includes('bộ'));
+    const isComboOrSet = CheckSanPhamIsCombo(sanPhamObject.ShortName);
 
     // Helper function để thêm spec row
     function AddSpecRow(label, value, url) {

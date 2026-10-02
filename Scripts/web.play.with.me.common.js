@@ -2052,4 +2052,11 @@ function AutoInitBottomPhoneCopyIcon() {
         });
     }
 }
+
+function CheckSanPhamIsCombo(sortName) {
+    return sortName &&
+        (sortName.toLowerCase().includes('combo') ||
+            sortName.toLowerCase().includes('bộ'));
+}
+
 AutoInitBottomPhoneCopyIcon();

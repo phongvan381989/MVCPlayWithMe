@@ -254,22 +254,9 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
-        /// <summary>
-        /// Sinh tên tự động bằng GenerateNameCore
-        /// - Lấy tên hiện tại (ShortName hoặc Name)
-        /// - Gọi GenerateNameCore(name, comboName, categoryName)
-        /// - UPDATE: ShortName = Name cũ, Name = tên mới từ GenerateNameCore
-        /// </summary>
-        [HttpPost]
-        public async Task<string> SetNameFromComboCategory(int sanPhamId, string comboName = null, string categoryName = null)
+        public async Task<MySqlResultState> SetNameFromComboCategoryCore(int sanPhamId, string comboName = null, string categoryName = null)
         {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
-
             MySqlResultState result = new MySqlResultState();
-
             try
             {
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
@@ -293,11 +280,10 @@ namespace MVCPlayWithMe.Controllers
                             {
                                 result.State = EMySqlResultState.ERROR;
                                 result.Message = "Không tìm thấy sản phẩm.";
-                                return JsonConvert.SerializeObject(result);
+                                return result;
                             }
                         }
                     }
-
 
                     // Sinh tên mới bằng GenerateNameCore
                     string newName = Product.GenerateNameCore(currentName, comboName ?? "", categoryName ?? "");
@@ -319,7 +305,7 @@ namespace MVCPlayWithMe.Controllers
                         if (rowsAffected > 0)
                         {
                             result.State = EMySqlResultState.OK;
-                            result.Message = $"Cập nhật tên thành công!\n\nTên cũ: {currentName}\nTên mới: {newName}";
+                            result.Message = newName;
                         }
                         else
                         {
@@ -327,6 +313,141 @@ namespace MVCPlayWithMe.Controllers
                             result.Message = "Không thể cập nhật sản phẩm.";
                         }
                     }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return result;
+        }
+
+        /// <summary>
+        /// Sinh tên tự động bằng GenerateNameCore
+        /// - Lấy tên hiện tại (ShortName hoặc Name)
+        /// - Gọi GenerateNameCore(name, comboName, categoryName)
+        /// - UPDATE: ShortName = Name cũ, Name = tên mới từ GenerateNameCore
+        /// </summary>
+        [HttpPost]
+        public async Task<string> SetNameFromComboCategory(int sanPhamId, string comboName = null, string categoryName = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await SetNameFromComboCategoryCore(sanPhamId, comboName, categoryName));
+        }
+
+        /// <summary>
+        /// Tạo sản phẩm combo mới từ các sản phẩm trong combo
+        /// - Tạo sản phẩm bán (tb_san_pham) mới
+        /// - Sinh mapping tới các sản phẩm kho (tbProducts) trong combo
+        /// - Tính giá tổng
+        /// - Chép ảnh đại diện
+        /// - Chép thuộc tính từ 1 sản phẩm bất kỳ
+        /// </summary>
+        [HttpPost]
+        public async Task<string> CreateNewComboProduct(int comboId, string comboName, string categoryName)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+
+                    // 2. Lấy danh sách sản phẩm trong combo (từ tbProducts)
+                    Combo combo = await ComboMySql.GetComboAsync(comboId);
+
+                    // 3. Lấy sản phẩm đầu tiên để chép thuộc tính
+                    Product firstPro = combo.products[0];
+
+                    // 5. Tạo sản phẩm mới
+                    string newName = Product.GenerateNameCore(string.Empty, comboName, categoryName);
+                    if(newName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+                    {
+                        newName = $"Bộ {newName} - {combo.products.Count} Cuốn";
+                    }
+
+                    SanPham newSanPham = new SanPham
+                    {
+                        Name = newName,
+                        ShortName = "Combo " + combo.products.Count + " Cuốn",
+                        ComboId = comboId,
+                        CategoryId = firstPro.categoryId,
+                        PublisherId = firstPro.publisherId,
+                        PublishingCompany = firstPro.publishingCompany,
+                        Author = firstPro.author,
+                        Translator = firstPro.translator,
+                        BookCoverPrice = 0,
+                        SalePrice = 0,
+                        Discount = 0, // Tính sau nếu cần
+                        Quantity = 0, // Set sau khi tính tồn kho
+                        HardCover = (ESanPhamCoverType)firstPro.hardCover,
+                        Language = firstPro.language,
+                        ProductLong = firstPro.productLong,
+                        ProductWide = firstPro.productWide,
+                        ProductHigh = firstPro.productHigh,
+                        ProductWeight = firstPro.productWeight,
+                        PageNumber = 0, // Tổng số trang
+                        PublishingTime = firstPro.publishingTime,
+                        MinAge = firstPro.minAge,
+                        MaxAge = firstPro.maxAge,
+                        Status = ESanPhamStatus.DANG_KINH_DOANH,
+                        Code = "", // Để trống
+                        Barcode = "", // Để trống
+                        Detail = "" // Để trống
+                    };
+
+                    // 6. Insert sản phẩm
+                    MySqlResultState insertResult = await SanPhamMySql.InsertAsync(newSanPham);
+                    if (insertResult.State != EMySqlResultState.OK)
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Lỗi khi tạo sản phẩm: " + insertResult.Message;
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    int newSanPhamId = newSanPham.Id;
+
+                    // 7. Tạo mapping cho từng sản phẩm trong combo
+                    foreach (var pro in combo.products)
+                    {
+                        string sqlMapping = @"
+                            INSERT INTO tb_san_pham_mapping (SanPhamBanId, SanPhamKhoId, Quantity)
+                            VALUES (@sanPhamId, @SanPhamKhoId, 1)";
+
+                        using (MySqlCommand cmdMapping = new MySqlCommand(sqlMapping, conn))
+                        {
+                            cmdMapping.Parameters.AddWithValue("@sanPhamId", newSanPhamId);
+                            cmdMapping.Parameters.AddWithValue("@SanPhamKhoId", pro.id);
+                            await cmdMapping.ExecuteNonQueryAsync();
+                        }
+                    }
+
+                    // Tính toán tiền
+                    result = await CalculateAndUpdateSalePriceCore(newSanPhamId);
+                    if (insertResult.State != EMySqlResultState.OK)
+                    {
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    // 8. Chép ảnh đại diện từ sản phẩm đầu tiên
+                    result = await CopyCoversFromComboProductsCore(newSanPhamId, comboId);
+                    if (insertResult.State != EMySqlResultState.OK)
+                    {
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    result.myAnything = newSanPhamId;
                 }
             }
             catch (Exception ex)
@@ -1135,20 +1256,8 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(await CopyImagesFromKhoProductCore(sanPhamName, sanPhamBanId, sanPhamBanId));
         }
 
-        /// <summary>
-        /// Copy ảnh bìa từ các sản phẩm lẻ cùng combo vào sản phẩm combo
-        /// Điều kiện: ShortName chứa "Combo" VÀ có ComboId
-        /// Chỉ copy ảnh có tên chứa "-bia" từ sản phẩm lẻ (ShortName không chứa "Combo")
-        /// </summary>
-        [HttpPost]
-        public async Task<string> CopyCoversFromComboProducts(
-            int sanPhamId, int comboId)
+        public async Task<MySqlResultState> CopyCoversFromComboProductsCore(int sanPhamId, int comboId)
         {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
-            }
-
             MySqlResultState result = new MySqlResultState();
 
             try
@@ -1158,7 +1267,7 @@ namespace MVCPlayWithMe.Controllers
                 string comboThumbnailForderPath = Common.GetAbsoluteThumbnailSanPhamMediaFolderPath(sanPhamId.ToString());
 
                 // 5. Lấy DisplayOrder hiện tại lớn nhất
-                List <SanPhamMedia> existingMedia = await SanPhamMediaMySql.GetAllBySanPhamComboIdAsync(comboId);
+                List<SanPhamMedia> existingMedia = await SanPhamMediaMySql.GetAllBySanPhamComboIdAsync(comboId);
                 int nextDisplayOrder = await SanPhamMediaMySql.GetMaxDisplayOrderBySanPhamId(sanPhamId);
 
                 int copiedCount = 0;
@@ -1168,7 +1277,7 @@ namespace MVCPlayWithMe.Controllers
                 foreach (var media in existingMedia)
                 {
                     // Bỏ qua chính nó
-                    if(media.SanPhamId == sanPhamId)
+                    if (media.SanPhamId == sanPhamId)
                     {
                         continue;
                     }
@@ -1204,9 +1313,9 @@ namespace MVCPlayWithMe.Controllers
                         DisplayOrder = ++nextDisplayOrder
                     });
 
-                    if(result.State != EMySqlResultState.OK)
+                    if (result.State != EMySqlResultState.OK)
                     {
-                        return JsonConvert.SerializeObject(result);
+                        return result;
                     }
 
                     copiedCount++;
@@ -1217,7 +1326,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     result.State = EMySqlResultState.ERROR;
                     result.Message = "Không tìm thấy ảnh bìa nào để copy từ các sản phẩm lẻ";
-                    return JsonConvert.SerializeObject(result);
+                    return result;
                 }
 
                 result.State = EMySqlResultState.OK;
@@ -1230,7 +1339,25 @@ namespace MVCPlayWithMe.Controllers
                 result.Message = ex.Message;
             }
 
-            return JsonConvert.SerializeObject(result);
+            return result;
+        }
+
+        /// <summary>
+        /// Copy ảnh bìa từ các sản phẩm lẻ cùng combo vào sản phẩm combo
+        /// Điều kiện: ShortName chứa "Combo" VÀ có ComboId
+        /// Chỉ copy ảnh có tên chứa "-bia" từ sản phẩm lẻ (ShortName không chứa "Combo")
+        /// </summary>
+        [HttpPost]
+        public async Task<string> CopyCoversFromComboProducts(
+            int sanPhamId, int comboId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+
+            return JsonConvert.SerializeObject(await CopyCoversFromComboProductsCore(sanPhamId, comboId));
         }
 
         /// <summary>
@@ -1623,13 +1750,25 @@ namespace MVCPlayWithMe.Controllers
         /// Thực hiện tất cả 5 bước trong 1 action: Chép ảnh + Tính giá + Lấy Alt Text + Đổi tên + Trạng thái
         /// </summary>
         [HttpPost]
-        public async Task<string> DoAllTasksInOneClick(string sanPhamName, int sanPhamBanId, int sanPhamKhoId)
+        public async Task<string> DoAllTasksInOneClick(string sanPhamName, int sanPhamBanId,
+            int sanPhamKhoId, string comboName, string categoryName)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
             MySqlResultState result = new MySqlResultState();
+
+            // Sinh tên, tên ngắn cho sản phẩm
+            if(string.IsNullOrEmpty(sanPhamName))
+            {
+                result = await SetNameFromComboCategoryCore(sanPhamBanId, comboName, categoryName);
+                if (result.State != EMySqlResultState.OK)
+                {
+                    return JsonConvert.SerializeObject(result);
+                }
+                sanPhamName = result.Message;
+            }
 
             int sanPhamId = sanPhamBanId;
             try

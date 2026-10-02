@@ -74,7 +74,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                 {
                     await conn.OpenAsync();
                     using (MySqlCommand cmd = new MySqlCommand(
-                        "SELECT COALESCE(MAX(DisplayOrder), 0) FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId",
+                        "SELECT COALESCE(MAX(DisplayOrder), -1) FROM tb_san_pham_media WHERE SanPhamId = @sanPhamId",
                         conn))
                     {
                         cmd.CommandType = CommandType.Text;

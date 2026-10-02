@@ -347,6 +347,43 @@ async function UpdateCommonBookCoverPrice() {
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
 }
 
+async function UpdateCommonTranslator() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("comboId", GetValueFromUrlName("id"));
+
+    let translator = document.getElementById("translator-id").value.trim();
+    searchParams.append("translator", translator);
+
+    let query = "/Product/UpdateCommonTranslatorWithCombo";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+}
+
+async function UpdateCommonDiscount() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("comboId", GetValueFromUrlName("id"));
+
+    let discount = GetValueInputById("discount-when-import", 0);
+    if (discount < 0 || discount > 100) {
+        CreateMustClickOkModal("Chiết khấu phải từ 0-100%.");
+        document.getElementById("discount-when-import").focus();
+        return;
+    }
+    searchParams.append("discount", discount);
+
+    let query = "/Product/UpdateCommonDiscountWithCombo";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+}
+
 async function CreateProductOfComboOnECommerce() {
     // Lấy id
     let id = GetValueFromUrlName("id");

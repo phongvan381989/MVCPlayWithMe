@@ -144,36 +144,45 @@ namespace MVCPlayWithMe.Models.ProductModel
         // Nếu sản phẩm là sách dựa vào category thì thêm chữ "Sách" ở đầu tên
         static public string GenerateNameCore(string name, string comboName, string categoryName)
         {
+            string generatedName = string.IsNullOrEmpty(name) ? "" : name.Trim();
+
             // Tên đăng gồm: (Sách) Tên combo "-" tên sản phẩm.
             if (!string.IsNullOrEmpty(comboName))
             {
-                name = comboName + " - " + name;
+                if (!string.IsNullOrEmpty(generatedName))
+                {
+                    generatedName = comboName + " - " + generatedName;
+                }
+                else
+                {
+                    generatedName = comboName;
+                }
             }
 
             // Bỏ chữ combo ở đầu tên nếu có
             // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
-            if (name.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
+            if (generatedName.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
             {
                 // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
-                name = name.TrimStart().Substring(5).Trim();
+                generatedName = generatedName.TrimStart().Substring(5).Trim();
             }
             else
             {
                 // Loại bỏ khoảng trắng nếu không có "combo"
-                name = name.Trim();
+                generatedName = generatedName.Trim();
             }
 
             if (!string.IsNullOrEmpty(categoryName) &&
                 categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
             {
                 // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
-                if (!name.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+                if (!generatedName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
                 {
-                    name = "Sách " + name;
+                    generatedName = "Sách " + generatedName;
                 }
             }
 
-            return name;
+            return generatedName;
         }
 
         // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
