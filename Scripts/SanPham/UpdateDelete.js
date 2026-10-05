@@ -1671,14 +1671,14 @@ async function GenerateAltTextForImage(fileName) {
             const altTextarea = mediaItem.querySelector('.media-alt');
             const descriptionTextarea = mediaItem.querySelector('.media-description');
 
-            if (titleTextarea) titleTextarea.value = result.Title || '';
-            if (altTextarea) altTextarea.value = result.AltText || '';
-            if (descriptionTextarea) descriptionTextarea.value = result.Description || '';
+            if (titleTextarea) titleTextarea.value = result.myJson.Title || '';
+            if (altTextarea) altTextarea.value = result.myJson.AltText || '';
+            if (descriptionTextarea) descriptionTextarea.value = result.myJson.Description || '';
 
             // Hiển thị PageNumber nếu có (chỉ có khi imageType = InsidePage)
-            if (result.PageNumber) {
+            if (result.myJson.PageNumber) {
                 // Lưu PageNumber vào data attribute để dùng cho AutoRename
-                mediaItem.dataset.pageNumber = result.PageNumber;
+                mediaItem.dataset.pageNumber = result.myJson.PageNumber;
 
                 // Tìm hoặc tạo div để hiển thị PageNumber
                 let pageNumberDiv = mediaItem.querySelector('.page-number-display');
@@ -1702,7 +1702,7 @@ async function GenerateAltTextForImage(fileName) {
                 }
 
                 // Update nội dung
-                pageNumberDiv.innerHTML = `📄 Claude AI đọc được: <strong>Trang ${result.PageNumber}</strong>`;
+                pageNumberDiv.innerHTML = `📄 Claude AI đọc được: <strong>Trang ${result.myJson.PageNumber}</strong>`;
 
                 // Flash effect
                 pageNumberDiv.style.transform = 'scale(1.05)';
