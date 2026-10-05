@@ -88,7 +88,8 @@ namespace MVCPlayWithMe.General.ClaudeAI
         /// <param name="publisher">Nhà xuất bản (nếu có)</param>
         /// <param name="minAge">Độ tuổi tối thiểu (nếu có, dùng cho sách trẻ em)</param>
         /// <param name="maxAge">Độ tuổi tối đa (nếu có, dùng cho sách trẻ em)</param>
-        /// <returns>ImageAltTextResult chứa title, alt text, description</returns>
+        /// <param name="includeDescription">Có yêu cầu generate description hay không (mặc định false)</param>
+        /// <returns>ImageAltTextResult chứa title, alt text, description (nếu includeDescription = true)</returns>
         public static async Task<ImageAltTextResult> GenerateImageAltTextAsync(
             string imagePath,
             string apiKey,
@@ -98,7 +99,8 @@ namespace MVCPlayWithMe.General.ClaudeAI
             string bookFormat = null,
             string publisher = null,
             int? minAge = null,
-            int? maxAge = null)
+            int? maxAge = null,
+            bool includeDescription = false)
         {
             var result = new ImageAltTextResult();
             string prompt = null;
@@ -141,7 +143,7 @@ namespace MVCPlayWithMe.General.ClaudeAI
 
                 // Tạo prompt tùy theo loại ảnh và thông tin sẵn có
                 prompt = GetPromptForImageType(imageType, bookName, author,
-                    bookFormat, publisher, minAge, maxAge);
+                    bookFormat, publisher, minAge, maxAge, includeDescription);
 
                 // Tạo messages
                 var messages = new List<Anthropic.SDK.Messaging.Message>
@@ -236,23 +238,25 @@ namespace MVCPlayWithMe.General.ClaudeAI
         /// <summary>
         /// Phần JSON format chung cho tất cả prompts
         /// </summary>
-        private static string GetJsonFormatSection(bool includePageNumber = false)
+        private static string GetJsonFormatSection(bool includePageNumber = false, bool includeDescription = false)
         {
-            if (includePageNumber)
+            var fields = new List<string>
             {
-                return @"{
-                            ""title"": ""[Tiêu đề ngắn gọn]"",
-                            ""altText"": ""[Alt text tối ưu SEO]"",
-                            ""description"": ""[Mô tả chi tiết]"",
-                            ""pageNumber"": ""[Số trang - VD: '5' hoặc '2-3', null nếu không thấy]""
-                        }";
+                @"""title"": ""[Tiêu đề ngắn gọn]""",
+                @"""altText"": ""[Alt text tối ưu SEO]"""
+            };
+
+            if (includeDescription)
+            {
+                fields.Add(@"""description"": ""[Mô tả chi tiết]""");
             }
 
-            return @"{
-                        ""title"": ""[Tiêu đề ngắn gọn]"",
-                        ""altText"": ""[Alt text tối ưu SEO]"",
-                        ""description"": ""[Mô tả chi tiết]""
-                    }";
+            if (includePageNumber)
+            {
+                fields.Add(@"""pageNumber"": ""[Số trang - VD: '5' hoặc '2-3', null nếu không thấy]""");
+            }
+
+            return "{\n                            " + string.Join(",\n                            ", fields) + "\n                        }";
         }
 
         /// <summary>
@@ -288,8 +292,8 @@ namespace MVCPlayWithMe.General.ClaudeAI
                     bookInfoLines.Add($"- Nhà xuất bản: {publisher}");
 
                 // Thêm độ tuổi phù hợp (cho sách trẻ em)
-                // Dùng hàm SanPham.GetAgeRangeText() để convert tháng → năm
-                string ageRange = SanPham.GetAgeRangeText(minAge, maxAge);
+                // Dùng hàm Common.GetAgeRangeText() để convert tháng → năm
+                string ageRange = Common.GetAgeRangeText(minAge, maxAge);
                 if (ageRange != string.Empty)
                 {
                     bookInfoLines.Add($"- Độ tuổi phù hợp: {ageRange}");
@@ -318,16 +322,18 @@ namespace MVCPlayWithMe.General.ClaudeAI
             string bookFormat = null,
             string publisher = null,
             int? minAge = null,
-            int? maxAge = null)
+            int? maxAge = null,
+            bool includeDescription = false)
         {
             string bookInfo = GetBookInfoSection(imageType, bookName, author, bookFormat, publisher, minAge, maxAge);
-            string jsonFormat = GetJsonFormatSection();
+            string jsonFormat = GetJsonFormatSection(includePageNumber: false, includeDescription: includeDescription);
             string commonReqs = GetCommonRequirements();
 
             switch (imageType)
             {
                 case BookImageType.Cover:
-                    return $@"Hãy phân tích ảnh BÌA SÁCH này và trả về JSON với format sau:{bookInfo}
+                    {
+                        string basePrompt = $@"Hãy phân tích ảnh BÌA SÁCH này và trả về JSON với format sau:{bookInfo}
 
 {jsonFormat}
 
@@ -350,16 +356,25 @@ Yêu cầu cho AltText (ẢNH BÌA - TỐI ƯU SEO):
 - Ví dụ:
   * ""Harry Potter bìa cứng cho bé 8-12 tuổi của J.K. Rowling, bìa đỏ đậm""
   * ""Ehon Hạt Mầm cho bé 3-6 tuổi - NXB Kim Đồng, bìa màu vàng sáng""
-  * ""Đắc Nhân Tâm - Dale Carnegie, bìa vàng bìa mềm"" (không có độ tuổi)
+  * ""Đắc Nhân Tâm - Dale Carnegie, bìa vàng bìa mềm"" (không có độ tuổi)";
+
+                        if (includeDescription)
+                        {
+                            basePrompt += @"
 
 Yêu cầu cho Description (20-40 từ):
 - Mô tả hình ảnh NHÌN THẤY trên bìa: màu sắc, hình vẽ, bố cục, tình trạng sách
-- KHÔNG lặp lại thông tin đã có (tên, tác giả) - chỉ mô tả visual{commonReqs}";
+- KHÔNG lặp lại thông tin đã có (tên, tác giả) - chỉ mô tả visual";
+                        }
+
+                        return basePrompt + commonReqs;
+                    }
 
                 case BookImageType.InsidePage:
-                    // Inside Page cần detect page number
-                    string insidePageJsonFormat = GetJsonFormatSection(includePageNumber: true);
-                    return $@"Hãy phân tích ảnh TRANG TRONG SÁCH này và trả về JSON với format sau:{bookInfo}
+                    {
+                        // Inside Page cần detect page number
+                        string insidePageJsonFormat = GetJsonFormatSection(includePageNumber: true, includeDescription: includeDescription);
+                        string insidePagePrompt = $@"Hãy phân tích ảnh TRANG TRONG SÁCH này và trả về JSON với format sau:{bookInfo}
 
 {insidePageJsonFormat}
 
@@ -382,12 +397,19 @@ Yêu cầu cho AltText (ẢNH TRANG TRONG - SEO):
 - Ví dụ:
   * ""Harry Potter: Minh họa Harry đi tàu Hogwarts trang 23""
   * ""Ehon Hạt Mầm: Cảnh động vật với màu sắc rực rỡ""
-  * ""Minh họa màu nước về tình bạn và chia sẻ trang 5""
+  * ""Minh họa màu nước về tình bạn và chia sẻ trang 5""";
+
+                        if (includeDescription)
+                        {
+                            insidePagePrompt += @"
 
 Yêu cầu cho Description (20-40 từ):
 - Mô tả chi tiết nội dung NHÌN THẤY: văn bản (OCR nếu đọc được), hình minh họa, bố cục, màu sắc, số trang
 - KHÔNG lặp lại ""Trang trong cuốn..."" - đi thẳng vào mô tả visual
-- Ví dụ: ""Trang sách minh họa màu nước với cảnh các bạn nhỏ cùng chơi trong vườn hoa, có đoạn văn về tình bạn ở góc dưới""
+- Ví dụ: ""Trang sách minh họa màu nước với cảnh các bạn nhỏ cùng chơi trong vườn hoa, có đoạn văn về tình bạn ở góc dưới""";
+                        }
+
+                        insidePagePrompt += @"
 
 QUAN TRỌNG - Yêu cầu cho PageNumber:
 - Đọc CHÍNH XÁC số trang xuất hiện trong ảnh (thường ở góc trên/dưới trang)
@@ -396,10 +418,14 @@ QUAN TRỌNG - Yêu cầu cho PageNumber:
   * Nếu 2 trang liền nhau (spread): ""2-3"" (dạng range)
   * Nếu KHÔNG THẤY số trang: null (không phải string ""null"", mà JSON null)
 - Ví dụ pageNumber hợp lệ: ""5"", ""12"", ""2-3"", ""10-11"", null
-- KHÔNG thêm chữ ""trang"", ""page"", chỉ GHI SỐ{commonReqs}";
+- KHÔNG thêm chữ ""trang"", ""page"", chỉ GHI SỐ";
+
+                        return insidePagePrompt + commonReqs;
+                    }
 
                 case BookImageType.BackCover:
-                    return $@"Hãy phân tích ảnh MẶT SAU SÁCH này và trả về JSON với format sau:{bookInfo}
+                    {
+                        string backCoverPrompt = $@"Hãy phân tích ảnh MẶT SAU SÁCH này và trả về JSON với format sau:{bookInfo}
 
 {jsonFormat}
 
@@ -422,14 +448,23 @@ Yêu cầu cho AltText (ẢNH MẶT SAU - SEO):
 - Ví dụ:
   * ""Harry Potter: Tóm tắt nội dung và barcode trên bìa sau""
   * ""Ehon Hạt Mầm bìa sau với thông tin NXB và giá""
-  * ""Bìa sau với tóm tắt câu chuyện và barcode ISBN""
+  * ""Bìa sau với tóm tắt câu chuyện và barcode ISBN""";
+
+                        if (includeDescription)
+                        {
+                            backCoverPrompt += @"
 
 Yêu cầu cho Description (20-40 từ):
 - Mô tả những gì NHÌN THẤY trên mặt sau: tóm tắt, giới thiệu, barcode, giá, logo NXB, review...
-- KHÔNG lặp lại ""Mặt sau sách..."" - đi thẳng vào mô tả{commonReqs}";
+- KHÔNG lặp lại ""Mặt sau sách..."" - đi thẳng vào mô tả";
+                        }
+
+                        return backCoverPrompt + commonReqs;
+                    }
 
                 case BookImageType.Spine:
-                    return $@"Hãy phân tích ảnh GÁY SÁCH này và trả về JSON với format sau:{bookInfo}
+                    {
+                        string spinePrompt = $@"Hãy phân tích ảnh GÁY SÁCH này và trả về JSON với format sau:{bookInfo}
 
 {jsonFormat}
 
@@ -451,14 +486,23 @@ Yêu cầu cho AltText (ẢNH GÁY SÁCH - SEO):
 - Ví dụ:
   * ""Harry Potter - J.K. Rowling, gáy đỏ 3cm với chữ vàng""
   * ""Ehon Hạt Mầm gáy vàng nổi bật, dày 1.5cm""
-  * ""Gáy sách xanh dương mỏng 1cm với logo NXB""
+  * ""Gáy sách xanh dương mỏng 1cm với logo NXB""";
+
+                        if (includeDescription)
+                        {
+                            spinePrompt += @"
 
 Yêu cầu cho Description (20-40 từ):
 - Mô tả NHÌN THẤY: chữ in trên gáy, màu sắc, độ dày sách, logo NXB, họa tiết
-- KHÔNG lặp lại ""Gáy sách..."" - đi thẳng vào mô tả{commonReqs}";
+- KHÔNG lặp lại ""Gáy sách..."" - đi thẳng vào mô tả";
+                        }
+
+                        return spinePrompt + commonReqs;
+                    }
 
                 case BookImageType.FullView:
-                    return $@"Hãy phân tích ảnh TOÀN CẢNH SÁCH này và trả về JSON với format sau:{bookInfo}
+                    {
+                        string fullViewPrompt = $@"Hãy phân tích ảnh TOÀN CẢNH SÁCH này và trả về JSON với format sau:{bookInfo}
 
 {jsonFormat}
 
@@ -481,14 +525,22 @@ Yêu cầu cho AltText (ẢNH TOÀN CẢNH - SEO):
 - Ví dụ:
   * ""Harry Potter: Nhiều góc nhìn với bìa, gáy và mặt sau""
   * ""Ehon Hạt Mầm toàn cảnh xoay 360 độ, nền trắng""
-  * ""Toàn cảnh sách nhiều góc độ trên nền gỗ""
+  * ""Toàn cảnh sách nhiều góc độ trên nền gỗ""";
+
+                        if (includeDescription)
+                        {
+                            fullViewPrompt += @"
 
 Yêu cầu cho Description (20-40 từ):
 - Mô tả toàn cảnh NHÌN THẤY: những phần nào của sách hiển thị, góc chụp, bố cục, background
-- KHÔNG lặp lại tên sách - chỉ mô tả visual{commonReqs}";
+- KHÔNG lặp lại tên sách - chỉ mô tả visual";
+                        }
+
+                        return fullViewPrompt + commonReqs;
+                    }
 
                 default:
-                    return GetPromptForImageType(BookImageType.Cover);
+                    return GetPromptForImageType(BookImageType.Cover, bookName, author, bookFormat, publisher, minAge, maxAge, includeDescription);
             }
         }
 

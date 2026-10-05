@@ -554,8 +554,8 @@ function CheckMissingDimension() {
 
 function CheckMissingAge() {
     const missing = combo.products.filter(p =>
-        !p.minAge || p.minAge === 0 ||
-        !p.maxAge || p.maxAge === 0
+        !p.minAge ||
+        !p.maxAge
     );
     ShowValidationResult('🔍 Kiểm Tra Độ Tuổi', missing, 'độ tuổi');
 }
@@ -589,7 +589,7 @@ function CheckAll() {
         { name: 'Ngôn ngữ', count: combo.products.filter(p => !p.language || p.language.trim() === '').length },
         { name: 'Số trang', count: combo.products.filter(p => !p.pageNumber || p.pageNumber === 0).length },
         { name: 'Kích thước', count: combo.products.filter(p => !p.productLong || p.productLong === 0 || !p.productWide || p.productWide === 0 || !p.productHigh || p.productHigh === 0 || !p.productWeight || p.productWeight === 0).length },
-        { name: 'Độ tuổi', count: combo.products.filter(p => !p.minAge || p.minAge === 0 || !p.maxAge || p.maxAge === 0).length },
+        { name: 'Độ tuổi', count: combo.products.filter(p => !p.minAge || !p.maxAge).length },
         { name: 'Mô tả', count: combo.products.filter(p => !p.detail || p.detail.trim() === '' || p.detail.trim().length < 100).length },
         { name: 'Hình ảnh', count: combo.products.filter(p => !p.imageSrc || p.imageSrc.length === 0).length }
     ];

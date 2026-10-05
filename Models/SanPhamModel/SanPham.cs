@@ -300,39 +300,6 @@ namespace MVCPlayWithMe.Models.SanPhamModel
         //    return GetAgeRangeText(MinAge, MaxAge);
         //}
 
-        /// <summary>
-        /// Static overload - Convert độ tuổi từ tháng → năm và format thành text
-        /// VD: "2-5 tuổi", "3 tuổi trở lên", "Không giới hạn"
-        /// </summary>
-        public static string GetAgeRangeText(int? minAge, int? maxAge)
-        {
-            if ((minAge == null || minAge == -1) && (maxAge == null || maxAge == -1))
-            {
-                return string.Empty;
-            }
-
-            int minYears = (minAge != null && minAge != -1) ? minAge.Value / 12 : -1;
-            int maxYears = (maxAge != null && maxAge != -1) ? maxAge.Value / 12 : -1;
-
-            if (minAge == -1)
-            {
-                return $"Đến {maxYears} tuổi";
-            }
-
-            if (maxAge == -1)
-            {
-                return $"Từ {minYears} tuổi";
-            }
-
-            if (minYears == maxYears)
-            {
-                return $"{minYears} tuổi";
-            }
-
-            return $"{minYears}-{maxYears} tuổi";
-        }
-
-
         // Chứa media của sản phẩm, bao gồm cả ảnh và video. Sắp xếp theo DisplayOrder tăng dần.
         // và có DisplayOrder < ngưỡng 38
         public List<SanPhamMedia> MediaList { get; set; } = new List<SanPhamMedia>();

@@ -2074,14 +2074,6 @@ async function DoAllTasksForComboProducts() {
         const comboId = GetDataIdFromComboDatalist(document.getElementById('combo-id').value) || -1;
 
         let sanPhamsToProcess = [];
-        // if (DEBUG_ADMIN) {
-        //     ShowCircleLoader();
-        //     const resultText = await PostJSON('/SanPham/GetListSanPhamOfCombo', { id: comboId });
-        //     RemoveCircleLoader();
-        //     sanPhamsToProcess = JSON.parse(resultText);
-        //     console.log("sanPhamsToProcess: " + JSON.stringify(sanPhamsToProcess));
-        //     return;
-        // }
 
         if (comboId > 0) {
             // Có combo -> lấy tất cả sản phẩm trong combo
@@ -2180,8 +2172,7 @@ async function DoAllTasksForComboProducts() {
             try {
                 //NOTE:sản phẩm mapping với 1 sản phẩm trong kho, chưa có media nào
                 if (sanPham.Mappings.length > 1 ||
-                    sanPham.MediaList.length > 0 ||
-                    sanPham.Mappings[0].SanPhamKhoId > 0) {
+                    sanPham.SanPhamKhoId <= 0) {
                     continue;
                 }
 
@@ -2189,7 +2180,7 @@ async function DoAllTasksForComboProducts() {
                 const resultText = await PostJSON('/SanPham/DoAllTasksInOneClick', {
                     sanPhamName: "", // Tên được cập nhật lại bên backend dựa trên comboName + categoryName
                     sanPhamBanId: sanPhamId,
-                    sanPhamKhoId: sanPham.Mappings[0].SanPhamKhoId,
+                    sanPhamKhoId: sanPham.SanPhamKhoId,
                     comboName: comboName,
                     categoryName: categoryName
                 });

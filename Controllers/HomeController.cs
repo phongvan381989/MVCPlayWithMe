@@ -1309,44 +1309,6 @@ namespace MVCPlayWithMe.Controllers
         }
 
         /// <summary>
-        /// Convert độ tuổi từ tháng → năm và format thành text
-        /// VD: "2-5 tuổi", "Từ 3 tuổi", "Đến 6 tuổi", "4 tuổi", ""
-        /// </summary>
-        private string GetAgeRangeText(int? minAge, int? maxAge)
-        {
-            // 1. Cả hai null hoặc -1 → ""
-            if ((!minAge.HasValue || minAge.Value == -1) && (!maxAge.HasValue || maxAge.Value == -1))
-            {
-                return "";
-            }
-
-            // 2. Convert tháng → năm (làm tròn xuống)
-            int minYears = (minAge.HasValue && minAge.Value != -1) ? (int)Math.Floor(minAge.Value / 12.0) : -1;
-            int maxYears = (maxAge.HasValue && maxAge.Value != -1) ? (int)Math.Floor(maxAge.Value / 12.0) : -1;
-
-            // 3. Chỉ có max → "Đến X tuổi"
-            if (!minAge.HasValue || minAge.Value == -1 || minAge.Value == 0)
-            {
-                return $"Đến {maxYears} tuổi";
-            }
-
-            // 4. Chỉ có min → "Từ X tuổi"
-            if (!maxAge.HasValue || maxAge.Value == -1 || maxAge.Value == 0)
-            {
-                return $"Từ {minYears} tuổi";
-            }
-
-            // 5. Min = Max → "X tuổi"
-            if (minYears == maxYears)
-            {
-                return $"{minYears} tuổi";
-            }
-
-            // 6. Min khác Max → "X-Y tuổi"
-            return $"{minYears}-{maxYears} tuổi";
-        }
-
-        /// <summary>
         /// Generate HTML cho bảng Specifications (THÔNG TIN CHI TIẾT)
         /// SSR cho initial load, JavaScript vẫn dùng để render khi switch variant
         /// </summary>
@@ -1550,7 +1512,7 @@ namespace MVCPlayWithMe.Controllers
             }
 
             // Tuổi phù hợp
-            string ageRangeText = GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
+            string ageRangeText = Common.GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
             if (!string.IsNullOrWhiteSpace(ageRangeText))
             {
                 AddSpecRow("Tuổi phù hợp", ageRangeText);
@@ -1683,7 +1645,7 @@ namespace MVCPlayWithMe.Controllers
                 metaDesc.Append($" - {sanPham.Name}");
 
                 // 3. Độ tuổi (nếu có)
-                string ageRangeText = GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
+                string ageRangeText = Common.GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
                 if (!string.IsNullOrWhiteSpace(ageRangeText))
                 {
                     metaDesc.Append($" ({ageRangeText})");
@@ -1715,7 +1677,7 @@ namespace MVCPlayWithMe.Controllers
                 metaDesc.Append(sanPham.Name);
 
                 // 2. Độ tuổi (nếu có)
-                string ageRangeText = GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
+                string ageRangeText = Common.GetAgeRangeText(sanPham.MinAge, sanPham.MaxAge);
                 if (!string.IsNullOrWhiteSpace(ageRangeText))
                 {
                     metaDesc.Append($" ({ageRangeText})");

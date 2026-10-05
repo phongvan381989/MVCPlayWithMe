@@ -286,19 +286,19 @@ function parseIntOrNull(val) {
 
 // POST request với JSON data, trả về response text
 async function PostJSON(url, data) {
-    if (DEBUG) {
-        let jsonData = JSON.stringify(data);
-        console.log("PostJSON request:", { url: url, data:jsonData });
-    }
+    // if (DEBUG_ADMIN) {
+    //     let jsonData = JSON.stringify(data);
+    //     console.log("PostJSON request:", { url: url, data:jsonData });
+    // }
     const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
     });
     let responseText = await response.text();
-    if (DEBUG) {
-        console.log("PostJSON " + url + " responseText: " + responseText);
-    }
+    // if (DEBUG_ADMIN) {
+    //     console.log("PostJSON " + url + " responseText: " + responseText);
+    // }
     return responseText;
 }
 

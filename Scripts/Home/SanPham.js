@@ -522,7 +522,8 @@ function ShowProductDescription() {
 // VD: "2-5 tuổi", "3 tuổi trở lên", "Không giới hạn"
 function GetAgeRangeText(minAge, maxAge) {
     // Null/undefined/-1 check
-    if ((minAge == null || minAge === -1) && (maxAge == null || maxAge === -1)) {
+    if ((minAge == null || minAge === -1 || minAge === 0) &&
+        (maxAge == null || maxAge === -1 || maxAge === 0)) {
         return "";
     }
 
