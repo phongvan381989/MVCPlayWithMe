@@ -1,4 +1,4 @@
-function CopyShopeeProductImageToProduct() {
+﻿function CopyShopeeProductImageToProduct() {
 
 }
 
@@ -155,6 +155,17 @@ async function TikiTestSomethingWithParameter() {
 async function TikiChangeQuantityWhenSetupOtherWarehouse() {
     const searchParams = new URLSearchParams();
     let query = "/Dev/TikiChangeQuantityWhenSetupOtherWarehouse";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công", "Có lỗi");
+}
+
+async function TikiInsertAttributeOfCategory() {
+    const searchParams = new URLSearchParams();
+    let query = "/Dev/TikiInsertAttributeOfCategory";
 
     ShowCircleLoader();
     let responseDB = await RequestHttpPostPromise(searchParams, query);

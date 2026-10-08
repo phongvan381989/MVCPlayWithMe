@@ -449,9 +449,11 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
-        // NOTE: Gọi 1 lần DUY NHẤT TRONG ĐỜI, gọi lần sau dữ liệu sẽ bị duplicate
-        private async Task InsertData_AttributeOfCategory()
+        // NOTE: Gọi 1 lần DUY NHẤT TRONG ĐỜI, gọi lần sau dữ liệu sẽ bị duplicate =>NOTE:
+        // fix bằng cách xóa dữ liệu trong bảng tbTikiAttributeOfCategory nếu có trước khi insert
+        private async Task<MySqlResultState> InsertData_AttributeOfCategory()
         {
+            MySqlResultState result = new MySqlResultState();
             // Lấy danh sách category id
             List<int> categoryIdList = new List<int>();
             try
@@ -481,14 +483,18 @@ namespace MVCPlayWithMe.Controllers
                         }
                     }
 
+                    // Xóa dữ liệu trong bảng tbTikiAttributeOfCategory nếu có trước khi insert
+                    await TikiMySql.DeleteAllTikiAttributesOfCategoryAsync(conn);
+
                     // Lưu vào db
                     await TikiMySql.InsertTikiAttributesOfCategoryAsync(attributeListGeneral, conn);
                 }
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Warn(ex.ToString());
+                Common.SetResultException(ex, result);
             }
+            return result;
         }
 
         // Từ category sản phẩm trên tiki đã mapping với sản phẩm trong kho,
@@ -858,6 +864,20 @@ namespace MVCPlayWithMe.Controllers
             {
                 Common.SetResultException(ex, result);
             }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> TikiInsertAttributeOfCategory()
+        {
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            result = await InsertData_AttributeOfCategory();
+
             return JsonConvert.SerializeObject(result);
         }
 

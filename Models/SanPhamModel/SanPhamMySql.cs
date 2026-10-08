@@ -1139,7 +1139,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                                     PublisherId = rdr.IsDBNull(idxPublisherId) ? (int?)null : rdr.GetInt32(idxPublisherId),
                                     BookCoverPrice = rdr.GetInt32(idxBookCoverPrice),
                                     Discount = rdr.IsDBNull(idxDiscount) ? 0 : rdr.GetFloat(idxDiscount),
-                                    SalePrice = rdr.GetInt32(idxSalePrice),
+                                    SalePrice = rdr.IsDBNull(idxSalePrice) ? 0 : rdr.GetInt32(idxSalePrice),
                                     Quantity = rdr.GetInt32(idxQuantity),
                                     Status = rdr.GetSByte(idxStatus)
                                 };
@@ -1217,7 +1217,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                         ORDER BY DisplayOrder ASC
                         LIMIT 1
                     ) media ON true
-                    WHERE sp.Status = 0";
+                    WHERE sp.Status = 0 AND sp.SalePrice > 0";
 
                 using (MySqlCommand cmd = new MySqlCommand())
                 {

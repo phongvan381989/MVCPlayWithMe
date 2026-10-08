@@ -62,6 +62,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
         public List<string> author { get; set; }
         //public float price { get; set; }
 
+        public string origin { get; set; } // "Việt Nam"
+        public string Organization_name { get; set; }
+        public string Organization_address { get; set; }
+
         public Attributes()
         {
             age_group = new List<string>();

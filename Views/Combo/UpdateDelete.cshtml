@@ -31,6 +31,43 @@
                         <option value="1">Ngừng kinh doanh</option>
                     </select>
                 </div>
+
+                <!-- Mô tả combo -->
+                <div style="margin: 15px 0;">
+                    <label for="combo-description" style="font-weight: 600; color: #333; display: block; margin-bottom: 8px;">
+                        📝 Mô Tả Combo:
+                    </label>
+                    <textarea id="combo-description"
+                              class="config-max-width"
+                              rows="20"
+                              placeholder="Nhập mô tả cho combo này..."
+                              style="width: 100%; padding: 12px; border: 2px solid #ddd; border-radius: 6px; font-size: 14px; font-family: inherit; resize: vertical;"
+                              title="Mô tả combo"></textarea>
+                    <div style="margin-top: 4px; font-size: 12px; color: #666;">
+                        <span id="combo-desc-char-count">0</span> ký tự
+                    </div>
+                </div>
+
+                <!-- Upload ảnh combo -->
+                <div style="margin: 15px 0; padding: 15px; background: #f9f9f9; border: 2px dashed #ddd; border-radius: 6px;">
+                    <label style="font-weight: 600; color: #333; display: block; margin-bottom: 10px;">
+                        🖼️ Ảnh Combo:
+                    </label>
+                    <input type="file"
+                           id="combo-image-upload"
+                           accept="image/jpeg,image/jpg,image/png,image/webp"
+                           multiple
+                           style="margin-bottom: 10px;"
+                           title="Chọn ảnh cho combo (JPG, PNG, WEBP)">
+                    <button type="button"
+                            class="hxvniuf87fso"
+                            onclick="UploadComboImages()"
+                            style="background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%); padding: 8px 16px;">
+                        📤 Upload Ảnh
+                    </button>
+                    <div id="combo-images-preview" style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px;"></div>
+                </div>
+
                 <div>
                     <table id="product-table" style="display:none;">
                         <tr>

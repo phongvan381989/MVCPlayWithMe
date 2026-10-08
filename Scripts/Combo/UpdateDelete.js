@@ -26,6 +26,17 @@ window.onload = async function () {
             }
         });
     }
+
+    // Setup character counter for combo description textarea
+    const comboDescTextarea = document.getElementById('combo-description');
+    const comboDescCharCount = document.getElementById('combo-desc-char-count');
+
+    if (comboDescTextarea) {
+        comboDescTextarea.addEventListener('input', function() {
+            const length = this.value.length;
+            comboDescCharCount.textContent = length;
+        });
+    }
 };
 
 let combo = null;
@@ -116,12 +127,22 @@ async function GetCombo() {
         document.getElementById("combo-name").value = combo.name;
         document.getElementById("combo-code").value = combo.code;
         document.getElementById("combo-status").value = combo.status;
+        document.getElementById("combo-description").value = combo.detail || '';
+
+        // Trigger character count update
+        const comboDescCharCount = document.getElementById('combo-desc-char-count');
+        if (comboDescCharCount) {
+            comboDescCharCount.textContent = (combo.detail || '').length;
+        }
 
         ShowProductTable(combo.products);
 
         if (combo.products.length > 0) {
             SetProductCommonInfoWithCombo(combo.products[0]);
         }
+
+        // Load ảnh combo
+        await LoadComboImages(combo.id);
     }
 }
 
@@ -134,12 +155,14 @@ async function UpdateCombo() {
 
     let code = document.getElementById("combo-code").value.trim();
     let status = document.getElementById("combo-status").value;
+    let description = document.getElementById("combo-description").value.trim();
 
     const searchParams = new URLSearchParams();
     searchParams.append("id", GetValueFromUrlName("id"));
     searchParams.append("name", CapitalizeWords(name));
     searchParams.append("code", code);
     searchParams.append("status", status);
+    searchParams.append("description", description);
     let query = "/Combo/UpdateCombo";
     ShowCircleLoader();
     let responseDB = await RequestHttpPostPromise(searchParams, query);
@@ -632,4 +655,90 @@ function CheckAll() {
 
     resultDiv.style.display = 'block';
     resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+// Upload ảnh combo
+async function UploadComboImages() {
+    const fileInput = document.getElementById('combo-image-upload');
+    const files = fileInput.files;
+    
+    if (!files || files.length === 0) {
+        CreateMustClickOkModal('⚠️ Chưa chọn ảnh nào!', null);
+        return;
+    }
+    
+    const comboId = GetValueFromUrlName("id");
+    if (!comboId || comboId <= 0) {
+        CreateMustClickOkModal('⚠️ Combo ID không hợp lệ!', null);
+        return;
+    }
+    
+    // Upload từng file
+    let successCount = 0;
+    let errorCount = 0;
+    
+    ShowCircleLoader();
+    
+    for (let i = 0; i < files.length; i++) {
+        const formData = new FormData();
+        formData.append('file', files[i]);
+        formData.append('comboId', comboId);
+        
+        try {
+            const response = await fetch('/Combo/UploadComboImage', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.text();
+            if (result.includes('thành công') || result.includes('Ok')) {
+                successCount++;
+            } else {
+                errorCount++;
+            }
+        } catch (error) {
+            errorCount++;
+        }
+    }
+    
+    RemoveCircleLoader();
+    
+    // Clear input
+    fileInput.value = '';
+    
+    // Reload images
+    await LoadComboImages(comboId);
+    
+    CreateMustClickOkModal(`✅ Upload thành công: ${successCount} ảnh\n❌ Lỗi: ${errorCount} ảnh`, null);
+}
+
+// Load và hiển thị ảnh combo
+async function LoadComboImages(comboId) {
+    try {
+        const response = await fetch(`/Combo/GetComboImages?comboId=${comboId}`);
+        const images = await response.json();
+        
+        const previewDiv = document.getElementById('combo-images-preview');
+        previewDiv.innerHTML = '';
+        
+        if (!images || images.length === 0) {
+            previewDiv.innerHTML = '<p style="color: #999;">Chưa có ảnh nào</p>';
+            return;
+        }
+        
+        images.forEach((imgSrc, index) => {
+            const imgContainer = document.createElement('div');
+            imgContainer.style.cssText = 'position: relative; display: inline-block;';
+            
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            img.style.cssText = 'width: 100px; height: 100px; object-fit: cover; border: 2px solid #ddd; border-radius: 4px;';
+            img.title = `Ảnh ${index + 1}`;
+            
+            imgContainer.appendChild(img);
+            previewDiv.appendChild(imgContainer);
+        });
+    } catch (error) {
+        console.error('Load combo images error:', error);
+    }
 }

@@ -3019,6 +3019,18 @@ namespace MVCPlayWithMe.Controllers
                     {
                         tikiCreatingProduct.attributes.publisher_vn = publisher.tikiAttributeValue;
                     }
+                    else if (attr.code == "origin")
+                    {
+                        tikiCreatingProduct.attributes.origin = publisher.origin;
+                    }
+                    else if (attr.code == "Organization_address")
+                    {
+                        tikiCreatingProduct.attributes.Organization_address = publisher.organization_address;
+                    }
+                    else if (attr.code == "Organization_name")
+                    {
+                        tikiCreatingProduct.attributes.Organization_name = publisher.organization_name;
+                    }
                 }
 
                 // number_of_page
@@ -3162,7 +3174,7 @@ namespace MVCPlayWithMe.Controllers
                                 if (trackObj.state != "approved")
                                 {
                                     result.State = EMySqlResultState.PENDING;
-                                    result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state;
+                                    result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state + ". " + trackObj.reason;
                                 }
                             }
                         }

@@ -64,11 +64,18 @@ namespace MVCPlayWithMe.Controllers
             }
 
             MySqlResultState result = await ComboMySql.DeleteComboAsync(id);
+
+            // Xóa media của combo
+            // Tạo đường dẫn Media/Combo/{ComboId}/
+            string comboFolderPath = System.Web.HttpContext.Current.Server.MapPath($"{Common.ComboMediaFolderPath}{id}/");
+
+            Common.DeleteMediaFolder(comboFolderPath);
+
             return JsonConvert.SerializeObject(result);
         }
 
         [HttpPost]
-        public async Task<string> UpdateCombo(int id, string name, string code, Byte status)
+        public async Task<string> UpdateCombo(int id, string name, string code, Byte status, string description = null)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -80,7 +87,7 @@ namespace MVCPlayWithMe.Controllers
                 code = string.Empty;
             }
 
-            MySqlResultState result = await ComboMySql.UpdateComboAsync(id, name, code, status);
+            MySqlResultState result = await ComboMySql.UpdateComboAsync(id, name, code, status, description);
             return JsonConvert.SerializeObject(result);
         }
 
@@ -221,6 +228,100 @@ namespace MVCPlayWithMe.Controllers
             }
             // Lấy danh sách sản phẩm
             return JsonConvert.SerializeObject(ls);
+        }
+
+        /// <summary>
+        /// Upload ảnh cho combo
+        /// </summary>
+        [HttpPost]
+        public async Task<string> UploadComboImage(HttpPostedFileBase file, int comboId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return "Lỗi xác thực.";
+            }
+
+            if (file == null || file.ContentLength == 0)
+            {
+                return "Ok. Không có file nào được gửi.";
+            }
+
+            if (comboId <= 0)
+            {
+                return "Lỗi: Combo ID không hợp lệ.";
+            }
+
+            try
+            {
+                // Tạo đường dẫn Media/Combo/{ComboId}/
+                string comboFolderPath = System.Web.HttpContext.Current.Server.MapPath($"{Common.ComboMediaFolderPath}{comboId}/");
+
+                // Tạo thư mục nếu chưa có
+                if (!System.IO.Directory.Exists(comboFolderPath))
+                {
+                    System.IO.Directory.CreateDirectory(comboFolderPath);
+                    // Tạo thư mục _320 cho thumbnail
+                    System.IO.Directory.CreateDirectory(System.Web.HttpContext.Current.Server.MapPath($"{Common.ComboMediaFolderPath}{comboId}_320/"));
+                }
+
+                // Lấy tên file
+                string fileName = System.IO.Path.GetFileName(file.FileName);
+                string filePath = System.IO.Path.Combine(comboFolderPath, fileName);
+
+                // Lưu file
+                file.SaveAs(filePath);
+
+                // Tạo thumbnail 320px nếu là ảnh
+                if (Common.ImageExtensions.Contains(System.IO.Path.GetExtension(filePath).ToLower()))
+                {
+                    Common.ReduceImageSizeTo320AndSave(filePath);
+                }
+
+                return $"Ok. Upload thành công: {fileName}";
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"UploadComboImage error: {ex.ToString()}");
+                return $"Lỗi: {ex.Message}";
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách ảnh của combo
+        /// </summary>
+        [HttpGet]
+        public async Task<string> GetComboImages(int comboId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new List<string>());
+            }
+
+            List<string> images = new List<string>();
+            try
+            {
+                string comboFolderPath = System.Web.HttpContext.Current.Server.MapPath($"{Common.ComboMediaFolderPath}{comboId}/");
+
+                if (System.IO.Directory.Exists(comboFolderPath))
+                {
+                    var files = System.IO.Directory.GetFiles(comboFolderPath)
+                        .Where(f => Common.ImageExtensions.Contains(System.IO.Path.GetExtension(f).ToLower()))
+                        .OrderBy(f => f)
+                        .ToList();
+
+                    foreach (var file in files)
+                    {
+                        string fileName = System.IO.Path.GetFileName(file);
+                        images.Add($"/Media/Combo/{comboId}/{fileName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"GetComboImages error: {ex.ToString()}");
+            }
+
+            return JsonConvert.SerializeObject(images);
         }
     }
 }

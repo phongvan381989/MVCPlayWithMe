@@ -54,12 +54,19 @@ namespace MVCPlayWithMe.Models
                 int nameIndex = rdr.GetOrdinal("Name");
                 int codeIndex = rdr.GetOrdinal("Code");
                 int statusIndex = rdr.GetOrdinal("Status");
+
+                // Try to get detail index (might not exist in old queries)
+                int detailIndex = rdr.GetOrdinal("Detail");
+
                 while (await rdr.ReadAsync())
                 {
-                    ls.Add(new Combo(rdr.GetInt32(idIndex),
+                    var combo = new Combo(rdr.GetInt32(idIndex),
                         rdr.IsDBNull(nameIndex) ? string.Empty : rdr.GetString(nameIndex),
                         rdr.IsDBNull(codeIndex) ? string.Empty : rdr.GetString(codeIndex),
-                        rdr.GetByte(statusIndex)));
+                        rdr.GetByte(statusIndex),
+                        rdr.IsDBNull(detailIndex) ? string.Empty : rdr.GetString(detailIndex));
+
+                    ls.Add(combo);
                 }
             }
             return ls;
@@ -197,7 +204,8 @@ namespace MVCPlayWithMe.Models
                                 combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"),
                                     MyMySql.GetString(rdr, "TBComboName"),
                                     MyMySql.GetString(rdr, "TBComboCode"),
-                                    MyMySql.GetByte(rdr, "TBComboStatus"));
+                                    MyMySql.GetByte(rdr, "TBComboStatus"),
+                                    MyMySql.GetString(rdr, "TBComboDetail"));
                             }
                             int proIdTem = MyMySql.GetInt32(rdr, "Id");
                             if (proIdTem != -1)
@@ -273,6 +281,47 @@ namespace MVCPlayWithMe.Models
             paras[3] = new MySqlParameter("@statusCode", status);
             MyMySql.AddOutParameters(paras);
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbCombo_Update", paras);
+        }
+
+        public static async Task<MySqlResultState> UpdateComboAsync(int id, string name, string code, Byte status, string detail)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE tbCombo SET Name = @name, Code = @code, Status = @status, Detail = @detail WHERE Id = @id", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.Parameters.AddWithValue("@name", name);
+                        cmd.Parameters.AddWithValue("@code", code);
+                        cmd.Parameters.AddWithValue("@status", status);
+                        cmd.Parameters.AddWithValue("@detail", detail ?? (object)DBNull.Value);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            result.State = EMySqlResultState.OK;
+                            result.Message = "Cập nhật combo thành công";
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = "Không tìm thấy combo để cập nhật";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.ERROR;
+                result.Message = ex.Message;
+            }
+            return result;
         }
 
         public static async Task<int> GetComboIdFromNameAsync(string name)

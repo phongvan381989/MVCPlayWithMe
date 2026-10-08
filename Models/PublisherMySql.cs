@@ -66,6 +66,9 @@ namespace MVCPlayWithMe.Models
                                     MyMySql.GetString(rdr, "Detail"));
                                 publisher.tikiCertificate = MyMySql.GetString(rdr, "TikiCertificate");
                                 publisher.tikiAttributeValue = MyMySql.GetString(rdr, "TikiAttributeValue");
+                                publisher.origin = MyMySql.GetString(rdr, "Origin");
+                                publisher.organization_name = MyMySql.GetString(rdr, "Organization_name");
+                                publisher.organization_address = MyMySql.GetString(rdr, "Organization_address");
                             }
                         }
                     }

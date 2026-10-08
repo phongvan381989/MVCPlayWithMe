@@ -17,6 +17,10 @@ namespace MVCPlayWithMe.Models
 
         public string tikiAttributeValue { get; set; }
 
+        public string origin { get; set; } // "Việt Nam"
+        public string organization_name { get; set; }
+        public string organization_address { get; set; }
+
         public Publisher(int idInput, string nameInput,
             float discountInput, string detalInput) : base(idInput, nameInput)
         {

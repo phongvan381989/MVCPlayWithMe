@@ -49,7 +49,11 @@ namespace MVCPlayWithMe.General
 
         public static Int16 orderDeadline = 48; // 48 h sau khi đặt hàng mà khách chưa thanh toán thì đơn sẽ bị hủy 
 
+        // dùng cho url
+        public static readonly string urlSeperator = @"/";
+        // dùng cho đường dẫn window
         public static readonly string pathSeperator = @"\";
+
         public static readonly string tail320 = "_320";
         public static readonly JsonSerializerSettings jsonSerializersettings = new JsonSerializerSettings
         {
@@ -164,6 +168,9 @@ namespace MVCPlayWithMe.General
         public static string SanPhamMediaFolderPath;
         public static string absoluteSanPhamMediaFolderPath;
 
+        public static string ComboMediaFolderPath;
+        public static string absoluteComboMediaFolderPath;
+
         public static string MediaFolderPath;
         public static string TemporaryImageShopeeMediaFolderPath;
         public static string TemporaryImageTikiMediaFolderPath;
@@ -186,7 +193,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteProductMediaFolderPath(string productId)
         {
-            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
+            string path = absoluteProductMediaFolderPath + productId + urlSeperator;
             //MyLogger.GetInstance().Info(path);
             if (!Directory.Exists(path))
             {
@@ -206,22 +213,22 @@ namespace MVCPlayWithMe.General
             string path = string.Empty;
             if (eType == eTiki)
             {
-                path = srcCertificateFolderPath + eTiki + pathSeperator;
+                path = srcCertificateFolderPath + eTiki + urlSeperator;
             }
             else if (eType == eShopee)
             {
-                path = srcCertificateFolderPath + eShopee + pathSeperator;
+                path = srcCertificateFolderPath + eShopee + urlSeperator;
             }
             else if (eType == eLazada)
             {
-                path = srcCertificateFolderPath + eLazada + pathSeperator;
+                path = srcCertificateFolderPath + eLazada + urlSeperator;
             }
             return path;
         }
 
         public static string CreateAbsoluteProductMediaFolderPath(string productId)
         {
-            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
+            string path = absoluteProductMediaFolderPath + productId + urlSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
             Directory.CreateDirectory(absoluteProductMediaFolderPath + productId + tail320);
@@ -233,7 +240,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string GetAbsoluteSanPhamMediaFolderPath(string sanPhamId)
         {
-            string path = absoluteSanPhamMediaFolderPath + sanPhamId + pathSeperator;
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + urlSeperator;
             if (!Directory.Exists(path))
             {
                 path = null;
@@ -246,7 +253,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string GetAbsoluteThumbnailSanPhamMediaFolderPath(string sanPhamId)
         {
-            string path = absoluteSanPhamMediaFolderPath + sanPhamId + Common.tail320 + pathSeperator;
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + Common.tail320 + urlSeperator;
             if (!Directory.Exists(path))
             {
                 path = null;
@@ -259,7 +266,7 @@ namespace MVCPlayWithMe.General
         /// </summary>
         public static string CreateAbsoluteSanPhamMediaFolderPath(string sanPhamId)
         {
-            string path = absoluteSanPhamMediaFolderPath + sanPhamId + pathSeperator;
+            string path = absoluteSanPhamMediaFolderPath + sanPhamId + urlSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
             Directory.CreateDirectory(absoluteSanPhamMediaFolderPath + sanPhamId + tail320);
@@ -360,7 +367,7 @@ namespace MVCPlayWithMe.General
         {
             List<string> src = new List<string>();
 
-            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
+            string path = absoluteProductMediaFolderPath + productId + urlSeperator;
             if (!Directory.Exists(path))
             {
                 return src;
@@ -368,7 +375,7 @@ namespace MVCPlayWithMe.General
 
             string[] files = Directory.GetFiles(path);
 
-            string relPath = ProductMediaFolderPath + productId + pathSeperator;
+            string relPath = ProductMediaFolderPath + productId + urlSeperator;
 
             foreach (var file in files)
             {
@@ -426,7 +433,7 @@ namespace MVCPlayWithMe.General
 
                     if (matchedFile != null)
                     {
-                        src = ProductMediaFolderPath + productId + pathSeperator + Path.GetFileName(matchedFile);
+                        src = ProductMediaFolderPath + productId + urlSeperator + Path.GetFileName(matchedFile);
                     }
                 }
             }
@@ -486,7 +493,7 @@ namespace MVCPlayWithMe.General
             string path = GetAbsoluteProductMediaFolderPath(productId.ToString());
             string[] files = Directory.GetFiles(Path.GetDirectoryName(path), "0.*");
 
-            string relPath = ProductMediaFolderPath + productId + pathSeperator;
+            string relPath = ProductMediaFolderPath + productId + urlSeperator;
 
             foreach (var file in files)
             {
@@ -526,7 +533,7 @@ namespace MVCPlayWithMe.General
         {
             List<string> src = new List<string>();
 
-            string path = absoluteProductMediaFolderPath + productId + pathSeperator;
+            string path = absoluteProductMediaFolderPath + productId + urlSeperator;
             if (!Directory.Exists(path))
             {
                 return src;
@@ -534,7 +541,7 @@ namespace MVCPlayWithMe.General
 
             string[] files = Directory.GetFiles(path);
 
-            string relPath = ProductMediaFolderPath + productId + pathSeperator;
+            string relPath = ProductMediaFolderPath + productId + urlSeperator;
 
             foreach (var file in files)
             {
@@ -731,7 +738,7 @@ namespace MVCPlayWithMe.General
                 while (intName <= maxName)
                 {
                     string fileNameTemp = intName.ToString() + Path.GetExtension(path);
-                    DeleteImageVideoWithoutExtension(Path.GetDirectoryName(path) + pathSeperator + fileNameTemp);
+                    DeleteImageVideoWithoutExtension(Path.GetDirectoryName(path) + urlSeperator + fileNameTemp);
                     intName++;
                 }
             }
@@ -877,7 +884,6 @@ namespace MVCPlayWithMe.General
             {
                 Directory.Delete(x, true);
             }
-
         }
 
         // Xóa file trong thư mục
@@ -1380,7 +1386,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteItemMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator;
             if (!Directory.Exists(path))
             {
                 //Directory.CreateDirectory(path);
@@ -1391,7 +1397,7 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteItemMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
             Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + Common.tail320);
@@ -1404,7 +1410,7 @@ namespace MVCPlayWithMe.General
         /// <returns></returns>
         public static string GetAbsoluteModelMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator + "Model" + pathSeperator;
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator + "Model" + urlSeperator;
             //MyLogger.GetInstance().Debug(path);
             if (!Directory.Exists(path))
             {
@@ -1415,10 +1421,10 @@ namespace MVCPlayWithMe.General
 
         public static string CreateAbsoluteModelMediaFolderPath(int itemId)
         {
-            string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator + "Model" + pathSeperator;
+            string path = absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator + "Model" + urlSeperator;
             Directory.CreateDirectory(path);
             // Tạo thư mục 320
-            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator + "Model" + tail320);
+            Directory.CreateDirectory(absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator + "Model" + tail320);
             return path;
         }
 
@@ -1434,7 +1440,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
+                string path = absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator;
 
                 files = Directory.GetFiles(path);
             }
@@ -1443,7 +1449,7 @@ namespace MVCPlayWithMe.General
                 return src;
             }
 
-            string relPath = ItemMediaFolderPath + itemId.ToString() + pathSeperator;
+            string relPath = ItemMediaFolderPath + itemId.ToString() + urlSeperator;
 
             foreach (var file in files)
             {
@@ -1482,7 +1488,7 @@ namespace MVCPlayWithMe.General
             {
                 newFileName = Path.GetFileName(path);
             }
-            var newSrc = fileDir + Common.tail320 + Common.pathSeperator + newFileName;
+            var newSrc = fileDir + Common.tail320 + Common.urlSeperator + newFileName;
             return newSrc;
         }
 
@@ -1532,7 +1538,7 @@ namespace MVCPlayWithMe.General
                         return src;
                 }
             }
-            src = ItemMediaFolderPath + itemId.ToString() + pathSeperator + Path.GetFileName(path);
+            src = ItemMediaFolderPath + itemId.ToString() + urlSeperator + Path.GetFileName(path);
 
             return src;
         }
@@ -1549,7 +1555,7 @@ namespace MVCPlayWithMe.General
 
             try
             {
-                string path = absoluteItemMediaFolderPath + itemId.ToString() + pathSeperator;
+                string path = absoluteItemMediaFolderPath + itemId.ToString() + urlSeperator;
 
                 files = Directory.GetFiles(path);
             }
@@ -1558,7 +1564,7 @@ namespace MVCPlayWithMe.General
                 return src;
             }
 
-            string relPath = ItemMediaFolderPath + itemId.ToString() + pathSeperator;
+            string relPath = ItemMediaFolderPath + itemId.ToString() + urlSeperator;
 
             foreach (var file in files)
             {

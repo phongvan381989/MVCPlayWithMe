@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySqlConnector;
@@ -1738,6 +1739,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return attributes;
         }
 
+        // Xóa tất cả attribute của category trong bảng trước đó
+        public static async Task DeleteAllTikiAttributesOfCategoryAsync(
+            MySqlConnection conn)
+        {
+            var query = "DELETE FROM tb_tiki_attribute_of_category";
+            using (var command = new MySqlCommand(query, conn))
+            {
+                command.CommandType = CommandType.Text;
+                command.ExecuteNonQuery();
+            }
+        }
         public static async Task InsertTikiAttributesOfCategoryAsync(
             List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes,
             MySqlConnection conn)
@@ -1792,11 +1804,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 using (MySqlCommand cmd = new MySqlCommand("st_tbTikiTrackCreateProduct_Insert", conn))
                 {
                     cmd.CommandType = CommandType.StoredProcedure;
-                    cmd.Parameters.AddWithValue("@intrack_id", track_id);
-                    cmd.Parameters.AddWithValue("@instate", state);
-                    cmd.Parameters.AddWithValue("@inreason", reason);
-                    cmd.Parameters.AddWithValue("@inrequest_id", request_id);
-                    cmd.Parameters.AddWithValue("@inName", name);
+                    cmd.Parameters.Add("@intrack_id", MySqlDbType.VarChar).Value = (object)track_id ?? DBNull.Value;
+                    cmd.Parameters.Add("@instate", MySqlDbType.VarChar).Value = (object)state ?? DBNull.Value;
+                    cmd.Parameters.Add("@inreason", MySqlDbType.VarChar).Value = (object)reason ?? DBNull.Value;
+                    cmd.Parameters.Add("@inrequest_id", MySqlDbType.VarChar).Value = (object)request_id ?? DBNull.Value;
+                    cmd.Parameters.Add("@inName", MySqlDbType.VarChar).Value = (object)name ?? DBNull.Value;
                     await cmd.ExecuteNonQueryAsync();
                 }
             }

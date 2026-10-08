@@ -113,6 +113,7 @@
                     title="Test chức năng nào đó.">
                 Test chức năng nào đó
             </button>
+
             <button type="button" onclick="TikiTestSomethingWithParameter()"
                     title="Test chức năng nào đó với tham số text.">
                 Test chức năng nào đó với tham số
@@ -121,6 +122,12 @@
             <button type="button" onclick="TikiChangeQuantityWhenSetupOtherWarehouse()"
                     title="Khi mở địa chỉ kho mới, tắt kho cũ, tồn kho sản phẩm trên sàn về 0. Ta cần cập nhật số lượng.">
                 Cập nhật tồn kho toàn bộ khi chuyển kho
+            </button>
+
+            <button type="button" onclick="TikiInsertAttributeOfCategory()" disabled
+                    title="Vì attribute của category có thể thay đổi theo thời gian. Hàm này sẽ lấy attribute của category và lưu vào DB.
+                    Xóa tất cả attribute cũ nếu có. Chỉ lưu attribute bắt buộc.">
+                Lấy Attribute của Category và lưu vào DB
             </button>
         </div>
 
