@@ -32,6 +32,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using System.Xml.Linq;
 using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Controllers
@@ -2856,47 +2857,8 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(outputList);
         }
 
-        public static List<string> GetTikiAgeGroups(int minAge, int maxAge)
-        {
-            // Danh sách mức độ tuổi trên Tiki
-            var tikiAgeGroups = new Dictionary<string, (int min, int max)>
-            {
-                { "Từ 0 - 3 tuổi", (0, 36) },
-                { "Từ 4 - 6 tuổi", (37, 72) },
-                { "Từ 7 - 9 tuổi", (73, 108) },
-                { "Từ 10 - 12 tuổi", (109, 144) },
-                { "Từ 13 - 18 tuổi", (145, 215) },
-                { "Người lớn", (216, int.MaxValue) }, // Từ 18 tuổi trở lên
-            };
-
-            // Kết quả phù hợp
-            var matchingGroups = new List<string>();
-
-            foreach (var group in tikiAgeGroups)
-            {
-                var range = group.Value;
-                // Kiểm tra nếu khoảng tuổi này giao nhau với (minAge, maxAge)
-                if (range.max >= minAge && range.min <= maxAge)
-                {
-                    matchingGroups.Add(group.Key);
-                }
-            }
-            //int length = matchingGroups.Count();
-            //string str = "";
-            //for (int i = 0; i < length; i++)
-            //{
-            //    str = str + matchingGroups[i];
-            //    if (i < length - 1)
-            //    {
-            //        str = str + ",";
-            //    }
-            //}
-
-            return matchingGroups;
-        }
-
         // Vì tiki hiển thị detail liền tù tì, không có xuống dòng nên cần thêm thẻ <p> nếu chưa có
-        string GetDescriptsFromDetailForTiki(string detail)
+        string TikiGetDescriptsFromDetail(string detail)
         {
             if (string.IsNullOrWhiteSpace(detail))
             {
@@ -2924,9 +2886,11 @@ namespace MVCPlayWithMe.Controllers
 
             return string.Join("\n", result);
         }
+
         // Từ sản phẩm trong kho, tạo sản phẩm trên sàn Tiki
-        public async Task<TikiCreateProductTrackingResponse> CreateTikiProductFromProductIdInWarehouse(int id,
+        public async Task<TikiCreateProductTrackingResponse> TikiCreateProductFromProductIdInWarehouse(int id,
             string name,
+            MySqlResultState result,
             MySqlConnection conn)
         {
             TikiCreateProductTrackingResponse trackObj = null;
@@ -2950,7 +2914,7 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.name = name;
                 }
 
-                tikiCreatingProduct.description = GetDescriptsFromDetailForTiki(product.detail);
+                tikiCreatingProduct.description = TikiGetDescriptsFromDetail(product.detail);
                 tikiCreatingProduct.market_price = product.bookCoverPrice;
 
                 Publisher publisher = await PublisherMySql.GetPublisherAsync(product.publisherId);
@@ -2959,33 +2923,15 @@ namespace MVCPlayWithMe.Controllers
                 List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes =
                     await TikiMySql.GetTikiAttributesOfCategoryAsync(tikiCreatingProduct.category_id, conn);
                 var tikiAttributesGroups = new Dictionary<string, object>();
-                //string product_height = (product.productHigh / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                //string product_length = (product.productLong / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                //string product_width = (product.productWide / 10 + 1).ToString("0.0", CultureInfo.InvariantCulture);
-                //string product_weight_kg = ((float)product.productWide / 1000).ToString("0.0", CultureInfo.InvariantCulture);
                 foreach (var attr in attributes)
                 {
                     if (attr.code == "age_group")
                     {
-                        // Bán sách nên chỉ có age_group - Phù hợp với độ tuổi là nhiều lựa chọn
-                        // Từ khoảng tuổi sản phẩm chọn ra những khoảng tuổi thích hơp gồm:
-                        // "Người lớn", "Từ 0 - 3 tuổi", "Từ 10 - 12 tuổi", "Từ 13 - 18 tuổi", "Từ 4 - 6 tuổi", "Từ 7 - 9 tuổi"
-                        ///string str = GetTikiAgeGroups(product.minAge, product.maxAge);
-
-                        int minAge = product.minAge <= 0 ? 0 : product.minAge;
-                        int maxAge = product.maxAge <= 0 ? 10000 : product.maxAge;
-                        tikiCreatingProduct.attributes.age_group = GetTikiAgeGroups(minAge, maxAge);
+                        tikiCreatingProduct.attributes.age_group = TikiCreateProduct.TikiGetAgeGroups(product.minAge, product.maxAge);
                     }
                     else if (attr.code == "book_cover")
                     {
-                        if (product.hardCover == 1)
-                        {
-                            tikiCreatingProduct.attributes.book_cover = "Bìa cứng";
-                        }
-                        else
-                        {
-                            tikiCreatingProduct.attributes.book_cover = "Bìa mềm";
-                        }
+                        tikiCreatingProduct.attributes.book_cover = TikiCreateProduct.TikiGetStringCover(product.hardCover);
                     }
                     else if (attr.code == "language_book")
                     {
@@ -2997,23 +2943,23 @@ namespace MVCPlayWithMe.Controllers
                     }
                     else if (attr.code == "product_height")
                     {
-                        tikiCreatingProduct.attributes.product_height =
-                            (product.productHigh / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                        tikiCreatingProduct.attributes.product_height = 
+                            TikiCreateProduct.TikiGetStringOneDimension(product.productHigh);
                     }
                     else if (attr.code == "product_length")
                     {
                         tikiCreatingProduct.attributes.product_length =
-                            (product.productLong / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                            TikiCreateProduct.TikiGetStringOneDimension(product.productLong);
                     }
                     else if (attr.code == "product_width")
                     {
                         tikiCreatingProduct.attributes.product_width =
-                            (product.productWide / 10.0 + 1).ToString("0.0", CultureInfo.InvariantCulture);
+                            TikiCreateProduct.TikiGetStringOneDimension(product.productWide);
                     }
                     else if (attr.code == "product_weight_kg")
                     {
                         tikiCreatingProduct.attributes.product_weight_kg =
-                            (product.productWeight / 1000.0 + 0.1).ToString("0.0", CultureInfo.InvariantCulture);
+                            TikiCreateProduct.TikiGetStringWeight(product.productWeight);
                     }
                     else if (attr.code == "publisher_vn")
                     {
@@ -3039,22 +2985,11 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
                 }
                 // dimensions
-                if (product.productLong > 0 && product.productWide > 0)
-                {
-                    string strTemp = 
-                        (product.productLong / 10.0).ToString("0.0", CultureInfo.InvariantCulture)
-                        + " x " +
-                        (product.productWide / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
-                    if (product.productHigh > 0)
-                    {
-                        strTemp = strTemp + " x " + (product.productHigh / 10.0).ToString("0.0", CultureInfo.InvariantCulture); ;
-                    }
-                    strTemp = strTemp + " cm";
-                    tikiCreatingProduct.attributes.dimensions = strTemp;
-                }
+                tikiCreatingProduct.attributes.dimensions =
+                TikiCreateProduct.TikiGetStringDimensions(product.productLong, product.productWide, product.productHigh);
 
                 // dịch giả
-                if(!string.IsNullOrEmpty(product.translator))
+                if (!string.IsNullOrEmpty(product.translator))
                 {
                     tikiCreatingProduct.attributes.dich_gia = product.translator;
                 }
@@ -3082,7 +3017,17 @@ namespace MVCPlayWithMe.Controllers
                 variant.inventory_type = TikiConstValues.inventory_type;
                 variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
                 variant.sku = TikiConstValues.GenerateRandomSKUString();
-                variant.min_code = TikiConstValues.GenerateRandomMincodeLong();
+                List<TrackOriginalSku> trackOriginalSkus = new List<TrackOriginalSku>();
+                trackOriginalSkus.Add(new TrackOriginalSku
+                {
+                    ECommmerce = EECommerceType.TIKI,
+                    OriginalSku = variant.sku,
+                    ProductId = product.id,
+                    Quantity = 1,
+                    IsVariant = 0
+                });
+
+                variant.min_code = Common.GenerateRandomMincodeLong();
 
                 WarehouseStock warehouseStock = new WarehouseStock();
                 warehouseStock.warehouseId = TikiConstValues.intIdKho28Ngo3TTDL;
@@ -3106,20 +3051,250 @@ namespace MVCPlayWithMe.Controllers
                 tikiCreatingProduct.meta_data = metaData;
 
                 // Tạo sản phẩm
-                trackObj = await TikiCreateProduct.CreateProduct(tikiCreatingProduct);
-                if (trackObj != null)
+                trackObj = await TikiCreateProduct.CreateProduct(tikiCreatingProduct, result);
+                if(result.State == EMySqlResultState.OK)
                 {
-                    await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
-                        trackObj.state,
-                        trackObj.reason,
-                        trackObj.request_id,
-                        tikiCreatingProduct.name,
-                        conn);
+                    await TikiWaitingCreatingProduct(trackObj, result, trackOriginalSkus, conn);
                 }
             }
             catch (Exception ex)
             {
-                MyLogger.GetInstance().Warn(ex.ToString());
+                Common.SetResultException(ex, result);
+                trackObj = null;
+            }
+
+            return trackObj;
+        }
+
+        // Từ combo, tạo sản phẩm với nhiều variant trên sàn Tiki.
+        //NOTE: Tạo nhiều biến thể, ảnh, kích thước, cân nặng sẽ được cập nhật sau từ bảng tb_track_original_sku
+        // Trung lặp code khá nhiều với hàm CreateTikiProductFromProductIdInWarehouse
+        public async Task<TikiCreateProductTrackingResponse> TikiCreateVariantsFromComboId(int comboId,
+            MySqlResultState result,
+            MySqlConnection conn)
+        {
+            TikiCreateProductTrackingResponse trackObj = null;
+            try
+            {
+                TikiCreatingProduct tikiCreatingProduct = new TikiCreatingProduct();
+                Combo combo = await ComboMySql.GetComboAsync(comboId);
+
+                // Lấy sản phẩm trong kho
+                Product product = combo.products.FirstOrDefault();
+
+                // Từ category id sản phẩm trong kho, lấy category tương ứng trên Tiki
+                tikiCreatingProduct.category_id =
+                    await ProductMySql.GetTikiCategoryIdFromProductCategoryIdAsync(product.categoryId, conn);
+
+                tikiCreatingProduct.name = Product.GenerateVariantName(combo.name, product.categoryName);
+
+                tikiCreatingProduct.description = TikiGetDescriptsFromDetail(combo.detail);
+
+
+                int totalPrice = combo.products.Sum(p => p.bookCoverPrice);
+                tikiCreatingProduct.market_price = totalPrice;
+
+                Publisher publisher = await PublisherMySql.GetPublisherAsync(product.publisherId);
+
+                // Attribute. Ta chỉ cập nhật những thuộc tính bắt buộc phải có và 1 vài thuộc tính khác
+                List<MVCPlayWithMe.OpenPlatform.Model.TikiApp.Category.TikiAttribute> attributes =
+                    await TikiMySql.GetTikiAttributesOfCategoryAsync(tikiCreatingProduct.category_id, conn);
+                var tikiAttributesGroups = new Dictionary<string, object>();
+                foreach (var attr in attributes)
+                {
+                    if (attr.code == "age_group")
+                    {
+                        tikiCreatingProduct.attributes.age_group = TikiCreateProduct.TikiGetAgeGroups(product.minAge, product.maxAge);
+                    }
+                    else if (attr.code == "book_cover")
+                    {
+                        tikiCreatingProduct.attributes.book_cover = TikiCreateProduct.TikiGetStringCover(product.hardCover);
+                    }
+                    else if (attr.code == "language_book")
+                    {
+                        tikiCreatingProduct.attributes.language_book = product.language;
+                    }
+                    else if (attr.code == "manufacturer")
+                    {
+                        tikiCreatingProduct.attributes.manufacturer = product.publishingCompany;
+                    }
+                    else if (attr.code == "product_height")
+                    {
+                        tikiCreatingProduct.attributes.product_height =
+                            TikiCreateProduct.TikiGetStringOneDimension(product.productHigh);
+                    }
+                    else if (attr.code == "product_length")
+                    {
+                        tikiCreatingProduct.attributes.product_length =
+                            TikiCreateProduct.TikiGetStringOneDimension(product.productLong);
+                    }
+                    else if (attr.code == "product_width")
+                    {
+                        tikiCreatingProduct.attributes.product_width =
+                            TikiCreateProduct.TikiGetStringOneDimension(product.productWide);
+                    }
+                    else if (attr.code == "product_weight_kg")
+                    {
+                        tikiCreatingProduct.attributes.product_weight_kg =
+                            TikiCreateProduct.TikiGetStringWeight(product.productWeight);
+                    }
+                    else if (attr.code == "publisher_vn")
+                    {
+                        tikiCreatingProduct.attributes.publisher_vn = publisher.tikiAttributeValue;
+                    }
+                    else if (attr.code == "origin")
+                    {
+                        tikiCreatingProduct.attributes.origin = publisher.origin;
+                    }
+                    else if (attr.code == "Organization_address")
+                    {
+                        tikiCreatingProduct.attributes.Organization_address = publisher.organization_address;
+                    }
+                    else if (attr.code == "Organization_name")
+                    {
+                        tikiCreatingProduct.attributes.Organization_name = publisher.organization_name;
+                    }
+                }
+
+                // pageNumber, dimensions: Đây chỉ là thông tin tương đối của sản phẩm trong combo
+                // number_of_page
+                if (product.pageNumber > 0)
+                {
+                    tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
+                }
+                // dimensions
+                tikiCreatingProduct.attributes.dimensions =
+                TikiCreateProduct.TikiGetStringDimensions(product.productLong, product.productWide, product.productHigh);
+
+                // dịch giả
+                if (!string.IsNullOrEmpty(product.translator))
+                {
+                    tikiCreatingProduct.attributes.dich_gia = product.translator;
+                }
+
+                // Tác giả. Thuộc tính này là "input_type": "multiselect"
+                if (!string.IsNullOrEmpty(product.author))
+                {
+                    tikiCreatingProduct.attributes.author = product.author.Split(',')
+                                .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
+                                .ToList();
+                }
+
+                product.SetSrcImageVideo();
+                if (product.imageSrc.Count > 0)
+                {
+                    tikiCreatingProduct.image = Common.httpsVoiBeNho + product.imageSrc[0];
+                    for (int i = 1; i < product.imageSrc.Count; i++)
+                    {
+                        tikiCreatingProduct.images.Add(Common.httpsVoiBeNho + product.imageSrc[i]);
+                    }
+                }
+                tikiCreatingProduct.option_attributes.Add("Chủ Đề");
+
+                List<TrackOriginalSku> trackOriginalSkus = new List<TrackOriginalSku>();
+
+                // Tạo variant cho từng sản phẩm trong combo
+                foreach (var p in combo.products)
+                {
+                    Variant variant = new Variant();
+                    variant.price = p.bookCoverPrice;
+                    variant.inventory_type = TikiConstValues.inventory_type;
+                    variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
+                    variant.sku = TikiConstValues.GenerateRandomSKUString();
+                    trackOriginalSkus.Add(new TrackOriginalSku
+                    {
+                        OriginalSku = variant.sku,
+                        IsVariant = 1,
+                        ProductId = p.id,
+                        ECommmerce = EECommerceType.TIKI,
+                        Quantity = 1
+                    });
+
+                    variant.min_code = Common.GenerateRandomMincodeLong();
+                    variant.option1 = p.name;
+
+                    p.SetSrcImageVideo();
+                    if (p.imageSrc.Count > 0)
+                    {
+                        variant.image = Common.httpsVoiBeNho + p.imageSrc[0];
+                        for (int i = 1; i < p.imageSrc.Count; i++)
+                        {
+                            variant.images.Add(Common.httpsVoiBeNho + p.imageSrc[i]);
+                        }
+                    }
+
+                    WarehouseStock warehouseStock = new WarehouseStock();
+                    warehouseStock.warehouseId = TikiConstValues.intIdKho28Ngo3TTDL;
+                    warehouseStock.qtyAvailable = p.quantity;
+
+                    variant.warehouse_stocks.Add(warehouseStock);
+                    tikiCreatingProduct.variants.Add(variant);
+                }
+
+                // Tạo variant là combo nếu combo có ảnh riêng
+                {
+                    Variant variant = new Variant();
+                    variant.price = totalPrice;
+                    variant.inventory_type = TikiConstValues.inventory_type;
+                    variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
+                    variant.sku = TikiConstValues.GenerateRandomSKUString();
+                    foreach (var pp in combo.products)
+                    {
+                        trackOriginalSkus.Add(new TrackOriginalSku
+                        {
+                            OriginalSku = variant.sku,
+                            IsVariant = 1,
+                            ProductId = pp.id,
+                            ECommmerce = EECommerceType.TIKI,
+                            Quantity = 1
+                        });
+                    }
+                    variant.min_code = Common.GenerateRandomMincodeLong();
+                    variant.option1 = "Combo " + combo.products.Count + " sản phẩm";
+
+                    combo.SetSrcImageVideo();
+                    if (combo.imageSrc.Count > 0)
+                    {
+                        variant.image = Common.httpsVoiBeNho + combo.imageSrc[0];
+                        // Ảnh sẽ cập nhật sau này
+                        //for (int i = 1; i < combo.imageSrc.Count; i++)
+                        //{
+                        //    variant.images.Add(Common.httpsVoiBeNho + combo.imageSrc[i]);
+                        //}
+                    }
+
+                    WarehouseStock warehouseStock = new WarehouseStock();
+                    warehouseStock.warehouseId = TikiConstValues.intIdKho28Ngo3TTDL;
+                    warehouseStock.qtyAvailable = combo.products.Min(p => p.quantity);
+
+                    variant.warehouse_stocks.Add(warehouseStock);
+                    tikiCreatingProduct.variants.Add(variant);
+
+                    // certificate_files
+                    CertificateFile certificateFile = new CertificateFile();
+                    certificateFile.type = "category";
+                    certificateFile.document_id = 18;
+
+                    certificateFile.url = Common.GetSrcCertificateFolderPath(Common.eTiki) + publisher.tikiCertificate;
+
+                    tikiCreatingProduct.certificate_files.Add(certificateFile);
+
+                    // meta_data
+                    MetaData metaData = new MetaData();
+                    metaData.is_auto_turn_on = true;
+                    tikiCreatingProduct.meta_data = metaData;
+
+                    // Tạo sản phẩm
+                    trackObj = await TikiCreateProduct.CreateProduct(tikiCreatingProduct, result);
+                    if(result.State == EMySqlResultState.OK)
+                    {
+                        await TikiWaitingCreatingProduct(trackObj, result, trackOriginalSkus, conn);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
                 trackObj = null;
             }
 
@@ -3148,36 +3323,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     if (needList.Contains(id))
                     {
-                        TikiCreateProductTrackingResponse trackObj = await CreateTikiProductFromProductIdInWarehouse(id, name, conn);
-                        if (trackObj == null)
-                        {
-                            result.State = EMySqlResultState.INVALID;
-                            result.Message = "Có lỗi xảy ra. Vui lòng checklog để sửa.";
-                        }
-                        else
-                        {
-                            if (trackObj.state == "queuing")
-                            {
-                                // Ta đợi 5 giây, lấy lại trạng thái để xem đã được approved
-                                Thread.Sleep(5000);
-                                trackObj = await TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
-                                if (trackObj != null)
-                                {
-                                    await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
-                                        trackObj.state,
-                                        trackObj.reason,
-                                        trackObj.request_id,
-                                        string.Empty,
-                                        conn);
-                                }
-
-                                if (trackObj.state != "approved")
-                                {
-                                    result.State = EMySqlResultState.PENDING;
-                                    result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state + ". " + trackObj.reason;
-                                }
-                            }
-                        }
+                        TikiCreateProductTrackingResponse trackObj = await TikiCreateProductFromProductIdInWarehouse(id, name, result, conn);
                     }
                 }
                 else if(eType == Common.eShopee)
@@ -4326,6 +4472,85 @@ namespace MVCPlayWithMe.Controllers
             return await CreateProductOnECommerceFromList_Core(productIds, eType);
         }
 
+        private async Task TikiWaitingCreatingProduct(TikiCreateProductTrackingResponse trackObj,
+            MySqlResultState result,
+             List<TrackOriginalSku> trackOriginalSkus,
+            MySqlConnection conn)
+        {
+
+            if (trackObj == null)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "Có lỗi xảy ra. Vui lòng checklog để sửa.";
+            }
+            else
+            {
+                if (trackObj != null)
+                {
+                    await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
+                        trackObj.state,
+                        trackObj.reason,
+                        trackObj.request_id,
+                        string.Empty,
+                        conn);
+                }
+
+                if (trackObj.state == "queuing")
+                {
+                    // Không có lỗi nghiêm trọng
+                    // Ta lưu original sku vào db
+                    await TrackOriginalSkuMySql.InsertTrackOriginalSkuBatchAsync(trackOriginalSkus, conn);
+
+                    // Ta đợi 10 giây, lấy lại trạng thái để xem đã được approved
+                    // Nếu được approved ta thêm sản phẩm vào tikiItem, mapping với sản phẩm riêng lẻ
+                    // Với sản phẩm nhiều biến thể, ta cập nhật ảnh, kích thước, cân nặng, trang,... đã
+                    Thread.Sleep(10000);
+                    trackObj = await TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
+                    if (trackObj != null)
+                    {
+                        await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
+                            trackObj.state,
+                            trackObj.reason,
+                            trackObj.request_id,
+                            string.Empty,
+                            conn);
+                    }
+
+                    if (trackObj.state != "approved")
+                    {
+                        result.State = EMySqlResultState.PENDING;
+                        result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state + ". " + trackObj.reason;
+                    }
+                }
+            }
+        }
+
+        [HttpPost]
+        public async Task<string> CreateVariantsOfComboOnECommerce(int comboId, string eType)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    if (eType == Common.eTiki)
+                    {
+                        TikiCreateProductTrackingResponse trackObj = await TikiCreateVariantsFromComboId(comboId, result, conn);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return JsonConvert.SerializeObject(result);
+
+        }
 
         // Tạo sản phẩm từ sản phẩm khác.
         // Sản phẩm được lấy trên web khác bằng browser extension

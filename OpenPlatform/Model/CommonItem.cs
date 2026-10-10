@@ -52,6 +52,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // tiki có thuộc tính này
         public string superSku { get; set; }
+
+        // sku gốc của sản phẩm, nhà bán tự sinh ra, không phải do sàn tạo ra, ví dụ: VBN-001, VBN-002, VBN-003
+        public string originalSku { get; set; }
+
         /// <summary>
         /// Name of product
         /// </summary>
@@ -434,6 +438,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             tikiSuperId = pro.super_id;
             sku = pro.sku;
             superSku = pro.super_sku;
+            originalSku = pro.original_sku;
             name = pro.name;
 
             if (pro.active == 1)
@@ -498,7 +503,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
         // Nếu Id và Supper Id bằng nhau, đây là sản phẩm cha chung ảo
         // Nếu là sản phẩm tiki và là cha chung ảo thì trả true ngược lại false
-        public Boolean TikiCheckVirtalParent()
+        public Boolean TikiCheckVirtualParent()
         {
             if (eType == eTiki && (int)itemId == tikiSuperId)
             {

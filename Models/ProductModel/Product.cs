@@ -185,6 +185,36 @@ namespace MVCPlayWithMe.Models.ProductModel
             return generatedName;
         }
 
+        static public string GenerateVariantName(string comboName, string categoryName)
+        {
+            string generatedName = string.IsNullOrEmpty(comboName) ? "" : comboName.Trim();
+
+            // Bỏ chữ combo ở đầu tên nếu có
+            // Kiểm tra nếu chuỗi bắt đầu bằng "combo" (không phân biệt hoa thường)
+            if (generatedName.TrimStart().StartsWith("combo", StringComparison.OrdinalIgnoreCase))
+            {
+                // Bỏ từ "combo" ở đầu và loại bỏ khoảng trắng
+                generatedName = generatedName.TrimStart().Substring(5).Trim();
+            }
+            else
+            {
+                // Loại bỏ khoảng trắng nếu không có "combo"
+                generatedName = generatedName.Trim();
+            }
+
+            if (!string.IsNullOrEmpty(categoryName) &&
+                categoryName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+            {
+                // Nếu tên có chữ sách ở đầu rồi thì thôi, không thêm vào.
+                if (!generatedName.StartsWith("sách", StringComparison.OrdinalIgnoreCase))
+                {
+                    generatedName = "Sách " + generatedName;
+                }
+            }
+
+            return generatedName;
+        }
+
         // Sinh tên tự động từ tên combo nếu có, tên sản phẩm để đăng lên sàn
         static public string ShopeeGenerateNameForBook(Product product)
         {

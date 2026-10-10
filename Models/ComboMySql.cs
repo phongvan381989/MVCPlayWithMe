@@ -195,54 +195,54 @@ namespace MVCPlayWithMe.Models
                         cmd.CommandType = CommandType.StoredProcedure;
                         cmd.Parameters.AddWithValue("@inId", id);
 
-                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
-                    {
-                        while (await rdr.ReadAsync())
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                         {
-                            if (combo == null)
+                            while (await rdr.ReadAsync())
                             {
-                                combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"),
-                                    MyMySql.GetString(rdr, "TBComboName"),
-                                    MyMySql.GetString(rdr, "TBComboCode"),
-                                    MyMySql.GetByte(rdr, "TBComboStatus"),
-                                    MyMySql.GetString(rdr, "TBComboDetail"));
-                            }
-                            int proIdTem = MyMySql.GetInt32(rdr, "Id");
-                            if (proIdTem != -1)
-                            {
-                                Product product = new Product();
-                                product.id = proIdTem;
-                                product.name = MyMySql.GetString(rdr, "Name");
-                                product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
-                                product.categoryName = MyMySql.GetString(rdr, "CategoryName");
-                                product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
-                                product.author = MyMySql.GetString(rdr, "Author");
-                                product.translator = MyMySql.GetString(rdr, "Translator");
-                                product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
-                                product.publisherName = MyMySql.GetString(rdr, "PublisherName");
-                                product.publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
-                                product.publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
-                                product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
-                                product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
-                                product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
-                                product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
-                                product.positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
-                                product.hardCover = MyMySql.GetInt32(rdr, "HardCover");
-                                product.minAge = MyMySql.GetInt32(rdr, "MinAge");
-                                product.maxAge = MyMySql.GetInt32(rdr, "MaxAge");
-                                product.parentId = MyMySql.GetInt32(rdr, "ParentId");
-                                product.republish = MyMySql.GetInt32(rdr, "Republish");
-                                product.status = MyMySql.GetInt32(rdr, "Status");
-                                product.quantity = MyMySql.GetInt32(rdr, "Quantity");
-                                product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
-                                product.discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat("Discount");
-                                product.language = MyMySql.GetString(rdr, "Language");
-                                product.detail = MyMySql.GetString(rdr, "Detail");
-                                product.SetFirstSrcImage();
-                                combo.products.Add(product);
+                                if (combo == null)
+                                {
+                                    combo = new Combo(MyMySql.GetInt32(rdr, "TBComboId"),
+                                        MyMySql.GetString(rdr, "TBComboName"),
+                                        MyMySql.GetString(rdr, "TBComboCode"),
+                                        MyMySql.GetByte(rdr, "TBComboStatus"),
+                                        MyMySql.GetString(rdr, "TBComboDetail"));
+                                }
+                                int proIdTem = MyMySql.GetInt32(rdr, "Id");
+                                if (proIdTem != -1)
+                                {
+                                    Product product = new Product();
+                                    product.id = proIdTem;
+                                    product.name = MyMySql.GetString(rdr, "Name");
+                                    product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
+                                    product.categoryName = MyMySql.GetString(rdr, "CategoryName");
+                                    product.bookCoverPrice = MyMySql.GetInt32(rdr, "BookCoverPrice");
+                                    product.author = MyMySql.GetString(rdr, "Author");
+                                    product.translator = MyMySql.GetString(rdr, "Translator");
+                                    product.publisherId = MyMySql.GetInt32(rdr, "PublisherId");
+                                    product.publisherName = MyMySql.GetString(rdr, "PublisherName");
+                                    product.publishingCompany = MyMySql.GetString(rdr, "PublishingCompany");
+                                    product.publishingTime = MyMySql.GetInt32(rdr, "PublishingTime");
+                                    product.productLong = MyMySql.GetInt32(rdr, "ProductLong");
+                                    product.productWide = MyMySql.GetInt32(rdr, "ProductWide");
+                                    product.productHigh = MyMySql.GetInt32(rdr, "ProductHigh");
+                                    product.productWeight = MyMySql.GetInt32(rdr, "ProductWeight");
+                                    product.positionInWarehouse = MyMySql.GetString(rdr, "PositionInWarehouse");
+                                    product.hardCover = MyMySql.GetInt32(rdr, "HardCover");
+                                    product.minAge = MyMySql.GetInt32(rdr, "MinAge");
+                                    product.maxAge = MyMySql.GetInt32(rdr, "MaxAge");
+                                    product.parentId = MyMySql.GetInt32(rdr, "ParentId");
+                                    product.republish = MyMySql.GetInt32(rdr, "Republish");
+                                    product.status = MyMySql.GetInt32(rdr, "Status");
+                                    product.quantity = MyMySql.GetInt32(rdr, "Quantity");
+                                    product.pageNumber = MyMySql.GetInt32(rdr, "PageNumber");
+                                    product.discount = rdr.IsDBNull(rdr.GetOrdinal("Discount")) ? 0 : rdr.GetFloat("Discount");
+                                    product.language = MyMySql.GetString(rdr, "Language");
+                                    product.detail = MyMySql.GetString(rdr, "Detail");
+                                    product.SetFirstSrcImage();
+                                    combo.products.Add(product);
+                                }
                             }
                         }
-                    }
                     }
                 }
                 catch (Exception ex)

@@ -429,6 +429,28 @@ async function CreateProductOfComboOnECommerce() {
     }
 }
 
+async function CreateVariantsOfComboOnECommerce() {
+    // Lấy id
+    let id = GetValueFromUrlName("id");
+    const searchParams = new URLSearchParams();
+    searchParams.append("comboId", id);
+    searchParams.append("eType", GetECommerceType());
+
+    let url = "/Product/CreateVariantsOfComboOnECommerce";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpPostPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật lỗi.", null);
+        return;
+    }
+}
+
 async function UpdateCommonDetail() {
     const detail = document.getElementById("common-detail").value.trim();
 

@@ -388,6 +388,36 @@ namespace MVCPlayWithMe.General
             return src;
         }
 
+        /// <summary>
+        /// Từ id combo, lấy được đường dẫn tới ảnh dùng cho thẻ img
+        /// </summary>
+        /// <param name="comboId"></param>
+        /// <returns></returns>
+        public static List<string> GetComboImageSrc(string comboId)
+        {
+            List<string> src = new List<string>();
+
+            string path = absoluteComboMediaFolderPath + comboId + urlSeperator;
+            if (!Directory.Exists(path))
+            {
+                return src;
+            }
+
+            string[] files = Directory.GetFiles(path);
+
+            string relPath = ComboMediaFolderPath + comboId + urlSeperator;
+
+            foreach (var file in files)
+            {
+                if (ImageExtensions.Contains(Path.GetExtension(file).ToLower()))
+                {
+                    src.Add(relPath + Path.GetFileName(file));
+                }
+            }
+            SortSourceFile(src);
+            return src;
+        }
+
         //// Lấy ảnh đầu tiên của imageSrc cho nhanh
         //public static string GetFirstProductImageSrc(string productId)
         //{
@@ -2978,6 +3008,16 @@ namespace MVCPlayWithMe.General
             }
 
             return new string(result);
+        }
+
+        public static long GenerateRandomMincodeLong()
+        {
+            lock (_orderCodeLock) // ← Lock trực tiếp _random, bỏ _lock riêng!
+            {
+                long timestamp = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+                int randomPart = _orderCodeRandom.Next(1000, 9999);
+                return (timestamp * 10000) + randomPart;
+            }
         }
         #endregion
 

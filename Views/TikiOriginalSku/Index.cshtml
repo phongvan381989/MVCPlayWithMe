@@ -1,0 +1,571 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css">
+    <style>
+        .filter-container {
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .filter-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-warning {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background-color: #e0a800;
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: white;
+        }
+
+        th {
+            background-color: #343a40;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        td[onclick]:hover {
+            background-color: #e7f3ff;
+            font-weight: 600;
+        }
+
+        .group-first-row {
+            border-top: 2px solid #007bff;
+        }
+
+        .cell-updated {
+            background-color: #d4edda !important;
+            font-weight: 600;
+            transition: background-color 2s ease-out;
+        }
+
+        @*@keyframes highlight {
+            0% { background-color: #28a745; }
+            100% { background-color: #d4edda; }
+        }*@
+
+        .ecommerce-badge {
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-tiki {
+            background-color: #1a94ff;
+            color: white;
+        }
+
+        .badge-shopee {
+            background-color: #ee4d2d;
+            color: white;
+        }
+
+        .badge-lazada {
+            background-color: #0f1990;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            font-size: 16px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div id="biggestContainer" style="padding: 20px;">
+        <h2 style="margin-bottom: 20px;">Quản Lý Track Original SKU</h2>
+
+        <!-- Filter Section -->
+        <div class="filter-container">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="filter-ecommerce">Sàn TMĐT</label>
+                    <select id="filter-ecommerce">
+                        <option value="-1">Tất cả</option>
+                        <option value="1">Tiki</option>
+                        <option value="2">Shopee</option>
+                        <option value="3">Lazada</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="search-productid">Product ID</label>
+                    <input type="number" id="search-productid" placeholder="Nhập Product ID">
+                </div>
+
+                <div class="filter-group">
+                    <label for="search-sku">SKU</label>
+                    <input type="text" id="search-sku" placeholder="Nhập SKU">
+                </div>
+
+                <div class="filter-group">
+                    <label for="filter-saved-status">Trạng thái</label>
+                    <select id="filter-saved-status">
+                        <option value="-1">Tất cả</option>
+                        <option value="0">Chưa lưu DB</option>
+                        <option value="1">Đã lưu DB</option>
+                    </select>
+                </div>
+
+                <div class="filter-group" style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="LoadData()">Tìm Kiếm</button>
+                </div>
+
+                <div class="filter-group" style="margin-top: 20px;">
+                    <button class="btn btn-success" onclick="LoadAllData()">Tải Tất Cả</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading -->
+        <div id="loading" class="loading" style="display:none;">
+            Đang tải dữ liệu...
+        </div>
+
+        <!-- Table -->
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Sàn</th>
+                        <th>Original SKU</th>
+                        <th>Product ID</th>
+                        <th>Quantity</th>
+                        <th>Is Variant</th>
+                        <th>Track ID</th>
+                        <th>Pro On Eco ID</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody">
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #6c757d;">
+                            Nhấn "Tìm Kiếm" hoặc "Tải Tất Cả" để xem dữ liệu
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.common.js"></script>
+    <script>
+        // Load data based on filters
+        async function LoadData() {
+            const productId = document.getElementById('search-productid').value;
+            const sku = document.getElementById('search-sku').value;
+            const eCommerce = document.getElementById('filter-ecommerce').value;
+
+            // Validate: cần ít nhất 1 filter
+            if (!productId && !sku && eCommerce === '-1') {
+                alert('Vui lòng chọn ít nhất một bộ lọc (Product ID, SKU hoặc Sàn TMĐT)');
+                return;
+            }
+
+            ShowLoading(true);
+
+            try {
+                let responseText = '';
+
+                if (productId) {
+                    // Search by ProductId
+                    responseText = await PostJSON('/TikiOriginalSku/GetByProductId', {
+                        productId: parseInt(productId)
+                    });
+                } else if (sku) {
+                    // Search by SKU (cần chọn sàn)
+                    if (eCommerce === '-1') {
+                        alert('Vui lòng chọn sàn TMĐT khi tìm theo SKU');
+                        ShowLoading(false);
+                        return;
+                    }
+                    responseText = await PostJSON('/TikiOriginalSku/GetBySku', {
+                        sku: sku,
+                        eCommerce: parseInt(eCommerce)
+                    });
+                } else {
+                    // Filter by ECommerce
+                    responseText = await PostJSON('/TikiOriginalSku/GetAllTrackOriginalSku', {
+                        eCommerce: parseInt(eCommerce)
+                    });
+                }
+
+                const data = JSON.parse(responseText);
+                RenderTable(data);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Có lỗi xảy ra khi tải dữ liệu');
+            } finally {
+                ShowLoading(false);
+            }
+        }
+
+        // Load all data (all ecommerce platforms)
+        async function LoadAllData() {
+            ShowLoading(true);
+
+            try {
+                const responseText = await PostJSON('/TikiOriginalSku/GetAllTrackOriginalSku', {
+                    eCommerce: -1
+                });
+
+                const data = JSON.parse(responseText);
+                RenderTable(data);
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Có lỗi xảy ra khi tải dữ liệu');
+            } finally {
+                ShowLoading(false);
+            }
+        }
+
+        // Render table
+        function RenderTable(data) {
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: #6c757d;">Không có dữ liệu</td></tr>';
+                return;
+            }
+
+            // Filter theo IsSaveProOnEcoToDb (trạng thái lưu DB)
+            const savedStatus = parseInt(document.getElementById('filter-saved-status').value);
+            if (savedStatus !== -1) {
+                data = data.filter(item => {
+                    if (savedStatus === 0) {
+                        // Chưa lưu DB: IsSaveProOnEcoToDb = 0
+                        return item.IsSaveProOnEcoToDb === 0;
+                    } else if (savedStatus === 1) {
+                        // Đã lưu DB: IsSaveProOnEcoToDb > 0
+                        return item.IsSaveProOnEcoToDb > 0;
+                    }
+                    return true;
+                });
+
+                // Nếu sau khi filter không còn data
+                if (data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 40px; color: #6c757d;">Không có dữ liệu phù hợp với bộ lọc</td></tr>';
+                    return;
+                }
+            }
+
+            // Sort data theo ECommerce, OriginalSku, CreatedDate
+            data.sort((a, b) => {
+                if (a.ECommmerce !== b.ECommmerce) {
+                    return a.ECommmerce - b.ECommmerce;
+                }
+                if (a.OriginalSku !== b.OriginalSku) {
+                    return (a.OriginalSku || '').localeCompare(b.OriginalSku || '');
+                }
+                return new Date(b.CreatedDate) - new Date(a.CreatedDate);
+            });
+
+            let previousKey = null; // Track ECommerce + OriginalSku trước đó
+
+            data.forEach((item, index) => {
+                const row = document.createElement('tr');
+
+                // Get ecommerce name and badge class
+                const ecommerceName = GetECommerceName(item.ECommmerce);
+                const badgeClass = GetBadgeClass(item.ECommmerce);
+
+                // Key để group: ECommerce + OriginalSku
+                const currentKey = `${item.ECommmerce}_${item.OriginalSku}`;
+                const isFirstInGroup = currentKey !== previousKey;
+
+                // Thêm class để tạo visual separation
+                if (isFirstInGroup && index > 0) {
+                    row.className = 'group-first-row';
+                }
+
+                // Thêm data attributes để có thể tìm và update sau
+                row.setAttribute('data-sku', item.OriginalSku);
+                row.setAttribute('data-ecommerce', item.ECommmerce);
+
+                // Get short name (2 characters)
+                const ecommerceShortName = GetECommerceShortName(item.ECommmerce);
+
+                row.innerHTML = `
+                    <td>${item.Id}</td>
+                    <td>${isFirstInGroup ? '<span class="ecommerce-badge ' + badgeClass + '">' + ecommerceShortName + '</span>' : ''}</td>
+                    <td>${isFirstInGroup ? (item.OriginalSku || '') : ''}</td>
+                    <td style="cursor: pointer; color: #007bff; text-decoration: underline;" onclick="window.open('/Product/UpdateDelete?id=${item.ProductId}', '_blank')" title="Click để mở trang sản phẩm">${item.ProductId}</td>
+                    <td>${item.Quantity}</td>
+                    <td>${isFirstInGroup ? (item.IsVariant === 1 ? 'Variant' : 'Simple') : ''}</td>
+                    <td>${item.TrackId || ''}</td>
+                    <td ${item.ProOnEcoId > 0 ? 'style="cursor: pointer; color: #007bff; text-decoration: underline;" onclick="window.open(\'/ProductECommerce/Item?eType=' + GetEEcomnerceNameFromIntType(item.ECommmerce) + '&id=' + item.ProOnEcoId + '\', \'_blank\')" title="Click để mở trang sản phẩm trên sàn ' + GetECommerceName(item.ECommmerce) + '"' : ''}>${item.ProOnEcoId > 0 ? item.ProOnEcoId : ''}</td>
+                    <td>
+                        ${isFirstInGroup ? `
+                            ${item.IsVariant === 1 ? '<button class="btn btn-warning" style="margin-right: 5px;" title="Cập nhật ảnh, kích thước, cân nặng,... cho biến thể. Lấy id trên sàn lưu vào tb_track_original_sku. Dùng nút Lấy SP sau khi check thủ công ok" onclick="UpdateVariant(\'' + item.OriginalSku + '\', ' + item.ECommmerce + ')">Cập nhật Variant</button>' : ''}
+                            <button class="btn btn-success" style="margin-right: 5px;" title="Từ Original SKU lấy sản phẩm tương ứng trên sàn và lưu vào db, lưu mapping" onclick="GetProduct('${item.OriginalSku}', ${item.ECommmerce}, ${item.ProOnEcoId})" ${item.IsSaveProOnEcoToDb > 0 ? 'disabled' : ''}>Lấy SP</button>
+                            <button class="btn btn-danger" disabled>Xóa</button>
+                        ` : ''}
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+                previousKey = currentKey;
+            });
+        }
+
+        // Update variant
+        async function UpdateVariant(sku, eCommerce) {
+            if (!confirm(`Cập nhật variant cho SKU "${sku}"?`)) {
+                return;
+            }
+
+            try {
+                const responseText = await PostJSON('/TikiOriginalSku/UpdateVariant', {
+                    sku: sku,
+                    eCommerce: eCommerce
+                });
+
+                const result = JSON.parse(responseText);
+
+                // Nếu có productId trên sàn → cập nhật vào table (chỉ khi chưa có)
+                if (result.myAnything) {
+                    UpdateProOnEcoIdInTable(sku, eCommerce, result.myAnything);
+                }
+            } catch (error) {
+                console.error('Error updating variant:', error);
+                alert('Có lỗi xảy ra khi cập nhật variant');
+            }
+        }
+
+        // Get product from ecommerce platform
+        async function GetProduct(sku, eCommerce, proOnEcoId) {
+            if (!confirm(`Lấy sản phẩm từ sàn cho SKU "${sku}"?`)) {
+                return;
+            }
+
+            try {
+                const responseText = await PostJSON('/TikiOriginalSku/GetProduct', {
+                    sku: sku,
+                    eCommerce: eCommerce,
+                    proOnEcoId: proOnEcoId
+                });
+
+                const result = JSON.parse(responseText);
+
+                // Nếu có productId trên sàn → cập nhật vào table (chỉ khi chưa có)
+                if (result.myAnything) {
+                    UpdateProOnEcoIdInTable(sku, eCommerce, result.myAnything);
+                }
+            } catch (error) {
+                console.error('Error getting product:', error);
+                alert('Có lỗi xảy ra khi lấy sản phẩm');
+            }
+        }
+
+        // Delete item
+        async function DeleteItem(sku, eCommerce) {
+            if (!confirm(`Bạn có chắc muốn xóa SKU "${sku}"?`)) {
+                return;
+            }
+
+            try {
+                const responseText = await PostJSON('/TikiOriginalSku/DeleteBySku', {
+                    sku: sku,
+                    eCommerce: eCommerce
+                });
+
+                const result = JSON.parse(responseText);
+
+                if (result.State === 0) { // EMySqlResultState.OK = 0
+                    alert(result.Message);
+                    LoadData(); // Reload data
+                } else {
+                    alert('Lỗi: ' + result.Message);
+                }
+            } catch (error) {
+                console.error('Error deleting item:', error);
+                alert('Có lỗi xảy ra khi xóa');
+            }
+        }
+
+        // Helper functions
+        function GetECommerceName(value) {
+            switch (value) {
+                case 1: return 'Tiki';
+                case 2: return 'Shopee';
+                case 3: return 'Lazada';
+                default: return 'Unknown';
+            }
+        }
+
+        function GetECommerceShortName(value) {
+            switch (value) {
+                case 1: return 'Ti';
+                case 2: return 'Sh';
+                case 3: return 'La';
+                default: return '';
+            }
+        }
+
+        function GetBadgeClass(value) {
+            switch (value) {
+                case 1: return 'badge-tiki';
+                case 2: return 'badge-shopee';
+                case 3: return 'badge-lazada';
+                default: return '';
+            }
+        }
+
+        //function GetECommerceTypeName(value) {
+        //    switch (value) {
+        //        case 1: return 'TIKI';
+        //        case 2: return 'SHOPEE';
+        //        case 3: return 'LAZADA';
+        //        default: return '';
+        //    }
+        //}
+
+        function FormatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            return `${day}/${month}/${year} ${hours}:${minutes}`;
+        }
+
+        function ShowLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Cập nhật Pro On Eco ID vào table
+        function UpdateProOnEcoIdInTable(sku, eCommerce, proOnEcoId) {
+            // Tìm tất cả rows có cùng SKU và ECommerce
+            const rows = document.querySelectorAll(`tr[data-sku="${sku}"][data-ecommerce="${eCommerce}"]`);
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                // Cell Pro On Eco ID là cell thứ 8 (index 7: ID, Sàn, SKU, ProductID, Quantity, IsVariant, TrackID, ProOnEcoId)
+                const proOnEcoIdCell = cells[7];
+
+                if (proOnEcoIdCell) {
+                    // Lấy giá trị hiện tại
+                    const currentValue = proOnEcoIdCell.textContent.trim();
+
+                    // Chỉ cập nhật nếu chưa có giá trị (trống hoặc <= 0)
+                    if (!currentValue || currentValue === '' || parseInt(currentValue) <= 0 || isNaN(parseInt(currentValue))) {
+                        // Cập nhật giá trị mới
+                        proOnEcoIdCell.textContent = proOnEcoId;
+
+                        // Thêm animation highlight
+                        proOnEcoIdCell.classList.add('cell-updated');
+
+                        // Xóa class sau 3 giây
+                        setTimeout(() => {
+                            proOnEcoIdCell.classList.remove('cell-updated');
+                        }, 3000);
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

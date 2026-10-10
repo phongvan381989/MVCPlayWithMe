@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
-using MVCPlayWithMe.General;
-using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
 using System.Collections.Generic;
@@ -10,7 +12,6 @@ using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
@@ -30,6 +31,41 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                 };
                 TikiUpdateQuantityResponse updateResponse = JsonConvert.DeserializeObject<TikiUpdateQuantityResponse>(response.Content, settings);
                 return updateResponse;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+            }
+            return null;
+        }
+
+        // Khi đăng variants, ta cần cập nhật lại số trang, kích thước, cân nặng, ảnh sau khi tạo sản phẩm thành công
+        public static async Task<TikiCreateProductTrackingResponse> TikiProductUpdateSomethingForVariant(
+            TikiForUpdatingVariant st,
+            MySqlResultState result)
+        {
+            string http = TikiConstValues.cstrProductUpdateSomething;
+            IRestResponse response = await CommonTikiAPI.PostExcuteRequest(http, JsonConvert.SerializeObject(st));
+            try
+            {
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                TikiCreateProductTrackingResponse trackObj = null;
+
+                JObject obj = JObject.Parse(response.Content);
+                if (obj["track_id"] != null)
+                {
+                    //track_id = (string)obj["track_id"];
+                    trackObj = JsonConvert.DeserializeObject<TikiCreateProductTrackingResponse>(response.Content, settings);
+                }
+                else
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Create product failed: " + response.Content;
+                }
             }
             catch (Exception ex)
             {

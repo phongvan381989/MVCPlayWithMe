@@ -168,9 +168,15 @@
                 @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
 
                 <button type="button" class="hxvniuf87fso"
-                        title="Tạo sản phẩm riêng lẻ, không cha và chưa đăng bán trên sàn thương mại điện tử ứng với lựa chọn trên."
+                        title="Tạo sản phẩm riêng lẻ, không cha và chưa đăng bán trên sàn thương mại điện tử ứng với sàn lựa chọn trên."
                         onclick="CreateProductOfComboOnECommerce()">
                     Tạo Sản Phẩm Trên Sàn TMDT
+                </button>
+
+                <button type="button" class="hxvniuf87fso"
+                        title="Tạo biến thể sản phẩm riêng lẻ, combo nếu có thể(combo có ảnh, có mô tả) và chưa đăng bán trên sàn thương mại điện tử ứng với sàn lựa chọn trên."
+                        onclick="CreateVariantsOfComboOnECommerce()">
+                    Tạo Biến Thể Combo Trên Sàn TMDT
                 </button>
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
 

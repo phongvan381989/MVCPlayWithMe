@@ -35,6 +35,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inStatus", item.bActive ? 0 : 1);
                     cmd.Parameters.AddWithValue("@inSku", item.sku);
                     cmd.Parameters.AddWithValue("@inSuperSku", item.superSku);
+                    cmd.Parameters.AddWithValue("@inOriginalSku", item.originalSku);
                     cmd.Parameters.AddWithValue("@inImage", item.imageSrc);
 
                     object scalarResult = await cmd.ExecuteScalarAsync();
@@ -81,7 +82,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             try
             {
                 // Nếu Id và Supper Id bằng nhau, đây là sản phẩm cha chung ảo
-                if (item.TikiCheckVirtalParent())
+                if (item.TikiCheckVirtualParent())
                 {
                     return true;
                 }
@@ -433,6 +434,28 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.Parameters.AddWithValue("@inTikiItemId", itemId);
                     cmd.Parameters.AddWithValue("@inProductId", productId);
                     cmd.Parameters.AddWithValue("@inQuantity", quantity);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return result;
+        }
+
+        public static async Task<MySqlResultState> TikiMappingInsertFromtbTrackOriginalSKUAsync(
+            int tikiItemId, // id trên sàn tiki
+            MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert_From_tbTrackOriginalSKU", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    cmd.Parameters.AddWithValue("@inTikiItemId", tikiItemId);
                     await cmd.ExecuteNonQueryAsync();
                 }
             }

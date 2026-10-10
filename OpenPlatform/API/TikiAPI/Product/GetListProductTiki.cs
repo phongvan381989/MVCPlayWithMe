@@ -1,14 +1,15 @@
-﻿using System;
+﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using RestSharp;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
-using MVCPlayWithMe.General;
-using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
-using RestSharp;
-using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
-using MVCPlayWithMe.OpenPlatform.Model;
 
 namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
@@ -175,6 +176,39 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                 return null;
             }
             return pro;
+        }
+
+        public static async Task GetProductIdByOriginalSku(string originalSku,
+            MySqlResultState result)
+        {
+            // GET https://api.tiki.vn/integration/v2/products/findBy?original_sku=YOUR_ORIGINAL_SKU_123
+            string http = TikiConstValues.cstrProductHTTPGetProductByOriginalSku + originalSku;
+            IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
+            if (response.StatusCode != System.Net.HttpStatusCode.OK)
+            {
+                if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                {
+                    result.State = EMySqlResultState.DONT_EXIST;
+                    result.Message = "Product not found";
+                }
+                else
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Error: " + response.StatusCode.ToString();
+                }
+                return;
+            }
+            string json = response.Content;
+            try
+            {
+                JObject obj = JObject.Parse(json);
+                result.myAnything = (int)obj["product_id"];
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+            return;
         }
     }
 }

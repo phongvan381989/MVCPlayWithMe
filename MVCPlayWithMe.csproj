@@ -329,6 +329,7 @@
     <Compile Include="Controllers\DevController.cs" />
     <Compile Include="Controllers\FeedController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiDealDiscountController.cs" />
+    <Compile Include="Controllers\OpenPlatform\TikiOriginalSkuController.cs" />
     <Compile Include="Controllers\PushMechanismController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\OpenPlatform\ProductECommerceController.cs" />
@@ -392,6 +393,8 @@
     <Compile Include="Models\ProductModel\ProductMySql.cs" />
     <Compile Include="Models\ProductModel\ProductSearchParameter.cs" />
     <Compile Include="Models\ProductModel\ProductSellingStatistics.cs" />
+    <Compile Include="Models\ProductModel\TrackOriginalSku.cs" />
+    <Compile Include="Models\ProductModel\TrackOriginalSkuMySql.cs" />
     <Compile Include="Models\Publisher.cs" />
     <Compile Include="Models\PublisherMySql.cs" />
     <Compile Include="Models\SanPhamModel\SanPham.cs" />
@@ -859,6 +862,7 @@
     <Content Include="Views\Administrator\Output.cshtml" />
     <Content Include="Views\Policy\PaymentQR.cshtml" />
     <Content Include="Views\Shared\_MetaPixel.cshtml" />
+    <Content Include="Views\TikiOriginalSku\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

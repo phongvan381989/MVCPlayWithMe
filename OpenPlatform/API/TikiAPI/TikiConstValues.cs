@@ -14,7 +14,9 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrAuthenHTTPAddress = "https://api.tiki.vn/sc/oauth2/token";
         public const string cstrOrdersHTTPAddress = "https://api.tiki.vn/integration/v2/orders";
         public const string cstrProductsHTTPAddress = "https://api.tiki.vn/integration/v2.1/products";
+        public const string cstrProductHTTPGetProductByOriginalSku = "https://api.tiki.vn/integration/v2/products/findBy?original_sku=";
         public const string cstrProductUpdate = "https://api.tiki.vn/integration/v2.1/products/updateSku";
+        public const string cstrProductUpdateSomething = "https://api.tiki.vn/integration/v2/requests/updateProductInfo";
 
         // limit must not be greater than 100, nhưng chỗ khác thực tế lại là 50, ảo ma canada
         public const string cstrPerPage = "50";
@@ -45,8 +47,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         {
             string prefix = "VBN"; // Phần bắt đầu của SKU
 
-            // Thời gian hiện tại theo định dạng yyyyMMddHHmmss
-            string timestamp = DateTime.UtcNow.ToString("yyyyMMddHHmmss");
+            // Thời gian hiện tại theo định dạng yyMMddHHmmss
+            string timestamp = DateTime.UtcNow.ToString("yyMMddHHmmss");
 
             int randomLength = 5; // Độ dài phần ngẫu nhiên
 
@@ -62,24 +64,6 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             }
             string sku = prefix + timestamp + new string(result);
             return sku;
-        }
-
-        public static long GenerateRandomMincodeLong()
-        {
-            // Bước 1: Lấy thời gian hiện tại theo định dạng yymmddHHmmss
-            string timestamp = DateTime.Now.ToString("yyMMddHHmmss");
-
-            // Bước 2: Sinh số ngẫu nhiên 5 chữ số
-            Random random = new Random();
-            int randomNumber = random.Next(10000, 99999); // Sinh số ngẫu nhiên từ 10000 đến 99999
-
-            // Bước 3: Kết hợp thời gian và số ngẫu nhiên
-            string randomCode = $"{timestamp}{randomNumber}";
-
-            // Bước 4: Chuyển sang kiểu long
-            long finalCode = long.Parse(randomCode);
-
-            return finalCode;
         }
     }
 }

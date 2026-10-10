@@ -81,10 +81,16 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
         public string inventory_type { get; set; }
         public string seller_warehouse { get; set; }
         public List<WarehouseStock> warehouse_stocks { get; set; }
+        public string option1 { get; set; }
+        public string option2 { get; set; }
+
+        public string image { get; set; }
+        public List<string> images { get; set; }
 
         public Variant()
         {
             warehouse_stocks = new List<WarehouseStock>();
+            images = new List<string>();
         }
     }
 
@@ -105,4 +111,43 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
     {
         public bool is_auto_turn_on { get; set; }
     }
+
+    // Chứa những class phục vụ việc cập nhật: ảnh, kích thước, trọng lượng, số trang sách, ... cho variants khi vừa tạo xong.
+    // Chứa những class phục vụ việc tạo body cho api tạo sản phẩm
+    public class TikiForUpdatingVariant
+    {
+        public int product_id { get; set; }
+        //public string name { get; set; }
+        public string description { get; set; }
+        //public int market_price { get; set; }
+        public AttributesForUpdatingVariant attributes { get; set; }
+        public string image { get; set; }
+        public List<string> images { get; set; }
+
+        public TikiForUpdatingVariant()
+        {
+            attributes = new AttributesForUpdatingVariant();
+            images = new List<string>();
+        }
+    }
+
+    public class AttributesForUpdatingVariant
+    {
+        // Chiều cao của sản phẩm sau khi đã được đóng gói, thùng, hộp...Đơn vị tính: cm
+        public string product_height { get; set; }
+
+        // Chiều rộng của sản phẩm sau khi đã được đóng gói, thùng, hộp... Đơn vị tính: cm
+        public string product_width { get; set; }
+
+        // Chiều dài của sản phẩm sau khi đã được đóng gói, thùng, hộp... Đơn vị tính: cm
+        public string product_length { get; set; }
+
+        // Trọng lượng của sản phẩm sau khi đã được đóng gói, thùng, hộp... Đơn vị tính: kg
+        public string product_weight_kg { get; set; }
+
+        public string dimensions { get; set; }
+
+        public string number_of_page { get; set; }
+    }
+
 }

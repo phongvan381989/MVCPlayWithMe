@@ -824,10 +824,12 @@ namespace MVCPlayWithMe.Controllers
                     return JsonConvert.SerializeObject(result);
                 }
 
-                ItemForCreate item = JsonConvert.DeserializeObject<ItemForCreate>(str, Common.jsonSerializersettings);
+                //ItemForCreate item = JsonConvert.DeserializeObject<ItemForCreate>(str, Common.jsonSerializersettings);
 
-                ProductController proController = new ProductController();
-                result = await proController.LazadaCreateItemFromOther(item);
+                //ProductController proController = new ProductController();
+                //result = await proController.LazadaCreateItemFromOther(item);
+
+
             }
             catch (Exception ex)
             {
