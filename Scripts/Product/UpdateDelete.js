@@ -211,7 +211,7 @@ async function CreateProductOnECommerce() {
     }
 
     // Sản phẩm phải có ảnh
-    if (document.getElementsByClassName("objImage").length < 1) {
+    if (product.imageSrc < 1) {
         CreateMustClickOkModal("Sản phẩm không có ảnh.");
         return;
     }

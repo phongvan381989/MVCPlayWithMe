@@ -38,11 +38,11 @@
                             <button type="button" style="margin-left: 30px; margin-right:10px;"
                                     title="Sản phẩm trong kho kinh doanh bình thường, chưa mapping với bất kỳ sản phẩm nào trên sàn thương mại điện tử.
                         Kết quả trả về được sắp xếp tồn kho tăng dần. Chọn nhà phát hành để lọc sau khi lấy được tất cả"
-                                    onclick="SearchDontSellOnECommerce(false)">
+                                    onclick="SearchDontSellOnECommerce(false)" disabled>
                                 Chưa Đăng Bán
                             </button>
 
-                            <button type="button" title="Khách không thể mua lẻ sản phẩm. Do sản phẩm trong kho kinh doanh bình thường chưa mapping riêng lẻ / một mình với bất kỳ sản phẩm nào trên sàn thương mại điện tử.
+                            <button type="button" title="Chưa đăng bán sản phẩm trong kho đứng một mình, không phải là biến thể.
                         Kết quả trả về được sắp xếp tồn kho tăng dần. Chọn nhà phát hành để lọc sau khi lấy được tất cả"
                                     onclick="SearchDontSellOnECommerce(true)">
                                 Chưa Đăng Bán Riêng Lẻ.
@@ -50,26 +50,25 @@
 
                             <button type="button" title="Chưa đăng bán đầy đủ combo, riêng lẻ ở cùng 1 sản phẩm cha / Item trên sàn.
                                     Các sản phẩm trong combo đều đang kinh doanh"
-                                    onclick="SearchDontSellFullComboAndSigleOnECommerce()">
+                                    onclick="SearchDontSellFullComboAndSigleOnECommerce()" disabled>
                                 Chưa Đăng Bán Combo + Lẻ.
                             </button>
 
-                            <button type="button" title="Chưa đăng bán riêng lẻ tất cả sản phẩm đang kinh doanh ở cùng 1
-                                    sản phẩm cha / Item trên sàn."
+                            <button type="button" title="Chưa đăng bán như biến thể, có thể có hoặc không có sản phẩm combo."
                                     onclick="SearchDontSellSigleWithParrentOnECommerce()">
-                                Chưa Đăng Bán Lẻ Cùng Cha.
+                                Chưa Đăng Bán Như Biến Thể.
                             </button>
 
                             <button type="button" title="Chưa đăng bán hoàn toàn riêng lẻ, xét với tất cả sản phẩm đang kinh doanh,
                                     không có sản phẩm cha, anh em gì cả."
-                                    onclick="SearchDontSellSigleWithNoParrentOnECommerce()">
+                                    onclick="SearchDontSellSigleWithNoParrentOnECommerce()" disabled>
                                 Chưa Đăng Bán Lẻ Không Có Cha.
                             </button>
                         </div>
                         <div id="xcvnai9309xvx0">
                             <button type="button" style="margin-left: 30px; margin-top: 15px;"
                                     title="Tạo sản phẩm riêng lẻ không cha trên sàn thương mại điện tử của những sản phẩm bên dưới nếu sản phẩm chưa được đăng riêng lẻ không cha"
-                                    onclick="CreateProductOnECommerceFromList()">
+                                    onclick="CreateProductOnECommerceFromList()" disabled>
                                 Tạo Sản Phẩm Riêng Lẻ Không Cha Trên Sàn TMDT Từ Danh Sách
                             </button>
                         </div>

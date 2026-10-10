@@ -350,16 +350,8 @@
                 }
             }
 
-            // Sort data theo ECommerce, OriginalSku, CreatedDate
-            data.sort((a, b) => {
-                if (a.ECommmerce !== b.ECommmerce) {
-                    return a.ECommmerce - b.ECommmerce;
-                }
-                if (a.OriginalSku !== b.OriginalSku) {
-                    return (a.OriginalSku || '').localeCompare(b.OriginalSku || '');
-                }
-                return new Date(b.CreatedDate) - new Date(a.CreatedDate);
-            });
+            // Note: Data đã được sort từ backend (ORDER BY trong SQL query)
+            // Không cần sort lại ở client-side
 
             let previousKey = null; // Track ECommerce + OriginalSku trước đó
 
@@ -411,9 +403,7 @@
 
         // Update variant
         async function UpdateVariant(sku, eCommerce) {
-            if (!confirm(`Cập nhật variant cho SKU "${sku}"?`)) {
-                return;
-            }
+            ShowCircleLoader();
 
             try {
                 const responseText = await PostJSON('/TikiOriginalSku/UpdateVariant', {
@@ -430,14 +420,14 @@
             } catch (error) {
                 console.error('Error updating variant:', error);
                 alert('Có lỗi xảy ra khi cập nhật variant');
+            } finally {
+                RemoveCircleLoader();
             }
         }
 
         // Get product from ecommerce platform
         async function GetProduct(sku, eCommerce, proOnEcoId) {
-            if (!confirm(`Lấy sản phẩm từ sàn cho SKU "${sku}"?`)) {
-                return;
-            }
+            ShowCircleLoader();
 
             try {
                 const responseText = await PostJSON('/TikiOriginalSku/GetProduct', {
@@ -455,6 +445,8 @@
             } catch (error) {
                 console.error('Error getting product:', error);
                 alert('Có lỗi xảy ra khi lấy sản phẩm');
+            } finally {
+                RemoveCircleLoader();
             }
         }
 
@@ -541,6 +533,24 @@
             // Tìm tất cả rows có cùng SKU và ECommerce
             const rows = document.querySelectorAll(`tr[data-sku="${sku}"][data-ecommerce="${eCommerce}"]`);
 
+            // Convert eCommerce number sang tên sàn
+            let eTypeName = '';
+            let ecommerceName = '';
+            switch (eCommerce) {
+                case 1:
+                    eTypeName = 'TIKI';
+                    ecommerceName = 'Tiki';
+                    break;
+                case 2:
+                    eTypeName = 'SHOPEE';
+                    ecommerceName = 'Shopee';
+                    break;
+                case 3:
+                    eTypeName = 'LAZADA';
+                    ecommerceName = 'Lazada';
+                    break;
+            }
+
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
                 // Cell Pro On Eco ID là cell thứ 8 (index 7: ID, Sàn, SKU, ProductID, Quantity, IsVariant, TrackID, ProOnEcoId)
@@ -554,6 +564,19 @@
                     if (!currentValue || currentValue === '' || parseInt(currentValue) <= 0 || isNaN(parseInt(currentValue))) {
                         // Cập nhật giá trị mới
                         proOnEcoIdCell.textContent = proOnEcoId;
+
+                        // Thêm style để làm clickable
+                        proOnEcoIdCell.style.cursor = 'pointer';
+                        proOnEcoIdCell.style.color = '#007bff';
+                        proOnEcoIdCell.style.textDecoration = 'underline';
+
+                        // Thêm onclick handler để mở trang sản phẩm trên sàn
+                        proOnEcoIdCell.onclick = function() {
+                            window.open(`/ProductECommerce/Item?eType=${eTypeName}&id=${proOnEcoId}`, '_blank');
+                        };
+
+                        // Thêm title tooltip
+                        proOnEcoIdCell.title = `Click để mở trang sản phẩm trên sàn ${ecommerceName}`;
 
                         // Thêm animation highlight
                         proOnEcoIdCell.classList.add('cell-updated');

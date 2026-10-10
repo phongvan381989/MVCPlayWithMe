@@ -64,7 +64,6 @@ function ShowProductTable(list) {
 
         // Id
         cell1.innerHTML = pro.id;
-        cell1.style.display = "none";
 
         // STT
         cell2.innerHTML = i + 1;

@@ -1108,6 +1108,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 return JsonConvert.SerializeObject(new List<Product>());
             }
+
             List<Product> lsSearchResult = new List<Product>();
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {

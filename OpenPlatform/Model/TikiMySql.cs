@@ -445,11 +445,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return result;
         }
 
-        public static async Task<MySqlResultState> TikiMappingInsertFromtbTrackOriginalSKUAsync(
+        public static async Task TikiMappingInsertFromtbTrackOriginalSKUAsync(
             int tikiItemId, // id trên sàn tiki
+            MySqlResultState result,
             MySqlConnection conn)
         {
-            MySqlResultState result = new MySqlResultState();
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand("st_tbTikiMapping_Insert_From_tbTrackOriginalSKU", conn))
@@ -463,8 +463,6 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             {
                 Common.SetResultException(ex, result);
             }
-
-            return result;
         }
 
         /// <summary>

@@ -169,7 +169,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(result);
         }
 
-        private async Task TikiUpdateMapping_VariantSomething(string originalSku,
+        private async Task TikiUpdateVariantSomething(string originalSku,
             MySqlResultState result,
             int productIdOnTiki,
             MySqlConnection conn)
@@ -250,6 +250,23 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         {
                             tikiForUpdatingVariant.images.Add(Common.httpsVoiBeNho + combo.imageSrc[i]);
                         }
+                        // Thêm ảnh bìa từng sản phẩm của combo
+                        foreach (var p in combo.products)
+                        {
+                            if (p.imageSrc.Count > 0)
+                            {
+                                tikiForUpdatingVariant.images.Add(Common.httpsVoiBeNho + p.imageSrc[0]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Nếu combo không có ảnh, thêm ảnh bìa từng sản phẩm của combo
+                        tikiForUpdatingVariant.image = Common.httpsVoiBeNho + combo.products[0].imageSrc[0];
+                        for (int i = 1; i < combo.products.Count; i++)
+                        {
+                            tikiForUpdatingVariant.images.Add(Common.httpsVoiBeNho + combo.products[i].imageSrc[0]);
+                        }
                     }
                 }
             }
@@ -318,7 +335,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         int producIdOnTiki = result.myAnything;
 
                         // 2. Cập nhật ảnh, kích thước, cân nặng,... cho biến thể
-                        await TikiUpdateMapping_VariantSomething(sku, result, producIdOnTiki, conn);
+                        await TikiUpdateVariantSomething(sku, result, producIdOnTiki, conn);
                     }
                     else
                     {
@@ -395,8 +412,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                             await TikiMySql.TikiInsertIfDontExistConnectOutAsync(item, conn);
 
                             // 3. Lưu mapping, và cập nhật trạng thái tb_track_original_sku để biết đã lưu sản phẩm sàn vào db
-                            result = await TikiMySql.TikiMappingInsertFromtbTrackOriginalSKUAsync(productIdOnTiki, conn);
+                            await TikiMySql.TikiMappingInsertFromtbTrackOriginalSKUAsync(productIdOnTiki, result, conn);
                         }
+
+                        //// Trả về productIdOnTiki để frontend hiển thị lên cột Pro On Eco ID
+                        //result.myAnything = productIdOnTiki;
                     }
                 }
             }
