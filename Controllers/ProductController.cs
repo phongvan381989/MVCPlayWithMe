@@ -10,6 +10,7 @@ using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
@@ -2889,7 +2890,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         // Từ sản phẩm trong kho, tạo sản phẩm trên sàn Tiki
-        public async Task<TikiCreateProductTrackingResponse> TikiCreateProductFromProductIdInWarehouse(int id,
+        public async Task TikiCreateProductFromProductIdInWarehouse(int id,
             string name,
             MySqlResultState result,
             MySqlConnection conn)
@@ -3001,6 +3002,23 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.attributes.author = product.author.Split(',')
                                 .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
                                 .ToList();
+
+                    foreach (string aut in tikiCreatingProduct.attributes.author)
+                    {
+                        MySqlResultState mySqlResult = await TikiCategoryAction.CheckGetAttributeValues(498, aut);
+                        if (mySqlResult.State != EMySqlResultState.OK)
+                        {
+                            result.GetValueFrom(mySqlResult);
+                            result.Message = result.Message;
+                            result.myJson = trackObj;
+                            return;
+                        }
+                    }
+                }
+                else
+                {
+                    result.State = EMySqlResultState.EMPTY;
+                    result.Message = "Tác giả đang trống.";
                 }
 
                 product.SetSrcImageVideo();
@@ -3064,13 +3082,13 @@ namespace MVCPlayWithMe.Controllers
                 trackObj = null;
             }
 
-            return trackObj;
+            result.myJson = trackObj;
         }
 
         // Từ combo, tạo sản phẩm với nhiều variant trên sàn Tiki.
         //NOTE: Tạo nhiều biến thể, ảnh, kích thước, cân nặng sẽ được cập nhật sau từ bảng tb_track_original_sku
         // Trung lặp code khá nhiều với hàm CreateTikiProductFromProductIdInWarehouse
-        public async Task<TikiCreateProductTrackingResponse> TikiCreateVariantsFromComboId(int comboId,
+        public async Task TikiCreateVariantsFromComboId(int comboId,
             MySqlResultState result,
             MySqlConnection conn)
         {
@@ -3119,7 +3137,7 @@ namespace MVCPlayWithMe.Controllers
                     {
                         tikiCreatingProduct.attributes.manufacturer = product.publishingCompany;
                     }
-                    else if (attr.code == "product_height")
+                    else if (attr.code == "product_height") // Kích thước, cân nặng được cập nhật sau với từng sản phẩm
                     {
                         tikiCreatingProduct.attributes.product_height =
                             TikiCreateProduct.TikiGetStringOneDimension(product.productHigh);
@@ -3179,6 +3197,23 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.attributes.author = product.author.Split(',')
                                 .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
                                 .ToList();
+
+                    foreach (string aut in tikiCreatingProduct.attributes.author)
+                    {
+                        MySqlResultState mySqlResult = await TikiCategoryAction.CheckGetAttributeValues(498, aut);
+                        if(mySqlResult.State != EMySqlResultState.OK)
+                        {
+                            result.GetValueFrom(mySqlResult);
+                            result.Message = "Đây là sản phẩm đầu tiên của combo. " + result.Message;
+                            result.myJson = trackObj;
+                            return;
+                        }    
+                    }
+                }
+                else
+                {
+                    result.State = EMySqlResultState.EMPTY;
+                    result.Message = "Sản phẩm đầu tiên của combo tác giả đang trống.";
                 }
 
                 product.SetSrcImageVideo();
@@ -3232,7 +3267,8 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.variants.Add(variant);
                 }
 
-                // Tạo variant là combo nếu combo có ảnh riêng
+                // Tạo variant là combo nếu combo có ảnh riêng, có mô tả
+                if(!string.IsNullOrEmpty(combo.detail) || combo.imageSrc.Count > 0)
                 {
                     Variant variant = new Variant();
                     variant.price = totalPrice;
@@ -3298,8 +3334,8 @@ namespace MVCPlayWithMe.Controllers
                 Common.SetResultException(ex, result);
                 trackObj = null;
             }
-
-            return trackObj;
+            result.myJson = trackObj;
+            return;
         }
 
         [HttpPost]
@@ -3320,41 +3356,30 @@ namespace MVCPlayWithMe.Controllers
                     eType, conn
                     );
 
-                if (eType == Common.eTiki)
+                if (!needList.Contains(id))
                 {
-                    if (needList.Contains(id))
-                    {
-                        TikiCreateProductTrackingResponse trackObj = await TikiCreateProductFromProductIdInWarehouse(id, name, result, conn);
-                    }
+                    result.State = EMySqlResultState.EXIST;
+                    result.Message = "Sản phẩm đã được đăng riêng lẻ không cha.";
                 }
-                else if(eType == Common.eShopee)
+                else
                 {
-                    if (needList.Contains(id))
+                    if (eType == Common.eTiki)
                     {
-                        result = await CreateShopeeProductFromProductIdInWarehouse(id, name, true, conn);
+                        await TikiCreateProductFromProductIdInWarehouse(id, name, result, conn);
                     }
-                    else
+                    else if (eType == Common.eShopee)
                     {
-                        result.State = EMySqlResultState.EXIST;
-                        result.Message = "Sản phẩm đã được đăng riêng lẻ không cha.";
+                        result = await ShopeeCreateProductFromProductIdInWarehouse(id, name, true, conn);
                     }
-                }
-                else if (eType == Common.eLazada)
-                {
-                    if (needList.Contains(id))
+                    else if (eType == Common.eLazada)
                     {
                         result = await LazadaCreateProductFromProductIdInWarehouse(id, name, true, conn);
                     }
                     else
                     {
-                        result.State = EMySqlResultState.EXIST;
-                        result.Message = "Sản phẩm đã được đăng riêng lẻ không cha.";
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Chưa hỗ trợ tạo sản phẩm trên " + eType;
                     }
-                }
-                else
-                {
-                    result.State = EMySqlResultState.INVALID;
-                    result.Message = "Chưa hỗ trợ tạo sản phẩm trên " + eType;
                 }
             }
             return JsonConvert.SerializeObject(result);
@@ -3693,7 +3718,7 @@ namespace MVCPlayWithMe.Controllers
             return result;
         }
 
-        public async Task<MySqlResultState> CreateShopeeProductFromProductIdInWarehouse(
+        public async Task<MySqlResultState> ShopeeCreateProductFromProductIdInWarehouse(
             int productId,
             string name,
             Boolean isNeedUploadImage,
@@ -4386,7 +4411,7 @@ namespace MVCPlayWithMe.Controllers
             string eType)
         {
             MySqlResultState result = new MySqlResultState();
-            if (eType != Common.eShopee && eType != Common.eLazada)
+            if (eType != Common.eShopee && eType != Common.eLazada && eType != Common.eTiki)
             {
                 result.State = EMySqlResultState.INVALID;
                 result.Message = "Chưa hỗ trợ tạo nhiều sản phẩm trên " + eType;
@@ -4413,9 +4438,14 @@ namespace MVCPlayWithMe.Controllers
                             continue;
                         }
 
-                        if (eType == Common.eShopee)
+                        if(eType == Common.eTiki)
                         {
-                            resultTemp = await CreateShopeeProductFromProductIdInWarehouse(productId,
+                            await TikiCreateProductFromProductIdInWarehouse(productId,
+                            null, result, conn);
+                        }
+                        else if (eType == Common.eShopee)
+                        {
+                            resultTemp = await ShopeeCreateProductFromProductIdInWarehouse(productId,
                             null, true, conn);
                         }
                         else if (eType == Common.eLazada)
@@ -4460,7 +4490,7 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> CreateProductOfComboOnECommerce(int comboId, string eType)
+        public async Task<string> CreateSingleProductOfComboOnECommerce(int comboId, string eType)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -4541,7 +4571,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
                     if (eType == Common.eTiki)
                     {
-                        TikiCreateProductTrackingResponse trackObj = await TikiCreateVariantsFromComboId(comboId, result, conn);
+                        await TikiCreateVariantsFromComboId(comboId, result, conn);
                     }
                 }
             }

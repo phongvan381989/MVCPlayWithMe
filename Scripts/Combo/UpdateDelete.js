@@ -406,14 +406,14 @@ async function UpdateCommonDiscount() {
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
 }
 
-async function CreateProductOfComboOnECommerce() {
+async function CreateSingleProductOfComboOnECommerce() {
     // Lấy id
     let id = GetValueFromUrlName("id");
     const searchParams = new URLSearchParams();
     searchParams.append("comboId", id);
     searchParams.append("eType", GetECommerceType());
 
-    let url = "/Product/CreateProductOfComboOnECommerce";
+    let url = "/Product/CreateSingleProductOfComboOnECommerce";
 
     try {
         // Cập nhật vào db

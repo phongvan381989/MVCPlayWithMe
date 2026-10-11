@@ -5,6 +5,7 @@ using RestSharp;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -81,6 +82,55 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category
                 return responseData.data;
             }
             return null;
+        }
+
+        public static async Task<MySqlResultState> CheckGetAttributeValues(int attributeId, string values)
+        {
+            // https://api.tiki.vn/integration/v2/attributes/540/values?q=phong
+            string http = TikiConstValues.cstrGetAttributeValues + attributeId.ToString() + "/values?q=" + values;
+            IRestResponse response = await CommonTikiAPI.GetExcuteRequest(http);
+
+            MySqlResultState result = new MySqlResultState();
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                string json = response.Content;
+                try
+                {
+                    using (JsonDocument doc = JsonDocument.Parse(json))
+                    {
+                        JsonElement root = doc.RootElement;
+
+                        // Kiểm tra xem trường 'data' có tồn tại và có phải là mảng không
+                        if (root.TryGetProperty("data", out JsonElement dataElement) && dataElement.ValueKind == JsonValueKind.Array)
+                        {
+                            int count = dataElement.GetArrayLength();
+                            if (count > 0)
+                            {
+                            }
+                            else
+                            {
+                                result.State = EMySqlResultState.EMPTY;
+                                result.Message = "Data rỗng ([]).";
+                            }
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.DONT_EXIST;
+                            result.Message = "Không tìm thấy trường data hoặc không phải mảng.";
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
+            else
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "response.StatusCode" + response.StatusCode.ToString();
+            }
+            return result;
         }
     }
 }

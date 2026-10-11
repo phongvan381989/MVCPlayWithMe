@@ -438,9 +438,15 @@
 
                 const result = JSON.parse(responseText);
 
-                // Nếu có productId trên sàn → cập nhật vào table (chỉ khi chưa có)
-                if (result.myAnything) {
-                    UpdateProOnEcoIdInTable(sku, eCommerce, result.myAnything);
+                if (result.State !== 0) {
+                    CreateMustClickOkModal(result.Message);
+                    return;
+                }
+                else {
+                    // Nếu có productId trên sàn → cập nhật vào table (chỉ khi chưa có)
+                    if (result.myAnything) {
+                        UpdateProOnEcoIdInTable(sku, eCommerce, result.myAnything);
+                    }
                 }
             } catch (error) {
                 console.error('Error getting product:', error);

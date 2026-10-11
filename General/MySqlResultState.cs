@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 
 namespace MVCPlayWithMe.General
 {
@@ -114,5 +115,14 @@ namespace MVCPlayWithMe.General
 
         // Chứa json của đối tượng server trả về
         public object myJson { get; set; }
+
+        public void GetValueFrom(MySqlResultState mySqlResult)
+        {
+            State = mySqlResult.State;
+            myAnything = mySqlResult.myAnything;
+            myAnythingLong = mySqlResult.myAnythingLong;
+            Message = mySqlResult.Message;
+            myJson = mySqlResult.myJson;
+        }
     }
 }

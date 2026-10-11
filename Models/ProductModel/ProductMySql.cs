@@ -731,7 +731,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                 string store = "";
                 if (eType == eTiki)
                 {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent";
+                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle";
                 }
                 else if (eType == eShopee)
                 {

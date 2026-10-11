@@ -34,6 +34,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrCategory = "https://api.tiki.vn/integration/v2/categories";
         public const string cstrCreateProduct = "https://api.tiki.vn/integration/v2.1/requests";
         public const string cstrTrackingRequestCreateProduct = "https://api.tiki.vn/integration/v2/tracking/";
+        public const string cstrGetAttributeValues = "https://api.tiki.vn/integration/v2/attributes/";
 
         public const string inventory_type = "dropship";
 
