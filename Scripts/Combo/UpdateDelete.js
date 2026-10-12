@@ -406,6 +406,24 @@ async function UpdateCommonDiscount() {
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
 }
 
+//
+async function UpdateCommonStatus() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("comboId", GetValueFromUrlName("id"));
+
+    let status = GetValueInputById("product-status", 0);
+    searchParams.append("status", status);
+
+    let query = "/Product/UpdateCommonStatusWithCombo";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
+}
+
+
 async function CreateSingleProductOfComboOnECommerce() {
     // Lấy id
     let id = GetValueFromUrlName("id");

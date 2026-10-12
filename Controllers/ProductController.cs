@@ -671,6 +671,24 @@ namespace MVCPlayWithMe.Controllers
             }
             return JsonConvert.SerializeObject(result);
         }
+        // 
+        public async Task<string> UpdateCommonStatusWithCombo(
+                int comboId,
+                int status
+            )
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await ProductMySql.UpdateCommonStatusWithComboAsync(comboId, status, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
 
         [HttpPost]
         public async Task<string> UpdateCommonDetailWithCombo(
@@ -3296,8 +3314,15 @@ namespace MVCPlayWithMe.Controllers
                 List<TrackOriginalSku> trackOriginalSkus = new List<TrackOriginalSku>();
 
                 // Tạo variant cho từng sản phẩm trong combo
+                // Sản phẩm phải ở trạng thái khác ngừng kinh doanh
+                Boolean hasNgungKinhDoanh = false;
                 foreach (var p in combo.products)
                 {
+                    if(p.status != (int)ESanPhamStatus.NGUNG_KINH_DOANH)
+                    {
+                        hasNgungKinhDoanh = true;
+                        continue;
+                    }
                     Variant variant = new Variant();
                     variant.price = p.bookCoverPrice;
                     variant.inventory_type = TikiConstValues.inventory_type;
@@ -3333,8 +3358,8 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.variants.Add(variant);
                 }
 
-                // Tạo variant là combo nếu combo có ảnh riêng, có mô tả
-                if(!string.IsNullOrEmpty(combo.detail) || combo.imageSrc.Count > 0)
+                // Tạo variant là combo nếu combo có ảnh riêng, có mô tả, và không có sản phẩm thuộc combo ngừng kinh doanh
+                if(!string.IsNullOrEmpty(combo.detail) && combo.imageSrc.Count > 0 && !hasNgungKinhDoanh)
                 {
                     Variant variant = new Variant();
                     variant.price = totalPrice;
