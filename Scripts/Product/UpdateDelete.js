@@ -305,3 +305,30 @@ async function CreateSanPhamVoibenhoFromProductId() {
         return;
     }
 }
+
+async function TikiUpdateProductImage() {
+    // Lấy id
+    let id = GetValueFromUrlName("id");
+    let tikiProductId = ConvertToInt(document.getElementById("tiki-product-id").value);
+    if (tikiProductId === 0) {
+        CreateMustClickOkModal("Mã sản phẩm Tiki chưa đúng định dạng.", function () { document.getElementById("tiki-product-id").focus(); });
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", id);
+    searchParams.append("tikiProductId", tikiProductId);
+
+    let url = "/Product/TikiUpdateProductImage";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật lỗi.", null);
+        return;
+    }
+}

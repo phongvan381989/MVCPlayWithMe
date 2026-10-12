@@ -45,14 +45,14 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             MySqlResultState result)
         {
             string http = TikiConstValues.cstrProductUpdateSomething;
-            IRestResponse response = await CommonTikiAPI.PostExcuteRequest(http, JsonConvert.SerializeObject(st));
+            JsonSerializerSettings settings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                MissingMemberHandling = MissingMemberHandling.Ignore
+            };
+            IRestResponse response = await CommonTikiAPI.PostExcuteRequest(http, JsonConvert.SerializeObject(st, settings));
             try
             {
-                JsonSerializerSettings settings = new JsonSerializerSettings
-                {
-                    NullValueHandling = NullValueHandling.Ignore,
-                    MissingMemberHandling = MissingMemberHandling.Ignore
-                };
                 TikiCreateProductTrackingResponse trackObj = null;
 
                 JObject obj = JObject.Parse(response.Content);

@@ -268,11 +268,11 @@ function ShowListCommonItem(list, table, disableUpdateButton) {
 
             // item Id
             cell1.innerHTML = item.itemId;
-            cell1.style.display = "none";
+            // cell1.style.display = "none";
 
             // Model Id
             cell2.innerHTML = model.modelId;
-            cell2.style.display = "none";
+            // cell2.style.display = "none";
 
             // Image
             let img = document.createElement("img");

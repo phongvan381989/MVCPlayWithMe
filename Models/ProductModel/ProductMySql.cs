@@ -2229,6 +2229,190 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        public static async Task<MySqlResultState> UpdateHardCoverAsync(int id, int hardCover)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `HardCover` = @inHardCover WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inHardCover", hardCover);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `HardCover` = @inHardCover WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inHardCover", hardCover);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> UpdateAuthorAsync(int id, string author)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `Author` = @inAuthor WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inAuthor", author);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `Author` = @inAuthor WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inAuthor", author);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> UpdateTranslatorAsync(int id, string translator)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `Translator` = @inTranslator WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inTranslator", translator);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `Translator` = @inTranslator WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inTranslator", translator);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> UpdatePublishingTimeAsync(int id, int publishingTime)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `PublishingTime` = @inPublishingTime WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPublishingTime", publishingTime);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `PublishingTime` = @inPublishingTime WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPublishingTime", publishingTime);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> UpdateDimensionsAndWeightAsync(int id, int productLong, int productWide, int productHigh, int productWeight)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE `tbProducts` SET `ProductLong` = @inProductLong, `ProductWide` = @inProductWide, `ProductHigh` = @inProductHigh, `ProductWeight` = @inProductWeight WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inProductLong", productLong);
+                        cmd.Parameters.AddWithValue("@inProductWide", productWide);
+                        cmd.Parameters.AddWithValue("@inProductHigh", productHigh);
+                        cmd.Parameters.AddWithValue("@inProductWeight", productWeight);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE `tb_san_pham` SET `ProductLong` = @inProductLong, `ProductWide` = @inProductWide, `ProductHigh` = @inProductHigh, `ProductWeight` = @inProductWeight WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inProductLong", productLong);
+                        cmd.Parameters.AddWithValue("@inProductWide", productWide);
+                        cmd.Parameters.AddWithValue("@inProductHigh", productHigh);
+                        cmd.Parameters.AddWithValue("@inProductWeight", productWeight);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        public static async Task<MySqlResultState> UpdateAgeRangeAsync(int id, int minAge, int maxAge)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `MinAge` = @inMinAge, `MaxAge` = @inMaxAge WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inMinAge", minAge);
+                        cmd.Parameters.AddWithValue("@inMaxAge", maxAge);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `MinAge` = @inMinAge, `MaxAge` = @inMaxAge WHERE `SanPhamKhoId` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inMinAge", minAge);
+                        cmd.Parameters.AddWithValue("@inMaxAge", maxAge);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
         public static async Task<List<Product>> GetListProductInWarehouseChangedQuantityAsync()
         {
             List<Product> ls = new List<Product>();

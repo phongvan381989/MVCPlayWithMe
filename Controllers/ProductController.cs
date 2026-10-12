@@ -1636,6 +1636,72 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(await ProductMySql.UpdateLanguageAsync(id, language));
         }
 
+        [HttpGet]
+        public async Task<string> UpdateHardCover(int id, int hardCover)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateHardCoverAsync(id, hardCover));
+        }
+
+        [HttpGet]
+        public async Task<string> UpdateAuthor(int id, string author)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateAuthorAsync(id, author));
+        }
+
+        [HttpGet]
+        public async Task<string> UpdateTranslator(int id, string translator)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateTranslatorAsync(id, translator));
+        }
+
+        [HttpGet]
+        public async Task<string> UpdatePublishingTime(int id, int publishingTime)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdatePublishingTimeAsync(id, publishingTime));
+        }
+
+        [HttpGet]
+        public async Task<string> UpdateDimensionsAndWeight(int id, int productLong, int productWide, int productHigh, int productWeight)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateDimensionsAndWeightAsync(id, productLong, productWide, productHigh, productWeight));
+        }
+
+        [HttpGet]
+        public async Task<string> UpdateAgeRange(int id, int minAge, int maxAge)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateAgeRangeAsync(id, minAge, maxAge));
+        }
+
         //// str có dạng: 12,45,24
         //private void GetListIntFromString(List<int> lsint, string str)
         //{
@@ -3470,6 +3536,59 @@ namespace MVCPlayWithMe.Controllers
                     result.Message = "Chưa hỗ trợ trên " + eType;
                 }
             }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        //
+        public async Task<string> TikiUpdateProductImage(int id, int tikiProductId)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+
+            try
+            {
+                Product product = null;
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    product = await ProductMySql.GetProductFromIdAsync(id, conn);
+                }
+                if(product == null)
+                {
+                    result.State = EMySqlResultState.EMPTY;
+                    result.Message = "Không lấy được sản phẩm trong kho";
+                }    
+
+                if (product.imageSrc.Count > 0)
+                {
+                    TikiForUpdatingVariant tikiForUpdatingVariant = new TikiForUpdatingVariant();
+
+                    // Bắt buộc có kích thước, cân nặng theo Backend Tiki 
+                    tikiForUpdatingVariant.attributes.product_length = TikiCreateProduct.TikiGetStringOneDimension(product.productLong);
+                    tikiForUpdatingVariant.attributes.product_width = TikiCreateProduct.TikiGetStringOneDimension(product.productWide);
+                    tikiForUpdatingVariant.attributes.product_height = TikiCreateProduct.TikiGetStringOneDimension(product.productHigh);
+                    tikiForUpdatingVariant.attributes.product_weight_kg = TikiCreateProduct.TikiGetStringWeight(product.productWeight);
+
+                    tikiForUpdatingVariant.product_id = tikiProductId;
+                    tikiForUpdatingVariant.image = Common.httpsVoiBeNho + product.imageSrc[0];
+                    for (int i = 1; i < product.imageSrc.Count; i++)
+                    {
+                        tikiForUpdatingVariant.images.Add(Common.httpsVoiBeNho + product.imageSrc[i]);
+                    }
+
+                    // Gửi yêu cầu cập nhật variant
+                    await TikiUpdateStock.TikiProductUpdateSomethingForVariant(tikiForUpdatingVariant, result);
+                }
+            }
+            catch(Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
             return JsonConvert.SerializeObject(result);
         }
 

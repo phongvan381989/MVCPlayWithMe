@@ -655,6 +655,132 @@ async function UpdateComboId() {
     }
 }
 
+
+async function UpdateHardCover() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("hardCover", document.getElementById("hard-cover").value);
+
+    let url = "/Product/UpdateHardCover";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật loại bìa lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateAuthor(){
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("author", document.getElementById("author-id").value);
+
+    let url = "/Product/UpdateAuthor";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật tác giả lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateTranlator() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("translator", document.getElementById("translator-id").value);
+
+    let url = "/Product/UpdateTranslator";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật người dịch lỗi.", null);
+        return;
+    }
+}
+
+async function UpdatePublishTime() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("publishingTime", GetValueInputById("publishing-time", -1));
+
+    let url = "/Product/UpdatePublishingTime";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật năm xuất bản lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateDimensions_Weight() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("productLong", GetValueInputById("product-long", 0));
+    searchParams.append("productWide", GetValueInputById("product-wide", 0));
+    searchParams.append("productHigh", GetValueInputById("product-high", 0));
+    searchParams.append("productWeight", GetValueInputById("product-weight", 0));
+
+    let url = "/Product/UpdateDimensionsAndWeight";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật kích thước & cân nặng lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateAgeRange() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("minAge", GetValueInputById("min-age", -1));
+    searchParams.append("maxAge", GetValueInputById("max-age", -1));
+
+    let url = "/Product/UpdateAgeRange";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật độ tuổi lỗi.", null);
+        return;
+    }
+}
+
+
 function ComboOfProductPage() {
     let comboId = document.getElementById("combo-id").comboIdValue;
     if (comboId == null || comboId == -1) {

@@ -41,23 +41,38 @@
             <div style="margin-bottom: 100px;">
                 @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
                 @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
-                <div>
-                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical"
+                <div class="Akxhvo9879xyv">
+                    <input type="text" id="product-name-when-creating" class="config-max-width margin-vertical nvuoja879oz"
                            title="Tên khi tạo sản phẩm trên sàn thương mại:Tiki, Shopee, Lazada,...
                            Tên này bằng: Sách + tên combo - tên sản phẩm. Sửa tên combo, tên sản phẩm nếu muốn thay đổi tên trên sàn">
-                    <button type="button" style="margin-left: 30px;"
+                    <button type="button" class="nvuoja879oz"
                             title="Tạo sản phẩm trên sàn thương mại điện tử với tên như trên"
                             onclick="CreateProductOnECommerce()">
                         Tạo Sản Phẩm Trên Sàn TMDT Với Tên Trên
                     </button>
 
-                    <button type="button" style="margin-left: 30px; display:none;"
+                    <button type="button" class="nvuoja879oz"
+                            id="btn-upload-image"
                             title="Tải ảnh lên sàn. Hiện tại hỗ trợ SHOPEE, Lazada"
                             onclick="UploadImageOnECommerce()">
                         Tải Ảnh Lên Sàn
                     </button>
 
-                    <button type="button" style="margin-left: 30px;"
+                </div>
+
+                <div class="Akxhvo9879xyv">
+                    <input type="text" id="tiki-product-id" class="config-max-width margin-vertical nvuoja879oz"
+                           placeholder="Id sản phẩm trên sàn Tiki"
+                           title="Id sản phẩm trên sàn Tiki">
+                    <button type="button" class="nvuoja879oz"
+                            title="Cập nhật ảnh, và bắt buộc có kích thước, cân nặng sản phẩm lên sàn Tiki."
+                            onclick="TikiUpdateProductImage()">
+                        Cập Nhật Ảnh, Kích Thước, Cân Nặng Sản Phẩm Lên Sàn Tiki
+                    </button>
+                </div>
+
+                <div class="Akxhvo9879xyv">
+                    <button type="button" class="nvuoja879oz"
                             title="Thống kê đơn hàng từ trước đến nay"
                             onclick="GetOutputOfProduct()">
                         Thống kê đơn hàng

@@ -746,14 +746,15 @@ function IsNumeric(value) {
 
 // Nếu input chưa nhập, hoặc nhập không phải số tự nhiên, số tự nhiên âm thì set giá trị là 0
 function ConvertToInt(value) {
-    if (isNaN(value)) {
+    if (value.trim() === "" || isNaN(value)) {
         return 0;
     }
 
-    let i = parseInt(value);
+    let i = parseInt(value, 10);
     if (i < 0) {
         i = 0;
     }
+
     return i;
 }
 
