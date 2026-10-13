@@ -28,6 +28,18 @@
         @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
     </div>
 
+    <div>
+        <label for="product-short-name-id">Tên:</label>
+        <input type="text" class="config-max-width margin-vertical" id="product-short-name-id">
+
+        <button type="button" onclick="UpdateShortName()" class="diplay-none-when-create"
+                style="float: right; display:none">
+            Cập nhật
+        </button>
+
+        @Html.Partial("~/Views/Shared/RowsDistance.cshtml")
+    </div>
+
     <label for="quantity">Tồn kho:</label><br>
     <input class="config-max-width margin-vertical disable-true-when-create" type="number" id="quantity" value="0">
 

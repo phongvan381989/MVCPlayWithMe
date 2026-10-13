@@ -1512,6 +1512,17 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpGet]
+        public async Task<string> UpdateShortName(int id, string shortname)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateShortNameAsync(id, shortname));
+        }
+
+        [HttpGet]
         public async Task<string> UpdateCode(int id, string code)
         {
             if ((await AuthentAdministratorAsync()) == null)
@@ -1696,6 +1707,17 @@ namespace MVCPlayWithMe.Controllers
             }
 
             return JsonConvert.SerializeObject(await ProductMySql.UpdatePublishingTimeAsync(id, publishingTime));
+        }
+        //
+        [HttpGet]
+        public async Task<string> UpdatePageNumber(int id, int pageNumber)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdatePageNumberAsync(id, pageNumber));
         }
 
         [HttpGet]
@@ -3338,7 +3360,7 @@ namespace MVCPlayWithMe.Controllers
                     });
 
                     variant.min_code = Common.GenerateRandomMincodeLong();
-                    variant.option1 = p.name;
+                    variant.option1 = !string.IsNullOrEmpty(p.shortName)? p.shortName: p.name;
 
                     p.SetSrcImageVideo();
                     if (p.imageSrc.Count > 0)

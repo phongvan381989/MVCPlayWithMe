@@ -124,6 +124,7 @@ async function GetCombo() {
     else {
         combo = JSON.parse(responseDB.responseText);
         document.getElementById("combo-name").value = combo.name;
+        document.title = combo.name;
         document.getElementById("combo-code").value = combo.code;
         document.getElementById("combo-status").value = combo.status;
         document.getElementById("combo-description").value = combo.detail || '';
@@ -406,7 +407,6 @@ async function UpdateCommonDiscount() {
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
 }
 
-//
 async function UpdateCommonStatus() {
     const searchParams = new URLSearchParams();
     searchParams.append("comboId", GetValueFromUrlName("id"));
@@ -422,7 +422,6 @@ async function UpdateCommonStatus() {
 
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
 }
-
 
 async function CreateSingleProductOfComboOnECommerce() {
     // Lấy id

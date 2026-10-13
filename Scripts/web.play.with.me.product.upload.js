@@ -282,7 +282,9 @@ function SetProductInfomation(product) {
     document.getElementById("quantity").value = product.quantity;
     document.getElementById("code").value = product.code;
     document.getElementById("barcode").value = product.barcode;
+    document.title = product.name;
     document.getElementById("product-name-id").value = product.name;
+    document.getElementById("product-short-name-id").value = product.shortName;
     document.getElementById("combo-id").value = product.comboName;
     document.getElementById("combo-id").comboIdValue = product.comboId;
 
@@ -460,6 +462,32 @@ async function UpdateName() {
     searchParams.append("name", CapitalizeWords(productName));
 
     let url = "/Product/UpdateName";
+
+    try {
+        // Cập nhật vào db
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        CreateMustClickOkModal("Cập nhật tên lỗi.", null);
+        return;
+    }
+}
+
+async function UpdateShortName() {
+    let shortName = document.getElementById("product-short-name-id").value;
+    if (isEmptyOrSpaces(shortName)) {
+        CreateMustClickOkModal("Tên ngắn sản phẩm trống.", null);
+        return false;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("shortname", CapitalizeWords(shortName));
+
+    let url = "/Product/UpdateShortName";
 
     try {
         // Cập nhật vào db
@@ -732,6 +760,27 @@ async function UpdatePublishTime() {
     catch (error) {
         RemoveCircleLoader();
         CreateMustClickOkModal("Cập nhật năm xuất bản lỗi.", null);
+        return;
+    }
+}
+
+//
+async function UpdatePageNumber() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("pageNumber", GetValueInputById("page-number", 0));
+
+    let url = "/Product/UpdatePageNumber";
+
+    try {
+        ShowCircleLoader();
+        let responseDB = await RequestHttpGetPromise(searchParams, url);
+        RemoveCircleLoader();
+        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
+    }
+    catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Cập nhật kích thước & cân nặng lỗi.", null);
         return;
     }
 }

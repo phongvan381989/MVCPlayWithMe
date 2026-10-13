@@ -15,6 +15,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         public string code { get; set; }
         public string barcode { get; set; }
         public string name { get; set; }
+        public string shortName { get; set; }
         /// <summary>
         /// Mục đích là để chỉ về cùng 1 sản phẩm. Ví dụ: 1 cuốn sách nhưng nhiều phiên bản cập nhật
         /// </summary>

@@ -27,6 +27,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             product.code = MyMySql.GetString(rdr, "Code");
             product.barcode = MyMySql.GetString(rdr, "Barcode");
             product.name = MyMySql.GetString(rdr, "Name");
+            product.shortName = MyMySql.GetString(rdr, "ShortName");
             product.comboId = MyMySql.GetInt32(rdr, "ComboId");
             product.comboName = MyMySql.GetString(rdr, "ComboName");
             product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
@@ -1879,6 +1880,35 @@ namespace MVCPlayWithMe.Models.ProductModel
             return await MyMySql.ExcuteNonQueryStoreProcedureAsync("st_tbProducts_Update_Name", paras);
         }
 
+        public static async Task<MySqlResultState> UpdateShortNameAsync(int id, string shortname)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tbproducts SET ShortName = @inShortName WHERE Id = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inShortName", shortname);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand("UPDATE webplaywithme.tb_san_pham SET ShortName = @inShortName WHERE SanPhamKhoId = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inShortName", shortname);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+            }
+            catch (Exception ex) { Common.SetResultException(ex, result); }
+            return result;
+        }
+
         public static async Task<MySqlResultState> UpdateCodeAsync(int id, string code)
         {
             MySqlParameter[] paras = new MySqlParameter[4];
@@ -2362,6 +2392,38 @@ namespace MVCPlayWithMe.Models.ProductModel
                         cmd.CommandType = CommandType.Text;
                         cmd.Parameters.AddWithValue("@inId", id);
                         cmd.Parameters.AddWithValue("@inPublishingTime", publishingTime);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
+        //
+        public static async Task<MySqlResultState> UpdatePageNumberAsync(int id, int pageNumber)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE `tbProducts` SET `PageNumber` = @inPageNumber WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPageNumber", pageNumber);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE `tb_san_pham` SET `PageNumber` = @inPageNumber WHERE `Id` = @inId;", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@inId", id);
+                        cmd.Parameters.AddWithValue("@inPageNumber", pageNumber);
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }
