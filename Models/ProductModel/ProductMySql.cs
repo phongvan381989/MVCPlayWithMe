@@ -1170,6 +1170,31 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        public static async Task<MySqlResultState> UpdateCommonPublishingCompanyWithComboAsync(int comboId, string publishingCompany, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `PublishingCompany` = @inPublishingCompany WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `PublishingCompany` = @inPublishingCompany WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPublishingCompany", publishingCompany);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex) { Common.SetResultException(ex, result); }
+            return result;
+        }
+
         public static async Task<MySqlResultState> UpdateCommonPublishingTimeWithComboAsync(int comboId, int publishingTime, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
@@ -1182,7 +1207,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                     cmd.Parameters.AddWithValue("@inPublishingTime", publishingTime);
                     await cmd.ExecuteNonQueryAsync();
                 }
-                // 
+                //
 
                 using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `PublishingTime` = @inPublishingTime WHERE `ComboId` = @inComboId;", conn))
                 {

@@ -217,7 +217,7 @@ async function CreateProductOnECommerce() {
     }
 
     // Sản phẩm phải có tối thiểu là 2 ảnh
-    if (document.getElementsByClassName("objImage").length < 2) {
+    if (product.imageSrc < 2) {
         let text = "Sản phẩm chỉ có 1 ảnh, bạn muốn ĐĂNG BÁN?";
         if (confirm(text) == false)
             return;

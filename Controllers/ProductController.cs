@@ -599,6 +599,25 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
+        public async Task<string> UpdateCommonPublishingCompanyWithCombo(
+                int comboId,
+                string publishingCompany
+            )
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await ProductMySql.UpdateCommonPublishingCompanyWithComboAsync(comboId, publishingCompany, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
         public async Task<string> UpdateCommonPublishingTimeWithCombo(
                 int comboId,
                 int publishingTime
@@ -3161,14 +3180,14 @@ namespace MVCPlayWithMe.Controllers
                 variant.warehouse_stocks.Add(warehouseStock);
                 tikiCreatingProduct.variants.Add(variant);
 
-                // certificate_files
-                CertificateFile certificateFile = new CertificateFile();
-                certificateFile.type = "category";
-                certificateFile.document_id = 18;
+                //// certificate_files => Bỏ vì chỉ cần cập nhật lần đầu thủ công
+                //CertificateFile certificateFile = new CertificateFile();
+                //certificateFile.type = "category";
+                //certificateFile.document_id = 18;
 
-                certificateFile.url = Common.GetSrcCertificateFolderPath(Common.eTiki) +  publisher.tikiCertificate;
+                //certificateFile.url = Common.GetSrcCertificateFolderPath(Common.eTiki) +  publisher.tikiCertificate;
 
-                tikiCreatingProduct.certificate_files.Add(certificateFile);
+                //tikiCreatingProduct.certificate_files.Add(certificateFile);
 
                 // meta_data
                 MetaData metaData = new MetaData();
@@ -3421,13 +3440,13 @@ namespace MVCPlayWithMe.Controllers
                     tikiCreatingProduct.variants.Add(variant);
 
                     // certificate_files
-                    CertificateFile certificateFile = new CertificateFile();
-                    certificateFile.type = "category";
-                    certificateFile.document_id = 18;
+                    //CertificateFile certificateFile = new CertificateFile();
+                    //certificateFile.type = "category";
+                    //certificateFile.document_id = 18;
 
-                    certificateFile.url = Common.GetSrcCertificateFolderPath(Common.eTiki) + publisher.tikiCertificate;
+                    //certificateFile.url = Common.GetSrcCertificateFolderPath(Common.eTiki) + publisher.tikiCertificate;
 
-                    tikiCreatingProduct.certificate_files.Add(certificateFile);
+                    //tikiCreatingProduct.certificate_files.Add(certificateFile);
 
                     // meta_data
                     MetaData metaData = new MetaData();
