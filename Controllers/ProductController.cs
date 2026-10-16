@@ -4626,7 +4626,8 @@ namespace MVCPlayWithMe.Controllers
                         if(eType == Common.eTiki)
                         {
                             await TikiCreateProductFromProductIdInWarehouse(productId,
-                            null, result, conn);
+                            null, resultTemp, conn);
+                            resultTemp.State = EMySqlResultState.OK;// Vì hàm luôn trả về Pendding
                         }
                         else if (eType == Common.eShopee)
                         {
@@ -4717,27 +4718,30 @@ namespace MVCPlayWithMe.Controllers
                     // Ta lưu original sku vào db
                     await TrackOriginalSkuMySql.InsertTrackOriginalSkuBatchAsync(trackOriginalSkus, conn);
 
-                    // Ta đợi 10 giây, lấy lại trạng thái để xem đã được approved
-                    // Nếu được approved ta thêm sản phẩm vào tikiItem, mapping với sản phẩm riêng lẻ
-                    // Với sản phẩm nhiều biến thể, ta cập nhật ảnh, kích thước, cân nặng, trang,... đã
-                    Thread.Sleep(10000);
-                    trackObj = await TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
-                    if (trackObj != null)
-                    {
-                        await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
-                            trackObj.state,
-                            trackObj.reason,
-                            trackObj.request_id,
-                            string.Empty,
-                            conn);
-                    }
+                    //// Ta đợi 10 giây, lấy lại trạng thái để xem đã được approved
+                    //// Nếu được approved ta thêm sản phẩm vào tikiItem, mapping với sản phẩm riêng lẻ
+                    //// Với sản phẩm nhiều biến thể, ta cập nhật ảnh, kích thước, cân nặng, trang,... đã
+                    //Thread.Sleep(10000);
+                    //trackObj = await TikiCreateProduct.TrackingRequestCreateProduct(trackObj.track_id);
+                    //if (trackObj != null)
+                    //{
+                    //    await TikiMySql.TikiInsert_tbTikiTrackCreateProductAsync(trackObj.track_id,
+                    //        trackObj.state,
+                    //        trackObj.reason,
+                    //        trackObj.request_id,
+                    //        string.Empty,
+                    //        conn);
+                    //}
 
-                    if (trackObj.state != "approved")
-                    {
-                        result.State = EMySqlResultState.PENDING;
-                        result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state + ". " + trackObj.reason;
-                    }
+                    //if (trackObj.state != "approved")
+                    //{
+                    //    result.State = EMySqlResultState.PENDING;
+                    //    result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state + ". " + trackObj.reason;
+                    //}
                 }
+
+                result.State = EMySqlResultState.PENDING;
+                result.Message = "Đăng sản phẩm đang ở trạng thái: " + trackObj.state + ". " + trackObj.reason;
             }
         }
 
