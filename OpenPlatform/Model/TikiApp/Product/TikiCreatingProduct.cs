@@ -133,6 +133,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
 
     public class AttributesForUpdatingVariant
     {
+        public string description { get; set; }
+
         // Chiều cao của sản phẩm sau khi đã được đóng gói, thùng, hộp...Đơn vị tính: cm
         public string product_height { get; set; }
 

@@ -196,6 +196,12 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         return;
                     }
 
+                    // Không hỗ trợ
+                    //if(!string.IsNullOrEmpty(product.detail) )
+                    //{
+                    //    tikiForUpdatingVariant.attributes.description = product.detail;
+                    //}
+
                     tikiForUpdatingVariant.attributes.product_length = TikiCreateProduct.TikiGetStringOneDimension(product.productLong);
                     tikiForUpdatingVariant.attributes.product_width = TikiCreateProduct.TikiGetStringOneDimension(product.productWide);
                     tikiForUpdatingVariant.attributes.product_height = TikiCreateProduct.TikiGetStringOneDimension(product.productHigh);

@@ -3258,7 +3258,15 @@ namespace MVCPlayWithMe.Controllers
                 {
                     if (attr.code == "age_group")
                     {
-                        tikiCreatingProduct.attributes.age_group = TikiCreateProduct.TikiGetAgeGroups(product.minAge, product.maxAge);
+                        // Lấy minAge
+                        int minAge = combo.products.Min(p => p.minAge);
+                        // Lấy maxAge
+                        int maxAge = combo.products.Max(p => p.maxAge);
+                        if(combo.products.Min(p => p.maxAge) == 0)
+                        {
+                            maxAge = 0;
+                        }    
+                        tikiCreatingProduct.attributes.age_group = TikiCreateProduct.TikiGetAgeGroups(minAge, maxAge);
                     }
                     else if (attr.code == "book_cover")
                     {
@@ -3333,6 +3341,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     authorsStrBuilder.Append(pro.author).Append(',');
                 }
+
                 List<string> authorListTemp = authorsStrBuilder.ToString().Split(',')
                                 .Select(s => s.Trim()) // Loại bỏ khoảng trắng ở đầu và cuối
                                 .ToList();
@@ -3379,10 +3388,10 @@ namespace MVCPlayWithMe.Controllers
                 if (product.imageSrc.Count > 0)
                 {
                     tikiCreatingProduct.image = Common.httpsVoiBeNho + product.imageSrc[0];
-                    for (int i = 1; i < product.imageSrc.Count; i++)
-                    {
-                        tikiCreatingProduct.images.Add(Common.httpsVoiBeNho + product.imageSrc[i]);
-                    }
+                    //for (int i = 1; i < product.imageSrc.Count; i++)
+                    //{
+                    //    tikiCreatingProduct.images.Add(Common.httpsVoiBeNho + product.imageSrc[i]);
+                    //}
                 }
                 tikiCreatingProduct.option_attributes.Add("Chủ Đề");
 
@@ -3418,7 +3427,8 @@ namespace MVCPlayWithMe.Controllers
                     p.SetSrcImageVideo();
                     if (p.imageSrc.Count > 0)
                     {
-                        variant.image = Common.httpsVoiBeNho + p.imageSrc[0];
+                        //variant.image = Common.httpsVoiBeNho + p.imageSrc[0]; // TEMPORARY
+                        variant.image = Common.httpsVoiBeNho + product.imageSrc[0];
                         // Cập nhật ảnh sau
                         //for (int i = 1; i < p.imageSrc.Count; i++)
                         //{
@@ -3459,7 +3469,9 @@ namespace MVCPlayWithMe.Controllers
                     combo.SetSrcImageVideo();
                     if (combo.imageSrc.Count > 0)
                     {
-                        variant.image = Common.httpsVoiBeNho + combo.imageSrc[0];
+                        //variant.image = Common.httpsVoiBeNho + combo.imageSrc[0]; //TEMPORARY
+                        variant.image = Common.httpsVoiBeNho + product.imageSrc[0];
+
                         // Ảnh sẽ cập nhật sau này
                         //for (int i = 1; i < combo.imageSrc.Count; i++)
                         //{
@@ -3512,7 +3524,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không cha
+                // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không phải biến thể
                 List<int> needList =
                     await ProductMySql.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
                     eType, conn
@@ -3521,7 +3533,7 @@ namespace MVCPlayWithMe.Controllers
                 if (!needList.Contains(id))
                 {
                     result.State = EMySqlResultState.EXIST;
-                    result.Message = "Sản phẩm đã được đăng riêng lẻ không cha.";
+                    result.Message = "Sản phẩm đã được đăng riêng lẻ không phải biến thể.";
                 }
                 else
                 {

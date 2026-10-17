@@ -1367,5 +1367,115 @@ namespace MVCPlayWithMe.Controllers
 
             return JsonConvert.SerializeObject(result);
         }
+
+        /// <summary>
+        /// Xem IIS logs liên quan đến file cụ thể
+        /// URL: /Dev/ViewIISLogs?searchPattern=DinhTi.jpg&hours=24
+        /// </summary>
+        [HttpGet]
+        public async Task<string> ViewIISLogs(string searchPattern = null, int hours = 24)
+        {
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            var log = new StringBuilder();
+
+            try
+            {
+                // Default: tìm certificate
+                if (string.IsNullOrEmpty(searchPattern))
+                {
+                    searchPattern = "Certificate";
+                }
+
+                // IIS log folder (default location)
+                string logFolder = @"C:\inetpub\logs\LogFiles\W3SVC1";
+
+                if (!Directory.Exists(logFolder))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = $"IIS log folder không tồn tại: {logFolder}";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                log.AppendLine($"=== IIS Logs ===");
+                log.AppendLine($"Thư mục: {logFolder}");
+                log.AppendLine($"Tìm kiếm: {searchPattern}");
+                log.AppendLine($"Thời gian: {hours} giờ gần đây\n");
+
+                // Lấy các file log trong khoảng thời gian
+                DateTime cutoffTime = DateTime.Now.AddHours(-hours);
+                var logFiles = Directory.GetFiles(logFolder, "u_ex*.log")
+                    .Where(f => System.IO.File.GetLastWriteTime(f) >= cutoffTime)
+                    .OrderByDescending(f => System.IO.File.GetLastWriteTime(f))
+                    .ToList();
+
+                log.AppendLine($"Tìm thấy {logFiles.Count} file log\n");
+
+                int matchCount = 0;
+                foreach (string logFile in logFiles)
+                {
+                    string fileName = Path.GetFileName(logFile);
+                    log.AppendLine($"--- {fileName} ---");
+
+                    // Đọc và filter
+                    string[] lines = System.IO.File.ReadAllLines(logFile);
+                    var matches = lines.Where(line => !line.StartsWith("#") && line.Contains(searchPattern)).ToList();
+
+                    if (matches.Any())
+                    {
+                        foreach (string match in matches)
+                        {
+                            matchCount++;
+                            // Parse log entry
+                            string[] parts = match.Split(' ');
+                            if (parts.Length >= 15)
+                            {
+                                string date = parts[0];
+                                string time = parts[1];
+                                string method = parts[3];
+                                string uri = parts[4];
+                                string clientIP = parts[8];
+                                string userAgent = parts.Length > 9 ? parts[9] : "-";
+                                string statusCode = parts.Length > 11 ? parts[11] : "-";
+                                string timeTaken = parts.Length > 14 ? parts[14] : "-";
+
+                                log.AppendLine($"  [{matchCount}] {date} {time}");
+                                log.AppendLine($"      {method} {uri}");
+                                log.AppendLine($"      IP: {clientIP} | Status: {statusCode} | Time: {timeTaken}ms");
+                                log.AppendLine($"      User-Agent: {userAgent}");
+                                log.AppendLine("");
+                            }
+                            else
+                            {
+                                // Nếu parse lỗi, in raw
+                                log.AppendLine($"  {match}");
+                            }
+                        }
+                    }
+                }
+
+                log.AppendLine($"\n=== Kết quả ===");
+                log.AppendLine($"Tìm thấy {matchCount} requests phù hợp");
+
+                result.State = EMySqlResultState.OK;
+                result.Message = $"Tìm thấy {matchCount} requests phù hợp với '{searchPattern}'";
+                result.myJson = log.ToString();
+
+                MyLogger.GetInstance().Info($"ViewIISLogs: {matchCount} matches for '{searchPattern}'");
+            }
+            catch (Exception ex)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Lỗi: " + ex.Message;
+                result.myJson = log.ToString();
+                MyLogger.GetInstance().Error("ViewIISLogs error: " + ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
     }
 }
