@@ -61,6 +61,7 @@ function ShowProductTable(list) {
         let cell4 = row.insertCell(3);
         let cell5 = row.insertCell(4);
         let cell6 = row.insertCell(5);
+        let cell7 = row.insertCell(6);
 
         // Id
         cell1.innerHTML = pro.id;
@@ -84,19 +85,22 @@ function ShowProductTable(list) {
         };
         cell3.append(img);
 
+        // Tên Ngắn
+        cell4.innerHTML = pro.shortName || '';
+
         // Tên
         let pName = document.createElement("p");
         //pName.className = "go-to-detail-product";
         pName.innerHTML = pro.name;
 
         UpdateProductNameStyle(pName, pro.status, pro.quantity);
-        cell4.append(pName);
+        cell5.append(pName);
 
         // Giá bìa
-        cell5.innerHTML = ConvertMoneyToText(pro.bookCoverPrice);
+        cell6.innerHTML = ConvertMoneyToText(pro.bookCoverPrice);
 
         // Số lượng tồn kho
-        cell6.innerHTML = pro.quantity;
+        cell7.innerHTML = pro.quantity;
     }
 }
 
@@ -467,6 +471,11 @@ async function CreateSingleProductOfComboOnECommerce() {
 }
 
 async function CreateVariantsOfComboOnECommerce() {
+    let comboDescription = document.getElementById("combo-description").value.trim();
+    if (!IsValidString(comboDescription) || comboDescription.length < 200) {
+        CreateMustClickOkModal("Chưa có mô tả combo hoặc mô tả quá ngắn, đây là mô tả chung cho các biến thể", null);
+        return;
+    }
     // Lấy id
     let id = GetValueFromUrlName("id");
     const searchParams = new URLSearchParams();

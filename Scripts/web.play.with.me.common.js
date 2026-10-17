@@ -1763,6 +1763,7 @@ function CapitalizeWords(input) {
 
     return input
         .toLowerCase() // Chuyển toàn bộ chuỗi về chữ thường
+        .trim()
         .split(' ')    // Tách chuỗi thành mảng các từ
         .map(word => {
             let i = 0;

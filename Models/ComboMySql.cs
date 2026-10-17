@@ -212,6 +212,7 @@ namespace MVCPlayWithMe.Models
                                 {
                                     Product product = new Product();
                                     product.id = proIdTem;
+                                    product.shortName = MyMySql.GetString(rdr, "ShortName");
                                     product.name = MyMySql.GetString(rdr, "Name");
                                     product.categoryId = MyMySql.GetInt32(rdr, "CategoryId");
                                     product.categoryName = MyMySql.GetString(rdr, "CategoryName");

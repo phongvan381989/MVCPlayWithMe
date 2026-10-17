@@ -1631,15 +1631,16 @@ namespace MVCPlayWithMe.Controllers
 
             StringBuilder metaDesc = new StringBuilder();
 
+            int discount = (int)Math.Floor(100 - (float)sanPham.SalePrice * 100 / sanPham.BookCoverPrice);
             // CHIẾN LƯỢC: Giảm mạnh (>= 20%) → Giá lên đầu để tăng CTR
-            bool hasStrongDiscount = sanPham.Discount >= 20;
+            bool hasStrongDiscount = discount >= 20;
 
             if (hasStrongDiscount)
             {
                 // ===== GIÁ Ở ĐẦU (Giảm >= 20%) =====
 
                 // 1. Giá + Giảm giá (nổi bật ngay từ đầu)
-                metaDesc.Append($"Giá {sanPham.SalePrice:N0}đ (giảm {(int)sanPham.Discount}%)");
+                metaDesc.Append($"Giá {sanPham.SalePrice:N0}đ (giảm {(int)discount}%)");
 
                 // 2. Tên sách
                 metaDesc.Append($" - {sanPham.Name}");
@@ -1699,9 +1700,9 @@ namespace MVCPlayWithMe.Controllers
                 metaDesc.Append($". Giá {sanPham.SalePrice:N0}đ");
 
                 // 6. Giảm giá (nếu có)
-                if (sanPham.Discount > 0)
+                if (discount > 0)
                 {
-                    metaDesc.Append($" (giảm {(int)sanPham.Discount}%)");
+                    metaDesc.Append($" (giảm {(int)discount}%)");
                 }
 
                 // 7. Tồn kho (nếu còn chỗ và > 0)

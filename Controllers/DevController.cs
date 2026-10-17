@@ -24,12 +24,14 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using ImageMagick;
 using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
@@ -1258,6 +1260,109 @@ namespace MVCPlayWithMe.Controllers
                 result.State = EMySqlResultState.ERROR;
                 result.Message = "Lỗi: " + ex.Message;
                 MyLogger.GetInstance().Error("PopulateSlugs error: " + ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Convert tất cả file .jfif sang .jpg trong thư mục
+        /// URL: /Dev/ConvertJfifToJpg?folderPath=xxx
+        /// </summary>
+        [HttpGet]
+        public async Task<string> ConvertJfifToJpg(string folderPath = null)
+        {
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = new MySqlResultState();
+            int convertedCount = 0;
+            int errorCount = 0;
+            var log = new StringBuilder();
+
+            try
+            {
+                // Default: Media/Product
+                if (string.IsNullOrEmpty(folderPath))
+                {
+                    folderPath = Server.MapPath("~/Media/Product");
+                }
+
+                if (!Directory.Exists(folderPath))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = $"Thư mục không tồn tại: {folderPath}";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                log.AppendLine($"=== Convert JFIF → JPG ===");
+                log.AppendLine($"Thư mục: {folderPath}\n");
+
+                // Lấy tất cả file .jfif (recursive)
+                string[] jfifFiles = Directory.GetFiles(folderPath, "*.jfif", SearchOption.AllDirectories);
+
+                log.AppendLine($"Tìm thấy {jfifFiles.Length} file JFIF\n");
+
+                foreach (string jfifPath in jfifFiles)
+                {
+                    try
+                    {
+                        // Tạo path cho file .jpg mới
+                        string jpgPath = Path.ChangeExtension(jfifPath, ".jpg");
+
+                        // Kiểm tra file JPG đã tồn tại chưa
+                        if (System.IO.File.Exists(jpgPath))
+                        {
+                            // JPG đã có → chỉ xóa JFIF
+                            System.IO.File.Delete(jfifPath);
+                            convertedCount++;
+                            log.AppendLine($"⏭️  [{convertedCount}] {Path.GetFileName(jfifPath)} → (JPG đã tồn tại, chỉ xóa JFIF)");
+                            MyLogger.GetInstance().Info($"Skipped (JPG exists), deleted JFIF: {jfifPath}");
+                        }
+                        else
+                        {
+                            // JPG chưa có → convert mới
+                            using (MagickImage image = new MagickImage(jfifPath))
+                            {
+                                image.Format = MagickFormat.Jpeg;
+                                image.Quality = 95; // Chất lượng 95%
+                                image.Write(jpgPath);
+                            }
+
+                            // Xóa file .jfif cũ
+                            System.IO.File.Delete(jfifPath);
+
+                            convertedCount++;
+                            log.AppendLine($"✅ [{convertedCount}] {Path.GetFileName(jfifPath)} → {Path.GetFileName(jpgPath)} (Converted)");
+                            MyLogger.GetInstance().Info($"Converted: {jfifPath} → {jpgPath}");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        errorCount++;
+                        log.AppendLine($"❌ [Error] {Path.GetFileName(jfifPath)}: {ex.Message}");
+                        MyLogger.GetInstance().Error($"Convert failed: {jfifPath}", ex);
+                    }
+                }
+
+                log.AppendLine($"\n=== Kết quả ===");
+                log.AppendLine($"✅ Thành công: {convertedCount} file");
+                log.AppendLine($"❌ Lỗi: {errorCount} file");
+
+                result.State = EMySqlResultState.OK;
+                result.Message = $"✅ Đã convert {convertedCount} file JFIF → JPG | ❌ Lỗi: {errorCount} file";
+                result.myJson = log.ToString();
+
+                MyLogger.GetInstance().Info($"ConvertJfifToJpg completed: {convertedCount} success, {errorCount} errors");
+            }
+            catch (Exception ex)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Lỗi: " + ex.Message;
+                result.myJson = log.ToString();
+                MyLogger.GetInstance().Error("ConvertJfifToJpg error: " + ex.ToString());
             }
 
             return JsonConvert.SerializeObject(result);

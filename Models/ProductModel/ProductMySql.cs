@@ -722,6 +722,48 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
+        //
+        public static async Task<List<Product>> SearchDontSellSigleWithParrentOnECommerce(
+            string eType,
+            MySqlConnection conn)
+        {
+            List<Product> ls = new List<Product>();
+            try
+            {
+                string store = "";
+                if (eType == eTiki)
+                {
+                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle";
+                }
+                else if (eType == eShopee)
+                {
+                    //store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
+                }
+                else if (eType == eLazada)
+                {
+                    //store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
+                }
+                if (!string.IsNullOrEmpty(store))
+                {
+                    using (MySqlCommand cmd = new MySqlCommand(store, conn))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+
+                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        {
+                            await ConvertQuicklyRowFromDataMySql(rdr, ls);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return ls;
+        }
+
         public static async Task<List<int>> SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
             string eType,
             MySqlConnection conn)
