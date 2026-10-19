@@ -195,6 +195,21 @@ async function DeleteCombo() {
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Xóa thành công.", "Có lỗi xảy ra.");
 }
 
+async function UpdateComboDescription() {
+    let description = document.getElementById("combo-description").value.trim();
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", GetValueFromUrlName("id"));
+    searchParams.append("description", description);
+
+    let query = "/Combo/UpdateComboDescription";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật mô tả thành công.", "Có lỗi xảy ra.");
+}
+
 function MappingOfCombo() {
     window.open("/Combo/MappingOfCombo?id=" + GetValueFromUrlName("id"));
 }

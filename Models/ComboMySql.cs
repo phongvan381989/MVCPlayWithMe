@@ -325,6 +325,44 @@ namespace MVCPlayWithMe.Models
             return result;
         }
 
+        public static async Task<MySqlResultState> UpdateComboDescriptionAsync(int id, string detail)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE tbCombo SET Detail = @detail WHERE Id = @id", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.Parameters.AddWithValue("@detail", detail ?? (object)DBNull.Value);
+
+                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
+                        if (rowsAffected > 0)
+                        {
+                            result.State = EMySqlResultState.OK;
+                            result.Message = "Cập nhật mô tả combo thành công";
+                        }
+                        else
+                        {
+                            result.State = EMySqlResultState.ERROR;
+                            result.Message = "Không tìm thấy combo để cập nhật";
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+                result.State = EMySqlResultState.ERROR;
+                result.Message = ex.Message;
+            }
+            return result;
+        }
+
         public static async Task<int> GetComboIdFromNameAsync(string name)
         {
             MySqlParameter[] paras = new MySqlParameter[3];

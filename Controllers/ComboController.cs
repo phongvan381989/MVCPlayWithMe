@@ -97,6 +97,18 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(result);
         }
 
+        [HttpPost]
+        public async Task<string> UpdateComboDescription(int id, string description = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = await ComboMySql.UpdateComboDescriptionAsync(id, description);
+            return JsonConvert.SerializeObject(result);
+        }
+
         public async Task<string> LoadCombo()
         {
             StringBuilder sb = new StringBuilder();

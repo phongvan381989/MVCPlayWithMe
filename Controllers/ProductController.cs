@@ -3232,6 +3232,13 @@ namespace MVCPlayWithMe.Controllers
             {
                 TikiCreatingProduct tikiCreatingProduct = new TikiCreatingProduct();
                 Combo combo = await ComboMySql.GetComboAsync(comboId);
+                if(string.IsNullOrEmpty(combo.detail))
+                {
+                    result.State = EMySqlResultState.INVALID;
+                    result.Message = "Chưa có mô tả chung của combo";
+                    return;
+                }    
+                combo.SetSrcImageVideo();
 
                 // Lấy sản phẩm trong kho
                 Product product = combo.products.FirstOrDefault();
@@ -3318,12 +3325,12 @@ namespace MVCPlayWithMe.Controllers
                     }
                 }
 
-                // pageNumber, dimensions: Đây chỉ là thông tin tương đối của sản phẩm trong combo
-                // number_of_page
-                if (product.pageNumber > 0)
-                {
-                    tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
-                }
+                //// pageNumber, dimensions: Đây chỉ là thông tin tương đối của sản phẩm trong combo
+                //// number_of_page
+                //if (product.pageNumber > 0)
+                //{
+                //    tikiCreatingProduct.attributes.number_of_page = product.pageNumber.ToString();
+                //}
                 // dimensions
                 tikiCreatingProduct.attributes.dimensions =
                 TikiCreateProduct.TikiGetStringDimensions(product.productLong, product.productWide, product.productHigh);
@@ -3464,9 +3471,8 @@ namespace MVCPlayWithMe.Controllers
                         });
                     }
                     variant.min_code = Common.GenerateRandomMincodeLong();
-                    variant.option1 = "Combo " + combo.products.Count + " sản phẩm";
+                    variant.option1 = "Combo " + combo.products.Count + " Cuốn";
 
-                    combo.SetSrcImageVideo();
                     if (combo.imageSrc.Count > 0)
                     {
                         //variant.image = Common.httpsVoiBeNho + combo.imageSrc[0]; //TEMPORARY
@@ -3509,7 +3515,6 @@ namespace MVCPlayWithMe.Controllers
                 trackObj = null;
             }
             result.myJson = trackObj;
-            return;
         }
 
         [HttpPost]

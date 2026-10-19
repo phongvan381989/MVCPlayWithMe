@@ -1,4 +1,4 @@
-// Tham số tìm kiếm
+﻿// Tham số tìm kiếm
 let publisher;
 let codeOrBarcode;
 let name;
@@ -222,7 +222,7 @@ function ShowSearchingResult(list) {
 
         // Id
         cell1.innerHTML = product.id;
-        cell1.style.display = "none";
+        // cell1.style.display = "none";
 
         // Image
         let img = document.createElement("img");

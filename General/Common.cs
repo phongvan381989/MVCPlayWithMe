@@ -414,7 +414,8 @@ namespace MVCPlayWithMe.General
                     src.Add(relPath + Path.GetFileName(file));
                 }
             }
-            SortSourceFile(src);
+            // Tên ảnh combo chưa được đặt theo thứ tự 0, 1,...
+            //SortSourceFile(src);
             return src;
         }
 
@@ -498,6 +499,11 @@ namespace MVCPlayWithMe.General
             foreach(var file in src)
             {
                 indexTemp = ConvertNameToInt(file);
+                if(indexTemp < 0) // có lỗi khi đặt tên file
+                {
+                    return;
+                }
+
                 if (indexTemp != Int32.MinValue && !dicSrc.ContainsKey(indexTemp))
                 {
                     dicSrc.Add(ConvertNameToInt(file), file);

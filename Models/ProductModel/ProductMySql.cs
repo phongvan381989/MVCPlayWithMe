@@ -399,10 +399,10 @@ namespace MVCPlayWithMe.Models.ProductModel
                 store = "st_tbProducts_Search_Dont_Sell_On_PlayWithMe";
             }
 
-            if (isSingle)
-            {
-                store = store + "_Signle";
-            }
+            //if (isSingle)
+            //{
+            //    store = store + "_Signle";
+            //}
 
             List<Product> ls = new List<Product>();
             try
