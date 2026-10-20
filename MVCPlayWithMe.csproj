@@ -328,8 +328,14 @@
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\DevController.cs" />
     <Compile Include="Controllers\FeedController.cs" />
+    <Compile Include="Controllers\OpenPlatform\NeedUpdateController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiDealDiscountController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiOriginalSkuController.cs" />
+    <Compile Include="Controllers\ProductSupporting\CommonProductSupporting.cs" />
+    <Compile Include="Controllers\ProductSupporting\LazadaProductSupporting.cs" />
+    <Compile Include="Controllers\ProductSupporting\ShopeeProductSupporting.cs" />
+    <Compile Include="Controllers\ProductSupporting\TikiProductSuporting.cs" />
+    <Compile Include="Controllers\ProductSupporting\VBNProductSupporting.cs" />
     <Compile Include="Controllers\PushMechanismController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\OpenPlatform\ProductECommerceController.cs" />
@@ -665,6 +671,7 @@
     <Content Include="Content\Home\Error.css" />
     <Content Include="Content\Home\SanPham.css" />
     <Content Include="Content\Home\Search.css" />
+    <Content Include="Content\NeedUpdate\Index.css" />
     <Content Include="Content\Normalize.css" />
     <Content Include="Content\photoswipe.css" />
     <Content Include="Content\Policy\PaymentQR.css" />
@@ -732,6 +739,7 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.js" />
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.8.3.js" />
+    <Content Include="Scripts\NeedUpdate\Index.js" />
     <Content Include="Scripts\photoswipe-lightbox.umd.min.js" />
     <Content Include="Scripts\photoswipe.umd.min.js" />
     <Content Include="Scripts\Policy\PaymentQR.js" />
@@ -863,6 +871,7 @@
     <Content Include="Views\Policy\PaymentQR.cshtml" />
     <Content Include="Views\Shared\_MetaPixel.cshtml" />
     <Content Include="Views\TikiOriginalSku\Index.cshtml" />
+    <Content Include="Views\NeedUpdate\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

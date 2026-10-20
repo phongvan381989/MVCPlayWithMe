@@ -683,7 +683,6 @@ async function UpdateComboId() {
     }
 }
 
-
 async function UpdateHardCover() {
     const searchParams = new URLSearchParams();
     searchParams.append("id", GetValueFromUrlName("id"));
