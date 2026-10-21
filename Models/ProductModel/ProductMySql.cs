@@ -1212,6 +1212,34 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        public static async Task<MySqlResultState> UpdateCommonPublisherWithComboAsync(int comboId, int publisherId, MySqlConnection conn)
+        {
+            MySqlResultState result = new MySqlResultState();
+            try
+            {
+
+                // Update tbProducts (sản phẩm kho)
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tbProducts` SET `PublisherId` = @inPublisherId WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+
+                // Update tb_san_pham (sản phẩm bán)
+                using (MySqlCommand cmd = new MySqlCommand("UPDATE `tb_san_pham` SET `PublisherId` = @inPublisherId WHERE `ComboId` = @inComboId;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.AddWithValue("@inComboId", comboId);
+                    cmd.Parameters.AddWithValue("@inPublisherId", publisherId);
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex) { Common.SetResultException(ex, result); }
+            return result;
+        }
+
         public static async Task<MySqlResultState> UpdateCommonPublishingCompanyWithComboAsync(int comboId, string publishingCompany, MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();

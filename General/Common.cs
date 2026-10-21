@@ -61,6 +61,8 @@ namespace MVCPlayWithMe.General
             MissingMemberHandling = MissingMemberHandling.Ignore
         };
 
+        public static readonly int minPrice = 25000;
+
         // Từ thực tế thấy:
         // set deal giảm giá khi tồn kho >= 3, khi tồn kho < 3 deal của tiki bị tắt
         // Nếu sản phẩm có tồn kho < 3, ta set deal mới thì không bị tắt

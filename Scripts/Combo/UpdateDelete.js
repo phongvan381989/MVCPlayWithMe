@@ -347,6 +347,28 @@ async function UpdateCommonPageNumber() {
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Update thành công.", "Có lỗi xảy ra.");
 }
 
+async function UpdateCommonPublisher() {
+    const searchParams = new URLSearchParams();
+    searchParams.append("comboId", GetValueFromUrlName("id"));
+
+    let publisherName = document.getElementById("publisher-id").value.trim();
+    let publisherId = GetDataIdFromPublisherDatalist(publisherName);
+    if (publisherId == null) {
+        CreateMustClickOkModal("Nhà phát hành chưa chính xác.");
+        return;
+    }
+
+    searchParams.append("publisherId", publisherId);
+
+    let query = "/Product/UpdateCommonPublisherWithCombo";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật nhà phát hành thành công.", "Có lỗi xảy ra.");
+}
+
 async function UpdateCommonPublishingCompany() {
     const searchParams = new URLSearchParams();
     searchParams.append("comboId", GetValueFromUrlName("id"));

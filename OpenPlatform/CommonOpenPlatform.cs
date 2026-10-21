@@ -198,6 +198,11 @@ namespace MVCPlayWithMe.OpenPlatform
                 salePrice = p;
             }
 
+            if (salePrice < p * 0.4 || p <= Common.minPrice)
+            {
+                salePrice = p; // Giá quá rẻ hoặc chiết khấu quá sâu thì không cho set tự động, phải làm thủ công
+            }
+
             return salePrice;
         }
 

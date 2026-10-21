@@ -130,16 +130,15 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             foreach (var it in commonItems)
             {
                 ids.Add((int)it.itemId);
-                if((int)it.itemId == 279816387)
-                {
-                    price = CommonOpenPlatform.CaculateSpecialPriceCoreFromCommonModel(it.models[0],
-                        listPublisher,
-                        taxAndFee);
-                }    
 
                 price = CommonOpenPlatform.CaculateSpecialPriceCoreFromCommonModel(it.models[0],
                         listPublisher,
                         taxAndFee);
+
+                if(price <= Common.minPrice)
+                {
+                    price = it.models[0].GetBookCoverPrice();
+                }    
                 prices.Add(price);
             }
 

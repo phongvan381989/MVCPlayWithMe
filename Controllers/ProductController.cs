@@ -601,6 +601,25 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
+        public async Task<string> UpdateCommonPublisherWithCombo(
+                int comboId,
+                int publisherId
+            )
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+            MySqlResultState result = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                result = await ProductMySql.UpdateCommonPublisherWithComboAsync(comboId, publisherId, conn);
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
         public async Task<string> UpdateCommonPublishingCompanyWithCombo(
                 int comboId,
                 string publishingCompany
