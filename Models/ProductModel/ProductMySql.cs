@@ -2629,12 +2629,35 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             if (listProId == null || listProId.Count == 0) return;
 
-            string eName = GetNameOfColumntbNeedUpdateQuantity(eECommerceType);
+            string eName = GetNameOfColumntbNeedUpdate(eECommerceType);
             try
             {
                 // Build IN clause: ProductId IN (1,2,3,...)
                 string inClause = string.Join(",", listProId);
                 string sql = $"UPDATE tbNeedUpdateQuantity SET {eName} = 0 WHERE ProductId IN ({inClause})";
+
+                using (MySqlCommand cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    await cmd.ExecuteNonQueryAsync();
+                }
+            }
+            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
+        }
+
+        public static async Task UpdateZeroStatusOfNeedUpdatePriceConnectOutAsync(
+            List<int> listProId,
+            EECommerceType eECommerceType,
+            MySqlConnection conn)
+        {
+            if (listProId == null || listProId.Count == 0) return;
+
+            string eName = GetNameOfColumntbNeedUpdate(eECommerceType);
+            try
+            {
+                // Build IN clause: ProductId IN (1,2,3,...)
+                string inClause = string.Join(",", listProId);
+                string sql = $"UPDATE tbNeedUpdatePrice SET {eName} = 0 WHERE ProductId IN ({inClause})";
 
                 using (MySqlCommand cmd = new MySqlCommand(sql, conn))
                 {
@@ -2652,7 +2675,7 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             if (listProId == null || listProId.Count == 0) return;
 
-            string eName = GetNameOfColumntbNeedUpdateQuantity(eECommerceType);
+            string eName = GetNameOfColumntbNeedUpdate(eECommerceType);
             try
             {
                 // Build IN clause: ProductId IN (1,2,3,...)
@@ -2668,7 +2691,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); }
         }
 
-        public static string GetNameOfColumntbNeedUpdateQuantity(EECommerceType eECommerceType)
+        public static string GetNameOfColumntbNeedUpdate(EECommerceType eECommerceType)
         {
             string eName = "Shopee";
             if (eECommerceType == EECommerceType.TIKI)
@@ -2692,10 +2715,35 @@ namespace MVCPlayWithMe.Models.ProductModel
         {
             List<int> listProductId = new List<int>();
 
-            string eName = GetNameOfColumntbNeedUpdateQuantity(eECommerceType);
+            string eName = GetNameOfColumntbNeedUpdate(eECommerceType);
             try
             {
                 using (MySqlCommand cmd = new MySqlCommand($"SELECT `ProductId` FROM `tbNeedUpdateQuantity` WHERE `{eName}` = 1;", conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        int productIdIndex = rdr.GetOrdinal("ProductId");
+                        while (await rdr.ReadAsync())
+                        {
+                            listProductId.Add(rdr.GetInt32(productIdIndex));
+                        }
+                    }
+                }
+            }
+            catch (Exception ex) { MyLogger.GetInstance().Warn(ex.ToString()); listProductId.Clear(); }
+            return listProductId;
+        }
+
+        public static async Task<List<int>> GetListProductOfNeedUpdatePriceConnectOutAsync(MySqlConnection conn,
+            EECommerceType eECommerceType)
+        {
+            List<int> listProductId = new List<int>();
+
+            string eName = GetNameOfColumntbNeedUpdate(eECommerceType);
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand($"SELECT `ProductId` FROM `tbneedupdateprice` WHERE `{eName}` = 1;", conn))
                 {
                     cmd.CommandType = CommandType.Text;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())

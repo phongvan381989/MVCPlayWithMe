@@ -1,4 +1,6 @@
-﻿using MVCPlayWithMe.General;
+﻿using ImageMagick;
+using MVCPlayWithMe.Controllers.ProductSupporting;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.Models.ProductModel;
@@ -31,7 +33,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
-using ImageMagick;
 using static MVCPlayWithMe.General.Common;
 using static MVCPlayWithMe.OpenPlatform.CommonOpenPlatform;
 using static MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order.TikiOrderItemFilterByDate;
@@ -158,7 +159,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
-                    await ProductController.LazadaUpdateQuantity_CoreAsync(ls);
+                    await LazadaProductSupporting.LazadaUpdateQuantity_CoreAsync(ls);
 
                     // Lấy danh sách item cập nhật số lượng sai
                     List<CommonItem> failLs = new List<CommonItem>();
@@ -210,7 +211,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
                     List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
 
-                    ProductController.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
+                    LazadaProductSupporting.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
 
                     // Lấy danh sách item cập nhật số lượng sai
                     List<CommonItem> failLs = new List<CommonItem>();
@@ -677,7 +678,7 @@ namespace MVCPlayWithMe.Controllers
                     {
                         List<CommonItem> lsTemp = new List<CommonItem>();
                         lsTemp.Add(item);
-                        ProductController.LazadaUpdatePrice_SpecialPrice_Core(lsTemp, conn);
+                        LazadaProductSupporting.LazadaUpdatePrice_SpecialPrice_Core(lsTemp, conn);
                     }
                 }
             }
@@ -801,7 +802,7 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                await ProductController.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                await VBNProductSupporting.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
             }
 
             return JsonConvert.SerializeObject(result);
@@ -859,7 +860,7 @@ namespace MVCPlayWithMe.Controllers
                     List<CommonItem> listCommonItem = await TikiMySql.TikiGetListAllUpdateQuantityConnectOutAsync(conn);
                     foreach (var commonItem in listCommonItem)
                     {
-                        await ProductController.TikiUpdateQuantityOfOneItemAsync(commonItem);
+                        await TikiProductSupporting.TikiUpdateQuantityOfOneItemAsync(commonItem);
                         await Task.Delay(500);
                     }
                 }

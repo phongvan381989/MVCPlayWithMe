@@ -40,20 +40,22 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // TODO: User sẽ implement logic
             MySqlResultState result = new MySqlResultState();
-            result.State = EMySqlResultState.OK;
-            result.Message = $"Chức năng đang được phát triển (Sàn: {eType})";
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 try
                 {
                     await conn.OpenAsync();
-                    // Danh sách sản phẩm trong kho có thay đổi số lượng cần cập nhật
-                    List<int> tikiProductIdList =
-                await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.TIKI);
-                    if (tikiProductIdList.Count > 0)
+                    if (eType == Common.eTiki)
                     {
-                        List<CommonItem> tikiList = await TikiProductSuporting.TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
-                        await CommonProductSupporting.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
+                        // Danh sách sản phẩm trong kho có thay đổi số lượng cần cập nhật
+                        List<int> tikiProductIdList =
+                        await ProductMySql.GetListProductOfNeedUpdatePriceConnectOutAsync(conn, EECommerceType.TIKI);
+
+                        if (tikiProductIdList.Count > 0)
+                        {
+                            List<CommonItem> tikiList = await TikiProductSupporting.TikiGetListNeedUpdatePriceAndUpdate_BatchAsync(conn);
+                            await CommonProductSupporting.UpdateZeroStatusOfNeedUpdatePrice_BatchConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, result, conn);
+                        }
                     }
                 }
                 catch(Exception ex)
@@ -79,9 +81,21 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // TODO: User sẽ implement logic
             MySqlResultState result = new MySqlResultState();
-            result.State = EMySqlResultState.OK;
-            result.Message = $"Chức năng đang được phát triển (Sàn: {eType})";
-
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+                    if (eType == Common.eTiki)
+                    {
+                        await TikiProductSupporting.TikiUpdatePriceAll_BatchAsync(conn);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                }
+            }
             return JsonConvert.SerializeObject(result);
         }
 
@@ -99,8 +113,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // TODO: User sẽ implement logic
             MySqlResultState result = new MySqlResultState();
-            result.State = EMySqlResultState.OK;
-            result.Message = $"Chức năng đang được phát triển (Sàn: {eType})";
 
             return JsonConvert.SerializeObject(result);
         }
@@ -119,8 +131,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             // TODO: User sẽ implement logic
             MySqlResultState result = new MySqlResultState();
-            result.State = EMySqlResultState.OK;
-            result.Message = $"Chức năng đang được phát triển (Sàn: {eType})";
 
             return JsonConvert.SerializeObject(result);
         }

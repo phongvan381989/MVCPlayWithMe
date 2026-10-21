@@ -295,35 +295,6 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             }
         }
 
-        // Từ giá bìa, lấy chiết khấu của nhà phát hành, thuế phí của sàn và tính được giá bán
-        public static async Task<int> LazadaCaculateSpecial_Price(Product product,
-            MySqlConnection conn)
-        {
-            // Lấy danh sách thuế phí
-            TaxAndFee taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(Common.eLazada, conn);
-
-            // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
-            List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
-
-            float discountOfPublisher = 0;
-            foreach (var publisher in listPublisher)
-            {
-                if (publisher.id == product.publisherId)
-                {
-                    discountOfPublisher = publisher.discount;
-                    break;
-                }
-            }
-
-            int sale_price = CommonOpenPlatform.CaculateSalePriceCoreFromBookCoverPrice(
-                product.bookCoverPrice,
-                product.discount,
-                discountOfPublisher,
-                taxAndFee);
-
-            return sale_price;
-        }
-
         public static string LazadaGetLanguage(string lang)
         {
             string language = "Vietnamese";
@@ -496,7 +467,8 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
 
             // giá bìa và giá bán
             lazadaSku.price = product.bookCoverPrice.ToString();
-            lazadaSku.special_price = LazadaCaculateSpecial_Price(product, conn).ToString();
+            int special_price = await CommonProductSupporting.CaculateSpecial_Price(product, Common.eLazada, conn);
+            lazadaSku.special_price = special_price.ToString();
             // SellerSku
             lazadaSku.SellerSku = TikiConstValues.GenerateRandomSKUString();
             // package_weight - kg
@@ -633,7 +605,8 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
 
             // giá bìa và giá bán
             lazadaSku.price = product.bookCoverPrice.ToString();
-            lazadaSku.special_price = LazadaCaculateSpecial_Price(product, conn).ToString();
+            int special_price = await CommonProductSupporting.CaculateSpecial_Price(product, Common.eLazada, conn);
+            lazadaSku.special_price = special_price.ToString();
 
             // SellerSku
             lazadaSku.SellerSku = TikiConstValues.GenerateRandomSKUString();

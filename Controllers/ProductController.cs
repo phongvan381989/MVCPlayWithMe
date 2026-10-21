@@ -1787,7 +1787,7 @@ namespace MVCPlayWithMe.Controllers
 
                     if (eType == Common.eTiki)
                     {
-                        result = await TikiProductSuporting.TikiUpdateQuantityOfOneItemModelAsync((int)itemId, conn);
+                        result = await TikiProductSupporting.TikiUpdateQuantityOfOneItemModelAsync((int)itemId, conn);
                     }
                     else if (eType == Common.eShopee)
                     {
@@ -1821,7 +1821,7 @@ namespace MVCPlayWithMe.Controllers
             {
                 foreach (CommonItem commonItem in listCommonItem)
                 {
-                    await TikiProductSuporting.TikiUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
+                    await TikiProductSupporting.TikiUpdateQuantityOfOneItemAsync(commonItem/*, conn*/);
                 }
             }
             else if (eECommerceType == EECommerceType.SHOPEE)
@@ -2104,7 +2104,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     if (eType == Common.eTiki)
                     {
-                        await TikiProductSuporting.TikiCreateProductFromProductIdInWarehouse(id, name, result, conn);
+                        await TikiProductSupporting.TikiCreateProductFromProductIdInWarehouse(id, name, result, conn);
                     }
                     else if (eType == Common.eShopee)
                     {
@@ -2243,7 +2243,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
                     if (eType == Common.eTiki)
                     {
-                        await TikiProductSuporting.TikiCreateVariantsFromComboId(comboId, result, conn);
+                        await TikiProductSupporting.TikiCreateVariantsFromComboId(comboId, result, conn);
                     }
                 }
             }

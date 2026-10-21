@@ -190,7 +190,7 @@ namespace MVCPlayWithMe.OpenPlatform
             // Làm tròn salePrice là bội của 100 VND
             if (salePrice % 100 != 0)
             {
-                salePrice =  (salePrice % 100 + 1) * 100;
+                salePrice = salePrice - salePrice % 100;
             }
             // Vì sản phẩm giá bìa thấp, để đạt % như mong muốn giá bán cần cao hơn cả giá bìa
             if (salePrice > p)

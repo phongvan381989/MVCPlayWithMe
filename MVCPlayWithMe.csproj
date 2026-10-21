@@ -334,7 +334,7 @@
     <Compile Include="Controllers\ProductSupporting\CommonProductSupporting.cs" />
     <Compile Include="Controllers\ProductSupporting\LazadaProductSupporting.cs" />
     <Compile Include="Controllers\ProductSupporting\ShopeeProductSupporting.cs" />
-    <Compile Include="Controllers\ProductSupporting\TikiProductSuporting.cs" />
+    <Compile Include="Controllers\ProductSupporting\TikiProductSupporting.cs" />
     <Compile Include="Controllers\ProductSupporting\VBNProductSupporting.cs" />
     <Compile Include="Controllers\PushMechanismController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
@@ -647,9 +647,12 @@
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUnit.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdate.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdatePrice.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdatePriceBatch.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdatePriceQuantityActiveBatchResponse.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantity.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityBatch.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityMeta.cs" />
-    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityResponse.cs" />
+    <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdatePriceQuantityActiveResponse.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateQuantityWarehouseQuantities.cs" />
     <Compile Include="OpenPlatform\Model\TikiApp\Product\TikiUpdateStatus.cs" />
     <Compile Include="OpenPlatform\Model\TikiDealDiscountMySql.cs" />

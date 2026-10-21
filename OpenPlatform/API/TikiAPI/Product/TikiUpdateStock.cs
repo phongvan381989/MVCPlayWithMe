@@ -1,4 +1,5 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Config;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
@@ -18,10 +19,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
 {
     public class TikiUpdateStock
     {
-        public static async Task<TikiUpdateQuantityResponse> TikiProductUpdate(TikiUpdate st)
+        public static async Task<TikiUpdatePriceQuantityActiveResponse> TikiProductUpdate(string body)
         {
             string http = TikiConstValues.cstrProductUpdate;
-            IRestResponse response = await CommonTikiAPI.PutExcuteRequest(http, st);
+
+            IRestResponse response = await CommonTikiAPI.PutExcuteRequest(http, body);
             try
             {
                 JsonSerializerSettings settings = new JsonSerializerSettings
@@ -29,7 +31,28 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
                     NullValueHandling = NullValueHandling.Ignore,
                     MissingMemberHandling = MissingMemberHandling.Ignore
                 };
-                TikiUpdateQuantityResponse updateResponse = JsonConvert.DeserializeObject<TikiUpdateQuantityResponse>(response.Content, settings);
+                TikiUpdatePriceQuantityActiveResponse updateResponse = JsonConvert.DeserializeObject<TikiUpdatePriceQuantityActiveResponse>(response.Content, settings);
+                return updateResponse;
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+            }
+            return null;
+        }
+
+        public static async Task<TikiUpdatePriceQuantityActiveBatchResponse> TikiProductUpdatePriceQuantityActiveBatch(string body)
+        {
+            string http = TikiConstValues.cstrProductUpdatePriceQuantityActiveBatch;
+            IRestResponse response = await CommonTikiAPI.PutExcuteRequest(http, body);
+            try
+            {
+                JsonSerializerSettings settings = new JsonSerializerSettings
+                {
+                    NullValueHandling = NullValueHandling.Ignore,
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+                TikiUpdatePriceQuantityActiveBatchResponse updateResponse = JsonConvert.DeserializeObject<TikiUpdatePriceQuantityActiveBatchResponse>(response.Content, settings);
                 return updateResponse;
             }
             catch (Exception ex)
@@ -81,12 +104,77 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         {
             TikiUpdateQuantity st = new TikiUpdateQuantity(itemId, TikiConstValues.intIdKho28Ngo3TTDL);
             st.UpdateQuantity(quantity);
-            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);
+            string body = JsonConvert.SerializeObject(st, Formatting.Indented);
+            TikiUpdatePriceQuantityActiveResponse tikiUpdateQuantityResponse = await TikiProductUpdate(body);
             result.myJson = tikiUpdateQuantityResponse;
             if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {
                 result.State = EMySqlResultState.ERROR;
             }
+        }
+
+        public static async Task<List<TikiUpdatePriceQuantityActiveResultItem>> TikiProductUpdateQuantity_BatchAsync(
+            List<int>ids,
+            List<int> quantities
+        )
+        {
+            List<TikiUpdatePriceQuantityActiveResultItem> resData = new List<TikiUpdatePriceQuantityActiveResultItem>();
+
+            // Mỗi lần cập nhật 15 itemid, tài liệu viết max là 20
+            int delta = 15;
+            int count = ids.Count();
+            TikiUpdateQuantityBatch tikiUpdateQuantityBatch = new TikiUpdateQuantityBatch();
+            for (int i = 0; i < count; i++)
+            {
+                TikiUpdateQuantity st = new TikiUpdateQuantity(ids[i], TikiConstValues.intIdKho28Ngo3TTDL);
+                st.UpdateQuantity(quantities[i]);
+                tikiUpdateQuantityBatch.data.Add(st);
+                if (tikiUpdateQuantityBatch.data.Count == delta ||
+                    i == (count - 1))
+                {
+                    string body = JsonConvert.SerializeObject(tikiUpdateQuantityBatch, Formatting.Indented);
+                    TikiUpdatePriceQuantityActiveBatchResponse tikiUpdateQuantityResponse = await TikiProductUpdatePriceQuantityActiveBatch(body);
+                    if (tikiUpdateQuantityResponse != null &&
+                        tikiUpdateQuantityResponse.data.Count > 0)
+                    {
+                        resData.AddRange(tikiUpdateQuantityResponse.data);
+                    }
+                    tikiUpdateQuantityBatch.data.Clear();
+                }
+            }
+            return resData;
+        }
+
+        public static async Task<List<TikiUpdatePriceQuantityActiveResultItem>> TikiProductUpdatePrice_BatchAsync(
+            List<int> ids,
+            List<int> prices
+        )
+        {
+            List<TikiUpdatePriceQuantityActiveResultItem> resData = new List<TikiUpdatePriceQuantityActiveResultItem>();
+
+            // Mỗi lần cập nhật 15 itemid, tài liệu viết max là 20
+            int delta = 15;
+            int count = ids.Count();
+            TikiUpdatePriceBatch tikiUpdatePriceBatch = new TikiUpdatePriceBatch();
+            for (int i = 0; i < count; i++)
+            {
+                TikiUpdatePrice st = new TikiUpdatePrice(ids[i]);
+                st.UpdatePrice(prices[i]);
+                tikiUpdatePriceBatch.data.Add(st);
+                if (tikiUpdatePriceBatch.data.Count == delta ||
+                    i == (count - 1))
+                {
+                    string body = JsonConvert.SerializeObject(tikiUpdatePriceBatch, Formatting.Indented);
+                    TikiUpdatePriceQuantityActiveBatchResponse tikiUpdateQuantityResponse = await TikiProductUpdatePriceQuantityActiveBatch(body);
+                    if (tikiUpdateQuantityResponse != null &&
+                        tikiUpdateQuantityResponse.data.Count > 0)
+                    {
+                        resData.AddRange(tikiUpdateQuantityResponse.data);
+                    }
+                    tikiUpdatePriceBatch.data.Clear();
+                }
+            }
+            return resData;
         }
 
         public static int GetQuantityFromTikiProduct(TikiProduct product)
@@ -166,7 +254,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
             }
             TikiUpdatePrice st = new TikiUpdatePrice(proId);
             st.UpdatePrice(price);
-            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);
+            string body = JsonConvert.SerializeObject(st, Formatting.Indented);
+            TikiUpdatePriceQuantityActiveResponse tikiUpdateQuantityResponse = await TikiProductUpdate(body);
             result.myJson = tikiUpdateQuantityResponse;
             if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {
@@ -186,7 +275,8 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product
         {
             TikiUpdateStatus st = new TikiUpdateStatus(proId);
             st.UpdateStatus(status);
-            TikiUpdateQuantityResponse tikiUpdateQuantityResponse = await TikiProductUpdate(st);
+            string body = JsonConvert.SerializeObject(st, Formatting.Indented);
+            TikiUpdatePriceQuantityActiveResponse tikiUpdateQuantityResponse = await TikiProductUpdate(body);
             result.myJson = tikiUpdateQuantityResponse;
             if (tikiUpdateQuantityResponse.errors != null && tikiUpdateQuantityResponse.errors.Count > 0)
             {

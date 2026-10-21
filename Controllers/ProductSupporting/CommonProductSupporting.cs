@@ -1,5 +1,7 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.ProductModel;
+using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model;
@@ -40,7 +42,7 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                 {
                     // Sàn Tiki trả về cập nhật lỗi
                     if (commonItem.result.myJson == null ||
-                        ((TikiUpdateQuantityResponse)commonItem.result.myJson).errors != null)
+                        ((TikiUpdatePriceQuantityActiveResponse)commonItem.result.myJson).errors != null)
                     {
                         foreach (var mapping in commonItem.models[0].mapping)
                         {
@@ -124,6 +126,45 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, eECommerceType, conn);
         }
 
+        public static async Task UpdateZeroStatusOfNeedUpdatePrice_BatchConnectOutAsync(
+            EECommerceType eECommerceType,
+            List<int> listProductIdChanged,
+            List<CommonItem> listCommonItem,
+            MySqlResultState result,
+            MySqlConnection conn)
+        {
+            // Danh sách sản phẩm chưa cập nhật số lượng thành công
+            List<int> listProductIdUpdateFail = null;
+            if (eECommerceType == EECommerceType.TIKI)
+            {
+                listProductIdUpdateFail = TikiProductSupporting.TikiGetListProductIdUpdateFail_Batch(listCommonItem, listProductIdChanged);
+            }
+
+            if(listProductIdUpdateFail == null)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "listProductIdUpdateFail lấy lỗi";
+                return;
+            }
+
+            // Danh sách sản phẩm cập nhật thành công
+            List<int> listProductIdUpdateSuccess = new List<int>();
+            foreach (var id in listProductIdChanged)
+            {
+                if (!listProductIdUpdateFail.Contains(id))
+                {
+                    listProductIdUpdateSuccess.Add(id);
+                }
+            }
+            if(listProductIdUpdateFail.Count > 0)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "listProductIdUpdateFail lỗi: " + JsonConvert.SerializeObject(listProductIdUpdateFail);
+            }
+
+            await ProductMySql.UpdateZeroStatusOfNeedUpdatePriceConnectOutAsync(listProductIdUpdateSuccess, eECommerceType, conn);
+        }
+
         public static async Task<List<CommonItem>> GetListNeedUpdateQuantityAndUpdate_CoreAsync()
         {
             List<CommonItem> ls = new List<CommonItem>();
@@ -138,7 +179,8 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                         await ProductMySql.GetListProductOfNeedUpdateQuantityConnectOutAsync(conn, EECommerceType.TIKI);
                     if (tikiProductIdList.Count > 0)
                     {
-                        List<CommonItem> tikiList = await TikiProductSuporting.TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                        //List<CommonItem> tikiList = await TikiProductSuporting.TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
+                        List<CommonItem> tikiList = await TikiProductSupporting.TikiGetListNeedUpdateQuantityAndUpdate_BatchAsync(conn);
                         await CommonProductSupporting.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
                         ls.AddRange(tikiList);
                     }
@@ -390,7 +432,7 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                         if (eType == Common.eTiki)
                         {
                             resultTemp = new MySqlResultState();
-                            await TikiProductSuporting.TikiCreateProductFromProductIdInWarehouse(productId,
+                            await TikiProductSupporting.TikiCreateProductFromProductIdInWarehouse(productId,
                             null, resultTemp, conn);
                             resultTemp.State = EMySqlResultState.OK;// Vì hàm luôn trả về Pendding
                         }
@@ -426,6 +468,36 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             }
 
             return JsonConvert.SerializeObject(result);
+        }
+
+        // Từ giá bìa, lấy chiết khấu của nhà phát hành, thuế phí của sàn và tính được giá bán
+        public static async Task<int> CaculateSpecial_Price(Product product,
+            string eEcommerceName,
+            MySqlConnection conn)
+        {
+            // Lấy danh sách thuế phí
+            TaxAndFee taxAndFee = await TikiDealDiscountMySql.GetTaxAndFeeAsync(eEcommerceName, conn);
+
+            // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
+            List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
+
+            float discountOfPublisher = 0;
+            foreach (var publisher in listPublisher)
+            {
+                if (publisher.id == product.publisherId)
+                {
+                    discountOfPublisher = publisher.discount;
+                    break;
+                }
+            }
+
+            int sale_price = CommonOpenPlatform.CaculateSalePriceCoreFromBookCoverPrice(
+                product.bookCoverPrice,
+                product.discount,
+                discountOfPublisher,
+                taxAndFee);
+
+            return sale_price;
         }
     }
 }

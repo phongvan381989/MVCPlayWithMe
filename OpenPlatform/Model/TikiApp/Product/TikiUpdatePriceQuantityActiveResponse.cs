@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
 {
-    public class TikiUpdateQuantityResponse
+    public class TikiUpdatePriceQuantityActiveResponse
     {
         // Trường hợp ok:
         //   {

@@ -16,6 +16,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
         public const string cstrProductsHTTPAddress = "https://api.tiki.vn/integration/v2.1/products";
         public const string cstrProductHTTPGetProductByOriginalSku = "https://api.tiki.vn/integration/v2/products/findBy?original_sku=";
         public const string cstrProductUpdate = "https://api.tiki.vn/integration/v2.1/products/updateSku";
+        public const string cstrProductUpdatePriceQuantityActiveBatch = "https://api.tiki.vn/integration/v2.1/products/updateSkus";
         public const string cstrProductUpdateSomething = "https://api.tiki.vn/integration/v2/requests/updateProductInfo";
 
         // limit must not be greater than 100, nhưng chỗ khác thực tế lại là 50, ảo ma canada

@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.General;
+﻿using Google.Protobuf.Collections;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
@@ -1853,10 +1854,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = CommandType.StoredProcedure;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (await rdr.ReadAsync())
-                        {
-                            TikiReadCommonItem(listCI, rdr);
-                        }
+                        await TikiReadCommonItem(listCI, rdr);
                     }
                 }
             }
@@ -1868,62 +1866,151 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             return listCI;
         }
 
-        public static void TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
+        public static async Task TikiReadCommonItem(List<CommonItem> list, MySqlDataReader rdr)
         {
-            CommonItem commonItem = null;
-            CommonModel commonModel = null;
-            int dbItemId = MyMySql.GetInt32(rdr, "TikiItemId");
-            if (list.Count() == 0)
+            int tikiItemIdIndex = rdr.GetOrdinal("TikiItemId");
+            int tMDTTikiItemIdIndex = rdr.GetOrdinal("TMDTTikiItemId");
+            int tikiItemNameIdIndex = rdr.GetOrdinal("TikiItemName");
+            int tikiItemImageIndex = rdr.GetOrdinal("TikiItemImage");
+            int tMDTTikiItemSuperIdIndex = rdr.GetOrdinal("TMDTTikiItemSuperId");
+            int tikiItemStatusIndex = rdr.GetOrdinal("TikiItemStatus");
+            int tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
+            int productIdIndex = rdr.GetOrdinal("ProductId");
+            int productNameIndex = rdr.GetOrdinal("ProductName");
+            int productQuantityIndex = rdr.GetOrdinal("ProductQuantity");
+            while (await rdr.ReadAsync())
             {
-                commonItem = new CommonItem(Common.eTiki);
-                list.Add(commonItem);
-            }
-            else
-            {
-                // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
-                if (list[list.Count() - 1].dbItemId != dbItemId)
+                CommonItem commonItem = null;
+                CommonModel commonModel = null;
+                int dbItemId = MyMySql.GetInt32(rdr, tikiItemIdIndex);
+                if (list.Count() == 0)
                 {
                     commonItem = new CommonItem(Common.eTiki);
                     list.Add(commonItem);
                 }
-            }
-            if (commonItem != null)
-            {
-                commonItem.dbItemId = dbItemId;
-                commonItem.itemId = MyMySql.GetInt32(rdr, "TMDTTikiItemId");
-                commonItem.name = MyMySql.GetString(rdr, "TikiItemName");
-                commonItem.imageSrc = MyMySql.GetString(rdr, "TikiItemImage");
-                commonItem.tikiSuperId = MyMySql.GetInt32(rdr, "TMDTTikiItemSuperId");
-
-                int status = MyMySql.GetInt32(rdr, "TikiItemStatus");
-                if (status != 1)
-                    commonItem.bActive = true;
                 else
-                    commonItem.bActive = false;
+                {
+                    // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                    if (list[list.Count() - 1].dbItemId != dbItemId)
+                    {
+                        commonItem = new CommonItem(Common.eTiki);
+                        list.Add(commonItem);
+                    }
+                }
+                if (commonItem != null)
+                {
+                    commonItem.dbItemId = dbItemId;
+                    commonItem.itemId = MyMySql.GetInt32(rdr, tMDTTikiItemIdIndex);
+                    commonItem.name = MyMySql.GetString(rdr, tikiItemNameIdIndex);
+                    commonItem.imageSrc = MyMySql.GetString(rdr, tikiItemImageIndex);
+                    commonItem.tikiSuperId = MyMySql.GetInt32(rdr, tMDTTikiItemSuperIdIndex);
+
+                    int status = MyMySql.GetInt32(rdr, tikiItemStatusIndex);
+                    if (status != 1)
+                        commonItem.bActive = true;
+                    else
+                        commonItem.bActive = false;
+                }
+                else
+                {
+                    commonItem = list[list.Count() - 1];
+                }
+
+                if (commonItem.models.Count() == 0)
+                {
+                    commonItem.models.Add(new CommonModel());
+                }
+                commonModel = commonItem.models[commonItem.models.Count() - 1];
+                commonModel.modelId = -1;
+
+                // Thêm mapping
+                Mapping mapping = new Mapping();
+                mapping.quantity = MyMySql.GetInt32(rdr, tikiMappingQuantityIndex);
+
+                Product product = new Product();
+                product.id = MyMySql.GetInt32(rdr, productIdIndex);
+                product.name = MyMySql.GetString(rdr, productNameIndex);
+                product.quantity = MyMySql.GetInt32(rdr, productQuantityIndex);
+                mapping.product = product;
+
+                commonModel.mapping.Add(mapping);
             }
-            else
+        }
+
+        public static async Task TikiReadCommonItemForUpdatePriceQuantityActive(List<CommonItem> list, MySqlDataReader rdr)
+        {
+            int tikiItemIdIndex = rdr.GetOrdinal("TikiItemId");
+            int tMDTTikiItemIdIndex = rdr.GetOrdinal("TMDTTikiItemId");
+            int tMDTTikiItemSuperIdIndex = rdr.GetOrdinal("TMDTTikiItemSuperId");
+
+            int tikiMappingQuantityIndex = rdr.GetOrdinal("TikiMappingQuantity");
+
+            int productIdIndex = rdr.GetOrdinal("ProductId");
+            int productDiscountIndex = rdr.GetOrdinal("ProductDiscount");
+            int productBookCoverPriceIndex = rdr.GetOrdinal("ProductBookCoverPrice");
+            int productQuantityIndex = rdr.GetOrdinal("ProductQuantity");
+
+            int publisherIdIndex = rdr.GetOrdinal("PublisherId");
+            while (await rdr.ReadAsync())
             {
-                commonItem = list[list.Count() - 1];
+                CommonItem commonItem = null;
+                CommonModel commonModel = null;
+                int dbItemId = MyMySql.GetInt32(rdr, tikiItemIdIndex);
+                if (list.Count() == 0)
+                {
+                    commonItem = new CommonItem(Common.eTiki);
+                    list.Add(commonItem);
+                }
+                else
+                {
+                    // Đọc sang item mới vì kết quả sql đã được order by theo itemid, modelid
+                    if (list[list.Count() - 1].dbItemId != dbItemId)
+                    {
+                        commonItem = new CommonItem(Common.eTiki);
+                        list.Add(commonItem);
+                    }
+                }
+                if (commonItem != null)
+                {
+                    commonItem.dbItemId = dbItemId;
+                    commonItem.itemId = MyMySql.GetInt32(rdr, tMDTTikiItemIdIndex);
+                    //commonItem.name = MyMySql.GetString(rdr, tikiItemNameIdIndex);
+                    //commonItem.imageSrc = MyMySql.GetString(rdr, tikiItemImageIndex);
+                    commonItem.tikiSuperId = MyMySql.GetInt32(rdr, tMDTTikiItemSuperIdIndex);
+
+                    //int status = MyMySql.GetInt32(rdr, tikiItemStatusIndex);
+                    //if (status != 1)
+                    //    commonItem.bActive = true;
+                    //else
+                    //    commonItem.bActive = false;
+                }
+                else
+                {
+                    commonItem = list[list.Count() - 1];
+                }
+
+                if (commonItem.models.Count() == 0)
+                {
+                    commonItem.models.Add(new CommonModel());
+                }
+                commonModel = commonItem.models[commonItem.models.Count() - 1];
+                commonModel.modelId = -1;
+
+                // Thêm mapping
+                Mapping mapping = new Mapping();
+                mapping.quantity = MyMySql.GetInt32(rdr, tikiMappingQuantityIndex);
+
+                Product product = new Product();
+                product.id = MyMySql.GetInt32(rdr, productIdIndex);
+                product.bookCoverPrice = MyMySql.GetInt32(rdr, productBookCoverPriceIndex);
+                product.discount = MyMySql.GetFloat(rdr, productDiscountIndex);
+                //product.name = MyMySql.GetString(rdr, productNameIndex);
+                product.quantity = MyMySql.GetInt32(rdr, productQuantityIndex);
+                product.publisherId = MyMySql.GetInt32(rdr, publisherIdIndex);
+                mapping.product = product;
+
+                commonModel.mapping.Add(mapping);
             }
-
-            if (commonItem.models.Count() == 0)
-            {
-                commonItem.models.Add(new CommonModel());
-            }
-            commonModel = commonItem.models[commonItem.models.Count() - 1];
-            commonModel.modelId = -1;
-
-            // Thêm mapping
-            Mapping mapping = new Mapping();
-            mapping.quantity = MyMySql.GetInt32(rdr, "TikiMappingQuantity");
-
-            Product product = new Product();
-            product.id = MyMySql.GetInt32(rdr, "ProductId");
-            product.name = MyMySql.GetString(rdr, "ProductName");
-            product.quantity = MyMySql.GetInt32(rdr, "ProductQuantity");
-            mapping.product = product;
-
-            commonModel.mapping.Add(mapping);
         }
 
         // Kết nối đóng mở bên ngoài
@@ -1939,10 +2026,49 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = CommandType.StoredProcedure;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (await rdr.ReadAsync())
-                        {
-                            TikiReadCommonItem(listCI, rdr);
-                        }
+                        await TikiReadCommonItem(listCI, rdr);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return listCI;
+        }
+
+        public static async Task<List<CommonItem>> TikiGetListNeedUpdatePriceConnectOutAsync(MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Need_Update_Price", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        await TikiReadCommonItemForUpdatePriceQuantityActive(listCI, rdr);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+            return listCI;
+        }
+
+        public static async Task<List<CommonItem>> TikiGetListUpdatePriceAllConnectOutAsync(MySqlConnection conn)
+        {
+            List<CommonItem> listCI = new List<CommonItem>();
+            try
+            {
+                using (MySqlCommand cmd = new MySqlCommand("st_tbTikiItem_Get_Update_Price_All", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        await TikiReadCommonItemForUpdatePriceQuantityActive(listCI, rdr);
                     }
                 }
             }
@@ -1965,10 +2091,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = CommandType.StoredProcedure;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (await rdr.ReadAsync())
-                        {
-                            TikiReadCommonItem(listCI, rdr);
-                        }
+                        await TikiReadCommonItem(listCI, rdr);
                     }
                 }
             }
@@ -1992,10 +2115,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = CommandType.StoredProcedure;
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        while (await rdr.ReadAsync())
-                        {
-                            TikiReadCommonItem(listCI, rdr);
-                        }
+                        await TikiReadCommonItem(listCI, rdr);
                     }
                 }
             }

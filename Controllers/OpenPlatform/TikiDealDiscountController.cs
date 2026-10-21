@@ -433,7 +433,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             MySqlResultState result = new MySqlResultState();
 
             // Lấy danh sách nhà phát hành, từ đó lấy được discount chung
-
             List<Publisher> listPublisher = await PublisherMySql.GetListPublisherConnectOutAsync(conn);
 
             // Lấy danh sách thuế phí

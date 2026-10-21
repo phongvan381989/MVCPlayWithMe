@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.Controllers.ProductSupporting;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
@@ -1082,7 +1083,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 if(resultState.State == EMySqlResultState.OK)
                 {
                     // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                    await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                    await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                 }    
             }
             catch (Exception ex)
@@ -1128,7 +1129,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         if (result != null && result.myAnything == 1)
                         {
                             // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                            await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                            await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                         }
                     }
                     else
@@ -1146,7 +1147,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                             if (result != null && result.myAnything == 1)
                             {
                                 // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                                await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                                await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                             }
                         }
                     }
@@ -1465,7 +1466,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         List<CommonItem> ls = new List<CommonItem>();
 
                         ls.Add(item);
-                        ProductController.LazadaUpdateQuantityPrice_SpecialPrice_Core(ls, conn);
+                        LazadaProductSupporting.LazadaUpdateQuantityPrice_SpecialPrice_Core(ls, conn);
 
                     }
                 }

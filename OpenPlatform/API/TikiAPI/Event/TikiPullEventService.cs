@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Hosting;
 using MVCPlayWithMe.Controllers;
+using MVCPlayWithMe.Controllers.ProductSupporting;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
@@ -63,7 +64,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                     if (resultState != null && resultState.myAnything == 1)
                     {
                         // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                        await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                     }
                 }
             }

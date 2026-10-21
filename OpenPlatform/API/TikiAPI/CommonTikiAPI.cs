@@ -182,13 +182,11 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI
             return response;
         }
 
-        static public async Task< IRestResponse> PutExcuteRequest(string http, TikiUpdate st)
+        static public async Task< IRestResponse> PutExcuteRequest(string http, string body)
         {
             RestRequest request = new RestRequest(http, Method.PUT);
 
             request.AddHeader("Content-Type", "application/json");
-
-            string body = JsonConvert.SerializeObject(st, Formatting.Indented);
             request.AddParameter("application/json", body, ParameterType.RequestBody);
 
             IRestResponse response = await ExecuteRequest(request);

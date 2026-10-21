@@ -1,4 +1,5 @@
-﻿using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.Controllers.ProductSupporting;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
@@ -138,7 +139,7 @@ namespace MVCPlayWithMe.Controllers
                         if (resultState != null && resultState.myAnything == 1)
                         {
                             // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                            await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                            await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                         }
                     }
                 }
@@ -222,7 +223,7 @@ namespace MVCPlayWithMe.Controllers
                         // Chờ 120 giây vì có thể shopee vừa gửi push thay đổi trạng thái đơn hàng
                         await Task.Delay(120000);
                         await TikiMySql.ReturnQuantityOfOrderMatchedBookingAsync(commonOrder, EECommerceType.SHOPEE, conn);
-                        await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                        await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                         return;
                     }
 
@@ -235,7 +236,7 @@ namespace MVCPlayWithMe.Controllers
                     if (resultState != null && resultState.myAnything == 1)
                     {
                         // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                        await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                        await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                     }
                 }
             }
@@ -372,7 +373,7 @@ namespace MVCPlayWithMe.Controllers
                         if (resultState != null && resultState.myAnything == 1)
                         {
                             // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
-                            await ProductController.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+                            await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
                         }
                     }
                 }

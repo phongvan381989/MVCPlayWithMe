@@ -11,6 +11,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
         public int category_id { get; set; }
         public string name { get; set; }
         public string description { get; set; }
+
+        // Giá trước chiết khấu (giá bìa)
         public int market_price { get; set; }
         public Attributes attributes { get; set; }
         public string image { get; set; }
@@ -77,6 +79,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product
     {
         public string sku { get; set; }
         public long min_code { get; set; }
+
+        // Giá bán thực tế
         public int price { get; set; }
         public string inventory_type { get; set; }
         public string seller_warehouse { get; set; }
