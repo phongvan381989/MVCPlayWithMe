@@ -2035,6 +2035,53 @@ namespace MVCPlayWithMe.Models.ProductModel
             return result;
         }
 
+        public static async Task<MySqlResultState> UpdateProductBasicInfoAsync(int id,
+            string shortName,
+            string name,
+            int bookCoverPrice,
+            int quantity)
+        {
+            MySqlResultState result = new MySqlResultState();
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                try
+                {
+                    await conn.OpenAsync();
+
+                    // Update tbProducts (sản phẩm kho)
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE `tbProducts` SET `ShortName` = @shortName, `Name` = @name, `BookCoverPrice` = @price, `Quantity` = @quantity WHERE `Id` = @id", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.Parameters.AddWithValue("@shortName", shortName ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@name", name);
+                        cmd.Parameters.AddWithValue("@price", bookCoverPrice);
+                        cmd.Parameters.AddWithValue("@quantity", quantity);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    // Update tb_san_pham nếu có mapping
+                    using (MySqlCommand cmd = new MySqlCommand(
+                        "UPDATE `tb_san_pham` SET `ShortName` = @shortName, `Name` = @name WHERE `SanPhamKhoId` = @id", conn))
+                    {
+                        cmd.CommandType = CommandType.Text;
+                        cmd.Parameters.AddWithValue("@id", id);
+                        cmd.Parameters.AddWithValue("@shortName", shortName ?? (object)DBNull.Value);
+                        cmd.Parameters.AddWithValue("@name", name);
+                        cmd.Parameters.AddWithValue("@price", bookCoverPrice);
+                        cmd.Parameters.AddWithValue("@quantity", quantity);
+                        await cmd.ExecuteNonQueryAsync();
+                    }
+
+                    result.State = EMySqlResultState.OK;
+                    result.Message = "Cập nhật sản phẩm thành công";
+                }
+                catch (Exception ex) { Common.SetResultException(ex, result); }
+            }
+            return result;
+        }
+
         // C?p nh?t c? ? tbNeedUpdateQuantity n?u có thay d?i t?n kho
         public static async Task<MySqlResultState> AddQuantityAsync(int id, int quantity)
         {

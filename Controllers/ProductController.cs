@@ -1398,6 +1398,17 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(await ProductMySql.UpdateQuantityAsync(id, quantity));
         }
 
+        [HttpPost]
+        public async Task<string> UpdateProductBasicInfo(int id, string shortName, string name, int bookCoverPrice, int quantity)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            return JsonConvert.SerializeObject(await ProductMySql.UpdateProductBasicInfoAsync(id, shortName, name, bookCoverPrice, quantity));
+        }
+
         [HttpGet]
         public async Task<string> UpdateISBN(int id, string isbn)
         {

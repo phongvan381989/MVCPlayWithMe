@@ -62,6 +62,7 @@ function ShowProductTable(list) {
         let cell5 = row.insertCell(4);
         let cell6 = row.insertCell(5);
         let cell7 = row.insertCell(6);
+        let cell8 = row.insertCell(7);
 
         // Id
         cell1.innerHTML = pro.id;
@@ -85,23 +86,97 @@ function ShowProductTable(list) {
         };
         cell3.append(img);
 
-        // Tên Ngắn
-        cell4.innerHTML = pro.shortName || '';
+        // Tên Ngắn - Input
+        let inputShortName = document.createElement("input");
+        inputShortName.type = "text";
+        inputShortName.value = pro.shortName || '';
+        inputShortName.id = `short-name-${pro.id}`;
+        inputShortName.style.width = "150px";
+        inputShortName.title = "Tên ngắn sản phẩm";
+        cell4.append(inputShortName);
 
-        // Tên
-        let pName = document.createElement("p");
-        //pName.className = "go-to-detail-product";
-        pName.innerHTML = pro.name;
+        // Tên - Input
+        let inputName = document.createElement("input");
+        inputName.type = "text";
+        inputName.value = pro.name;
+        inputName.id = `name-${pro.id}`;
+        inputName.style.width = "300px";
+        inputName.title = "Tên sản phẩm";
+        // Apply style based on status
+        UpdateProductNameStyle(inputName, pro.status, pro.quantity);
+        cell5.append(inputName);
 
-        UpdateProductNameStyle(pName, pro.status, pro.quantity);
-        cell5.append(pName);
+        // Giá bìa - Input
+        let inputPrice = document.createElement("input");
+        inputPrice.type = "number";
+        inputPrice.value = pro.bookCoverPrice;
+        inputPrice.id = `price-${pro.id}`;
+        inputPrice.style.width = "120px";
+        inputPrice.min = "0";
+        inputPrice.title = "Giá bìa";
+        cell6.append(inputPrice);
 
-        // Giá bìa
-        cell6.innerHTML = ConvertMoneyToText(pro.bookCoverPrice);
+        // Số lượng tồn kho - Input
+        let inputQuantity = document.createElement("input");
+        inputQuantity.type = "number";
+        inputQuantity.value = pro.quantity;
+        inputQuantity.id = `quantity-${pro.id}`;
+        inputQuantity.style.width = "80px";
+        inputQuantity.min = "0";
+        inputQuantity.title = "Số lượng tồn kho";
+        cell7.append(inputQuantity);
 
-        // Số lượng tồn kho
-        cell7.innerHTML = pro.quantity;
+        // Nút Cập Nhật
+        let btnUpdate = document.createElement("button");
+        btnUpdate.type = "button";
+        btnUpdate.className = "hxvniuf87fso";
+        btnUpdate.innerHTML = "Cập Nhật";
+        btnUpdate.title = "Cập nhật thông tin sản phẩm";
+        btnUpdate.onclick = function () {
+            UpdateProductInCombo(pro.id);
+        };
+        cell8.append(btnUpdate);
     }
+}
+
+async function UpdateProductInCombo(productId) {
+    // Lấy giá trị từ các input
+    let shortName = document.getElementById(`short-name-${productId}`).value.trim();
+    let name = document.getElementById(`name-${productId}`).value.trim();
+    let price = parseInt(document.getElementById(`price-${productId}`).value);
+    let quantity = parseInt(document.getElementById(`quantity-${productId}`).value);
+
+    // Validate
+    if (name === '') {
+        CreateMustClickOkModal("Tên sản phẩm không được rỗng.");
+        document.getElementById(`name-${productId}`).focus();
+        return;
+    }
+    if (isNaN(price) || price < 0) {
+        CreateMustClickOkModal("Giá bìa không hợp lệ.");
+        document.getElementById(`price-${productId}`).focus();
+        return;
+    }
+    if (isNaN(quantity) || quantity < 0) {
+        CreateMustClickOkModal("Số lượng không hợp lệ.");
+        document.getElementById(`quantity-${productId}`).focus();
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("id", productId);
+    searchParams.append("shortName", shortName);
+    searchParams.append("name", name);
+    searchParams.append("bookCoverPrice", price);
+    searchParams.append("quantity", quantity);
+
+    let query = "/Product/UpdateProductBasicInfo";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật sản phẩm thành công.", "Có lỗi xảy ra.");
 }
 
 async function GetCombo() {

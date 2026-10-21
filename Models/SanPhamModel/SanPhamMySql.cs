@@ -1050,7 +1050,7 @@ namespace MVCPlayWithMe.Models.SanPhamModel
                             Quantity = rdr.GetInt32(idxQuantity),
                             PageNumber = rdr.IsDBNull(idxPageNumber) ? (int?)null : rdr.GetInt32(idxPageNumber),
                             Discount = rdr.IsDBNull(idxDiscount) ? 0 : rdr.GetFloat(idxDiscount),
-                            SalePrice = rdr.GetInt32(idxSalePrice),
+                            SalePrice = rdr.IsDBNull(idxSalePrice) ? 0 : rdr.GetInt32(idxSalePrice),
                             Language = rdr.IsDBNull(idxLanguage) ? null : rdr.GetString(idxLanguage),
                             Date = rdr.IsDBNull(idxDate) ? (DateTime?)null : rdr.GetDateTime(idxDate),
                             SoldQuantity = rdr.IsDBNull(idxSoldQuantity) ? (int?)null : rdr.GetInt32(idxSoldQuantity),
