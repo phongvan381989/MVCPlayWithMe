@@ -1158,10 +1158,8 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(ls);
         }
 
-        // isSignle: true lấy sản phẩm trong kho chưa được bán như 1 sản phẩm riêng lẻ trên sàn (mapping chỉ có 1 mình sản phẩm), web.
-        // Ngược lại lấy sản phẩm trong kho chưa được bán trên sàn cả 1 sản phẩm riêng lẻ, combo.
         [HttpGet]
-        public async Task<string> SearchDontSellOnECommerce(Boolean isSingle, string eType)
+        public async Task<string> SearchDontSellOnECommerce(string eType)
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
@@ -1172,69 +1170,69 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
-                lsSearchResult = await ProductMySql.SearchDontSellOnECommerce(isSingle, eType, conn);
+                lsSearchResult = await ProductMySql.SearchDontSellOnECommerce(eType, conn);
             }
 
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
-        // Chưa đăng bán đầy đủ combo, riêng lẻ ở cùng 1 sản phẩm cha / Item trên sàn
-        // Các sản phẩm trong combo đều đang kinh doanh
-        [HttpGet]
-        public async Task<string> SearchDontSellFullComboAndSigleOnECommerce(string eType)
-        {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new List<Product>());
-            }
+        //// Chưa đăng bán đầy đủ combo, riêng lẻ ở cùng 1 sản phẩm cha / Item trên sàn
+        //// Các sản phẩm trong combo đều đang kinh doanh
+        //[HttpGet]
+        //public async Task<string> SearchDontSellFullComboAndSigleOnECommerce(string eType)
+        //{
+        //    if ((await AuthentAdministratorAsync()) == null)
+        //    {
+        //        return JsonConvert.SerializeObject(new List<Product>());
+        //    }
 
-            List<Product> lsSearchResult = new List<Product>();
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-                {
-                    await conn.OpenAsync();
+        //    List<Product> lsSearchResult = new List<Product>();
+        //    try
+        //    {
+        //        using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+        //        {
+        //            await conn.OpenAsync();
 
-                    // Lấy danh sách sản phẩm có combo
-                    List<Product> lsProduct = await ProductMySql.GetActiveProductHasComboActiveAll(conn);
+        //            // Lấy danh sách sản phẩm có combo
+        //            List<Product> lsProduct = await ProductMySql.GetActiveProductHasComboActiveAll(conn);
 
-                    // Tạo danh sách combo
-                    List<Combo> lsCombo = new List<Combo>();
-                    int count = lsProduct.Count();
+        //            // Tạo danh sách combo
+        //            List<Combo> lsCombo = new List<Combo>();
+        //            int count = lsProduct.Count();
 
-                    Product proTemp = null;
-                    Combo comboTemp = null;
-                    for (int i = 0; i < count; i++)
-                    {
-                        proTemp = lsProduct[i];
-                        if (comboTemp == null || proTemp.comboId != comboTemp.id)
-                        {
-                            lsCombo.Add(new Combo(proTemp.comboId, proTemp.comboName));
-                            comboTemp = lsCombo[lsCombo.Count - 1];
-                        }
-                        comboTemp.products.Add(proTemp);
-                    }
+        //            Product proTemp = null;
+        //            Combo comboTemp = null;
+        //            for (int i = 0; i < count; i++)
+        //            {
+        //                proTemp = lsProduct[i];
+        //                if (comboTemp == null || proTemp.comboId != comboTemp.id)
+        //                {
+        //                    lsCombo.Add(new Combo(proTemp.comboId, proTemp.comboName));
+        //                    comboTemp = lsCombo[lsCombo.Count - 1];
+        //                }
+        //                comboTemp.products.Add(proTemp);
+        //            }
 
-                    if(eType == Common.eTiki)
-                    {
-                        //lsSearchResult = TikiSearchDontSellFullComboAndSigleOnECommerce(lsCombo, conn);
-                        foreach(var combo in lsCombo)
-                        {
-                            if(!await ProductMySql.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
-                            {
-                                lsSearchResult.AddRange(combo.products);
-                            }
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
+        //            if(eType == Common.eTiki)
+        //            {
+        //                //lsSearchResult = TikiSearchDontSellFullComboAndSigleOnECommerce(lsCombo, conn);
+        //                foreach(var combo in lsCombo)
+        //                {
+        //                    if(!await ProductMySql.TikiDontSellFullComboAndSigleConnectOut(combo, conn))
+        //                    {
+        //                        lsSearchResult.AddRange(combo.products);
+        //                    }
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //    }
 
-            return JsonConvert.SerializeObject(lsSearchResult);
-        }
+        //    return JsonConvert.SerializeObject(lsSearchResult);
+        //}
 
         // Chưa đăng bán như biến thể
         [HttpGet]
@@ -1303,32 +1301,32 @@ namespace MVCPlayWithMe.Controllers
             return JsonConvert.SerializeObject(lsSearchResult);
         }
 
-        // Chưa đăng bán hoàn toàn riêng lẻ, xét với tất cả sản phẩm đang kinh doanh
-        [HttpGet]
-        public async Task<string> SearchDontSellSigleWithNoParrentOnECommerce(string eType)
-        {
-            if ((await AuthentAdministratorAsync()) == null)
-            {
-                return JsonConvert.SerializeObject(new List<Product>());
-            }
+        //// Chưa đăng bán hoàn toàn riêng lẻ, xét với tất cả sản phẩm đang kinh doanh
+        //[HttpGet]
+        //public async Task<string> SearchDontSellSigleWithNoParrentOnECommerce(string eType)
+        //{
+        //    if ((await AuthentAdministratorAsync()) == null)
+        //    {
+        //        return JsonConvert.SerializeObject(new List<Product>());
+        //    }
 
-            List<Product> lsSearchResult = new List<Product>();
-            try
-            {
-                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-                {
-                    await conn.OpenAsync();
-                    lsSearchResult = await
-                        ProductMySql.SearchDontSellSigleWithNoParrentOnECommerceConnectOut(eType, conn);
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
+        //    List<Product> lsSearchResult = new List<Product>();
+        //    try
+        //    {
+        //        //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+        //        //{
+        //        //    await conn.OpenAsync();
+        //        //    lsSearchResult = await
+        //        //        ProductMySql.SearchDontSellSigleWithNoParrentOnECommerceConnectOut(eType, conn);
+        //        //}
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //    }
 
-            return JsonConvert.SerializeObject(lsSearchResult);
-        }
+        //    return JsonConvert.SerializeObject(lsSearchResult);
+        //}
 
         [HttpGet]
         public async Task<string> ChangePage(string publisher, string codeOrBarcode,

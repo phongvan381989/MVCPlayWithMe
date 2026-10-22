@@ -660,6 +660,10 @@ async function UpdateCommonDetail() {
     }
 }
 
+function ECommerceTypeChange() {
+    // define tránh crash
+}
+
 // ==================== VALIDATION CHECKER FUNCTIONS ====================
 
 function ShowValidationResult(title, missingProducts, fieldName) {

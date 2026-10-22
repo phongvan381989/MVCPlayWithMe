@@ -416,7 +416,7 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
-                    // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ không cha
+                    // Lấy danh sách sản phẩm chưa đăng bán riêng lẻ
                     List<int> needList =
                         await ProductMySql.SearchDontSellSigleWithNoParrentOnECommerce_GetIdListOnly_ConnectOutAsync(
                         eType, conn

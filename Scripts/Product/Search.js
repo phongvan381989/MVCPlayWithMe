@@ -545,26 +545,26 @@ function ECommerceTypeChange() {
     RefreshResultView();
 }
 
-async function SearchDontSellOnECommerce(isSingle) {
+async function SearchDontSellOnECommerce() {
     // Làm mới input publisher
     document.getElementById("publisher-id").value = "";
 
     let url = "/Product/SearchDontSellOnECommerce";
     const searchParams = new URLSearchParams();
-    searchParams.append("isSingle", isSingle);
+    // searchParams.append("isSingle", isSingle);
     searchParams.append("eType", GetECommerceType());
     SearchProductCore(url, searchParams);
 }
 
-async function SearchDontSellFullComboAndSigleOnECommerce() {
-    // Làm mới input publisher
-    document.getElementById("publisher-id").value = "";
+// async function SearchDontSellFullComboAndSigleOnECommerce() {
+//     // Làm mới input publisher
+//     document.getElementById("publisher-id").value = "";
 
-    let url = "/Product/SearchDontSellFullComboAndSigleOnECommerce";
-    const searchParams = new URLSearchParams();
-    searchParams.append("eType", GetECommerceType());
-    SearchProductCore(url, searchParams);
-}
+//     let url = "/Product/SearchDontSellFullComboAndSigleOnECommerce";
+//     const searchParams = new URLSearchParams();
+//     searchParams.append("eType", GetECommerceType());
+//     SearchProductCore(url, searchParams);
+// }
 
 async function SearchDontSellSigleWithParrentOnECommerce() {
     // Làm mới input publisher
@@ -576,15 +576,15 @@ async function SearchDontSellSigleWithParrentOnECommerce() {
     SearchProductCore(url, searchParams);
 }
 
-async function SearchDontSellSigleWithNoParrentOnECommerce() {
-    // Làm mới input publisher
-    document.getElementById("publisher-id").value = "";
+// async function SearchDontSellSigleWithNoParrentOnECommerce() {
+//     // Làm mới input publisher
+//     document.getElementById("publisher-id").value = "";
 
-    let url = "/Product/SearchDontSellSigleWithNoParrentOnECommerce";
-    const searchParams = new URLSearchParams();
-    searchParams.append("eType", GetECommerceType());
-    SearchProductCore(url, searchParams);
-}
+//     let url = "/Product/SearchDontSellSigleWithNoParrentOnECommerce";
+//     const searchParams = new URLSearchParams();
+//     searchParams.append("eType", GetECommerceType());
+//     SearchProductCore(url, searchParams);
+// }
 
 async function CreateProductOnECommerceFromList() {
     let publisherId = GetDataIdFromPublisherDatalist(document.getElementById("publisher-id").value);

@@ -381,7 +381,7 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public static async Task<List<Product>> SearchDontSellOnECommerce( Boolean isSingle,
+        public static async Task<List<Product>> SearchDontSellOnECommerce(
             string eType,
             MySqlConnection conn)
         {
@@ -398,11 +398,6 @@ namespace MVCPlayWithMe.Models.ProductModel
             {
                 store = "st_tbProducts_Search_Dont_Sell_On_PlayWithMe";
             }
-
-            //if (isSingle)
-            //{
-            //    store = store + "_Signle";
-            //}
 
             List<Product> ls = new List<Product>();
             try
@@ -681,46 +676,46 @@ namespace MVCPlayWithMe.Models.ProductModel
             return false;
         }
 
-        public static async Task<List<Product>> SearchDontSellSigleWithNoParrentOnECommerceConnectOut(
-            string eType,
-            MySqlConnection conn)
-        {
-            List<Product> ls = new List<Product>();
-            try
-            {
-                string store = "";
-                if(eType == eTiki)
-                {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent";
-                }
-                else if(eType == eShopee)
-                {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
-                }
-                else if(eType == eLazada)
-                {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
-                }
-                if (!string.IsNullOrEmpty(store))
-                {
-                    using (MySqlCommand cmd = new MySqlCommand(store, conn))
-                    {
-                        cmd.CommandType = CommandType.StoredProcedure;
+        //public static async Task<List<Product>> SearchDontSellSigleWithNoParrentOnECommerceConnectOut(
+        //    string eType,
+        //    MySqlConnection conn)
+        //{
+        //    List<Product> ls = new List<Product>();
+        //    try
+        //    {
+        //        string store = "";
+        //        if(eType == eTiki)
+        //        {
+        //            store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent";
+        //        }
+        //        else if(eType == eShopee)
+        //        {
+        //            store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
+        //        }
+        //        else if(eType == eLazada)
+        //        {
+        //            store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
+        //        }
+        //        if (!string.IsNullOrEmpty(store))
+        //        {
+        //            using (MySqlCommand cmd = new MySqlCommand(store, conn))
+        //            {
+        //                cmd.CommandType = CommandType.StoredProcedure;
 
-                        using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
-                        {
-                            await ConvertQuicklyRowFromDataMySql(rdr, ls);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
+        //                using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+        //                {
+        //                    await ConvertQuicklyRowFromDataMySql(rdr, ls);
+        //                }
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //    }
 
-            return ls;
-        }
+        //    return ls;
+        //}
 
         //
         public static async Task<List<Product>> SearchDontSellSigleWithParrentOnECommerce(
@@ -774,15 +769,15 @@ namespace MVCPlayWithMe.Models.ProductModel
                 string store = "";
                 if (eType == eTiki)
                 {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki_Signle";
+                    store = "st_tbProducts_Search_Dont_Sell_On_Tiki";
                 }
                 else if (eType == eShopee)
                 {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
+                    //store = "st_tbProducts_Search_Dont_Sell_On_Shopee_Signle_No_Parrent";
                 }
                 else if(eType == eLazada)
                 {
-                    store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
+                    //store = "st_tbProducts_Search_Dont_Sell_On_Lazada_Signle_No_Parrent";
                 }
                 if (!string.IsNullOrEmpty(store))
                 {
@@ -809,29 +804,29 @@ namespace MVCPlayWithMe.Models.ProductModel
             return ls;
         }
 
-        public static async Task<List<Product>> ShopeeDontSellSigleWithNoParrentConnectOut(
-            MySqlConnection conn)
-        {
-            List<Product> ls = new List<Product>();
-            try
-            {
-                using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent", conn))
-                {
-                    cmd.CommandType = CommandType.StoredProcedure;
+        //public static async Task<List<Product>> ShopeeDontSellSigleWithNoParrentConnectOut(
+        //    MySqlConnection conn)
+        //{
+        //    List<Product> ls = new List<Product>();
+        //    try
+        //    {
+        //        using (MySqlCommand cmd = new MySqlCommand("st_tbProducts_Search_Dont_Sell_On_Tiki_Signle_No_Parrent", conn))
+        //        {
+        //            cmd.CommandType = CommandType.StoredProcedure;
 
-                    using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
-                    {
-                        await ConvertQuicklyRowFromDataMySql(rdr, ls);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                MyLogger.GetInstance().Warn(ex.ToString());
-            }
+        //            using (MySqlDataReader rdr = (MySqlDataReader) await cmd.ExecuteReaderAsync())
+        //            {
+        //                await ConvertQuicklyRowFromDataMySql(rdr, ls);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        MyLogger.GetInstance().Warn(ex.ToString());
+        //    }
 
-            return ls;
-        }
+        //    return ls;
+        //}
 
         //Tìm ki?m có phân trang
         public static async Task<List<Product>> SearchProductChangePage(ProductSearchParameter searchParameter)
