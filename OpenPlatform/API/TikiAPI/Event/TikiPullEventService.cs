@@ -2,8 +2,10 @@
 using MVCPlayWithMe.Controllers;
 using MVCPlayWithMe.Controllers.ProductSupporting;
 using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Event;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
 using MySqlConnector;
@@ -22,6 +24,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
         // Xử lý event của đơn hàng
         private async Task HandleOrderEvent(TikiEvent tikiEvent, MySqlConnection conn)
         {
+            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+            await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(tikiEvent.payload.order_code,
+                (int)EECommerceType.TIKI, tikiEvent.payload.status);
+
             if (tikiEvent.type != "ORDER_CREATED_SUCCESSFULLY" &&
                 tikiEvent.payload.status != "canceled")
             {

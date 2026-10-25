@@ -79,6 +79,20 @@ namespace MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder
 
             return lsOrderShopeeFullInfo;
         }
+        // Shopee không hỗ trợ lọc theo TO_CONFIRM_RECEIVE
+        public static async Task<List<ShopeeOrderDetail>> ShopeeOrderGetOrderDetailToConfirmReceiveAsync(
+            DateTime time_from,
+            DateTime time_to,
+            MySqlConnection conn)
+        {
+            List<ShopeeOrderDetail> lsOrderShopeeFullInfo = await ShopeeOrderGetOrderDetailAllAsync(
+                time_from,
+                time_to,
+                ShopeeOrderStatus.shopeeOrderStatusArray[(int)ShopeeOrderStatus.EnumShopeeOrderStatus.TO_CONFIRM_RECEIVE],
+                conn);
+
+            return lsOrderShopeeFullInfo;
+        }
 
         /// <summary>
         /// Lấy thông tin chi tiết đơn hàng

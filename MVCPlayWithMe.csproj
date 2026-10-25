@@ -327,6 +327,7 @@
     <Compile Include="Controllers\ComboController.cs" />
     <Compile Include="Controllers\CustomerController.cs" />
     <Compile Include="Controllers\DevController.cs" />
+    <Compile Include="Controllers\EInvoiceController.cs" />
     <Compile Include="Controllers\FeedController.cs" />
     <Compile Include="Controllers\OpenPlatform\NeedUpdateController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiDealDiscountController.cs" />
@@ -379,6 +380,8 @@
     <Compile Include="Models\Import.cs" />
     <Compile Include="Models\Item.cs" />
     <Compile Include="Models\Model.cs" />
+    <Compile Include="Models\Order\EInvoice.cs" />
+    <Compile Include="Models\Order\EInvoiceMySql.cs" />
     <Compile Include="Models\Order\Order.cs" />
     <Compile Include="Models\Order\OrderCodeSequenceMySql.cs" />
     <Compile Include="Models\Order\OrderDetail.cs" />
@@ -386,6 +389,8 @@
     <Compile Include="Models\Order\OrderPay.cs" />
     <Compile Include="Models\Order\OrderSimplePromotion.cs" />
     <Compile Include="Models\Order\OrderSimplePromotionMySql.cs" />
+    <Compile Include="Models\Order\OrderStatusTrack.cs" />
+    <Compile Include="Models\Order\OrderStatusTrackMySql.cs" />
     <Compile Include="Models\Order\OrderTrack.cs" />
     <Compile Include="Models\Output.cs" />
     <Compile Include="Models\OutputMySql.cs" />
@@ -725,6 +730,7 @@
     <Content Include="Scripts\Customer\Login.js" />
     <Content Include="Scripts\Customer\Order.js" />
     <Content Include="Scripts\Dev\Index.js" />
+    <Content Include="Scripts\EInvoice\Index.js" />
     <Content Include="Scripts\Home\Cart.js" />
     <Content Include="Scripts\Home\Checkout.js" />
     <Content Include="Scripts\Home\SanPham.js" />
@@ -875,6 +881,7 @@
     <Content Include="Views\Shared\_MetaPixel.cshtml" />
     <Content Include="Views\TikiOriginalSku\Index.cshtml" />
     <Content Include="Views\NeedUpdate\Index.cshtml" />
+    <Content Include="Views\EInvoice\Index.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

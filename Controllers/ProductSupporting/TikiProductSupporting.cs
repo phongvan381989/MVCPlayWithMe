@@ -742,7 +742,8 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                     Variant variant = new Variant();
 
                     variant.price = CommonOpenPlatform.CaculateSalePriceCoreFromBookCoverPrice(
-                        product.bookCoverPrice, product.discount, discountOfPublisher, taxAndFee);
+                        p.bookCoverPrice, p.discount, discountOfPublisher, taxAndFee);
+
                     variant.inventory_type = TikiConstValues.inventory_type;
                     variant.seller_warehouse = TikiConstValues.intIdKho28Ngo3TTDL.ToString();
                     variant.sku = TikiConstValues.GenerateRandomSKUString();

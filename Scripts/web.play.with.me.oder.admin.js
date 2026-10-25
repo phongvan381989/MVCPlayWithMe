@@ -66,6 +66,9 @@ function GetOrderStatus() {
     else if (document.getElementsByClassName("canceled-order")[0].checked == true) {
         orderStatus = 2;
     }
+    // else if (document.getElementsByClassName("to-confirm-receive-order")[0].checked == true) {
+    //     orderStatus = 3;
+    // }
     return orderStatus;
 }
 
@@ -81,6 +84,9 @@ async function GetListOrder() {
     ShowCircleLoader();
     try {
         responseDB = await RequestHttpPostPromise(searchParams, query);
+        if (DEBUG_ADMIN) {
+            console.log("GetListOrder data: " + responseDB.responseText);
+        }
     }
     catch (msgLoi) {
         RemoveCircleLoader();
@@ -122,6 +128,36 @@ async function CheckPackedOrderEnough() {
     }
     alert("Các đơn đều đã được đóng hàng.");
 }
+
+// async function GetToConfirm_Receive() {
+//     const searchParams = new URLSearchParams();
+//     searchParams.append("fromTo", GetFromTo());
+//     searchParams.append("orderStatus", GetOrderStatus());
+
+//     let query = "/ProductECommerce/GetListOrder";
+
+//     let responseDB = null;
+//     ShowCircleLoader();
+//     try {
+//         responseDB = await RequestHttpPostPromise(searchParams, query);
+//     }
+//     catch (msgLoi) {
+//         RemoveCircleLoader();
+//         await CreateMustClickOkModal(msgLoi, null);
+//         return;
+//     }
+//     RemoveCircleLoader();
+
+//     if (responseDB.responseText == "null") {
+//         await CreateMustClickOkModal("Không lấy được đơn hàng. Thử lại sau.", null);
+//         return;
+//     }
+
+//     // Hiển thị danh sách đơn hàng
+//     listOrder = JSON.parse(responseDB.responseText);
+
+//     ECommerceTypeChange();
+// }
 
 function SearchOrderCodeInList(orderCodeValue) {
     let length = listOrderTemp.length;
@@ -423,6 +459,7 @@ function DisplayListOrder(inlistOrderTemp) {
         let cell3 = row.insertCell(3);
         let cell4 = row.insertCell(4);
         let cell5 = row.insertCell(5);
+        let cell6 = row.insertCell(6);
 
         // Sàn
         cell0.innerHTML = order.ecommerceName;
@@ -471,6 +508,14 @@ function DisplayListOrder(inlistOrderTemp) {
         cell5.innerHTML = order.orderStatusInWarehouse;
         SetColorOfPackedReturned(cell5);
 
+        // TG Cập Nhật
+        if (order.update_time) {
+            let updateTime = new Date(order.update_time);
+            cell6.innerHTML = updateTime.toLocaleString();
+        } else {
+            cell6.innerHTML = "";
+        }
+
         row.onclick = function () {
             let id = parseInt(row.getAttribute("data-index-id"));
             currentOrder = listOrderTemp[id];
@@ -506,6 +551,10 @@ function GetOrderStatusInWarehouse() {
     else if (document.getElementById("order-status-unbooked").checked == true) {
         statusInWarehouse = unbookedOrderStatusInWarehouse;
     }
+    // else if (document.getElementById("order-status-to-confirm-receive").checked == true) {
+    //     statusInWarehouse = unbookedOrderStatusInWarehouse;
+    // }
+
 
     return statusInWarehouse;
 }
@@ -513,13 +562,26 @@ function GetOrderStatusInWarehouse() {
 // Lọc theo trạng thái trong kho
 function FilterOrderStatusInWarehouse(list, statusInWarehouse) {
     let listTemp = [];
-    // Lấy tất cả
-    if (statusInWarehouse == eAll) {
-        listTemp = list;
+    if (document.getElementById("order-status-to-confirm-receive").checked == false) {
+        // Lấy tất cả
+        if (statusInWarehouse == eAll) {
+            listTemp = list;
+        }
+        else {
+            for (let i = 0; i < list.length; i++) {
+                if (list[i].orderStatusInWarehouse === statusInWarehouse) {
+                    listTemp.push(list[i]);
+                }
+            }
+        }
     }
-    else {
+    else {// Lấy đơn hàng đã giao - cần xuất hóa đơn
+        //order.status
+        //let keywords = ["TO_CONFIRM_RECEIVE", "successful_delivery", "delivered"];
         for (let i = 0; i < list.length; i++) {
-            if (list[i].orderStatusInWarehouse === statusInWarehouse) {
+            if (list[i].status.includes("TO_CONFIRM_RECEIVE") ||
+                list[i].status.includes("successful_delivery") ||
+                list[i].status.includes("delivered")) {
                 listTemp.push(list[i]);
             }
         }
@@ -1360,3 +1422,128 @@ async function ManualMinusQuantityOrder() {
     // Ẩn modal
     CloseModalInOrderPage();
 }
+
+// Xuất file CSV cho hóa đơn điện tử
+async function ExportEInvoiceCSV() {
+    // Lấy ngày từ input
+    let dateInput = document.getElementById("einvoice-date").value;
+    if (!dateInput) {
+        await CreateMustClickOkModal("Vui lòng chọn ngày.", null);
+        return;
+    }
+
+    if (document.getElementById("order-status-to-confirm-receive").checked == false) {
+        CreateMustClickOkModal("Click Đã Giao - Xuất Hóa Đơn để lọc lấy đơn đã giao trước");
+        return;
+    }
+
+    // Convert input date sang Date object (set time 00:00:00)
+    let selectedDate = new Date(dateInput);
+    selectedDate.setHours(0, 0, 0, 0);
+
+    // Lọc đơn hàng có update_time >= ngày chọn
+    let filteredOrders = listOrderTemp.filter(order => {
+        if (!order.update_time) return false;
+
+        let updateTime = new Date(order.update_time);
+        return updateTime >= selectedDate;
+    });
+
+    if (filteredOrders.length === 0) {
+        await CreateMustClickOkModal("Không có đơn hàng nào trong khoảng thời gian này.", null);
+        return;
+    }
+
+    // Tạo CSV content
+    let csvContent = "﻿"; // BOM cho UTF-8
+    csvContent += "Ngày,Tên Sàn,Mã Đơn,Tên Sản Phẩm,Giá Bán,Số Lượng\n";
+
+    // Duyệt qua từng đơn hàng
+    for (let order of filteredOrders) {
+        // Format ngày từ update_time
+        let updateDate = "";
+        if (order.update_time) {
+            let date = new Date(order.update_time);
+
+            // Định dạng Ngày, Tháng, Năm
+            let day = date.getDate().toString().padStart(2, '0');
+            let month = (date.getMonth() + 1).toString().padStart(2, '0');
+            let year = date.getFullYear();
+
+            // Định dạng Giờ, Phút, Giây
+            let hours = date.getHours().toString().padStart(2, '0');
+            let minutes = date.getMinutes().toString().padStart(2, '0');
+            let seconds = date.getSeconds().toString().padStart(2, '0');
+
+            updateDate = `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // Duyệt qua từng sản phẩm trong đơn
+        for (let i = 0; i < order.listItemName.length; i++) {
+            let orderCode = order.code;
+
+            // Tên sàn
+            let ecommerceName = order.ecommerceName;
+
+            let itemName = order.listItemName[i];
+
+            // Nếu có model name, thêm vào sau item name
+            if (order.listModelName[i] && order.listModelName[i] !== "") {
+                itemName += " - " + order.listModelName[i];
+            }
+
+            // Giá bán (model_discounted_price)
+            let price = order.list_model_discounted_price[i] || 0;
+
+            // Số lượng
+            let quantity = order.listQuantity[i];
+
+            // Escape dấu phấy trong tên sản phẩm (bọc bằng dấu ngoặc kép)
+            if (itemName.includes(",") || itemName.includes("\"")) {
+                itemName = "\"" + itemName.replace(/"/g, "\"\"") + "\"";
+            }
+
+            csvContent += `${updateDate},${ecommerceName},${orderCode},${itemName},${price},${quantity}\n`;
+        }
+
+        // Thêm dòng trống giữa các đơn hàng để dễ đọc
+        csvContent += "\n";
+    }
+
+    // Tạo Blob và download
+    let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    let link = document.createElement("a");
+
+    // Tạo tên file với timestamp
+    let now = new Date();
+    let fileName = `HoaDon_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.csv`;
+
+    if (navigator.msSaveBlob) { // IE 10+
+        navigator.msSaveBlob(blob, fileName);
+    } else {
+        link.href = URL.createObjectURL(blob);
+        link.download = fileName;
+        link.style.display = "none";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    alert(`Đã xuất ${filteredOrders.length} đơn hàng ra file ${fileName}`);
+}
+
+// Chờ trang load xong rồi chạy
+window.addEventListener('DOMContentLoaded', (event) => {
+    let today = new Date();
+
+    // Trích xuất Năm, Tháng, Ngày theo giờ địa phương
+    let year = today.getFullYear();
+    let month = (today.getMonth() + 1).toString().padStart(2, '0');
+    let day = today.getDate().toString().padStart(2, '0');
+
+    // Gộp lại thành định dạng YYYY-MM-DD
+    let formattedDate = `${year}-${month}-${day}`;
+
+    // Gán giá trị vào input
+    document.getElementById('einvoice-date').value = formattedDate;
+});

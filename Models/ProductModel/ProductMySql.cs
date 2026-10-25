@@ -394,6 +394,10 @@ namespace MVCPlayWithMe.Models.ProductModel
             {
                 store = "st_tbProducts_Search_Dont_Sell_On_Shopee";
             }
+            else if(eType == Common.eLazada)
+            {
+                store = "st_tbProducts_Search_Dont_Sell_On_Lazada";
+            }
             else if (eType == Common.ePlayWithMe)
             {
                 store = "st_tbProducts_Search_Dont_Sell_On_PlayWithMe";

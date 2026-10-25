@@ -58,7 +58,8 @@ namespace MVCPlayWithMe.OpenPlatform
         {
             ALL, // Tất cả trạng thái đơn hàng
             READY_TO_SHIP_PROCESSED, // Đơn hàng nhà bán cần gửi cho bên vận chuyển
-            CANCELLED // Đơn hủy
+            CANCELLED, // Đơn hủy
+            TO_CONFIRM_RECEIVE, // Đã giao cho người mua
         }
 
         // Hàm này lấy sản phẩm mới đăng / mới cập nhật có trạng thái NORMAL trên sàn Tiki, Shopee, Lazada,...

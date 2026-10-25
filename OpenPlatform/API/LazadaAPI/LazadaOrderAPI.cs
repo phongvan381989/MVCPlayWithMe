@@ -215,6 +215,16 @@ namespace MVCPlayWithMe.OpenPlatform.API.LazadaAPI
             return orders;
         }
 
+        // Đơn hàng giao cho người mua
+        public static async Task<List<LazadaOrder>> LazadaGetOrdersDetailToConfirmReceiveAsync(DateTime fromDate)
+        {
+            List<LazadaOrder> orders = await LazadaGetOrdersAsync(fromDate,
+                LazadaOrder.lazadaOrderStatusArray[(int)LazadaOrder.EnumLazadaOrderStatus.delivered]);
+
+            await LazadaGetItemsFromOrdersAsync(orders);
+            return orders;
+        }
+
         public static async Task< List<LazadaOrderItem>> LazadaGetOrderItemsAsync(long order_id)
         {
             List<LazadaOrderItem> orderItems = new List<LazadaOrderItem>();

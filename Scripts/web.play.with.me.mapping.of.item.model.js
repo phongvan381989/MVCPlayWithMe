@@ -66,6 +66,9 @@ function ShowWhyUpdateFail(listCommonItemTemp) {
                 eleWhyUpdateFail.innerHTML = errors[0];
                 updateOk = false;
             }
+            else if (item.result.State != 0) {
+                eleWhyUpdateFail.innerHTML = item.result.Message;
+            }
             else {
                 eleWhyUpdateFail.innerHTML = "Xong";
             }

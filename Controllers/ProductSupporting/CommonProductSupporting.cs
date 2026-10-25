@@ -126,6 +126,45 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, eECommerceType, conn);
         }
 
+        public static async Task UpdateZeroStatusOfNeedUpdateQuantity_BatchConnectOutAsync(
+            EECommerceType eECommerceType,
+            List<int> listProductIdChanged,
+            List<CommonItem> listCommonItem,
+            MySqlResultState result,
+            MySqlConnection conn)
+        {
+            // Danh sách sản phẩm chưa cập nhật số lượng thành công
+            List<int> listProductIdUpdateFail = null;
+            if (eECommerceType == EECommerceType.TIKI)
+            {
+                listProductIdUpdateFail = TikiProductSupporting.TikiGetListProductIdUpdateFail_Batch(listCommonItem, listProductIdChanged);
+            }
+
+            if (listProductIdUpdateFail == null)
+            {
+                result.State = EMySqlResultState.INVALID;
+                result.Message = "listProductIdUpdateFail lấy lỗi";
+                return;
+            }
+
+            // Danh sách sản phẩm cập nhật thành công
+            List<int> listProductIdUpdateSuccess = new List<int>();
+            foreach (var id in listProductIdChanged)
+            {
+                if (!listProductIdUpdateFail.Contains(id))
+                {
+                    listProductIdUpdateSuccess.Add(id);
+                }
+            }
+            if (listProductIdUpdateFail.Count > 0)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "listProductIdUpdateFail lỗi: " + JsonConvert.SerializeObject(listProductIdUpdateFail);
+            }
+
+            await ProductMySql.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(listProductIdUpdateSuccess, eECommerceType, conn);
+        }
+
         public static async Task UpdateZeroStatusOfNeedUpdatePrice_BatchConnectOutAsync(
             EECommerceType eECommerceType,
             List<int> listProductIdChanged,
@@ -181,7 +220,9 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                     {
                         //List<CommonItem> tikiList = await TikiProductSuporting.TikiGetListNeedUpdateQuantityAndUpdateAsync(conn);
                         List<CommonItem> tikiList = await TikiProductSupporting.TikiGetListNeedUpdateQuantityAndUpdate_BatchAsync(conn);
-                        await CommonProductSupporting.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
+                        //await CommonProductSupporting.UpdateZeroStatusOfNeedUpdateQuantityConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, conn);
+                        MySqlResultState result = new MySqlResultState();
+                        await CommonProductSupporting.UpdateZeroStatusOfNeedUpdateQuantity_BatchConnectOutAsync(EECommerceType.TIKI, tikiProductIdList, tikiList, result, conn);
                         ls.AddRange(tikiList);
                     }
 

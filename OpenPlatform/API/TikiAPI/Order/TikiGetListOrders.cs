@@ -128,6 +128,10 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order
                     {
                         listValuePair.Add(new DevNameValuePair("status", "canceled"));
                     }
+                    else if(orderStatus == CommonOrderStatus.TO_CONFIRM_RECEIVE)
+                    {
+                        listValuePair.Add(new DevNameValuePair("status", "delivered"));
+                    }
                 }
                 else // Các page sau chỉ cập nhật currentpage
                 {

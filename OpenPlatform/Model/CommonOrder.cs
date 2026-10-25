@@ -1,5 +1,7 @@
-﻿using MVCPlayWithMe.General;
+﻿using Google.Protobuf.WellKnownTypes;
+using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
@@ -84,6 +86,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         public List<string> listItemName { get; set; } // Tên của item
         public List<string> listModelName { get; set; } // Tên của model
 
+        // Giá gốc của sản phẩm theo model_original_price Shopee
+        public List<float> list_model_original_price { get; set; }
+
+        // Giá bán thực tế sau chiết khấu theo model_discounted_price
+        public List<float> list_model_discounted_price { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -93,6 +101,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// 2020-08-10 18:50:17	When the order is created
         /// </summary>
         public DateTime created_at { get; set; }
+
+        // SHOPEE:
+        //Return by default.Timestamp that indicates the last time that there was a change in value of order,
+        //such as order status changed from 'Paid' to 'Completed'.
+        public DateTime update_time { get; set; }
 
         /// <summary>
         /// 
@@ -116,6 +129,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemName = new List<string>();
             listModelName = new List<string>();
             listMapping = new List<List<Mapping>>();
+
+            list_model_discounted_price = new List<float>();
+            list_model_original_price = new List<float>();
         }
 
         /// <summary>
@@ -141,6 +157,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelName = new List<string>();
             listMapping = new List<List<Mapping>>();
 
+            list_model_discounted_price = new List<float>();
+            list_model_original_price = new List<float>();
+
             foreach (TikiOrderItemV2 e in order.items)
             {
                 listItemId.Add(e.product.id);
@@ -150,8 +169,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 listThumbnail.Add(e.product.thumbnail);
                 listItemName.Add(e.product.name);
                 listModelName.Add("");
+
+                list_model_discounted_price.Add((float)e.invoice.price);// Cần check lại
+                list_model_original_price.Add((float)e.price); // Cần check lại
             }
             created_at = order.created_at;
+            update_time = order.updated_at;
         }
 
         /// <summary>
@@ -172,6 +195,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
             isExpress = CommonOpenPlatform.IsShopeeExpress(order.checkout_shipping_carrier);
             created_at = Common.GetDateFromTimestamp(order.create_time);
+            update_time = Common.GetDateFromTimestamp(order.update_time);
+
             listItemId = new List<long>();
             listModelId = new List<long>();
             listThumbnail = new List<string>();
@@ -180,6 +205,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemName = new List<string>();
             listModelName = new List<string>();
             listMapping = new List<List<Mapping>>();
+
+            list_model_discounted_price = new List<float>();
+            list_model_original_price = new List<float>();
 
             foreach (ShopeeGetOrderDetailItem e in order.item_list)
             {
@@ -190,6 +218,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                 listItemName.Add(e.item_name);
                 listModelName.Add(e.model_name);
+
+                list_model_discounted_price.Add(e.model_discounted_price);
+                list_model_original_price.Add(e.model_original_price);
             }
         }
 
@@ -206,6 +237,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             matchStatus = booking.match_status;
 
             created_at = Common.GetDateFromTimestamp(booking.create_time);
+            update_time = Common.GetDateFromTimestamp(booking.update_time);
+
             listItemId = new List<long>();
             listModelId = new List<long>();
             listThumbnail = new List<string>();
@@ -214,6 +247,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listItemName = new List<string>();
             listModelName = new List<string>();
             listMapping = new List<List<Mapping>>();
+
+            list_model_discounted_price = new List<float>();
+            list_model_original_price = new List<float>();
 
             foreach (ShopeeGetBookingDetailItem e in booking.item_list)
             {
@@ -256,6 +292,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
             listModelName = new List<string>();
             listMapping = new List<List<Mapping>>();
 
+            list_model_discounted_price = new List<float>();
+            list_model_original_price = new List<float>();
+
             long itemId, modelId;
             Boolean isExist;
             int index = 0;
@@ -286,7 +325,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     listQuantity.Add(1);
 
                     listItemName.Add(e.name);
-                   listModelName.Add(e.GetVariationName());
+                    listModelName.Add(e.GetVariationName());
+
+                    //list_model_discounted_price.Add((float)e.invoice.price);// Cần check lại
+                    //list_model_original_price.Add((float)e.price); // Cần check lại
                 }
             }
         }

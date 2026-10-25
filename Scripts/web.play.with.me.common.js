@@ -30,6 +30,7 @@ var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
 var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
+var orderStatusToConfirmReceive = "Xuất Hóa Đơn"
 var MediaFolderPath = "/Media"
 var sanPhamMediaFolderPath = MediaFolderPath + "/SanPham/";
 

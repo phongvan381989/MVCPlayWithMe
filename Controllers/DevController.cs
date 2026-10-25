@@ -3,6 +3,7 @@ using MVCPlayWithMe.Controllers.ProductSupporting;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Dev;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
@@ -799,11 +800,13 @@ namespace MVCPlayWithMe.Controllers
             //        conn);
             //}
 
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-            {
-                await conn.OpenAsync();
-                await VBNProductSupporting.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
-            }
+            //using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            //{
+            //    await conn.OpenAsync();
+            //    await VBNProductSupporting.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
+            //}
+
+            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123", 0, "TO_CONFRIM_RECEIVE");
 
             return JsonConvert.SerializeObject(result);
         }

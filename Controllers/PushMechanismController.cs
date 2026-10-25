@@ -1,6 +1,7 @@
 ﻿using MVCPlayWithMe.Controllers.ProductSupporting;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic;
@@ -37,6 +38,10 @@ namespace MVCPlayWithMe.Controllers
         private async Task ShopeeHandleOrderStatusPushAsync(OrderStatusPush orderStatusPush)
         {
             if (orderStatusPush == null) return;
+
+            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+            await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
+                (int)EECommerceType.SHOPEE, orderStatusPush.status);
 
             // Check status: UNPAID, READY_TO_SHIP, CANCELLED, IN_CANCEL đề phòng miss thông báo.
             // UNPAID, READY_TO_SHIP: thông báo này đến trước sự kiện đóng đơn
@@ -317,6 +322,10 @@ namespace MVCPlayWithMe.Controllers
         private async Task LazadaHandleOrderStatusPushAsync(LazadaOrderStatusPush orderStatusPush)
         {
             if (orderStatusPush == null) return;
+
+            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+            await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
+                (int)EECommerceType.LAZADA, orderStatusPush.order_status);
 
             // Possible values are unpaid, pending, canceled, ready_to_ship,
             // delivered, returned, shipped , failed, topack,toship,shipping and lost

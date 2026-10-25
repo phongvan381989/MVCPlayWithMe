@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace MVCPlayWithMe.Models.Order
 {
@@ -13,7 +13,7 @@ namespace MVCPlayWithMe.Models.Order
         public DateTime? Time { get; set; }
 
         // Helper properties (không map từ DB)
-        public string StatusString => MVCPlayWithMe.General.OrderStatusMapper.ToString(Status);
-        public string StatusDisplayName => MVCPlayWithMe.General.OrderStatusMapper.ToDisplayName(Status);
+        //public string StatusString => MVCPlayWithMe.General.OrderStatusMapper.ToString(Status);
+        //public string StatusDisplayName => MVCPlayWithMe.General.OrderStatusMapper.ToDisplayName(Status);
     }
 }

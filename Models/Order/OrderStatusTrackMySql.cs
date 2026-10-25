@@ -1,4 +1,4 @@
-using MVCPlayWithMe.General;
+﻿using MVCPlayWithMe.General;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
@@ -217,14 +217,14 @@ namespace MVCPlayWithMe.Models.Order
             return result;
         }
 
-        /// <summary>
-        /// Thêm tracking với OrderStatus string
-        /// </summary>
-        public static async Task<MySqlResultState> InsertAsync(int orderId, string orderStatus)
-        {
-            int status = OrderStatusMapper.ToInt(orderStatus);
-            return await InsertAsync(orderId, status);
-        }
+        ///// <summary>
+        ///// Thêm tracking với OrderStatus string
+        ///// </summary>
+        //public static async Task<MySqlResultState> InsertAsync(int orderId, string orderStatus)
+        //{
+        //    int status = OrderStatusMapper.ToInt(orderStatus);
+        //    return await InsertAsync(orderId, status);
+        //}
 
         #endregion
 

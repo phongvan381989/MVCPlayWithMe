@@ -40,6 +40,11 @@
                 <input type="radio" id="canceled-order" name="order-type" class="margin-left20 canceled-order">
                 <label for="canceled-order">Hủy</label>
             </div>
+
+            @*<div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="to-confirm-receive-order" name="order-type" class="margin-left20 to-confirm-receive-order">
+                <label for="to-confirm-receive-order">Đã Giao Phục Vụ Xuất Hóa Đơn</label>
+            </div>*@
         </div>
 
         <div class="display-flex-margin10">
@@ -48,9 +53,21 @@
                 Danh Sách Đơn Hàng
             </button>
             <button type="button" class="vndejhx90" title="Khả dụng khi chọn Cần Gửi Hàng"
-                    onclick="CheckPackedOrderEnough()">
+                    onclick="CheckPackedOrderEnough()" disabled>
                 Kiểm Tra Đủ Đơn
             </button>
+            @*<button type="button" class="vndejhx90" title="Lấy đơn đã giao => Cần xuất hóa đơn điện tử"
+                    onclick="GetToConfirm_Receive()">
+                Đơn Đã Giao
+            </button>*@
+            <div id="container-btn-create-einvoice">
+                <label for="einvoice-date" class="vndejhx90">Từ ngày:</label>
+                <input type="date" id="einvoice-date" class="vndejhx90" />
+                <button type="button" class="vndejhx90" onclick="ExportEInvoiceCSV()"
+                        title="Xuất danh sách đơn hàng có thời gian cập nhật >= ngày chọn ra file CSV">
+                    Sinh Hóa Đơn
+                </button>
+            </div>
         </div>
 
         @Html.Partial("~/Views/Shared/ECommerceType.cshtml")
@@ -102,6 +119,13 @@
                        class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
                 <label for="order-status-unbooked">Hủy Giữ Chỗ</label>
             </div>
+
+            <div class="display-flex-margin-right20-align-items-center">
+                <input type="radio" id="order-status-to-confirm-receive" name="order-status-packed-returned-booked-unbooked"
+                       class="margin-left20 canceled-order" onchange="ChangeOrderStatusInWarehouse()">
+                <label for="order-status-to-confirm-receive">Đã Giao - Xuất Hóa Đơn</label>
+            </div>
+
             <div class="display-flex-margin-right20-align-items-center">
                 <label id="count-order-on-view" style="padding-left:20px;"> 0 đơn hàng</label>
             </div>
@@ -116,6 +140,7 @@
                     <th>Trạng Thái</th>
                     <th>Thời Gian</th>
                     <th>Đóng/Hoàn</th>
+                    <th>TG Cập Nhật</th>
                 </tr>
             </table>
         </div>

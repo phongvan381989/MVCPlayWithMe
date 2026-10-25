@@ -782,6 +782,19 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     // Lazada
                     lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailReadyToShipAsync(time_from);
                 }
+                // Shopee không hỗ trợ lọc order status theo TO_CONFIRM_RECEIVE
+                //else if(eOrderStatus == CommonOrderStatus.TO_CONFIRM_RECEIVE)
+                //{
+                //    // Shopee
+                //    lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToConfirmReceiveAsync(
+                //    time_from,
+                //    time_to,
+                //    conn);
+
+
+                //    // Lazada
+                //    lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailToConfirmReceiveAsync(time_from);
+                //}
                 else
                 {
                     // Shopee
@@ -802,28 +815,39 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
 
                 // Shopee
-                foreach (var order in lsOrderShopeeFullInfo)
+                if (lsOrderShopeeFullInfo != null)
                 {
-                    lsCommonOrder.Add(new CommonOrder(order));
-                }
-                foreach (var order in lsBookingShopeeFullInfo)
-                {
-                    //if (string.IsNullOrEmpty(order.order_sn))
-                    //{
-                    //    // Đảm bảo chưa có đơn matched
+                    foreach (var order in lsOrderShopeeFullInfo)
+                    {
                         lsCommonOrder.Add(new CommonOrder(order));
-                    //}
+                    }
+                }
+
+                if (lsBookingShopeeFullInfo != null)
+                {
+                    foreach (var order in lsBookingShopeeFullInfo)
+                    {
+                        //if (string.IsNullOrEmpty(order.order_sn))
+                        //{
+                        //    // Đảm bảo chưa có đơn matched
+                        lsCommonOrder.Add(new CommonOrder(order));
+                        //}
+                    }
                 }
 
                 // Lazada
-                foreach (var order in lsOrderLazadaFullInfo)
+                if (lsOrderLazadaFullInfo != null)
                 {
-                    lsCommonOrder.Add(new CommonOrder(order));
+                    foreach (var order in lsOrderLazadaFullInfo)
+                    {
+                        lsCommonOrder.Add(new CommonOrder(order));
+                    }
                 }
             }
 
-            // Lấy đơn hàng của web Play With Me
-            lsCommonOrder.AddRange(await OrderMySql.GetListCommonOrderAsync(fromTo));
+            // Temporary Comment
+            //// Lấy đơn hàng của web Play With Me
+            //lsCommonOrder.AddRange(await OrderMySql.GetListCommonOrderAsync(fromTo));
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
             await OrderMySql.GetOrderStatusInWarehouseToCommonOrderAsync(lsCommonOrder);
