@@ -39,9 +39,15 @@ namespace MVCPlayWithMe.Controllers
         {
             if (orderStatusPush == null) return;
 
+            SByte needInvoice = 0;
+            if(orderStatusPush.status == "TO_CONFIRM_RECEIVE")
+            {
+                needInvoice = 1;
+            }
+
             // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
             await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
-                (int)EECommerceType.SHOPEE, orderStatusPush.status);
+                (int)EECommerceType.SHOPEE, orderStatusPush.status, needInvoice);
 
             // Check status: UNPAID, READY_TO_SHIP, CANCELLED, IN_CANCEL đề phòng miss thông báo.
             // UNPAID, READY_TO_SHIP: thông báo này đến trước sự kiện đóng đơn
@@ -323,9 +329,15 @@ namespace MVCPlayWithMe.Controllers
         {
             if (orderStatusPush == null) return;
 
+            SByte needInvoice = 0;
+            if (orderStatusPush.order_status == "delivered")
+            {
+                needInvoice = 1;
+            }
+
             // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
             await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
-                (int)EECommerceType.LAZADA, orderStatusPush.order_status);
+                (int)EECommerceType.LAZADA, orderStatusPush.order_status, needInvoice);
 
             // Possible values are unpaid, pending, canceled, ready_to_ship,
             // delivered, returned, shipped , failed, topack,toship,shipping and lost

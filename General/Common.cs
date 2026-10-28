@@ -121,6 +121,28 @@ namespace MVCPlayWithMe.General
             return eEnumType;
         }
 
+        public static string GetStringFromEECommerceType(EECommerceType eEnumType)
+        {
+            string stringType = eAll;
+            if(eEnumType == EECommerceType.PLAY_WITH_ME)
+            {
+                stringType = ePlayWithMe;
+            }
+            else if(eEnumType == EECommerceType.TIKI)
+            {
+                stringType = eTiki;
+            }
+            else if (eEnumType == EECommerceType.SHOPEE)
+            {
+                stringType = eShopee;
+            }
+            else if (eEnumType == EECommerceType.LAZADA)
+            {
+                stringType = eLazada;
+            }
+            return stringType;
+        }
+
         public enum ECommerceOrderStatus
         {
             PACKED, // Đơn thực tế được đóng
@@ -3058,6 +3080,30 @@ namespace MVCPlayWithMe.General
             return sb.ToString()
                 .Replace("đ", "d")
                 .Replace("Đ", "D");
+        }
+
+        /// <summary>
+        /// Xóa các ký tự thuộc danh sách chỉ định, sau đó gộp nhiều khoảng trắng thành 1
+        /// </summary>
+        /// <param name="input">Chuỗi cần lọc</param>
+        /// <param name="charactersToRemove">Danh sách ký tự cần xóa (VD: "+*")</param>
+        /// <returns>Chuỗi đã loại bỏ các ký tự trong danh sách và gộp khoảng trắng</returns>
+        public static string RemoveCharactersInList(string input, string charactersToRemove)
+        {
+            if (string.IsNullOrEmpty(input) || string.IsNullOrEmpty(charactersToRemove))
+                return input;
+
+            // Escape các ký tự đặc biệt trong Regex
+            string escaped = Regex.Escape(charactersToRemove);
+
+            // Pattern: [+*] → xóa tất cả ký tự + và *
+            string pattern = "[" + escaped + "]";
+            string result = Regex.Replace(input, pattern, "");
+
+            // Thay nhiều khoảng trắng liên tiếp = 1 khoảng trắng
+            result = Regex.Replace(result, @"\s+", " ").Trim();
+
+            return result;
         }
         #endregion
 

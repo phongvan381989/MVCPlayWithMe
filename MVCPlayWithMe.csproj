@@ -415,6 +415,7 @@
     <Compile Include="Models\SanPhamModel\SanPhamMediaMySql.cs" />
     <Compile Include="Models\SanPhamModel\SanPhamMySql.cs" />
     <Compile Include="Models\SanPhamModel\SanPhamSearchParameter.cs" />
+    <Compile Include="OpenPlatform\API\CassoInvoiceAPI\CommonCassoInvoiceAPI.cs" />
     <Compile Include="OpenPlatform\API\DevNameValuePair.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\CommonLazadaAPI.cs" />
     <Compile Include="OpenPlatform\API\LazadaAPI\LazadaAuthenAPI.cs" />
@@ -441,6 +442,11 @@
     <Compile Include="OpenPlatform\API\TikiAPI\DealDiscount\DealAction.cs" />
     <Compile Include="OpenPlatform\API\TikiAPI\Product\TikiCreateProduct.cs" />
     <Compile Include="OpenPlatform\CommonOpenPlatform.cs" />
+    <Compile Include="OpenPlatform\Model\CassoAuthenMySql.cs" />
+    <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoAuthen.cs" />
+    <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoDraftInvoiceRequest.cs" />
+    <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoDraftInvoiceResponse.cs" />
+    <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoInvoiceError.cs" />
     <Compile Include="OpenPlatform\Model\ItemForCreate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\CommonLazadaResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuth.cs" />
@@ -674,6 +680,8 @@
     <Content Include="Content\Customer\AccountInfor.css" />
     <Content Include="Content\Customer\Order.css" />
     <Content Include="Content\Dev\Index.css" />
+    <Content Include="Content\EInvoice\Index.css" />
+    <Content Include="Content\EInvoice\Order.css" />
     <Content Include="Content\Home\Cart.css" />
     <Content Include="Content\Home\Checkout.css" />
     <Content Include="Content\Home\Error.css" />
@@ -731,6 +739,7 @@
     <Content Include="Scripts\Customer\Order.js" />
     <Content Include="Scripts\Dev\Index.js" />
     <Content Include="Scripts\EInvoice\Index.js" />
+    <Content Include="Scripts\EInvoice\Order.js" />
     <Content Include="Scripts\Home\Cart.js" />
     <Content Include="Scripts\Home\Checkout.js" />
     <Content Include="Scripts\Home\SanPham.js" />
@@ -882,6 +891,7 @@
     <Content Include="Views\TikiOriginalSku\Index.cshtml" />
     <Content Include="Views\NeedUpdate\Index.cshtml" />
     <Content Include="Views\EInvoice\Index.cshtml" />
+    <Content Include="Views\EInvoice\Order.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -433,3 +433,18 @@ Publishers updated: ${result.myJson.publisherCount}
         CreateMustClickOkModal('❌ Lỗi kết nối!\n\n' + error.message, null);
     }
 }
+
+async function CassoRefreshAccesToken() {
+    if (!confirm('Làm mới access token của Casso?')) {
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    let query = "/Dev/CassoRefreshAccessToken";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Làm mới token thành công", "Có lỗi khi làm mới token");
+}

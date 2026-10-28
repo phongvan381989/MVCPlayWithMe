@@ -6,6 +6,7 @@ using MVCPlayWithMe.Models.Dev;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
@@ -16,6 +17,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
@@ -806,7 +808,14 @@ namespace MVCPlayWithMe.Controllers
             //    await VBNProductSupporting.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
             //}
 
-            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123", 0, "TO_CONFRIM_RECEIVE");
+            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123000", 0, "TO_CONFRIM_RECEIVE11", 0);
+            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123000", 0, "TO_CONFRIM_RECEIVE22", 0);
+            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123001", 0, "TO_CONFRIM_RECEIVE11", 0);
+            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123001", 0, "TO_CONFRIM_RECEIVE22", 1);
+
+            //result = await CommonCassoInvoiceAPI.GetAndSaveAccessTokenAsync();
+            //01a16e8b-96f0-7be7-ab7b-8b99b7f34083
+            result.myJson = await CommonCassoInvoiceAPI.GetInvoiceByIdAsync("01a16e8b-96a2-73cc-9d51-010be0ccb8dc");
 
             return JsonConvert.SerializeObject(result);
         }
@@ -1477,6 +1486,28 @@ namespace MVCPlayWithMe.Controllers
                 result.Message = "Lỗi: " + ex.Message;
                 result.myJson = log.ToString();
                 MyLogger.GetInstance().Error("ViewIISLogs error: " + ex.ToString());
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Làm mới access token của Casso
+        /// </summary>
+        [HttpPost]
+        public async Task<string> CassoRefreshAccessToken()
+        {
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            CassoAuthen authen = await CommonCassoInvoiceAPI.GetAndSaveAccessTokenAsync(true);
+            MySqlResultState result = new MySqlResultState();
+            if (authen == null)
+            {
+                result.State = EMySqlResultState.ERROR;
+                result.Message = "Làm mới thất bại";
             }
 
             return JsonConvert.SerializeObject(result);

@@ -959,6 +959,30 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return JsonConvert.SerializeObject(lsCommonOrder);
         }
 
+        [HttpPost]
+        public async Task<string> GetOrderDetail(string ecommerce,
+            string orderCode)
+        {
+
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(null);
+            }
+
+            CommonOrder commonOrder = null;
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                {
+                    commonOrder = await CommonProductSupporting.GetOrderDetail(ecommerce, orderCode, conn);
+
+                    await CommonProductSupporting.LoadMappingForCommonOrder(commonOrder, conn);
+                }
+            }
+
+            return JsonConvert.SerializeObject(commonOrder);
+        }
+
         /// <summary>
         /// Load lại mapping, sản phẩm trong 1 order
         /// </summary>
@@ -985,24 +1009,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     // Ta cần cập nhật lại.
                     await OrderMySql.UpdateStatusNormalOfTMDTItemConnectOut(order, conn);
 
-                    order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
-
-                    if (order.ecommerceName == eTiki)
-                    {
-                        await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(order, conn);
-                    }
-                    else if (order.ecommerceName == eShopee)
-                    {
-                        await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(order, conn);
-                    }
-                    else if (order.ecommerceName == eLazada)
-                    {
-                        await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(order, conn);
-                    }
-                    else if (order.ecommerceName == ePlayWithMe)
-                    {
-                        await OrderMySql.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
-                    }
+                    await CommonProductSupporting.LoadMappingForCommonOrder(order, conn);
                 }
                 catch (Exception ex)
                 {
@@ -1011,7 +1018,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             }
             return JsonConvert.SerializeObject(order);
         }
-
 
         [HttpPost]
         public async Task<string> EnoughProductInOrder(string eType, string commonOrder)

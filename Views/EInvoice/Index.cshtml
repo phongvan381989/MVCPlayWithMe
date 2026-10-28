@@ -7,59 +7,35 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20261024">
-    <style>
-        .invoice-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        .invoice-table th,
-        .invoice-table td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-        .invoice-table th {
-            background-color: #4CAF50;
-            color: white;
-        }
-        .invoice-table tr:nth-child(even) {
-            background-color: #f2f2f2;
-        }
-        .status-0 { color: orange; font-weight: bold; } /* Chưa xuất */
-        .status-1 { color: green; font-weight: bold; } /* Đã xuất */
-        .status-2 { color: red; font-weight: bold; } /* Lỗi */
-        .btn-update {
-            padding: 5px 10px;
-            margin: 2px;
-            cursor: pointer;
-        }
-        .display-flex-margin10 {
-            display: flex;
-            margin: 10px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-        .vndejhx90 {
-            margin-right: 10px;
-            padding: 8px 12px;
-        }
-    </style>
+    <link rel="stylesheet" href="~/Content/EInvoice/Index.css">
 </head>
 <body>
     <div id="biggestContainer">
         <h2>Quản Lý Hóa Đơn Điện Tử</h2>
 
         <div class="display-flex-margin10">
+            <label for="filter-date" class="vndejhx90">Từ ngày:</label>
+            <input type="date" id="filter-date" class="vndejhx90" />
+
             <button type="button" class="vndejhx90" onclick="LoadInvoiceList()"
                     title="Tải danh sách hóa đơn">
                 Tải Danh Sách
             </button>
 
-            <button type="button" class="vndejhx90" onclick="ShowAddModal()"
-                    title="Thêm hóa đơn mới">
-                Thêm Hóa Đơn
-            </button>
+            <div style="margin-left: 20px;">
+                <label style="margin-right: 10px;">
+                    <input type="radio" name="filter-need-invoice" value="all" onchange="DisplayInvoiceTable()" />
+                    Tất Cả
+                </label>
+                <label style="margin-right: 10px;">
+                    <input type="radio" name="filter-need-invoice" value="need" checked onchange="DisplayInvoiceTable()" />
+                    Cần HĐ
+                </label>
+                <label>
+                    <input type="radio" name="filter-need-invoice" value="pending" onchange="DisplayInvoiceTable()" />
+                    Chưa Xuất HĐ
+                </label>
+            </div>
 
             <label id="count-invoice" style="padding-left:20px;">0 hóa đơn</label>
         </div>
@@ -69,79 +45,21 @@
                 <thead>
                     <tr>
                         <th>ID</th>
-                        <th>Mã Đơn</th>
                         <th>Sàn</th>
+                        <th>Mã Đơn</th>
                         <th>Trạng Thái Đơn</th>
-                        <th>Tổng Tiền</th>
+                        <th>TG Cần Xuất HD</th>
+                        <th>Cần HĐ</th>
                         <th>Trạng Thái HĐ</th>
                         <th>Ngày Xuất</th>
                         <th>Mã HĐ</th>
-                        <th>Ghi Chú</th>
-                        <th>Thao Tác</th>
+                        <th>Mã Tra Cứu</th>
+                        <th>Invoice ID</th>
                     </tr>
                 </thead>
                 <tbody>
                 </tbody>
             </table>
-        </div>
-    </div>
-
-    <!-- Modal Thêm/Sửa -->
-    <div id="invoice-modal" class="modal" style="display:none; position:fixed; z-index:1000; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.4);">
-        <div style="background-color:#fefefe; margin:5% auto; padding:20px; border:1px solid #888; width:600px; border-radius:8px;">
-            <span class="close" onclick="CloseModal()" style="float:right; font-size:28px; font-weight:bold; cursor:pointer;">&times;</span>
-            <h3 id="modal-title">Thêm Hóa Đơn</h3>
-
-            <input type="hidden" id="invoice-id" value="-1" />
-
-            <div style="margin:10px 0;">
-                <label>Mã Đơn:</label><br />
-                <input type="text" id="invoice-code" style="width:100%; padding:8px;" />
-            </div>
-
-            <div style="margin:10px 0;">
-                <label>Sàn:</label><br />
-                <select id="invoice-ecommerce" style="width:100%; padding:8px;">
-                    <option value="0">PlayWithMe</option>
-                    <option value="1">Tiki</option>
-                    <option value="2">Shopee</option>
-                    <option value="3">Lazada</option>
-                </select>
-            </div>
-
-            <div style="margin:10px 0;">
-                <label>Trạng Thái Đơn:</label><br />
-                <input type="text" id="invoice-order-status" style="width:100%; padding:8px;" />
-            </div>
-
-            <div style="margin:10px 0;">
-                <label>Tổng Tiền:</label><br />
-                <input type="number" id="invoice-money" style="width:100%; padding:8px;" step="0.01" />
-            </div>
-
-            <div style="margin:10px 0;">
-                <label>Trạng Thái HĐ:</label><br />
-                <select id="invoice-status" style="width:100%; padding:8px;">
-                    <option value="0">Chưa xuất</option>
-                    <option value="1">Đã xuất</option>
-                    <option value="2">Lỗi</option>
-                </select>
-            </div>
-
-            <div style="margin:10px 0;">
-                <label>Mã HĐ:</label><br />
-                <input type="text" id="invoice-code-einvoice" style="width:100%; padding:8px;" />
-            </div>
-
-            <div style="margin:10px 0;">
-                <label>Ghi Chú:</label><br />
-                <textarea id="invoice-note" style="width:100%; padding:8px;" rows="3"></textarea>
-            </div>
-
-            <div style="margin:20px 0; text-align:center;">
-                <button type="button" class="vndejhx90" onclick="SaveInvoice()">Lưu</button>
-                <button type="button" class="vndejhx90" onclick="CloseModal()">Hủy</button>
-            </div>
         </div>
     </div>
 

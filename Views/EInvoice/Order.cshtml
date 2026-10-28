@@ -1,0 +1,82 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20261025">
+    <link rel="stylesheet" href="~/Content/EInvoice/Order.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        <h2>Chi Tiết Đơn Hàng</h2>
+
+        <!-- Thông tin đơn hàng -->
+        <div class="order-info">
+            <div class="order-info-item">
+                <label>Sàn:</label>
+                <span id="order-ecommerce">@ViewBag.EType</span>
+            </div>
+            <div class="order-info-item">
+                <label>Mã Đơn:</label>
+                <span id="order-code">@ViewBag.OrderId</span>
+            </div>
+            <div class="order-info-item">
+                <label>Mã Vận Đơn:</label>
+                <span id="order-ship-code"></span>
+            </div>
+            <div class="order-info-item">
+                <label>Trạng Thái:</label>
+                <span id="order-status"></span>
+            </div>
+            <div class="order-info-item">
+                <label>Thời Gian Tạo:</label>
+                <span id="order-created-at"></span>
+            </div>
+            <div class="order-info-item">
+                <label>Thời Gian Cập Nhật:</label>
+                <span id="order-update-time"></span>
+            </div>
+            <div class="order-info-item">
+                <label>Tin Nhắn Khách:</label>
+                <span id="order-message"></span>
+            </div>
+        </div>
+
+        <!-- Danh sách sản phẩm -->
+        <h3>Danh Sách Sản Phẩm</h3>
+        <table class="product-table" id="product-table">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Hình Ảnh</th>
+                    <th>Tên Sản Phẩm</th>
+                    <th>Tên Model</th>
+                    <th>Số Lượng</th>
+                    <th>Giá Gốc</th>
+                    <th>Giá Bán</th>
+                    <th>Thành Tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 20px; text-align: right;">
+            <button type="button" onclick="CreateDraftInvoice()"
+                    style="padding: 12px 24px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; margin-right: 10px;">
+                Tạo Hóa Đơn Nháp
+            </button>
+            <button type="button" onclick="IssueInvoice()"
+                    style="padding: 12px 24px; background-color: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold;">
+                Xuất Hóa Đơn
+            </button>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.common.js?v=20261025"></script>
+    <script src="~/Scripts/EInvoice/Order.js?v=20261025"></script>
+</body>
+</html>

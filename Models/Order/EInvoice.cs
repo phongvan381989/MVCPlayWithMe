@@ -50,6 +50,31 @@ namespace MVCPlayWithMe.Models.Order
         /// </summary>
         public string Note { get; set; }
 
+        /// <summary>
+        /// Thời gian cập nhật trạng thái đơn hàng
+        /// </summary>
+        public DateTime? OrderStatusUpdateTime { get; set; }
+
+        /// <summary>
+        /// Cần xuất hóa đơn: 0=Không, 1=Có
+        /// </summary>
+        public int NeedInvoice { get; set; }
+
+        /// <summary>
+        /// Thời gian cập nhật NeedInvoice
+        /// </summary>
+        public DateTime? NeedInvoiceUpdateTime { get; set; }
+
+        /// <summary>
+        /// Mã tra cứu hóa đơn Casso
+        /// </summary>
+        public string InvoiceLookupCode { get; set; }
+
+        /// <summary>
+        /// ID hóa đơn Casso
+        /// </summary>
+        public string InvoiceId { get; set; }
+
         public EInvoice()
         {
             Id = -1;
@@ -61,6 +86,11 @@ namespace MVCPlayWithMe.Models.Order
             InvoiceDate = DateTime.Now;
             InvoiceCode = string.Empty;
             Note = string.Empty;
+            OrderStatusUpdateTime = null;
+            NeedInvoice = 0;
+            NeedInvoiceUpdateTime = null;
+            InvoiceLookupCode = string.Empty;
+            InvoiceId = string.Empty;
         }
     }
 }

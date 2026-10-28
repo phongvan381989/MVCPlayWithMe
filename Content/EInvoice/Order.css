@@ -1,0 +1,45 @@
+﻿.order-info {
+    background-color: #f9f9f9;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+}
+
+.order-info-item {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+    .order-info-item label {
+        font-weight: bold;
+        margin-right: 10px;
+    }
+
+.product-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+    .product-table th,
+    .product-table td {
+        border: 1px solid #ddd;
+        padding: 12px;
+        text-align: left;
+    }
+
+    .product-table th {
+        background-color: #4CAF50;
+        color: white;
+    }
+
+    .product-table tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+.product-thumbnail {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+}

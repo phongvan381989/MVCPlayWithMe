@@ -24,9 +24,15 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
         // Xử lý event của đơn hàng
         private async Task HandleOrderEvent(TikiEvent tikiEvent, MySqlConnection conn)
         {
+            SByte needInvoice = 0;
+            if (tikiEvent.payload.status == "successful_delivery")
+            {
+                needInvoice = 1;
+            }
+
             // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
             await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(tikiEvent.payload.order_code,
-                (int)EECommerceType.TIKI, tikiEvent.payload.status);
+                (int)EECommerceType.TIKI, tikiEvent.payload.status, needInvoice);
 
             if (tikiEvent.type != "ORDER_CREATED_SUCCESSFULLY" &&
                 tikiEvent.payload.status != "canceled")

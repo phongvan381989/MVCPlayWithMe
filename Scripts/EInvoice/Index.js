@@ -2,6 +2,14 @@
 
 // Load danh sách hóa đơn khi trang load
 window.onload = function () {
+    // Set mặc định 7 ngày trước
+    let today = new Date();
+    // let sevenDaysAgo = new Date(today);
+    // sevenDaysAgo.setDate(today.getDate() - 7);
+    let dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    document.getElementById("filter-date").value = dateString;
+
+    // Load dữ liệu
     LoadInvoiceList();
 };
 
@@ -34,6 +42,13 @@ function GetInvoiceStatusClass(status) {
 // Load danh sách hóa đơn từ server
 async function LoadInvoiceList() {
     const searchParams = new URLSearchParams();
+
+    // Lấy ngày filter
+    let filterDate = document.getElementById("filter-date").value;
+    if (filterDate) {
+        searchParams.append("fromDate", filterDate);
+    }
+
     let query = "/EInvoice/GetList";
 
     ShowCircleLoader();
@@ -54,184 +69,94 @@ function DisplayInvoiceTable() {
     let tbody = document.querySelector("#invoice-table tbody");
     tbody.innerHTML = "";
 
-    // Update count
-    document.getElementById("count-invoice").innerHTML = invoiceList.length + " hóa đơn";
+    // Lấy filter từ radio button
+    let filterValue = document.querySelector('input[name="filter-need-invoice"]:checked').value;
 
-    for (let i = 0; i < invoiceList.length; i++) {
-        let invoice = invoiceList[i];
+    // Filter danh sách theo lựa chọn
+    let filteredList = invoiceList;
+    if (filterValue === "need") {
+        // Chỉ đơn cần xuất hóa đơn
+        filteredList = invoiceList.filter(invoice => invoice.NeedInvoice === 1);
+    } else if (filterValue === "pending") {
+        // Đơn cần xuất nhưng chưa xuất (InvoiceStatus = 0)
+        filteredList = invoiceList.filter(invoice => invoice.NeedInvoice === 1 && invoice.InvoiceStatus === 0);
+    }
+
+    // Update count
+    document.getElementById("count-invoice").innerHTML = filteredList.length + " hóa đơn";
+
+    for (let i = 0; i < filteredList.length; i++) {
+        let invoice = filteredList[i];
         let row = tbody.insertRow(-1);
 
         // ID
         let cell0 = row.insertCell(0);
         cell0.innerHTML = invoice.Id;
 
-        // Mã Đơn
-        let cell1 = row.insertCell(1);
-        cell1.innerHTML = invoice.Code;
-
         // Sàn
+        let cell1 = row.insertCell(1);
+        cell1.innerHTML = GetECommerceName(invoice.ECommmerce);
+
+        // Mã Đơn
         let cell2 = row.insertCell(2);
-        cell2.innerHTML = GetECommerceName(invoice.ECommmerce);
+        cell2.innerHTML = invoice.Code;
+        cell2.style.cursor = "pointer";
+        cell2.style.color = "blue";
+        cell2.style.textDecoration = "underline";
+        cell2.onclick = function () {
+            OpenOrderDetail(invoice);
+        };
 
         // Trạng Thái Đơn
         let cell3 = row.insertCell(3);
         cell3.innerHTML = invoice.OrderStatus || "";
 
-        // Tổng Tiền
+        // TG Cần Xuất HD
         let cell4 = row.insertCell(4);
-        cell4.innerHTML = ConvertMoneyToText(invoice.MoneySum);
+        if (invoice.NeedInvoiceUpdateTime) {
+            let date = new Date(invoice.NeedInvoiceUpdateTime);
+            cell4.innerHTML = date.toLocaleString('vi-VN');
+        }
 
-        // Trạng Thái HĐ
+        // Cần HĐ
         let cell5 = row.insertCell(5);
-        cell5.innerHTML = GetInvoiceStatusName(invoice.InvoiceStatus);
-        cell5.className = GetInvoiceStatusClass(invoice.InvoiceStatus);
+        cell5.innerHTML = invoice.NeedInvoice === 1 ? "Có" : "Không";
+        cell5.style.fontWeight = "bold";
+        cell5.style.color = invoice.NeedInvoice === 1 ? "red" : "gray";
+
+        // Trạng Thái HĐ (chỉ hiển thị khi NeedInvoice = 1)
+        let cell6 = row.insertCell(6);
+        if (invoice.NeedInvoice === 1) {
+            cell6.innerHTML = GetInvoiceStatusName(invoice.InvoiceStatus);
+            cell6.className = GetInvoiceStatusClass(invoice.InvoiceStatus);
+        } else {
+            cell6.innerHTML = "";
+        }
 
         // Ngày Xuất
-        let cell6 = row.insertCell(6);
+        let cell7 = row.insertCell(7);
         if (invoice.InvoiceDate) {
             let date = new Date(invoice.InvoiceDate);
-            cell6.innerHTML = date.toLocaleString('vi-VN');
+            cell7.innerHTML = date.toLocaleString('vi-VN');
         }
 
         // Mã HĐ
-        let cell7 = row.insertCell(7);
-        cell7.innerHTML = invoice.InvoiceCode || "";
-
-        // Ghi Chú
         let cell8 = row.insertCell(8);
-        cell8.innerHTML = invoice.Note || "";
+        cell8.innerHTML = invoice.InvoiceCode || "";
 
-        // Thao Tác
+        // Mã Tra Cứu
         let cell9 = row.insertCell(9);
+        cell9.innerHTML = invoice.InvoiceLookupCode || "";
 
-        // Nút Cập Nhật Trạng Thái
-        let btnUpdate = document.createElement("button");
-        btnUpdate.innerHTML = "Cập Nhật";
-        btnUpdate.className = "btn-update";
-        btnUpdate.onclick = function () {
-            ShowUpdateStatusModal(invoice);
-        };
-        cell9.appendChild(btnUpdate);
-
-        // Nút Xóa
-        let btnDelete = document.createElement("button");
-        btnDelete.innerHTML = "Xóa";
-        btnDelete.className = "btn-update";
-        btnDelete.style.backgroundColor = "#f44336";
-        btnDelete.style.color = "white";
-        btnDelete.onclick = function () {
-            DeleteInvoice(invoice.Id);
-        };
-        cell9.appendChild(btnDelete);
+        // Invoice ID
+        let cell10 = row.insertCell(10);
+        cell10.innerHTML = invoice.InvoiceId || "";
     }
 }
 
-// Hiển thị modal thêm mới
-function ShowAddModal() {
-    document.getElementById("modal-title").innerHTML = "Thêm Hóa Đơn";
-    document.getElementById("invoice-id").value = "-1";
-    document.getElementById("invoice-code").value = "";
-    document.getElementById("invoice-ecommerce").value = "1";
-    document.getElementById("invoice-order-status").value = "";
-    document.getElementById("invoice-money").value = "0";
-    document.getElementById("invoice-status").value = "0";
-    document.getElementById("invoice-code-einvoice").value = "";
-    document.getElementById("invoice-note").value = "";
-
-    document.getElementById("invoice-modal").style.display = "block";
-}
-
-// Hiển thị modal cập nhật trạng thái
-function ShowUpdateStatusModal(invoice) {
-    document.getElementById("modal-title").innerHTML = "Cập Nhật Trạng Thái";
-    document.getElementById("invoice-id").value = invoice.Id;
-    document.getElementById("invoice-code").value = invoice.Code;
-    document.getElementById("invoice-code").disabled = true;
-    document.getElementById("invoice-ecommerce").value = invoice.ECommmerce;
-    document.getElementById("invoice-ecommerce").disabled = true;
-    document.getElementById("invoice-order-status").value = invoice.OrderStatus || "";
-    document.getElementById("invoice-money").value = invoice.MoneySum;
-    document.getElementById("invoice-status").value = invoice.InvoiceStatus;
-    document.getElementById("invoice-code-einvoice").value = invoice.InvoiceCode || "";
-    document.getElementById("invoice-note").value = invoice.Note || "";
-
-    document.getElementById("invoice-modal").style.display = "block";
-}
-
-// Đóng modal
-function CloseModal() {
-    document.getElementById("invoice-modal").style.display = "none";
-    document.getElementById("invoice-code").disabled = false;
-    document.getElementById("invoice-ecommerce").disabled = false;
-}
-
-// Lưu hóa đơn
-async function SaveInvoice() {
-    let id = parseInt(document.getElementById("invoice-id").value);
-    let code = document.getElementById("invoice-code").value.trim();
-    let ecommerce = parseInt(document.getElementById("invoice-ecommerce").value);
-    let orderStatus = document.getElementById("invoice-order-status").value.trim();
-    let moneySum = parseFloat(document.getElementById("invoice-money").value);
-    let invoiceStatus = parseInt(document.getElementById("invoice-status").value);
-    let invoiceCode = document.getElementById("invoice-code-einvoice").value.trim();
-    let note = document.getElementById("invoice-note").value.trim();
-
-    // Validate
-    if (code === "") {
-        CreateMustClickOkModal("Mã đơn hàng không được rỗng.", null);
-        return;
-    }
-
-    const searchParams = new URLSearchParams();
-    let query = "";
-
-    if (id === -1) {
-        // Thêm mới
-        searchParams.append("code", code);
-        searchParams.append("ecommerce", ecommerce);
-        searchParams.append("orderStatus", orderStatus);
-        searchParams.append("moneySum", moneySum);
-        searchParams.append("invoiceStatus", invoiceStatus);
-        searchParams.append("note", note);
-        query = "/EInvoice/Insert";
-    } else {
-        // Cập nhật trạng thái
-        searchParams.append("id", id);
-        searchParams.append("invoiceStatus", invoiceStatus);
-        searchParams.append("invoiceCode", invoiceCode);
-        searchParams.append("note", note);
-        query = "/EInvoice/UpdateStatus";
-    }
-
-    ShowCircleLoader();
-    let responseDB = await RequestHttpPostPromise(searchParams, query);
-    RemoveCircleLoader();
-
-    CheckStatusResponseAndShowPrompt(responseDB.responseText,
-        "Lưu hóa đơn thành công.",
-        "Có lỗi xảy ra.");
-
-    CloseModal();
-    LoadInvoiceList();
-}
-
-// Xóa hóa đơn
-async function DeleteInvoice(id) {
-    if (!confirm("Bạn có chắc muốn xóa hóa đơn này?")) {
-        return;
-    }
-
-    const searchParams = new URLSearchParams();
-    searchParams.append("id", id);
-    let query = "/EInvoice/Delete";
-
-    ShowCircleLoader();
-    let responseDB = await RequestHttpPostPromise(searchParams, query);
-    RemoveCircleLoader();
-
-    CheckStatusResponseAndShowPrompt(responseDB.responseText,
-        "Xóa hóa đơn thành công.",
-        "Có lỗi xảy ra.");
-
-    LoadInvoiceList();
+// Mở tab chi tiết đơn hàng
+function OpenOrderDetail(invoice) {
+    let eTypeName = GetECommerceName(invoice.ECommmerce).toUpperCase();
+    let url = `/EInvoice/Order?ecommerce=${eTypeName}&orderCode=${invoice.Code}`;
+    window.open(url, '_blank');
 }

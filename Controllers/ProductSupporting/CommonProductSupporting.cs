@@ -1,13 +1,19 @@
 ﻿using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.OpenPlatform;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
+using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
+using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
 using MySqlConnector;
 using Newtonsoft.Json;
@@ -539,6 +545,78 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                 taxAndFee);
 
             return sale_price;
+        }
+
+        public static async Task<CommonOrder> GetOrderDetail(string ecommerce,
+            string orderCode, MySqlConnection conn)
+        {
+            CommonOrder commonOrder = null;
+            try
+            {
+                if (ecommerce == Common.eShopee)
+                {
+                    // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn
+                    ShopeeOrderDetail shopeeOrderDetail =
+                    await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderCode);
+
+                    if (shopeeOrderDetail != null)
+                    {
+                        commonOrder = new CommonOrder(shopeeOrderDetail);
+                    }
+                }
+                else if (ecommerce == Common.eLazada)
+                {
+                    // Lấy mã đơn hàng từ DB dựa vào tham số mã đơn hàng hoặc mã vận đơn
+                    long order_id = Common.ConvertStringToInt64(orderCode);
+                    if (order_id > 0)
+                    {
+                        LazadaOrder orderDetail =
+                        await LazadaOrderAPI.LazadaGetOrderDetailAsync(order_id);
+
+                        if (orderDetail != null)
+                        {
+                            commonOrder = new CommonOrder(orderDetail);
+                        }
+                    }
+                }
+                else if (ecommerce == Common.eTiki)
+                {
+                    TikiOrder tikiOrder = await TikiGetListOrders.TikiGetOrderFromCode(orderCode);
+                    if (tikiOrder != null)
+                    {
+                        commonOrder = new CommonOrder(tikiOrder);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.Message);
+                commonOrder = null;
+            }
+
+            return commonOrder;
+        }
+
+        public static async Task LoadMappingForCommonOrder(CommonOrder order, MySqlConnection conn)
+        {
+            order.listMapping = new List<List<Models.Mapping>>(); // Reset để cập nhật lại
+
+            if (order.ecommerceName == eTiki)
+            {
+                await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(order, conn);
+            }
+            else if (order.ecommerceName == eShopee)
+            {
+                await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(order, conn);
+            }
+            else if (order.ecommerceName == eLazada)
+            {
+                await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(order, conn);
+            }
+            else if (order.ecommerceName == ePlayWithMe)
+            {
+                await OrderMySql.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
+            }
         }
     }
 }

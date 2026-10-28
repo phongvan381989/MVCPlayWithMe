@@ -16,18 +16,12 @@ function InitializeEnterPress() {
 
     inputProductCode.addEventListener("keypress", function (event) {
         if (event.key === "Enter" && /*modal.style.display == "block"*/ document.activeElement === inputProductCode) {
-            //if (DEBUG) {
-            //    console.log("inputProductCode CALL");
-            //}
             event.preventDefault();
             document.getElementsByClassName("btn-add-product")[0].click();
         }
     });
     inputOrderCode.addEventListener("keypress", function (event) {
         if (event.key === "Enter" && /*modal.style.display == "none"*/document.activeElement === inputOrderCode) {
-            //if (DEBUG) {
-            //    console.log("inputOrderCode CALL");
-            //}
             event.preventDefault();
 
             if (document.getElementById("is-order-detail-from-server").checked) {
@@ -1076,9 +1070,6 @@ function InitializeModalInOrderPage() {
 // indexI = -1: Sản phẩm không có trong đơn hàng
 // indexJ = -1: Sản phẩm đã đủ số lượng
 function SearchProductCodeInOrder(code) {
-    //if (DEBUG) {
-    //    console.log("SearchProductCodeInOrder CALL code: " + code);
-    //}
 
     let indexI = -1;
     let indexJ = -1;
@@ -1087,10 +1078,6 @@ function SearchProductCodeInOrder(code) {
             if (currentOrder.listMapping[i][j].product.code === code
                 || currentOrder.listMapping[i][j].product.barcode === code) {
                 indexI = i;
-                //if (DEBUG) {
-                //    console.log("currentOrder.listMapping[i][j].product.code: " + currentOrder.listMapping[i][j].product.code);
-                //    console.log("currentOrder.listMapping[i][j].product.barcode: " + currentOrder.listMapping[i][j].product.barcode);
-                //}
                 // Thêm thuộc tính checked để đếm số lần sản phẩm đã được xuất kho
                 if (!currentOrder.listMapping[i][j].hasOwnProperty("checked")) {
                     currentOrder.listMapping[i][j].checked = 1;
@@ -1114,9 +1101,7 @@ function SearchProductCodeInOrder(code) {
     let ls = [];
     ls.push(indexI);
     ls.push(indexJ);
-    //if (DEBUG) {
-    //    console.log("ls: " + JSON.stringify(ls));
-    //}
+
     return ls;
 }
 
@@ -1164,9 +1149,7 @@ function UpdateViewOfAddProduct(lsIndex) {
     // Tự động click "Đủ Sản Phẩm"
     let isEnoughProduct = true;
     let collection = document.getElementsByClassName("item-checked-enough")
-    //if (DEBUG) {
-    //    console.log("collection: " + collection.length);
-    //}
+
     for (let i = 0; i < collection.length; i++) {
         if (collection[i].checked === false) {
             isEnoughProduct = false;
@@ -1432,25 +1415,29 @@ async function ExportEInvoiceCSV() {
         return;
     }
 
-    if (document.getElementById("order-status-to-confirm-receive").checked == false) {
-        CreateMustClickOkModal("Click Đã Giao - Xuất Hóa Đơn để lọc lấy đơn đã giao trước");
+    let filteredOrders = [];
+    ShowCircleLoader();
+    try {
+
+        // Gọi API lấy danh sách đơn cần xuất hóa đơn
+        const responseText = await PostJSON('/EInvoice/GetOrdersForExport', {
+            date: dateInput
+        });
+        if (DEBUG_ADMIN) {
+            console.log("ExportEInvoiceCSV: " + responseText);
+        }
+
+        filteredOrders = JSON.parse(responseText);
+    }
+    catch (msgLoi) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal(msgLoi);
         return;
     }
-
-    // Convert input date sang Date object (set time 00:00:00)
-    let selectedDate = new Date(dateInput);
-    selectedDate.setHours(0, 0, 0, 0);
-
-    // Lọc đơn hàng có update_time >= ngày chọn
-    let filteredOrders = listOrderTemp.filter(order => {
-        if (!order.update_time) return false;
-
-        let updateTime = new Date(order.update_time);
-        return updateTime >= selectedDate;
-    });
+    RemoveCircleLoader();
 
     if (filteredOrders.length === 0) {
-        await CreateMustClickOkModal("Không có đơn hàng nào trong khoảng thời gian này.", null);
+        await CreateMustClickOkModal("Không có đơn hàng nào cần xuất hóa đơn trong ngày này.", null);
         return;
     }
 
@@ -1460,7 +1447,7 @@ async function ExportEInvoiceCSV() {
 
     // Duyệt qua từng đơn hàng
     for (let order of filteredOrders) {
-        // Format ngày từ update_time
+        // Format ngày từ updateTime
         let updateDate = "";
         if (order.update_time) {
             let date = new Date(order.update_time);
