@@ -1508,5 +1508,61 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
             return JsonConvert.SerializeObject(result);
         }
+
+        #region Quản lý đơn hoàn trả
+
+        /// <summary>
+        /// Trang quản lý đơn hoàn trả về shop
+        /// </summary>
+        [HttpGet]
+        public async Task<ActionResult> OrderReturnShop()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+                return View("~/Views/Administrator/Login.cshtml");
+
+            return View();
+        }
+
+        /// <summary>
+        /// Lấy danh sách đơn hoàn trả
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GetOrderReturnShopList(int? isReturn = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            List<ECommerceOrderReturnShop> list;
+
+            if (isReturn.HasValue)
+            {
+                list = await ECommerceOrderReturnShopMySql.GetByIsReturnAsync(isReturn.Value);
+            }
+            else
+            {
+                list = await ECommerceOrderReturnShopMySql.GetAllAsync();
+            }
+
+            return JsonConvert.SerializeObject(list);
+        }
+
+        /// <summary>
+        /// Cập nhật trạng thái hoàn trả
+        /// </summary>
+        [HttpPost]
+        public async Task<string> UpdateOrderReturnStatus(int id, int isReturn)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = await ECommerceOrderReturnShopMySql.UpdateIsReturnByIdAsync(id, isReturn);
+            return JsonConvert.SerializeObject(result);
+        }
+
+        #endregion
     }
 }

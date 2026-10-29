@@ -330,5 +330,57 @@ namespace MVCPlayWithMe.Controllers
                 return JsonConvert.SerializeObject(result);
             }
         }
+
+        /// <summary>
+        /// Trang kiểm tra hóa đơn cần sửa đổi
+        /// </summary>
+        public async Task<ActionResult> Check()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return AuthenticationFail();
+            }
+            return View();
+        }
+
+        /// <summary>
+        /// Lấy danh sách đơn cần kiểm tra hóa đơn
+        /// </summary>
+        [HttpPost]
+        public async Task<string> GetCheckInvoiceList(int? isDone = null)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            List<ECommerceOrderCheckInvoice> list;
+
+            if (isDone.HasValue)
+            {
+                list = await ECommerceOrderCheckInvoiceMySql.GetByIsDoneAsync(isDone.Value);
+            }
+            else
+            {
+                list = await ECommerceOrderCheckInvoiceMySql.GetAllAsync();
+            }
+
+            return JsonConvert.SerializeObject(list);
+        }
+
+        /// <summary>
+        /// Cập nhật trạng thái đã kiểm tra xong (IsDone = 1)
+        /// </summary>
+        [HttpPost]
+        public async Task<string> UpdateCheckInvoiceStatus(int id)
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            MySqlResultState result = await ECommerceOrderCheckInvoiceMySql.UpdateIsDoneByIdAsync(id);
+            return JsonConvert.SerializeObject(result);
+        }
     }
 }

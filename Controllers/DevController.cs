@@ -815,7 +815,12 @@ namespace MVCPlayWithMe.Controllers
 
             //result = await CommonCassoInvoiceAPI.GetAndSaveAccessTokenAsync();
             //01a16e8b-96f0-7be7-ab7b-8b99b7f34083
-            result.myJson = await CommonCassoInvoiceAPI.GetInvoiceByIdAsync("01a16e8b-96a2-73cc-9d51-010be0ccb8dc");
+            //result.myJson = await CommonCassoInvoiceAPI.GetInvoiceByIdAsync("01a16e8b-96a2-73cc-9d51-010be0ccb8dc");
+
+            //await ECommerceOrderCheckInvoiceMySql.InsertOrIgnoreAsync("Test Shopee 1",
+            //    (int)EECommerceType.SHOPEE);
+            //await ECommerceOrderCheckInvoiceMySql.InsertOrIgnoreAsync("Test Tiki 2",
+            //    (int)EECommerceType.TIKI);
 
             return JsonConvert.SerializeObject(result);
         }

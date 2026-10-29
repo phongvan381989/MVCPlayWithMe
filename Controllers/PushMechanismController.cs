@@ -68,6 +68,14 @@ namespace MVCPlayWithMe.Controllers
             {
                 await conn.OpenAsync();
 
+                if(orderStatusPush.status == "TO_RETURN" || 
+                orderStatusPush.status == "CANCELLED")
+                {
+                    // Lưu vào bảng check đơn hủy nhưng đã đóng
+                    await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(orderStatusPush.ordersn,
+                        (int)EECommerceType.SHOPEE, conn);
+                }
+
                 TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                     orderStatusPush.ordersn,
                     EECommerceType.SHOPEE, conn);
@@ -257,6 +265,15 @@ namespace MVCPlayWithMe.Controllers
             }
         }
 
+        private async Task ShopeeHandleReturnPushAsync(ShopeeReturnUpdatesPushData returnPushData)
+        {
+            if (returnPushData == null) return;
+
+            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+            await ECommerceOrderCheckInvoiceMySql.InsertOrIgnoreAsync(returnPushData.order_sn,
+                (int)EECommerceType.SHOPEE);
+        }
+
         public async Task ThreadShopeeNotificationsAsync(string requestBody)
         {
             try
@@ -291,6 +308,12 @@ namespace MVCPlayWithMe.Controllers
                     // booking_status_push
                     ShopeeBookingSatusPushData data = JsonConvert.DeserializeObject<ShopeeBookingSatusPushData>(obj["data"].ToString());
                     await ShopeeHandleBookingStatusPushAsync(data);
+                }
+                else if(code == 29)
+                {
+                    //return_updates_push
+                    ShopeeReturnUpdatesPushData data = JsonConvert.DeserializeObject<ShopeeReturnUpdatesPushData>(obj["data"].ToString());
+                    //await ShopeeHandleBookingStatusPushAsync(data);
                 }
             }
             catch (Exception ex)
@@ -352,6 +375,13 @@ namespace MVCPlayWithMe.Controllers
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
+
+                if (orderStatusPush.order_status == "canceled")
+                {
+                    // Lưu vào bảng check đơn hủy nhưng đã đóng
+                    await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(orderStatusPush.order_status,
+                        (int)EECommerceType.LAZADA, conn);
+                }
 
                 TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                     orderStatusPush.trade_order_id,

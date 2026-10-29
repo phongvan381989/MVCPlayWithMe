@@ -40,6 +40,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                 return;
             }
 
+            if (tikiEvent.payload.status == "canceled")
+            {
+                // Lưu vào bảng check đơn hủy nhưng đã đóng
+                await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(tikiEvent.payload.order_code,
+                    (int)EECommerceType.TIKI, conn);
+            }
+
             TbEcommerceOrder tbEcommerceOrder = 
              await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                 tikiEvent.payload.order_code,

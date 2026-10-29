@@ -1,0 +1,49 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    @Html.Partial("~/Views/Shared/Head.cshtml")
+    <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20261029">
+    <link rel="stylesheet" href="~/Content/ProductECommerce/OrderReturnShop.css">
+</head>
+<body>
+    <div id="biggestContainer">
+        <div class="config-max-width padding-container">
+            <h2>Quản Lý Đơn Hoàn Trả Về Shop</h2>
+
+            <div class="status-filter">
+                <label>Lọc theo trạng thái:</label>
+                <button type="button" onclick="FilterByStatus(null)">Tất Cả</button>
+                <button type="button" class="active" onclick="FilterByStatus(0)">Chưa Hoàn</button>
+                <button type="button" onclick="FilterByStatus(1)">Đã Hoàn</button>
+                <button type="button" onclick="FilterByStatus(2)">Thất Lạc</button>
+                <button type="button" onclick="LoadData()" style="margin-left: auto; background-color: #007bff; color: white;">
+                    🔄 Tải Lại
+                </button>
+            </div>
+
+            <div class="count-result" id="count-result"></div>
+
+            <table id="myTableReturnShop">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Sàn TMĐT</th>
+                        <th>Mã Đơn</th>
+                        <th>Trạng Thái</th>
+                        <th>Thao Tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="~/Scripts/web.play.with.me.common.js?v=20261029"></script>
+    <script src="~/Scripts/ProductECommerce/OrderReturnShop.js?v=20261029"></script>
+</body>
+</html>

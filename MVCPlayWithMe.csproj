@@ -447,6 +447,10 @@
     <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoDraftInvoiceRequest.cs" />
     <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoDraftInvoiceResponse.cs" />
     <Compile Include="OpenPlatform\Model\CassoInvoiceApp\CassoInvoiceError.cs" />
+    <Compile Include="OpenPlatform\Model\ECommerceOrderCheckInvoice.cs" />
+    <Compile Include="OpenPlatform\Model\ECommerceOrderCheckInvoiceMySql.cs" />
+    <Compile Include="OpenPlatform\Model\ECommerceOrderReturnShop.cs" />
+    <Compile Include="OpenPlatform\Model\ECommerceOrderReturnShopMySql.cs" />
     <Compile Include="OpenPlatform\Model\ItemForCreate.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\CommonLazadaResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\LazadaApp\LazadaConfig\LazadaAuth.cs" />
@@ -485,6 +489,7 @@
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeCreateProduct\ShopeeUploadImageResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeLogistic\ShopeeGetBookingTrackingNumberResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\ShopeeBookingSatusPush.cs" />
+    <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeNotification\ShopeeReturnUpdatesPush.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailItem.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingDetailResponseHTTP.cs" />
     <Compile Include="OpenPlatform\Model\ShopeeApp\ShopeeOrder\ShopeeGetBookingListResponseHTTP.cs" />
@@ -680,6 +685,7 @@
     <Content Include="Content\Customer\AccountInfor.css" />
     <Content Include="Content\Customer\Order.css" />
     <Content Include="Content\Dev\Index.css" />
+    <Content Include="Content\EInvoice\Check.css" />
     <Content Include="Content\EInvoice\Index.css" />
     <Content Include="Content\EInvoice\Order.css" />
     <Content Include="Content\Home\Cart.css" />
@@ -695,6 +701,7 @@
     <Content Include="Content\ProductECommerce\Index.css" />
     <Content Include="Content\ProductECommerce\Item.css" />
     <Content Include="Content\ProductECommerce\Order.css" />
+    <Content Include="Content\ProductECommerce\OrderReturnShop.css" />
     <Content Include="Content\Product\Import.css" />
     <Content Include="Content\Product\MappingOfProduct.css" />
     <Content Include="Content\Product\NeedUpdateQuatity.css" />
@@ -738,6 +745,7 @@
     <Content Include="Scripts\Customer\Login.js" />
     <Content Include="Scripts\Customer\Order.js" />
     <Content Include="Scripts\Dev\Index.js" />
+    <Content Include="Scripts\EInvoice\Check.js" />
     <Content Include="Scripts\EInvoice\Index.js" />
     <Content Include="Scripts\EInvoice\Order.js" />
     <Content Include="Scripts\Home\Cart.js" />
@@ -764,6 +772,7 @@
     <Content Include="Scripts\ProductECommerce\Index.js" />
     <Content Include="Scripts\ProductECommerce\item.js" />
     <Content Include="Scripts\ProductECommerce\ItemOnDB.js" />
+    <Content Include="Scripts\ProductECommerce\OrderReturnShop.js" />
     <Content Include="Scripts\ProductECommerce\OrderStatistics.js" />
     <Content Include="Scripts\Product\ChangeImport.js" />
     <Content Include="Scripts\Product\Create.js" />
@@ -892,6 +901,8 @@
     <Content Include="Views\NeedUpdate\Index.cshtml" />
     <Content Include="Views\EInvoice\Index.cshtml" />
     <Content Include="Views\EInvoice\Order.cshtml" />
+    <Content Include="Views\ProductECommerce\OrderReturnShop.cshtml" />
+    <Content Include="Views\EInvoice\Check.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
