@@ -57,7 +57,7 @@ function RenderTable(data) {
     if (data.length === 0) {
         let row = tbody.insertRow(-1);
         let cell = row.insertCell(0);
-        cell.colSpan = 5;
+        cell.colSpan = 7;
         cell.innerHTML = "Không có dữ liệu";
         cell.style.textAlign = "center";
         cell.style.padding = "20px";
@@ -79,17 +79,30 @@ function RenderTable(data) {
         let cell2 = row.insertCell(2);
         cell2.innerHTML = item.Code || "";
 
-        // Trạng Thái
+        // Loại Đơn
         let cell3 = row.insertCell(3);
-        cell3.innerHTML = GetStatusBadge(item.IsReturn);
+        cell3.innerHTML = GetOrderTypeBadge(item.IsBooking);
+
+        // Thời Gian
+        let cell4 = row.insertCell(4);
+        if (item.UpdateTime) {
+            let date = new Date(item.UpdateTime);
+            cell4.innerHTML = date.toLocaleString('vi-VN');
+        } else {
+            cell4.innerHTML = "";
+        }
+
+        // Trạng Thái
+        let cell5 = row.insertCell(5);
+        cell5.innerHTML = GetStatusBadge(item.IsReturn);
 
         // Thao Tác
-        let cell4 = row.insertCell(4);
+        let cell6 = row.insertCell(6);
         if (item.IsReturn === 0) {
             // Chưa hoàn - hiển thị 2 nút
-            cell4.innerHTML = `
+            cell6.innerHTML = `
                 <div class="action-buttons">
-                    <button class="btn-returned" onclick="UpdateStatus(${item.Id}, 1, '${item.Code}')">
+                    <button class="btn-returned" onclick="CreateMustClickOkModal('Ấn Hoàn Hàng bên trang Order', null)">
                         ✓ Đã Hoàn
                     </button>
                     <button class="btn-lost" onclick="UpdateStatus(${item.Id}, 2, '${item.Code}')">
@@ -99,7 +112,7 @@ function RenderTable(data) {
             `;
         } else {
             // Đã có trạng thái - không cho sửa
-            cell4.innerHTML = `<span style="color: #6c757d; font-style: italic;">Đã xử lý</span>`;
+            cell6.innerHTML = `<span style="color: #6c757d; font-style: italic;">Đã xử lý</span>`;
         }
     });
 }
@@ -112,6 +125,18 @@ function GetECommerceName(ecommerce) {
         case 2: return "Shopee";
         case 3: return "Lazada";
         default: return "Không xác định";
+    }
+}
+
+// Lấy badge loại đơn
+function GetOrderTypeBadge(isBooking) {
+    switch (isBooking) {
+        case 0:
+            return '<span class="status-badge" style="background-color: #6c757d; color: white;">Bình thường</span>';
+        case 1:
+            return '<span class="status-badge" style="background-color: #17a2b8; color: white;">Booking</span>';
+        default:
+            return '<span class="status-badge">Không xác định</span>';
     }
 }
 

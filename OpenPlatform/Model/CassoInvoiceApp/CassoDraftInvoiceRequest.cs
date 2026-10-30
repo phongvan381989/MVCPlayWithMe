@@ -54,7 +54,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp
 
         public static string RemoveCharactersInItemName(string input)
         {
-            return Common.RemoveCharactersInList(input, "+?");
+            return Common.RemoveCharactersInList(input, "+?!");
         }
 
         public OpenApiCreateInvoiceBody(CommonOrder order)

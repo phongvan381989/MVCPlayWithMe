@@ -44,7 +44,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             {
                 // Lưu vào bảng check đơn hủy nhưng đã đóng
                 await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(tikiEvent.payload.order_code,
-                    (int)EECommerceType.TIKI, conn);
+                    (int)EECommerceType.TIKI, 0,  conn);
             }
 
             TbEcommerceOrder tbEcommerceOrder = 

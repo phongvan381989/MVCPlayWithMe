@@ -1143,9 +1143,13 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
+                    string orderCode;
+                    SByte isBooking = 0;
                     // Là đơn booking
                     if (order.isBooking)
                     {
+                        isBooking = 1;
+                        orderCode = order.bookingCode;
                         TbEcommerceOrder tbEcommerceBookingLastest = await TikiMySql.GetLastestStatusOfECommerceBookingAsync(
                             order.bookingCode, eECommerceType, conn);
                         ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceBookingLastest.status;
@@ -1164,6 +1168,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     }
                     else
                     {
+                        orderCode = order.code;
                         TbEcommerceOrder tbEcommerceOrder = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
                             order.code, eECommerceType, conn);
                         ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
@@ -1181,6 +1186,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                             }
                         }
                     }
+
+                    await ECommerceOrderReturnShopMySql.UpdateIsReturnAsync(orderCode, (int)eECommerceType, isBooking, 1, conn);
                 }
             }
             catch (Exception ex)

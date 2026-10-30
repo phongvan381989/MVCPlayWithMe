@@ -82,7 +82,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                     Id = rdr.GetInt32("Id"),
                                     Code = MyMySql.GetString(rdr, "Code"),
                                     ECommmerce = MyMySql.GetInt32(rdr, "ECommmerce"),
-                                    IsReturn = MyMySql.GetInt32(rdr, "IsReturn")
+                                    IsReturn = MyMySql.GetInt32(rdr, "IsReturn"),
+                                    IsBooking = MyMySql.GetInt32(rdr, "IsBooking"),
+                                    UpdateTime = MyMySql.GetDateTime(rdr, "UpdateTime")
                                 });
                             }
                         }
@@ -126,7 +128,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                     Id = rdr.GetInt32("Id"),
                                     Code = MyMySql.GetString(rdr, "Code"),
                                     ECommmerce = MyMySql.GetInt32(rdr, "ECommmerce"),
-                                    IsReturn = MyMySql.GetInt32(rdr, "IsReturn")
+                                    IsReturn = MyMySql.GetInt32(rdr, "IsReturn"),
+                                    IsBooking = MyMySql.GetInt32(rdr, "IsBooking"),
+                                    UpdateTime = MyMySql.GetDateTime(rdr, "UpdateTime")
                                 };
                             }
                         }
@@ -171,7 +175,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                     Id = rdr.GetInt32("Id"),
                                     Code = MyMySql.GetString(rdr, "Code"),
                                     ECommmerce = MyMySql.GetInt32(rdr, "ECommmerce"),
-                                    IsReturn = MyMySql.GetInt32(rdr, "IsReturn")
+                                    IsReturn = MyMySql.GetInt32(rdr, "IsReturn"),
+                                    IsBooking = MyMySql.GetInt32(rdr, "IsBooking"),
+                                    UpdateTime = MyMySql.GetDateTime(rdr, "UpdateTime")
                                 });
                             }
                         }
@@ -191,40 +197,39 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public static async Task<MySqlResultState> UpdateIsReturnAsync(string code,
             int ecommerce,
-            int isReturn) // 0: chưa hoàn hàng về shop, 1: đã hoàn về shop, 2: thất lạc
+            SByte isBooking, // 0: Đơn bình thường, 1: Là Booking 
+            SByte isReturn, // 0: chưa hoàn hàng về shop, 1: đã hoàn về shop, 2: thất lạc
+            MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
 
             try
             {
-                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                string query = @"UPDATE tbecommerceorder_return_shop
+                                SET IsReturn = @isReturn
+                                WHERE Code = @code AND ECommmerce = @ecommerce AND IsBooking = @isBooking";
+
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
-                    await conn.OpenAsync();
+                    cmd.Parameters.AddWithValue("@code", code);
+                    cmd.Parameters.AddWithValue("@ecommerce", ecommerce);
+                    cmd.Parameters.AddWithValue("@isBooking", isBooking);
+                    cmd.Parameters.AddWithValue("@isReturn", isReturn);
 
-                    string query = @"UPDATE tbecommerceorder_return_shop
-                                   SET IsReturn = @isReturn
-                                   WHERE Code = @code AND ECommmerce = @ecommerce";
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    if (rowsAffected > 0)
                     {
-                        cmd.Parameters.AddWithValue("@code", code);
-                        cmd.Parameters.AddWithValue("@ecommerce", ecommerce);
-                        cmd.Parameters.AddWithValue("@isReturn", isReturn);
-
-                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
-
-                        if (rowsAffected > 0)
-                        {
-                            result.State = EMySqlResultState.OK;
-                            result.Message = "Cập nhật trạng thái hoàn trả thành công";
-                        }
-                        else
-                        {
-                            result.State = EMySqlResultState.EXCEPTION;
-                            result.Message = "Không tìm thấy đơn hàng để cập nhật";
-                        }
+                        result.State = EMySqlResultState.OK;
+                        result.Message = "Cập nhật trạng thái hoàn trả thành công";
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.EXCEPTION;
+                        result.Message = "Không tìm thấy đơn hàng để cập nhật";
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -319,6 +324,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// </summary>
         public static async Task<MySqlResultState> InsertIfPackedAsync(string code,
             int ecommerce,
+            SByte isBooking, //0: Đơn bình thường, 1: Là Booking
             MySqlConnection conn
             )
         {
@@ -331,8 +337,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     cmd.CommandType = System.Data.CommandType.StoredProcedure;
 
                     // IN parameters
-                    cmd.Parameters.AddWithValue("@inCode", code);
-                    cmd.Parameters.AddWithValue("@inECommmerce", ecommerce);
+                    cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = code;
+                    cmd.Parameters.Add("@inECommmerce", MySqlDbType.Byte).Value = ecommerce;
+                    cmd.Parameters.Add("@inIsBooking", MySqlDbType.Byte).Value = isBooking;
 
                     // Execute
                     await cmd.ExecuteNonQueryAsync();

@@ -38,5 +38,17 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// 2 - Thất lạc.
         /// </summary>
         public int IsReturn { get; set; }
+
+        /// <summary>
+        /// Loại đơn hàng.
+        /// 0 - Đơn bình thường.
+        /// 1 - Đơn Booking.
+        /// </summary>
+        public int IsBooking { get; set; }
+
+        /// <summary>
+        /// Thời gian cập nhật.
+        /// </summary>
+        public DateTime? UpdateTime { get; set; }
     }
 }

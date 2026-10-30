@@ -73,7 +73,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     // Lưu vào bảng check đơn hủy nhưng đã đóng
                     await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(orderStatusPush.ordersn,
-                        (int)EECommerceType.SHOPEE, conn);
+                        (int)EECommerceType.SHOPEE, 0, conn);
                 }
 
                 TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
@@ -194,6 +194,14 @@ namespace MVCPlayWithMe.Controllers
                 using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
                     await conn.OpenAsync();
+
+                    if (data.booking_status == "CANCELLED")
+                    {
+                        // Lưu vào bảng check đơn hủy nhưng đã đóng
+                        await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(data.booking_sn,
+                            (int)EECommerceType.SHOPEE, 1, conn);
+                    }
+
                     ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
                     ECommerceOrderStatus oldStatus = ECommerceOrderStatus.DONT_EXIST;
                     if (data.booking_status == "READY_TO_SHIP"
@@ -380,7 +388,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     // Lưu vào bảng check đơn hủy nhưng đã đóng
                     await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(orderStatusPush.order_status,
-                        (int)EECommerceType.LAZADA, conn);
+                        (int)EECommerceType.LAZADA, 0,  conn);
                 }
 
                 TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
