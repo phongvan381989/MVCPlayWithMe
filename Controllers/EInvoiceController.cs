@@ -202,44 +202,47 @@ namespace MVCPlayWithMe.Controllers
                     result.Message = "Không parse được dữ liệu đơn hàng";
                     return JsonConvert.SerializeObject(result);
                 }
-
-                Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(order.code,
-                    (int)Common.GetEECommerceTypeFromString(order.ecommerceName));
-                if(hasCasso)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    result.State = EMySqlResultState.EXIST;
-                    result.Message = "Đã có hóa đơn nháp. Đơn đã có mã tìm kiếm, id hóa đơn trên hệ thống Casso. KHông được tạo mới";
-                    return JsonConvert.SerializeObject(result);
-                }
-
-                // Tạo request body
-                OpenApiCreateInvoiceBody request = new OpenApiCreateInvoiceBody(order);
-
-                // Gọi API Casso
-                CassoResponse<OpenApiInvoiceResource> response =
-                    await CommonCassoInvoiceAPI.CreateDraftInvoiceAsync(request);
-
-                if (response.IsSucceed)
-                {
-                    result = await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(order.code,
-                        (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
-                        response.data.id, response.data.lookupCode, 0);
-                    result.myJson = new
+                    await conn.OpenAsync();
+                    Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(order.code,
+                    (int)Common.GetEECommerceTypeFromString(order.ecommerceName), conn);
+                    if (hasCasso)
                     {
-                        success = true,
-                        message = "Tạo hóa đơn nháp thành công",
-                        invoiceId = response.data.id,
-                        lookupCode = response.data.lookupCode,
-                        invoiceNumber = response.data.invoiceNumber,
-                        status = response.data.status
-                    };
-                    return JsonConvert.SerializeObject(result);
-                }
-                else
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = $"Lỗi từ Casso: {response.message}";
-                    return JsonConvert.SerializeObject(result);
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Đã có hóa đơn nháp. Đơn đã có mã tìm kiếm, id hóa đơn trên hệ thống Casso. KHông được tạo mới";
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    // Tạo request body
+                    OpenApiCreateInvoiceBody request = new OpenApiCreateInvoiceBody(order);
+
+                    // Gọi API Casso
+                    CassoResponse<OpenApiInvoiceResource> response =
+                        await CommonCassoInvoiceAPI.CreateDraftInvoiceAsync(request);
+
+                    if (response.IsSucceed)
+                    {
+                        result = await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(order.code,
+                            (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
+                            response.data.id, response.data.lookupCode, 0, conn);
+                        result.myJson = new
+                        {
+                            success = true,
+                            message = "Tạo hóa đơn nháp thành công",
+                            invoiceId = response.data.id,
+                            lookupCode = response.data.lookupCode,
+                            invoiceNumber = response.data.invoiceNumber,
+                            status = response.data.status
+                        };
+                        return JsonConvert.SerializeObject(result);
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = $"Lỗi từ Casso: {response.message}";
+                        return JsonConvert.SerializeObject(result);
+                    }
                 }
             }
             catch (Exception ex)
@@ -279,49 +282,52 @@ namespace MVCPlayWithMe.Controllers
                     result.Message = "Không parse được dữ liệu đơn hàng";
                     return JsonConvert.SerializeObject(result);
                 }
-
-                Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(order.code,
-                    (int)Common.GetEECommerceTypeFromString(order.ecommerceName));
-                if (hasCasso)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    result.State = EMySqlResultState.EXIST;
-                    result.Message = "Đã có hóa đơn nháp. Đơn đã có mã tìm kiếm, id hóa đơn trên hệ thống Casso. KHông được tạo mới";
-                    return JsonConvert.SerializeObject(result);
-                }
-
-                // Tạo request body
-                OpenApiCreateInvoiceBody request = new OpenApiCreateInvoiceBody(order);
-
-                // Gọi API Casso để xuất hóa đơn
-                CassoResponse<OpenApiInvoiceResource> response =
-                    await CommonCassoInvoiceAPI.IssueInvoiceAsync(request);
-
-                if (response.IsSucceed)
-                {
-                    // Cập nhật InvoiceId và LookupCode vào DB
-                    result = await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(
-                        order.code,
-                        (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
-                        response.data.id,
-                        response.data.lookupCode, 1);
-
-                    result.myJson = new
+                    await conn.OpenAsync();
+                    Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(order.code,
+                    (int)Common.GetEECommerceTypeFromString(order.ecommerceName), conn);
+                    if (hasCasso)
                     {
-                        success = true,
-                        message = "Xuất hóa đơn thành công!",
-                        invoiceId = response.data.id,
-                        lookupCode = response.data.lookupCode,
-                        invoiceNumber = response.data.invoiceNumber,
-                        status = response.data.status,
-                        taxAuthorityCode = response.data.taxAuthorityCode
-                    };
-                    return JsonConvert.SerializeObject(result);
-                }
-                else
-                {
-                    result.State = EMySqlResultState.ERROR;
-                    result.Message = $"Lỗi từ Casso: {response.message}";
-                    return JsonConvert.SerializeObject(result);
+                        result.State = EMySqlResultState.EXIST;
+                        result.Message = "Đã có hóa đơn nháp. Đơn đã có mã tìm kiếm, id hóa đơn trên hệ thống Casso. KHông được tạo mới";
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    // Tạo request body
+                    OpenApiCreateInvoiceBody request = new OpenApiCreateInvoiceBody(order);
+
+                    // Gọi API Casso để xuất hóa đơn
+                    CassoResponse<OpenApiInvoiceResource> response =
+                        await CommonCassoInvoiceAPI.IssueInvoiceAsync(request);
+
+                    if (response.IsSucceed)
+                    {
+                        // Cập nhật InvoiceId và LookupCode vào DB
+                        result = await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(
+                            order.code,
+                            (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
+                            response.data.id,
+                            response.data.lookupCode, 1, conn);
+
+                        result.myJson = new
+                        {
+                            success = true,
+                            message = "Xuất hóa đơn thành công!",
+                            invoiceId = response.data.id,
+                            lookupCode = response.data.lookupCode,
+                            invoiceNumber = response.data.invoiceNumber,
+                            status = response.data.status,
+                            taxAuthorityCode = response.data.taxAuthorityCode
+                        };
+                        return JsonConvert.SerializeObject(result);
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = $"Lỗi từ Casso: {response.message}";
+                        return JsonConvert.SerializeObject(result);
+                    }
                 }
             }
             catch (Exception ex)
@@ -381,6 +387,48 @@ namespace MVCPlayWithMe.Controllers
 
             MySqlResultState result = await ECommerceOrderCheckInvoiceMySql.UpdateIsDoneByIdAsync(id);
             return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Lấy ký tự bỏ qua từ tb_casso_authen và cập nhật vào OpenApiCreateInvoiceBody
+        /// </summary>
+        [HttpPost]
+        public async Task<string> LoadSkippingCharacters()
+        {
+            if ((await AuthentAdministratorAsync()) == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                // Lấy thông tin từ database
+                CassoAuthen authen = await CassoAuthenMySql.GetAsync();
+
+                if (authen == null)
+                {
+                    return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.EXCEPTION, "Không tìm thấy thông tin Casso Authen"));
+                }
+
+                // Cập nhật vào biến static
+                string characters = authen.SkippingCharacters ?? string.Empty;
+                OpenApiCreateInvoiceBody.SetSkippingCharacters(characters);
+
+                // Lấy lại để confirm
+                string currentCharacters = OpenApiCreateInvoiceBody.GetSkippingCharacters();
+
+                return JsonConvert.SerializeObject(new
+                {
+                    State = 0,
+                    Message = $"Đã tải ký tự bỏ qua: '{currentCharacters}'",
+                    Characters = currentCharacters
+                });
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn($"LoadSkippingCharacters error: {ex.Message}");
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.EXCEPTION, $"Lỗi: {ex.Message}"));
+            }
         }
     }
 }

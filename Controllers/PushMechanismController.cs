@@ -3,6 +3,7 @@ using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform;
+using MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI;
 using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeLogistic;
 using MVCPlayWithMe.OpenPlatform.API.ShopeeAPI.ShopeeOrder;
@@ -45,9 +46,23 @@ namespace MVCPlayWithMe.Controllers
                 needInvoice = 1;
             }
 
-            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
-            await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
-                (int)EECommerceType.SHOPEE, orderStatusPush.status, needInvoice);
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+
+                // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+                await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
+                    (int)EECommerceType.SHOPEE, orderStatusPush.status, needInvoice, conn);
+
+                // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
+                if (needInvoice == 1)
+                {
+                    ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderStatusPush.ordersn);
+                    CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
+                    await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                    CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                }
+            }
 
             // Check status: UNPAID, READY_TO_SHIP, CANCELLED, IN_CANCEL đề phòng miss thông báo.
             // UNPAID, READY_TO_SHIP: thông báo này đến trước sự kiện đóng đơn
@@ -366,9 +381,31 @@ namespace MVCPlayWithMe.Controllers
                 needInvoice = 1;
             }
 
-            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
-            await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
-                (int)EECommerceType.LAZADA, orderStatusPush.order_status, needInvoice);
+            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            {
+                await conn.OpenAsync();
+                // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+                await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
+                (int)EECommerceType.LAZADA, orderStatusPush.order_status, needInvoice, conn);
+
+                // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
+                if (needInvoice == 1)
+                {
+                    long order_id = Common.ConvertStringToInt64(orderStatusPush.trade_order_id);
+                    if (order_id < 0) return;
+                    List<LazadaOrderItem> orderItems = await LazadaOrderAPI.LazadaGetOrderItemsAsync(order_id);
+                    if (orderItems.Count != 0)
+                    {
+                        LazadaOrder order = new LazadaOrder();
+                        order.order_id = orderItems[0].order_id;
+                        order.orderItems = orderItems;
+
+                        CommonOrder commonOrder = new CommonOrder(order);
+                        await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                        CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    }
+                }
+            }
 
             // Possible values are unpaid, pending, canceled, ready_to_ship,
             // delivered, returned, shipped , failed, topack,toship,shipping and lost

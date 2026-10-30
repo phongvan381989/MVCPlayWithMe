@@ -3,8 +3,11 @@ using MVCPlayWithMe.Controllers;
 using MVCPlayWithMe.Controllers.ProductSupporting;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI;
+using MVCPlayWithMe.OpenPlatform.API.LazadaAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeNotification;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Event;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
@@ -32,7 +35,19 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
 
             // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
             await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(tikiEvent.payload.order_code,
-                (int)EECommerceType.TIKI, tikiEvent.payload.status, needInvoice);
+                (int)EECommerceType.TIKI, tikiEvent.payload.status, needInvoice, conn);
+            // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
+            if (needInvoice == 1)
+            {
+                TikiOrder tikiOrder = await TikiGetListOrders.TikiGetOrderFromCode(tikiEvent.payload.order_code);
+
+                if (tikiOrder != null)
+                {
+                    CommonOrder commonOrder = new CommonOrder(tikiOrder);
+                    await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                    CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                }
+            }
 
             if (tikiEvent.type != "ORDER_CREATED_SUCCESSFULLY" &&
                 tikiEvent.payload.status != "canceled")

@@ -116,7 +116,7 @@ namespace MVCPlayWithMe.Models.Order
 
                     if (fromDate.HasValue)
                     {
-                        query += " WHERE `NeedInvoiceUpdateTime` >= @fromDate";
+                        query += " WHERE (`NeedInvoiceUpdateTime` IS NULL AND `OrderStatusUpdateTime` >= @fromDate) OR `NeedInvoiceUpdateTime` >= @fromDate";
                     }
 
                     query += " ORDER BY `NeedInvoiceUpdateTime` DESC";
@@ -292,7 +292,8 @@ namespace MVCPlayWithMe.Models.Order
             string code,
             int ecommerce,
             string orderStatus,
-            SByte needInvoice) //0: chưa cần/ không cần xuất hóa đơn / 1: Cần xuất hóa đơn
+            SByte needInvoice, //0: chưa cần/ không cần xuất hóa đơn / 1: Cần xuất hóa đơn
+            MySqlConnection conn)
         {
             if(string.IsNullOrEmpty(code) || string.IsNullOrEmpty(orderStatus))
             {
@@ -301,38 +302,33 @@ namespace MVCPlayWithMe.Models.Order
 
             try
             {
-                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                // Insert nếu chưa tồn tại, Update OrderStatus nếu đã có
+                // ON DUPLICATE KEY UPDATE dựa vào UNIQUE KEY `UC_CombinedKeys` (`Code`,`ECommmerce`)
+                string query = @"INSERT INTO `tb_einvoice`
+                    (`Code`, `ECommmerce`, `OrderStatus`, `OrderStatusUpdateTime`)
+                    VALUES (@code, @ecommerce, @orderStatus, NOW())
+                    ON DUPLICATE KEY UPDATE
+                    `OrderStatus` = @orderStatus, `OrderStatusUpdateTime` = NOW()";
+
+                if(needInvoice == 1)
                 {
-                    await conn.OpenAsync();
-
-                    // Insert nếu chưa tồn tại, Update OrderStatus nếu đã có
-                    // ON DUPLICATE KEY UPDATE dựa vào UNIQUE KEY `UC_CombinedKeys` (`Code`,`ECommmerce`)
-                    string query = @"INSERT INTO `tb_einvoice`
-                        (`Code`, `ECommmerce`, `OrderStatus`, `OrderStatusUpdateTime`)
-                        VALUES (@code, @ecommerce, @orderStatus, NOW())
-                        ON DUPLICATE KEY UPDATE
-                        `OrderStatus` = @orderStatus, `OrderStatusUpdateTime` = NOW()";
-
-                    if(needInvoice == 1)
+                    query = @"INSERT INTO `tb_einvoice`
+                    (`Code`, `ECommmerce`, `OrderStatus`, `OrderStatusUpdateTime`, `NeedInvoice`, `NeedInvoiceUpdateTime`)
+                    VALUES (@code, @ecommerce, @orderStatus, NOW(), @needInvoice, NOW())
+                    ON DUPLICATE KEY UPDATE
+                    `OrderStatus` = @orderStatus, `OrderStatusUpdateTime` = NOW(), `NeedInvoice` = @needInvoice, `NeedInvoiceUpdateTime` = NOW()";
+                }
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@orderStatus", MySqlDbType.VarChar).Value = orderStatus ?? string.Empty;
+                    if (needInvoice == 1)
                     {
-                        query = @"INSERT INTO `tb_einvoice`
-                        (`Code`, `ECommmerce`, `OrderStatus`, `OrderStatusUpdateTime`, `NeedInvoice`, `NeedInvoiceUpdateTime`)
-                        VALUES (@code, @ecommerce, @orderStatus, NOW(), @needInvoice, NOW())
-                        ON DUPLICATE KEY UPDATE
-                        `OrderStatus` = @orderStatus, `OrderStatusUpdateTime` = NOW(), `NeedInvoice` = @needInvoice, `NeedInvoiceUpdateTime` = NOW()";
+                        cmd.Parameters.Add("@needInvoice", MySqlDbType.Byte).Value = needInvoice;
                     }
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                        cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
-                        cmd.Parameters.Add("@orderStatus", MySqlDbType.VarChar).Value = orderStatus ?? string.Empty;
-                        if (needInvoice == 1)
-                        {
-                            cmd.Parameters.Add("@needInvoice", MySqlDbType.Byte).Value = needInvoice;
-                        }
-                        await cmd.ExecuteNonQueryAsync();
-                    }
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception ex)
@@ -345,41 +341,37 @@ namespace MVCPlayWithMe.Models.Order
         /// Kiểm tra Code + ECommmerce đã có InvoiceId hoặc InvoiceLookupCode chưa
         /// </summary>
         /// <returns>true nếu đã có, false nếu chưa có hoặc không tồn tại record</returns>
-        public static async Task<bool> HasCassoInvoiceLookUpInfoAsync(string code, int ecommerce)
+        public static async Task<bool> HasCassoInvoiceLookUpInfoAsync(string code, int ecommerce, MySqlConnection conn)
         {
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            try
             {
-                try
+                string query = @"SELECT `InvoiceId`, `InvoiceLookupCode`
+                    FROM `tb_einvoice`
+                    WHERE `Code` = @code AND `ECommmerce` = @ecommerce
+                    LIMIT 1";
+
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
-                    await conn.OpenAsync();
-                    string query = @"SELECT `InvoiceId`, `InvoiceLookupCode`
-                        FROM `tb_einvoice`
-                        WHERE `Code` = @code AND `ECommmerce` = @ecommerce
-                        LIMIT 1";
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
 
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
-                        cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                        cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
-
-                        using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                        if (await rdr.ReadAsync())
                         {
-                            if (await rdr.ReadAsync())
-                            {
-                                string invoiceId = rdr.IsDBNull(0) ? string.Empty : rdr.GetString(0);
-                                string lookupCode = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
+                            string invoiceId = rdr.IsDBNull(0) ? string.Empty : rdr.GetString(0);
+                            string lookupCode = rdr.IsDBNull(1) ? string.Empty : rdr.GetString(1);
 
-                                // Có ít nhất 1 trong 2 trường có giá trị
-                                return !string.IsNullOrEmpty(invoiceId) || !string.IsNullOrEmpty(lookupCode);
-                            }
+                            // Có ít nhất 1 trong 2 trường có giá trị
+                            return !string.IsNullOrEmpty(invoiceId) || !string.IsNullOrEmpty(lookupCode);
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    MyLogger.GetInstance().Warn(ex.ToString());
-                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
             }
 
             return false; // Không tìm thấy hoặc lỗi
@@ -393,58 +385,55 @@ namespace MVCPlayWithMe.Models.Order
             int ecommerce,
             string invoiceId,
             string invoiceLookupCode,
-            int invoiceStatus = 0) // 0: Chưa xuất  / 1:  Đã xuất / 2:  Lỗi
+            int invoiceStatus, // 0: Chưa xuất  / 1:  Đã xuất / 2:  Lỗi
+            MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+            try
             {
-                try
+                string query = @"UPDATE `tb_einvoice`
+                    SET `InvoiceId` = @invoiceId,
+                        `InvoiceLookupCode` = @invoiceLookupCode
+                    WHERE `Code` = @code AND `ECommmerce` = @ecommerce";
+
+                if(invoiceStatus != 0)
                 {
-                    await conn.OpenAsync();
-                    string query = @"UPDATE `tb_einvoice`
-                        SET `InvoiceId` = @invoiceId,
-                            `InvoiceLookupCode` = @invoiceLookupCode
-                        WHERE `Code` = @code AND `ECommmerce` = @ecommerce";
+                    query = @"UPDATE `tb_einvoice`
+                    SET `InvoiceId` = @invoiceId,
+                        `InvoiceLookupCode` = @invoiceLookupCode,
+                        `InvoiceStatus` = @invoiceStatus
+                    WHERE `Code` = @code AND `ECommmerce` = @ecommerce";
+                }    
 
-                    if(invoiceStatus != 0)
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@invoiceId", MySqlDbType.VarChar).Value = invoiceId ?? string.Empty;
+                    cmd.Parameters.Add("@invoiceLookupCode", MySqlDbType.VarChar).Value = invoiceLookupCode ?? string.Empty;
+                    if (invoiceStatus != 0)
                     {
-                        query = @"UPDATE `tb_einvoice`
-                        SET `InvoiceId` = @invoiceId,
-                            `InvoiceLookupCode` = @invoiceLookupCode,
-                            `InvoiceStatus` = @invoiceStatus
-                        WHERE `Code` = @code AND `ECommmerce` = @ecommerce";
-                    }    
+                        cmd.Parameters.Add("@invoiceStatus", MySqlDbType.Byte).Value = invoiceStatus;
+                    }
 
-                    using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                    int rowsAffected = await cmd.ExecuteNonQueryAsync();
+
+                    if (rowsAffected > 0)
                     {
-                        cmd.CommandType = CommandType.Text;
-                        cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                        cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
-                        cmd.Parameters.Add("@invoiceId", MySqlDbType.VarChar).Value = invoiceId ?? string.Empty;
-                        cmd.Parameters.Add("@invoiceLookupCode", MySqlDbType.VarChar).Value = invoiceLookupCode ?? string.Empty;
-                        if (invoiceStatus != 0)
-                        {
-                            cmd.Parameters.Add("@invoiceStatus", MySqlDbType.Byte).Value = invoiceStatus;
-                        }
-
-                        int rowsAffected = await cmd.ExecuteNonQueryAsync();
-
-                        if (rowsAffected > 0)
-                        {
-                            result.State = EMySqlResultState.OK;
-                            result.Message = "Cập nhật thông tin hóa đơn thành công";
-                        }
-                        else
-                        {
-                            result.State = EMySqlResultState.INVALID;
-                            result.Message = "Không tìm thấy đơn hàng để cập nhật";
-                        }
+                        result.State = EMySqlResultState.OK;
+                        result.Message = "Cập nhật thông tin hóa đơn thành công";
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.INVALID;
+                        result.Message = "Không tìm thấy đơn hàng để cập nhật";
                     }
                 }
-                catch (Exception ex)
-                {
-                    Common.SetResultException(ex, result);
-                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
             return result;
         }

@@ -37,7 +37,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                                     access_token = MyMySql.GetString(rdr, "access_token"),
                                     exp = MyMySql.GetInt64(rdr, "exp"),
                                     expires_in = MyMySql.GetInt32(rdr, "expires_in"),
-                                    issued_at = MyMySql.GetInt64(rdr, "issued_at")
+                                    issued_at = MyMySql.GetInt64(rdr, "issued_at"),
+                                    SkippingCharacters = MyMySql.GetString(rdr, "SkippingCharacters")
                                 };
                             }
                         }
@@ -49,6 +50,36 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
             }
             return authen;
+        }
+
+        /// <summary>
+        /// Lấy thông tin xác thực Casso (lấy record đầu tiên)
+        /// </summary>
+        public static async Task<string> GetSkippingCharactersAsync(MySqlConnection conn)
+        {
+            string skippingCharacters = null;
+            try
+            {
+                string query = "SELECT SkippingCharacters FROM `tb_casso_authen` LIMIT 1";
+
+                using (MySqlCommand cmd = new MySqlCommand(query, conn))
+                {
+                    cmd.CommandType = CommandType.Text;
+                    using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
+                    {
+                        if (await rdr.ReadAsync())
+                        {
+                            skippingCharacters = MyMySql.GetString(rdr, "SkippingCharacters");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
+
+            return skippingCharacters;
         }
 
         /// <summary>

@@ -2,6 +2,7 @@
 using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp;
+using MySqlConnector;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
@@ -246,6 +247,33 @@ namespace MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI
         public static async Task<CassoResponse<OpenApiInvoiceResource>> IssueInvoiceAsync(OpenApiCreateInvoiceBody request)
         {
             return await ExecuteCassoApiAsync<OpenApiInvoiceResource>("/xinvoice/v1/invoices/issue", Method.POST, request);
+        }
+
+        public static async Task IssueInvoiceBackground(CommonOrder order, MySqlConnection conn)
+        {
+            try
+            {
+                // Tạo request body
+                OpenApiCreateInvoiceBody request = new OpenApiCreateInvoiceBody(order);
+
+                // Gọi API Casso để xuất hóa đơn
+                CassoResponse<OpenApiInvoiceResource> response =
+                    await CommonCassoInvoiceAPI.IssueInvoiceAsync(request);
+
+                if (response.IsSucceed)
+                {
+                    // Cập nhật InvoiceId và LookupCode vào DB
+                    await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(
+                        order.code,
+                        (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
+                        response.data.id,
+                        response.data.lookupCode, 1, conn);
+                }
+            }
+            catch (Exception ex)
+            {
+                MyLogger.GetInstance().Warn(ex.ToString());
+            }
         }
     }
 

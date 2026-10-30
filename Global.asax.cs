@@ -8,6 +8,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI.DealDiscount;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
 using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
@@ -76,6 +77,9 @@ namespace MVCPlayWithMe
                     CommonTikiAPI.tikiConfigApp = CommonTikiAPI.GetTikiConfigApp(conn).GetAwaiter().GetResult();
                     CommonShopeeAPI.shopeeAuthen = CommonShopeeAPI.ShopeeGetAuthen(conn).GetAwaiter().GetResult();
                     LazadaAuthenAPI.lazadaAuthen = LazadaAuthenAPI.LazadaGetAuthFromDBAsync(conn).GetAwaiter().GetResult();
+
+                    String skippingCharacters = CassoAuthenMySql.GetSkippingCharactersAsync(conn).GetAwaiter().GetResult();
+                    OpenApiCreateInvoiceBody.SetSkippingCharacters(skippingCharacters);
                 }
             }
             catch (Exception ex)

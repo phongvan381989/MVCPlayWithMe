@@ -44,6 +44,11 @@ namespace MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp
         /// </summary>
         public long exp { get; set; }
 
+        /// <summary>
+        /// Các ký tự cần bỏ qua trong tên sản phẩm khi xuất hóa đơn
+        /// </summary>
+        public string SkippingCharacters { get; set; }
+
         public CassoAuthen()
         {
             Id = -1;
@@ -54,6 +59,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp
             expires_in = 0;
             issued_at = 0;
             exp = 0;
+            SkippingCharacters = string.Empty;
         }
     }
 }

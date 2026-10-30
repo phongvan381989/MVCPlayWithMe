@@ -160,3 +160,33 @@ function OpenOrderDetail(invoice) {
     let url = `/EInvoice/Order?ecommerce=${eTypeName}&orderCode=${invoice.Code}`;
     window.open(url, '_blank');
 }
+
+// Lấy ký tự bỏ qua từ database
+async function LoadSkippingCharacters() {
+    ShowCircleLoader();
+
+    const searchParams = new URLSearchParams();
+    let query = "/EInvoice/LoadSkippingCharacters";
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+
+    RemoveCircleLoader();
+
+    try {
+        let result = JSON.parse(responseDB.responseText);
+
+        if (result.State === 0) {
+            // Hiển thị ký tự đã load
+            let displayElement = document.getElementById("skipping-characters-display");
+            if (displayElement) {
+                displayElement.innerHTML = `Ký tự bỏ qua: "${result.Characters}"`;
+            }
+
+            CreateMustClickOkModal(result.Message, null);
+        } else {
+            CreateMustClickOkModal(`Lỗi: ${result.Message}`, null);
+        }
+    } catch (e) {
+        console.error("Error:", e);
+        CreateMustClickOkModal("Lỗi: " + e.message, null);
+    }
+}

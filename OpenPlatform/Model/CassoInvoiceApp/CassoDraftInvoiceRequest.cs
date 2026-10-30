@@ -52,9 +52,30 @@ namespace MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp
         /// </summary>
         public List<OpenApiLineItemInput> items { get; set; }
 
+        private static string skippingCharacters;
+
+        /// <summary>
+        /// Cập nhật danh sách ký tự cần bỏ qua
+        /// </summary>
+        public static void SetSkippingCharacters(string characters)
+        {
+            if (!string.IsNullOrEmpty(characters))
+            {
+                skippingCharacters = characters;
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách ký tự cần bỏ qua hiện tại
+        /// </summary>
+        public static string GetSkippingCharacters()
+        {
+            return skippingCharacters;
+        }
+
         public static string RemoveCharactersInItemName(string input)
         {
-            return Common.RemoveCharactersInList(input, "+?!");
+            return Common.RemoveCharactersInList(input, skippingCharacters);
         }
 
         public OpenApiCreateInvoiceBody(CommonOrder order)
