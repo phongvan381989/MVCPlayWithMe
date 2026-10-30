@@ -45,7 +45,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
                 {
                     CommonOrder commonOrder = new CommonOrder(tikiOrder);
                     await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
-                    CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
                 }
             }
 

@@ -60,7 +60,7 @@ namespace MVCPlayWithMe.Controllers
                     ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderStatusPush.ordersn);
                     CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
                     await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
-                    CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
                 }
             }
 
@@ -402,7 +402,7 @@ namespace MVCPlayWithMe.Controllers
 
                         CommonOrder commonOrder = new CommonOrder(order);
                         await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
-                        CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                        await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
                     }
                 }
             }
