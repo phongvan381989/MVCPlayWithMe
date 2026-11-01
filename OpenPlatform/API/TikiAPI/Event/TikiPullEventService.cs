@@ -39,13 +39,21 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
             if (needInvoice == 1)
             {
-                TikiOrder tikiOrder = await TikiGetListOrders.TikiGetOrderFromCode(tikiEvent.payload.order_code);
-
-                if (tikiOrder != null)
+                // Kiểm tra xem đơn hàng đã được xuất hóa đơn chưa do sàn duplicate thông báo
+                Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(
+                    tikiEvent.payload.order_code,
+                    (int)EECommerceType.TIKI,
+                    conn);
+                if (!hasCasso)
                 {
-                    CommonOrder commonOrder = new CommonOrder(tikiOrder);
-                    await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
-                    await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    TikiOrder tikiOrder = await TikiGetListOrders.TikiGetOrderFromCode(tikiEvent.payload.order_code);
+
+                    if (tikiOrder != null)
+                    {
+                        CommonOrder commonOrder = new CommonOrder(tikiOrder);
+                        await TikiMySql.TikiGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                        await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    }
                 }
             }
 

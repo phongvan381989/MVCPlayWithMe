@@ -57,10 +57,18 @@ namespace MVCPlayWithMe.Controllers
                 // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
                 if (needInvoice == 1)
                 {
-                    ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderStatusPush.ordersn);
-                    CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
-                    await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
-                    await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    // Kiểm tra xem đơn hàng đã được xuất hóa đơn chưa do sàn duplicate thông báo
+                    Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(
+                        orderStatusPush.ordersn,
+                        (int)EECommerceType.SHOPEE,
+                        conn);
+                    if (!hasCasso)
+                    {
+                        ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderStatusPush.ordersn);
+                        CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
+                        await ShopeeMySql.ShopeeGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                        await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                    }
                 }
             }
 
@@ -391,18 +399,26 @@ namespace MVCPlayWithMe.Controllers
                 // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
                 if (needInvoice == 1)
                 {
-                    long order_id = Common.ConvertStringToInt64(orderStatusPush.trade_order_id);
-                    if (order_id < 0) return;
-                    List<LazadaOrderItem> orderItems = await LazadaOrderAPI.LazadaGetOrderItemsAsync(order_id);
-                    if (orderItems.Count != 0)
+                    // Kiểm tra xem đơn hàng đã được xuất hóa đơn chưa do sàn duplicate thông báo
+                    Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(
+                        orderStatusPush.trade_order_id,
+                        (int)EECommerceType.LAZADA,
+                        conn);
+                    if (!hasCasso)
                     {
-                        LazadaOrder order = new LazadaOrder();
-                        order.order_id = orderItems[0].order_id;
-                        order.orderItems = orderItems;
+                        long order_id = Common.ConvertStringToInt64(orderStatusPush.trade_order_id);
+                        if (order_id < 0) return;
+                        List<LazadaOrderItem> orderItems = await LazadaOrderAPI.LazadaGetOrderItemsAsync(order_id);
+                        if (orderItems.Count != 0)
+                        {
+                            LazadaOrder order = new LazadaOrder();
+                            order.order_id = orderItems[0].order_id;
+                            order.orderItems = orderItems;
 
-                        CommonOrder commonOrder = new CommonOrder(order);
-                        await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
-                        await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                            CommonOrder commonOrder = new CommonOrder(order);
+                            await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(commonOrder, conn);
+                            await CommonCassoInvoiceAPI.IssueInvoiceBackground(commonOrder, conn);
+                        }
                     }
                 }
             }

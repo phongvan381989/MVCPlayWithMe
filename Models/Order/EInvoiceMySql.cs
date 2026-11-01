@@ -341,7 +341,8 @@ namespace MVCPlayWithMe.Models.Order
         /// Kiểm tra Code + ECommmerce đã có InvoiceId hoặc InvoiceLookupCode chưa
         /// </summary>
         /// <returns>true nếu đã có, false nếu chưa có hoặc không tồn tại record</returns>
-        public static async Task<bool> HasCassoInvoiceLookUpInfoAsync(string code, int ecommerce, MySqlConnection conn)
+        public static async Task<bool> HasCassoInvoiceLookUpInfoAsync(string code, int ecommerce,
+            MySqlConnection conn)
         {
             try
             {
