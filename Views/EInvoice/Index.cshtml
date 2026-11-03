@@ -41,13 +41,27 @@
         </div>
 
         <div class="display-flex-margin10">
-            <button type="button" class="vndejhx90" onclick="LoadSkippingCharacters()"
+            <button type="button" class="vndejhx90" onclick="LoadSkippingCharacters()" disabled
                     style="background-color: #28a745; color: white;"
-                    title="Lấy ký tự bỏ qua từ database">
+                    title="Lấy ký tự bỏ qua từ database. NOTE: cần enable">
                 Lấy Ký Tự Bỏ Qua
             </button>
 
             <span id="skipping-characters-display" style="margin-left: 10px; font-weight: bold; color: #007bff;"></span>
+
+            <div style="margin-left: 30px; display: flex; align-items: center; gap: 10px;">
+                <label for="casso-ecommerce">Sàn:</label>
+                @Html.Partial("~/Views/Shared/ECommerceSelect.cshtml")
+
+                <label for="casso-order-code">Mã Đơn:</label>
+                <input type="text" id="casso-order-code" class="vndejhx90" placeholder="Nhập mã đơn hàng" />
+
+                <button type="button" class="vndejhx90" onclick="GetInvoiceDetailFromCasso()"
+                        style="background-color: #007bff; color: white;"
+                        title="Lấy chi tiết hóa đơn từ Casso">
+                    Lấy Chi Tiết HĐ Từ Casso
+                </button>
+            </div>
         </div>
 
         <div>
@@ -65,6 +79,7 @@
                         <th>Mã HĐ</th>
                         <th>Mã Tra Cứu</th>
                         <th>Invoice ID</th>
+                        <th>SỐ HD</th>
                     </tr>
                 </thead>
                 <tbody>

@@ -605,7 +605,8 @@ namespace MVCPlayWithMe.Models.Order
         public static async Task<MySqlResultState> AddDetailOrderTransactionAsync(
             MySqlConnection conn,
             MySqlTransaction transaction,
-            int orderId, List<Cart> lsCartCookie)
+            int orderId,
+            List<OrderDetail> lsOrderDetail)
         {
             MySqlResultState result = new MySqlResultState();
 
@@ -620,12 +621,12 @@ namespace MVCPlayWithMe.Models.Order
                     cmd.Parameters.Add("@inBookCoverPrice", MySqlDbType.Int32).Value = 0;
                     cmd.Parameters.Add("@inPrice", MySqlDbType.Int32).Value = 0;
 
-                    foreach (var cart in lsCartCookie)
+                    foreach (var detail in lsOrderDetail)
                     {
-                        cmd.Parameters[1].Value = cart.sanPhamId;
-                        cmd.Parameters[2].Value = cart.quantity;
-                        cmd.Parameters[3].Value = cart.sanPhamBasicInfo.BookCoverPrice;
-                        cmd.Parameters[4].Value = cart.sanPhamBasicInfo.SalePrice;
+                        cmd.Parameters[1].Value = detail.sanPhamId;
+                        cmd.Parameters[2].Value = detail.quantity;
+                        cmd.Parameters[3].Value = detail.bookCoverPrice;
+                        cmd.Parameters[4].Value = detail.price;
                         await cmd.ExecuteNonQueryAsync();
                     }
                 }

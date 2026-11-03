@@ -27,24 +27,13 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
         // Xử lý event của đơn hàng
         private async Task HandleOrderEvent(TikiEvent tikiEvent, MySqlConnection conn)
         {
-            SByte needInvoice = 0;
             if (tikiEvent.payload.status == "successful_delivery")
             {
-                needInvoice = 1;
-            }
-
-            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
-            await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(tikiEvent.payload.order_code,
-                (int)EECommerceType.TIKI, tikiEvent.payload.status, needInvoice, conn);
-            // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
-            if (needInvoice == 1)
-            {
-                // Kiểm tra xem đơn hàng đã được xuất hóa đơn chưa do sàn duplicate thông báo
-                Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(
-                    tikiEvent.payload.order_code,
-                    (int)EECommerceType.TIKI,
-                    conn);
-                if (!hasCasso)
+                // Insert trạng thái đơn vào danh sách xuất hóa đơn (chỉ insert nếu chưa tồn tại)
+                bool isNewOrder = await EInvoiceMySql.InsertOrderStatusBackgroundAsync(tikiEvent.payload.order_code,
+                    (int)EECommerceType.TIKI, tikiEvent.payload.status, conn);
+                // Xuất hóa đơn tự động chỉ cho đơn MỚI (tránh duplicate khi sàn gửi notification trùng)
+                if (isNewOrder)
                 {
                     TikiOrder tikiOrder = await TikiGetListOrders.TikiGetOrderFromCode(tikiEvent.payload.order_code);
 

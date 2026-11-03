@@ -276,6 +276,7 @@ function RenderTable() {
                 <td class="money-cell">${ConvertMoneyToTextWithIcon(finalMoney)}</td>
                 <td>${GetPaymentStatusBadge(order.OrderPayStatus)}</td>
                 <td>${GetOrderStatusBadge(order.OrderStatus)}</td>
+                <td>${GetSourceBadge(order.from)}</td>
                 <td>${GetFormattedDate(new Date(order.time))}</td>
                 <td>
                     <button class="btn-action btn-edit" onclick="OpenEditModal(${order.id})" title="Sửa">
@@ -325,6 +326,17 @@ function GetOrderStatusBadge(orderStatus) {
 
     let status = statusMap[orderStatus] || { text: 'N/A', class: 'badge-secondary' };
     return `<span class="badge ${status.class}">${status.text}</span>`;
+}
+
+function GetSourceBadge(sourceValue) {
+    const sourceMap = {
+        0: { text: 'Web', class: 'badge-primary' },
+        1: { text: 'Facebook', class: 'badge-info' },
+        2: { text: 'Zalo', class: 'badge-success' }
+    };
+
+    let source = sourceMap[sourceValue] || { text: 'N/A', class: 'badge-secondary' };
+    return `<span class="badge ${source.class}">${source.text}</span>`;
 }
 
 // ========================================

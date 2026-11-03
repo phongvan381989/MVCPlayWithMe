@@ -79,8 +79,8 @@ function ChangePublisher() {
                 }
             }
 
-            document.getElementById("status-all").checked = true;
-            FilterProductAll();
+            document.getElementById("status-normal").checked = true;
+            FilterProductNormal();
         }
     }
 }
@@ -108,8 +108,8 @@ async function SearchProductCore(url, searchParams) {
 
     document.getElementById("empty-result").style.display = "none";
     document.getElementById("search-result").style.display = "block";
-    document.getElementById("status-all").checked = true;
-    FilterProductAll();
+    document.getElementById("status-normal").checked = true;
+    FilterProductNormal();
 }
 
 function ResfreshListData() {

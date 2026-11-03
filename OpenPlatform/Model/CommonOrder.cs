@@ -327,8 +327,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                     listItemName.Add(e.name);
                     listModelName.Add(e.GetVariationName());
 
-                    //list_model_discounted_price.Add((float)e.invoice.price);// Cần check lại
-                    //list_model_original_price.Add((float)e.price); // Cần check lại
+                    list_model_discounted_price.Add(e.item_price);// Cần check lại
+                    list_model_original_price.Add(e.paid_price); 
                 }
             }
         }

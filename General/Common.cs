@@ -95,6 +95,8 @@ namespace MVCPlayWithMe.General
             TIKI,
             SHOPEE,
             LAZADA,
+            TIKTOK,
+            MANUAL,
             ALL
         }
 

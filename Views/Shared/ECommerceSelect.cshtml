@@ -1,0 +1,25 @@
+﻿@*
+    Dropdown sàn TMĐT - Thuần HTML
+    Cách dùng: @Html.Partial("~/Views/Shared/ECommerceSelect.cshtml")
+
+    Enum EECommerceType:
+    0 = PLAY_WITH_ME
+    1 = TIKI
+    2 = SHOPEE (mặc định)
+    3 = LAZADA
+    4 = TIKTOK
+    5 = MANUAL
+    6 = ALL
+
+    Để custom ID hoặc selected value, dùng JavaScript sau khi render.
+*@
+
+<select id="casso-ecommerce">
+    <option value="0">PlayWithMe</option>
+    <option value="1">Tiki</option>
+    <option value="2" selected>Shopee</option>
+    <option value="3">Lazada</option>
+    <option value="4">TikTok</option>
+    <option value="5">Thủ Công</option>
+    <option value="6">Tất Cả</option>
+</select>

@@ -1,5 +1,7 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Customer;
 using MVCPlayWithMe.Models.Order;
+using MVCPlayWithMe.Models.SanPhamModel;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MySqlConnector;
 using System;
@@ -1848,24 +1850,6 @@ namespace MVCPlayWithMe.Models.ProductModel
                 catch (Exception ex) { Common.SetResultException(ex, resultState); }
             }
             return resultState;
-        }
-
-        public static async Task<MySqlResultState> CreateOrderManuallyAsync(List<Import> ls, int sumPay)
-        {
-            MySqlResultState result = await OrderMySql.AddOrderAsync(-1, "", 1, null);
-            if(result.State != EMySqlResultState.OK)
-            {
-                return result;
-            }
-            int orderId = result.myAnything;
-            result = await UpdateOutputAndProductTableFromFromListImportAsync(orderId, ls, ECommerceOrderStatus.PACKED, EECommerceType.PLAY_WITH_ME);
-            if (result.State != EMySqlResultState.OK) return result;
-            OrderPay orderPay = new OrderPay();
-            orderPay.type = EOrderPayType.FINAL;
-            orderPay.value = sumPay;
-
-            await OrderMySql.AddPayOrderAsync(orderId, new List<OrderPay> { orderPay });
-            return result;
         }
 
         public static async Task<List<Product>> SearchProductForMappingAsync(ProductSearchParameter searchParameter, MySqlConnection conn)

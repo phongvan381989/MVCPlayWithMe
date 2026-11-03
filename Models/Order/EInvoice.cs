@@ -75,6 +75,11 @@ namespace MVCPlayWithMe.Models.Order
         /// </summary>
         public string InvoiceId { get; set; }
 
+        /// <summary>
+        /// Số hóa đơn
+        /// </summary>
+        public int InvoiceNumber { get; set; }
+
         public EInvoice()
         {
             Id = -1;
@@ -91,6 +96,7 @@ namespace MVCPlayWithMe.Models.Order
             NeedInvoiceUpdateTime = null;
             InvoiceLookupCode = string.Empty;
             InvoiceId = string.Empty;
+            InvoiceNumber = 0;
         }
     }
 }

@@ -7,11 +7,66 @@
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
     <link rel="stylesheet" href="~/Content/web.play.with.me.table.show.data.css?v=20260610">
+    <link rel="stylesheet" href="~/Content/web.play.with.me.modal.common.css" />
     <link rel="stylesheet" href="~/Content/Product/OrderManually.css?v=20260610">
 </head>
 <body>
     <div id="biggestContainer">
         <div class="config-max-width padding-container">
+            <div style="margin-bottom: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9;">
+                <h4 style="margin-top: 0;">Thông Tin Người Nhận</h4>
+
+                <div style="margin-bottom: 10px;">
+                    <button type="button" onclick="ShowCustomerInforModal(true, false, null)" style="padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                        Nhập Thông Tin Người Nhận
+                    </button>
+                </div>
+
+                <!-- Hiển thị thông tin đã nhập -->
+                <div id="customer-infor-display" style="display: none; padding: 10px; background-color: #e8f4f8; border-radius: 4px; margin-bottom: 10px;">
+                    <div style="margin-bottom: 5px;"><strong>Họ tên:</strong> <span id="display-name"></span></div>
+                    <div style="margin-bottom: 5px;"><strong>SĐT:</strong> <span id="display-phone"></span></div>
+                    <div style="margin-bottom: 5px;"><strong>Địa chỉ:</strong> <span id="display-address"></span></div>
+                    <button type="button" onclick="ShowCustomerInforModal(false, false, currentCustomerInfor)" style="padding: 5px 15px; margin-top: 5px;">Sửa</button>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label for="customer-message">Tin nhắn:</label>
+                    <textarea class="config-max-width margin-vertical" id="customer-message" rows="3" placeholder="Tin nhắn của người đặt đơn"></textarea>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label for="shipping-fee">Phí ship:</label>
+                    <input type="number" class="config-max-width margin-vertical" id="shipping-fee" placeholder="Nhập phí ship" value="0" min="0" step="1000">
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label for="order-from">Nguồn đơn hàng:</label>
+                    <select class="config-max-width margin-vertical" id="order-from">
+                        <option value="0">Web (voibenho.com)</option>
+                        <option value="1" selected>Facebook</option>
+                        <option value="3">Zalo</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label for="order-pay-status">Trạng thái thanh toán:</label>
+                    <select class="config-max-width margin-vertical" id="order-pay-status">
+                        <option value="0" selected>ĐANG CHỜ XỬ LÝ</option>
+                        <option value="1">ĐÃ THANH TOÁN</option>
+                        <option value="2">ĐÃ HOÀN TIỀN</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <label for="payment-method">Phương thức thanh toán:</label>
+                    <select class="config-max-width margin-vertical" id="payment-method">
+                        <option value="0">Tiền mặt</option>
+                        <option value="1" selected>Chuyển vào tk hộ kinh doanh</option>
+                    </select>
+                </div>
+            </div>
+
             <div>
                 <label for="publisher-id">Nhà phát hành:</label>
                 <input list="list-Publisher" class="config-max-width margin-vertical"
@@ -31,29 +86,6 @@
 
                 <datalist id="list-combo"></datalist>
             </div>
-            <div class="adasdxjnf98">
-                <div title="Chiết khấu 100% mang ý nghĩa cập nhật số lượng lại đúng thực tế do không
-                 rõ sai sót ở đâu. Số lượng có thể là số âm" class="hxvniuf87fso">
-                    <label for="discount">Chiết khấu(%):</label>
-                    <div>
-                        <input type="number" min="0" max="100" step="5" class="margin-vertical" id="discount" value="0">
-                    </div>
-                </div>
-
-                <div title="Số lượng nhập kho" class="hxvniuf87fso">
-                    <label for="quantity_import">Số lượng:</label>
-                    <div>
-                        <input type="number" class="margin-vertical" id="quantity_import" value="0">
-                    </div>
-                </div>
-
-                <div title="Tổng thanh toán">
-                    <label for="sum_pay">Thanh toán:</label>
-                    <div>
-                        <input type="number" class="margin-vertical" id="sum_pay" value="0">
-                    </div>
-                </div>
-            </div>
             <br />
 
             <div class="config-max-width sfxvsg90svx">
@@ -71,21 +103,47 @@
                     <th>Tên</th>
                     <th>Giá Bìa</th>
                     <th>Chiết Khấu</th>
-                    <th>Giá Nhập</th>
+                    <th>Giá Bán</th>
                     <th>Số Lượng</th>
+                    <th>Tổng Tiền</th>
                     <th></th>
                 </tr>
             </table>
 
+            <div style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; background-color: #f0f8ff; max-width: 400px; margin-left: auto;">
+                <h4 style="margin-top: 0; margin-bottom: 15px;">Tổng Kết Đơn Hàng</h4>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Tổng tiền sản phẩm:</span>
+                    <span id="total-products" style="font-weight: bold;">0 ₫</span>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span>Phí ship:</span>
+                    <span id="total-shipping" style="font-weight: bold; color: #ff6600;">0 ₫</span>
+                </div>
+
+                <hr style="border: 1px solid #ddd;">
+
+                <div style="display: flex; justify-content: space-between; margin-top: 10px;">
+                    <span style="font-size: 18px; font-weight: bold;">Tổng Thanh Toán:</span>
+                    <span id="total-payment" style="font-size: 20px; font-weight: bold; color: #007bff;">0 ₫</span>
+                </div>
+            </div>
+
             <div class="config-max-width">
                 <br />
-                <button type="button" onclick="CreateOrder()">Lưu</button>
+                <button type="button" onclick="CreateOrderManually()">Tạo đơn hàng thủ công</button>
                 <button type="button" style="float: right;" onclick="Delete()">Xóa toàn bộ</button>
             </div>
         </div>
     </div>
 
+    @Html.Partial("~/Views/Shared/Home/CustomerInfor.cshtml")
+
     <script src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
+    <script src="~/Scripts/web.play.with.me.customer.infor.cookie.js"></script>
+    <script src="~/Scripts/web.play.with.me.address.js?v=20260916"></script>
     <script src="~/Scripts/Product/OrderManually.js?v=20260610"></script>
 </body>
 </html>

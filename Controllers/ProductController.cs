@@ -25,6 +25,7 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -970,33 +971,136 @@ namespace MVCPlayWithMe.Controllers
         }
 
         [HttpPost]
-        public async Task<string> CreateOrderManually(string listObject, string customerInfor,
-            string listOrderPay, string noteToShop, int sumPay)
+        public async Task<string> CreateOrderManually()
         {
             if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
             }
 
-            List<Import> ls = null;
+            MVCPlayWithMe.Models.Order.Order order = null;
             MySqlResultState result = new MySqlResultState();
             try
             {
-                ls = JsonConvert.DeserializeObject<List<Import>>(listObject);
+                // Đọc JSON body từ request
+                string body;
+                using (var reader = new System.IO.StreamReader(Request.InputStream))
+                {
+                    body = await reader.ReadToEndAsync();
+                }
 
-                // Tạm thời chưa xử lý phần dữ liệu này
-                //Address cusInfor = JsonConvert.DeserializeObject<Address>(customerInfor);
-                //List<OrderPay> lsOrderPay = JsonConvert.DeserializeObject<List<OrderPay>>(listOrderPay);
-                //string note = noteToShop;
+                // Deserialize thành đối tượng Order
+                order = JsonConvert.DeserializeObject<MVCPlayWithMe.Models.Order.Order>(body);
 
-                if (ls == null || ls.Count == 0)
+                if (order == null)
                 {
                     result.State = EMySqlResultState.ERROR;
-                    result.Message = "Danh sách cần nhập rỗng hoặc lỗi.";
+                    result.Message = "Không thể parse dữ liệu đơn hàng.";
+                    return JsonConvert.SerializeObject(result);
                 }
-                else
+
+                if (order.lsOrderDetail == null || order.lsOrderDetail.Count == 0)
                 {
-                    result = await ProductMySql.CreateOrderManuallyAsync(ls, sumPay);
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Đơn hàng không có sản phẩm nào.";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Gọi repository để lưu đơn hàng
+                int newOrderId = -1;
+                string orderCode = string.Empty;
+
+                // Sinh mã đơn hàng unique
+                try
+                {
+                    orderCode = await OrderCodeSequenceMySql.GenerateUniqueOrderCodeAsync();
+                }
+                catch (Exception ex)
+                {
+                    Common.SetResultException(ex, result);
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Tạo Address object từ Order
+                Address cusInfor = new Address
+                {
+                    name = order.name ?? "",
+                    phone = order.phone ?? "",
+                    province = order.province ?? "",
+                    subdistrict = order.subdistrict ?? "",
+                    detail = order.detail ?? ""
+                };
+
+                // Tạo danh sách (sanPhamId, quantity) để trừ kho
+                var sanPhamQuantities = order.lsOrderDetail
+                    .Select(d => (d.sanPhamId, d.quantity))
+                    .ToList();
+
+                // PaymentDeadline: mặc định 48h nếu PENDING, null nếu đã thanh toán
+                DateTime? paymentDeadline = order.OrderPayStatus == EOrderPayStatus.PENDING
+                    ? DateTime.Now.AddHours(48)
+                    : (DateTime?)null;
+
+                // Start TRANSACTION
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+
+                    using (MySqlTransaction transaction = await conn.BeginTransactionAsync())
+                    {
+                        // 1. Insert Order
+                        result = await OrderMySql.AddOrderTransactionAsync(conn, transaction,
+                            order.customerId,
+                            order.note ?? "",
+                            (SByte)order.from,
+                            orderCode,
+                            (SByte)order.OrderStatus,
+                            (SByte)order.OrderPayStatus,
+                            (SByte)order.PaymentMethod,
+                            paymentDeadline ?? DateTime.Now.AddHours(48),
+                            cusInfor);
+
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            await transaction.RollbackAsync();
+                            return JsonConvert.SerializeObject(result);
+                        }
+                        newOrderId = result.myAnything;
+
+                        // 2. Insert OrderDetail
+                        result = await OrderMySql.AddDetailOrderTransactionAsync(conn, transaction, newOrderId, order.lsOrderDetail);
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            await transaction.RollbackAsync();
+                            return JsonConvert.SerializeObject(result);
+                        }
+
+                        // 3. Trừ số lượng sản phẩm trong tb_san_pham
+                        result = await SanPhamMySql.UpdateQuantityAfterSaleTransactionAsync(conn, transaction, sanPhamQuantities);
+                        if (result.State != EMySqlResultState.OK)
+                        {
+                            await transaction.RollbackAsync();
+                            return JsonConvert.SerializeObject(result);
+                        }
+
+                        // 4. Insert OrderPay
+                        if (order.lsOrderPay != null && order.lsOrderPay.Count > 0)
+                        {
+                            result = await OrderMySql.AddPayOrderTransactionAsync(conn, transaction, newOrderId, order.lsOrderPay);
+                            if (result.State != EMySqlResultState.OK)
+                            {
+                                await transaction.RollbackAsync();
+                                return JsonConvert.SerializeObject(result);
+                            }
+                        }
+
+                        // 5. Commit transaction
+                        await transaction.CommitAsync();
+
+                        result.State = EMySqlResultState.OK;
+                        result.Message = $"Tạo đơn hàng thành công. Mã đơn: {orderCode}";
+                        MyLogger.GetInstance().Info($"✅ CreateOrderManually DONE! OrderID={newOrderId}, OrderCode={orderCode}");
+                    }
                 }
             }
             catch (Exception ex)

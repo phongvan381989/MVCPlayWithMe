@@ -1,4 +1,4 @@
-// mảng đối tượng product
+﻿// mảng đối tượng product
 let listBasicInfo = [];
 
 let listInsertTemp = [];
@@ -8,7 +8,72 @@ let listSaveInfo = [];
 
 let discount = 0;
 
+// Lưu thông tin khách hàng từ modal
+let currentCustomerInfor = null;
+
 GetListPublisher();
+
+// Hàm cập nhật tổng kết đơn hàng
+function UpdateOrderSummary() {
+    // Tính tổng tiền sản phẩm từ bảng
+    let table = document.getElementById("myTable");
+    let totalProducts = 0;
+
+    for (let i = 1; i < table.rows.length; i++) {
+        let row = table.rows[i];
+        // Cell 7 là cột "Tổng Tiền"
+        let totalCell = row.cells[7];
+        if (totalCell) {
+            let totalText = totalCell.innerHTML.replace(/[,.]/g, ''); // Loại bỏ dấu phẩy
+            let total = parseFloat(totalText) || 0;
+            totalProducts += total;
+        }
+    }
+
+    // Lấy phí ship
+    let shippingFee = parseFloat(document.getElementById("shipping-fee").value) || 0;
+
+    // Tính tổng thanh toán (không có giảm giá)
+    let totalPayment = totalProducts + shippingFee;
+
+    // Cập nhật hiển thị
+    document.getElementById("total-products").innerHTML = totalProducts.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById("total-shipping").innerHTML = shippingFee.toLocaleString('vi-VN') + ' ₫';
+    document.getElementById("total-payment").innerHTML = totalPayment.toLocaleString('vi-VN') + ' ₫';
+}
+
+// Event listener cho phí ship
+window.addEventListener('load', function() {
+    document.getElementById("shipping-fee").addEventListener("input", UpdateOrderSummary);
+});
+
+// Xử lý khi hoàn thành modal nhập thông tin khách hàng
+function FinishCustomerInforModal() {
+    if (!ValidCustomerInforInput()) {
+        return;
+    }
+
+    // Lấy thông tin từ modal
+    currentCustomerInfor = CreateAddressObjFromInput();
+
+    // Hiển thị thông tin đã nhập
+    document.getElementById("display-name").innerText = currentCustomerInfor.name;
+    document.getElementById("display-phone").innerText = currentCustomerInfor.phone;
+    document.getElementById("display-address").innerText =
+        currentCustomerInfor.province + ", " +
+        currentCustomerInfor.subdistrict + ", " +
+        currentCustomerInfor.detail;
+
+    document.getElementById("customer-infor-display").style.display = "block";
+
+    // Đóng modal
+    ReturnCustomerInforModal();
+}
+
+// Đóng modal
+function ReturnCustomerInforModal() {
+    document.getElementById("modal-customer-infor").style.display = "none";
+}
 
 function ComboIdName(id, name) {
     this.id = id;
@@ -63,15 +128,7 @@ async function GetBasicInfoProduct() {
     document.getElementById("combo-id").value = "";
 }
 
-document.getElementById("discount").addEventListener("input", function (event) {
-    discount = this.value;
-    if (isEmptyOrSpaces(discount))
-        discount = 0;
-    if (discount < 0)
-        discount = 0;
-    else if (discount > 100)
-        discount = 100;
-});
+// discount mặc định = 0 (không cần input nữa)
 
 document.getElementById("code-or-isbn").addEventListener("keypress", function (event) {
     if (event.key === "Enter") {
@@ -206,6 +263,7 @@ function AddHeadList() {
             let cell6 = row.insertCell(5);
             let cell7 = row.insertCell(6);
             let cell8 = row.insertCell(7);
+            let cell9 = row.insertCell(8);
 
             // Id
             cell1.innerHTML = objBasicInfo.id;
@@ -232,12 +290,24 @@ function AddHeadList() {
             // Giá bìa
             cell4.innerHTML = objBasicInfo.bookCoverPrice;
 
-            // Chiết khấu
-            cell5.innerHTML = discount;
+            // Giá Bán (input để có thể sửa)
+            let salePrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
 
-            // Giá nhập
-            let importPrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
-            cell6.innerHTML = importPrice;
+            // Chiết khấu - format ban đầu
+            if (discount > 0) {
+                cell5.innerHTML = `-${discount.toFixed(2)}%`;
+                cell5.style.color = "red";
+                cell5.style.fontWeight = "bold";
+            } else {
+                cell5.innerHTML = `0.00%`;
+                cell5.style.color = "green";
+                cell5.style.fontWeight = "bold";
+            }
+            let input6 = document.createElement("input");
+            input6.type = "number";
+            input6.value = salePrice;
+            input6.step = "1000";
+            cell6.appendChild(input6);
 
             // Số lượng nhập
             // Focus vào đây
@@ -245,7 +315,50 @@ function AddHeadList() {
             input7.type = "number";
             cell7.appendChild(input7);
             input7.focus();
-            input7.value = document.getElementById("quantity_import").value;
+            input7.value = 1; // Giá trị mặc định
+
+            // Tổng Tiền
+            let totalPrice = salePrice * input7.value;
+            cell8.innerHTML = ConvertMoneyToText(totalPrice);
+
+            // Hàm cập nhật tổng tiền
+            function updateTotal() {
+                let sale = parseFloat(input6.value) || 0;
+                let qty = parseFloat(input7.value) || 0;
+                let total = sale * qty;
+                cell8.innerHTML = ConvertMoneyToText(total);
+                UpdateOrderSummary(); // Cập nhật tổng kết đơn hàng
+            }
+
+            // Hàm cập nhật chiết khấu khi sửa giá bán
+            function updateDiscount() {
+                let sale = parseFloat(input6.value) || 0;
+                let coverPrice = objBasicInfo.bookCoverPrice;
+                if (coverPrice > 0) {
+                    let newDiscount = ((coverPrice - sale) / coverPrice) * 100;
+
+                    // Format và đổi màu
+                    if (sale < coverPrice) {
+                        // Giá bán < Giá bìa → Màu đỏ, dấu "-", thêm "%"
+                        cell5.innerHTML = `-${newDiscount.toFixed(2)}%`;
+                        cell5.style.color = "red";
+                        cell5.style.fontWeight = "bold";
+                    } else {
+                        // Giá bán >= Giá bìa → Màu xanh
+                        let increase = ((sale - coverPrice) / coverPrice) * 100;
+                        cell5.innerHTML = `+${increase.toFixed(2)}%`;
+                        cell5.style.color = "green";
+                        cell5.style.fontWeight = "bold";
+                    }
+                }
+                updateTotal();
+            }
+
+            // Event listener cho Giá Bán
+            input6.addEventListener("input", updateDiscount);
+
+            // Event listener cho Số Lượng
+            input7.addEventListener("input", updateTotal);
             input7.addEventListener("keypress", function (event) {
                 if (event.key === "Enter") {
                     event.preventDefault();
@@ -275,9 +388,13 @@ function AddHeadList() {
             let btn = document.createElement("button");
             btn.onclick = function () {
                 this.parentElement.parentElement.remove();
+                UpdateOrderSummary(); // Cập nhật tổng kết sau khi xóa
             };
             btn.innerHTML = "Xóa";
-            cell8.appendChild(btn)
+            cell9.appendChild(btn);
+
+            // Cập nhật tổng kết khi thêm sản phẩm mới
+            UpdateOrderSummary();
 
             //alert(JSON.stringify(objBasicInfo));
         }
@@ -297,39 +414,156 @@ function objImport(productId, price, quantity, bookCoverPrice, discount) {
 }
 
 // Lưu db
-async function CreateOrder() {
-    listSaveInfo = [];
+async function CreateOrderManually() {
     let rows = document.getElementById("myTable").rows;
     let length = rows.length;
-    for (let i = 1; i < length; i++) {
-        let obj = new objImport(
-            Number(rows[i].cells[0].innerHTML),
-            Number(rows[i].cells[5].innerHTML),
-            Number(rows[i].cells[6].childNodes[0].value),
-            Number(rows[i].cells[3].innerHTML),
-            Number(rows[i].cells[4].innerHTML)
-        );
-        listSaveInfo.push(obj);
+
+    if (length <= 1) {
+        CreateMustClickOkModal("Chưa có sản phẩm nào trong đơn hàng", null);
+        return;
     }
 
-    const searchParams = new URLSearchParams();
-    searchParams.append("listObject", JSON.stringify(listSaveInfo));
-    searchParams.append("customerInfor", "");
-    searchParams.append("listOrderPay", "");
-    searchParams.append("noteToShop", "");
-    searchParams.append("sumPay", document.getElementById("sum_pay").value);
+    // Tạo danh sách OrderDetail từ bảng
+    let lsOrderDetail = [];
+    for (let i = 1; i < length; i++) {
+        let row = rows[i];
+        let orderDetail = {
+            id: -1,
+            orderId: -1,
+            sanPhamId: Number(row.cells[0].innerHTML),
+            name: row.cells[2].innerHTML,
+            CoverImageFileName: "",
+            quantity: Number(row.cells[6].childNodes[0].value),
+            bookCoverPrice: Number(row.cells[3].innerHTML),
+            price: Number(row.cells[5].childNodes[0].value)
+        };
+        lsOrderDetail.push(orderDetail);
+    }
 
+    // Lấy thông tin từ order summary
+    let totalProducts = 0;
+    for (let i = 1; i < length; i++) {
+        let row = rows[i];
+        let totalCell = row.cells[7];
+        if (totalCell) {
+            let totalText = totalCell.innerHTML.replace(/[,.]/g, '');
+            let total = parseFloat(totalText) || 0;
+            totalProducts += total;
+        }
+    }
+
+    let shippingFee = parseFloat(document.getElementById("shipping-fee").value) || 0;
+    let totalPayment = totalProducts + shippingFee;
+
+    // Tạo danh sách OrderPay
+    let lsOrderPay = [
+        {
+            id: -1,
+            orderId: -1,
+            orderSimplePromoId: -1,
+            orderSimplePromotion: null,
+            type: 0, // TOTAL
+            strType: "Tổng tiền hàng",
+            value: totalProducts
+        },
+        {
+            id: -1,
+            orderId: -1,
+            orderSimplePromoId: -1,
+            orderSimplePromotion: null,
+            type: 1, // SHIP
+            strType: "Phí vận chuyển",
+            value: shippingFee
+        },
+        {
+            id: -1,
+            orderId: -1,
+            orderSimplePromoId: -1,
+            orderSimplePromotion: null,
+            type: 10, // FINAL
+            strType: "Tổng thanh toán",
+            value: totalPayment
+        }
+    ];
+
+    // Tạo danh sách OrderTrack (trạng thái ban đầu: PROCESSING = 0)
+    let lsOrderTrack = [
+        {
+            id: -1,
+            orderId: -1,
+            status: 0, // EOrderStatus.PROCESSING
+            strStatus: "Đang xử lý",
+            time: null
+        }
+    ];
+
+    // Kiểm tra đã nhập thông tin người nhận chưa
+    if (!currentCustomerInfor) {
+        CreateMustClickOkModal("Vui lòng nhập thông tin người nhận", null);
+        return;
+    }
+
+    // Lấy thông tin từ các dropdown
+    let orderFrom = parseInt(document.getElementById("order-from").value) || 1;
+    let orderPayStatus = parseInt(document.getElementById("order-pay-status").value) || 0;
+    let paymentMethod = parseInt(document.getElementById("payment-method").value) || 1;
+
+    // Tạo đối tượng Order
+    let order = {
+        id: -1,
+        customerId: -1,
+        lsOrderPay: lsOrderPay,
+        lsOrderTrack: lsOrderTrack,
+        lsOrderDetail: lsOrderDetail,
+        name: currentCustomerInfor.name || "",
+        phone: currentCustomerInfor.phone || "",
+        province: currentCustomerInfor.province || "",
+        subdistrict: currentCustomerInfor.subdistrict || "",
+        detail: currentCustomerInfor.detail || "",
+        code: "",
+        from: orderFrom, // 0: Web, 1: Facebook, 3: Zalo
+        note: document.getElementById("customer-message").value || "",
+        time: null,
+        OrderCode: "",
+        OrderStatus: 0, // EOrderStatus.PROCESSING
+        OrderPayStatus: orderPayStatus, // 0: PENDING, 1: PAID, 2: REFUNDED
+        PaymentMethod: paymentMethod, // 0: CASH_ON_DELIVERY, 1: BANK_TRANSFER
+        PaymentDeadline: null
+    };
+
+    // Gọi API với PostJSON
     let url = "/Product/CreateOrderManually";
 
     ShowCircleLoader();
-    let responseDB = await RequestHttpPostPromise(searchParams, url);
-    RemoveCircleLoader();
-    if (responseDB.responseText != "null") {
-        CheckStatusResponseAndShowPrompt(responseDB.responseText, "Cập nhật thành công.", "Cập nhật thất bại.");
-        DeleteRowsExcludeHead(document.getElementById("myTable"));
-    }
-    else {
-        CreateMustClickOkModal("Cập nhật thất bại.", null);
+    try {
+        let responseText = await PostJSON(url, order);
+        RemoveCircleLoader();
+
+        if (responseText && responseText !== "null") {
+            CheckStatusResponseAndShowPrompt(responseText, "Tạo đơn hàng thành công.", "Tạo đơn hàng thất bại.");
+
+            // Parse để kiểm tra kết quả
+            let result = JSON.parse(responseText);
+            if (result.State === 0) {
+                // Xóa toàn bộ nếu thành công
+                DeleteRowsExcludeHead(document.getElementById("myTable"));
+
+                // Reset form thông tin người nhận
+                currentCustomerInfor = null;
+                document.getElementById("customer-infor-display").style.display = "none";
+                document.getElementById("customer-message").value = "";
+                document.getElementById("shipping-fee").value = "0";
+
+                // Cập nhật tổng kết
+                UpdateOrderSummary();
+            }
+        }
+        else {
+            CreateMustClickOkModal("Tạo đơn hàng thất bại.", null);
+        }
+    } catch (error) {
+        RemoveCircleLoader();
+        CreateMustClickOkModal("Lỗi: " + error.message, null);
     }
 }
 
@@ -339,4 +573,5 @@ function Delete() {
         return;
 
     DeleteRowsExcludeHead(document.getElementById("myTable"));
+    UpdateOrderSummary(); // Cập nhật tổng kết sau khi xóa toàn bộ
 }

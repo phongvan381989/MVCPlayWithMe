@@ -6,6 +6,7 @@ using MySqlConnector;
 using Newtonsoft.Json;
 using RestSharp;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI
@@ -249,10 +250,38 @@ namespace MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI
             return await ExecuteCassoApiAsync<OpenApiInvoiceResource>("/xinvoice/v1/invoices/issue", Method.POST, request);
         }
 
+        public static Boolean CheckOrderCanIssueInvoice(CommonOrder order)
+        {
+            foreach (var price in order.list_model_discounted_price)
+            {
+                if (price <= 0)
+                {
+                    MyLogger.GetInstance().Warn($"Order {order.code} has invalid discounted price: {price}. Cannot issue invoice.");
+                    return false;
+                }
+            }
+
+            foreach (var quantity in order.listQuantity)
+            {
+                if (quantity <= 0)
+                {
+                    MyLogger.GetInstance().Warn($"Order {order.code} has invalid quantity: {quantity}. Cannot issue invoice.");
+                    return false;
+                }
+            }
+            return true;
+        }
+
         public static async Task IssueInvoiceBackground(CommonOrder order, MySqlConnection conn)
         {
             try
             {
+                if (!CheckOrderCanIssueInvoice(order))
+                {
+                    MyLogger.GetInstance().Warn($"Order {order.code} has invalid items. Cannot issue invoice.");
+                    return;
+                }
+
                 // Tạo request body
                 OpenApiCreateInvoiceBody request = new OpenApiCreateInvoiceBody(order);
 

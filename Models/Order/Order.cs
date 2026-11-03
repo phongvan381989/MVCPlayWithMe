@@ -31,7 +31,7 @@ namespace MVCPlayWithMe.Models.Order
         public string detail { get; set; }
         public string code { get; set; }
 
-        // 0: Nếu đơn phát sinh từ web, 1: Tạo thủ công đơn khi mua qua face, tiktok,...
+        // 0: Nếu đơn phát sinh từ web, 1: Facebook, 2: Zalo
         public int from { get; set; }
 
         public string note { get; set; }

@@ -151,6 +151,10 @@ function DisplayInvoiceTable() {
         // Invoice ID
         let cell10 = row.insertCell(10);
         cell10.innerHTML = invoice.InvoiceId || "";
+
+        // Số HĐ
+        let cell11 = row.insertCell(11);
+        cell11.innerHTML = invoice.InvoiceNumber || "";
     }
 }
 
@@ -186,6 +190,48 @@ async function LoadSkippingCharacters() {
             CreateMustClickOkModal(`Lỗi: ${result.Message}`, null);
         }
     } catch (e) {
+        console.error("Error:", e);
+        CreateMustClickOkModal("Lỗi: " + e.message, null);
+    }
+}
+
+// Lấy chi tiết hóa đơn từ Casso
+async function GetInvoiceDetailFromCasso() {
+    let ecommerce = document.getElementById("casso-ecommerce").value;
+    let orderCode = document.getElementById("casso-order-code").value.trim();
+
+    if (!orderCode) {
+        CreateMustClickOkModal("Vui lòng nhập mã đơn hàng.", null);
+        return;
+    }
+
+    ShowCircleLoader();
+
+    try {
+        const responseText = await PostJSON('/EInvoice/GetInvoiceDetailFromCasso', {
+            ecommerce: parseInt(ecommerce),
+            orderCode: orderCode
+        });
+
+        RemoveCircleLoader();
+
+        let result = JSON.parse(responseText);
+
+        if (result.State === 0) {
+            // Thành công - lấy invoice từ result.myAnything
+            let invoice = result.myJson;
+
+            // Xóa dữ liệu cũ và chỉ hiển thị đơn này
+            invoiceList = [invoice];
+            DisplayInvoiceTable();
+
+            // // Hiển thị thông báo thành công
+            // CreateMustClickOkModal(`Lấy thành công số hóa đơn: ${invoice.InvoiceNumber}`, null);
+        } else {
+            CreateMustClickOkModal(`Lỗi: ${result.Message}`, null);
+        }
+    } catch (e) {
+        RemoveCircleLoader();
         console.error("Error:", e);
         CreateMustClickOkModal("Lỗi: " + e.message, null);
     }

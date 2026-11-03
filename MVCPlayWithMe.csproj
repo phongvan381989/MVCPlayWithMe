@@ -903,6 +903,7 @@
     <Content Include="Views\EInvoice\Order.cshtml" />
     <Content Include="Views\ProductECommerce\OrderReturnShop.cshtml" />
     <Content Include="Views\EInvoice\Check.cshtml" />
+    <Content Include="Views\Shared\ECommerceSelect.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

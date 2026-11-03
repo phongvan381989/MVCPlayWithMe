@@ -40,29 +40,18 @@ namespace MVCPlayWithMe.Controllers
         {
             if (orderStatusPush == null) return;
 
-            SByte needInvoice = 0;
             if(orderStatusPush.status == "TO_CONFIRM_RECEIVE")
             {
-                needInvoice = 1;
-            }
-
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-            {
-                await conn.OpenAsync();
-
-                // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
-                await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
-                    (int)EECommerceType.SHOPEE, orderStatusPush.status, needInvoice, conn);
-
-                // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
-                if (needInvoice == 1)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    // Kiểm tra xem đơn hàng đã được xuất hóa đơn chưa do sàn duplicate thông báo
-                    Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(
-                        orderStatusPush.ordersn,
-                        (int)EECommerceType.SHOPEE,
-                        conn);
-                    if (!hasCasso)
+                    await conn.OpenAsync();
+
+                    // Insert trạng thái đơn vào danh sách xuất hóa đơn (chỉ insert nếu chưa tồn tại)
+                    bool isNewOrder = await EInvoiceMySql.InsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
+                        (int)EECommerceType.SHOPEE, orderStatusPush.status, conn);
+
+                    // Xuất hóa đơn tự động chỉ cho đơn MỚI (tránh duplicate khi sàn gửi notification trùng)
+                    if (isNewOrder)
                     {
                         ShopeeOrderDetail shopeeOrderDetail = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailFromOrderSNAsync(orderStatusPush.ordersn);
                         CommonOrder commonOrder = new CommonOrder(shopeeOrderDetail);
@@ -344,7 +333,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     //return_updates_push
                     ShopeeReturnUpdatesPushData data = JsonConvert.DeserializeObject<ShopeeReturnUpdatesPushData>(obj["data"].ToString());
-                    //await ShopeeHandleBookingStatusPushAsync(data);
+                    await ShopeeHandleReturnPushAsync(data);
                 }
             }
             catch (Exception ex)
@@ -383,28 +372,17 @@ namespace MVCPlayWithMe.Controllers
         {
             if (orderStatusPush == null) return;
 
-            SByte needInvoice = 0;
             if (orderStatusPush.order_status == "delivered")
             {
-                needInvoice = 1;
-            }
-
-            using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
-            {
-                await conn.OpenAsync();
-                // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
-                await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
-                (int)EECommerceType.LAZADA, orderStatusPush.order_status, needInvoice, conn);
-
-                // Xuất hóa đơn tự động, cuối ngày vẫn cần check có đơn nào xuất không thành công thì xuất thủ công
-                if (needInvoice == 1)
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
                 {
-                    // Kiểm tra xem đơn hàng đã được xuất hóa đơn chưa do sàn duplicate thông báo
-                    Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(
-                        orderStatusPush.trade_order_id,
-                        (int)EECommerceType.LAZADA,
-                        conn);
-                    if (!hasCasso)
+                    await conn.OpenAsync();
+                    // Insert trạng thái đơn vào danh sách xuất hóa đơn (chỉ insert nếu chưa tồn tại)
+                    bool isNewOrder = await EInvoiceMySql.InsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
+                    (int)EECommerceType.LAZADA, orderStatusPush.order_status, conn);
+
+                    // Xuất hóa đơn tự động chỉ cho đơn MỚI (tránh duplicate khi sàn gửi notification trùng)
+                    if (isNewOrder)
                     {
                         long order_id = Common.ConvertStringToInt64(orderStatusPush.trade_order_id);
                         if (order_id < 0) return;

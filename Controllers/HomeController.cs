@@ -944,7 +944,20 @@ namespace MVCPlayWithMe.Controllers
                         //}
 
                         // 4. Insert OrderDetail
-                        result = await OrderMySql.AddDetailOrderTransactionAsync(conn, transaction, newOrderId, lsBuyedCart);
+                        List<OrderDetail> lsOrderDetail = new List<OrderDetail>();
+                        foreach (var cartItem in lsBuyedCart)
+                        {
+                            OrderDetail orderDetail = new OrderDetail
+                            {
+                                sanPhamId = cartItem.sanPhamId,
+                                quantity = cartItem.quantity,
+                                bookCoverPrice = cartItem.sanPhamBasicInfo.BookCoverPrice,
+                                price = cartItem.sanPhamBasicInfo.SalePrice
+                            };
+                            lsOrderDetail.Add(orderDetail);
+                        }
+
+                        result = await OrderMySql.AddDetailOrderTransactionAsync(conn, transaction, newOrderId, lsOrderDetail);
                         if (result.State != EMySqlResultState.OK)
                         {
                             return await RoolBackWhenOrderError(transaction, result);

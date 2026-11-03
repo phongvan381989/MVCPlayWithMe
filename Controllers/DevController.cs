@@ -808,11 +808,6 @@ namespace MVCPlayWithMe.Controllers
             //    await VBNProductSupporting.VBNGetListNeedUpdateQuantityAndUpdateAsync(conn);
             //}
 
-            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123000", 0, "TO_CONFRIM_RECEIVE11", 0);
-            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123000", 0, "TO_CONFRIM_RECEIVE22", 0);
-            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123001", 0, "TO_CONFRIM_RECEIVE11", 0);
-            //await EInvoiceMySql.UpdateOrInsertOrderStatusBackgroundAsync("TESTABC123001", 0, "TO_CONFRIM_RECEIVE22", 1);
-
             //result = await CommonCassoInvoiceAPI.GetAndSaveAccessTokenAsync();
             //01a16e8b-96f0-7be7-ab7b-8b99b7f34083
             //result.myJson = await CommonCassoInvoiceAPI.GetInvoiceByIdAsync("01a16e8b-96a2-73cc-9d51-010be0ccb8dc");

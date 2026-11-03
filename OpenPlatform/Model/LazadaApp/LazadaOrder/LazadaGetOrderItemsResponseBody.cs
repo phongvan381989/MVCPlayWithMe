@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MVCPlayWithMe.Models.ProductModel;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -50,6 +51,12 @@ namespace MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder
 
         // Ex: "TÊN SÁCH:COMBO 3 CUỐN". Trong đó "TÊN SÁCH" là tên variation
         public string variation { get; set; }
+
+        // Product price
+        public float item_price { get; set; }
+
+        // Paid price
+        public float paid_price { get; set; }
 
         // Nếu variation khác rỗng, ta lấy tên cụ thể của 1 variation
         public string GetVariationName()
