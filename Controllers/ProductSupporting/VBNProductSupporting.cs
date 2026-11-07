@@ -1,6 +1,10 @@
 ﻿using MVCPlayWithMe.General;
+using MVCPlayWithMe.Models.Order;
 using MVCPlayWithMe.Models.ProductModel;
 using MVCPlayWithMe.Models.SanPhamModel;
+using MVCPlayWithMe.OpenPlatform.Model;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Event;
+using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Order;
 using MySqlConnector;
 using System;
 using System.Collections.Generic;
@@ -65,6 +69,45 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             MySqlResultState result = await SanPhamMySql.UpdateQuantityAsync(spId);
 
             return result;
+        }
+
+        // Cập nhật tồn kho, trạng thái giữ chỗ,đóng đơn, hoàn đơn,...khi có đơn
+        public static async Task UpdateOrderWhenCreateOrCancelAsync(Order order, MySqlConnection conn)
+        {
+            EECommerceType eECommerceType =
+                order.from == EOrderFrom.VOI_BE_NHO ? EECommerceType.PLAY_WITH_ME : EECommerceType.MANUAL;
+
+            TbEcommerceOrder tbEcommerceOrder =
+             await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
+                order.code,
+                eECommerceType, conn);
+
+            ECommerceOrderStatus oldStatus = (ECommerceOrderStatus)tbEcommerceOrder.status;
+
+            ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
+            if (order.OrderStatus == EOrderStatus.CANCELLED)
+            {
+                status = ECommerceOrderStatus.UNBOOKED;
+            }
+
+            if (!TikiMySql.IsNeedUpdateQuantityOfProductInWarehouseFromOrderStatus(status, oldStatus))
+            {
+                return;
+            }
+
+            CommonOrder commonOrder = new CommonOrder(order);
+            await OrderMySql.PlayWithMeGetMappingOfCommonOrderConnectOut(commonOrder, conn);
+
+            long unixTimeSeconds = ((DateTimeOffset)order.time).ToUnixTimeSeconds();
+            MySqlResultState resultState = await TikiMySql.UpdateQuantityOfProductInWarehouseFromOrderConnectOutAsync(
+                commonOrder, status, unixTimeSeconds, oldStatus,
+                eECommerceType, conn);
+
+            if (resultState != null && resultState.myAnything == 1)
+            {
+                // Cập nhật số lượng sản phẩm khác trên sàn SHOPEE, TIKI, LAZADA. Không quan tâm kết quả thành công hay không
+                await CommonProductSupporting.GetListNeedUpdateQuantityAndUpdate_CoreAsync();
+            }
         }
     }
 }

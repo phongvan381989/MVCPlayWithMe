@@ -3,6 +3,7 @@ using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
@@ -196,9 +197,9 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Cập nhật trạng thái IsReturn theo Code và ECommerce
         /// </summary>
         public static async Task<MySqlResultState> UpdateIsReturnAsync(string code,
-            int ecommerce,
-            SByte isBooking, // 0: Đơn bình thường, 1: Là Booking 
-            SByte isReturn, // 0: chưa hoàn hàng về shop, 1: đã hoàn về shop, 2: thất lạc
+            EECommerceType ecommerce,
+            EOrderType isBooking, // 0: Đơn bình thường, 1: Là Booking 
+            EOrderReturnStatus isReturn, // 0: chưa hoàn hàng về shop, 1: đã hoàn về shop, 2: thất lạc
             MySqlConnection conn)
         {
             MySqlResultState result = new MySqlResultState();
@@ -211,10 +212,10 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                 using (MySqlCommand cmd = new MySqlCommand(query, conn))
                 {
-                    cmd.Parameters.AddWithValue("@code", code);
-                    cmd.Parameters.AddWithValue("@ecommerce", ecommerce);
-                    cmd.Parameters.AddWithValue("@isBooking", isBooking);
-                    cmd.Parameters.AddWithValue("@isReturn", isReturn);
+                    cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
+                    cmd.Parameters.Add("@isBooking", MySqlDbType.Byte).Value = (SByte)isBooking;
+                    cmd.Parameters.Add("@isReturn", MySqlDbType.Byte).Value = (SByte)isReturn;
 
                     int rowsAffected = await cmd.ExecuteNonQueryAsync();
 
@@ -323,8 +324,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Gọi stored procedure st_InsertOrderReturnShop_IfPacked
         /// </summary>
         public static async Task<MySqlResultState> InsertIfPackedAsync(string code,
-            int ecommerce,
-            SByte isBooking, //0: Đơn bình thường, 1: Là Booking
+            EECommerceType ecommerce,
+            EOrderType eOrderType, //0: Đơn bình thường, 1: Là Booking
             MySqlConnection conn
             )
         {
@@ -338,8 +339,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                     // IN parameters
                     cmd.Parameters.Add("@inCode", MySqlDbType.VarChar).Value = code;
-                    cmd.Parameters.Add("@inECommmerce", MySqlDbType.Byte).Value = ecommerce;
-                    cmd.Parameters.Add("@inIsBooking", MySqlDbType.Byte).Value = isBooking;
+                    cmd.Parameters.Add("@inECommmerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
+                    cmd.Parameters.Add("@inIsBooking", MySqlDbType.Byte).Value = (SByte)eOrderType;
 
                     // Execute
                     await cmd.ExecuteNonQueryAsync();

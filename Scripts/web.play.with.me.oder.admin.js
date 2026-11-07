@@ -561,6 +561,14 @@ function FilterOrderStatusInWarehouse(list, statusInWarehouse) {
         if (statusInWarehouse == eAll) {
             listTemp = list;
         }
+        else if (statusInWarehouse == bookedOrderStatusInWarehouse) { // Giữ chỗ sẽ hiển thị cả đơn chưa có trạng thái / "Chưa Tồn Tại" trong kho
+            for (let i = 0; i < list.length; i++) {
+                if (list[i].orderStatusInWarehouse === statusInWarehouse ||
+                    list[i].orderStatusInWarehouse === dontexistOrderStatusInWarehouse) {
+                    listTemp.push(list[i]);
+                }
+            }
+        }
         else {
             for (let i = 0; i < list.length; i++) {
                 if (list[i].orderStatusInWarehouse === statusInWarehouse) {

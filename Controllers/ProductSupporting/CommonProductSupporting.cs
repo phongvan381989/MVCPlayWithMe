@@ -547,6 +547,7 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             return sale_price;
         }
 
+        // Lấy thông tin gồm cả mapping
         public static async Task<CommonOrder> GetOrderDetail(string ecommerce,
             string orderCode, MySqlConnection conn)
         {
@@ -587,12 +588,34 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
                         commonOrder = new CommonOrder(tikiOrder);
                     }
                 }
+                else if (ecommerce == Common.ePlayWithMe || ecommerce == Common.eManual)
+                {
+                    MySqlResultState result = await OrderMySql.GetOrderByOrderCode_CoreAsync(orderCode, conn);
+                    if (result.State == EMySqlResultState.OK)
+                    {
+                        Order order = result.myJson as Order;
+                        commonOrder = new CommonOrder(order);
+                    }
+                }
+                else if (ecommerce == Common.eTikTok)
+                {
+
+                }
+                else
+                {
+                    MyLogger.GetInstance().Warn("Không hỗ trợ lấy chi tiết đơn hàng từ sàn " + ecommerce);
+                }
+                if(commonOrder != null)
+                {
+                    await LoadMappingForCommonOrder(commonOrder, conn);
+                }
             }
             catch(Exception ex)
             {
                 MyLogger.GetInstance().Warn(ex.Message);
                 commonOrder = null;
             }
+
 
             return commonOrder;
         }
@@ -613,7 +636,7 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             {
                 await LazadaMySql.LazadaGetMappingOfCommonOrderConnectOutAsync(order, conn);
             }
-            else if (order.ecommerceName == ePlayWithMe)
+            else if (order.ecommerceName == ePlayWithMe || order.ecommerceName == eManual)
             {
                 await OrderMySql.PlayWithMeGetMappingOfCommonOrderConnectOut(order, conn);
             }

@@ -16,7 +16,7 @@ async function GetOrderDetail() {
 
         // Gọi API admin
         let data = { id: ORDER_ID };
-        let responseText = await PostJSON('/Administrator/GetOrderDetailAdmin', data);
+        let responseText = await PostJSON('/Order/GetOrderFromId', data);
         let result = JSON.parse(responseText);
 
         RemoveCircleLoader();
@@ -87,6 +87,9 @@ function ShowOrderDetail(orderObj) {
 
         // Icon - Set src cho <img>
         let imageSrc = Get320VersionOfImageSrc(GetSanPhamMediaUrl(itemObj.sanPhamId, itemObj.CoverImageFileName));
+        if (orderObj.from !== EOrderFrom.VOI_BE_NHO && IsValidString(itemObj.CoverImageFileName)) {
+            imageSrc = Get320VersionOfImageSrc(itemObj.CoverImageFileName);
+        }
         let imgElement = cloneItem.getElementsByClassName("model-icon")[0];
         imgElement.src = imageSrc;
         imgElement.alt = itemObj.name || "Product image";

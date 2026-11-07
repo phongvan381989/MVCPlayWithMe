@@ -294,7 +294,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.CassoInvoiceAPI
                     // Cập nhật InvoiceId và LookupCode vào DB
                     await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(
                         order.code,
-                        (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
+                        Common.GetEECommerceTypeFromString(order.ecommerceName),
                         response.data.id,
                         response.data.lookupCode, 1, conn);
                 }

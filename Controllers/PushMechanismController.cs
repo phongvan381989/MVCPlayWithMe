@@ -48,7 +48,7 @@ namespace MVCPlayWithMe.Controllers
 
                     // Insert trạng thái đơn vào danh sách xuất hóa đơn (chỉ insert nếu chưa tồn tại)
                     bool isNewOrder = await EInvoiceMySql.InsertOrderStatusBackgroundAsync(orderStatusPush.ordersn,
-                        (int)EECommerceType.SHOPEE, orderStatusPush.status, conn);
+                        EECommerceType.SHOPEE, orderStatusPush.status, conn);
 
                     // Xuất hóa đơn tự động chỉ cho đơn MỚI (tránh duplicate khi sàn gửi notification trùng)
                     if (isNewOrder)
@@ -85,7 +85,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     // Lưu vào bảng check đơn hủy nhưng đã đóng
                     await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(orderStatusPush.ordersn,
-                        (int)EECommerceType.SHOPEE, 0, conn);
+                        EECommerceType.SHOPEE, EOrderType.NORMAL, conn);
                 }
 
                 TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(
@@ -211,7 +211,7 @@ namespace MVCPlayWithMe.Controllers
                     {
                         // Lưu vào bảng check đơn hủy nhưng đã đóng
                         await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(data.booking_sn,
-                            (int)EECommerceType.SHOPEE, 1, conn);
+                            EECommerceType.SHOPEE, EOrderType.BOOKING, conn);
                     }
 
                     ECommerceOrderStatus status = ECommerceOrderStatus.BOOKED;
@@ -289,9 +289,9 @@ namespace MVCPlayWithMe.Controllers
         {
             if (returnPushData == null) return;
 
-            // Lưu/cập nhật trạng thái đơn vào danh sách xuất hóa đơn
+            // Lưu/cập nhật trạng thái đơn vào danh sách cần điều chỉnh/hủy hóa đơn đã xuất do khách trả hàng hoàn tiền
             await ECommerceOrderCheckInvoiceMySql.InsertOrIgnoreAsync(returnPushData.order_sn,
-                (int)EECommerceType.SHOPEE);
+                EECommerceType.SHOPEE);
         }
 
         public async Task ThreadShopeeNotificationsAsync(string requestBody)
@@ -379,7 +379,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
                     // Insert trạng thái đơn vào danh sách xuất hóa đơn (chỉ insert nếu chưa tồn tại)
                     bool isNewOrder = await EInvoiceMySql.InsertOrderStatusBackgroundAsync(orderStatusPush.trade_order_id,
-                    (int)EECommerceType.LAZADA, orderStatusPush.order_status, conn);
+                    EECommerceType.LAZADA, orderStatusPush.order_status, conn);
 
                     // Xuất hóa đơn tự động chỉ cho đơn MỚI (tránh duplicate khi sàn gửi notification trùng)
                     if (isNewOrder)
@@ -419,7 +419,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     // Lưu vào bảng check đơn hủy nhưng đã đóng
                     await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(orderStatusPush.order_status,
-                        (int)EECommerceType.LAZADA, 0,  conn);
+                        EECommerceType.LAZADA, EOrderType.NORMAL,  conn);
                 }
 
                 TbEcommerceOrder tbEcommerceOrderLastest = await TikiMySql.GetLastestStatusOfECommerceOrderAsync(

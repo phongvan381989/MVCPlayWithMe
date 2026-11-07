@@ -221,11 +221,18 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(order.code,
-                    (int)Common.GetEECommerceTypeFromString(order.ecommerceName), conn);
+                    Common.GetEECommerceTypeFromString(order.ecommerceName), conn);
                     if (hasCasso)
                     {
                         result.State = EMySqlResultState.EXIST;
                         result.Message = "Đã có hóa đơn nháp. Đơn đã có mã tìm kiếm, id hóa đơn trên hệ thống Casso. KHông được tạo mới";
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    if(!CommonCassoInvoiceAPI.CheckOrderCanIssueInvoice(order))
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Đơn hàng không thể tạo hóa đơn";
                         return JsonConvert.SerializeObject(result);
                     }
 
@@ -239,7 +246,7 @@ namespace MVCPlayWithMe.Controllers
                     if (response.IsSucceed)
                     {
                         result = await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(order.code,
-                            (int)Common.GetEECommerceTypeFromString(order.ecommerceName),
+                            Common.GetEECommerceTypeFromString(order.ecommerceName),
                             response.data.id, response.data.lookupCode, 0, conn);
                         result.myJson = new
                         {
@@ -302,7 +309,7 @@ namespace MVCPlayWithMe.Controllers
                 {
                     await conn.OpenAsync();
                     Boolean hasCasso = await EInvoiceMySql.HasCassoInvoiceLookUpInfoAsync(order.code,
-                    (int)ecommerce, conn);
+                    ecommerce, conn);
                     if (hasCasso)
                     {
                         result.State = EMySqlResultState.EXIST;
@@ -314,6 +321,13 @@ namespace MVCPlayWithMe.Controllers
                     {
                         result.State = EMySqlResultState.INVALID;
                         result.Message = "Đơn hàng có sản phẩm không hợp lệ. Không thể tạo hóa đơn.";
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    if (!CommonCassoInvoiceAPI.CheckOrderCanIssueInvoice(order))
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Đơn hàng không thể tạo hóa đơn";
                         return JsonConvert.SerializeObject(result);
                     }
 
@@ -329,7 +343,7 @@ namespace MVCPlayWithMe.Controllers
                         // Check tồn tại
                         //Lấy EInvoice từ DB
                         EInvoice invoice = await EInvoiceMySql.GetByCodeAndECommerceAsync(order.code,
-                            (int)ecommerce,
+                            ecommerce,
                             conn);
                         if (invoice == null)
                         {
@@ -357,7 +371,7 @@ namespace MVCPlayWithMe.Controllers
                             // Cập nhật InvoiceId và LookupCode vào DB
                             result = await EInvoiceMySql.UpdateCassoInvoiceLookUpInfoAsync(
                                 order.code,
-                                (int)ecommerce,
+                                ecommerce,
                                 response.data.id,
                                 response.data.lookupCode, 1, conn);
                         }
@@ -535,7 +549,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
 
                     // Bước 1: Lấy EInvoice từ DB
-                    EInvoice invoice = await EInvoiceMySql.GetByCodeAndECommerceAsync(orderCode, ecommerce.Value, conn);
+                    EInvoice invoice = await EInvoiceMySql.GetByCodeAndECommerceAsync(orderCode, (EECommerceType)ecommerce.Value, conn);
 
                     if (invoice == null)
                     {
@@ -595,7 +609,7 @@ namespace MVCPlayWithMe.Controllers
                     // Bước 3: Cập nhật InvoiceNumber vào DB
                     MySqlResultState updateResult = await EInvoiceMySql.UpdateInvoiceNumberAsync(
                         orderCode,
-                        ecommerce.Value,
+                        (EECommerceType)ecommerce.Value,
                         invoiceNumberInt,
                         conn);
 

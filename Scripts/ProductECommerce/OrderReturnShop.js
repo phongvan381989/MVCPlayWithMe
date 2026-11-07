@@ -73,7 +73,7 @@ function RenderTable(data) {
 
         // Sàn TMĐT
         let cell1 = row.insertCell(1);
-        cell1.innerHTML = GetECommerceName(item.ECommmerce);
+        cell1.innerHTML = GetEEcomnerceNameFromIntType(item.ECommmerce);
 
         // Mã Đơn
         let cell2 = row.insertCell(2);
@@ -115,17 +115,6 @@ function RenderTable(data) {
             cell6.innerHTML = `<span style="color: #6c757d; font-style: italic;">Đã xử lý</span>`;
         }
     });
-}
-
-// Lấy tên sàn TMĐT
-function GetECommerceName(ecommerce) {
-    switch (ecommerce) {
-        case 0: return "Play With Me";
-        case 1: return "Tiki";
-        case 2: return "Shopee";
-        case 3: return "Lazada";
-        default: return "Không xác định";
-    }
 }
 
 // Lấy badge loại đơn

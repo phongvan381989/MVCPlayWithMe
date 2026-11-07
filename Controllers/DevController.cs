@@ -816,6 +816,7 @@ namespace MVCPlayWithMe.Controllers
             //    (int)EECommerceType.SHOPEE);
             //await ECommerceOrderCheckInvoiceMySql.InsertOrIgnoreAsync("Test Tiki 2",
             //    (int)EECommerceType.TIKI);
+            //await OrderMySql.GetListCommonOrderByDateTime_StatusAsync(DateTime.Now.AddDays(-30), CommonOrderStatus.ALL);
 
             return JsonConvert.SerializeObject(result);
         }

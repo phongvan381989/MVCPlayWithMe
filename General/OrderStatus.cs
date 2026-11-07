@@ -16,6 +16,20 @@ namespace MVCPlayWithMe.General
         COMPLETED,
     }
 
+    public enum EOrderType
+    {
+        NORMAL,
+        BOOKING
+    }
+
+    // Trạng thái hoàn hàng
+    public enum EOrderReturnStatus
+    {
+        NOT_RETURNED,
+        RETURNED,
+        LOST
+    }
+
     // Phương thức thanh toán
     public enum EPaymentMethod
     {
@@ -27,7 +41,7 @@ namespace MVCPlayWithMe.General
     {
         VOI_BE_NHO,
         FACEBOOK,
-        TIKTOK,
+        ZALO,
         OTHER
     }
 

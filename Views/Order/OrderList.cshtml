@@ -6,7 +6,7 @@
 <html lang="vi">
 <head>
     @Html.Partial("~/Views/Shared/Head.cshtml")
-    <link rel="stylesheet" href="~/Content/Administrator/OrderList.css?v=20260807">
+    <link rel="stylesheet" href="~/Content/Order/OrderList.css?v=20260807">
 </head>
 <body>
     <div id="biggestContainer">
@@ -18,13 +18,15 @@
                 <!-- Date Range Radio -->
                 <div class="date-range-radio">
                     <label class="radio-label">
-                        <input type="radio" name="date-range" value="30" checked onclick="OnDateRangeChange(this)">
-                        <span>30 ngày</span>
-                    </label>
-                    <label class="radio-label">
-                        <input type="radio" name="date-range" value="7" onclick="OnDateRangeChange(this)">
+                        <input type="radio" name="date-range" value="7" checked onclick="OnDateRangeChange(this)">
                         <span>7 ngày</span>
                     </label>
+
+                    <label class="radio-label">
+                        <input type="radio" name="date-range" value="30" onclick="OnDateRangeChange(this)">
+                        <span>30 ngày</span>
+                    </label>
+
                     <label class="radio-label">
                         <input type="radio" name="date-range" value="all" onclick="OnDateRangeChange(this)">
                         <span>Tất cả</span>
@@ -169,7 +171,7 @@
                         <option value="1">Đang giao</option>
                         <option value="2">Đã nhận</option>
                         <option value="3">Đã hủy</option>
-                        <option value="4">Hoàn về</option>
+                        <option value="4">Trả hàng hoàn tiền</option>
                         <option value="5">Hoàn thành</option>
                     </select>
                 </div>
@@ -191,6 +193,6 @@
 
     <script src="~/Scripts/web.play.with.me.common.js?v=20260916"></script>
     <script src="~/Scripts/Customer/CommonOrder.js?v=20260807"></script>
-    <script src="~/Scripts/Administrator/OrderList.js?v=20260807"></script>
+    <script src="~/Scripts/Order/OrderList.js?v=20260807"></script>
 </body>
 </html>

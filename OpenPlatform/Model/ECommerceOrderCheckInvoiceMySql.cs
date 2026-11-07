@@ -3,6 +3,7 @@ using MySqlConnector;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.OpenPlatform.Model
 {
@@ -322,7 +323,7 @@ namespace MVCPlayWithMe.OpenPlatform.Model
         /// Insert hoặc bỏ qua nếu đã tồn tại (INSERT IGNORE)
         /// Bỏ trả về MySqlResultState cho nhanh
         /// </summary>
-        public static async Task InsertOrIgnoreAsync(string code, int ecommerce)
+        public static async Task InsertOrIgnoreAsync(string code, EECommerceType ecommerce)
         {
             try
             {
@@ -335,8 +336,8 @@ namespace MVCPlayWithMe.OpenPlatform.Model
 
                     using (MySqlCommand cmd = new MySqlCommand(query, conn))
                     {
-                        cmd.Parameters.AddWithValue("@code", code);
-                        cmd.Parameters.AddWithValue("@ecommerce", ecommerce);
+                        cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
+                        cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
 
                         int rowsAffected = await cmd.ExecuteNonQueryAsync();
                     }

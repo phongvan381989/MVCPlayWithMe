@@ -376,7 +376,7 @@
                 row.setAttribute('data-ecommerce', item.ECommmerce);
 
                 // Get short name (2 characters)
-                const ecommerceShortName = GetECommerceShortName(item.ECommmerce);
+                const ecommerceShortName = GetEEcomnerceNameFromIntType(item.ECommmerce).slice(0, 2);
 
                 row.innerHTML = `
                     <td>${item.Id}</td>
@@ -386,7 +386,7 @@
                     <td>${item.Quantity}</td>
                     <td>${isFirstInGroup ? (item.IsVariant === 1 ? 'Variant' : 'Simple') : ''}</td>
                     <td>${item.TrackId || ''}</td>
-                    <td ${item.ProOnEcoId > 0 ? 'style="cursor: pointer; color: #007bff; text-decoration: underline;" onclick="window.open(\'/ProductECommerce/Item?eType=' + GetEEcomnerceNameFromIntType(item.ECommmerce) + '&id=' + item.ProOnEcoId + '\', \'_blank\')" title="Click để mở trang sản phẩm trên sàn ' + GetECommerceName(item.ECommmerce) + '"' : ''}>${item.ProOnEcoId > 0 ? item.ProOnEcoId : ''}</td>
+                    <td ${item.ProOnEcoId > 0 ? 'style="cursor: pointer; color: #007bff; text-decoration: underline;" onclick="window.open(\'/ProductECommerce/Item?eType=' + GetEEcomnerceNameFromIntType(item.ECommmerce) + '&id=' + item.ProOnEcoId + '\', \'_blank\')" title="Click để mở trang sản phẩm trên sàn ' + GetEEcomnerceNameFromIntType(item.ECommmerce) + '"' : ''}>${item.ProOnEcoId > 0 ? item.ProOnEcoId : ''}</td>
                     <td>
                         ${isFirstInGroup ? `
                             ${item.IsVariant === 1 ? '<button class="btn btn-warning" style="margin-right: 5px;" title="Cập nhật ảnh, kích thước, cân nặng,... cho biến thể. Lấy id trên sàn lưu vào tb_track_original_sku. Dùng nút Lấy SP sau khi check thủ công ok" onclick="UpdateVariant(\'' + item.OriginalSku + '\', ' + item.ECommmerce + ')">Cập nhật Variant</button>' : ''}
@@ -479,25 +479,6 @@
             } catch (error) {
                 console.error('Error deleting item:', error);
                 alert('Có lỗi xảy ra khi xóa');
-            }
-        }
-
-        // Helper functions
-        function GetECommerceName(value) {
-            switch (value) {
-                case 1: return 'Tiki';
-                case 2: return 'Shopee';
-                case 3: return 'Lazada';
-                default: return 'Unknown';
-            }
-        }
-
-        function GetECommerceShortName(value) {
-            switch (value) {
-                case 1: return 'Ti';
-                case 2: return 'Sh';
-                case 3: return 'La';
-                default: return '';
             }
         }
 

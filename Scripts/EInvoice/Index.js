@@ -2,27 +2,13 @@
 
 // Load danh sách hóa đơn khi trang load
 window.onload = function () {
-    // Set mặc định 7 ngày trước
     let today = new Date();
-    // let sevenDaysAgo = new Date(today);
-    // sevenDaysAgo.setDate(today.getDate() - 7);
-    let dateString = today.toISOString().split('T')[0]; // YYYY-MM-DD
+    let dateString = today.toLocaleDateString('sv-SE');
     document.getElementById("filter-date").value = dateString;
 
     // Load dữ liệu
     LoadInvoiceList();
 };
-
-// Lấy tên sàn từ mã số
-function GetECommerceName(ecommerce) {
-    switch (ecommerce) {
-        case 0: return "PlayWithMe";
-        case 1: return "Tiki";
-        case 2: return "Shopee";
-        case 3: return "Lazada";
-        default: return "Unknown";
-    }
-}
 
 // Lấy tên trạng thái hóa đơn
 function GetInvoiceStatusName(status) {
@@ -95,7 +81,7 @@ function DisplayInvoiceTable() {
 
         // Sàn
         let cell1 = row.insertCell(1);
-        cell1.innerHTML = GetECommerceName(invoice.ECommmerce);
+        cell1.innerHTML = GetEEcomnerceNameFromIntType(invoice.ECommmerce);
 
         // Mã Đơn
         let cell2 = row.insertCell(2);
@@ -160,7 +146,7 @@ function DisplayInvoiceTable() {
 
 // Mở tab chi tiết đơn hàng
 function OpenOrderDetail(invoice) {
-    let eTypeName = GetECommerceName(invoice.ECommmerce).toUpperCase();
+    let eTypeName = GetEEcomnerceNameFromIntType(invoice.ECommmerce).toUpperCase();
     let url = `/EInvoice/Order?ecommerce=${eTypeName}&orderCode=${invoice.Code}`;
     window.open(url, '_blank');
 }

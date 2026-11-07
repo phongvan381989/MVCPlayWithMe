@@ -32,7 +32,7 @@ namespace MVCPlayWithMe.Models.Order
         public string code { get; set; }
 
         // 0: Nếu đơn phát sinh từ web, 1: Facebook, 2: Zalo
-        public int from { get; set; }
+        public EOrderFrom from { get; set; }
 
         public string note { get; set; }
 

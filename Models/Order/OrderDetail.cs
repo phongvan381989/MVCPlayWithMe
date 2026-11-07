@@ -19,7 +19,8 @@ namespace MVCPlayWithMe.Models.Order
 
         public string name { get; set; }
 
-        // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất)
+        // Ảnh bìa từ tb_san_pham_media (DisplayOrder = nhỏ nhất) nếu đơn từ web voi bé nhỏ
+        // url tới ảnh đầu tiên của sản phẩm trong tbProducts, ví dụ: /Media/SanPham/578/0.jpg
         public string CoverImageFileName { get; set; }
 
         public int quantity { get; set; }

@@ -332,5 +332,64 @@ namespace MVCPlayWithMe.OpenPlatform.Model
                 }
             }
         }
+
+        public CommonOrder(Order order)
+        {
+            if(order.from != (EOrderFrom)EOrderFrom.VOI_BE_NHO)
+            {
+                ecommerceName = Common.eManual;
+            }
+            else
+            {
+                ecommerceName = Common.ePlayWithMe;
+            }
+
+            id = order.id;
+            code = order.code;
+            shipCode = string.Empty;
+            status = OrderStatus.GetOrderStatus(order.OrderStatus);
+            messageToSeller = order.note;
+            isExpress = false;
+            created_at = order.time.HasValue ? order.time.Value : new DateTime();
+            update_time = order.time.HasValue ? order.time.Value : new DateTime();
+            listItemId = new List<long>();
+            listModelId = new List<long>();
+            listThumbnail = new List<string>();
+            listQuantity = new List<long>();
+            listItemName = new List<string>();
+            listModelName = new List<string>();
+            listMapping = new List<List<Mapping>>();
+            list_model_discounted_price = new List<float>();
+            list_model_original_price = new List<float>();
+            foreach (OrderDetail e in order.lsOrderDetail)
+            {
+                listItemId.Add(e.sanPhamId);
+                listModelId.Add(-1);
+                if(order.from != (EOrderFrom)EOrderFrom.VOI_BE_NHO) // Lấy src của sản phẩm thật trong kho
+                {
+                    listThumbnail.Add(Common.GetFirstProductImageSrc(e.sanPhamId.ToString()));
+                }
+                else
+                {
+                    // Lấy src của sản phẩm voi bé nhỏ
+                    listThumbnail.Add(Common.GenerateV320RelativeSanPhamMediaUrl(
+                        e.CoverImageFileName, e.sanPhamId));
+                }
+                listQuantity.Add(e.quantity);
+                listItemName.Add(e.name);
+                listModelName.Add("");
+                list_model_discounted_price.Add((float)e.price);
+                list_model_original_price.Add((float)e.bookCoverPrice);
+            }
+        }
+
+        //public void GeneralMappingOfManualOrder()
+        //{
+        //    // Đơn hàng thủ công, mapping với chính nó luôn
+        //    foreach (var item in listItemId)
+        //    {
+        //        listMapping.Add(new List<Models.Mapping> { new Models.Mapping { itemId = item } });
+        //    }
+        //}
     }
 }

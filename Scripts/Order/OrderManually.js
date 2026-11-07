@@ -11,8 +11,6 @@ let discount = 0;
 // Lưu thông tin khách hàng từ modal
 let currentCustomerInfor = null;
 
-GetListPublisher();
-
 // Hàm cập nhật tổng kết đơn hàng
 function UpdateOrderSummary() {
     // Tính tổng tiền sản phẩm từ bảng
@@ -43,8 +41,9 @@ function UpdateOrderSummary() {
 }
 
 // Event listener cho phí ship
-window.addEventListener('load', function() {
+window.addEventListener('load', async function() {
     document.getElementById("shipping-fee").addEventListener("input", UpdateOrderSummary);
+    await GetListPublisher();
 });
 
 // Xử lý khi hoàn thành modal nhập thông tin khách hàng
@@ -79,6 +78,7 @@ function ComboIdName(id, name) {
     this.id = id;
     this.name = name;
 }
+
 function SetDataIdListOfCombo(list) {
     // list chứa dữ liệu comboId lặp lại, tạo list mới không lặp lại
     let listTemp = [];
@@ -120,6 +120,7 @@ async function GetBasicInfoProduct() {
     else {
         listBasicInfo = [];
     }
+
     let ele = document.getElementById("list-product-name");
     SetDataListOfIdName(ele, listBasicInfo);
     SetDataIdListOfCombo(listBasicInfo);
@@ -185,6 +186,11 @@ function AddHeadList() {
         CreateMustClickOkModal("Danh sách sản phẩm chưa được tải về. Vui lòng chọn nhà phát hành, để tải danh sách sản phẩm tương ứng. Hoặc thử lại sau nếu đã chọn nhà phát hành", null);
         return;
     }
+
+    // Lấy chiết khấu và số lượng từ input
+    let discountInput = parseFloat(document.getElementById("discount-input").value) || 0;
+    let quantityInput = parseInt(document.getElementById("quantity-input").value) || 1;
+
     let code = document.getElementById("code-or-isbn").value;
     let nameId = GetDataIdFromProductNameDatalist(document.getElementById("product-name-id").value);
     let comboId = GetDataIdFromComboDatalist(document.getElementById("combo-id").value)
@@ -264,6 +270,7 @@ function AddHeadList() {
             let cell7 = row.insertCell(6);
             let cell8 = row.insertCell(7);
             let cell9 = row.insertCell(8);
+            let cell10 = row.insertCell(9);
 
             // Id
             cell1.innerHTML = objBasicInfo.id;
@@ -291,11 +298,11 @@ function AddHeadList() {
             cell4.innerHTML = objBasicInfo.bookCoverPrice;
 
             // Giá Bán (input để có thể sửa)
-            let salePrice = (100 - discount) * objBasicInfo.bookCoverPrice / 100;
+            let salePrice = (100 - discountInput) * objBasicInfo.bookCoverPrice / 100;
 
             // Chiết khấu - format ban đầu
-            if (discount > 0) {
-                cell5.innerHTML = `-${discount.toFixed(2)}%`;
+            if (discountInput > 0) {
+                cell5.innerHTML = `-${discountInput.toFixed(2)}%`;
                 cell5.style.color = "red";
                 cell5.style.fontWeight = "bold";
             } else {
@@ -313,13 +320,22 @@ function AddHeadList() {
             // Focus vào đây
             let input7 = document.createElement("input");
             input7.type = "number";
+            input7.min = "1";
             cell7.appendChild(input7);
             input7.focus();
-            input7.value = 1; // Giá trị mặc định
+            input7.value = quantityInput; // Lấy từ input
 
             // Tổng Tiền
             let totalPrice = salePrice * input7.value;
             cell8.innerHTML = ConvertMoneyToText(totalPrice);
+
+            // Tồn kho
+            let stockQuantity = objBasicInfo.quantity || 0;
+            cell9.innerHTML = stockQuantity;
+            if (stockQuantity <= 0) {
+                cell9.style.color = "red";
+                cell9.style.fontWeight = "bold";
+            }
 
             // Hàm cập nhật tổng tiền
             function updateTotal() {
@@ -391,7 +407,7 @@ function AddHeadList() {
                 UpdateOrderSummary(); // Cập nhật tổng kết sau khi xóa
             };
             btn.innerHTML = "Xóa";
-            cell9.appendChild(btn);
+            cell10.appendChild(btn);
 
             // Cập nhật tổng kết khi thêm sản phẩm mới
             UpdateOrderSummary();
@@ -421,6 +437,32 @@ async function CreateOrderManually() {
     if (length <= 1) {
         CreateMustClickOkModal("Chưa có sản phẩm nào trong đơn hàng", null);
         return;
+    }
+
+    // Kiểm tra số lượng và tồn kho
+    for (let i = 1; i < length; i++) {
+        let row = rows[i];
+        let productName = row.cells[2].innerHTML;
+        let quantity = Number(row.cells[6].childNodes[0].value);
+        let stockQuantity = Number(row.cells[8].innerHTML);
+
+        // Kiểm tra số lượng < 1
+        if (quantity < 1) {
+            CreateMustClickOkModal(`Sản phẩm "${productName}" có số lượng không hợp lệ (${quantity}). Số lượng phải >= 1.`, null);
+            return;
+        }
+
+        // Kiểm tra tồn kho <= 0
+        if (stockQuantity <= 0) {
+            CreateMustClickOkModal(`Sản phẩm "${productName}" đã hết hàng (Tồn kho: ${stockQuantity}). Vui lòng xóa khỏi đơn hàng.`, null);
+            return;
+        }
+
+        // Kiểm tra số lượng đặt mua > tồn kho
+        if (quantity > stockQuantity) {
+            CreateMustClickOkModal(`Sản phẩm "${productName}" không đủ hàng.\nSố lượng đặt: ${quantity}\nTồn kho: ${stockQuantity}\nVui lòng giảm số lượng hoặc xóa khỏi đơn hàng.`, null);
+            return;
+        }
     }
 
     // Tạo danh sách OrderDetail từ bảng
@@ -532,7 +574,7 @@ async function CreateOrderManually() {
     };
 
     // Gọi API với PostJSON
-    let url = "/Product/CreateOrderManually";
+    let url = "/Order/CreateOrderManually";
 
     ShowCircleLoader();
     try {

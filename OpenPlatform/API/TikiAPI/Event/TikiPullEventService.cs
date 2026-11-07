@@ -31,7 +31,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             {
                 // Insert trạng thái đơn vào danh sách xuất hóa đơn (chỉ insert nếu chưa tồn tại)
                 bool isNewOrder = await EInvoiceMySql.InsertOrderStatusBackgroundAsync(tikiEvent.payload.order_code,
-                    (int)EECommerceType.TIKI, tikiEvent.payload.status, conn);
+                    EECommerceType.TIKI, tikiEvent.payload.status, conn);
                 // Xuất hóa đơn tự động chỉ cho đơn MỚI (tránh duplicate khi sàn gửi notification trùng)
                 if (isNewOrder)
                 {
@@ -56,7 +56,7 @@ namespace MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event
             {
                 // Lưu vào bảng check đơn hủy nhưng đã đóng
                 await ECommerceOrderReturnShopMySql.InsertIfPackedAsync(tikiEvent.payload.order_code,
-                    (int)EECommerceType.TIKI, 0,  conn);
+                    EECommerceType.TIKI, EOrderType.NORMAL,  conn);
             }
 
             TbEcommerceOrder tbEcommerceOrder = 

@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using static MVCPlayWithMe.General.Common;
 
 namespace MVCPlayWithMe.Models.Order
 {
@@ -290,7 +291,7 @@ namespace MVCPlayWithMe.Models.Order
         /// <returns>true nếu insert thành công, false nếu đã tồn tại (duplicate key)</returns>
         public static async Task<bool> InsertOrderStatusBackgroundAsync(
             string code,
-            int ecommerce,
+            EECommerceType ecommerce,
             string orderStatus,
             MySqlConnection conn)
         {
@@ -311,7 +312,7 @@ namespace MVCPlayWithMe.Models.Order
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
                     cmd.Parameters.Add("@orderStatus", MySqlDbType.VarChar).Value = orderStatus ?? string.Empty;
 
                     int rowsAffected = await cmd.ExecuteNonQueryAsync();
@@ -332,7 +333,7 @@ namespace MVCPlayWithMe.Models.Order
         /// Kiểm tra Code + ECommmerce đã có InvoiceId hoặc InvoiceLookupCode chưa
         /// </summary>
         /// <returns>true nếu đã có, false nếu chưa có hoặc không tồn tại record</returns>
-        public static async Task<bool> HasCassoInvoiceLookUpInfoAsync(string code, int ecommerce,
+        public static async Task<bool> HasCassoInvoiceLookUpInfoAsync(string code, EECommerceType ecommerce,
             MySqlConnection conn)
         {
             try
@@ -346,7 +347,7 @@ namespace MVCPlayWithMe.Models.Order
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
@@ -374,7 +375,7 @@ namespace MVCPlayWithMe.Models.Order
         /// </summary>
         public static async Task<MySqlResultState> UpdateCassoInvoiceLookUpInfoAsync(
             string code,
-            int ecommerce,
+            EECommerceType ecommerce,
             string invoiceId,
             string invoiceLookupCode,
             int invoiceStatus, // 0: Chưa xuất  / 1:  Đã xuất / 2:  Lỗi
@@ -401,7 +402,7 @@ namespace MVCPlayWithMe.Models.Order
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
                     cmd.Parameters.Add("@invoiceId", MySqlDbType.VarChar).Value = invoiceId ?? string.Empty;
                     cmd.Parameters.Add("@invoiceLookupCode", MySqlDbType.VarChar).Value = invoiceLookupCode ?? string.Empty;
                     if (invoiceStatus != 0)
@@ -434,7 +435,7 @@ namespace MVCPlayWithMe.Models.Order
         /// Lấy EInvoice theo Code và ECommmerce
         /// </summary>
         public static async Task<EInvoice> GetByCodeAndECommerceAsync(string code,
-            int ecommerce,
+            EECommerceType ecommerce,
             MySqlConnection conn)
         {
             EInvoice invoice = null;
@@ -448,7 +449,7 @@ namespace MVCPlayWithMe.Models.Order
                 {
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
 
                     using (MySqlDataReader rdr = (MySqlDataReader)await cmd.ExecuteReaderAsync())
                     {
@@ -470,7 +471,7 @@ namespace MVCPlayWithMe.Models.Order
         /// </summary>
         public static async Task<MySqlResultState> UpdateInvoiceNumberAsync(
             string code,
-            int ecommerce,
+            EECommerceType ecommerce,
             int invoiceNumber,
             MySqlConnection conn)
         {
@@ -486,7 +487,7 @@ namespace MVCPlayWithMe.Models.Order
                     cmd.CommandType = CommandType.Text;
                     cmd.Parameters.Add("@invoiceNumber", MySqlDbType.Int32).Value = invoiceNumber;
                     cmd.Parameters.Add("@code", MySqlDbType.VarChar).Value = code;
-                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Int32).Value = ecommerce;
+                    cmd.Parameters.Add("@ecommerce", MySqlDbType.Byte).Value = (SByte)ecommerce;
 
                     int rowsAffected = await cmd.ExecuteNonQueryAsync();
 

@@ -33,7 +33,7 @@ const EOrderFrom = Object.freeze(
     {
         VOI_BE_NHO: 0,
         FACEBOOK: 1,
-        TIKTOK: 2,
+        ZALO: 2,
         OTHER: 3
     }
 );

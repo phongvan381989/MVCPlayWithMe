@@ -703,6 +703,23 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return View();
         }
 
+        private async Task<string> GetListOrderTemporary(int fromTo, int orderStatus)
+        {
+            DateTime time_from, time_to;
+            time_from = DateTime.Today;
+            time_to = DateTime.Today;
+            if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.today)
+                time_from = time_to.AddDays(-1);
+            else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last7days)
+                time_from = time_to.AddDays(-7);
+            else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
+                time_from = time_to.AddDays(-30);
+
+            CommonOrderStatus commonOrderStatus = (CommonOrderStatus)orderStatus;
+
+            return JsonConvert.SerializeObject(await OrderMySql.GetListCommonOrderByDateTime_StatusAsync(time_from, commonOrderStatus));
+        }
+
         /// <summary>
         /// Cần lấy danh sách order và booking
         /// </summary>
@@ -712,15 +729,18 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public async Task<string> GetListOrder(int fromTo, int orderStatus)
         {
+            // Temporary
+            return await GetListOrderTemporary(fromTo, orderStatus);
+
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
             if ((await AuthentAdministratorAsync()) == null)
             {
                 return JsonConvert.SerializeObject(lsCommonOrder);
             }
-            CommonOrderStatus eOrderStatus = (CommonOrderStatus)orderStatus;
+            CommonOrderStatus commonOrderStatus = (CommonOrderStatus)orderStatus;
             // Lấy đơn hàng tiki
             List<TikiOrder> lsOrderTikiFullInfo;
-            lsOrderTikiFullInfo = await TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo, eOrderStatus);
+            lsOrderTikiFullInfo = await TikiGetListOrders.GetListOrderAShop((EnumOrderItemFilterByDate)fromTo, commonOrderStatus);
             if(lsOrderTikiFullInfo != null)
             {
                 foreach(var order in lsOrderTikiFullInfo)
@@ -733,14 +753,15 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             List<ShopeeOrderDetail> lsOrderShopeeFullInfo = null ;
             List<ShopeeBookingDetail> lsBookingShopeeFullInfo = null;
             DateTime time_from, time_to;
-            time_from = DateTime.Now;
-            time_to = DateTime.Now;
+            time_from = DateTime.Today;
+            time_to = DateTime.Today;
             if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.today)
                 time_from = time_to.AddDays(-1);
             else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last7days)
                 time_from = time_to.AddDays(-7);
             else if ((EnumOrderItemFilterByDate)fromTo == EnumOrderItemFilterByDate.last30days)
                 time_from = time_to.AddDays(-30);
+            time_to = DateTime.Now.AddDays(1).Date;
 
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
@@ -748,7 +769,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
 
                 // Lấy đơn hàng của shopee, lazada
                 List<LazadaOrder> lsOrderLazadaFullInfo = null;
-                if (eOrderStatus == CommonOrderStatus.CANCELLED)
+                if (commonOrderStatus == CommonOrderStatus.CANCELLED)
                 {
                     // Shopee
                     lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailAllAsync(
@@ -766,7 +787,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     // Lazada
                     lsOrderLazadaFullInfo = await LazadaOrderAPI.LazadaGetOrdersDetailCanceledAsync(time_from);
                 }
-                else if (eOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
+                else if (commonOrderStatus == CommonOrderStatus.READY_TO_SHIP_PROCESSED)
                 {
                     // Shopee
                     lsOrderShopeeFullInfo = await ShopeeGetOrderDetail.ShopeeOrderGetOrderDetailToPickUpAsync(
@@ -845,9 +866,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 }
             }
 
-            // Temporary Comment
-            //// Lấy đơn hàng của web Play With Me
-            //lsCommonOrder.AddRange(await OrderMySql.GetListCommonOrderAsync(fromTo));
+            // Lấy đơn hàng của web Play With Me, đơn thủ công
+            lsCommonOrder.AddRange(await OrderMySql.GetListCommonOrderByDateTime_StatusAsync(time_from, commonOrderStatus));
 
             // Cập nhật trạng thái đơn hàng: giữ chỗ / hủy giữ chỗ / đã đóng / đã hoàn
             await OrderMySql.GetOrderStatusInWarehouseToCommonOrderAsync(lsCommonOrder);
@@ -975,8 +995,6 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 await conn.OpenAsync();
                 {
                     commonOrder = await CommonProductSupporting.GetOrderDetail(ecommerce, orderCode, conn);
-
-                    await CommonProductSupporting.LoadMappingForCommonOrder(commonOrder, conn);
                 }
             }
 
@@ -1144,11 +1162,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                 {
                     await conn.OpenAsync();
                     string orderCode;
-                    SByte isBooking = 0;
+                    EOrderType isBooking = EOrderType.NORMAL;
                     // Là đơn booking
                     if (order.isBooking)
                     {
-                        isBooking = 1;
+                        isBooking = EOrderType.BOOKING;
                         orderCode = order.bookingCode;
                         TbEcommerceOrder tbEcommerceBookingLastest = await TikiMySql.GetLastestStatusOfECommerceBookingAsync(
                             order.bookingCode, eECommerceType, conn);
@@ -1187,7 +1205,11 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                         }
                     }
 
-                    await ECommerceOrderReturnShopMySql.UpdateIsReturnAsync(orderCode, (int)eECommerceType, isBooking, 1, conn);
+                    await ECommerceOrderReturnShopMySql.UpdateIsReturnAsync(orderCode,
+                        eECommerceType,
+                        isBooking,
+                        EOrderReturnStatus.RETURNED,
+                        conn);
                 }
             }
             catch (Exception ex)

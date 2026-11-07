@@ -15,9 +15,11 @@ var uidKey = "uid";
 var visitorType = "visitorType"; // Chỉ có cookie này khi đăng nhập như người quản trị
 var eAll = "ALL";
 var ePlayWithMe = "PLAYWITHME";
+var eManual = "MANUAL";
 var eTiki = "TIKI";
 var eShopee = "SHOPEE";
 var eLazada = "LAZADA";
+var eTikTok = "TIKTOK";
 var httpsVoiBeNho = "https://voibenho.com";
 var titleVoiBeNho = "Tiệm sách Voi bé nhỏ";
 
@@ -26,13 +28,17 @@ var intPlayWithMe = 0;
 var intTiki = 1;
 var intShopee = 2;
 var intLazada = 3;
+var intTikTok = 4;
+var intManual = 5;
 var packedOrderStatusInWarehouse = "Đã Đóng";
 var returnedOrderStatusInWarehouse = "Đã Hoàn";
 var bookedOrderStatusInWarehouse = "Giữ Chỗ";
 var unbookedOrderStatusInWarehouse = "Hủy Giữ Chỗ";
-var orderStatusToConfirmReceive = "Xuất Hóa Đơn"
+var orderStatusToConfirmReceive = "Xuất Hóa Đơn";
+var dontexistOrderStatusInWarehouse = "Chưa Tồn Tại";
 var MediaFolderPath = "/Media"
 var sanPhamMediaFolderPath = MediaFolderPath + "/SanPham/";
+var productMediaFolderPath = MediaFolderPath + "/Product/";
 
 var tikiConstDiscount = 5;
 
@@ -239,6 +245,25 @@ function CheckUserNameValid(userName) {
     }
 
     return '{"isValid":false, "message":"Tên đăng nhập không đúng."}'
+}
+
+/**
+ * Gán giá trị ngày theo giờ địa phương cho thẻ input[type="date"]
+ * @param {string} elementId - ID của thẻ input
+ * @param {Date} [date=new Date()] - Đối tượng Date cần gán (mặc định là ngày giờ hiện tại)
+ */
+function SetLocalDateInput(inputElement, date = new Date()) {
+    let year = date.getFullYear();
+    let month = String(date.getMonth() + 1).padStart(2, '0'); // Tháng từ 0-11
+    let day = String(date.getDate()).padStart(2, '0');
+
+    let localDateString = `${year}-${month}-${day}`;
+
+    if (inputElement) {
+        inputElement.value = localDateString;
+    } else {
+        console.warn(`Không tìm thấy phần tử với ID là: ${elementId}`);
+    }
 }
 
 // Check SDT di động hợp lệ
@@ -791,6 +816,10 @@ function ConvertIntToPixel(value) {
 
 function GetSanPhamMediaUrl(sanPhamId, fileName) {
     return sanPhamMediaFolderPath + `${sanPhamId}/${fileName}`;
+}
+
+function GetV320ProductFirstMediaUrl(id) {
+    return productMediaFolderPath + `${id}/first_320.jpg`;
 }
 
 // Từ src ảnh lấy được src phiên bản 320
@@ -1594,6 +1623,12 @@ function GetIntECommerceType() {
     else if (document.getElementById("play-with-me-e-ecommonerce-type").checked == true) {
         ecommerce = intPlayWithMe;
     }
+    else if (document.getElementById("tiktok-e-ecommonerce-type").checked == true) {
+        ecommerce = intTikTok;
+    }
+    else if (document.getElementById("manual-e-ecommonerce-type").checked == true) {
+        ecommerce = intManual;
+    }
 
     return ecommerce;
 }
@@ -1677,6 +1712,12 @@ function GetEEcomnerceNameFromIntType(type) {
     }
     else if (type === intLazada) {
         name = eLazada;
+    }
+    else if (type === intTikTok) {
+        name = eTikTok;
+    }
+    else if (type === intManual) {
+        name = eManual;
     }
     return name;
 }

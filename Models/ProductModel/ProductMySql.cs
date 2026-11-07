@@ -1694,6 +1694,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                             int barcodeIndex = rdr.GetOrdinal("Barcode");
                             int nameIndex = rdr.GetOrdinal("Name");
                             int bookCoverPriceIndex = rdr.GetOrdinal("BookCoverPrice");
+                            int quantityIndex = rdr.GetOrdinal("Quantity");
                             int comboIdIndex = rdr.GetOrdinal("ComboId");
                             int comboCodeIndex = rdr.GetOrdinal("ComboCode");
                             int comboNameIndex = rdr.GetOrdinal("ComboName");
@@ -1705,6 +1706,7 @@ namespace MVCPlayWithMe.Models.ProductModel
                                 product.barcode = rdr.IsDBNull(barcodeIndex) ? string.Empty : rdr.GetString(barcodeIndex);
                                 product.name = rdr.GetString(nameIndex);
                                 product.bookCoverPrice = rdr.GetInt32(bookCoverPriceIndex);
+                                product.quantity = rdr.GetInt32(quantityIndex);
                                 product.comboId = rdr.GetInt32(comboIdIndex);
                                 product.comboCode = rdr.IsDBNull(comboCodeIndex) ? string.Empty : rdr.GetString(comboCodeIndex);
                                 product.comboName = rdr.IsDBNull(comboNameIndex) ? string.Empty : rdr.GetString(comboNameIndex);

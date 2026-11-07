@@ -120,6 +120,14 @@ namespace MVCPlayWithMe.General
             {
                 eEnumType = EECommerceType.LAZADA;
             }
+            else if(eType == eManual)
+            {
+                eEnumType = EECommerceType.MANUAL;
+            }
+            else if(eType == eTikTok)
+            {
+                eEnumType = EECommerceType.TIKTOK;
+            }
             return eEnumType;
         }
 
@@ -158,6 +166,8 @@ namespace MVCPlayWithMe.General
         public static string eTiki = "TIKI";
         public static string eLazada = "LAZADA";
         public static string ePlayWithMe = "PLAYWITHME";
+        public static string eTikTok = "TIKTOK";
+        public static string eManual = "MANUAL";
         public static string eAll = "ALL";
 
         public static string tikiActive = "ACTIVE";

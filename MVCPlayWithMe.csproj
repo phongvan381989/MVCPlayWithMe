@@ -332,6 +332,7 @@
     <Compile Include="Controllers\OpenPlatform\NeedUpdateController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiDealDiscountController.cs" />
     <Compile Include="Controllers\OpenPlatform\TikiOriginalSkuController.cs" />
+    <Compile Include="Controllers\OrderController.cs" />
     <Compile Include="Controllers\ProductSupporting\CommonProductSupporting.cs" />
     <Compile Include="Controllers\ProductSupporting\LazadaProductSupporting.cs" />
     <Compile Include="Controllers\ProductSupporting\ShopeeProductSupporting.cs" />
@@ -677,8 +678,8 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Content\Administrator\Index.css" />
-    <Content Include="Content\Administrator\OrderDetail.css" />
-    <Content Include="Content\Administrator\OrderList.css" />
+    <Content Include="Content\Order\OrderDetail.css" />
+    <Content Include="Content\Order\OrderList.css" />
     <Content Include="Content\Administrator\Output.css" />
     <Content Include="Content\Combo\MappingOfCombo.css" />
     <Content Include="Content\Combo\UpdateDelete.css" />
@@ -705,7 +706,7 @@
     <Content Include="Content\Product\Import.css" />
     <Content Include="Content\Product\MappingOfProduct.css" />
     <Content Include="Content\Product\NeedUpdateQuatity.css" />
-    <Content Include="Content\Product\OrderManually.css" />
+    <Content Include="Content\Order\OrderManually.css" />
     <Content Include="Content\Product\RecheckImport.css" />
     <Content Include="Content\Product\Search.css" />
     <Content Include="Content\Product\UpdateDelete.css" />
@@ -730,8 +731,8 @@
     <Content Include="Scripts\Administrator\Index.js" />
     <Content Include="Scripts\Administrator\Login.js" />
     <Content Include="Scripts\Administrator\New.js" />
-    <Content Include="Scripts\Administrator\OrderDetail.js" />
-    <Content Include="Scripts\Administrator\OrderList.js" />
+    <Content Include="Scripts\Order\OrderDetail.js" />
+    <Content Include="Scripts\Order\OrderList.js" />
     <Content Include="Scripts\Administrator\Output.js" />
     <Content Include="Scripts\cart-manager.js" />
     <Content Include="Scripts\Category\Create.js" />
@@ -780,7 +781,7 @@
     <Content Include="Scripts\Product\Import.js" />
     <Content Include="Scripts\Product\MappingOfProduct.js" />
     <Content Include="Scripts\Product\NeedUpdateQuatity.js" />
-    <Content Include="Scripts\Product\OrderManually.js" />
+    <Content Include="Scripts\Order\OrderManually.js" />
     <Content Include="Scripts\Product\RecheckImport.js" />
     <Content Include="Scripts\Product\Search.js" />
     <Content Include="Scripts\Product\SellingStatistics.js" />
@@ -876,7 +877,7 @@
     <Content Include="Views\Policy\ObligationPolicy.cshtml" />
     <Content Include="Views\Policy\TransportPolicy.cshtml" />
     <Content Include="Views\Policy\IntroducePolicy.cshtml" />
-    <Content Include="Views\Product\OrderManually.cshtml" />
+    <Content Include="Views\Order\OrderManually.cshtml" />
     <Content Include="Views\Shared\ECommerceType.cshtml" />
     <Content Include="Views\TikiDealDiscount\Index.cshtml" />
     <Content Include="Views\Product\SellingStatistics.cshtml" />
@@ -892,8 +893,8 @@
     <Content Include="Views\Administrator\PaymentProofs.cshtml" />
     <Content Include="Views\Administrator\PendingOrders.cshtml" />
     <Content Include="Views\Administrator\PendingPayments.cshtml" />
-    <Content Include="Views\Administrator\OrderList.cshtml" />
-    <Content Include="Views\Administrator\OrderDetail.cshtml" />
+    <Content Include="Views\Order\OrderList.cshtml" />
+    <Content Include="Views\Order\OrderDetail.cshtml" />
     <Content Include="Views\Administrator\Output.cshtml" />
     <Content Include="Views\Policy\PaymentQR.cshtml" />
     <Content Include="Views\Shared\_MetaPixel.cshtml" />

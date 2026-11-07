@@ -1,4 +1,5 @@
 ﻿using Anthropic.SDK.Common;
+using MVCPlayWithMe.Controllers.ProductSupporting;
 using MVCPlayWithMe.General;
 using MVCPlayWithMe.Models;
 using MVCPlayWithMe.Models.Customer;
@@ -912,11 +913,12 @@ namespace MVCPlayWithMe.Controllers
                 }
             }
 
-            // Start TRANSACTION
+
             using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
             {
                 await conn.OpenAsync();
 
+                // Start TRANSACTION
                 using (MySqlTransaction transaction = await conn.BeginTransactionAsync())
                 {
                     try
@@ -970,8 +972,8 @@ namespace MVCPlayWithMe.Controllers
                             return await RoolBackWhenOrderError(transaction, result);
                         }
 
-                        // Temporary comments
-                        // 4.6. Trừ số lượng sản phẩm trong tbProducts
+                        // NOTE: Sẽ cập nhật bên ngoài transaction
+                        //// 4.6. Trừ số lượng sản phẩm trong tbProducts
                         //result = await ProductMySql.UpdateQuantityAfterSaleVBNTransactionAsync(conn, transaction, productIdQuantities);
                         //if (result.State != EMySqlResultState.OK)
                         //{
@@ -1022,8 +1024,22 @@ namespace MVCPlayWithMe.Controllers
                         return Json(result, JsonRequestBehavior.AllowGet);
                     }
                 }
+                // End TRANSACTION
+
+                if (result.State != EMySqlResultState.OK)
+                {
+                    return Json(result, JsonRequestBehavior.AllowGet);
+                }
+
+                result = await OrderMySql.GetOrderByOrderCode_CoreAsync(orderCode, conn);
+                if (result.State != EMySqlResultState.OK)
+                {
+                    return Json(result, JsonRequestBehavior.AllowGet);
+                }
+
+                Order order = result.myJson as Order;
+                await VBNProductSupporting.UpdateOrderWhenCreateOrCancelAsync(order, conn);
             }
-            // End TRANSACTION
 
             // Trả về OrderCode trong result.Message, OrderId trong result.myAnything
             MyLogger.GetInstance().Info($"✅ CheckOrderOnSever DONE! OrderID={newOrderId}, OrderCode={orderCode}");

@@ -1,4 +1,4 @@
-let currentFilter = 0; // null = all, 0 = cần check
+﻿let currentFilter = 0; // null = all, 0 = cần check
 let allData = []; // Cache dữ liệu
 
 // Load dữ liệu khi trang load
@@ -76,7 +76,7 @@ function RenderTable(data) {
 
         // Sàn TMĐT
         let cell1 = row.insertCell(1);
-        cell1.innerHTML = GetECommerceName(item.ECommmerce);
+        cell1.innerHTML = GetEEcomnerceNameFromIntType(item.ECommmerce);
 
         // Mã Đơn
         let cell2 = row.insertCell(2);
@@ -109,17 +109,6 @@ function RenderTable(data) {
             cell5.innerHTML = `<span style="color: #6c757d; font-style: italic;">Đã hoàn thành</span>`;
         }
     });
-}
-
-// Lấy tên sàn TMĐT
-function GetECommerceName(ecommerce) {
-    switch (ecommerce) {
-        case 0: return "Play With Me";
-        case 1: return "Tiki";
-        case 2: return "Shopee";
-        case 3: return "Lazada";
-        default: return "Không xác định";
-    }
 }
 
 // Lấy badge trạng thái

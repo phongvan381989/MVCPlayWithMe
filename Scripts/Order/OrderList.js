@@ -37,8 +37,8 @@ function SetDateRange(days) {
         fromDate.setDate(today.getDate() - parseInt(days));
     }
 
-    document.getElementById('date-to').valueAsDate = today;
-    document.getElementById('date-from').valueAsDate = fromDate;
+    SetLocalDateInput(document.getElementById('date-to'), today);
+    SetLocalDateInput(document.getElementById('date-from'), fromDate);
 }
 
 // Handle khi click radio button
@@ -74,7 +74,7 @@ async function LoadAllOrders() {
         if (dateTo) data.dateTo = dateTo;
 
         // Dùng PostJSON từ common.js
-        let responseText = await PostJSON('/Administrator/GetAllOrdersAdmin', data);
+        let responseText = await PostJSON('/Order/GetAllOrdersAdmin', data);
         let result = JSON.parse(responseText);
 
         if (result.State === 0) {  // OK
@@ -320,7 +320,7 @@ function GetOrderStatusBadge(orderStatus) {
         1: { text: 'Đang giao', class: 'badge-info' },
         2: { text: 'Đã nhận', class: 'badge-success' },
         3: { text: 'Đã hủy', class: 'badge-danger' },
-        4: { text: 'Hoàn về', class: 'badge-secondary' },
+        4: { text: 'Trả hàng hoàn tiền', class: 'badge-secondary' },
         5: { text: 'Hoàn thành', class: 'badge-success' }
     };
 
@@ -467,7 +467,7 @@ async function SaveStatus() {
                 orderId: currentEditingOrderId,
                 newStatus: newOrderStatus
             };
-            let orderResponseText = await PostJSON('/Administrator/UpdateOrderStatus', orderData);
+            let orderResponseText = await PostJSON('/Order/UpdateOrderStatus', orderData);
             let orderResult = JSON.parse(orderResponseText);
 
             if (orderResult.State !== 0) {
@@ -482,7 +482,7 @@ async function SaveStatus() {
                 orderId: currentEditingOrderId,
                 newPaymentStatus: newPaymentStatus
             };
-            let paymentResponseText = await PostJSON('/Administrator/UpdatePaymentStatus', paymentData);
+            let paymentResponseText = await PostJSON('/Order/UpdatePaymentStatus', paymentData);
             let paymentResult = JSON.parse(paymentResponseText);
 
             if (paymentResult.State !== 0) {
@@ -511,7 +511,7 @@ async function SaveStatus() {
 
 function ViewOrderDetail(orderId) {
     // Navigate to admin order detail page
-    window.open(`/Administrator/OrderDetail?id=${orderId}`, '_blank');
+    window.open(`/Order/OrderDetail?id=${orderId}`, '_blank');
 }
 
 // ========================================
