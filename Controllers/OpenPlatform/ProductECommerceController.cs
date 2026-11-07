@@ -703,6 +703,7 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
             return View();
         }
 
+        // Phục vụ test tạm thời
         private async Task<string> GetListOrderTemporary(int fromTo, int orderStatus)
         {
             DateTime time_from, time_to;
@@ -729,8 +730,8 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
         [HttpPost]
         public async Task<string> GetListOrder(int fromTo, int orderStatus)
         {
-            // Temporary
-            return await GetListOrderTemporary(fromTo, orderStatus);
+            //// Temporary
+            //return await GetListOrderTemporary(fromTo, orderStatus);
 
             List<CommonOrder> lsCommonOrder = new List<CommonOrder>();
             if ((await AuthentAdministratorAsync()) == null)
