@@ -214,7 +214,7 @@ namespace MVCPlayWithMe.Controllers
                     await conn.OpenAsync();
                     List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
 
-                    LazadaProductSupporting.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
+                    await LazadaProductSupporting.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
 
                     // Lấy danh sách item cập nhật số lượng sai
                     List<CommonItem> failLs = new List<CommonItem>();

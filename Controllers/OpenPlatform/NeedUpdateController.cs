@@ -90,6 +90,16 @@ namespace MVCPlayWithMe.Controllers.OpenPlatform
                     {
                         await TikiProductSupporting.TikiUpdatePriceAll_BatchAsync(conn);
                     }
+                    else if(eType == Common.eLazada)
+                    {
+                        await LazadaProductSupporting.LazadaUpdatePriceAll(conn);
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.PENDING;
+                        result.Message = "Chưa implement logic cho sàn này";
+
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -187,6 +187,16 @@ namespace MVCPlayWithMe.Controllers.ProductSupporting
             return result;
         }
 
+        public static async Task<List<CommonItem>> LazadaUpdatePriceAll(MySqlConnection conn)
+        {
+            // Danh sách sản phẩm Lazada
+            List<CommonItem> ls = await LazadaMySql.LazadaGetItemOnDBAsync(conn);
+
+            await LazadaProductSupporting.LazadaUpdatePrice_SpecialPrice_Core(ls, conn);
+
+            return ls;
+        }
+
         public static MySqlResultState LazadaCheckValidProductInfo(Product product)
         {
             MySqlResultState result = new MySqlResultState();
