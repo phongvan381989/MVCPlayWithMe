@@ -448,3 +448,71 @@ async function CassoRefreshAccesToken() {
 
     CheckStatusResponseAndShowPrompt(responseDB.responseText, "Làm mới token thành công", "Có lỗi khi làm mới token");
 }
+
+async function TikTokShopGenerateAuthorityUrl() {
+    const searchParams = new URLSearchParams();
+    let query = "/Dev/TikTokShopGenerateAuthorityUrl";
+
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    let result = JSON.parse(responseDB.responseText);
+    if (result.State != 0) {
+        CreateMustClickOkModal(result.Message);
+        return;
+    }
+    document.getElementById("generate_authority_url_tiktokshop").value = result.Message;
+}
+
+async function TikTokShopGetAccessTokenFromCodeForFirst() {
+    let text = "Bạn vừa được chủ shop ủy quyền?";
+    if (confirm(text) == false)
+        return;
+
+    let code = document.getElementById("code_after_authority_tiktokshop").value;
+    if (CheckIsEmptyOrSpacesAndShowResult(code, "code không hợp lệ.")) {
+        document.getElementById("code_after_authority_tiktokshop").focus();
+        return;
+    }
+
+    const searchParams = new URLSearchParams();
+    searchParams.append("code", code);
+    let query = "/Dev/TikTokShopGetAccessTokenFromCodeForFirst";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+}
+
+async function TikTokShopRefreshAccessToken() {
+    const searchParams = new URLSearchParams();
+    let query = "/Dev/TikTokShopRefreshAccessToken";
+    ShowCircleLoader();
+    let responseDB = await RequestHttpPostPromise(searchParams, query);
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseDB.responseText, "Thành công.", "Có lỗi xảy ra.");
+}
+
+async function TikTokShopGetAuthorizedShops() {
+    ShowCircleLoader();
+    const responseText = await PostJSON('/Dev/TikTokShopGetAuthorizedShops', {});
+    RemoveCircleLoader();
+
+    CheckStatusResponseAndShowPrompt(responseText, "Shop info đã được lưu thành công!", "Có lỗi xảy ra.");
+}
+
+async function TikTokShopTestGetOrder7Days() {
+    ShowCircleLoader();
+    const responseText = await PostJSON('/Dev/TikTokShopTestGetOrder7Days', {});
+    RemoveCircleLoader();
+
+    const result = JSON.parse(responseText);
+    if (result.State === 0) {
+        CreateMustClickOkModal(result.Message);
+    } else {
+        CreateMustClickOkModal("Có lỗi xảy ra: " + result.Message);
+    }
+}

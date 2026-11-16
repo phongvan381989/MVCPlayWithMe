@@ -1,4 +1,4 @@
-.fmx09gx8 {
+﻿.fmx09gx8 {
     background-color: white;
     padding: 10px;
     margin: 10px 0px 10px 0px;
@@ -15,6 +15,13 @@
 
 .nsklnksjn {
     background-color: #ff3399;
+    padding: 10px;
+    margin: 10px 0px 10px 0px;
+    border-radius: 5px;
+}
+
+.nsklnksjnTikTok {
+    background-color: #d633ff;
     padding: 10px;
     margin: 10px 0px 10px 0px;
     border-radius: 5px;

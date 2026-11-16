@@ -214,6 +214,48 @@
             </div>
         </div>
 
+        <div class="nsklnksjnTikTok">
+            <div class="gmxk9381"> Lấy URL Ủy quyền TIKTOK SHOP</div>
+            <div class="flpzni5136">
+                <input type="text" id="generate_authority_url_tiktokshop" class="config-max-width margin-vertical"
+                       title="Hiển thị đường dẫn gửi chủ shop ủy quyền cho phần mềm" />
+                <button type="button" onclick="TikTokShopGenerateAuthorityUrl()"
+                        title="Lấy được đường dẫn gửi chủ shop ủy quyền cho phần mềm,hoặc lấy ở partner center">
+                    Lấy Url ủy quyền gửi chủ shop
+                </button>
+            </div>
+
+            <div class="flpzni5136">
+                <input type="text" id="code_after_authority_tiktokshop" class="config-max-width margin-vertical"
+                       title="copy code có được sau khi chủ shop uy quyền, trả về trong url callback dán vào input này" />
+                <button type="button" onclick="TikTokShopGetAccessTokenFromCodeForFirst()"
+                        title="Từ code ở input trên, ta lấy được access, refresh token lần đầu và lưu vào db">
+                    Get Access Token From Code For First
+                </button>
+            </div>
+
+            <div class="flpzni5136">
+                <button type="button" onclick="TikTokShopRefreshAccessToken()"
+                        title="Làm mới access token từ refresh token">
+                    Refresh Access Token
+                </button>
+            </div>
+
+            <div class="flpzni5136">
+                <button type="button" onclick="TikTokShopGetAuthorizedShops()" disabled
+                        title="Lấy danh sách shop đã ủy quyền và tự động lưu shop đầu tiên vào DB.NOTE: chỉ gọi lần đầu được shop ủy quyền">
+                    Get Authorized Shops (Auto-save)
+                </button>
+            </div>
+
+            <div>
+                <button type="button" onclick="TikTokShopTestGetOrder7Days()"
+                        title="Kiểm tra lấy đơn hàng 7 ngày">
+                    Test Get Order
+                </button>
+            </div>
+        </div>
+
         <div class="fmx09gx8" style="margin-top: 20px; border: 2px solid #4CAF50; padding: 15px; border-radius: 8px; background: #f1f8f4;">
             <div class="gmxk9381" style="color: #2e7d32; font-weight: bold;">
                 🗺️ SITEMAP.XML - SEO

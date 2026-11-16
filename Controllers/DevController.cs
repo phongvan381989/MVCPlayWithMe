@@ -16,6 +16,7 @@ using MVCPlayWithMe.OpenPlatform.API.TikiAPI;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Category;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Event;
 using MVCPlayWithMe.OpenPlatform.API.TikiAPI.Product;
+using MVCPlayWithMe.OpenPlatform.API.TikTokShopAPI;
 using MVCPlayWithMe.OpenPlatform.Model;
 using MVCPlayWithMe.OpenPlatform.Model.CassoInvoiceApp;
 using MVCPlayWithMe.OpenPlatform.Model.LazadaApp.LazadaOrder;
@@ -24,6 +25,8 @@ using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeCreateProduct;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeOrder;
 using MVCPlayWithMe.OpenPlatform.Model.ShopeeApp.ShopeeProduct;
 using MVCPlayWithMe.OpenPlatform.Model.TikiApp.Product;
+using MVCPlayWithMe.OpenPlatform.Model.TikTokApp.TikTokAuth;
+using MVCPlayWithMe.OpenPlatform.Model.TikTokApp.TikTokOrder;
 using MySqlConnector;
 using Newtonsoft.Json;
 using System;
@@ -1509,6 +1512,316 @@ namespace MVCPlayWithMe.Controllers
             {
                 result.State = EMySqlResultState.ERROR;
                 result.Message = "Làm mới thất bại";
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Lấy URL ủy quyền TikTok Shop
+        /// Format: https://services.tiktokshop.com/open/authorize?service_id={service_id}
+        /// </summary>
+        [HttpPost]
+        public async Task<string> TikTokShopGenerateAuthorityUrl()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                using (MySqlConnection conn = new MySqlConnection(MyMySql.connStr))
+                {
+                    await conn.OpenAsync();
+                    var auth = await TikTokAuthMySql.GetAuthFromDBAsync(conn);
+
+                    if (auth == null || string.IsNullOrWhiteSpace(auth.ServiceId))
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "ServiceId chưa được cấu hình trong database. Vui lòng cập nhật ServiceId vào table tb_tiktok_authen trước.";
+                        MyLogger.GetInstance().Error("TikTok ServiceId not found in database");
+                        return JsonConvert.SerializeObject(result);
+                    }
+
+                    // TikTok Shop authorization URL
+                    // Format: https://services.tiktokshop.com/open/authorize?service_id={service_id}
+                    string authUrl = $"https://services.tiktokshop.com/open/authorize?service_id={auth.ServiceId}";
+
+                    result.Message = authUrl;
+                    MyLogger.GetInstance().Info($"Generated TikTok Shop auth URL with ServiceId: {auth.ServiceId}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Lấy access token TikTok Shop từ authorization code lần đầu
+        /// </summary>
+        [HttpPost]
+        public async Task<string> TikTokShopGetAccessTokenFromCodeForFirst(string code)
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                if (string.IsNullOrWhiteSpace(code))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Authorization code is required";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                MyLogger.GetInstance().Info($"TikTok Shop exchanging code: {code}");
+
+                bool isOk = await TikTokAuthAPI.TikTokAuthTokenCreateAndSaveDBAsync(code);
+                if (!isOk)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Failed to exchange code for tokens. Check logs for details.";
+                }
+                else
+                {
+                    result.State = EMySqlResultState.OK;
+                    result.Message = "Access token và refresh token đã được lưu thành công";
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Refresh access token TikTok Shop
+        /// </summary>
+        [HttpPost]
+        public async Task<string> TikTokShopRefreshAccessToken()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                MyLogger.GetInstance().Info("TikTok Shop refreshing access token");
+
+                bool isOk = await TikTokAuthAPI.TikTokAuthTokenRefreshAsync();
+                if (!isOk)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Failed to refresh token. Check logs for details.";
+                }
+                else
+                {
+                    result.State = EMySqlResultState.OK;
+                    result.Message = "Access token đã được làm mới thành công";
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Get list of authorized shops from TikTok Shop
+        /// API: GET /authorization/202309/shops
+        /// </summary>
+        [HttpPost]
+        public async Task<string> TikTokShopGetAuthorizedShops()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                MyLogger.GetInstance().Info("TikTok Shop getting authorized shops");
+
+                var shopsResponse = await TikTokAuthAPI.GetAuthorizedShopsAsync();
+                if (shopsResponse == null || !shopsResponse.IsSuccess())
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = shopsResponse != null
+                        ? $"TikTok API error: {shopsResponse.message}"
+                        : "Failed to get authorized shops. Check logs for details.";
+                }
+                else if (shopsResponse.data.shops == null || shopsResponse.data.shops.Length == 0)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "No authorized shops found";
+                }
+                else
+                {
+                    MyLogger.GetInstance().Info($"Retrieved {shopsResponse.data.shops.Length} authorized shop(s)");
+
+                    // Auto-save first shop (index 0)
+                    var firstShop = shopsResponse.data.shops[0];
+                    bool saveOk = await TikTokAuthMySql.SaveShopInfoAsync(firstShop.id, firstShop.cipher);
+
+                    if (!saveOk)
+                    {
+                        result.State = EMySqlResultState.ERROR;
+                        result.Message = "Failed to save shop info. Check logs for details.";
+                    }
+                    else
+                    {
+                        result.State = EMySqlResultState.OK;
+                        result.Message = $"Shop info đã được lưu thành công!\n" +
+                                       $"Shop Name: {firstShop.name}\n" +
+                                       $"Shop Code: {firstShop.code}\n" +
+                                       $"Region: {firstShop.region}\n" +
+                                       $"Seller Type: {firstShop.seller_type}\n" +
+                                       $"Shop ID: {firstShop.id}\n" +
+                                       $"Total Shops: {shopsResponse.data.shops.Length}";
+
+                        MyLogger.GetInstance().Info($"Auto-saved first shop: {firstShop.name} ({firstShop.code})");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        /// <summary>
+        /// Save selected shop information (ShopId, ShopCipher) to database
+        /// </summary>
+        [HttpPost]
+        public async Task<string> TikTokShopSaveShopInfo(string shopId = null, string shopCipher = null)
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                // Accept JSON body from PostJSON
+                if (shopId == null || shopCipher == null)
+                {
+                    using (var reader = new System.IO.StreamReader(Request.InputStream))
+                    {
+                        string body = await reader.ReadToEndAsync();
+                        var jsonData = JsonConvert.DeserializeObject<Dictionary<string, object>>(body);
+                        shopId = jsonData["shopId"]?.ToString();
+                        shopCipher = jsonData["shopCipher"]?.ToString();
+                    }
+                }
+
+                if (string.IsNullOrWhiteSpace(shopId) || string.IsNullOrWhiteSpace(shopCipher))
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "ShopId và ShopCipher không được để trống";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                MyLogger.GetInstance().Info($"TikTok Shop saving shop info: ShopId={shopId}, ShopCipher={shopCipher}");
+
+                bool isOk = await TikTokAuthMySql.SaveShopInfoAsync(shopId, shopCipher);
+                if (!isOk)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Failed to save shop info. Check logs for details.";
+                }
+                else
+                {
+                    result.State = EMySqlResultState.OK;
+                    result.Message = "Shop information đã được lưu thành công";
+                }
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
+            }
+
+            return JsonConvert.SerializeObject(result);
+        }
+
+        [HttpPost]
+        public async Task<string> TikTokShopTestGetOrder7Days()
+        {
+            MySqlResultState result = new MySqlResultState();
+            if (await AuthentAdministratorAsync() == null)
+            {
+                return JsonConvert.SerializeObject(new MySqlResultState(EMySqlResultState.AUTHEN_FAIL, MySqlResultState.authenFailMessage));
+            }
+
+            try
+            {
+                MyLogger.GetInstance().Info("TikTok Shop testing get orders for last 7 days");
+
+                // Get all orders from last 7 days
+                var allOrders = await TikTokShopOrderAPI.GetAllOrdersAsync(
+                    timeRange: TikTokOrderTimeRange.SevenDays,
+                    orderStatus: null  // Tất cả trạng thái
+                );
+
+                if (allOrders == null)
+                {
+                    result.State = EMySqlResultState.ERROR;
+                    result.Message = "Failed to get orders. Check logs for details.";
+                    return JsonConvert.SerializeObject(result);
+                }
+
+                // Build result message
+                result.State = EMySqlResultState.OK;
+                result.Message = $"✅ Lấy đơn hàng 7 ngày thành công!\n\n" +
+                               $"📦 Tổng số đơn hàng: {allOrders.Count}\n" +
+                               $"📅 Thời gian: 7 ngày gần đây\n\n";
+
+                if (allOrders.Count > 0)
+                {
+                    // Show first 5 orders as sample
+                    result.Message += "🔍 Mẫu đơn hàng đầu tiên:\n";
+                    int sampleCount = Math.Min(5, allOrders.Count);
+                    for (int i = 0; i < sampleCount; i++)
+                    {
+                        var order = allOrders[i];
+                        string vnStatus = TikTokOrderStatus.GetVietnameseDescription(order.status);
+                        result.Message += $"\n{i + 1}. Order ID: {order.id}\n" +
+                                        $"   Status: {vnStatus} ({order.status})\n" +
+                                        $"   Create Time: {DateTimeOffset.FromUnixTimeSeconds(order.create_time):yyyy-MM-dd HH:mm}\n";
+                    }
+
+                    if (allOrders.Count > sampleCount)
+                    {
+                        result.Message += $"\n... và {allOrders.Count - sampleCount} đơn hàng khác";
+                    }
+                }
+                else
+                {
+                    result.Message += "ℹ️ Không có đơn hàng nào trong 7 ngày qua.";
+                }
+
+                MyLogger.GetInstance().Info($"Successfully fetched {allOrders.Count} orders");
+            }
+            catch (Exception ex)
+            {
+                Common.SetResultException(ex, result);
             }
 
             return JsonConvert.SerializeObject(result);
